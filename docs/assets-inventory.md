@@ -152,7 +152,6 @@
 |--|----|------|
 | - [ ] | block.ic2.advanced_miner | 高级采矿机 |
 | - [ ] | block.ic2.crop_harvester | 作物收割机 |
-| - [ ] | block.ic2.classic_cropmatron | 作物监管机 |
 | - [ ] | block.ic2.miner | 采矿机 |
 | - [ ] | block.ic2.mass_fabricator | 物质生成机 |
 | - [ ] | block.ic2.uu_assembly_bench | UU 组装台 |
@@ -205,9 +204,7 @@
 | - [ ] | block.ic2.batbox | 储电箱 |
 | - [ ] | block.ic2.cesu | CESU 储电箱 |
 | - [ ] | block.ic2.mfe | MFE 储电箱 |
-| - [ ] | block.ic2.classic_mfe | MFE 储电箱 |
 | - [x] | block.ic2.mfsu | MFSU 储电箱 |
-| - [ ] | block.ic2.classic_mfsu | 经典MFSU 储电箱 |
 | - [ ] | block.ic2.batbox_chargepad | 充电座 (BatBox) |
 | - [ ] | block.ic2.cesu_chargepad | 充电座 (CESU) |
 | - [ ] | block.ic2.mfe_chargepad | 充电座 (MFE) |
@@ -239,13 +236,7 @@
 ### 机器 - 特殊类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | block.ic2.classic_nuke | 核弹 |
 | - [ ] | block.ic2.nuke | 核弹 |
-| - [ ] | block.ic2.classic_canner | 经典装罐机 |
-| - [ ] | block.ic2.classic_electrolyzer | 经典电解机 |
-| - [ ] | block.ic2.classic_mass_fabricator | 经典物质生成机 |
-| - [ ] | block.ic2.classic_mfe | 经典 MFE |
-| - [ ] | block.ic2.classic_mfsu | 经典 MFSU |
 
 ### 机器 - 工作台类
 |  | ID | 名称 |
@@ -925,12 +916,6 @@
 | - [ ] | item.ic2.centrifuge | 热能离心机 |
 | - [ ] | item.ic2.cesu | CESU 储电箱 |
 | - [ ] | item.ic2.chunk_loader | 区块加载器 |
-| - [ ] | item.ic2.classic_canner | 经典装罐机 |
-| - [ ] | item.ic2.classic_cropmatron | 作物监管机 |
-| - [ ] | item.ic2.classic_electrolyzer | 经典电解机 |
-| - [ ] | item.ic2.classic_mass_fabricator | 经典物质生成机 |
-| - [ ] | item.ic2.classic_mfe | 经典 MFE |
-| - [ ] | item.ic2.classic_mfsu | 经典 MFSU |
 | - [ ] | item.ic2.compressor | 压缩机 |
 | - [ ] | item.ic2.condenser | 冷凝机 |
 | - [x] | item.ic2.copper_block | 铜块 |
