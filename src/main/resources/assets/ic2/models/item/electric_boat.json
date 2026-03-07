@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/boat/electric_boat"
+		"layer0": "ic2:item/boat/electric_boat"
 	}
 }

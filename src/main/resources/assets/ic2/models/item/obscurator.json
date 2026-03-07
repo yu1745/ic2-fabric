@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/tool/electric/obscurator"
+		"layer0": "ic2:item/tool/electric/obscurator"
 	}
 }

@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/tool/forge_hammer"
+		"layer0": "ic2:item/tool/forge_hammer"
 	}
 }

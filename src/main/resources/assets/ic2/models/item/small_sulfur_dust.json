@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/resource/dust/small_sulfur"
+		"layer0": "ic2:item/resource/dust/small_sulfur"
 	}
 }

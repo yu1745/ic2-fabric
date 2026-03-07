@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/resource/iridium_shard"
+		"layer0": "ic2:item/resource/iridium_shard"
 	}
 }

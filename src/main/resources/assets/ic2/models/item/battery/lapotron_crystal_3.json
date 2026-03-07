@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/battery/lapotron_crystal_3"
+		"layer0": "ic2:item/battery/lapotron_crystal_3"
 	}
 }

@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/reactor/heat_plating"
+		"layer0": "ic2:item/reactor/heat_plating"
 	}
 }

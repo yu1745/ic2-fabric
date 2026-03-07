@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/crop/coffee_beans"
+		"layer0": "ic2:item/crop/coffee_beans"
 	}
 }

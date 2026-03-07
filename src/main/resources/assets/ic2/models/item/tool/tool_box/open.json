@@ -1,6 +1,6 @@
 {
   "parent": "ic2:item/default",
   "textures": {
-    "layer0": "ic2:items/tool/tool_box_open"
+    "layer0": "ic2:item/tool/tool_box_open"
   }
 }

@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "ic2:block/resource/ore/deepslate_uranium_ore" }
+  }
+}

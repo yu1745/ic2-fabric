@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/rotor/carbon_rotor_model"
+		"layer0": "ic2:item/rotor/carbon_rotor_model"
 	}
 }

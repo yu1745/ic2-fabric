@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/armor/bronze_leggings"
+		"layer0": "ic2:item/armor/bronze_leggings"
 	}
 }

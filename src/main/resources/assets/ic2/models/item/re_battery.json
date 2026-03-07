@@ -1,7 +1,7 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/battery/re_battery_0"
+		"layer0": "ic2:item/battery/re_battery_0"
 	},
 	"overrides": [
 		{

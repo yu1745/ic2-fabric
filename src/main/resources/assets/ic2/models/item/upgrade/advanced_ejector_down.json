@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/upgrade/advanced_ejector_down"
+		"layer0": "ic2:item/upgrade/advanced_ejector_down"
 	}
 }

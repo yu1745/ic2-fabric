@@ -1,7 +1,7 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/reinforced_door"
+		"layer0": "ic2:item/reinforced_door"
 	},
 	"display": {
 		"thirdperson": {

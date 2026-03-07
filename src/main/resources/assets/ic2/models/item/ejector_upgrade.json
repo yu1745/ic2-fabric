@@ -1,7 +1,7 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/upgrade/ejector"
+		"layer0": "ic2:item/upgrade/ejector"
 	},
 	"overrides": [
 		{

@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/boat/rubber_boat"
+		"layer0": "ic2:item/boat/rubber_boat"
 	}
 }

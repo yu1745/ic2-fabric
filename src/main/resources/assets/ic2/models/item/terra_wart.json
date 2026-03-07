@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/crop/terra_wart"
+		"layer0": "ic2:item/crop/terra_wart"
 	}
 }

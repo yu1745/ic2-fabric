@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/crafting/carbon_mesh"
+		"layer0": "ic2:item/crafting/carbon_mesh"
 	}
 }

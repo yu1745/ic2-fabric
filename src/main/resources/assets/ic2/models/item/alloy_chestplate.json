@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/armor/alloy_chestplate"
+		"layer0": "ic2:item/armor/alloy_chestplate"
 	}
 }

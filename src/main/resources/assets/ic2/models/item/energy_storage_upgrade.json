@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/upgrade/energy_storage"
+		"layer0": "ic2:item/upgrade/energy_storage"
 	}
 }

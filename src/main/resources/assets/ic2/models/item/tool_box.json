@@ -1,7 +1,7 @@
 {
   "parent": "ic2:item/tool/default",
   "textures": {
-    "layer0": "ic2:items/tool/tool_box"
+    "layer0": "ic2:item/tool/tool_box"
   },
   "overrides": [
     {

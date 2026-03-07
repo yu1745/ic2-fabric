@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/battery/energy_crystal_1"
+		"layer0": "ic2:item/battery/energy_crystal_1"
 	}
 }

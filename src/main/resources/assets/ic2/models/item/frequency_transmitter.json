@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "ic2:items/tool/frequency_transmitter"
+    "layer0": "ic2:item/tool/frequency_transmitter"
   }
 }

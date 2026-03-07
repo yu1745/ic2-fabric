@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/crafting/jetpack_attachment_plate"
+		"layer0": "ic2:item/crafting/jetpack_attachment_plate"
 	}
 }

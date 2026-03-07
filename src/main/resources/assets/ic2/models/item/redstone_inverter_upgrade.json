@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:item/default",
 	"textures": {
-		"layer0": "ic2:items/upgrade/redstone_inverter"
+		"layer0": "ic2:item/upgrade/redstone_inverter"
 	}
 }
