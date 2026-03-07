@@ -46,6 +46,7 @@
 		"minecraft": "~1.20.1",
 		"java": ">=17",
 		"fabric-api": "*",
-		"fabric-language-kotlin": "*"
+		"fabric-language-kotlin": "*",
+		"team_reborn_energy": ">=3.0.0"
 	}
 }

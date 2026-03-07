@@ -12,14 +12,10 @@ base {
 }
 
 repositories {
-	// Add repositories to retrieve artifacts from in here.
-	// You should only use this when depending on other mods because
-	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
-	// for more information about repositories.
 	flatDir {
 		dir 'libs'
 	}
+	// maven { url "https://maven.fabricmc.net/" }
 }
 
 loom {
@@ -58,6 +54,8 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 	modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
+	// Team Reborn Energy API（电力熔炉等与电缆/发电机互通）
+	modApi "teamreborn:energy:${project.energy_api_version}"
 }
 
 processResources {
