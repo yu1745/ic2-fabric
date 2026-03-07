@@ -1,0 +1,874 @@
+{
+  "variants": {
+    "crop_type=none": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=crossing_base": {
+      "model": "ic2:block/crop/stick_upgraded"
+    },
+    "crop_type=wheat,age=0": {
+      "model": "ic2:block/crop/wheat_0"
+    },
+    "crop_type=wheat,age=1": {
+      "model": "ic2:block/crop/wheat_1"
+    },
+    "crop_type=wheat,age=2": {
+      "model": "ic2:block/crop/wheat_2"
+    },
+    "crop_type=wheat,age=3": {
+      "model": "ic2:block/crop/wheat_3"
+    },
+    "crop_type=wheat,age=4": {
+      "model": "ic2:block/crop/wheat_4"
+    },
+    "crop_type=wheat,age=5": {
+      "model": "ic2:block/crop/wheat_5"
+    },
+    "crop_type=wheat,age=6": {
+      "model": "ic2:block/crop/wheat_6"
+    },
+    "crop_type=wheat,age=7": {
+      "model": "ic2:block/crop/wheat_7"
+    },
+    "crop_type=pumpkin,age=0": {
+      "model": "ic2:block/crop/pumpkin_0"
+    },
+    "crop_type=pumpkin,age=1": {
+      "model": "ic2:block/crop/pumpkin_1"
+    },
+    "crop_type=pumpkin,age=2": {
+      "model": "ic2:block/crop/pumpkin_2"
+    },
+    "crop_type=pumpkin,age=3": {
+      "model": "ic2:block/crop/pumpkin_3"
+    },
+    "crop_type=pumpkin,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=pumpkin,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=pumpkin,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=pumpkin,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=melon,age=0": {
+      "model": "ic2:block/crop/melon_0"
+    },
+    "crop_type=melon,age=1": {
+      "model": "ic2:block/crop/melon_1"
+    },
+    "crop_type=melon,age=2": {
+      "model": "ic2:block/crop/melon_2"
+    },
+    "crop_type=melon,age=3": {
+      "model": "ic2:block/crop/melon_3"
+    },
+    "crop_type=melon,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=melon,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=melon,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=melon,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=dandelion,age=0": {
+      "model": "ic2:block/crop/dandelion_0"
+    },
+    "crop_type=dandelion,age=1": {
+      "model": "ic2:block/crop/dandelion_1"
+    },
+    "crop_type=dandelion,age=2": {
+      "model": "ic2:block/crop/dandelion_2"
+    },
+    "crop_type=dandelion,age=3": {
+      "model": "ic2:block/crop/dandelion_3"
+    },
+    "crop_type=dandelion,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=dandelion,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=dandelion,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=dandelion,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=poppy,age=0": {
+      "model": "ic2:block/crop/poppy_0"
+    },
+    "crop_type=poppy,age=1": {
+      "model": "ic2:block/crop/poppy_1"
+    },
+    "crop_type=poppy,age=2": {
+      "model": "ic2:block/crop/poppy_2"
+    },
+    "crop_type=poppy,age=3": {
+      "model": "ic2:block/crop/poppy_3"
+    },
+    "crop_type=poppy,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=poppy,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=poppy,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=poppy,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=blackthorn,age=0": {
+      "model": "ic2:block/crop/blackthorn_0"
+    },
+    "crop_type=blackthorn,age=1": {
+      "model": "ic2:block/crop/blackthorn_1"
+    },
+    "crop_type=blackthorn,age=2": {
+      "model": "ic2:block/crop/blackthorn_2"
+    },
+    "crop_type=blackthorn,age=3": {
+      "model": "ic2:block/crop/blackthorn_3"
+    },
+    "crop_type=blackthorn,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=blackthorn,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=blackthorn,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=blackthorn,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=tulip,age=0": {
+      "model": "ic2:block/crop/tulip_0"
+    },
+    "crop_type=tulip,age=1": {
+      "model": "ic2:block/crop/tulip_1"
+    },
+    "crop_type=tulip,age=2": {
+      "model": "ic2:block/crop/tulip_2"
+    },
+    "crop_type=tulip,age=3": {
+      "model": "ic2:block/crop/tulip_3"
+    },
+    "crop_type=tulip,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=tulip,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=tulip,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=tulip,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=cyazint,age=0": {
+      "model": "ic2:block/crop/cyazint_0"
+    },
+    "crop_type=cyazint,age=1": {
+      "model": "ic2:block/crop/cyazint_1"
+    },
+    "crop_type=cyazint,age=2": {
+      "model": "ic2:block/crop/cyazint_2"
+    },
+    "crop_type=cyazint,age=3": {
+      "model": "ic2:block/crop/cyazint_3"
+    },
+    "crop_type=cyazint,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=cyazint,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=cyazint,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=cyazint,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=venomilia,age=0": {
+      "model": "ic2:block/crop/venomilia_0"
+    },
+    "crop_type=venomilia,age=1": {
+      "model": "ic2:block/crop/venomilia_1"
+    },
+    "crop_type=venomilia,age=2": {
+      "model": "ic2:block/crop/venomilia_2"
+    },
+    "crop_type=venomilia,age=3": {
+      "model": "ic2:block/crop/venomilia_3"
+    },
+    "crop_type=venomilia,age=4": {
+      "model": "ic2:block/crop/venomilia_4"
+    },
+    "crop_type=venomilia,age=5": {
+      "model": "ic2:block/crop/venomilia_5"
+    },
+    "crop_type=venomilia,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=venomilia,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=reed,age=0": {
+      "model": "ic2:block/crop/reed_0"
+    },
+    "crop_type=reed,age=1": {
+      "model": "ic2:block/crop/reed_1"
+    },
+    "crop_type=reed,age=2": {
+      "model": "ic2:block/crop/reed_2"
+    },
+    "crop_type=reed,age=3": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=reed,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=reed,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=reed,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=reed,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=sticky_reed,age=0": {
+      "model": "ic2:block/crop/sticky_reed_0"
+    },
+    "crop_type=sticky_reed,age=1": {
+      "model": "ic2:block/crop/sticky_reed_1"
+    },
+    "crop_type=sticky_reed,age=2": {
+      "model": "ic2:block/crop/sticky_reed_2"
+    },
+    "crop_type=sticky_reed,age=3": {
+      "model": "ic2:block/crop/sticky_reed_3"
+    },
+    "crop_type=sticky_reed,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=sticky_reed,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=sticky_reed,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=sticky_reed,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=cocoa,age=0": {
+      "model": "ic2:block/crop/cocoa_0"
+    },
+    "crop_type=cocoa,age=1": {
+      "model": "ic2:block/crop/cocoa_1"
+    },
+    "crop_type=cocoa,age=2": {
+      "model": "ic2:block/crop/cocoa_2"
+    },
+    "crop_type=cocoa,age=3": {
+      "model": "ic2:block/crop/cocoa_3"
+    },
+    "crop_type=cocoa,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=cocoa,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=cocoa,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=cocoa,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=flax,age=0": {
+      "model": "ic2:block/crop/flax_0"
+    },
+    "crop_type=flax,age=1": {
+      "model": "ic2:block/crop/flax_1"
+    },
+    "crop_type=flax,age=2": {
+      "model": "ic2:block/crop/flax_2"
+    },
+    "crop_type=flax,age=3": {
+      "model": "ic2:block/crop/flax_3"
+    },
+    "crop_type=flax,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=flax,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=flax,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=flax,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=red_mushroom,age=0": {
+      "model": "ic2:block/crop/red_mushroom_0"
+    },
+    "crop_type=red_mushroom,age=1": {
+      "model": "ic2:block/crop/red_mushroom_1"
+    },
+    "crop_type=red_mushroom,age=2": {
+      "model": "ic2:block/crop/red_mushroom_2"
+    },
+    "crop_type=red_mushroom,age=3": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=red_mushroom,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=red_mushroom,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=red_mushroom,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=red_mushroom,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=brown_mushroom,age=0": {
+      "model": "ic2:block/crop/brown_mushroom_0"
+    },
+    "crop_type=brown_mushroom,age=1": {
+      "model": "ic2:block/crop/brown_mushroom_1"
+    },
+    "crop_type=brown_mushroom,age=2": {
+      "model": "ic2:block/crop/brown_mushroom_2"
+    },
+    "crop_type=brown_mushroom,age=3": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=brown_mushroom,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=brown_mushroom,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=brown_mushroom,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=brown_mushroom,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=nether_wart,age=0": {
+      "model": "ic2:block/crop/nether_wart_0"
+    },
+    "crop_type=nether_wart,age=1": {
+      "model": "ic2:block/crop/nether_wart_1"
+    },
+    "crop_type=nether_wart,age=2": {
+      "model": "ic2:block/crop/nether_wart_2"
+    },
+    "crop_type=nether_wart,age=3": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=nether_wart,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=nether_wart,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=nether_wart,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=nether_wart,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=terra_wart,age=0": {
+      "model": "ic2:block/crop/terra_wart_0"
+    },
+    "crop_type=terra_wart,age=1": {
+      "model": "ic2:block/crop/terra_wart_1"
+    },
+    "crop_type=terra_wart,age=2": {
+      "model": "ic2:block/crop/terra_wart_2"
+    },
+    "crop_type=terra_wart,age=3": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=terra_wart,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=terra_wart,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=terra_wart,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=terra_wart,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=oak_sapling,age=0": {
+      "model": "ic2:block/crop/oak_sapling_0"
+    },
+    "crop_type=oak_sapling,age=1": {
+      "model": "ic2:block/crop/oak_sapling_1"
+    },
+    "crop_type=oak_sapling,age=2": {
+      "model": "ic2:block/crop/oak_sapling_2"
+    },
+    "crop_type=oak_sapling,age=3": {
+      "model": "ic2:block/crop/oak_sapling_3"
+    },
+    "crop_type=oak_sapling,age=4": {
+      "model": "ic2:block/crop/oak_sapling_4"
+    },
+    "crop_type=oak_sapling,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=oak_sapling,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=oak_sapling,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=spruce_sapling,age=0": {
+      "model": "ic2:block/crop/spruce_sapling_0"
+    },
+    "crop_type=spruce_sapling,age=1": {
+      "model": "ic2:block/crop/spruce_sapling_1"
+    },
+    "crop_type=spruce_sapling,age=2": {
+      "model": "ic2:block/crop/spruce_sapling_2"
+    },
+    "crop_type=spruce_sapling,age=3": {
+      "model": "ic2:block/crop/spruce_sapling_3"
+    },
+    "crop_type=spruce_sapling,age=4": {
+      "model": "ic2:block/crop/spruce_sapling_4"
+    },
+    "crop_type=spruce_sapling,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=spruce_sapling,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=spruce_sapling,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=birch_sapling,age=0": {
+      "model": "ic2:block/crop/birch_sapling_0"
+    },
+    "crop_type=birch_sapling,age=1": {
+      "model": "ic2:block/crop/birch_sapling_1"
+    },
+    "crop_type=birch_sapling,age=2": {
+      "model": "ic2:block/crop/birch_sapling_2"
+    },
+    "crop_type=birch_sapling,age=3": {
+      "model": "ic2:block/crop/birch_sapling_3"
+    },
+    "crop_type=birch_sapling,age=4": {
+      "model": "ic2:block/crop/birch_sapling_4"
+    },
+    "crop_type=birch_sapling,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=birch_sapling,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=birch_sapling,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=jungle_sapling,age=0": {
+      "model": "ic2:block/crop/jungle_sapling_0"
+    },
+    "crop_type=jungle_sapling,age=1": {
+      "model": "ic2:block/crop/jungle_sapling_1"
+    },
+    "crop_type=jungle_sapling,age=2": {
+      "model": "ic2:block/crop/jungle_sapling_2"
+    },
+    "crop_type=jungle_sapling,age=3": {
+      "model": "ic2:block/crop/jungle_sapling_3"
+    },
+    "crop_type=jungle_sapling,age=4": {
+      "model": "ic2:block/crop/jungle_sapling_4"
+    },
+    "crop_type=jungle_sapling,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=jungle_sapling,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=jungle_sapling,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=acacia_sapling,age=0": {
+      "model": "ic2:block/crop/acacia_sapling_0"
+    },
+    "crop_type=acacia_sapling,age=1": {
+      "model": "ic2:block/crop/acacia_sapling_1"
+    },
+    "crop_type=acacia_sapling,age=2": {
+      "model": "ic2:block/crop/acacia_sapling_2"
+    },
+    "crop_type=acacia_sapling,age=3": {
+      "model": "ic2:block/crop/acacia_sapling_3"
+    },
+    "crop_type=acacia_sapling,age=4": {
+      "model": "ic2:block/crop/acacia_sapling_4"
+    },
+    "crop_type=acacia_sapling,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=acacia_sapling,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=acacia_sapling,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=dark_oak_sapling,age=0": {
+      "model": "ic2:block/crop/dark_oak_sapling_0"
+    },
+    "crop_type=dark_oak_sapling,age=1": {
+      "model": "ic2:block/crop/dark_oak_sapling_1"
+    },
+    "crop_type=dark_oak_sapling,age=2": {
+      "model": "ic2:block/crop/dark_oak_sapling_2"
+    },
+    "crop_type=dark_oak_sapling,age=3": {
+      "model": "ic2:block/crop/dark_oak_sapling_3"
+    },
+    "crop_type=dark_oak_sapling,age=4": {
+      "model": "ic2:block/crop/dark_oak_sapling_4"
+    },
+    "crop_type=dark_oak_sapling,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=dark_oak_sapling,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=dark_oak_sapling,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=ferru,age=0": {
+      "model": "ic2:block/crop/ferru_0"
+    },
+    "crop_type=ferru,age=1": {
+      "model": "ic2:block/crop/ferru_1"
+    },
+    "crop_type=ferru,age=2": {
+      "model": "ic2:block/crop/ferru_2"
+    },
+    "crop_type=ferru,age=3": {
+      "model": "ic2:block/crop/ferru_3"
+    },
+    "crop_type=ferru,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=ferru,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=ferru,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=ferru,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=cyprium,age=0": {
+      "model": "ic2:block/crop/cyprium_0"
+    },
+    "crop_type=cyprium,age=1": {
+      "model": "ic2:block/crop/cyprium_1"
+    },
+    "crop_type=cyprium,age=2": {
+      "model": "ic2:block/crop/cyprium_2"
+    },
+    "crop_type=cyprium,age=3": {
+      "model": "ic2:block/crop/cyprium_3"
+    },
+    "crop_type=cyprium,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=cyprium,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=cyprium,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=cyprium,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=stagnium,age=0": {
+      "model": "ic2:block/crop/stagnium_0"
+    },
+    "crop_type=stagnium,age=1": {
+      "model": "ic2:block/crop/stagnium_1"
+    },
+    "crop_type=stagnium,age=2": {
+      "model": "ic2:block/crop/stagnium_2"
+    },
+    "crop_type=stagnium,age=3": {
+      "model": "ic2:block/crop/stagnium_3"
+    },
+    "crop_type=stagnium,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=stagnium,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=stagnium,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=stagnium,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=plumbiscus,age=0": {
+      "model": "ic2:block/crop/plumbiscus_0"
+    },
+    "crop_type=plumbiscus,age=1": {
+      "model": "ic2:block/crop/plumbiscus_1"
+    },
+    "crop_type=plumbiscus,age=2": {
+      "model": "ic2:block/crop/plumbiscus_2"
+    },
+    "crop_type=plumbiscus,age=3": {
+      "model": "ic2:block/crop/plumbiscus_3"
+    },
+    "crop_type=plumbiscus,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=plumbiscus,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=plumbiscus,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=plumbiscus,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=aurelia,age=0": {
+      "model": "ic2:block/crop/aurelia_0"
+    },
+    "crop_type=aurelia,age=1": {
+      "model": "ic2:block/crop/aurelia_1"
+    },
+    "crop_type=aurelia,age=2": {
+      "model": "ic2:block/crop/aurelia_2"
+    },
+    "crop_type=aurelia,age=3": {
+      "model": "ic2:block/crop/aurelia_3"
+    },
+    "crop_type=aurelia,age=4": {
+      "model": "ic2:block/crop/aurelia_4"
+    },
+    "crop_type=aurelia,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=aurelia,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=aurelia,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=shining,age=0": {
+      "model": "ic2:block/crop/shining_0"
+    },
+    "crop_type=shining,age=1": {
+      "model": "ic2:block/crop/shining_1"
+    },
+    "crop_type=shining,age=2": {
+      "model": "ic2:block/crop/shining_2"
+    },
+    "crop_type=shining,age=3": {
+      "model": "ic2:block/crop/shining_3"
+    },
+    "crop_type=shining,age=4": {
+      "model": "ic2:block/crop/shining_4"
+    },
+    "crop_type=shining,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=shining,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=shining,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=red_wheat,age=0": {
+      "model": "ic2:block/crop/red_wheat_0"
+    },
+    "crop_type=red_wheat,age=1": {
+      "model": "ic2:block/crop/red_wheat_1"
+    },
+    "crop_type=red_wheat,age=2": {
+      "model": "ic2:block/crop/red_wheat_2"
+    },
+    "crop_type=red_wheat,age=3": {
+      "model": "ic2:block/crop/red_wheat_3"
+    },
+    "crop_type=red_wheat,age=4": {
+      "model": "ic2:block/crop/red_wheat_4"
+    },
+    "crop_type=red_wheat,age=5": {
+      "model": "ic2:block/crop/red_wheat_5"
+    },
+    "crop_type=red_wheat,age=6": {
+      "model": "ic2:block/crop/red_wheat_6"
+    },
+    "crop_type=red_wheat,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=coffee,age=0": {
+      "model": "ic2:block/crop/coffee_0"
+    },
+    "crop_type=coffee,age=1": {
+      "model": "ic2:block/crop/coffee_1"
+    },
+    "crop_type=coffee,age=2": {
+      "model": "ic2:block/crop/coffee_2"
+    },
+    "crop_type=coffee,age=3": {
+      "model": "ic2:block/crop/coffee_3"
+    },
+    "crop_type=coffee,age=4": {
+      "model": "ic2:block/crop/coffee_4"
+    },
+    "crop_type=coffee,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=coffee,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=coffee,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=hops,age=0": {
+      "model": "ic2:block/crop/hops_0"
+    },
+    "crop_type=hops,age=1": {
+      "model": "ic2:block/crop/hops_1"
+    },
+    "crop_type=hops,age=2": {
+      "model": "ic2:block/crop/hops_2"
+    },
+    "crop_type=hops,age=3": {
+      "model": "ic2:block/crop/hops_3"
+    },
+    "crop_type=hops,age=4": {
+      "model": "ic2:block/crop/hops_4"
+    },
+    "crop_type=hops,age=5": {
+      "model": "ic2:block/crop/hops_5"
+    },
+    "crop_type=hops,age=6": {
+      "model": "ic2:block/crop/hops_6"
+    },
+    "crop_type=hops,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=carrots,age=0": {
+      "model": "ic2:block/crop/carrots_0"
+    },
+    "crop_type=carrots,age=1": {
+      "model": "ic2:block/crop/carrots_1"
+    },
+    "crop_type=carrots,age=2": {
+      "model": "ic2:block/crop/carrots_2"
+    },
+    "crop_type=carrots,age=3": {
+      "model": "ic2:block/crop/carrots_3"
+    },
+    "crop_type=carrots,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=carrots,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=carrots,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=carrots,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=potato,age=0": {
+      "model": "ic2:block/crop/potato_0"
+    },
+    "crop_type=potato,age=1": {
+      "model": "ic2:block/crop/potato_1"
+    },
+    "crop_type=potato,age=2": {
+      "model": "ic2:block/crop/potato_2"
+    },
+    "crop_type=potato,age=3": {
+      "model": "ic2:block/crop/potato_3"
+    },
+    "crop_type=potato,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=potato,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=potato,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=potato,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=eating_plant,age=0": {
+      "model": "ic2:block/crop/eating_plant_0"
+    },
+    "crop_type=eating_plant,age=1": {
+      "model": "ic2:block/crop/eating_plant_1"
+    },
+    "crop_type=eating_plant,age=2": {
+      "model": "ic2:block/crop/eating_plant_2"
+    },
+    "crop_type=eating_plant,age=3": {
+      "model": "ic2:block/crop/eating_plant_3"
+    },
+    "crop_type=eating_plant,age=4": {
+      "model": "ic2:block/crop/eating_plant_4"
+    },
+    "crop_type=eating_plant,age=5": {
+      "model": "ic2:block/crop/eating_plant_5"
+    },
+    "crop_type=eating_plant,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=eating_plant,age=7": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=beetroots,age=0": {
+      "model": "ic2:block/crop/beetroots_0"
+    },
+    "crop_type=beetroots,age=1": {
+      "model": "ic2:block/crop/beetroots_1"
+    },
+    "crop_type=beetroots,age=2": {
+      "model": "ic2:block/crop/beetroots_2"
+    },
+    "crop_type=beetroots,age=3": {
+      "model": "ic2:block/crop/beetroots_3"
+    },
+    "crop_type=beetroots,age=4": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=beetroots,age=5": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=beetroots,age=6": {
+      "model": "ic2:block/crop/crop"
+    },
+    "crop_type=beetroots,age=7": {
+      "model": "ic2:block/crop/crop"
+    }
+  }
+}

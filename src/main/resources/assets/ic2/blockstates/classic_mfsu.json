@@ -1,0 +1,27 @@
+{
+	"variants": {
+		"facing=east": {
+			"model": "ic2:block/wiring/storage/classic_mfsu",
+			"y": 90
+		},
+		"facing=north": {
+			"model": "ic2:block/wiring/storage/classic_mfsu"
+		},
+		"facing=south": {
+			"model": "ic2:block/wiring/storage/classic_mfsu",
+			"y": 180
+		},
+		"facing=west": {
+			"model": "ic2:block/wiring/storage/classic_mfsu",
+			"y": 270
+		},
+		"facing=up": {
+			"model": "ic2:block/wiring/storage/classic_mfsu",
+			"x": -90
+		},
+		"facing=down": {
+			"model": "ic2:block/wiring/storage/classic_mfsu",
+			"x": 90
+		}
+	}
+}

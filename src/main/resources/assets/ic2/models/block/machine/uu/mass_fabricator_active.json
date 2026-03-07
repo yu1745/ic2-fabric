@@ -1,0 +1,8 @@
+{
+	"parent": "ic2:block/machine/uu/mass_fabricator",
+	"textures": {
+		"east": "ic2:blocks/machine/uu/mass_fabricator_right_active",
+		"south": "ic2:blocks/machine/uu/mass_fabricator_back_active",
+		"west": "ic2:blocks/machine/uu/mass_fabricator_left_active"
+	}
+}

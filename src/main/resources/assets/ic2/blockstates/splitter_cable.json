@@ -1,0 +1,85 @@
+{
+	"multipart": [
+		{
+			"apply": {
+				"model": "ic2:block/cable/splitter_core"
+			},
+			"when": {
+				"active": "false"
+			}
+		},
+		{
+			"apply": {
+				"model": "ic2:block/cable/splitter_core_active"
+			},
+			"when": {
+				"active": "true"
+			}
+		},
+		{
+			"apply": {
+				"model": "ic2:block/cable/splitter_side",
+				"uvlock": true
+			},
+			"when": {
+				"north": "true",
+				"active": "false"
+			}
+		},
+		{
+			"apply": {
+				"model": "ic2:block/cable/splitter_side",
+				"uvlock": true,
+				"y": 90
+			},
+			"when": {
+				"east": "true",
+				"active": "false"
+			}
+		},
+		{
+			"apply": {
+				"model": "ic2:block/cable/splitter_side",
+				"uvlock": true,
+				"y": 180
+			},
+			"when": {
+				"south": "true",
+				"active": "false"
+			}
+		},
+		{
+			"apply": {
+				"model": "ic2:block/cable/splitter_side",
+				"uvlock": true,
+				"y": 270
+			},
+			"when": {
+				"west": "true",
+				"active": "false"
+			}
+		},
+		{
+			"apply": {
+				"model": "ic2:block/cable/splitter_side",
+				"uvlock": true,
+				"x": -90
+			},
+			"when": {
+				"up": "true",
+				"active": "false"
+			}
+		},
+		{
+			"apply": {
+				"model": "ic2:block/cable/splitter_side",
+				"uvlock": true,
+				"x": 90
+			},
+			"when": {
+				"down": "true",
+				"active": "false"
+			}
+		}
+	]
+}

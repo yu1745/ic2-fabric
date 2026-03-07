@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gui width="176" height="166">
+	<image x="40" y="18" width="80" height="60" basesize="256" u="40" v="18" src="ic2:textures/gui/guithermalcentrifuge.png" />
+    <text y="6" align="center">%name%</text>
+    <slot name="input" x="10" y="17"/>
+    <slot name="discharge" x="10" y="53"/>
+    <slotgrid x="123" y="17" name="output" rows="3" />
+    <environment name="game">
+        <slotgrid name="upgrade" x="151" y="7" cols="1"/>
+        <button type="recipe" x="84" y="25" width="3" height="28" event="centrifuge"></button>
+    </environment>
+    <gauge name="progress" x="84" y="25" style="progresscentrifuge"></gauge>
+    <energygauge x="15" y="38"/>
+    <gauge name="heat" x="68" y="67" style="heatcentrifuge"/>
+    <!--<text x="14" y="25" >Heat</text>-->
+    <playerInventory x="7" y="83"/>
+</gui>

@@ -1,0 +1,6 @@
+{
+	"parent": "block/crop",
+	"textures": {
+		"crop": "ic2:blocks/crop/blackthorn_1"
+	}
+}

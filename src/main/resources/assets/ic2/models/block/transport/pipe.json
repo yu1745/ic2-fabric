@@ -1,0 +1,20 @@
+{   "parent": "block/block",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "#side"
+  },
+  "elements": [
+    {   "from": [ 0, 6, 6 ],
+      "to": [ 16, 10, 10 ],
+      "faces": {
+        "down":  { "texture": "#side" },
+        "up":    { "texture": "#side" },
+        "north": { "texture": "#side" },
+        "south": { "texture": "#side" },
+        "west":  { "texture": "#size", "cullface": "west" },
+        "east":  { "texture": "#size", "cullface": "east" }
+      },
+      "__comment": "Tiny pipe"
+    }
+  ]
+}

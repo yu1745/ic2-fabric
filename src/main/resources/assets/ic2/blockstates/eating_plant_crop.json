@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "ic2:block/crop/eating_plant_0"
+    },
+    "age=1": {
+      "model": "ic2:block/crop/eating_plant_1"
+    },
+    "age=2": {
+      "model": "ic2:block/crop/eating_plant_2"
+    },
+    "age=3": {
+      "model": "ic2:block/crop/eating_plant_3"
+    },
+    "age=4": {
+      "model": "ic2:block/crop/eating_plant_4"
+    },
+    "age=5": {
+      "model": "ic2:block/crop/eating_plant_5"
+    }
+  }
+}

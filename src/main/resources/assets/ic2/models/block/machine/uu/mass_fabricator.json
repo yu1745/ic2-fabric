@@ -1,0 +1,12 @@
+{
+	"parent": "block/cube",
+	"textures": {
+		"particle": "ic2:blocks/machine/uu/mass_fabricator_bottom",
+		"down": "ic2:blocks/machine/uu/mass_fabricator_bottom",
+		"up": "ic2:blocks/machine/uu/mass_fabricator_top",
+		"north": "ic2:blocks/machine/uu/mass_fabricator_front",
+		"east": "ic2:blocks/machine/uu/mass_fabricator_right",
+		"south": "ic2:blocks/machine/uu/mass_fabricator_back",
+		"west": "ic2:blocks/machine/uu/mass_fabricator_left"
+	}
+}

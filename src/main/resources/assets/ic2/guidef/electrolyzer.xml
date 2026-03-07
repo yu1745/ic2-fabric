@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gui width="176" height="166">
+    <text y="6" align="center">%name%</text>
+    <slot name="water" x="53" y="34"/>
+    <energyGauge style="bar" x="79" y="38"/>
+    <!-- Apparently energy gauges have a 4 pixel offset -->
+    <slot name="hydrogen" x="111" y="34"/>
+    <playerInventory x="7" y="83"/>
+</gui>

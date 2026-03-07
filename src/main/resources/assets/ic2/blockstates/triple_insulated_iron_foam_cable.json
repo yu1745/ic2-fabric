@@ -1,0 +1,140 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "ic2:block/cf/foam"
+      },
+      "when": {
+        "foam": "soft"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_white"
+      },
+      "when": {
+        "foam": "hard_white"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_orange"
+      },
+      "when": {
+        "foam": "hard_orange"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_magenta"
+      },
+      "when": {
+        "foam": "hard_magenta"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_light_blue"
+      },
+      "when": {
+        "foam": "hard_light_blue"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_yellow"
+      },
+      "when": {
+        "foam": "hard_yellow"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_lime"
+      },
+      "when": {
+        "foam": "hard_lime"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_pink"
+      },
+      "when": {
+        "foam": "hard_pink"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_gray"
+      },
+      "when": {
+        "foam": "hard_gray"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_light_gray"
+      },
+      "when": {
+        "foam": "hard_light_gray"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_cyan"
+      },
+      "when": {
+        "foam": "hard_cyan"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_purple"
+      },
+      "when": {
+        "foam": "hard_purple"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_blue"
+      },
+      "when": {
+        "foam": "hard_blue"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_brown"
+      },
+      "when": {
+        "foam": "hard_brown"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_green"
+      },
+      "when": {
+        "foam": "hard_green"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_red"
+      },
+      "when": {
+        "foam": "hard_red"
+      }
+    },
+    {
+      "apply": {
+        "model": "ic2:block/cf/wall_black"
+      },
+      "when": {
+        "foam": "hard_black"
+      }
+    }
+  ]
+}

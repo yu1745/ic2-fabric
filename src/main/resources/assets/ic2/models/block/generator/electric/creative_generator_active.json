@@ -1,0 +1,12 @@
+{
+	"parent": "block/cube",
+	"textures": {
+		"particle": "ic2:blocks/generator/electric/creative_generator_side",
+		"down": "ic2:blocks/generator/electric/creative_generator_bottom",
+		"up": "ic2:blocks/generator/electric/creative_generator_top",
+		"north": "ic2:blocks/generator/electric/creative_generator_side_active",
+		"east": "ic2:blocks/generator/electric/creative_generator_side_active",
+		"south": "ic2:blocks/generator/electric/creative_generator_side_active",
+		"west": "ic2:blocks/generator/electric/creative_generator_side_active"
+	}
+}

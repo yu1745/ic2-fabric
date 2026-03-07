@@ -1,0 +1,6 @@
+{
+	"variants": {
+		"active=false": { "model": "ic2:block/wiring/chargepad/mfe_chargepad" },
+		"active=true": { "model": "ic2:block/wiring/chargepad/mfe_chargepad_active" }
+	}
+}

@@ -1,0 +1,25 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "ic2:block/crop/red_wheat_0"
+    },
+    "age=1": {
+      "model": "ic2:block/crop/red_wheat_1"
+    },
+    "age=2": {
+      "model": "ic2:block/crop/red_wheat_2"
+    },
+    "age=3": {
+      "model": "ic2:block/crop/red_wheat_3"
+    },
+    "age=4": {
+      "model": "ic2:block/crop/red_wheat_4"
+    },
+    "age=5": {
+      "model": "ic2:block/crop/red_wheat_5"
+    },
+    "age=6": {
+      "model": "ic2:block/crop/red_wheat_6"
+    }
+  }
+}

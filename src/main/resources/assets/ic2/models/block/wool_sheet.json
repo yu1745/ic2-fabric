@@ -1,0 +1,6 @@
+{
+	"parent": "ic2:block/sheet_base",
+	"textures": {
+		"texture": "minecraft:block/white_wool"
+	}
+}

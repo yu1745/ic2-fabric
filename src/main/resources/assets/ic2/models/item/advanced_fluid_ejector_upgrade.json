@@ -1,0 +1,44 @@
+{
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:items/upgrade/advanced_fluid_ejector"
+	},
+	"overrides": [
+		{
+			"predicate": {
+				"ic2:down": 1
+			},
+			"model": "ic2:item/upgrade/advanced_fluid_ejector_down"
+		},
+		{
+			"predicate": {
+				"ic2:up": 1
+			},
+			"model": "ic2:item/upgrade/advanced_fluid_ejector_up"
+		},
+		{
+			"predicate": {
+				"ic2:north": 1
+			},
+			"model": "ic2:item/upgrade/advanced_fluid_ejector_north"
+		},
+		{
+			"predicate": {
+				"ic2:south": 1
+			},
+			"model": "ic2:item/upgrade/advanced_fluid_ejector_south"
+		},
+		{
+			"predicate": {
+				"ic2:west": 1
+			},
+			"model": "ic2:item/upgrade/advanced_fluid_ejector_west"
+		},
+		{
+			"predicate": {
+				"ic2:east": 1
+			},
+			"model": "ic2:item/upgrade/advanced_fluid_ejector_east"
+		}
+	]
+}

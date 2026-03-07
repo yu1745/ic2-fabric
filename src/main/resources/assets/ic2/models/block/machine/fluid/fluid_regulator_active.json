@@ -1,0 +1,12 @@
+{
+	"parent": "block/cube",
+	"textures": {
+		"particle": "ic2:blocks/machine/fluid/fluid_regulator_left_active",
+		"down": "ic2:blocks/machine/fluid/fluid_regulator_bottomtop",
+		"up": "ic2:blocks/machine/fluid/fluid_regulator_bottomtop",
+		"north": "ic2:blocks/machine/fluid/fluid_regulator_front_active",
+		"east": "ic2:blocks/machine/fluid/fluid_regulator_left_active",
+		"south": "ic2:blocks/machine/fluid/fluid_regulator_back_active",
+		"west": "ic2:blocks/machine/fluid/fluid_regulator_right_active"
+	}
+}

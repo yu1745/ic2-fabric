@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gui width="176" height="166">
+	<image x="48" y="45" width="81" height="36" basesize="256" u="47" v="44" src="ic2:textures/gui/guisolidheatgenerator.png"/>
+    <text y="6" align="center">%name%</text>
+    <slot name="fuel" x="80" y="45"/>
+    <slot name="ashes" x="113" y="45"/>
+    <gauge name="fuel" x="81" y="29" style="fuel"/>
+    <playerInventory x="7" y="83" title="false" />
+</gui>

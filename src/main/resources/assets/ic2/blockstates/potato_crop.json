@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "ic2:block/crop/potato_0"
+    },
+    "age=1": {
+      "model": "ic2:block/crop/potato_1"
+    },
+    "age=2": {
+      "model": "ic2:block/crop/potato_2"
+    },
+    "age=3": {
+      "model": "ic2:block/crop/potato_3"
+    }
+  }
+}

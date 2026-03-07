@@ -1,0 +1,27 @@
+{
+	"variants": {
+		"facing=east": {
+			"model": "ic2:block/wiring/storage/batbox",
+			"y": 90
+		},
+		"facing=north": {
+			"model": "ic2:block/wiring/storage/batbox"
+		},
+		"facing=south": {
+			"model": "ic2:block/wiring/storage/batbox",
+			"y": 180
+		},
+		"facing=west": {
+			"model": "ic2:block/wiring/storage/batbox",
+			"y": 270
+		},
+		"facing=up": {
+			"model": "ic2:block/wiring/storage/batbox",
+			"x": -90
+		},
+		"facing=down": {
+			"model": "ic2:block/wiring/storage/batbox",
+			"x": 90
+		}
+	}
+}

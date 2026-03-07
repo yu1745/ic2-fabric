@@ -1,0 +1,32 @@
+{
+	"parent": "ic2:item/default",
+	"textures": {
+		"layer0": "ic2:items/battery/energy_crystal_0"
+	},
+	"overrides": [
+		{
+			"predicate": {
+				"ic2:charge": 0.2
+			},
+			"model": "ic2:item/battery/energy_crystal_1"
+		},
+		{
+			"predicate": {
+				"ic2:charge": 0.4
+			},
+			"model": "ic2:item/battery/energy_crystal_2"
+		},
+		{
+			"predicate": {
+				"ic2:charge": 0.6
+			},
+			"model": "ic2:item/battery/energy_crystal_3"
+		},
+		{
+			"predicate": {
+				"ic2:charge": 0.8
+			},
+			"model": "ic2:item/battery/energy_crystal_4"
+		}
+	]
+}

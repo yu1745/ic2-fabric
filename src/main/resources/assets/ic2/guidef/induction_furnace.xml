@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gui width="176" height="166">
+    <text y="6" align="center">%name%</text>
+
+	<image x="42" y="16" src="textures/gui/overlay/induction_furnace_input"/>
+    <slot name="inputA" x="43" y="17" style="plain"/>
+    <slot name="inputB" x="59" y="17" style="plain"/>
+
+	<image x="110" y="30" src="textures/gui/overlay/induction_furnace_output"/>
+    <slot name="outputA" x="113" y="35" style="plain"/>
+    <slot name="outputB" x="129" y="35" style="plain"/>
+
+    <slot name="discharge" x="50" y="52"/>
+    <slotgrid name="upgrade" x="151" y="25" cols="1"/>
+    <energygauge x="55" y="37"/>
+    <gauge name="progress" x="81" y="35" style="progressarrow"/>
+    <button type="recipe" x="81" y="35" width="22" height="15" event="minecraft.smelting"></button>
+    <playerInventory x="7" y="83"/>
+
+	<text x="10" y="36">{ic2.generic.text.heat}</text>
+	<text x="10" y="46">%base.getHeat()%</text>
+</gui>

@@ -1,0 +1,34 @@
+{
+	"variants": {
+		"facing=east,active=false": {
+			"model": "ic2:block/machine/uu/uu_scanner",
+			"y": 90
+		},
+		"facing=east,active=true": {
+			"model": "ic2:block/machine/uu/uu_scanner_active",
+			"y": 90
+		},
+		"facing=north,active=false": {
+			"model": "ic2:block/machine/uu/uu_scanner"
+		},
+		"facing=north,active=true": {
+			"model": "ic2:block/machine/uu/uu_scanner_active"
+		},
+		"facing=south,active=false": {
+			"model": "ic2:block/machine/uu/uu_scanner",
+			"y": 180
+		},
+		"facing=south,active=true": {
+			"model": "ic2:block/machine/uu/uu_scanner_active",
+			"y": 180
+		},
+		"facing=west,active=false": {
+			"model": "ic2:block/machine/uu/uu_scanner",
+			"y": 270
+		},
+		"facing=west,active=true": {
+			"model": "ic2:block/machine/uu/uu_scanner_active",
+			"y": 270
+		}
+	}
+}

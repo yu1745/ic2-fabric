@@ -1,0 +1,19 @@
+{
+	"variants": {
+		"facing=east": {
+			"model": "ic2:block/machine/uu/pattern_storage",
+			"y": 90
+		},
+		"facing=north": {
+			"model": "ic2:block/machine/uu/pattern_storage"
+		},
+		"facing=south": {
+			"model": "ic2:block/machine/uu/pattern_storage",
+			"y": 180
+		},
+		"facing=west": {
+			"model": "ic2:block/machine/uu/pattern_storage",
+			"y": 270
+		}
+	}
+}

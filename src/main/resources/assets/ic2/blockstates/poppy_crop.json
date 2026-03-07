@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "ic2:block/crop/poppy_0"
+    },
+    "age=1": {
+      "model": "ic2:block/crop/poppy_1"
+    },
+    "age=2": {
+      "model": "ic2:block/crop/poppy_2"
+    },
+    "age=3": {
+      "model": "ic2:block/crop/poppy_3"
+    }
+  }
+}

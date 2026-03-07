@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/door_bottom_left_open",
+  "textures": {
+    "bottom": "ic2:blocks/reinforced_door_bottom",
+    "top": "ic2:blocks/reinforced_door_top"
+  }
+}

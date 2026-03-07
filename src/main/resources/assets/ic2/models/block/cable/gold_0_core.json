@@ -1,0 +1,6 @@
+{
+	"parent": "ic2:block/cable/shape/core_3",
+	"textures": {
+		"texture": "ic2:blocks/wiring/cable/gold_cable_0"
+	}
+}

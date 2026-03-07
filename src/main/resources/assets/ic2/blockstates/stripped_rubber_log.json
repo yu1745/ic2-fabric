@@ -1,0 +1,7 @@
+{
+	"variants": {
+		"axis=y": { "model": "ic2:block/resource/stripped_rubber_log" },
+		"axis=x": { "model": "ic2:block/resource/stripped_rubber_log", "x": 90, "y": 90 },
+		"axis=z": { "model": "ic2:block/resource/stripped_rubber_log", "x": 90 }
+	}
+}

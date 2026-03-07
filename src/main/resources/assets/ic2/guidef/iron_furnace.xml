@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gui width="176" height="166">
+	<text y="6" align="center">%name%</text>
+	<slot name="input" x="55" y="16"/>
+	<slot name="output" x="111" y="30" style="large"/>
+	<slot name="fuel" x="55" y="52"/>
+	<gauge name="fuel" x="56" y="36" style="fuel"/>
+	<button type="recipe" x="56" y="36" width="13" height="13" event="minecraft.fuel"></button>
+	<gauge name="progress" x="80" y="35" style="progressarrow"/>
+	<button type="recipe" x="80" y="35" width="22" height="15" event="minecraft.smelting"></button>
+	<button x="6" y="50" width="20" height="20" icon="minecraft:experience_bottle" event="0">{ic2.IronFurnace.gui.xp}</button>
+	<playerInventory x="7" y="83"/>
+</gui>

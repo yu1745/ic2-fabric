@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "ic2:block/resource/rubber/slab"
+    },
+    "type=double": {
+      "model": "ic2:block/resource/rubber/planks"
+    },
+    "type=top": {
+      "model": "ic2:block/resource/rubber/slab_top"
+    }
+  }
+}

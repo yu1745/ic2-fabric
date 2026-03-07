@@ -1,0 +1,25 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "ic2:block/crop/hops_0"
+    },
+    "age=1": {
+      "model": "ic2:block/crop/hops_1"
+    },
+    "age=2": {
+      "model": "ic2:block/crop/hops_2"
+    },
+    "age=3": {
+      "model": "ic2:block/crop/hops_3"
+    },
+    "age=4": {
+      "model": "ic2:block/crop/hops_4"
+    },
+    "age=5": {
+      "model": "ic2:block/crop/hops_5"
+    },
+    "age=6": {
+      "model": "ic2:block/crop/hops_6"
+    }
+  }
+}

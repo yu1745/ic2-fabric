@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gui width="176" height="166">
+    <text y="6" align="center">%name%</text>
+    <slot name="input" x="26" y="16"/>
+    <slot name="output" x="111" y="34" style="large"/>
+    <slot name="discharge" x="26" y="52"/>
+    <tooltip text="ic2.BlockCutter.gui.bladeslot">
+		<slot name="cutterInputSlot" x="70" y="34" style="plain" />
+    </tooltip>
+    <environment name="game">
+        <slotgrid name="upgrade" x="151" y="7" cols="1"/>
+        <button type="recipe" x="55" y="33" width="15" height="19" event="block_cutter"></button>
+        <button type="recipe" x="86" y="33" width="15" height="19" event="block_cutter"></button>
+        <only if="isBladeTooWeak">
+	        <tooltip text="ic2.BlockCutter.gui.bladeTooWeak">
+				<image x="63" y="54" src="ic2:textures/gui/guiblockcutter" width="30" height="26" basesize="256" u="176" v="34" />
+	        </tooltip>
+        </only>
+    </environment>
+    <energygauge x="29" y="37"/>
+    <gauge name="progress" x="55" y="33" style="progressblockcutter"/>
+    <playerInventory x="7" y="83"/>
+</gui>

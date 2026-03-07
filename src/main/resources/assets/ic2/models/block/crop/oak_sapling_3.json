@@ -1,0 +1,6 @@
+{
+	"parent": "block/cross",
+	"textures": {
+		"cross": "ic2:blocks/crop/oak_sapling_3"
+	}
+}

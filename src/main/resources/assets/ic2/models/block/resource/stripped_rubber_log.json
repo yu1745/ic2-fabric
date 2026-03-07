@@ -1,0 +1,7 @@
+{
+	"parent": "block/cube_column",
+	"textures": {
+		"side": "ic2:blocks/resource/stripped_rubber_log",
+		"end": "ic2:blocks/resource/stripped_rubber_log_top"
+	}
+}

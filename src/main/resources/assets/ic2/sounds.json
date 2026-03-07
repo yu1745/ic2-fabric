@@ -1,0 +1,297 @@
+{
+  "item.cutter.use": {
+    "sounds": [
+      "ic2:tools/cutter"
+    ]
+  },
+  "item.painter.use": {
+    "sounds": [
+      "ic2:tools/painter"
+    ]
+  },
+  "item.treetap.use": {
+    "sounds": [
+      "ic2:tools/treetap/treetap"
+    ]
+  },
+  "item.wrench.use": {
+    "sounds": [
+      "ic2:tools/wrench"
+    ]
+  },
+  "item.battery.use": {
+    "sounds": [
+      "ic2:tools/battery"
+    ]
+  },
+  "item.chainsaw.idle": {
+    "sounds": [
+      "ic2:tools/chainsaw/idle"
+    ]
+  },
+  "item.chainsaw.stop": {
+    "sounds": [
+      "ic2:tools/chainsaw/stop"
+    ]
+  },
+  "item.chainsaw.use1": {
+    "sounds": [
+      "ic2:tools/chainsaw/use1"
+    ]
+  },
+  "item.chainsaw.use2": {
+    "sounds": [
+      "ic2:tools/chainsaw/use2"
+    ]
+  },
+  "item.crowbar.use": {
+    "sounds": [
+      "ic2:tools/crowbar"
+    ]
+  },
+  "item.drill.idle": {
+    "sounds": [
+      "ic2:tools/drill/idle"
+    ]
+  },
+  "item.drill.hard": {
+    "sounds": [
+      "ic2:tools/drill/hard"
+    ]
+  },
+  "item.drill.soft": {
+    "sounds": [
+      "ic2:tools/drill/soft"
+    ]
+  },
+  "item.electric.shutdown": {
+    "sounds": [
+      "ic2:tools/shutdown"
+    ]
+  },
+  "item.laser.shoot": {
+    "sounds": [
+      "ic2:tools/laser/shoot"
+    ]
+  },
+  "item.laser.explosive": {
+    "sounds": [
+      "ic2:tools/laser/explosive"
+    ]
+  },
+  "item.laser.scatter": {
+    "sounds": [
+      "ic2:tools/laser/scatter"
+    ]
+  },
+  "item.laser.long_range": {
+    "sounds": [
+      "ic2:tools/laser/long_range"
+    ]
+  },
+  "item.laser.low_focus": {
+    "sounds": [
+      "ic2:tools/laser/low_focus"
+    ]
+  },
+  "item.nanosaber.idle": {
+    "sounds": [
+      "ic2:tools/nanosaber/idle"
+    ]
+  },
+  "item.nanosaber.power_up": {
+    "sounds": [
+      "ic2:tools/nanosaber/power_up"
+    ]
+  },
+  "item.nanosaber.swing1": {
+    "sounds": [
+      "ic2:tools/nanosaber/swing1"
+    ]
+  },
+  "item.nanosaber.swing2": {
+    "sounds": [
+      "ic2:tools/nanosaber/swing2"
+    ]
+  },
+  "item.nanosaber.swing3": {
+    "sounds": [
+      "ic2:tools/nanosaber/swing3"
+    ]
+  },
+  "item.scanner.use": {
+    "sounds": [
+      "ic2:tools/scanner"
+    ]
+  },
+  "item.treetap.electric.use": {
+    "sounds": [
+      "ic2:tools/treetap/electric"
+    ]
+  },
+  "generator.generator.loop": {
+    "sounds": [
+      "ic2:generators/generator"
+    ]
+  },
+  "generator.geothermal.loop": {
+    "sounds": [
+      "ic2:generators/geothermal"
+    ]
+  },
+  "generator.nuclear.loop": {
+    "sounds": [
+      "ic2:generators/nuclear/reactor"
+    ]
+  },
+  "generator.nuclear.power.low": {
+    "sounds": [
+      "ic2:generators/nuclear/power/low"
+    ]
+  },
+  "generator.nuclear.power.medium": {
+    "sounds": [
+      "ic2:generators/nuclear/power/medium"
+    ]
+  },
+  "generator.nuclear.power.high": {
+    "sounds": [
+      "ic2:generators/nuclear/power/high"
+    ]
+  },
+  "generator.water.loop": {
+    "sounds": [
+      "ic2:generators/water"
+    ]
+  },
+  "generator.wind.loop": {
+    "sounds": [
+      "ic2:generators/wind"
+    ]
+  },
+  "machine.overload": {
+    "sounds": [
+      "ic2:machines/state/overload"
+    ]
+  },
+  "machine.interrupt1": {
+    "sounds": [
+      "ic2:machines/state/interrupt1"
+    ]
+  },
+  "machine.canner.operate": {
+    "sounds": [
+      "ic2:machines/canner/operate"
+    ]
+  },
+  "machine.canner.reverse": {
+    "sounds": [
+      "ic2:machines/canner/reverse"
+    ]
+  },
+  "machine.compressor.operate": {
+    "sounds": [
+      "ic2:machines/compressor/operate"
+    ]
+  },
+  "machine.electrolyzer.loop": {
+    "sounds": [
+      "ic2:machines/electrolyzer/loop"
+    ]
+  },
+  "machine.extractor.operate": {
+    "sounds": [
+      "ic2:machines/extractor/operate"
+    ]
+  },
+  "machine.fabricator.loop": {
+    "sounds": [
+      "ic2:machines/fabricator/loop"
+    ]
+  },
+  "machine.fabricator.scrap": {
+    "sounds": [
+      "ic2:machines/fabricator/scrap"
+    ]
+  },
+  "machine.furnace.electric.loop": {
+    "sounds": [
+      "ic2:machines/furnace/electric/loop"
+    ]
+  },
+  "machine.furnace.electric.start": {
+    "sounds": [
+      "ic2:machines/furnace/electric/start"
+    ]
+  },
+  "machine.furnace.electric.stop": {
+    "sounds": [
+      "ic2:machines/furnace/electric/stop"
+    ]
+  },
+  "machine.furnace.induction.loop": {
+    "sounds": [
+      "ic2:machines/furnace/induction/loop"
+    ]
+  },
+  "machine.furnace.induction.start": {
+    "sounds": [
+      "ic2:machines/furnace/induction/start"
+    ]
+  },
+  "machine.furnace.induction.stop": {
+    "sounds": [
+      "ic2:machines/furnace/induction/stop"
+    ]
+  },
+  "machine.furnace.iron.operate": {
+    "sounds": [
+      "ic2:machines/furnace/iron/operate"
+    ]
+  },
+  "machine.macerator.operate": {
+    "sounds": [
+      "ic2:machines/macerator/operate"
+    ]
+  },
+  "machine.miner.operate": {
+    "sounds": [
+      "ic2:machines/miner/operate"
+    ]
+  },
+  "machine.o_mat.operate": {
+    "sounds": [
+      "ic2:machines/o_mat/operate"
+    ]
+  },
+  "machine.pump.operate": {
+    "sounds": [
+      "ic2:machines/pump/operate"
+    ]
+  },
+  "machine.recycler.operate": {
+    "sounds": [
+      "ic2:machines/recycler/operate"
+    ]
+  },
+  "machine.teleporter.use": {
+    "sounds": [
+      "ic2:machines/teleporter/use"
+    ]
+  },
+  "machine.teleporter.charge": {
+    "sounds": [
+      "ic2:machines/teleporter/charge"
+    ]
+  },
+  "machine.terraformer.loop": {
+    "sounds": [
+      "ic2:machines/terraformer/loop"
+    ]
+  },
+  "block.nuke.explode": {
+    "sounds": [
+      "ic2:misc/nuke/explode"
+    ]
+  }
+}

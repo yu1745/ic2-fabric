@@ -1,0 +1,50 @@
+{
+	"variants": {
+		"facing=east,active=false": {
+			"model": "ic2:block/wiring/transformer/ev_transformer",
+			"y": 90
+		},
+		"facing=east,active=true": {
+			"model": "ic2:block/wiring/transformer/ev_transformer_active",
+			"y": 90
+		},
+		"facing=north,active=false": {
+			"model": "ic2:block/wiring/transformer/ev_transformer"
+		},
+		"facing=north,active=true": {
+			"model": "ic2:block/wiring/transformer/ev_transformer_active"
+		},
+		"facing=south,active=false": {
+			"model": "ic2:block/wiring/transformer/ev_transformer",
+			"y": 180
+		},
+		"facing=south,active=true": {
+			"model": "ic2:block/wiring/transformer/ev_transformer_active",
+			"y": 180
+		},
+		"facing=west,active=false": {
+			"model": "ic2:block/wiring/transformer/ev_transformer",
+			"y": 270
+		},
+		"facing=west,active=true": {
+			"model": "ic2:block/wiring/transformer/ev_transformer_active",
+			"y": 270
+		},
+		"facing=up,active=false": {
+			"model": "ic2:block/wiring/transformer/ev_transformer",
+			"x": -90
+		},
+		"facing=up,active=true": {
+			"model": "ic2:block/wiring/transformer/ev_transformer_active",
+			"x": -90
+		},
+		"facing=down,active=false": {
+			"model": "ic2:block/wiring/transformer/ev_transformer",
+			"x": 90
+		},
+		"facing=down,active=true": {
+			"model": "ic2:block/wiring/transformer/ev_transformer_active",
+			"x": 90
+		}
+	}
+}

@@ -1,0 +1,12 @@
+{
+	"parent": "block/cube",
+	"textures": {
+		"particle": "ic2:blocks/machine/fluid/weighted_fluid_distributor_out",
+		"down": "ic2:blocks/machine/fluid/weighted_fluid_distributor_out",
+		"up": "ic2:blocks/machine/fluid/weighted_fluid_distributor_out",
+		"north": "ic2:blocks/machine/fluid/weighted_fluid_distributor_in",
+		"east": "ic2:blocks/machine/fluid/weighted_fluid_distributor_out",
+		"south": "ic2:blocks/machine/fluid/weighted_fluid_distributor_out",
+		"west": "ic2:blocks/machine/fluid/weighted_fluid_distributor_out"
+	}
+}

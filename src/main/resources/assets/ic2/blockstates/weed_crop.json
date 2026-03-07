@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "age=0": {
+      "model": "ic2:block/crop/weed_0"
+    },
+    "age=1": {
+      "model": "ic2:block/crop/weed_1"
+    },
+    "age=2": {
+      "model": "ic2:block/crop/weed_2"
+    },
+    "age=3": {
+      "model": "ic2:block/crop/weed_3"
+    },
+    "age=4": {
+      "model": "ic2:block/crop/weed_4"
+    }
+  }
+}

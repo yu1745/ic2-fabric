@@ -1,0 +1,20 @@
+{   "parent": "block/block",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "#side"
+  },
+  "elements": [
+    {   "from": [ 0, 4, 4 ],
+      "to": [ 16, 12, 12 ],
+      "faces": {
+        "down":  { "texture": "#side", "tintindex": 0 },
+        "up":    { "texture": "#side", "tintindex": 0 },
+        "north": { "texture": "#side", "tintindex": 0 },
+        "south": { "texture": "#side", "tintindex": 0 },
+        "west":  { "texture": "#size", "tintindex": 0, "cullface": "west" },
+        "east":  { "texture": "#size", "tintindex": 0, "cullface": "east" }
+      },
+      "__comment": "Medium pipe"
+    }
+  ]
+}

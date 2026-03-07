@@ -1,0 +1,7 @@
+{
+	"parent": "ic2:block/personal/trade_o_mat",
+	"textures": {
+		"east": "ic2:blocks/personal/wireless_trade_o_mat_side",
+		"west": "ic2:blocks/personal/wireless_trade_o_mat_side"
+	}
+}

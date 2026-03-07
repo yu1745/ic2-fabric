@@ -1,0 +1,74 @@
+{
+	"parent": "ic2:item/tool/default",
+	"textures": {
+		"layer0": "ic2:items/tool/electric/nano_saber/inactive"
+	},
+	"overrides": [
+		{
+			"predicate": {
+				"ic2:nano_saber_active": 0.0
+			},
+			"model": "ic2:item/tool/nano_saber/inactive"
+		},
+		{
+			"predicate": {
+				"ic2:nano_saber_active": 0.1
+			},
+			"model": "ic2:item/tool/nano_saber/active_1"
+		},
+		{
+			"predicate": {
+				"ic2:nano_saber_active": 0.2
+			},
+			"model": "ic2:item/tool/nano_saber/active_2"
+		},
+		{
+			"predicate": {
+				"ic2:nano_saber_active": 0.3
+			},
+			"model": "ic2:item/tool/nano_saber/active_3"
+		},
+		{
+			"predicate": {
+				"ic2:nano_saber_active": 0.4
+			},
+			"model": "ic2:item/tool/nano_saber/active_4"
+		},
+		{
+			"predicate": {
+				"ic2:nano_saber_active": 0.5
+			},
+			"model": "ic2:item/tool/nano_saber/active_5"
+		},
+		{
+			"predicate": {
+				"ic2:nano_saber_active": 0.6
+			},
+			"model": "ic2:item/tool/nano_saber/active_6"
+		},
+		{
+			"predicate": {
+				"ic2:nano_saber_active": 0.7
+			},
+			"model": "ic2:item/tool/nano_saber/active_7"
+		},
+		{
+			"predicate": {
+				"ic2:nano_saber_active": 0.8
+			},
+			"model": "ic2:item/tool/nano_saber/active_8"
+		},
+		{
+			"predicate": {
+				"ic2:nano_saber_active": 0.9
+			},
+			"model": "ic2:item/tool/nano_saber/active_9"
+		},
+		{
+			"predicate": {
+				"ic2:nano_saber_active": 1
+			},
+			"model": "ic2:item/tool/nano_saber/active_10"
+		}
+	]
+}

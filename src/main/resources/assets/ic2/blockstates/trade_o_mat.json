@@ -1,0 +1,34 @@
+{
+	"variants": {
+		"facing=east,active=false": {
+			"model": "ic2:block/personal/trade_o_mat",
+			"y": 90
+		},
+		"facing=east,active=true": {
+			"model": "ic2:block/personal/wireless_trade_o_mat",
+			"y": 90
+		},
+		"facing=north,active=false": {
+			"model": "ic2:block/personal/trade_o_mat"
+		},
+		"facing=north,active=true": {
+			"model": "ic2:block/personal/wireless_trade_o_mat"
+		},
+		"facing=south,active=false": {
+			"model": "ic2:block/personal/trade_o_mat",
+			"y": 180
+		},
+		"facing=south,active=true": {
+			"model": "ic2:block/personal/wireless_trade_o_mat",
+			"y": 180
+		},
+		"facing=west,active=false": {
+			"model": "ic2:block/personal/trade_o_mat",
+			"y": 270
+		},
+		"facing=west,active=true": {
+			"model": "ic2:block/personal/wireless_trade_o_mat",
+			"y": 270
+		}
+	}
+}
