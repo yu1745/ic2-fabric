@@ -1,0 +1,12 @@
+#
+# https://help.github.com/articles/dealing-with-line-endings/
+#
+# 文本文件统一使用 LF，避免 "LF will be replaced by CRLF" 警告
+*               text=auto eol=lf
+
+# Linux start script should use lf
+/gradlew        text eol=lf
+
+# These are Windows script files and should use crlf
+*.bat           text eol=crlf
+

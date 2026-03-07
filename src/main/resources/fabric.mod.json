@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"id": "ic2_120",
+	"version": "${version}",
+	"name": "ic2_1.20",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/ic2_120/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			{
+				"value": "ic2_120.Ic2_120",
+				"adapter": "kotlin"
+			}
+		],
+		"client": [
+			{
+				"value": "ic2_120.Ic2_120Client",
+				"adapter": "kotlin"
+			}
+		],
+		"fabric-datagen": [
+			{
+				"value": "ic2_120.Ic2_120DataGenerator",
+				"adapter": "kotlin"
+			}
+		]
+	},
+	"mixins": [
+		"ic2_120.mixins.json",
+		{
+			"config": "ic2_120.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*",
+		"fabric-language-kotlin": "*"
+	}
+}
