@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/template_orientable_trapdoor_top",
   "textures": {
-    "texture": "ic2:blocks/resource/rubber/trapdoor"
+    "texture": "ic2:block/resource/rubber/trapdoor"
   }
 }

@@ -1,6 +1,6 @@
 {
 	"parent": "block/cube_all",
 	"textures": {
-		"all": "ic2:blocks/resource/ore/deepslate_uranium_ore"
+		"all": "ic2:block/resource/ore/deepslate_uranium_ore"
 	}
 }

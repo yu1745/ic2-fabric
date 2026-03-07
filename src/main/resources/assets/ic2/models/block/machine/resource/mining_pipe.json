@@ -1,6 +1,6 @@
 {
 	"parent": "block/fence_post",
 	"textures": {
-		"texture": "ic2:blocks/machine/resource/mining_pipe"
+		"texture": "ic2:block/machine/resource/mining_pipe"
 	}
 }

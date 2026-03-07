@@ -1,6 +1,6 @@
 {
 	"parent": "block/crop",
 	"textures": {
-		"crop": "ic2:blocks/crop/poppy_3"
+		"crop": "ic2:block/crop/poppy_3"
 	}
 }

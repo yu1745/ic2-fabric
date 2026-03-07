@@ -1,6 +1,6 @@
 {
 	"parent": "block/cross",
 	"textures": {
-		"cross": "ic2:blocks/crop/spruce_sapling_0"
+		"cross": "ic2:block/crop/spruce_sapling_0"
 	}
 }

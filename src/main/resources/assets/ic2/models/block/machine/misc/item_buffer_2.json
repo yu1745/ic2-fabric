@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "ic2:blocks/machine/misc/item_buffer_2"
+    "all": "ic2:block/machine/misc/item_buffer_2"
   }
 }

@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/pressure_plate_up",
   "textures": {
-    "texture": "ic2:blocks/resource/rubber/planks"
+    "texture": "ic2:block/resource/rubber/planks"
   }
 }

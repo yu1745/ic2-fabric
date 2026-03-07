@@ -1,6 +1,6 @@
 {
 	"parent": "block/cube_all",
 	"textures": {
-		"all": "ic2:blocks/machine/resource/mining_pipe_tip"
+		"all": "ic2:block/machine/resource/mining_pipe_tip"
 	}
 }

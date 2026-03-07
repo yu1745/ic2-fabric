@@ -1,8 +1,8 @@
 {
   "parent": "block/cube",
   "textures": {
-    "particle": "ic2:blocks/iridium_storage_box",
-    "all": "ic2:blocks/iridium_storage_box"
+    "particle": "ic2:block/iridium_storage_box",
+    "all": "ic2:block/iridium_storage_box"
   },
   "elements": [
     {

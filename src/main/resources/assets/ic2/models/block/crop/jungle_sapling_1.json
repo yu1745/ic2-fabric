@@ -1,6 +1,6 @@
 {
 	"parent": "block/cross",
 	"textures": {
-		"cross": "ic2:blocks/crop/jungle_sapling_1"
+		"cross": "ic2:block/crop/jungle_sapling_1"
 	}
 }

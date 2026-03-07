@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "ic2:blocks/steam/refractory_bricks"
+    "all": "ic2:block/steam/refractory_bricks"
   }
 }

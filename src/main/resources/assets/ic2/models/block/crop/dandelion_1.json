@@ -1,6 +1,6 @@
 {
 	"parent": "block/crop",
 	"textures": {
-		"crop": "ic2:blocks/crop/dandelion_1"
+		"crop": "ic2:block/crop/dandelion_1"
 	}
 }

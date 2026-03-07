@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/button_inventory",
   "textures": {
-    "texture": "ic2:blocks/resource/rubber/planks"
+    "texture": "ic2:block/resource/rubber/planks"
   }
 }

@@ -1,6 +1,6 @@
 {
 	"parent": "block/cube_all",
 	"textures": {
-		"all": "ic2:blocks/resource/bronze_block"
+		"all": "ic2:block/resource/bronze_block"
 	}
 }

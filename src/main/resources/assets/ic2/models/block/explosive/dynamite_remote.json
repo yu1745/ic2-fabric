@@ -1,6 +1,6 @@
 {
 	"parent": "block/torch",
 	"textures": {
-		"torch": "ic2:blocks/explosive/dynamite_remote"
+		"torch": "ic2:block/explosive/dynamite_remote"
 	}
 }

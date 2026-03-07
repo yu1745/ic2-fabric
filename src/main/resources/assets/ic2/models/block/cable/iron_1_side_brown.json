@@ -1,6 +1,6 @@
 {
 	"parent": "ic2:block/cable/shape/side_8",
 	"textures": {
-		"texture": "ic2:blocks/wiring/cable/iron_cable_1_brown"
+		"texture": "ic2:block/wiring/cable/iron_cable_1_brown"
 	}
 }

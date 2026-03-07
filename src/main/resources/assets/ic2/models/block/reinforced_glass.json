@@ -1,6 +1,6 @@
 {
 	"parent": "block/cube_all",
 	"textures": {
-		"all": "ic2:blocks/reinforced_glass"
+		"all": "ic2:block/reinforced_glass"
 	}
 }
