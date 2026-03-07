@@ -13,12 +13,16 @@ class ElectricFurnaceSync(
 ) : TickLimitedEnergyStorage(ENERGY_CAPACITY, MAX_INSERT, MAX_EXTRACT, currentTickProvider) {
 
     companion object {
-        const val ENERGY_CAPACITY = 10_000L
+        /** 电力缓存容量，与 IC2 实验版电炉一致（416 EU） */
+        const val ENERGY_CAPACITY = 416L
         const val MAX_INSERT = 32L
+        /** 对外不允许提取（电缆等不能从电炉拉电）；内部消耗在 BlockEntity.tick 中直接扣减 amount */
         const val MAX_EXTRACT = 0L
         const val NBT_ENERGY_STORED = "EnergyStored"
-        /** 烧炼完成所需进度（与 MC 熔炉 200 tick 一致，用于 GUI 进度条） */
-        const val PROGRESS_MAX = 200
+        /** 烧炼完成所需进度（与 IC2 实验版电炉一致：6.5 秒 = 130 tick） */
+        const val PROGRESS_MAX = 130
+        /** 每 tick 消耗能量（EU），与 IC2 实验版一致：3 EU/t，整炉 130 tick 共 390 EU */
+        const val ENERGY_PER_TICK = 3L
     }
 
     var energy by schema.int("Energy")

@@ -3,6 +3,7 @@ package ic2_120.client
 import ic2_120.client.compose.*
 import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
+import ic2_120.client.ui.ProgressBar
 import ic2_120.content.ElectricFurnaceSync
 import ic2_120.content.block.ElectricFurnaceBlock
 import ic2_120.content.screen.ElectricFurnaceScreenHandler
@@ -28,6 +29,7 @@ class ElectricFurnaceScreen(
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
+        // GuiBackground.drawPlayerInventorySlotBorders(context, x, y, ElectricFurnaceScreenHandler.PLAYER_INV_Y, ElectricFurnaceScreenHandler.HOTBAR_Y, ElectricFurnaceScreenHandler.SLOT_SIZE, GuiBackground.BORDER_COLOR)
         // 机器槽周围绘制边框（使用与 HandledScreen 相同的 x,y 及 slot 坐标，保证与物品绘制对齐）
         val borderColor = GuiBackground.BORDER_COLOR
         val slotSize = ElectricFurnaceScreenHandler.SLOT_SIZE
@@ -37,6 +39,14 @@ class ElectricFurnaceScreen(
         val outputSlot = handler.slots[1]
         context.drawBorder(x + inputSlot.x - borderOffset, y + inputSlot.y - borderOffset, borderW, borderW, borderColor)
         context.drawBorder(x + outputSlot.x - borderOffset, y + outputSlot.y - borderOffset, borderW, borderW, borderColor)
+        // 烧炼进度条：夹在输入槽与输出槽之间，原版风格
+        val progress = handler.sync.progress.coerceIn(0, ElectricFurnaceSync.PROGRESS_MAX)
+        val progressFrac = if (ElectricFurnaceSync.PROGRESS_MAX > 0) (progress.toFloat() / ElectricFurnaceSync.PROGRESS_MAX).coerceIn(0f, 1f) else 0f
+        val barX = x + inputSlot.x + slotSize + 2
+        val barW = outputSlot.x - (inputSlot.x + slotSize) - 4
+        val barH = 8
+        val barY = y + inputSlot.y + (slotSize - barH) / 2
+        ProgressBar.draw(context, barX, barY, barW, barH, progressFrac)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -47,8 +57,6 @@ class ElectricFurnaceScreen(
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = ElectricFurnaceSync.ENERGY_CAPACITY
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
-        val progress = handler.sync.progress.coerceIn(0, ElectricFurnaceSync.PROGRESS_MAX)
-        val progressFraction = if (ElectricFurnaceSync.PROGRESS_MAX > 0) (progress.toFloat() / ElectricFurnaceSync.PROGRESS_MAX).coerceIn(0f, 1f) else 0f
         val contentW = (backgroundWidth - 16).coerceAtLeast(0)
         val barW = (contentW - 36).coerceAtLeast(0)
 
@@ -74,27 +82,6 @@ class ElectricFurnaceScreen(
                     color = 0xCCCCCC,
                     shadow = false
                 )
-                // Flex(
-                //     direction = FlexDirection.ROW,
-                //     alignItems = AlignItems.CENTER,
-                //     gap = 8,
-                //     modifier = Modifier.EMPTY.width(contentW)
-                // ) {
-                //     // Text("进度", color = 0xAAAAAA)
-                //     // EnergyBar(
-                //     //     progressFraction,
-                //     //     barWidth = 0,
-                //     //     barHeight = 9,
-                //     //     emptyColor = 0xFF664400.toInt(),
-                //     //     fullColor = 0xFFEEAA00.toInt(),
-                //     //     modifier = Modifier.EMPTY.width(barW)
-                //     // )
-                // }
-                // Text(
-                //     "$progress / ${ElectricFurnaceSync.PROGRESS_MAX}",
-                //     color = 0xCCCCCC,
-                //     shadow = false
-                // )
             }
         }
 

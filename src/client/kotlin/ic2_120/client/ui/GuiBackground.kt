@@ -33,7 +33,7 @@ object GuiBackground {
     ) {
         context.fill(x, y, x + width, y + height, fillColor)
         context.drawBorder(x, y, width, height, borderColor)
-        drawPlayerInventorySlotBorders(context, x, y, width, height, borderColor)
+        // drawPlayerInventorySlotBorders(context, x, y, width, height, borderColor)
     }
 
     private const val BORDER_OFFSET = 1

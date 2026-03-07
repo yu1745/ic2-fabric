@@ -34,6 +34,7 @@ class MfsuScreen(
         val x = (width - backgroundWidth) / 2
         val y = (height - backgroundHeight) / 2
         GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
+        // GuiBackground.drawPlayerInventorySlotBorders(context, x, y, MfsuScreenHandler.PLAYER_INV_Y, MfsuScreenHandler.HOTBAR_Y, MfsuScreenHandler.SLOT_SIZE, GuiBackground.BORDER_COLOR)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
