@@ -5,8 +5,8 @@ import ic2_120.content.syncs.SyncSchema
 import net.minecraft.util.math.Direction
 
 /**
- * MFSU 的同步属性与能量存储（分面）。
- * 容量 40M EU，8192 EU/t。仅正面允许输入，其余面仅输出。
+ * MFSU 的同步属性与能量存储。
+ * 容量 40M EU；整机 8192 EU/t 输入（仅正面可接）、8192 EU/t 输出（除正面外可接），多面共享。
  */
 class MfsuSync(
     schema: SyncSchema,

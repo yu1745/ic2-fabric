@@ -20,16 +20,19 @@ class GeneratorSync(
 ) {
 
     companion object {
-        /** 电力缓存容量 1 万 EU */
-        const val ENERGY_CAPACITY = 10_000L
-        const val MAX_EXTRACT = 32L
+        /** 电力缓存容量 4000 EU（= 1 煤，与 IC2 Experimental 一致） */
+        const val ENERGY_CAPACITY = 4_000L
+        /** 整机每 tick 最大输出 10 EU/t（多面共享，与 IC2 Experimental 一致） */
+        const val MAX_EXTRACT = 10L
         const val NBT_ENERGY_STORED = "EnergyStored"
         /** 燃料燃烧进度条最大值 */
         const val BURN_TIME_MAX = 100
         /** 每 tick 燃烧进度消耗（用于 GUI 显示） */
         const val BURN_PROGRESS_PER_TICK = 1
-        /** 每 tick 产生 EU（与 IC2 经典一致：1 煤 1600 tick → 4000 EU，即 2.5 EU/t） */
-        const val EU_PER_BURN_TICK = 2.5
+        /** 每 tick 产生 EU（与 IC2 Experimental 一致：10 EU/t，1 煤 400 tick → 4000 EU） */
+        const val EU_PER_BURN_TICK = 10.0
+        /** 相对原版熔炉燃烧时间的除数，使 1 煤 = 400 tick（1600/4） */
+        const val BURN_TICKS_DIVISOR = 4
     }
 
     var energy by schema.int("Energy")
@@ -39,6 +42,7 @@ class GeneratorSync(
     var totalBurnTime by schema.int("TotalBurnTime")
 
     override fun getSideMaxInsert(side: Direction?): Long = 0L
+    /** 正面不输出；其余面可输出，整机总输出由基类限制为 MAX_EXTRACT/tick（多面共享）。 */
     override fun getSideMaxExtract(side: Direction?): Long =
         if (side != getFacing()) MAX_EXTRACT else 0L
 

@@ -129,8 +129,13 @@ class GeneratorBlockEntity(
         }
     }
 
+    /**
+     * 发电机燃料燃烧时间（tick）。与 IC2 Experimental 对齐：原版熔炉时间 ÷ 4，
+     * 使 1 煤 = 400 tick × 10 EU/t = 4000 EU，容量亦为 4000 EU。
+     */
     private fun getFuelTime(stack: ItemStack): Int {
         if (stack.isEmpty) return 0
-        return FuelRegistry.INSTANCE.get(stack.item) ?: 0
+        val furnaceTicks = FuelRegistry.INSTANCE.get(stack.item) ?: return 0
+        return (furnaceTicks / GeneratorSync.BURN_TICKS_DIVISOR).coerceAtLeast(1)
     }
 }

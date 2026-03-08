@@ -4,10 +4,11 @@ import net.minecraft.util.math.Direction
 import team.reborn.energy.api.base.SimpleSidedEnergyContainer
 
 /**
- * 将分面容器的 maxInsert 语义从“单次调用上限”提升为“每 tick 总输入上限”的可复用基类。
+ * 分面能量容器，输入/输出均为**整机每 tick 总上限**（非每面独立上限）。
  *
- * - 子类只需实现各面的基础输入/输出规则；
- * - 基类统一处理按 tick 的输入预算；
+ * - [maxInsertPerTick] / [maxExtractPerTick]：整个方块每 tick 的总输入/总输出上限，多面共享；
+ * - 子类通过 [getSideMaxInsert]/[getSideMaxExtract] 指定各面是否可输入/输出及该面的“意愿上限”；
+ * - 基类按 tick 累计实际输入/输出，保证整机不超限；
  * - 提供 [syncCommittedAmount] 以兼容外部直接改 amount（如读 NBT）。
  */
 open class TickLimitedSidedEnergyContainer(
@@ -17,8 +18,9 @@ open class TickLimitedSidedEnergyContainer(
     private val currentTickProvider: () -> Long? = { null }
 ) : SimpleSidedEnergyContainer() {
 
-    private var insertTrackedTick: Long = Long.MIN_VALUE
+    private var budgetTrackedTick: Long = Long.MIN_VALUE
     private var insertedThisTick: Long = 0L
+    private var extractedThisTick: Long = 0L
     private var lastCommittedAmount: Long = 0L
 
     override fun getCapacity(): Long = capacity
@@ -30,14 +32,20 @@ open class TickLimitedSidedEnergyContainer(
         return minOf(sideLimit, remainingThisTick)
     }
 
-    final override fun getMaxExtract(side: Direction?): Long =
-        getSideMaxExtract(side).coerceAtLeast(0L).coerceAtMost(maxExtractPerTick)
+    final override fun getMaxExtract(side: Direction?): Long {
+        normalizeTickBudget()
+        val sideLimit = getSideMaxExtract(side).coerceAtLeast(0L)
+        val remainingThisTick = (maxExtractPerTick - extractedThisTick).coerceAtLeast(0L)
+        return minOf(sideLimit, remainingThisTick)
+    }
 
     final override fun onFinalCommit() {
         normalizeTickBudget()
-        val insertedDelta = (amount - lastCommittedAmount).coerceAtLeast(0L)
-        if (insertedDelta > 0L) {
-            insertedThisTick = (insertedThisTick + insertedDelta).coerceAtMost(maxInsertPerTick)
+        val delta = amount - lastCommittedAmount
+        if (delta > 0L) {
+            insertedThisTick = (insertedThisTick + delta).coerceAtMost(maxInsertPerTick)
+        } else if (delta < 0L) {
+            extractedThisTick = (extractedThisTick - delta).coerceAtMost(maxExtractPerTick)
         }
         lastCommittedAmount = amount
         onEnergyCommitted()
@@ -48,10 +56,10 @@ open class TickLimitedSidedEnergyContainer(
         lastCommittedAmount = amount
     }
 
-    /** 子类定义各面的基础输入能力（不含每 tick 预算限制）。 */
+    /** 子类定义该面是否可输入及该面的意愿上限；整机总输入由 [maxInsertPerTick] 限制。 */
     protected open fun getSideMaxInsert(side: Direction?): Long = maxInsertPerTick
 
-    /** 子类定义各面的基础输出能力。 */
+    /** 子类定义该面是否可输出及该面的意愿上限；整机总输出由 [maxExtractPerTick] 限制。 */
     protected open fun getSideMaxExtract(side: Direction?): Long = maxExtractPerTick
 
     /** 子类可在提交后同步 GUI/NBT 镜像字段。 */
@@ -59,9 +67,10 @@ open class TickLimitedSidedEnergyContainer(
 
     private fun normalizeTickBudget() {
         val now = currentTickProvider() ?: return
-        if (insertTrackedTick != now) {
-            insertTrackedTick = now
+        if (budgetTrackedTick != now) {
+            budgetTrackedTick = now
             insertedThisTick = 0L
+            extractedThisTick = 0L
         }
     }
 }
