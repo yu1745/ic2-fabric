@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "powered=false": { "model": "ic2:block/resource/rubber/pressure_plate" },
+    "powered=true": { "model": "ic2:block/resource/rubber/pressure_plate_down" }
+  }
+}

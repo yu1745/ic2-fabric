@@ -31,7 +31,8 @@ import net.minecraft.block.Blocks
 @ModBlock(
     name = "copper_block",
     registerItem = true,
-    tab = CreativeTab.IC2_MATERIALS
+    tab = CreativeTab.IC2_MATERIALS,
+    transparent = false
 )
 class CopperBlock : Block(
     AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
@@ -43,6 +44,7 @@ class CopperBlock : Block(
 - `registerItem`: 是否自动注册方块物品（默认 `true`）
 - `tab`: 创造模式物品栏位置，使用 `CreativeTab` 枚举常量
 - `group`: 可选。分组名；相同 `group` 的方块/物品在创造模式物品栏中会排在一起，避免反射扫描顺序不稳定导致的乱序
+- `transparent`: 可选。是否将该方块自动注册到客户端 `cutout` 渲染层（默认 `false`）
 
 **可用的物品栏枚举**：
 ```kotlin
@@ -163,7 +165,42 @@ class CopperOre : Block(Settings.create().strength(3.0f))
 class DeepslateCopperOre : Block(Settings.create().strength(4.5f))
 ```
 
-### 7. 注册 ScreenHandler 与客户端 Screen（UI）
+### 7. 透明方块渲染（transparent）
+
+对于有镂空/透明贴图的方块（例如脚手架、玻璃纤维线缆），可直接在注解中声明：
+
+```kotlin
+@ModBlock(
+    name = "iron_scaffold",
+    registerItem = true,
+    tab = CreativeTab.IC2_MATERIALS,
+    group = "scaffold",
+    transparent = true
+)
+class IronScaffoldBlock : PillarBlock(
+    AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(3.0f).nonOpaque()
+)
+```
+
+说明：
+- `transparent = true` 会在客户端自动注册到 `RenderLayer.getTranslucent()`（仅客户端执行）。
+- 建议同时在方块 `Settings` 上使用 `.nonOpaque()`，以获得正确的遮光与面剔除行为。
+
+#### 透明方块模型注意事项（避免闪烁）
+
+1. **避免共面重复面（Z-Fighting）**  
+   不要在同一位置叠加两套面片（例如既保留完整立方体 6 面，又额外贴一层反向面），否则会出现内部光照/面片闪烁。
+
+2. **需要双面可见时，只保留一套几何**  
+   如果需要“透过去能看到背面”，应使用单套双面思路（例如为每个方向提供对应反向面），而不是与原外壳重叠。
+
+3. **物品手持大小异常**  
+   自定义 `elements` 模型时，建议保留合适的 `parent`（例如 `minecraft:block/cube_column` 或 `minecraft:block/block`），避免丢失默认显示变换导致手持/物品栏尺寸异常。
+
+4. **排查顺序建议**  
+   先检查：渲染层是否正确（`transparent=true`）→ `nonOpaque()` 是否设置 → 模型是否有共面重叠 → 纹理是否有 alpha 通道。
+
+### 8. 注册 ScreenHandler 与客户端 Screen（UI）
 
 **服务端 / 共用**：在 ScreenHandler 类上添加 `@ModScreenHandler`，并约定类有 companion 方法 `fromBuffer(syncId, playerInventory, buf)`：
 
@@ -187,7 +224,7 @@ class ElectricFurnaceScreen(handler: ElectricFurnaceScreenHandler, ...) : Handle
 
 主入口扫描包需包含 `ic2_120.content.screen`；客户端入口调用 `ClientScreenRegistrar.registerScreens(Ic2_120.MOD_ID, listOf("ic2_120.client"))`。
 
-### 8. 在主入口点启用自动注册
+### 9. 在主入口点启用自动注册
 
 ```kotlin
 package ic2_120

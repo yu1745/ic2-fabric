@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "ic2:block/resource/rubber/planks",
+    "side": "ic2:block/resource/rubber/planks",
+    "top": "ic2:block/resource/rubber/planks"
+  }
+}

@@ -42,60 +42,60 @@
 | - [x] | block.ic2.uranium_block | 铀块 |
 | - [x] | block.ic2.silver_block | 银块 |
 | - [x] | block.ic2.coal_block | 压缩煤块 |
-| - [ ] | block.ic2.reinforced_stone | 防爆石 |
-| - [ ] | block.ic2.basalt | 玄武石 |
+| - [x] | block.ic2.reinforced_stone | 防爆石 |
+| - [x] | block.ic2.basalt | 玄武石 |
 
 ### 木材相关类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | block.ic2.rubber_log | 橡胶原木 |
-| - [ ] | block.ic2.stripped_rubber_log | 去皮橡胶原木 |
+| - [x] | block.ic2.rubber_log | 橡胶原木 |
+| - [x] | block.ic2.stripped_rubber_log | 去皮橡胶原木 |
 | - [x] | block.ic2.rubber_wood | 橡胶木 |
-| - [ ] | block.ic2.stripped_rubber_wood | 去皮橡胶木 |
-| - [ ] | block.ic2.rubber_planks | 橡胶木板 |
-| - [ ] | block.ic2.rubber_sapling | 橡胶树苗 |
-| - [ ] | block.ic2.rubber_button | 橡胶木按钮 |
-| - [ ] | block.ic2.rubber_door | 橡胶木门 |
-| - [ ] | block.ic2.rubber_fence | 橡胶木栅栏 |
-| - [ ] | block.ic2.rubber_fence_gate | 橡胶木栅栏门 |
-| - [ ] | block.ic2.rubber_pressure_plate | 橡胶木压力板 |
+| - [x] | block.ic2.stripped_rubber_wood | 去皮橡胶木 |
+| - [x] | block.ic2.rubber_planks | 橡胶木板 |
+| - [x] | block.ic2.rubber_sapling | 橡胶树苗 |
+| - [x] | block.ic2.rubber_button | 橡胶木按钮 |
+| - [x] | block.ic2.rubber_door | 橡胶木门 |
+| - [x] | block.ic2.rubber_fence | 橡胶木栅栏 |
+| - [x] | block.ic2.rubber_fence_gate | 橡胶木栅栏门 |
+| - [x] | block.ic2.rubber_pressure_plate | 橡胶木压力板 |
 | - [ ] | block.ic2.rubber_sign | 橡胶木告示牌 |
-| - [ ] | block.ic2.rubber_slab | 橡胶木台阶 |
-| - [ ] | block.ic2.rubber_stairs | 橡胶木楼梯 |
-| - [ ] | block.ic2.rubber_trapdoor | 橡胶木活板门 |
-| - [ ] | block.ic2.rubber_leaves | 橡胶树叶 |
-| - [ ] | block.ic2.wooden_scaffold | 脚手架 |
-| - [ ] | block.ic2.reinforced_wooden_scaffold | 强化脚手架 |
-| - [ ] | block.ic2.iron_scaffold | 铁质脚手架 |
-| - [ ] | block.ic2.reinforced_iron_scaffold | 强化铁质脚手架 |
+| - [x] | block.ic2.rubber_slab | 橡胶木台阶 |
+| - [x] | block.ic2.rubber_stairs | 橡胶木楼梯 |
+| - [x] | block.ic2.rubber_trapdoor | 橡胶木活板门 |
+| - [x] | block.ic2.rubber_leaves | 橡胶树叶 |
+| - [x] | block.ic2.wooden_scaffold | 脚手架 |
+| - [x] | block.ic2.reinforced_wooden_scaffold | 强化脚手架 |
+| - [x] | block.ic2.iron_scaffold | 铁质脚手架 |
+| - [x] | block.ic2.reinforced_iron_scaffold | 强化铁质脚手架 |
 
 ### 建筑与装饰类
 |  | ID | 名称 |
 |--|----|------|
 | - [x] | block.ic2.iron_fence | 铁栅栏 |
-| - [ ] | block.ic2.reinforced_glass | 防爆玻璃 |
-| - [ ] | block.ic2.foam | 建筑泡沫 |
-| - [ ] | block.ic2.white_wall | 建筑泡沫墙 (白色) |
-| - [ ] | block.ic2.orange_wall | 建筑泡沫墙 (橙色) |
-| - [ ] | block.ic2.magenta_wall | 建筑泡沫墙 (品红色) |
-| - [ ] | block.ic2.light_blue_wall | 建筑泡沫墙 (浅蓝色) |
-| - [ ] | block.ic2.yellow_wall | 建筑泡沫墙 (黄色) |
-| - [ ] | block.ic2.lime_wall | 建筑泡沫墙 (柠檬色) |
-| - [ ] | block.ic2.pink_wall | 建筑泡沫墙 (粉色) |
-| - [ ] | block.ic2.gray_wall | 建筑泡沫墙 (灰色) |
-| - [ ] | block.ic2.light_gray_wall | 建筑泡沫墙 (浅灰色) |
-| - [ ] | block.ic2.cyan_wall | 建筑泡沫墙 (青色) |
-| - [ ] | block.ic2.purple_wall | 建筑泡沫墙 (紫色) |
-| - [ ] | block.ic2.blue_wall | 建筑泡沫墙 (蓝色) |
-| - [ ] | block.ic2.brown_wall | 建筑泡沫墙 (棕色) |
-| - [ ] | block.ic2.green_wall | 建筑泡沫墙 (绿色) |
-| - [ ] | block.ic2.red_wall | 建筑泡沫墙 (红色) |
-| - [ ] | block.ic2.black_wall | 建筑泡沫墙 (黑色) |
-| - [ ] | block.ic2.resin_sheet | 树脂垫 |
-| - [ ] | block.ic2.rubber_sheet | 橡胶垫 |
-| - [ ] | block.ic2.wool_sheet | 羊毛垫 |
-| - [ ] | block.ic2.mining_pipe | 采矿管道 |
-| - [ ] | block.ic2.itnt | 工业 TNT |
+| - [x] | block.ic2.reinforced_glass | 防爆玻璃 |
+| - [x] | block.ic2.foam | 建筑泡沫 |
+| - [x] | block.ic2.white_wall | 建筑泡沫墙 (白色) |
+| - [x] | block.ic2.orange_wall | 建筑泡沫墙 (橙色) |
+| - [x] | block.ic2.magenta_wall | 建筑泡沫墙 (品红色) |
+| - [x] | block.ic2.light_blue_wall | 建筑泡沫墙 (浅蓝色) |
+| - [x] | block.ic2.yellow_wall | 建筑泡沫墙 (黄色) |
+| - [x] | block.ic2.lime_wall | 建筑泡沫墙 (柠檬色) |
+| - [x] | block.ic2.pink_wall | 建筑泡沫墙 (粉色) |
+| - [x] | block.ic2.gray_wall | 建筑泡沫墙 (灰色) |
+| - [x] | block.ic2.light_gray_wall | 建筑泡沫墙 (浅灰色) |
+| - [x] | block.ic2.cyan_wall | 建筑泡沫墙 (青色) |
+| - [x] | block.ic2.purple_wall | 建筑泡沫墙 (紫色) |
+| - [x] | block.ic2.blue_wall | 建筑泡沫墙 (蓝色) |
+| - [x] | block.ic2.brown_wall | 建筑泡沫墙 (棕色) |
+| - [x] | block.ic2.green_wall | 建筑泡沫墙 (绿色) |
+| - [x] | block.ic2.red_wall | 建筑泡沫墙 (红色) |
+| - [x] | block.ic2.black_wall | 建筑泡沫墙 (黑色) |
+| - [x] | block.ic2.resin_sheet | 树脂垫 |
+| - [x] | block.ic2.rubber_sheet | 橡胶垫 |
+| - [x] | block.ic2.wool_sheet | 羊毛垫 |
+| - [x] | block.ic2.mining_pipe | 采矿管道 |
+| - [x] | block.ic2.itnt | 工业 TNT |
 
 ### 机器 - 发电类
 |  | ID | 名称 |

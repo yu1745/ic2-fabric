@@ -1,0 +1,1 @@
+{ "variants": { "axis=x": { "model": "ic2_120:block/wooden_scaffold", "x": 90, "y": 90 }, "axis=y": { "model": "ic2_120:block/wooden_scaffold" }, "axis=z": { "model": "ic2_120:block/wooden_scaffold", "x": 90 } } }

@@ -53,8 +53,8 @@ class IronCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Bas
 /**
  * 玻璃纤维导线。超高压传输，8192 EU/t，损耗仅 0.025 EU/格。
  */
-@ModBlock(name = "glass_fibre_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
-class GlassFibreCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings) {
+@ModBlock(name = "glass_fibre_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables", transparent = true)
+class GlassFibreCableBlock(settings: AbstractBlock.Settings = defaultSettings().nonOpaque()) : BaseCableBlock(settings) {
 
     override fun getTransferRate(): Long = 8192L
     override fun getEnergyLoss(): Long = 25L

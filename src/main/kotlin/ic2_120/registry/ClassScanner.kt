@@ -87,6 +87,7 @@ object ClassScanner {
         // 清空之前的映射
         tabItems.clear()
         blockClassToName.clear()
+        TransparentBlockRegistry.clear()
 
         // 按顺序注册：方块 → 方块实体类型 → ScreenHandler → 物品 → 物品栏
         registerBlocks(modId, blockClasses)
@@ -412,6 +413,9 @@ object ClassScanner {
                 // 注册方块
                 Registry.register(Registries.BLOCK, id, instance)
                 blockClassToName[clazz] = name
+                if (annotation.transparent) {
+                    TransparentBlockRegistry.add(id)
+                }
                 logger.debug("已注册方块: {}", id)
 
                 // 注册方块物品

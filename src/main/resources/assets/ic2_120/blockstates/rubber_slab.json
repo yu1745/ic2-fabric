@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "type=bottom": { "model": "ic2_120:block/rubber_slab" },
+    "type=double": { "model": "ic2_120:block/rubber_planks" },
+    "type=top": { "model": "ic2_120:block/rubber_slab_top" }
+  }
+}

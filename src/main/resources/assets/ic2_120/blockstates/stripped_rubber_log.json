@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "axis=x": { "model": "ic2_120:block/stripped_rubber_log", "x": 90, "y": 90 },
+    "axis=y": { "model": "ic2_120:block/stripped_rubber_log" },
+    "axis=z": { "model": "ic2_120:block/stripped_rubber_log", "x": 90 }
+  }
+}

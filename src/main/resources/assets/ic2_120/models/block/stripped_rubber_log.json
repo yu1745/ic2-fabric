@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "ic2:block/resource/rubber_wood_dry_leftrightback",
+    "end": "ic2:block/resource/rubber_wood_bottomtop"
+  }
+}

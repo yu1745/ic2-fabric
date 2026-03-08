@@ -70,6 +70,14 @@ class SilverBlock : Block(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strengt
 @ModBlock(name = "coal_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")
 class CoalBlock : Block(AbstractBlock.Settings.copy(Blocks.COAL_BLOCK).strength(5.0f, 6.0f))
 
+/** 防爆石。 */
+@ModBlock(name = "reinforced_stone", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")
+class ReinforcedStoneBlock : Block(AbstractBlock.Settings.copy(Blocks.STONE).strength(50.0f, 1200.0f))
+
+/** 玄武石。 */
+@ModBlock(name = "basalt", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")
+class BasaltBlock : Block(AbstractBlock.Settings.copy(Blocks.BASALT).strength(4.0f, 6.0f))
+
 /** 铁栅栏。金属成型机挤压：铁板 + 铁外壳 -> 铁栅栏。支持与同类型、原版铁栏杆相互连接。 */
 @ModBlock(name = "iron_fence", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "parts")
 class IronFenceBlock(

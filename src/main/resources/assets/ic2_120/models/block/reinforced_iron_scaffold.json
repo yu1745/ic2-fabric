@@ -1,0 +1,27 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "side": "ic2:block/reinforced_iron_scaffold_sides",
+    "end": "ic2:block/iron_scaffold_bottomtop"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": { "texture": "#side", "cullface": "north" },
+        "south": { "texture": "#side", "cullface": "south" },
+        "west": { "texture": "#side", "cullface": "west" },
+        "east": { "texture": "#side", "cullface": "east" },
+        "up": { "texture": "#end", "cullface": "up" },
+        "down": { "texture": "#end", "cullface": "down" }
+      }
+    },
+    { "from": [0, 0, 0], "to": [16, 16, 0], "faces": { "south": { "texture": "#side" } } },
+    { "from": [0, 0, 16], "to": [16, 16, 16], "faces": { "north": { "texture": "#side" } } },
+    { "from": [0, 0, 0], "to": [0, 16, 16], "faces": { "east": { "texture": "#side" } } },
+    { "from": [16, 0, 0], "to": [16, 16, 16], "faces": { "west": { "texture": "#side" } } },
+    { "from": [0, 0, 0], "to": [16, 0, 16], "faces": { "up": { "texture": "#end" } } },
+    { "from": [0, 16, 0], "to": [16, 16, 16], "faces": { "down": { "texture": "#end" } } }
+  ]
+}
