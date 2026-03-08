@@ -3,6 +3,7 @@ package ic2_120.content.block.machines
 import ic2_120.content.recipes.MetalFormerRecipes
 import ic2_120.content.sync.MetalFormerSync
 import ic2_120.content.ModBlockEntities
+import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.pullEnergyFromNeighbors
 import ic2_120.content.block.MetalFormerBlock
 import ic2_120.content.screen.MetalFormerScreenHandler
@@ -32,6 +33,7 @@ class MetalFormerBlockEntity(
 ) : BlockEntity(type, pos, state), Inventory, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     companion object {
+        const val METAL_FORMER_TIER = 1
         const val SLOT_INPUT = 0
         const val SLOT_OUTPUT = 1
         const val SLOT_DISCHARGING = 2
@@ -44,6 +46,12 @@ class MetalFormerBlockEntity(
     val syncedData = SyncedData(this)
     @RegisterEnergy
     val sync = MetalFormerSync(syncedData) { world?.time }
+    private val batteryDischarger = BatteryDischargerComponent(
+        inventory = this,
+        batterySlot = SLOT_DISCHARGING,
+        machineTierProvider = { METAL_FORMER_TIER },
+        canDischargeNow = { sync.amount < MetalFormerSync.ENERGY_CAPACITY }
+    )
 
     constructor(pos: BlockPos, state: BlockState) : this(
         ModBlockEntities.getType(MetalFormerBlockEntity::class),
@@ -54,6 +62,9 @@ class MetalFormerBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) {
+        if (slot == SLOT_DISCHARGING && stack.count > 1) {
+            stack.count = 1
+        }
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
@@ -182,11 +193,16 @@ class MetalFormerBlockEntity(
      * 从放电槽提取能量（如果需要）
      */
     private fun extractFromDischargingSlot() {
-        val dischargingStack = getStack(SLOT_DISCHARGING)
-        if (dischargingStack.isEmpty) return
+        val space = (MetalFormerSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0L)
+        if (space <= 0L) return
 
-        // TODO: 实现从电池物品提取能量的逻辑
-        // 这里需要检查物品是否实现了能量存储接口
+        val request = minOf(space, MetalFormerSync.MAX_INSERT)
+        val extracted = batteryDischarger.tick(request)
+        if (extracted <= 0L) return
+
+        sync.amount = (sync.amount + extracted).coerceAtMost(MetalFormerSync.ENERGY_CAPACITY)
+        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        markDirty()
     }
 
     private fun setActiveState(world: World, pos: BlockPos, state: BlockState, active: Boolean) {

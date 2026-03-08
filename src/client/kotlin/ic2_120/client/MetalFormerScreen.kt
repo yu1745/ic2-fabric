@@ -54,30 +54,46 @@ class MetalFormerScreen(
         context.drawBorder(x + outputSlot.x - borderOffset, y + outputSlot.y - borderOffset, slotSize, slotSize, borderColor)
         context.drawBorder(x + upgradeSlot.x - borderOffset, y + upgradeSlot.y - borderOffset, slotSize, slotSize, borderColor)
 
-        // 绘制3个进度条（工具盒轮廓图案）
+        // 绘制3个进度条（工具盒轮廓图案），分段显示总进度
         val progress = handler.sync.progress.coerceIn(0, MetalFormerSync.PROGRESS_MAX)
         val progressFrac = if (MetalFormerSync.PROGRESS_MAX > 0) (progress.toFloat() / MetalFormerSync.PROGRESS_MAX).coerceIn(0f, 1f) else 0f
+
+        // 计算每段的进度（三个进度条分段显示）
+        val segmentSize = 1f / 3f
+        val bar1Frac = when {
+            progressFrac <= segmentSize -> progressFrac / segmentSize
+            else -> 1f
+        }
+        val bar2Frac = when {
+            progressFrac <= segmentSize -> 0f
+            progressFrac <= segmentSize * 2 -> (progressFrac - segmentSize) / segmentSize
+            else -> 1f
+        }
+        val bar3Frac = when {
+            progressFrac <= segmentSize * 2 -> 0f
+            else -> (progressFrac - segmentSize * 2) / segmentSize
+        }
 
         // 第一个进度条（输入槽右侧）
         val bar1X = x + inputSlot.x + slotSize + 2
         val bar1Y = y + inputSlot.y + 2
         val bar1W = 20
         val bar1H = 6
-        ProgressBar.draw(context, bar1X, bar1Y, bar1W, bar1H, progressFrac)
+        ProgressBar.draw(context, bar1X, bar1Y, bar1W, bar1H, bar1Frac)
 
         // 第二个进度条（中间）
         val bar2X = bar1X + bar1W + 4
         val bar2Y = bar1Y
         val bar2W = 20
         val bar2H = 6
-        ProgressBar.draw(context, bar2X, bar2Y, bar2W, bar2H, progressFrac)
+        ProgressBar.draw(context, bar2X, bar2Y, bar2W, bar2H, bar2Frac)
 
         // 第三个进度条（靠近输出槽，与前两个等长）
         val bar3X = bar2X + bar2W + 4
         val bar3Y = bar1Y
         val bar3W = 20
         val bar3H = 6
-        ProgressBar.draw(context, bar3X, bar3Y, bar3W, bar3H, progressFrac)
+        ProgressBar.draw(context, bar3X, bar3Y, bar3W, bar3H, bar3Frac)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {

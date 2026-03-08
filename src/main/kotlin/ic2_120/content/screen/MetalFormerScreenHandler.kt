@@ -3,6 +3,11 @@ package ic2_120.content.screen
 import ic2_120.content.sync.MetalFormerSync
 import ic2_120.content.block.MetalFormerBlock
 import ic2_120.content.block.machines.MetalFormerBlockEntity
+import ic2_120.content.item.energy.IBatteryItem
+import ic2_120.content.screen.slot.PredicateSlot
+import ic2_120.content.screen.slot.SlotMoveHelper
+import ic2_120.content.screen.slot.SlotSpec
+import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import net.minecraft.entity.player.PlayerEntity
@@ -23,7 +28,7 @@ class MetalFormerScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    propertyDelegate: PropertyDelegate
 ) : ScreenHandler(ModScreenHandlers.getType(MetalFormerScreenHandler::class), syncId) {
 
     val sync = MetalFormerSync(SyncedDataView(propertyDelegate))
@@ -53,33 +58,33 @@ class MetalFormerScreenHandler(
     init {
         checkSize(blockInventory, MetalFormerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
+        val upgradeSlotSpec = SlotSpec(
+            canInsert = { _ ->
+            //todo 存放升级元件的，现在还没实现
+                false
+            }
+        )
 
         // 机器槽位
         // 左上：输入槽
-        addSlot(Slot(blockInventory, MetalFormerBlockEntity.SLOT_INPUT, INPUT_SLOT_X, INPUT_SLOT_Y))
+        addSlot(PredicateSlot(blockInventory, MetalFormerBlockEntity.SLOT_INPUT, INPUT_SLOT_X, INPUT_SLOT_Y, INPUT_SLOT_SPEC))
 
         // 左下：放电槽（放置电池）
-        addSlot(object : Slot(blockInventory, MetalFormerBlockEntity.SLOT_DISCHARGING, DISCHARGING_SLOT_X, DISCHARGING_SLOT_Y) {
-            override fun canInsert(stack: ItemStack): Boolean {
-                // TODO: 检查是否为电池物品
-                return false
-            }
-        })
+        addSlot(
+            PredicateSlot(
+                blockInventory,
+                MetalFormerBlockEntity.SLOT_DISCHARGING,
+                DISCHARGING_SLOT_X,
+                DISCHARGING_SLOT_Y,
+                DISCHARGING_SLOT_SPEC
+            )
+        )
 
         // 中间右侧：输出槽
-        addSlot(object : Slot(blockInventory, MetalFormerBlockEntity.SLOT_OUTPUT, OUTPUT_SLOT_X, OUTPUT_SLOT_Y) {
-            override fun canInsert(stack: ItemStack): Boolean = false
-            override fun canTakeItems(player: PlayerEntity): Boolean = true
-        })
+        addSlot(PredicateSlot(blockInventory, MetalFormerBlockEntity.SLOT_OUTPUT, OUTPUT_SLOT_X, OUTPUT_SLOT_Y, OUTPUT_SLOT_SPEC))
 
         // 最右侧：升级槽
-        addSlot(object : Slot(blockInventory, MetalFormerBlockEntity.SLOT_UPGRADE, UPGRADE_SLOT_X, UPGRADE_SLOT_Y) {
-            override fun canInsert(stack: ItemStack): Boolean {
-                // 仅在挤压模式下允许插入次要输入
-                val mode = MetalFormerSync.Mode.fromId(propertyDelegate.get(2))
-                return mode == MetalFormerSync.Mode.EXTRUDING
-            }
-        })
+        addSlot(PredicateSlot(blockInventory, MetalFormerBlockEntity.SLOT_UPGRADE, UPGRADE_SLOT_X, UPGRADE_SLOT_Y, upgradeSlotSpec))
 
         // 玩家物品栏
         for (row in 0 until 3) {
@@ -100,29 +105,39 @@ class MetalFormerScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
-            when {
+            when (index) {
                 // 输出槽 -> 玩家物品栏
-                index == SLOT_OUTPUT_INDEX -> {
+                SLOT_OUTPUT_INDEX -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 // 放电槽 -> 玩家物品栏
-                index == SLOT_DISCHARGING_INDEX -> {
+                SLOT_DISCHARGING_INDEX -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 // 升级槽 -> 玩家物品栏
-                index == SLOT_UPGRADE_INDEX -> {
+                SLOT_UPGRADE_INDEX -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                // 玩家物品栏 -> 机器
-                index in PLAYER_INV_START..HOTBAR_END -> {
-                    if (!insertItem(stackInSlot, SLOT_INPUT_INDEX, SLOT_INPUT_INDEX + 1, false)) {
+                else -> {
+                    if (index in PLAYER_INV_START..HOTBAR_END) {
+                        // 玩家物品栏 -> 机器
+                        val moved = SlotMoveHelper.insertIntoTargets(
+                            stackInSlot,
+                            listOf(
+                                SlotTarget(slots[SLOT_DISCHARGING_INDEX], DISCHARGING_SLOT_SPEC),
+                                SlotTarget(slots[SLOT_INPUT_INDEX], INPUT_SLOT_SPEC)
+                            )
+                        )
+                        if (!moved) {
+                            return ItemStack.EMPTY
+                        }
+                    } else if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) {
                         return ItemStack.EMPTY
                     }
                 }
-                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
@@ -154,6 +169,18 @@ class MetalFormerScreenHandler(
         const val UPGRADE_SLOT_Y = 47
 
         const val SLOT_SIZE = 18
+        private val INPUT_SLOT_SPEC = SlotSpec(
+            // 避免电池被误放入加工输入槽，优先进入放电槽。
+            canInsert = { stack -> stack.item !is IBatteryItem }
+        )
+        private val DISCHARGING_SLOT_SPEC = SlotSpec(
+            maxItemCount = 1,
+            canInsert = { stack -> stack.item is IBatteryItem }
+        )
+        private val OUTPUT_SLOT_SPEC = SlotSpec(
+            canInsert = { false },
+            canTake = { true }
+        )
 
         // 玩家物品栏位置
         const val PLAYER_INV_X = 8

@@ -4,9 +4,11 @@ import ic2_120.content.recipes.MaceratorRecipes
 import ic2_120.content.sync.MaceratorSync
 import ic2_120.content.ModBlockEntities
 import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.block.MaceratorBlock
 import ic2_120.content.screen.MaceratorScreenHandler
 import ic2_120.content.syncs.SyncedData
+import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import net.minecraft.block.BlockState
@@ -32,11 +34,25 @@ class MaceratorBlockEntity(
     state: BlockState
 ) : BlockEntity(type, pos, state), Inventory, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
-    private val inventory = DefaultedList.ofSize(2, ItemStack.EMPTY)  // 0: 输入, 1: 输出
+    companion object {
+        const val MACERATOR_TIER = 1
+        const val SLOT_INPUT = 0
+        const val SLOT_OUTPUT = 1
+        const val SLOT_DISCHARGING = 2
+        const val INVENTORY_SIZE = 3
+    }
+
+    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
 
     val syncedData = SyncedData(this)
     @RegisterEnergy
     val sync = MaceratorSync(syncedData) { world?.time }
+    private val batteryDischarger = BatteryDischargerComponent(
+        inventory = this,
+        batterySlot = SLOT_DISCHARGING,
+        machineTierProvider = { MACERATOR_TIER },
+        canDischargeNow = { sync.amount < MaceratorSync.ENERGY_CAPACITY }
+    )
 
     constructor(pos: BlockPos, state: BlockState) : this(
         ModBlockEntities.getType(MaceratorBlockEntity::class),
@@ -44,9 +60,12 @@ class MaceratorBlockEntity(
         state
     )
 
-    override fun size(): Int = 2
+    override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) {
+        if (slot == SLOT_DISCHARGING && stack.count > 1) {
+            stack.count = 1
+        }
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
@@ -86,9 +105,14 @@ class MaceratorBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+
+        // 从相邻方块或物品栏电池提取能量
         pullEnergyFromNeighbors(world, pos, sync, MaceratorSync.MAX_INSERT)
 
-        val input = getStack(0)
+        // 从放电槽提取能量
+        extractFromDischargingSlot()
+
+        val input = getStack(SLOT_INPUT)
         if (input.isEmpty()) {
             if (sync.progress != 0) sync.progress = 0
             return
@@ -129,5 +153,21 @@ class MaceratorBlockEntity(
         if (state.get(MaceratorBlock.ACTIVE) != active) {
             world.setBlockState(pos, state.with(MaceratorBlock.ACTIVE, active))
         }
+    }
+
+    /**
+     * 从放电槽提取能量（如果需要）
+     */
+    private fun extractFromDischargingSlot() {
+        val space = (MaceratorSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0L)
+        if (space <= 0L) return
+
+        val request = minOf(space, MaceratorSync.MAX_INSERT)
+        val extracted = batteryDischarger.tick(request)
+        if (extracted <= 0L) return
+
+        sync.amount = (sync.amount + extracted).coerceAtMost(MaceratorSync.ENERGY_CAPACITY)
+        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        markDirty()
     }
 }

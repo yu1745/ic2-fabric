@@ -4,6 +4,7 @@ import ic2_120.content.sync.GeneratorSync
 import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.GeneratorBlock
 import ic2_120.content.block.ITieredMachine
+import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.screen.GeneratorScreenHandler
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
@@ -53,6 +54,21 @@ class GeneratorBlockEntity(
         { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: net.minecraft.util.math.Direction.NORTH },
         { world?.time }
     )
+    private val batteryCharger = BatteryChargerComponent(
+        inventory = this,
+        batterySlot = BATTERY_SLOT,
+        machineTierProvider = { tier },
+        machineEnergyProvider = { sync.amount },
+        extractEnergy = { requested ->
+            val extracted = requested.coerceIn(0L, sync.amount)
+            if (extracted > 0L) {
+                sync.amount -= extracted
+                sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+            }
+            extracted
+        },
+        canChargeNow = { sync.amount > 0 }
+    )
 
     constructor(pos: BlockPos, state: BlockState) : this(
         ModBlockEntities.getType(GeneratorBlockEntity::class),
@@ -63,6 +79,9 @@ class GeneratorBlockEntity(
     override fun size(): Int = 2
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) {
+        if (slot == BATTERY_SLOT && stack.count > 1) {
+            stack.count = 1
+        }
         inventory[slot] = stack
         markDirty()
     }
@@ -163,35 +182,7 @@ class GeneratorBlockEntity(
             markDirty()
         }
 
-        // 电池充电逻辑：只在燃烧燃料时充电
-        if (sync.burnTime > 0) {
-            val batterySlot = getStack(BATTERY_SLOT)
-            if (!batterySlot.isEmpty && batterySlot.item is IBatteryItem) {
-                val battery = batterySlot.item as IBatteryItem
-
-                // 检查能量等级：只能给等级 <= 自己的电池充电
-                if (battery.tier <= tier) {
-                    // 检查电池是否已充满
-                    if (!battery.isFullyCharged(batterySlot)) {
-                        // 计算可充入电量（考虑电池传输速度和发电机剩余能量）
-                        val canCharge = minOf(
-                            battery.transferSpeed.toLong(),           // 电池传输速度限制
-                            sync.amount,                              // 发电机剩余能量
-                            battery.maxCapacity - battery.getCurrentCharge(batterySlot) // 电池剩余空间
-                        )
-
-                        if (canCharge > 0) {
-                            // 执行充电
-                            val charged = battery.charge(batterySlot, canCharge)
-                            sync.amount -= charged
-                            sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-                            setStack(BATTERY_SLOT, batterySlot)
-                            markDirty()
-                        }
-                    }
-                }
-            }
-        }
+        batteryCharger.tick()
 
         val active = sync.burnTime > 0
         if (state.get(GeneratorBlock.ACTIVE) != active) {
