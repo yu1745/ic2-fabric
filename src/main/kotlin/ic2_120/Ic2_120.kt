@@ -3,6 +3,7 @@ package ic2_120
 import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.content.block.MfsuBlock
 import ic2_120.content.block.cables.CableBlockEntity
+import ic2_120.content.entity.ModEntities
 import ic2_120.registry.ClassScanner
 import ic2_120.registry.CreativeTab
 import net.fabricmc.api.ModInitializer
@@ -25,6 +26,9 @@ object Ic2_120 : ModInitializer {
     private val logger = LoggerFactory.getLogger(MOD_ID)
 
     override fun onInitialize() {
+        // 船实体类型需在扫描物品前注册，供 @ModItem 船物品类构造时引用
+        ModEntities.register()
+
         // 使用类级别注解的自动注册系统
         ClassScanner.scanAndRegister(
             MOD_ID,
@@ -32,7 +36,7 @@ object Ic2_120 : ModInitializer {
                 "ic2_120.content.tab",     // 扫描物品栏类（必须先注册）
                 "ic2_120.content.block",   // 扫描方块类（包括 cables, machines, energy 等子包）
                 "ic2_120.content.screen",  // 扫描 ScreenHandler 类
-                "ic2_120.content.item"     // 扫描物品类
+                "ic2_120.content.item"     // 扫描物品类（含 @ModItem 船物品）
             )
         )
 

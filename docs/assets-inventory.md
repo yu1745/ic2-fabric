@@ -894,8 +894,8 @@
 ### 载具类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | item.ic2.broken_rubber_boat | 破损的橡胶船 |
-| - [ ] | item.ic2.carbon_boat | 碳纤维船 |
+| - [x] | item.ic2.broken_rubber_boat | 破损的橡胶船 |
+| - [x] | item.ic2.carbon_boat | 碳纤维船 |
 
 ### 机器物品模型（作为物品展示）
 |  | ID | 名称 |
