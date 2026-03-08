@@ -1,19 +1,27 @@
 package ic2_120.content.block.storage
 
+import ic2_120.content.screen.StorageBoxScreenHandler
 import ic2_120.registry.BlockEntityTypeStore
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.minecraft.inventory.Inventories
+import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
+import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.screen.ScreenHandler
 
 /**
  * 储物箱 BlockEntity
@@ -31,7 +39,7 @@ import net.minecraft.util.math.BlockPos
 class StorageBoxBlockEntity(
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(STORAGE_BOX_TYPE, pos, state) {
+) : BlockEntity(STORAGE_BOX_TYPE, pos, state), Inventory, ExtendedScreenHandlerFactory {
 
     companion object {
         /** 木质储物箱容量 */
@@ -118,11 +126,22 @@ class StorageBoxBlockEntity(
         return DefaultedList.ofSize(getCapacity(), ItemStack.EMPTY)
     }
 
-    /** 获取物品栏（只读） */
+    /** 获取物品栏（只读） - 外部访问用 */
     fun getInventory(): DefaultedList<ItemStack> = inventory
 
+    /** 获取物品栏大小 */
+    override fun size(): Int = inventory.size
+
+    /** 判断物品栏是否为空 */
+    override fun isEmpty(): Boolean {
+        for (stack in inventory) {
+            if (!stack.isEmpty) return false
+        }
+        return true
+    }
+
     /** 获取指定槽位的物品 */
-    fun getStack(slot: Int): ItemStack {
+    override fun getStack(slot: Int): ItemStack {
         return if (slot >= 0 && slot < inventory.size) {
             inventory[slot]
         } else {
@@ -130,16 +149,22 @@ class StorageBoxBlockEntity(
         }
     }
 
-    /** 设置指定槽位的物品 */
-    fun setStack(slot: Int, stack: ItemStack) {
+    /** 从物品栏移除物品（玩家取物品） */
+    override fun removeStack(slot: Int, amount: Int): ItemStack {
         if (slot >= 0 && slot < inventory.size) {
-            inventory[slot] = stack
+            val stack = inventory[slot]
+            val removed = stack.split(amount)
+            if (stack.isEmpty) {
+                inventory[slot] = ItemStack.EMPTY
+            }
             markDirty()
+            return removed
         }
+        return ItemStack.EMPTY
     }
 
-    /** 从物品栏移除物品 */
-    fun removeStack(slot: Int): ItemStack {
+    /** 从物品栏移除整个槽位的物品 */
+    override fun removeStack(slot: Int): ItemStack {
         if (slot >= 0 && slot < inventory.size) {
             val stack = inventory[slot]
             inventory[slot] = ItemStack.EMPTY
@@ -149,15 +174,47 @@ class StorageBoxBlockEntity(
         return ItemStack.EMPTY
     }
 
-    /** 获取物品栏大小 */
-    fun size(): Int = inventory.size
-
-    /** 判断物品栏是否为空 */
-    fun isEmpty(): Boolean {
-        for (stack in inventory) {
-            if (!stack.isEmpty) return false
+    /** 设置指定槽位的物品 */
+    override fun setStack(slot: Int, stack: ItemStack) {
+        if (slot >= 0 && slot < inventory.size) {
+            inventory[slot] = stack
+            markDirty()
         }
-        return true
+    }
+
+    /** 标记物品栏已更改 */
+    override fun markDirty() {
+        super.markDirty()
+    }
+
+    /** 检查玩家是否可以使用此物品栏 */
+    override fun canPlayerUse(player: PlayerEntity): Boolean {
+        return if (world == null || pos == null) false
+        else player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+    }
+
+    /** 清空物品栏 */
+    override fun clear() {
+        inventory.clear()
+        markDirty()
+    }
+
+    // ========== ExtendedScreenHandlerFactory 实现 ==========
+
+    /** 创建菜单标题 */
+    override fun getDisplayName(): Text {
+        val block = cachedState.block
+        return Text.translatable(block.translationKey)
+    }
+
+    /** 创建 ScreenHandler */
+    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
+        return StorageBoxScreenHandler.create(syncId, playerInventory, this)
+    }
+
+    /** 写入数据到 PacketByteBuf（客户端 GUI 打开时使用） */
+    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+        buf.writeBlockPos(pos)
     }
 
     override fun writeNbt(nbt: NbtCompound) {

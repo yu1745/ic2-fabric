@@ -9,9 +9,16 @@ import net.minecraft.block.BlockRenderType
 import net.minecraft.block.Blocks
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.entity.BlockEntity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
+import net.minecraft.loot.context.LootContext
+import net.minecraft.loot.context.LootContextParameters
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.util.ActionResult
+import net.minecraft.util.Hand
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
 
 /**
  * 储物箱基类
@@ -29,8 +36,76 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
      */
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
 
+    /**
+     * 玩家右键点击打开 GUI
+     */
+    override fun onUse(
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ActionResult {
+        if (!world.isClient) {
+            val blockEntity = world.getBlockEntity(pos)
+            if (blockEntity is StorageBoxBlockEntity) {
+                player.openHandledScreen(blockEntity)
+            }
+        }
+        return ActionResult.SUCCESS
+    }
+
+    /**
+     * 方块被替换/破坏时掉落带有物品栏的物品（类似潜影盒）
+     */
+    override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
+        if (!world.isClient && !state.isOf(newState.block)) {
+            val blockEntity = world.getBlockEntity(pos)
+            if (blockEntity is StorageBoxBlockEntity) {
+                // 创建带有 BlockEntity NBT 的物品
+                val itemStack = ItemStack(this.asItem())
+                val nbt = blockEntity.createNbtWithIdentifyingData()
+                if (!nbt.isEmpty) {
+                    itemStack.orCreateNbt.put("BlockEntityTag", nbt)
+                }
+
+                // 掉落物品
+                if (!itemStack.isEmpty) {
+                    val itemEntity = net.minecraft.entity.ItemEntity(
+                        world,
+                        pos.x.toDouble() + 0.5,
+                        pos.y.toDouble() + 0.5,
+                        pos.z.toDouble() + 0.5,
+                        itemStack
+                    )
+                    itemEntity.setToDefaultPickupDelay()
+                    world.spawnEntity(itemEntity)
+                }
+            }
+        }
+        super.onStateReplaced(state, world, pos, newState, moved)
+    }
+
     override fun onStacksDropped(state: BlockState, world: ServerWorld, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
-        // 不调用 super，防止掉落物品内容，只掉落方块本身
+        // 不调用 super，防止默认掉落行为
+    }
+
+    /**
+     * 获取掉落的物品（包含 BlockEntity NBT 数据）- 用于创造模式拾取
+     */
+    override fun getPickStack(world: net.minecraft.world.BlockView, pos: BlockPos, state: BlockState): ItemStack {
+        val itemStack = super.getPickStack(world, pos, state)
+        val blockEntity = world.getBlockEntity(pos)
+
+        if (blockEntity is StorageBoxBlockEntity) {
+            val nbt = blockEntity.createNbtWithIdentifyingData()
+            if (!nbt.isEmpty) {
+                itemStack.orCreateNbt.put("BlockEntityTag", nbt)
+            }
+        }
+
+        return itemStack
     }
 
     override fun getComparatorOutput(state: BlockState, world: net.minecraft.world.World, pos: BlockPos): Int {
