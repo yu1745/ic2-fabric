@@ -6,7 +6,6 @@ import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
-import net.minecraft.block.AbstractBlock
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -25,9 +24,7 @@ import net.minecraft.world.World
  * 地热发电机方块。
  */
 @ModBlock(name = "geo_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES)
-class GeoGeneratorBlock(
-    settings: AbstractBlock.Settings = AbstractBlock.Settings.create().strength(3.5f)
-) : MachineBlock(settings) {
+class GeoGeneratorBlock : MachineBlock() {
 
     override val tier: Int = GENERATOR_TIER
 

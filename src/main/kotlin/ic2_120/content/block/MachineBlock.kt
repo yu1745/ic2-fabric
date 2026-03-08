@@ -4,6 +4,7 @@ import net.minecraft.block.AbstractBlock
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
 import net.minecraft.block.BlockWithEntity
+import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemPlacementContext
@@ -20,8 +21,16 @@ import net.minecraft.world.World
  * 放置时根据玩家朝向设置 HORIZONTAL_FACING（玩家面向的方向的相反方向为方块正面）。
  *
  * 所有机器都有能量等级，用于决定能接受什么等级的电池供电。
+ *
+ * 默认硬度为铁方块硬度（5.0f, 6.0f），子类可通过传入自定义 settings 覆盖。
  */
-abstract class MachineBlock(settings: AbstractBlock.Settings) : BlockWithEntity(settings), ITieredMachine {
+abstract class MachineBlock(settings: AbstractBlock.Settings = defaultMachineSettings()) : BlockWithEntity(settings), ITieredMachine {
+
+    companion object {
+        /** 机器方块的默认设置：铁方块硬度（5.0f, 6.0f） */
+        fun defaultMachineSettings(): AbstractBlock.Settings =
+            AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
+    }
 
     /**
      * 机器的能量等级（1-4）

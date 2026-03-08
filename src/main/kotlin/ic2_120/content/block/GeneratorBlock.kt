@@ -4,7 +4,6 @@ import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.machines.GeneratorBlockEntity
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
-import net.minecraft.block.AbstractBlock
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -24,7 +23,7 @@ import net.minecraft.world.World
  * 能量等级：1
  */
 @ModBlock(name = "generator", registerItem = true, tab = CreativeTab.IC2_MACHINES)
-class GeneratorBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.create().strength(3.5f)) : MachineBlock(settings) {
+class GeneratorBlock : MachineBlock() {
 
     override val tier: Int = GENERATOR_TIER
 

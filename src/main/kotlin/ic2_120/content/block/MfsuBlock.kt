@@ -5,7 +5,6 @@ import ic2_120.content.block.machines.MfsuBlockEntity
 import ic2_120.content.ModBlockEntities
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
-import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -28,7 +27,7 @@ import net.minecraft.world.World
  * 能量等级：4
  */
 @ModBlock(name = "mfsu", registerItem = true, tab = CreativeTab.IC2_MACHINES)
-class MfsuBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.create().strength(3.5f)) : MachineBlock(settings) {
+class MfsuBlock : MachineBlock() {
 
     override val tier: Int = 4
 

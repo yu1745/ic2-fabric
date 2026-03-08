@@ -101,7 +101,7 @@
 |  | ID | 名称 |
 |--|----|------|
 | - [x] | block.ic2.generator | 火力发电机 |
-| - [ ] | block.ic2.geo_generator | 地热发电机 |
+| - [x] | block.ic2.geo_generator | 地热发电机 |
 | - [ ] | block.ic2.kinetic_generator | 动能发电机 |
 | - [ ] | block.ic2.rt_generator | 放射性同位素温差发电机 |
 | - [ ] | block.ic2.semifluid_generator | 半流质发电机 |
@@ -841,24 +841,24 @@
 |  | ID | 名称 |
 |--|----|------|
 | - [x] | item.ic2.cutter | 板材切割剪刀 |
-| - [ ] | item.ic2.debug_item | 测试工具 |
+| - [x] | item.ic2.debug_item | 测试工具 |
 | - [x] | item.ic2.forge_hammer | 锻造锤 |
-| - [ ] | item.ic2.tool_box | 工具箱 |
-| - [ ] | item.ic2.meter | EU 电表 |
-| - [ ] | item.ic2.treetap | 木龙头 |
-| - [ ] | item.ic2.wrench | 扳手 |
-| - [ ] | item.ic2.frequency_transmitter | 遥控器 |
-| - [ ] | item.ic2.chainsaw | 链锯 |
-| - [ ] | item.ic2.diamond_drill | 钻石钻头 |
-| - [ ] | item.ic2.drill | 采矿钻头 |
+| - [x] | item.ic2.tool_box | 工具箱 |
+| - [x] | item.ic2.meter | EU 电表 |
+| - [x] | item.ic2.treetap | 木龙头 |
+| - [x] | item.ic2.wrench | 扳手 |
+| - [x] | item.ic2.frequency_transmitter | 遥控器 |
+| - [x] | item.ic2.chainsaw | 链锯 |
+| - [x] | item.ic2.diamond_drill | 钻石钻头 |
+| - [x] | item.ic2.drill | 采矿钻头 |
 | - [x] | item.ic2.mining_laser | 采矿镭射枪 |
-| - [ ] | item.ic2.electric_treetap | 电动树脂提取器 |
-| - [ ] | item.ic2.electric_wrench | 电动扳手 |
-| - [ ] | item.ic2.iridium_drill | 铱钻头 |
-| - [ ] | item.ic2.obscurator | 拟态板 |
-| - [ ] | item.ic2.scanner | OD 扫描器 |
-| - [ ] | item.ic2.advanced_scanner | OV 扫描器 |
-| - [ ] | item.ic2.wind_meter | 风力计 |
+| - [x] | item.ic2.electric_treetap | 电动树脂提取器 |
+| - [x] | item.ic2.electric_wrench | 电动扳手 |
+| - [x] | item.ic2.iridium_drill | 铱钻头 |
+| - [x] | item.ic2.obscurator | 拟态板 |
+| - [x] | item.ic2.scanner | OD 扫描器 |
+| - [x] | item.ic2.advanced_scanner | OV 扫描器 |
+| - [x] | item.ic2.wind_meter | 风力计 |
 
 ### 刷子类
 |  | ID | 名称 |
