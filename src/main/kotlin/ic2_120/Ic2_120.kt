@@ -61,4 +61,9 @@ object Ic2_120 : ModInitializer {
 
         logger.info("IC2 1.20 模组已加载（类注解驱动自动注册）")
     }
+
+    /**
+     * 创建模组内的标识符
+     */
+    fun id(path: String): Identifier = Identifier(MOD_ID, path)
 }

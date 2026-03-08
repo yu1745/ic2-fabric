@@ -33,6 +33,7 @@
   "block.ic2_120.metal_former": "Metal Former",
   "block.ic2_120.mfsu": "MFSU",
   "block.ic2_120.mfsu_full": "MFSU (Full)",
+  "block.ic2_120.iron_fence": "Iron Fence",
   "container.ic2_120.mfsu": "MFSU",
   "item.ic2_120.mixed_metal_ingot": "Mixed Metal Ingot",
   "item.ic2_120.lead_ingot": "Lead Ingot",
@@ -126,6 +127,14 @@
   "item.ic2_120.rtg_pellet": "RTG Pellet",
   "item.ic2_120.forge_hammer": "Forge Hammer",
   "item.ic2_120.cutter": "Cutter",
+  "item.ic2_120.tin_can": "Empty Tin Can",
+  "item.ic2_120.fuel_rod": "Empty Fuel Rod",
+  "item.ic2_120.iron_shaft": "Tool Handle (Iron)",
+  "item.ic2_120.steel_shaft": "Tool Handle (Steel)",
+  "item.ic2_120.coin": "Industrial Currency",
+  "mode.ic2_120.rolling": "Rolling Mode",
+  "mode.ic2_120.cutting": "Cutting Mode",
+  "mode.ic2_120.extruding": "Extruding Mode",
   "tooltip.ic2_120.cable_eu_t": "%s EU/t",
   "tooltip.ic2_120.cable_loss": "Loss: %s EU/block"
 }

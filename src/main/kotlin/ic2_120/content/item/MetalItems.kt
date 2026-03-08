@@ -28,3 +28,4 @@ class BronzeIngot : Item(FabricItemSettings())
  */
 @ModItem(name = "rubber", tab = CreativeTab.IC2_MATERIALS, group = "materials")
 class RubberItem : Item(FabricItemSettings())
+

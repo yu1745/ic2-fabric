@@ -31,7 +31,15 @@ class MetalFormerBlockEntity(
     state: BlockState
 ) : BlockEntity(type, pos, state), Inventory, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
-    private val inventory = DefaultedList.ofSize(2, ItemStack.EMPTY)  // 0: 输入, 1: 输出
+    companion object {
+        const val SLOT_INPUT = 0
+        const val SLOT_OUTPUT = 1
+        const val SLOT_DISCHARGING = 2
+        const val SLOT_UPGRADE = 3
+        const val INVENTORY_SIZE = 4
+    }
+
+    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
 
     val syncedData = SyncedData(this)
     @RegisterEnergy
@@ -43,7 +51,7 @@ class MetalFormerBlockEntity(
         state
     )
 
-    override fun size(): Int = 2
+    override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
@@ -73,6 +81,7 @@ class MetalFormerBlockEntity(
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(MetalFormerSync.NBT_ENERGY_STORED)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        sync.setMode(MetalFormerSync.Mode.fromId(nbt.getInt(MetalFormerSync.NBT_MODE)))
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -80,26 +89,46 @@ class MetalFormerBlockEntity(
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(MetalFormerSync.NBT_ENERGY_STORED, sync.amount)
+        nbt.putInt(MetalFormerSync.NBT_MODE, sync.mode)
+    }
+
+    /**
+     * 切换加工模式（由 GUI 按钮调用）
+     */
+    fun cycleMode() {
+        sync.cycleMode()
+        sync.progress = 0  // 切换模式时重置进度
+        markDirty()
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+
+        // 从相邻方块或物品栏电池提取能量
         pullEnergyFromNeighbors(world, pos, sync, MetalFormerSync.MAX_INSERT)
 
-        val input = getStack(0)
-        if (input.isEmpty()) {
+        // 从放电槽提取能量
+        extractFromDischargingSlot()
+
+        val input = getStack(SLOT_INPUT)
+        if (input.isEmpty) {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
             return
         }
 
-        val result = MetalFormerRecipes.getOutput(input) ?: run {
+        val currentMode = sync.getMode()
+
+        // 检查配方（支持双输入配方）
+        val secondaryInput = if (needsSecondaryInput(currentMode)) getStack(SLOT_UPGRADE) else null
+        val result = MetalFormerRecipes.getOutput(currentMode, input, secondaryInput) ?: run {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
             return
         }
-        val outputSlot = getStack(1)
+
+        val outputSlot = getStack(SLOT_OUTPUT)
         val maxStack = result.maxCount
         val canAccept = outputSlot.isEmpty() ||
             (ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= maxStack)
@@ -111,9 +140,18 @@ class MetalFormerBlockEntity(
         }
 
         if (sync.progress >= MetalFormerSync.PROGRESS_MAX) {
+            // 消耗输入物品
             input.decrement(1)
-            if (outputSlot.isEmpty()) setStack(1, result)
+
+            // 消耗次要输入物品（如果有）
+            if (secondaryInput != null && !secondaryInput.isEmpty) {
+                secondaryInput.decrement(1)
+            }
+
+            // 输出结果
+            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result)
             else outputSlot.increment(result.count)
+
             sync.progress = 0
             markDirty()
             setActiveState(world, pos, state, false)
@@ -130,6 +168,25 @@ class MetalFormerBlockEntity(
         } else {
             setActiveState(world, pos, state, false)
         }
+    }
+
+    /**
+     * 检查当前模式是否需要次要输入（升级槽）
+     * 某些挤压模式配方需要两个输入
+     */
+    private fun needsSecondaryInput(mode: MetalFormerSync.Mode): Boolean {
+        return mode == MetalFormerSync.Mode.EXTRUDING
+    }
+
+    /**
+     * 从放电槽提取能量（如果需要）
+     */
+    private fun extractFromDischargingSlot() {
+        val dischargingStack = getStack(SLOT_DISCHARGING)
+        if (dischargingStack.isEmpty) return
+
+        // TODO: 实现从电池物品提取能量的逻辑
+        // 这里需要检查物品是否实现了能量存储接口
     }
 
     private fun setActiveState(world: World, pos: BlockPos, state: BlockState, active: Boolean) {

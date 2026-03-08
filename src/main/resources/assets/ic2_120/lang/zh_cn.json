@@ -38,6 +38,7 @@
   "block.ic2_120.metal_former": "金属成型机",
   "block.ic2_120.mfsu": "MFSU储电箱",
   "block.ic2_120.mfsu_full": "MFSU储电箱（满电）",
+  "block.ic2_120.iron_fence": "铁栅栏",
   "container.ic2_120.mfsu": "MFSU储电箱",
   "item.ic2_120.mixed_metal_ingot": "合金锭",
   "item.ic2_120.lead_ingot": "铅锭",
@@ -131,6 +132,14 @@
   "item.ic2_120.rtg_pellet": "放射性同位素燃料靶丸",
   "item.ic2_120.forge_hammer": "锻造锤",
   "item.ic2_120.cutter": "板材切割剪刀",
+  "item.ic2_120.tin_can": "空锡罐",
+  "item.ic2_120.fuel_rod": "空燃料棒",
+  "item.ic2_120.iron_shaft": "铁柄（铁）",
+  "item.ic2_120.steel_shaft": "铁柄（钢）",
+  "item.ic2_120.coin": "工业货币",
+  "mode.ic2_120.rolling": "辊压模式",
+  "mode.ic2_120.cutting": "切割模式",
+  "mode.ic2_120.extruding": "挤压模式",
   "tooltip.ic2_120.cable_eu_t": "%s EU/t",
   "tooltip.ic2_120.cable_loss": "损耗: %s EU/格"
 }

@@ -4,8 +4,11 @@ import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
+import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
+import net.minecraft.block.FenceBlock
 import net.minecraft.block.PillarBlock
+import net.minecraft.util.math.Direction
 
 /**
  * 铜方块。
@@ -66,3 +69,17 @@ class SilverBlock : Block(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strengt
 
 @ModBlock(name = "coal_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")
 class CoalBlock : Block(AbstractBlock.Settings.copy(Blocks.COAL_BLOCK).strength(5.0f, 6.0f))
+
+/** 铁栅栏。金属成型机挤压：铁板 + 铁外壳 -> 铁栅栏。支持与同类型、原版铁栏杆相互连接。 */
+@ModBlock(name = "iron_fence", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "parts")
+class IronFenceBlock(
+    settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BARS).strength(5.0f, 6.0f)
+) : FenceBlock(settings) {
+
+    override fun canConnect(state: BlockState, neighborIsFullSquare: Boolean, dir: Direction): Boolean {
+        val block = state.block
+        // 与同类型铁栅栏、原版铁栏杆相互连接
+        return block is IronFenceBlock
+        // return super.canConnect(state, neighborIsFullSquare, dir)
+    }
+}
