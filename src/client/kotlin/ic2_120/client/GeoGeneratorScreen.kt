@@ -2,6 +2,7 @@ package ic2_120.client
 
 import ic2_120.client.compose.*
 import ic2_120.client.ui.EnergyBar
+import ic2_120.client.ui.FilteredOutputRate
 import ic2_120.client.ui.GuiBackground
 import ic2_120.client.ui.ProgressBar
 import ic2_120.content.sync.GeoGeneratorSync
@@ -22,8 +23,7 @@ class GeoGeneratorScreen(
 ) : HandledScreen<GeoGeneratorScreenHandler>(handler, playerInventory, title) {
 
     private val ui = ComposeUI()
-    private var lastEnergy: Long = -1
-    private var outputRate: Int = 0
+    private var outputRate by FilteredOutputRate()
 
     init {
         backgroundWidth = PANEL_WIDTH
@@ -69,11 +69,7 @@ class GeoGeneratorScreen(
         val left = x
         val top = y
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        if (lastEnergy >= 0) {
-            val deltaEu = energy - lastEnergy
-            outputRate = if (deltaEu < 0) (-deltaEu).coerceAtMost(Int.MAX_VALUE.toLong()).toInt() else 0
-        }
-        lastEnergy = energy
+        outputRate = energy
         val cap = GeoGeneratorSync.ENERGY_CAPACITY
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
         // 左侧内容区宽度（右侧留出岩浆条空间）
@@ -104,7 +100,7 @@ class GeoGeneratorScreen(
                         shadow = false
                     )
                     Text(
-                        "输出 ${formatEu(outputRate.toLong())} EU/t",
+                        "输出 ${formatEu(outputRate)} EU/t",
                         color = 0xAAAAAA,
                         shadow = false
                     )

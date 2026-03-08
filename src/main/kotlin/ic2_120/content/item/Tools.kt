@@ -135,11 +135,11 @@ class Chainsaw : Item(FabricItemSettings().maxCount(1)), IElectricTool {
     override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 }
 
-/** 钻石钻头 - 电动采矿工具（等级 2，27k EU） */
+/** 钻石钻头 - 电动采矿工具（等级 1，10k EU） */
 @ModItem(name = "diamond_drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
 class DiamondDrill : Item(FabricItemSettings().maxCount(1)), IElectricTool {
-    override val tier = 2
-    override val maxCapacity = 27_000L
+    override val tier = 1
+    override val maxCapacity = 10_000L
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<net.minecraft.text.Text>, context: net.minecraft.client.item.TooltipContext) {
@@ -183,11 +183,11 @@ class ElectricTreetap : Item(FabricItemSettings().maxCount(1)), IElectricTool {
     override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 }
 
-/** 电动扳手 - 拆卸机器、旋转方块（等级 2，27k EU） */
+/** 电动扳手 - 拆卸机器、旋转方块（等级 1，10k EU） */
 @ModItem(name = "electric_wrench", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
 class ElectricWrench : Item(FabricItemSettings().maxCount(1)), IElectricTool {
-    override val tier = 2
-    override val maxCapacity = 27_000L
+    override val tier = 1
+    override val maxCapacity = 10_000L
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<net.minecraft.text.Text>, context: net.minecraft.client.item.TooltipContext) {

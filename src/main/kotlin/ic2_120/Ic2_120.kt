@@ -1,6 +1,7 @@
 package ic2_120
 
 import ic2_120.content.WrenchHandler
+import ic2_120.content.item.CellAndBucketFluidRegistration
 import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.content.block.MfsuBlock
 import ic2_120.content.block.cables.CableBlockEntity
@@ -54,6 +55,9 @@ object Ic2_120 : ModInitializer {
 
         // 地热发电机流体能力注册（Fabric Transfer API）
         GeoGeneratorBlockEntity.registerFluidStorageLookup()
+
+        // 单元与桶的流体交互（右键放置/收集液体，等效桶）
+        CellAndBucketFluidRegistration.register()
 
         // 世界卸载时清理电网缓存
         ServerWorldEvents.UNLOAD.register { _, world ->

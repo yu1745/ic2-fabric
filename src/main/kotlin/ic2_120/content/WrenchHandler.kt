@@ -2,6 +2,7 @@ package ic2_120.content
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.MachineBlock
+import ic2_120.content.item.energy.IElectricTool
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.item.ItemStack
@@ -17,8 +18,9 @@ import net.minecraft.world.World
 
 /**
  * 扳手与机器方块的交互逻辑：
- * - 扳手/电扳手左键拆机器：瞬间拆，掉完整机器，扳手耗 10 耐久
- * - 扳手/电扳手右键：旋转机器朝向，不耗耐久
+ * - 普通扳手左键拆机器：瞬间拆，掉完整机器，耗 10 耐久
+ * - 电动扳手左键拆机器：瞬间拆，掉完整机器，耗 1000 EU（电量不足则无法拆卸）
+ * - 扳手/电扳手右键：旋转机器朝向，不耗耐久/不耗电
  * - 非扳手拆卸：只掉机器外壳（由 MachineBlock.getCasingDrop 决定）
  */
 object WrenchHandler {
@@ -30,6 +32,11 @@ object WrenchHandler {
         if (stack.isEmpty) return false
         val id = Registries.ITEM.getId(stack.item)
         return id == WRENCH_ID || id == ELECTRIC_WRENCH_ID
+    }
+
+    private fun isElectricWrench(stack: ItemStack): Boolean {
+        if (stack.isEmpty) return false
+        return Registries.ITEM.getId(stack.item) == ELECTRIC_WRENCH_ID
     }
 
     fun register() {
@@ -58,13 +65,21 @@ object WrenchHandler {
             ActionResult.SUCCESS
         }
 
-        // 左键：扳手瞬间拆机器，掉完整机器，耗 10 耐久
+        // 左键：扳手瞬间拆机器，掉完整机器
+        // - 普通扳手：耗 10 耐久
+        // - 电动扳手：耗 1000 EU（电量不足则无法拆卸）
         AttackBlockCallback.EVENT.register { player, world, hand, pos, direction ->
             val stack = player.getStackInHand(hand)
             if (!isWrench(stack)) return@register ActionResult.PASS
 
             val state = world.getBlockState(pos)
             if (state.block !is MachineBlock) return@register ActionResult.PASS
+
+            // 电动扳手：电量不足 1000 EU 则不允许拆卸
+            if (isElectricWrench(stack)) {
+                val tool = stack.item as IElectricTool
+                if (tool.getEnergy(stack) < 1000) return@register ActionResult.FAIL
+            }
 
             if (!world.isClient && player is ServerPlayerEntity) {
                 // 副手扳手时临时换到主手，确保 loot 表识别为扳手拆卸
@@ -80,8 +95,17 @@ object WrenchHandler {
                     player.setStackInHand(Hand.MAIN_HAND, player.getStackInHand(Hand.OFF_HAND))
                     player.setStackInHand(Hand.OFF_HAND, main)
                 }
-                if (broken && stack.isDamageable) {
-                    stack.damage(10, player) { it.sendToolBreakStatus(hand) }
+                if (broken) {
+                    when {
+                        isElectricWrench(stack) -> {
+                            val tool = stack.item as IElectricTool
+                            val current = tool.getEnergy(stack)
+                            tool.setEnergy(stack, current - 1000)
+                        }
+                        stack.isDamageable -> {
+                            stack.damage(10, player) { it.sendToolBreakStatus(hand) }
+                        }
+                    }
                 }
             }
             ActionResult.SUCCESS

@@ -1,5 +1,7 @@
 package ic2_120.client
 
+import ic2_120.client.ui.FilteredInputRate
+import ic2_120.client.ui.FilteredOutputRate
 import ic2_120.client.ui.GuiBackground
 import ic2_120.client.compose.*
 import ic2_120.client.ui.EnergyBar
@@ -20,10 +22,8 @@ class MfsuScreen(
 ) : HandledScreen<MfsuScreenHandler>(handler, playerInventory, title) {
 
     private val ui = ComposeUI()
-    /** 上一帧同步到的能量，用于客户端计算输入/输出速率 */
-    private var lastEnergy: Long = -1
-    private var inputRate: Int = 0
-    private var outputRate: Int = 0
+    private var inputRate by FilteredInputRate()
+    private var outputRate by FilteredOutputRate()
 
     init {
         backgroundWidth = PANEL_WIDTH
@@ -45,14 +45,8 @@ class MfsuScreen(
 
         ui.render(context, textRenderer, mouseX, mouseY) {
             val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-            if (lastEnergy >= 0) {
-                val delta = energy - lastEnergy
-                when {
-                    delta > 0 -> { inputRate = delta.coerceAtMost(Int.MAX_VALUE.toLong()).toInt(); outputRate = 0 }
-                    delta < 0 -> { outputRate = (-delta).coerceAtMost(Int.MAX_VALUE.toLong()).toInt(); inputRate = 0 }
-                }
-            }
-            lastEnergy = energy
+            inputRate = energy
+            outputRate = energy
 
             val cap = MfsuSync.ENERGY_CAPACITY
             val fraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
@@ -79,7 +73,7 @@ class MfsuScreen(
                     shadow = false
                 )
                 Text(
-                    "输入 ${formatEu(inputRate.toLong())} EU/t · 输出 ${formatEu(outputRate.toLong())} EU/t",
+                    "输入 ${formatEu(inputRate)} EU/t · 输出 ${formatEu(outputRate)} EU/t",
                     color = 0xAAAAAA,
                     shadow = false
                 )
