@@ -214,17 +214,17 @@
 |  | ID | 名称 |
 |--|----|------|
 | - [x] | block.ic2.copper_cable | 铜质导线 |
-| - [ ] | block.ic2.insulated_copper_cable | 绝缘铜质导线 |
+| - [x] | block.ic2.insulated_copper_cable | 绝缘铜质导线 |
 | - [x] | block.ic2.glass_fibre_cable | 玻璃纤维导线 |
 | - [x] | block.ic2.gold_cable | 金质导线 |
-| - [ ] | block.ic2.insulated_gold_cable | 绝缘金质导线 |
-| - [ ] | block.ic2.double_insulated_gold_cable | 2x绝缘金质导线 |
+| - [x] | block.ic2.insulated_gold_cable | 绝缘金质导线 |
+| - [x] | block.ic2.double_insulated_gold_cable | 2x绝缘金质导线 |
 | - [x] | block.ic2.iron_cable | 高压导线 |
-| - [ ] | block.ic2.insulated_iron_cable | 绝缘高压导线 |
-| - [ ] | block.ic2.double_insulated_iron_cable | 2x绝缘高压导线 |
-| - [ ] | block.ic2.triple_insulated_iron_cable | 3x绝缘高压导线 |
+| - [x] | block.ic2.insulated_iron_cable | 绝缘高压导线 |
+| - [x] | block.ic2.double_insulated_iron_cable | 2x绝缘高压导线 |
+| - [x] | block.ic2.triple_insulated_iron_cable | 3x绝缘高压导线 |
 | - [x] | block.ic2.tin_cable | 锡质导线 |
-| - [ ] | block.ic2.insulated_tin_cable | 绝缘锡质导线 |
+| - [x] | block.ic2.insulated_tin_cable | 绝缘锡质导线 |
 | - [ ] | block.ic2.detector_cable | EU 检测导线 |
 | - [ ] | block.ic2.splitter_cable | EU 分流导线 |
 | - [x] | block.ic2.lv_transformer | 低压变压器 |

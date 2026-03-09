@@ -114,6 +114,30 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
             item("ic2_120:cutter"), Items.GLASS
         )
 
+        // ==================== 绝缘导线配方（导线 + 橡胶，1 橡胶=1 倍绝缘，2 橡胶=2 倍，3 橡胶=3 倍） ====================
+        val rubber = item("ic2_120:rubber")
+        createShapeless(recipeExporter, "insulated_copper_cable", RecipeCategory.MISC, item("ic2_120:insulated_copper_cable"), 1,
+            item("ic2_120:copper_cable"), rubber
+        )
+        createShapeless(recipeExporter, "insulated_tin_cable", RecipeCategory.MISC, item("ic2_120:insulated_tin_cable"), 1,
+            item("ic2_120:tin_cable"), rubber
+        )
+        createShapeless(recipeExporter, "insulated_gold_cable", RecipeCategory.MISC, item("ic2_120:insulated_gold_cable"), 1,
+            item("ic2_120:gold_cable"), rubber
+        )
+        createShapeless(recipeExporter, "double_insulated_gold_cable", RecipeCategory.MISC, item("ic2_120:double_insulated_gold_cable"), 1,
+            item("ic2_120:gold_cable"), rubber, rubber
+        )
+        createShapeless(recipeExporter, "insulated_iron_cable", RecipeCategory.MISC, item("ic2_120:insulated_iron_cable"), 1,
+            item("ic2_120:iron_cable"), rubber
+        )
+        createShapeless(recipeExporter, "double_insulated_iron_cable", RecipeCategory.MISC, item("ic2_120:double_insulated_iron_cable"), 1,
+            item("ic2_120:iron_cable"), rubber, rubber
+        )
+        createShapeless(recipeExporter, "triple_insulated_iron_cable", RecipeCategory.MISC, item("ic2_120:triple_insulated_iron_cable"), 1,
+            item("ic2_120:iron_cable"), rubber, rubber, rubber
+        )
+
         // ==================== 锡罐工作台配方 ====================
         val tinIngot = item("ic2_120:tin_ingot")
         val tinCan = item("ic2_120:tin_can")
