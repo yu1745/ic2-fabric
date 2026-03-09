@@ -21,6 +21,7 @@ fun FilteredRate(
             filtered.toLong().coerceAtLeast(0)
 
         override fun setValue(thisRef: Any?, property: KProperty<*>, value: Long) {
+            if (value == lastCapacity) return  // 跳过重复帧：render 每帧调用，sync 每 tick 更新，避免用 0 稀释滤波值
             val raw = if (lastCapacity >= 0) rateFromDelta(lastCapacity, value) else 0L
             lastCapacity = value
             filtered = alpha * raw + (1 - alpha) * filtered
