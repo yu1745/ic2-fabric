@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "active=false": { "model": "ic2:block/generator/electric/rt_generator" },
+    "active=true": { "model": "ic2:block/generator/electric/rt_generator_active" }
+  }
+}

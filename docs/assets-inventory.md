@@ -103,7 +103,7 @@
 | - [x] | block.ic2.generator | 火力发电机 |
 | - [x] | block.ic2.geo_generator | 地热发电机 |
 | - [ ] | block.ic2.kinetic_generator | 动能发电机 |
-| - [ ] | block.ic2.rt_generator | 放射性同位素温差发电机 |
+| - [x] | block.ic2.rt_generator | 放射性同位素温差发电机 |
 | - [ ] | block.ic2.semifluid_generator | 半流质发电机 |
 | - [x] | block.ic2.solar_generator | 太阳能发电机 |
 | - [ ] | block.ic2.stirling_generator | 斯特林发电机 |
@@ -124,9 +124,9 @@
 ### 机器 - 核反应堆类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | block.ic2.nuclear_reactor | 核反应堆 |
+| - [x] | block.ic2.nuclear_reactor | 核反应堆 |
 | - [ ] | block.ic2.reactor_access_hatch | 反应堆访问接口 |
-| - [ ] | block.ic2.reactor_chamber | 核反应仓 |
+| - [x] | block.ic2.reactor_chamber | 核反应仓 |
 | - [ ] | block.ic2.reactor_fluid_port | 反应堆流体接口 |
 | - [ ] | block.ic2.reactor_redstone_port | 反应堆红石接口 |
 

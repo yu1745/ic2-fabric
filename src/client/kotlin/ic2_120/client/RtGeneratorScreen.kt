@@ -1,0 +1,125 @@
+package ic2_120.client
+
+import ic2_120.client.compose.*
+import ic2_120.client.ui.EnergyBar
+import ic2_120.client.ui.GuiBackground
+import ic2_120.content.block.RtGeneratorBlock
+import ic2_120.content.block.machines.RtGeneratorBlockEntity
+import ic2_120.content.screen.RtGeneratorScreenHandler
+import ic2_120.content.sync.RtGeneratorSync
+import ic2_120.registry.annotation.ModScreen
+import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.text.Text
+
+@ModScreen(block = RtGeneratorBlock::class)
+class RtGeneratorScreen(
+    handler: RtGeneratorScreenHandler,
+    playerInventory: PlayerInventory,
+    title: Text
+) : HandledScreen<RtGeneratorScreenHandler>(handler, playerInventory, title) {
+
+    private val ui = ComposeUI()
+
+    init {
+        backgroundWidth = PANEL_WIDTH
+        backgroundHeight = PANEL_HEIGHT
+        titleY = -1000  // 隐藏默认标题，使用 ComposeUI 自定义布局
+    }
+
+    override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context, x, y,
+            RtGeneratorScreenHandler.PLAYER_INV_Y,
+            RtGeneratorScreenHandler.HOTBAR_Y,
+            RtGeneratorScreenHandler.SLOT_SIZE
+        )
+        val borderColor = GuiBackground.BORDER_COLOR
+        val slotSize = RtGeneratorScreenHandler.SLOT_SIZE
+        val borderOffset = 1
+
+        // 燃料槽 2x3 网格整体边框
+        val fuelSlot0 = handler.slots[0]
+        val fuelSlot5 = handler.slots[5]
+        val gridX = x + fuelSlot0.x - borderOffset
+        val gridY = y + fuelSlot0.y - borderOffset
+        val gridW = (fuelSlot5.x - fuelSlot0.x) + slotSize + borderOffset * 2
+        val gridH = (fuelSlot5.y - fuelSlot0.y) + slotSize + borderOffset * 2
+        context.drawBorder(gridX, gridY, gridW, gridH, borderColor)
+
+        // 电池槽边框
+        val batterySlot = handler.slots[RtGeneratorBlockEntity.BATTERY_SLOT]
+        context.drawBorder(x + batterySlot.x - borderOffset, y + batterySlot.y - borderOffset, slotSize, slotSize, borderColor)
+    }
+
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        super.render(context, mouseX, mouseY, delta)
+        val left = x
+        val top = y
+        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+        val cap = RtGeneratorSync.ENERGY_CAPACITY
+        val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
+
+        // 根据燃料槽数量计算输出
+        val pelletCount = (0..5).count { !handler.slots[it].stack.isEmpty }
+        val outputEuPerTick = RtGeneratorSync.euPerTickFromPelletCount(pelletCount)
+
+        // 能量信息放在右侧（x=88），避免与左侧燃料槽（x=8~62）重叠
+        val infoX = left + 88
+        val infoW = (backgroundWidth - 88 - 8).coerceAtLeast(0)
+        val barW = (infoW - 36).coerceAtLeast(0)
+
+        ui.render(context, textRenderer, mouseX, mouseY) {
+            // 标题在左侧（使用 container 翻译键可显示较短标题）
+            Text(title.string, x = left + 8, y = top + 8, color = 0xFFFFFF, absolute = true)
+            // 能量信息在右侧
+            Column(x = infoX, y = top + 8, spacing = 6, absolute = true) {
+                Flex(
+                    direction = FlexDirection.ROW,
+                    alignItems = AlignItems.CENTER,
+                    gap = 8,
+                    modifier = Modifier.EMPTY.width(infoW)
+                ) {
+                    Text("缓冲", color = 0xAAAAAA)
+                    EnergyBar(
+                        energyFraction,
+                        barWidth = 0,
+                        barHeight = 9,
+                        modifier = Modifier.EMPTY.width(barW)
+                    )
+                }
+                // 第一行：能量值
+                Text(
+                    "${formatEu(energy)} / ${formatEu(cap)} EU",
+                    color = 0xCCCCCC,
+                    shadow = false
+                )
+                // 第二行：输出，避免溢出
+                Text(
+                    "输出 ${outputEuPerTick} EU/t",
+                    color = 0xAAAAAA,
+                    shadow = false
+                )
+            }
+        }
+        drawMouseoverTooltip(context, mouseX, mouseY)
+    }
+
+    private fun formatEu(value: Long): String {
+        return when {
+            value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000.0)
+            value >= 1_000 -> String.format("%.1fK", value / 1_000.0)
+            else -> value.toString()
+        }
+    }
+
+    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
+        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+
+    companion object {
+        private const val PANEL_WIDTH = 176
+        private const val PANEL_HEIGHT = 166
+    }
+}

@@ -303,6 +303,42 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
                 .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "solar_generator"))
         }
 
+        // ==================== 核反应仓配方 ====================
+        // 4 铅板（四角）+ 1 基础机械外壳（中心）-> 1 核反应仓
+        val reactorChamber = item("ic2_120:reactor_chamber")
+        val leadPlate = item("ic2_120:lead_plate")
+        if (reactorChamber != Items.AIR && leadPlate != Items.AIR && machine != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, reactorChamber, 1)
+                .pattern("L L").pattern(" M ").pattern("L L")
+                .input('L', leadPlate).input('M', machine)
+                .criterion(hasItem(leadPlate), conditionsFromItem(leadPlate))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "reactor_chamber"))
+        }
+
+        // ==================== 核反应堆配方 ====================
+        // 4 致密铅板（上下两行）+ 1 高级电路（上中）+ 3 核反应仓（中行）+ 1 火力发电机（下中）
+        val nuclearReactor = item("ic2_120:nuclear_reactor")
+        val denseLeadPlate = item("ic2_120:dense_lead_plate")
+        if (nuclearReactor != Items.AIR && denseLeadPlate != Items.AIR && advancedCircuit != Items.AIR &&
+            reactorChamber != Items.AIR && generator != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, nuclearReactor, 1)
+                .pattern("DCD").pattern("RRR").pattern("DGD")
+                .input('D', denseLeadPlate).input('C', advancedCircuit).input('R', reactorChamber).input('G', generator)
+                .criterion(hasItem(reactorChamber), conditionsFromItem(reactorChamber))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "nuclear_reactor"))
+        }
+
+        // ==================== 放射性同位素温差发电机配方 ====================
+        // 7 铁质外壳 + 1 核反应仓 + 1 火力发电机
+        val rtGenerator = item("ic2_120:rt_generator")
+        if (rtGenerator != Items.AIR && ironCasing != Items.AIR && reactorChamber != Items.AIR && generator != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, rtGenerator, 1)
+                .pattern("III").pattern("IGI").pattern("IRI")
+                .input('I', ironCasing).input('G', generator).input('R', reactorChamber)
+                .criterion(hasItem(reactorChamber), conditionsFromItem(reactorChamber))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "rt_generator"))
+        }
+
         // ==================== 日光灯配方 ====================
         // 绝缘铜质导线（上中）+ 锡质导线（中中）+ 5 玻璃 -> 8 日光灯
         val luminatorFlat = item("ic2_120:luminator_flat")
