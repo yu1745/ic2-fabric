@@ -285,6 +285,7 @@
   "item.ic2_120.iodine": "Iodine",
   "item.ic2_120.empty_cell": "Empty Cell",
   "item.ic2_120.fluid_cell": "Fluid Cell",
+  "item.ic2_120.fluid_cell.filled": "%s Fluid Cell",
   "item.ic2_120.air_cell": "Compressed Air Cell",
   "item.ic2_120.biofuel_cell": "Biofuel Cell",
   "item.ic2_120.bio_cell": "Compressed Plant Ball Cell",

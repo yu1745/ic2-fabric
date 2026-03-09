@@ -35,6 +35,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.TypedActionResult
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
+import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.RaycastContext
 import net.minecraft.world.World
@@ -169,6 +170,16 @@ class FluidCellItem : Item(FabricItemSettings()), FluidModificationItem {
     }
 
     override fun getRecipeRemainder(stack: ItemStack): ItemStack = ItemStack(emptyCell)
+
+    override fun getName(stack: ItemStack): Text {
+        val variant = stack.getFluidCellVariant()
+        if (variant != null && !variant.isBlank) {
+            val fluid = variant.fluid
+            val fluidName = fluid.defaultState.blockState.block.translationKey
+            return Text.translatable("item.ic2_120.fluid_cell.filled", Text.translatable(fluidName))
+        }
+        return super.getName(stack)
+    }
 }
 
 private val emptyCell: Item get() = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))

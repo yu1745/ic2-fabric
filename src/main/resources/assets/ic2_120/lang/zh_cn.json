@@ -285,6 +285,7 @@
   "item.ic2_120.iodine": "碘",
   "item.ic2_120.empty_cell": "空单元",
   "item.ic2_120.fluid_cell": "通用流体单元",
+  "item.ic2_120.fluid_cell.filled": "%s 通用流体单元",
   "item.ic2_120.air_cell": "压缩空气单元",
   "item.ic2_120.biofuel_cell": "植物能量单元",
   "item.ic2_120.bio_cell": "压缩植物球单元",
