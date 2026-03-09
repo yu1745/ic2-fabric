@@ -342,5 +342,15 @@
   "ic2_120.generator.fuel_slot": "燃料槽",
   "ic2_120.generator.battery_slot": "电池充电槽",
   "ic2_120.gui.tier": "等级 %d",
-  "ic2_120.gui.energy_tier_info": "可充等级 %d 及更低"
+  "ic2_120.gui.energy_tier_info": "可充等级 %d 及更低",
+  "block.ic2_120.coolant": "IC2冷却液",
+  "block.ic2_120.hot_coolant": "IC2热冷却液",
+  "block.ic2_120.uu_matter": "UU物质",
+  "block.ic2_120.weed_ex": "除草剂",
+  "block.ic2_120.pahoehoe_lava": "熔岩岩浆",
+  "item.ic2_120.coolant_bucket": "IC2冷却液桶",
+  "item.ic2_120.hot_coolant_bucket": "IC2热冷却液桶",
+  "item.ic2_120.uu_matter_bucket": "UU物质桶",
+  "item.ic2_120.weed_ex_bucket": "除草剂桶",
+  "item.ic2_120.pahoehoe_lava_bucket": "熔岩岩浆桶"
 }

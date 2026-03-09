@@ -306,8 +306,8 @@ class BiomassBucket : Item(FabricItemSettings())
 @ModItem(name = "construct_foam_bucket", tab = CreativeTab.IC2_MATERIALS, group = "buckets")
 class ConstructFoamBucket : Item(FabricItemSettings())
 
-@ModItem(name = "coolant_bucket", tab = CreativeTab.IC2_MATERIALS, group = "buckets")
-class CoolantBucket : Item(FabricItemSettings())
+// coolant_bucket、hot_coolant_bucket、uu_matter_bucket、weed_ex_bucket、pahoehoe_lava_bucket
+// 由 ModFluids 注册为 BucketItem，此处不再重复注册
 
 // ========== 建筑泡沫类 ==========
 

@@ -1,6 +1,7 @@
 package ic2_120
 
 import ic2_120.content.WrenchHandler
+import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.CellAndBucketFluidRegistration
 import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.content.block.MfsuBlock
@@ -31,6 +32,9 @@ object Ic2_120 : ModInitializer {
     private val logger = LoggerFactory.getLogger(MOD_ID)
 
     override fun onInitialize() {
+        // 流体需在 ClassScanner 之前注册（流体、方块、桶）
+        ModFluids.register()
+
         // 船实体类型需在扫描物品前注册，供 @ModItem 船物品类构造时引用
         ModEntities.register()
 

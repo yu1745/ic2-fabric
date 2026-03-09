@@ -342,5 +342,15 @@
   "ic2_120.generator.fuel_slot": "Fuel Slot",
   "ic2_120.generator.battery_slot": "Battery Charge Slot",
   "ic2_120.gui.tier": "Tier %d",
-  "ic2_120.gui.energy_tier_info": "Can charge Tier %d and lower"
+  "ic2_120.gui.energy_tier_info": "Can charge Tier %d and lower",
+  "block.ic2_120.coolant": "IC2 Coolant",
+  "block.ic2_120.hot_coolant": "IC2 Hot Coolant",
+  "block.ic2_120.uu_matter": "UU Matter",
+  "block.ic2_120.weed_ex": "Weed-EX",
+  "block.ic2_120.pahoehoe_lava": "Pahoehoe Lava",
+  "item.ic2_120.coolant_bucket": "IC2 Coolant Bucket",
+  "item.ic2_120.hot_coolant_bucket": "IC2 Hot Coolant Bucket",
+  "item.ic2_120.uu_matter_bucket": "UU Matter Bucket",
+  "item.ic2_120.weed_ex_bucket": "Weed-EX Bucket",
+  "item.ic2_120.pahoehoe_lava_bucket": "Pahoehoe Lava Bucket"
 }

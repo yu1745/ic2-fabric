@@ -2,6 +2,7 @@ package ic2_120
 
 import ic2_120.client.BatteryModelPredicates
 import ic2_120.client.ModItemTooltip
+import ic2_120.client.ModFluidClient
 import ic2_120.client.ClientBlockRenderLayers
 import ic2_120.client.ClientEntityRenderers
 import ic2_120.client.ClientScreenRegistrar
@@ -11,6 +12,7 @@ import net.fabricmc.api.ClientModInitializer
 
 object Ic2_120Client : ClientModInitializer {
 	override fun onInitializeClient() {
+		ModFluidClient.register()
 		ClientScreenRegistrar.registerScreens(Ic2_120.MOD_ID, listOf("ic2_120.client"))
 		ModItemTooltip.register()
 		ClientEntityRenderers.register()
