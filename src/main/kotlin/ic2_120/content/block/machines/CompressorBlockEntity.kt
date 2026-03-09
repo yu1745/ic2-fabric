@@ -7,6 +7,12 @@ import ic2_120.content.pullEnergyFromNeighbors
 import ic2_120.content.block.CompressorBlock
 import ic2_120.content.screen.CompressorScreenHandler
 import ic2_120.content.syncs.SyncedData
+import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
+import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
+import ic2_120.content.upgrade.IOverclockerUpgradeSupport
+import ic2_120.content.upgrade.ITransformerUpgradeSupport
+import ic2_120.content.upgrade.OverclockerUpgradeComponent
+import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import net.minecraft.block.BlockState
@@ -29,13 +35,31 @@ class CompressorBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Inventory, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
-    private val inventory = DefaultedList.ofSize(2, ItemStack.EMPTY)  // 0: 输入, 1: 输出
+    override var speedMultiplier: Float = 1f
+    override var energyMultiplier: Float = 1f
+    override var capacityBonus: Long = 0L
+    override var voltageTierBonus: Int = 0
+
+    companion object {
+        const val COMPRESSOR_TIER = 1
+        const val SLOT_INPUT = 0
+        const val SLOT_OUTPUT = 1
+        val SLOT_UPGRADE_INDICES = intArrayOf(2, 3, 4, 5)
+        const val INVENTORY_SIZE = 6
+    }
+
+    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
 
     val syncedData = SyncedData(this)
     @RegisterEnergy
-    val sync = CompressorSync(syncedData) { world?.time }
+    val sync = CompressorSync(
+        syncedData,
+        { world?.time },
+        { capacityBonus },
+        { TransformerUpgradeComponent.maxInsertForTier(COMPRESSOR_TIER + voltageTierBonus) }
+    )
 
     constructor(pos: BlockPos, state: BlockState) : this(
         ModBlockEntities.getType(CompressorBlockEntity::class),
@@ -43,7 +67,7 @@ class CompressorBlockEntity(
         state
     )
 
-    override fun size(): Int = 2
+    override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
@@ -85,16 +109,23 @@ class CompressorBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        pullEnergyFromNeighbors(world, pos, sync, CompressorSync.MAX_INSERT)
 
-        val input = getStack(0)
+        // 应用升级效果（加速、储能、高压）
+        OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
+
+        pullEnergyFromNeighbors(world, pos, sync, sync.getMaxInsertPerTick())
+
+        val input = getStack(SLOT_INPUT)
         val recipe = CompressorRecipes.getRecipe(input) ?: run {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
             return
         }
         val (inputCount, result) = recipe
-        val outputSlot = getStack(1)
+        val outputSlot = getStack(SLOT_OUTPUT)
         val maxStack = result.maxCount
         val canAccept = outputSlot.isEmpty() ||
             (ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= maxStack)
@@ -105,9 +136,10 @@ class CompressorBlockEntity(
             return
         }
 
+        val progressIncrement = speedMultiplier.toInt().coerceAtLeast(1)
         if (sync.progress >= CompressorSync.PROGRESS_MAX) {
             input.decrement(inputCount)
-            if (outputSlot.isEmpty()) setStack(1, result)
+            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result)
             else outputSlot.increment(result.count)
             sync.progress = 0
             markDirty()
@@ -115,11 +147,11 @@ class CompressorBlockEntity(
             return
         }
 
-        val need = CompressorSync.ENERGY_PER_TICK
+        val need = (CompressorSync.ENERGY_PER_TICK * energyMultiplier).toLong().coerceAtLeast(1L)
         if (sync.amount >= need) {
             sync.amount = (sync.amount - need).coerceAtLeast(0L)
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            sync.progress += 1
+            sync.progress += progressIncrement
             markDirty()
             setActiveState(world, pos, state, true)
         } else {

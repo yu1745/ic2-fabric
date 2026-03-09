@@ -7,6 +7,7 @@ import ic2_120.client.ui.ProgressBar
 import ic2_120.content.sync.CompressorSync
 import ic2_120.content.block.CompressorBlock
 import ic2_120.content.screen.CompressorScreenHandler
+import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -38,10 +39,14 @@ class CompressorScreen(
         val borderColor = GuiBackground.BORDER_COLOR
         val slotSize = CompressorScreenHandler.SLOT_SIZE
         val borderOffset = 1
-        val inputSlot = handler.slots[0]
-        val outputSlot = handler.slots[1]
+        val inputSlot = handler.slots[CompressorScreenHandler.SLOT_INPUT_INDEX]
+        val outputSlot = handler.slots[CompressorScreenHandler.SLOT_OUTPUT_INDEX]
         context.drawBorder(x + inputSlot.x - borderOffset, y + inputSlot.y - borderOffset, slotSize, slotSize, borderColor)
         context.drawBorder(x + outputSlot.x - borderOffset, y + outputSlot.y - borderOffset, slotSize, slotSize, borderColor)
+        for (i in CompressorScreenHandler.SLOT_UPGRADE_INDEX_START..CompressorScreenHandler.SLOT_UPGRADE_INDEX_END) {
+            val slot = handler.slots[i]
+            context.drawBorder(x + slot.x - borderOffset, y + slot.y - borderOffset, slotSize, slotSize, borderColor)
+        }
         val progress = handler.sync.progress.coerceIn(0, CompressorSync.PROGRESS_MAX)
         val progressFrac = if (CompressorSync.PROGRESS_MAX > 0) (progress.toFloat() / CompressorSync.PROGRESS_MAX).coerceIn(0f, 1f) else 0f
         val barX = x + inputSlot.x + slotSize + 2
@@ -56,7 +61,7 @@ class CompressorScreen(
         val left = x
         val top = y
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = CompressorSync.ENERGY_CAPACITY
+        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1L)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
         val contentW = (backgroundWidth - 16).coerceAtLeast(0)
         val barW = (contentW - 36).coerceAtLeast(0)
@@ -91,7 +96,8 @@ class CompressorScreen(
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
 
     companion object {
-        private const val PANEL_WIDTH = 176
+        /** 原版 UI 宽度 + 升级槽列宽度 */
+        private val PANEL_WIDTH = UpgradeSlotLayout.VANILLA_UI_WIDTH + UpgradeSlotLayout.SLOT_SPACING
         private const val PANEL_HEIGHT = 166
     }
 }
