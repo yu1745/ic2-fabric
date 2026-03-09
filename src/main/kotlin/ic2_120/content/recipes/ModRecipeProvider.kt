@@ -158,6 +158,17 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
             .input('M', bronze).input('S', stick)
             .criterion(hasItem(bronze), conditionsFromItem(bronze))
             .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "bronze_hoe"))
+
+        // ==================== 基础机器配方 ====================
+        val machine = item("ic2_120:machine")
+        val circuit = item("ic2_120:circuit")
+        val treetap = item("ic2_120:treetap")
+        // 提取机：4 木龙头 + 1 基础机械外壳 + 1 电路板
+        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, item("ic2_120:extractor"), 1)
+            .pattern("   ").pattern("TMT").pattern("TCT")
+            .input('T', treetap).input('M', machine).input('C', circuit)
+            .criterion(hasItem(machine), conditionsFromItem(machine))
+            .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "extractor"))
     }
 
     private fun createShapeless(

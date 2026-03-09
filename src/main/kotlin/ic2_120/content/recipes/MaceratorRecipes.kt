@@ -40,6 +40,7 @@ object MaceratorRecipes {
         add("minecraft:granite", ItemStack(net.minecraft.item.Items.COBBLESTONE, 1)) // 花岗岩 -> 1 圆石
         add("minecraft:diorite", ItemStack(net.minecraft.item.Items.COBBLESTONE, 1)) // 闪长岩 -> 1 圆石
         add("minecraft:andesite", ItemStack(net.minecraft.item.Items.COBBLESTONE, 1)) // 安山岩 -> 1 圆石
+        add("minecraft:netherrack", stack("ic2_120:netherrack_dust", 1))             // 地狱岩 -> 1 地狱岩粉
     }
 
     private fun add(inputId: String, output: ItemStack) {

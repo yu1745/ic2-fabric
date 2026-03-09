@@ -135,7 +135,7 @@
 |--|----|------|
 | - [x] | block.ic2.compressor | 压缩机 |
 | - [x] | block.ic2.electric_furnace | 电炉 |
-| - [ ] | block.ic2.extractor | 提取机 |
+| - [x] | block.ic2.extractor | 提取机 |
 | - [ ] | block.ic2.iron_furnace | 铁炉 |
 | - [x] | block.ic2.macerator | 打粉机 |
 | - [ ] | block.ic2.recycler | 回收机 |
@@ -915,7 +915,7 @@
 | - [ ] | item.ic2.centrifuge | 热能离心机 |
 | - [ ] | item.ic2.cesu | CESU 储电箱 |
 | - [ ] | item.ic2.chunk_loader | 区块加载器 |
-| - [ ] | item.ic2.compressor | 压缩机 |
+| - [x] | item.ic2.compressor | 压缩机 |
 | - [ ] | item.ic2.condenser | 冷凝机 |
 | - [x] | item.ic2.copper_block | 铜块 |
 | - [ ] | item.ic2.copper_cable | 铜质导线 |

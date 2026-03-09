@@ -83,6 +83,10 @@ class TinDust : Item(FabricItemSettings())
 @ModItem(name = "hydrated_tin_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
 class HydratedTinDust : Item(FabricItemSettings())
 
+/** 地狱岩粉 */
+@ModItem(name = "netherrack_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+class NetherrackDust : Item(FabricItemSettings())
+
 // ========== 小撮粉尘类 ==========
 
 /** 小撮青铜粉 */

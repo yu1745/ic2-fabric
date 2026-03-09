@@ -3,6 +3,7 @@
   "values": [
     "ic2_120:compressor",
     "ic2_120:electric_furnace",
+    "ic2_120:extractor",
     "ic2_120:generator",
     "ic2_120:geo_generator",
     "ic2_120:macerator",
