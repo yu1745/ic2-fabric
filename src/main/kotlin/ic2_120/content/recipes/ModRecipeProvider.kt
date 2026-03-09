@@ -194,10 +194,62 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
             .criterion(hasItem(machine), conditionsFromItem(machine))
             .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "extractor"))
 
+        // ==================== 变压器配方 ====================
+        val lvTransformer = item("ic2_120:lv_transformer")
+        val mvTransformer = item("ic2_120:mv_transformer")
+        val insulatedTinCable = item("ic2_120:insulated_tin_cable")
+        val coil = item("ic2_120:coil")
+        val insulatedCopperCable = item("ic2_120:insulated_copper_cable")
+        val insulatedGoldCable = item("ic2_120:insulated_gold_cable")
+        val insulatedIronCable = item("ic2_120:insulated_iron_cable")
+        val advancedCircuit = item("ic2_120:advanced_circuit")
+        val advancedReBattery = item("ic2_120:advanced_re_battery")
+        val lapotronCrystal = item("ic2_120:lapotron_crystal")
+        val hvTransformer = item("ic2_120:hv_transformer")
+        val planks = Items.OAK_PLANKS
+
+        // 低压变压器：6 木板 + 2 绝缘锡质导线 + 1 线圈
+        if (lvTransformer != Items.AIR && insulatedTinCable != Items.AIR && coil != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, lvTransformer, 1)
+                .pattern("PWP").pattern("PCP").pattern("PWP")
+                .input('P', planks).input('W', insulatedTinCable).input('C', coil)
+                .criterion(hasItem(coil), conditionsFromItem(coil))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "lv_transformer"))
+        }
+
+        // 中压变压器：2 绝缘铜质导线 + 1 基础机械外壳（中间一列）
+        if (mvTransformer != Items.AIR && insulatedCopperCable != Items.AIR && machine != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, mvTransformer, 1)
+                .pattern(" W ").pattern(" M ").pattern(" W ")
+                .input('W', insulatedCopperCable).input('M', machine)
+                .criterion(hasItem(machine), conditionsFromItem(machine))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "mv_transformer"))
+        }
+
+        // 高压变压器：2 绝缘金质导线 + 1 电路板 + 1 中压变压器 + 1 高级充电电池
+        if (hvTransformer != Items.AIR && insulatedGoldCable != Items.AIR && circuit != Items.AIR &&
+            mvTransformer != Items.AIR && advancedReBattery != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, hvTransformer, 1)
+                .pattern(" W ").pattern("CTB").pattern(" W ")
+                .input('W', insulatedGoldCable).input('C', circuit).input('T', mvTransformer).input('B', advancedReBattery)
+                .criterion(hasItem(mvTransformer), conditionsFromItem(mvTransformer))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "hv_transformer"))
+        }
+
+        // 超高压变压器：2 绝缘高压导线 + 1 高级电路 + 1 高压变压器 + 1 拉普顿晶体
+        val evTransformer = item("ic2_120:ev_transformer")
+        if (evTransformer != Items.AIR && insulatedIronCable != Items.AIR && advancedCircuit != Items.AIR &&
+            hvTransformer != Items.AIR && lapotronCrystal != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, evTransformer, 1)
+                .pattern(" W ").pattern("CTL").pattern(" W ")
+                .input('W', insulatedIronCable).input('C', advancedCircuit).input('T', hvTransformer).input('L', lapotronCrystal)
+                .criterion(hasItem(hvTransformer), conditionsFromItem(hvTransformer))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "ev_transformer"))
+        }
+
         // ==================== 特斯拉线圈配方 ====================
         // 配方一：5 红石粉 + 1 中压变压器 + 2 铁质外壳 + 1 电路板
         // 配方二：5 红石粉 + 1 中压变压器 + 2 钢锭 + 1 电路板
-        val mvTransformer = item("ic2_120:mv_transformer")
         val teslaCoil = item("ic2_120:tesla_coil")
         val redstone = Items.REDSTONE
         val ironCasing = item("ic2_120:iron_casing")

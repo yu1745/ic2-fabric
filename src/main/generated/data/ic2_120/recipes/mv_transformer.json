@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "M": {
+      "item": "ic2_120:machine"
+    },
+    "W": {
+      "item": "ic2_120:insulated_copper_cable"
+    }
+  },
+  "pattern": [
+    " W ",
+    " M ",
+    " W "
+  ],
+  "result": {
+    "item": "ic2_120:mv_transformer"
+  },
+  "show_notification": true
+}
