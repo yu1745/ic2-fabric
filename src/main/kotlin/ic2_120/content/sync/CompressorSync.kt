@@ -22,11 +22,14 @@ class CompressorSync(
 ) {
 
     companion object {
-        const val ENERGY_CAPACITY = 416L
+        /** 基础容量 600 EU，可完成一次完整压缩 */
+        const val ENERGY_CAPACITY = 600L
         const val MAX_INSERT = 32L
         const val MAX_EXTRACT = 0L
         const val NBT_ENERGY_STORED = "EnergyStored"
-        const val PROGRESS_MAX = 130
+        /** 加工耗时 15 秒 = 300 tick */
+        const val PROGRESS_MAX = 300
+        /** 功率 2 EU/t，单次压缩共需 600 EU */
         const val ENERGY_PER_TICK = 2L
     }
 
