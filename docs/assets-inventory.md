@@ -680,10 +680,10 @@
 ### 驱动与动力类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | item.ic2.small_power_unit | 小型驱动把手 |
-| - [ ] | item.ic2.power_unit | 驱动把手 |
+| - [x] | item.ic2.small_power_unit | 小型驱动把手 |
+| - [x] | item.ic2.power_unit | 驱动把手 |
 | - [x] | item.ic2.tin_can | 锡罐 (空) |
-| - [ ] | item.ic2.filled_tin_can | 锡罐 (满) |
+| - [x] | item.ic2.filled_tin_can | 锡罐 (满) |
 
 ### 碳材料类
 |  | ID | 名称 |
@@ -697,7 +697,7 @@
 |  | ID | 名称 |
 |--|----|------|
 | - [x] | item.ic2.coal_ball | 煤球 |
-| - [ ] | item.ic2.coal_block | 压缩煤球 |
+| - [x] | item.ic2.coal_block | 压缩煤球 |
 | - [x] | item.ic2.coal_chunk | 煤块 |
 | - [x] | item.ic2.industrial_diamond | 工业钻石 |
 | - [x] | item.ic2.plant_ball | 植物球 |
@@ -710,8 +710,8 @@
 ### 建筑泡沫类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | item.ic2.cf_powder | 建筑泡沫粉 |
-| - [ ] | item.ic2.pellet | 建筑泡沫颗粒 |
+| - [x] | item.ic2.cf_powder | 建筑泡沫粉 |
+| - [x] | item.ic2.pellet | 建筑泡沫颗粒 |
 
 ### 模式存储类
 |  | ID | 名称 |
@@ -777,13 +777,13 @@
 ### 地形转换模板类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | item.ic2.blank_tfbp | 地形转换模板 - 空白 |
-| - [ ] | item.ic2.chilling_tfbp | 地形转换模板 - 冰原 |
-| - [ ] | item.ic2.cultivation_tfbp | 地形转换模板 - 耕地 |
-| - [ ] | item.ic2.desertification_tfbp | 地形转换模板 - 沙漠 |
-| - [ ] | item.ic2.flatification_tfbp | 地形转换模板 - 平地 |
-| - [ ] | item.ic2.irrigation_tfbp | 地形转换模板 - 灌溉 |
-| - [ ] | item.ic2.mushroom_tfbp | 地形转换模板 - 蘑菇 |
+| - [x] | item.ic2.blank_tfbp | 地形转换模板 - 空白 |
+| - [x] | item.ic2.chilling_tfbp | 地形转换模板 - 冰原 |
+| - [x] | item.ic2.cultivation_tfbp | 地形转换模板 - 耕地 |
+| - [x] | item.ic2.desertification_tfbp | 地形转换模板 - 沙漠 |
+| - [x] | item.ic2.flatification_tfbp | 地形转换模板 - 平地 |
+| - [x] | item.ic2.irrigation_tfbp | 地形转换模板 - 灌溉 |
+| - [x] | item.ic2.mushroom_tfbp | 地形转换模板 - 蘑菇 |
 
 ### 服装与护甲类
 |  | ID | 名称 |

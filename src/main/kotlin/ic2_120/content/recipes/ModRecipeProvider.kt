@@ -114,6 +114,22 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
             item("ic2_120:cutter"), Items.GLASS
         )
 
+        // ==================== 锡罐工作台配方 ====================
+        val tinIngot = item("ic2_120:tin_ingot")
+        val tinCan = item("ic2_120:tin_can")
+        // 8 锡锭 -> 16 空锡罐
+        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, tinCan, 16)
+            .pattern("TTT").pattern("T T").pattern("TTT")
+            .input('T', tinIngot)
+            .criterion(hasItem(tinIngot), conditionsFromItem(tinIngot))
+            .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "tin_can_from_ingots_8"))
+        // 6 锡锭 -> 4 空锡罐
+        ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, tinCan, 4)
+            .pattern(" T ").pattern("T T").pattern("TTT")
+            .input('T', tinIngot)
+            .criterion(hasItem(tinIngot), conditionsFromItem(tinIngot))
+            .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "tin_can_from_ingots_6"))
+
         // ==================== 青铜工具配方 ====================
         val bronze = item("ic2_120:bronze_ingot")
         val stick = Items.STICK

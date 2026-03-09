@@ -1,1 +1,6 @@
-{ "parent": "ic2:block/resource/rubber/door_bottom_left" }
+{
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "ic2:item/rubber_door"
+    }
+  }

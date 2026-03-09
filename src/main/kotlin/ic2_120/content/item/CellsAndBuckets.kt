@@ -309,6 +309,14 @@ class ConstructFoamBucket : Item(FabricItemSettings())
 @ModItem(name = "coolant_bucket", tab = CreativeTab.IC2_MATERIALS, group = "buckets")
 class CoolantBucket : Item(FabricItemSettings())
 
+// ========== 建筑泡沫类 ==========
+
+@ModItem(name = "cf_powder", tab = CreativeTab.IC2_MATERIALS, group = "construction_foam")
+class CfPowder : Item(FabricItemSettings())
+
+@ModItem(name = "pellet", tab = CreativeTab.IC2_MATERIALS, group = "construction_foam")
+class Pellet : Item(FabricItemSettings())
+
 /**
  * 通用流体单元的 FluidStorage：空单元可装任意流体，满单元可倒出对应流体。
  */

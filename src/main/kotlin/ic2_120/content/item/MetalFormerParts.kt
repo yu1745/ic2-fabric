@@ -10,6 +10,15 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 @ModItem(name = "tin_can", tab = CreativeTab.IC2_MATERIALS, group = "parts")
 class EmptyTinCanItem : Item(FabricItemSettings())
 
+@ModItem(name = "filled_tin_can", tab = CreativeTab.IC2_MATERIALS, group = "parts")
+class FilledTinCanItem : Item(FabricItemSettings())
+
+@ModItem(name = "small_power_unit", tab = CreativeTab.IC2_MATERIALS, group = "parts")
+class SmallPowerUnitItem : Item(FabricItemSettings())
+
+@ModItem(name = "power_unit", tab = CreativeTab.IC2_MATERIALS, group = "parts")
+class PowerUnitItem : Item(FabricItemSettings())
+
 @ModItem(name = "fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "parts")
 class EmptyFuelRodItem : Item(FabricItemSettings())
 
