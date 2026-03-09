@@ -280,6 +280,17 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
                 .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "tesla_coil_steel"))
         }
 
+        // ==================== 风力发电机配方 ====================
+        // 4 铁锭（四角）+ 1 火力发电机（中心）-> 1 风力发电机
+        val windGenerator = item("ic2_120:wind_generator")
+        if (windGenerator != Items.AIR && generator != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, windGenerator, 1)
+                .pattern("I I").pattern(" G ").pattern("I I")
+                .input('I', Items.IRON_INGOT).input('G', generator)
+                .criterion(hasItem(generator), conditionsFromItem(generator))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "wind_generator"))
+        }
+
         // ==================== 太阳能发电机配方 ====================
         // 煤粉 x3 + 玻璃 x3 + 电路板 x2 + 火力发电机 x1
         val solarGenerator = item("ic2_120:solar_generator")

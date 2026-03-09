@@ -88,6 +88,7 @@
   "block.ic2_120.geo_generator": "地热发电机",
   "block.ic2_120.water_generator": "水力发电机",
   "block.ic2_120.solar_generator": "太阳能发电机",
+  "block.ic2_120.wind_generator": "风力发电机",
   "block.ic2_120.macerator": "粉碎机",
   "block.ic2_120.compressor": "压缩机",
   "block.ic2_120.extractor": "提取机",

@@ -11,6 +11,7 @@
     "ic2_120:mfsu",
     "ic2_120:solar_generator",
     "ic2_120:tesla_coil",
-    "ic2_120:water_generator"
+    "ic2_120:water_generator",
+    "ic2_120:wind_generator"
   ]
 }

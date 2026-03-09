@@ -108,7 +108,7 @@
 | - [x] | block.ic2.solar_generator | 太阳能发电机 |
 | - [ ] | block.ic2.stirling_generator | 斯特林发电机 |
 | - [x] | block.ic2.water_generator | 水力发电机 |
-| - [ ] | block.ic2.wind_generator | 风力发电机 |
+| - [x] | block.ic2.wind_generator | 风力发电机 |
 | - [ ] | block.ic2.electric_heat_generator | 电力加热机 |
 | - [ ] | block.ic2.fluid_heat_generator | 流体加热机 |
 | - [ ] | block.ic2.rt_heat_generator | 放射性同位素温差加热机 |
