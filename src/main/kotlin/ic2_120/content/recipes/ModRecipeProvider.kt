@@ -279,6 +279,19 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
                 .criterion(hasItem(steelIngot), conditionsFromItem(steelIngot))
                 .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "tesla_coil_steel"))
         }
+
+        // ==================== 日光灯配方 ====================
+        // 绝缘铜质导线（上中）+ 锡质导线（中中）+ 5 玻璃 -> 8 日光灯
+        val luminatorFlat = item("ic2_120:luminator_flat")
+        val glass = Items.GLASS
+        val tinCable = item("ic2_120:tin_cable")
+        if (luminatorFlat != Items.AIR && insulatedCopperCable != Items.AIR && tinCable != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, luminatorFlat, 8)
+                .pattern(" C ").pattern("GTG").pattern("GGG")
+                .input('C', insulatedCopperCable).input('G', glass).input('T', tinCable)
+                .criterion(hasItem(insulatedCopperCable), conditionsFromItem(insulatedCopperCable))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "luminator_flat"))
+        }
     }
 
     private fun createShapeless(

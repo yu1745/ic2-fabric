@@ -38,6 +38,9 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
         addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "hv_transformer")))
         addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "ev_transformer")))
 
+        // 日光灯：直接掉落自身（无物品槽，无外壳）
+        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "luminator_flat")))
+
         // 机器方块：条件掉落
         for (block in Registries.BLOCK) {
             val id = Registries.BLOCK.getId(block)

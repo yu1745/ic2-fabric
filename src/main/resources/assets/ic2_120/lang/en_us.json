@@ -96,6 +96,7 @@
   "block.ic2_120.mfsu": "MFSU",
   "block.ic2_120.mfsu_full": "MFSU (Full)",
   "block.ic2_120.tesla_coil": "Tesla Coil",
+  "block.ic2_120.luminator_flat": "Luminator",
   "block.ic2_120.lv_transformer": "LV Transformer",
   "block.ic2_120.mv_transformer": "MV Transformer",
   "block.ic2_120.hv_transformer": "HV Transformer",

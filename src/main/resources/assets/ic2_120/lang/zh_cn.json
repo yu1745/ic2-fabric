@@ -96,6 +96,7 @@
   "block.ic2_120.mfsu": "MFSU储电箱",
   "block.ic2_120.mfsu_full": "MFSU储电箱（满电）",
   "block.ic2_120.tesla_coil": "特斯拉线圈",
+  "block.ic2_120.luminator_flat": "日光灯",
   "block.ic2_120.lv_transformer": "低压变压器",
   "block.ic2_120.mv_transformer": "中压变压器",
   "block.ic2_120.hv_transformer": "高压变压器",
