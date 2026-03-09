@@ -6,6 +6,7 @@ import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.content.block.MfsuBlock
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
+import ic2_120.content.block.machines.WaterGeneratorBlockEntity
 import ic2_120.content.block.storage.StorageBoxBlockEntity
 import ic2_120.content.entity.ModEntities
 import ic2_120.registry.ClassScanner
@@ -53,8 +54,9 @@ object Ic2_120 : ModInitializer {
         // 特殊处理：储物箱 BlockEntity 需在所有方块注册后统一注册（一个 BE 类型关联多种储物箱方块）
         StorageBoxBlockEntity.register(MOD_ID)
 
-        // 地热发电机流体能力注册（Fabric Transfer API）
+        // 地热/水力发电机流体能力注册（Fabric Transfer API）
         GeoGeneratorBlockEntity.registerFluidStorageLookup()
+        WaterGeneratorBlockEntity.registerFluidStorageLookup()
 
         // 单元与桶的流体交互（右键放置/收集液体，等效桶）
         CellAndBucketFluidRegistration.register()

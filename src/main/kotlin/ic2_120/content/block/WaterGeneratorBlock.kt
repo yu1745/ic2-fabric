@@ -1,0 +1,83 @@
+package ic2_120.content.block
+
+import ic2_120.content.ModBlockEntities
+import ic2_120.content.block.machines.WaterGeneratorBlockEntity
+import ic2_120.registry.CreativeTab
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
+import ic2_120.registry.annotation.ModBlock
+import net.minecraft.block.BlockState
+import net.minecraft.block.entity.BlockEntity
+import net.minecraft.block.entity.BlockEntityTicker
+import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.ItemPlacementContext
+import net.minecraft.state.StateManager
+import net.minecraft.state.property.BooleanProperty
+import net.minecraft.util.ActionResult
+import net.minecraft.util.Hand
+import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
+
+/**
+ * 水力发电机方块。
+ * 水桶发电 500 EU（1 EU/t），周围 3x3x3 水方块每块 +0.01 EU/t。
+ */
+@ModBlock(name = "water_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES)
+class WaterGeneratorBlock : MachineBlock() {
+
+    override val tier: Int = GENERATOR_TIER
+
+    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
+        WaterGeneratorBlockEntity(pos, state)
+
+    override fun <T : BlockEntity> getTicker(
+        world: World,
+        state: BlockState,
+        type: BlockEntityType<T>
+    ): BlockEntityTicker<T>? =
+        if (world.isClient) null
+        else checkType(type, ModBlockEntities.getType(WaterGeneratorBlockEntity::class)) { w, p, s, be ->
+            (be as WaterGeneratorBlockEntity).tick(w, p, s)
+        }
+
+    override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
+        super.appendProperties(builder)
+        builder.add(ACTIVE)
+    }
+
+    override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =
+        super.getPlacementState(ctx)?.with(ACTIVE, false)
+
+    override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
+        val be = world.getBlockEntity(pos)
+        return be as? net.minecraft.screen.NamedScreenHandlerFactory
+    }
+
+    override fun onUse(
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ActionResult {
+        if (!world.isClient) {
+            val storage = FluidStorage.SIDED.find(world, pos, hit.side)
+                ?: FluidStorage.SIDED.find(world, pos, null)
+            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
+                return ActionResult.SUCCESS
+            }
+            createScreenHandlerFactory(state, world, pos)?.let { factory ->
+                player.openHandledScreen(factory)
+            }
+        }
+        return ActionResult.SUCCESS
+    }
+
+    companion object {
+        const val GENERATOR_TIER = 1
+        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+    }
+}

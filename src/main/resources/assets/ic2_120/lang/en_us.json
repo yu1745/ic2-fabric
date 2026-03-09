@@ -86,6 +86,7 @@
   "block.ic2_120.electric_furnace": "Electric Furnace",
   "block.ic2_120.generator": "Generator",
   "block.ic2_120.geo_generator": "Geothermal Generator",
+  "block.ic2_120.water_generator": "Water Mill",
   "block.ic2_120.macerator": "Macerator",
   "block.ic2_120.compressor": "Compressor",
   "block.ic2_120.extractor": "Extractor",

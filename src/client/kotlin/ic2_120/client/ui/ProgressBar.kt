@@ -66,6 +66,9 @@ object ProgressBar {
     /** 岩浆条纯色（橙红） */
     const val LAVA_SOLID_COLOR = 0xFFCC4400.toInt()
 
+    /** 水/流体条纯色（蓝） */
+    const val WATER_SOLID_COLOR = 0xFF4488CC.toInt()
+
     /**
      * 绘制竖向燃料/容量条。
      * @param context DrawContext

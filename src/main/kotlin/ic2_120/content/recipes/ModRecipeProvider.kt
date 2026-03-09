@@ -247,6 +247,18 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
                 .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "ev_transformer"))
         }
 
+        // ==================== 水力发电机配方 ====================
+        // 4 木棍（四角）+ 4 橡木木板（四边）+ 1 火力发电机（中心）-> 2 水力发电机
+        val waterGenerator = item("ic2_120:water_generator")
+        val generator = item("ic2_120:generator")
+        if (waterGenerator != Items.AIR && generator != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, waterGenerator, 2)
+                .pattern("SPS").pattern("PGP").pattern("SPS")
+                .input('S', stick).input('P', planks).input('G', generator)
+                .criterion(hasItem(generator), conditionsFromItem(generator))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "water_generator"))
+        }
+
         // ==================== 特斯拉线圈配方 ====================
         // 配方一：5 红石粉 + 1 中压变压器 + 2 铁质外壳 + 1 电路板
         // 配方二：5 红石粉 + 1 中压变压器 + 2 钢锭 + 1 电路板

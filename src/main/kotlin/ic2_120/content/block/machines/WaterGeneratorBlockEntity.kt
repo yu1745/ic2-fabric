@@ -1,0 +1,370 @@
+package ic2_120.content.block.machines
+
+import ic2_120.Ic2_120
+import ic2_120.content.ModBlockEntities
+import ic2_120.content.block.WaterGeneratorBlock
+import ic2_120.content.energy.charge.BatteryChargerComponent
+import ic2_120.content.item.getFluidCellVariant
+import ic2_120.content.item.energy.IElectricTool
+import ic2_120.content.item.energy.IBatteryItem
+import ic2_120.content.sync.WaterGeneratorSync
+import ic2_120.content.screen.WaterGeneratorScreenHandler
+import ic2_120.content.syncs.SyncedData
+import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.annotation.RegisterEnergy
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
+import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
+import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluids
+import net.minecraft.inventory.Inventories
+import net.minecraft.inventory.Inventory
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.nbt.NbtCompound
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.registry.Registries
+import net.minecraft.screen.ScreenHandler
+import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.state.property.Properties
+import net.minecraft.text.Text
+import net.minecraft.util.Identifier
+import net.minecraft.util.collection.DefaultedList
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.random.Random
+import net.minecraft.world.World
+
+/**
+ * 水力发电机方块实体。
+ *
+ * 发电机制：
+ * - 水罐（Fabric Transfer API）：1 桶容量，500 EU 总量，1 EU/t 速率
+ * - 周围 3x3x3 水方块：每个水方块 +0.01 EU/t（常见水塔约 0.25 EU/t）
+ */
+@ModBlockEntity(block = WaterGeneratorBlock::class)
+class WaterGeneratorBlockEntity(
+    type: BlockEntityType<*>,
+    pos: BlockPos,
+    state: BlockState
+) : MachineBlockEntity(type, pos, state), Inventory,
+    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+
+    companion object {
+        const val GENERATOR_TIER = 1
+        private const val NBT_WATER_AMOUNT = "WaterAmount"
+        private const val NBT_WATER_ENV_ACCUM = "WaterEnvAccum"
+        private const val NBT_TICK_OFFSET = "TickOffset"
+        private const val NBT_CACHED_WATER_COUNT = "CachedWaterCount"
+        /** 周围水方块检测间隔（tick） */
+        private const val WATER_CHECK_INTERVAL = 20
+
+        private val random = Random.create()
+
+        const val FUEL_SLOT = 0
+        const val EMPTY_CONTAINER_SLOT = 1
+        const val BATTERY_SLOT = 2
+
+        @Volatile
+        private var fluidLookupRegistered = false
+
+        fun registerFluidStorageLookup() {
+            if (fluidLookupRegistered) return
+            val type = ModBlockEntities.getType(WaterGeneratorBlockEntity::class)
+            FluidStorage.SIDED.registerForBlockEntity({ be, side -> be.getFluidStorageForSide(side) }, type)
+            fluidLookupRegistered = true
+        }
+    }
+
+    override val tier: Int = GENERATOR_TIER
+
+    private val inventory = DefaultedList.ofSize(3, ItemStack.EMPTY)
+
+    val syncedData = SyncedData(this)
+
+    @RegisterEnergy
+    val sync = WaterGeneratorSync(
+        schema = syncedData,
+        getFacing = { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        currentTickProvider = { world?.time }
+    )
+
+    private val waterTankInternal = object : SingleVariantStorage<FluidVariant>() {
+        private val tankCapacity: Long = FluidConstants.BUCKET
+
+        override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
+
+        override fun getCapacity(variant: FluidVariant): Long = tankCapacity
+
+        override fun canInsert(variant: FluidVariant): Boolean = variant.fluid == Fluids.WATER
+
+        override fun canExtract(variant: FluidVariant): Boolean = false
+
+        override fun onFinalCommit() {
+            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            markDirty()
+        }
+
+        fun setStoredWater(newAmount: Long) {
+            amount = newAmount.coerceIn(0L, tankCapacity)
+            variant = if (amount > 0L) FluidVariant.of(Fluids.WATER) else FluidVariant.blank()
+            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        }
+
+        fun getStoredAmount(): Long = amount
+
+        /** 尝试插入水，返回实际插入量 */
+        fun tryInsertWater(toInsert: Long): Long {
+            if (toInsert <= 0L || (amount > 0L && variant.fluid != Fluids.WATER)) return 0L
+            val space = tankCapacity - amount
+            val actual = minOf(toInsert, space)
+            if (actual <= 0L) return 0L
+            amount += actual
+            if (variant.fluid != Fluids.WATER) variant = FluidVariant.of(Fluids.WATER)
+            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            return actual
+        }
+
+        /** 内部消耗水 */
+        fun consumeInternal(toConsume: Long): Long {
+            if (toConsume <= 0L || variant.fluid != Fluids.WATER) return 0L
+            val actual = minOf(toConsume, amount)
+            if (actual <= 0L) return 0L
+            amount -= actual
+            if (amount <= 0L) variant = FluidVariant.blank()
+            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            return actual
+        }
+    }
+
+    val waterTank: Storage<FluidVariant> = waterTankInternal
+
+    /** 周围水方块发电累积器（百分之一 EU 单位，满 100 时产生 1 EU） */
+    private var waterEnvAccum: Int = 0
+
+    /** 构造时随机 0..19，使各机器水检测分散到不同 tick，避免集中卡顿 */
+    private var tickOffset: Int = 0
+
+    /** 缓存的周围水方块数量，每 20 tick 更新一次 */
+    private var cachedWaterCount: Int = 0
+
+    private val batteryCharger = BatteryChargerComponent(
+        inventory = this,
+        batterySlot = BATTERY_SLOT,
+        machineTierProvider = { tier },
+        machineEnergyProvider = { sync.amount },
+        extractEnergy = { requested ->
+            val extracted = requested.coerceIn(0L, sync.amount)
+            if (extracted > 0L) {
+                sync.amount -= extracted
+                sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+            }
+            extracted
+        },
+        canChargeNow = { sync.amount > 0L }
+    )
+
+    constructor(pos: BlockPos, state: BlockState) : this(
+        ModBlockEntities.getType(WaterGeneratorBlockEntity::class),
+        pos,
+        state
+    ) {
+        tickOffset = random.nextBetween(0, WATER_CHECK_INTERVAL - 1)
+    }
+
+    override fun getInventory(): Inventory = this
+
+    override fun size(): Int = 3
+
+    override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
+
+    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+
+    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
+
+    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+
+    override fun setStack(slot: Int, stack: ItemStack) {
+        if (slot == BATTERY_SLOT && stack.count > 1) stack.count = 1
+        inventory[slot] = stack
+        markDirty()
+    }
+
+    override fun clear() {
+        inventory.clear()
+    }
+
+    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+
+    fun canPlaceInSlot(slot: Int, stack: ItemStack): Boolean {
+        if (stack.isEmpty) return false
+        return when (slot) {
+            FUEL_SLOT -> stack.item == Items.WATER_BUCKET ||
+                (stack.item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) && stack.getFluidCellVariant()?.fluid == Fluids.WATER)
+            EMPTY_CONTAINER_SLOT -> false
+            BATTERY_SLOT -> stack.item is IBatteryItem || stack.item is IElectricTool
+            else -> false
+        }
+    }
+
+    private fun tryInsertEmptyContainer(emptyStack: ItemStack): Boolean {
+        if (emptyStack.isEmpty) return false
+        val current = getStack(EMPTY_CONTAINER_SLOT)
+        return if (current.isEmpty) {
+            setStack(EMPTY_CONTAINER_SLOT, emptyStack.copy())
+            true
+        } else if (ItemStack.canCombine(current, emptyStack)) {
+            val toAdd = minOf(emptyStack.count, current.maxCount - current.count)
+            if (toAdd > 0) {
+                current.increment(toAdd)
+                markDirty()
+                true
+            } else false
+        } else false
+    }
+
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+        buf.writeBlockPos(pos)
+        buf.writeVarInt(syncedData.size())
+    }
+
+    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.water_generator")
+
+    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+        WaterGeneratorScreenHandler(
+            syncId,
+            playerInventory,
+            this,
+            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            syncedData
+        )
+
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
+        syncedData.readNbt(nbt)
+        sync.amount = nbt.getLong(WaterGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, WaterGeneratorSync.ENERGY_CAPACITY)
+        sync.syncCommittedAmount()
+        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        waterTankInternal.setStoredWater(nbt.getLong(NBT_WATER_AMOUNT))
+        waterEnvAccum = nbt.getInt(NBT_WATER_ENV_ACCUM).coerceIn(0, 99)
+        tickOffset = nbt.getInt(NBT_TICK_OFFSET).coerceIn(0, WATER_CHECK_INTERVAL - 1)
+        cachedWaterCount = nbt.getInt(NBT_CACHED_WATER_COUNT).coerceAtLeast(0)
+    }
+
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
+        syncedData.writeNbt(nbt)
+        nbt.putLong(WaterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
+        nbt.putLong(NBT_WATER_AMOUNT, waterTankInternal.amount)
+        nbt.putInt(NBT_WATER_ENV_ACCUM, waterEnvAccum)
+        nbt.putInt(NBT_TICK_OFFSET, tickOffset)
+        nbt.putInt(NBT_CACHED_WATER_COUNT, cachedWaterCount)
+    }
+
+    fun tick(world: World, pos: BlockPos, state: BlockState) {
+        if (world.isClient) return
+
+        sync.energy = sync.amount.toInt().coerceAtLeast(0)
+
+        // 燃料槽：水桶或水单元倒入水罐
+        val fuelStack = getStack(FUEL_SLOT)
+        val fluidCell = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell"))
+        val emptyCell = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
+        when {
+            fuelStack.item == Items.WATER_BUCKET -> {
+                val inserted = waterTankInternal.tryInsertWater(FluidConstants.BUCKET)
+                if (inserted >= FluidConstants.BUCKET) {
+                    val emptyBucket = ItemStack(Items.BUCKET)
+                    if (tryInsertEmptyContainer(emptyBucket)) {
+                        fuelStack.decrement(1)
+                        if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)
+                        markDirty()
+                    }
+                }
+            }
+            fuelStack.item == fluidCell && fuelStack.getFluidCellVariant()?.fluid == Fluids.WATER -> {
+                val inserted = waterTankInternal.tryInsertWater(FluidConstants.BUCKET)
+                if (inserted >= FluidConstants.BUCKET) {
+                    val emptyCellStack = ItemStack(emptyCell)
+                    if (tryInsertEmptyContainer(emptyCellStack)) {
+                        fuelStack.decrement(1)
+                        if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)
+                        markDirty()
+                    }
+                }
+            }
+        }
+
+        // 发电：水罐 1 EU/t + 周围水方块 0.01 EU/t 每块
+        val space = (WaterGeneratorSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0L)
+        if (space > 0L) {
+            var euToAdd = 0L
+
+            // 水罐：按流体量消耗，1 桶 = 500 EU = 500 ticks
+            if (waterTankInternal.amount > 0L && waterTankInternal.variant.fluid == Fluids.WATER) {
+                val consumePerTick = FluidConstants.BUCKET / WaterGeneratorSync.BURN_TICKS_PER_BUCKET
+                val toConsume = minOf(consumePerTick, waterTankInternal.amount, space * consumePerTick / WaterGeneratorSync.EU_PER_BURN_TICK)
+                val consumed = waterTankInternal.consumeInternal(toConsume)
+                if (consumed > 0L) {
+                    euToAdd += consumed * WaterGeneratorSync.EU_PER_BURN_TICK / consumePerTick
+                }
+            }
+
+            // 周围 3x3x3 水方块：每块 0.01 EU/t，每 20 tick 检测一次（带随机偏移分散负载）
+            if ((world.time + tickOffset) % WATER_CHECK_INTERVAL == 0L) {
+                cachedWaterCount = countWaterBlocks(world, pos)
+            }
+            waterEnvAccum += cachedWaterCount * WaterGeneratorSync.EU_PER_TICK_PER_WATER_BLOCK_CENT
+            while (waterEnvAccum >= 100 && euToAdd + 1 <= space) {
+                waterEnvAccum -= 100
+                euToAdd += 1
+            }
+
+            if (euToAdd > 0L) {
+                sync.amount = (sync.amount + euToAdd).coerceAtMost(WaterGeneratorSync.ENERGY_CAPACITY)
+                sync.energy = sync.amount.toInt().coerceAtLeast(0)
+                markDirty()
+            }
+        }
+
+        batteryCharger.tick()
+
+        val active = waterTankInternal.amount > 0L && waterTankInternal.variant.fluid == Fluids.WATER ||
+            waterEnvAccum >= 100 || cachedWaterCount > 0
+        if (state.get(WaterGeneratorBlock.ACTIVE) != active) {
+            world.setBlockState(pos, state.with(WaterGeneratorBlock.ACTIVE, active))
+        }
+    }
+
+    private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
+        if (side == (world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH)) return null
+        return waterTank
+    }
+
+    private fun countWaterBlocks(world: World, center: BlockPos): Int {
+        var count = 0
+        for (x in (center.x - 1)..(center.x + 1)) {
+            for (y in (center.y - 1)..(center.y + 1)) {
+                for (z in (center.z - 1)..(center.z + 1)) {
+                    if (x == center.x && y == center.y && z == center.z) continue
+                    val p = BlockPos(x, y, z)
+                    if (world.isInBuildLimit(p)) {
+                        val blockState = world.getBlockState(p)
+                        if (blockState.isOf(Blocks.WATER)) {
+                            count++
+                        }
+                    }
+                }
+            }
+        }
+        return count
+    }
+}
