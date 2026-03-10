@@ -8,29 +8,29 @@ import net.minecraft.block.Blocks
 
 // ========== 普通矿石（石头基质） ==========
 
-/** 铅矿石 */
+/** 铅矿石（生成参数照搬原版金矿：Y -64~32，矿脉小） */
 @ModBlock(name = "lead_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS)
 class LeadOreBlock : Block(
-    AbstractBlock.Settings.copy(Blocks.IRON_ORE).strength(3.0f, 3.0f)
+    AbstractBlock.Settings.copy(Blocks.GOLD_ORE).strength(3.0f, 3.0f)
 )
 
-/** 锡矿石 */
+/** 锡矿石（生成参数照搬原版铁矿：Y -64~256，矿脉大） */
 @ModBlock(name = "tin_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS)
 class TinOreBlock : Block(
     AbstractBlock.Settings.copy(Blocks.IRON_ORE).strength(3.0f, 3.0f)
 )
 
-/** 铀矿石 */
+/** 铀矿石（生成参数照搬原版钻石矿：Y -64~16，稀有） */
 @ModBlock(name = "uranium_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS)
 class UraniumOreBlock : Block(
-    AbstractBlock.Settings.copy(Blocks.IRON_ORE).strength(3.0f, 3.0f)
+    AbstractBlock.Settings.copy(Blocks.DIAMOND_ORE).strength(3.0f, 3.0f)
 )
 
-/** 铜矿石 */
-@ModBlock(name = "copper_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS)
-class CopperOreBlock : Block(
-    AbstractBlock.Settings.copy(Blocks.IRON_ORE).strength(3.0f, 3.0f)
-)
+// 铜矿石：原版已有 minecraft:copper_ore，此处不再注册
+// @ModBlock(name = "copper_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS)
+// class CopperOreBlock : Block(
+//     AbstractBlock.Settings.copy(Blocks.IRON_ORE).strength(3.0f, 3.0f)
+// )
 
 /** 铱矿石 */
 @ModBlock(name = "iridium_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS)
@@ -40,20 +40,20 @@ class IridiumOreBlock : Block(
 
 // ========== 深层矿石（深板岩基质） ==========
 
-/** 深层铅矿石 */
+/** 深层铅矿石（照搬原版深层金矿） */
 @ModBlock(name = "deepslate_lead_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS)
 class DeepslateLeadOreBlock : Block(
-    AbstractBlock.Settings.copy(Blocks.DEEPSLATE_IRON_ORE).strength(4.5f, 3.0f)
+    AbstractBlock.Settings.copy(Blocks.DEEPSLATE_GOLD_ORE).strength(4.5f, 3.0f)
 )
 
-/** 深层锡矿石 */
+/** 深层锡矿石（照搬原版深层铁矿） */
 @ModBlock(name = "deepslate_tin_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS)
 class DeepslateTinOreBlock : Block(
     AbstractBlock.Settings.copy(Blocks.DEEPSLATE_IRON_ORE).strength(4.5f, 3.0f)
 )
 
-/** 深层铀矿石 */
+/** 深层铀矿石（照搬原版深层钻石矿） */
 @ModBlock(name = "deepslate_uranium_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS)
 class DeepslateUraniumOreBlock : Block(
-    AbstractBlock.Settings.copy(Blocks.DEEPSLATE_IRON_ORE).strength(4.5f, 3.0f)
+    AbstractBlock.Settings.copy(Blocks.DEEPSLATE_DIAMOND_ORE).strength(4.5f, 3.0f)
 )

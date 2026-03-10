@@ -21,11 +21,10 @@ object MaceratorRecipes {
         // 矿石 -> 2 粉碎矿石
         add("minecraft:iron_ore", stack("ic2_120:crushed_iron", 2))           // 铁矿石 -> 2 粉碎铁
         add("minecraft:gold_ore", stack("ic2_120:crushed_gold", 2))            // 金矿石 -> 2 粉碎金
-        add("minecraft:copper_ore", stack("ic2_120:crushed_copper", 2))        // 铜矿石 -> 2 粉碎铜
+        add("minecraft:copper_ore", stack("ic2_120:crushed_copper", 2))        // 原版铜矿石 -> 2 粉碎铜
         add("ic2_120:lead_ore", stack("ic2_120:crushed_lead", 2))             // 铅矿石 -> 2 粉碎铅
         add("ic2_120:tin_ore", stack("ic2_120:crushed_tin", 2))               // 锡矿石 -> 2 粉碎锡
         add("ic2_120:uranium_ore", stack("ic2_120:crushed_uranium", 2))       // 铀矿石 -> 2 粉碎铀
-        add("ic2_120:copper_ore", stack("ic2_120:crushed_copper", 2))          // 铜矿石(模组) -> 2 粉碎铜
         add("ic2_120:silver_ore", stack("ic2_120:crushed_silver", 2))         // 银矿石 -> 2 粉碎银
         add("minecraft:deepslate_iron_ore", stack("ic2_120:crushed_iron", 2)) // 深板岩铁矿石 -> 2 粉碎铁
         add("minecraft:deepslate_gold_ore", stack("ic2_120:crushed_gold", 2))  // 深板岩金矿石 -> 2 粉碎金

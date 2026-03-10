@@ -4,6 +4,7 @@ import ic2_120.content.RubberTreetapHandler
 import ic2_120.content.WrenchHandler
 import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.content.fluid.ModFluids
+import ic2_120.content.worldgen.OreGeneration
 import ic2_120.content.worldgen.RubberTreeGeneration
 import ic2_120.content.item.CellAndBucketFluidRegistration
 import ic2_120.content.block.MfsuBlock
@@ -42,6 +43,8 @@ object Ic2_120 : ModInitializer {
 
         // 橡胶树世界生成（主世界植被装饰阶段）
         RubberTreeGeneration.register()
+        // 矿石世界生成（锡/铅/铀，照搬铁矿/金矿/钻石矿）
+        OreGeneration.register()
 
         // 使用类级别注解的自动注册系统
         ClassScanner.scanAndRegister(

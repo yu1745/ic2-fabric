@@ -6,7 +6,7 @@ import ic2_120.registry.annotation.ModCreativeTab
  * IC2 材料物品栏。
  * 包含所有金属、橡胶等基础材料。
  */
-@ModCreativeTab(name = "ic2_materials", iconItem = "copper_ingot")
+@ModCreativeTab(name = "ic2_materials", iconItem = "tin_ingot")
 class Ic2MaterialsTab
 
 /**

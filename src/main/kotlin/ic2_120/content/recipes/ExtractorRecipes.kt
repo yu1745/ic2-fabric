@@ -77,8 +77,7 @@ object ExtractorRecipes {
         // === 矿石 (铁/金/铜/锡) -> 2 粉碎矿石 ===
         add("minecraft:iron_ore", stack("ic2_120:crushed_iron", 2))            // 铁矿石 -> 2 粉碎铁
         add("minecraft:gold_ore", stack("ic2_120:crushed_gold", 2))             // 金矿石 -> 2 粉碎金
-        add("minecraft:copper_ore", stack("ic2_120:crushed_copper", 2))        // 铜矿石 -> 2 粉碎铜
-        add("ic2_120:copper_ore", stack("ic2_120:crushed_copper", 2))          // 模组铜矿石 -> 2 粉碎铜
+        add("minecraft:copper_ore", stack("ic2_120:crushed_copper", 2))        // 原版铜矿石 -> 2 粉碎铜
         add("ic2_120:tin_ore", stack("ic2_120:crushed_tin", 2))                // 锡矿石 -> 2 粉碎锡
         add("minecraft:deepslate_iron_ore", stack("ic2_120:crushed_iron", 2))  // 深板岩铁矿石 -> 2 粉碎铁
         add("minecraft:deepslate_gold_ore", stack("ic2_120:crushed_gold", 2))  // 深板岩金矿石 -> 2 粉碎金
@@ -88,7 +87,7 @@ object ExtractorRecipes {
         // === 矿锭/板 -> 粉末 ===
         add("minecraft:iron_ingot", stack("ic2_120:iron_dust", 1))              // 铁锭 -> 铁粉
         add("minecraft:gold_ingot", stack("ic2_120:gold_dust", 1))             // 金锭 -> 金粉
-        add("ic2_120:copper_ingot", stack("ic2_120:copper_dust", 1))          // 铜锭 -> 铜粉
+        add("minecraft:copper_ingot", stack("ic2_120:copper_dust", 1))         // 原版铜锭 -> 铜粉
         add("ic2_120:tin_ingot", stack("ic2_120:tin_dust", 1))                // 锡锭 -> 锡粉
         add("ic2_120:bronze_ingot", stack("ic2_120:bronze_dust", 1))           // 青铜锭 -> 青铜粉
         add("ic2_120:lead_ingot", stack("ic2_120:lead_dust", 1))              // 铅锭 -> 铅粉
@@ -104,7 +103,7 @@ object ExtractorRecipes {
         // === 矿石块 -> 9 粉末 ===
         add("minecraft:iron_block", stack("ic2_120:iron_dust", 9))             // 铁块 -> 9 铁粉
         add("minecraft:gold_block", stack("ic2_120:gold_dust", 9))             // 金块 -> 9 金粉
-        add("ic2_120:copper_block", stack("ic2_120:copper_dust", 9))           // 铜块 -> 9 铜粉
+        add("minecraft:copper_block", stack("ic2_120:copper_dust", 9))         // 原版铜块 -> 9 铜粉
         add("ic2_120:tin_block", stack("ic2_120:tin_dust", 9))                 // 锡块 -> 9 锡粉
         add("ic2_120:bronze_block", stack("ic2_120:bronze_dust", 9))           // 青铜块 -> 9 青铜粉
         add("ic2_120:lead_block", stack("ic2_120:lead_dust", 9))                // 铅块 -> 9 铅粉

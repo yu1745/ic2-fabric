@@ -40,7 +40,7 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
         )
 
         createShapeless(recipeExporter, "copper_plate_from_hammer", RecipeCategory.MISC, item("ic2_120:copper_plate"), 1,
-            item("ic2_120:forge_hammer"), item("ic2_120:copper_ingot")
+            item("ic2_120:forge_hammer"), Items.COPPER_INGOT
         )
 
         createShapeless(recipeExporter, "tin_plate_from_hammer", RecipeCategory.MISC, item("ic2_120:tin_plate"), 1,

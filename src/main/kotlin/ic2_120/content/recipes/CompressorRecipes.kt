@@ -33,10 +33,8 @@ object CompressorRecipes {
         add("minecraft:iron_ingot", 9, stack("minecraft:iron_block", 1))
         // 9 金锭 -> 1 金块（金属锭 -> 金属块）
         add("minecraft:gold_ingot", 9, stack("minecraft:gold_block", 1))
-        // 9 铜锭 -> 1 铜块（金属锭 -> 金属块）
+        // 9 铜锭 -> 1 铜块（金属锭 -> 金属块，使用原版）
         add("minecraft:copper_ingot", 9, stack("minecraft:copper_block", 1))
-        // 9 IC2 铜锭 -> 1 铜块（金属锭 -> 金属块）
-        add("ic2_120:copper_ingot", 9, stack("ic2_120:copper_block", 1))
         // 9 锡锭 -> 1 锡块（金属锭 -> 金属块）
         add("ic2_120:tin_ingot", 9, stack("ic2_120:tin_block", 1))
         // 9 青铜锭 -> 1 青铜块（金属锭 -> 金属块）

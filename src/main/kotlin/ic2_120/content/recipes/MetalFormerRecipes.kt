@@ -52,7 +52,7 @@ object MetalFormerRecipes {
         // 锭 -> 板
         add(rolling, "ic2_120:tin_ingot", stack("ic2_120:tin_plate", 1))       // 锡锭 -> 锡板
         add(rolling, "minecraft:iron_ingot", stack("ic2_120:iron_plate", 1))     // 铁锭 -> 铁板
-        add(rolling, "ic2_120:copper_ingot", stack("ic2_120:copper_plate", 1)) // 铜锭 -> 铜板
+        add(rolling, "minecraft:copper_ingot", stack("ic2_120:copper_plate", 1)) // 原版铜锭 -> 铜板
         add(rolling, "ic2_120:bronze_ingot", stack("ic2_120:bronze_plate", 1))// 青铜锭 -> 青铜板
         add(rolling, "minecraft:gold_ingot", stack("ic2_120:gold_plate", 1))    // 金锭 -> 金板
         add(rolling, "ic2_120:lead_ingot", stack("ic2_120:lead_plate", 1))      // 铅锭 -> 铅板
@@ -85,7 +85,7 @@ object MetalFormerRecipes {
         // 锭 -> 导线
         add(extruding, "ic2_120:tin_ingot", stack("ic2_120:tin_cable", 3))      // 锡锭 -> 3*锡质导线
         add(extruding, "minecraft:gold_ingot", stack("ic2_120:gold_cable", 4)) // 金锭 -> 4*金质导线
-        add(extruding, "ic2_120:copper_ingot", stack("ic2_120:copper_cable", 3))// 铜锭 -> 3*铜质导线
+        add(extruding, "minecraft:copper_ingot", stack("ic2_120:copper_cable", 3))// 原版铜锭 -> 3*铜质导线
         add(extruding, "minecraft:iron_ingot", stack("ic2_120:iron_cable", 4))   // 铁锭 -> 4*高压导线
 
         // 外壳/板/块 -> 制品（单输入）

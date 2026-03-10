@@ -10,13 +10,7 @@ import net.minecraft.block.FenceBlock
 import net.minecraft.block.PillarBlock
 import net.minecraft.util.math.Direction
 
-/**
- * 铜方块。
- */
-@ModBlock(name = "copper_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")
-class CopperBlock : Block(
-    AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
-)
+// 铜方块：使用原版 minecraft:copper_block，此处不再注册
 
 /**
  * 锡方块。
