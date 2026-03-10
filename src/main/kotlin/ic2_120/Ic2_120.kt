@@ -1,9 +1,10 @@
 package ic2_120
 
 import ic2_120.content.WrenchHandler
-import ic2_120.content.fluid.ModFluids
-import ic2_120.content.item.CellAndBucketFluidRegistration
 import ic2_120.content.block.energy.EnergyNetworkManager
+import ic2_120.content.fluid.ModFluids
+import ic2_120.content.worldgen.RubberTreeGeneration
+import ic2_120.content.item.CellAndBucketFluidRegistration
 import ic2_120.content.block.MfsuBlock
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
@@ -37,6 +38,9 @@ object Ic2_120 : ModInitializer {
 
         // 船实体类型需在扫描物品前注册，供 @ModItem 船物品类构造时引用
         ModEntities.register()
+
+        // 橡胶树世界生成（主世界植被装饰阶段）
+        RubberTreeGeneration.register()
 
         // 使用类级别注解的自动注册系统
         ClassScanner.scanAndRegister(

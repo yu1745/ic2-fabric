@@ -1,6 +1,7 @@
 {
 	"schemaVersion": 1,
 	"id": "ic2_120",
+	"accessWidener": "ic2_120.accesswidener",
 	"version": "${version}",
 	"name": "ic2_1.20",
 	"description": "This is an example description! Tell everyone what your mod is about!",

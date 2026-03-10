@@ -1,8 +1,13 @@
 package ic2_120.content.block
 
+import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import net.minecraft.block.*
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
+import net.minecraft.util.Identifier
+import net.minecraft.world.gen.feature.ConfiguredFeature
 
 // ========== 原木 / 木材 ==========
 
@@ -52,12 +57,20 @@ class RubberPressurePlateBlock(settings: AbstractBlock.Settings = AbstractBlock.
 
 // ========== 树叶 / 树苗 ==========
 
+/** 橡胶树生成器，用于树苗生长与骨粉催熟。 */
+private class RubberSaplingGenerator : net.minecraft.block.sapling.SaplingGenerator() {
+    override fun getTreeFeature(random: net.minecraft.util.math.random.Random, bees: Boolean): RegistryKey<ConfiguredFeature<*, *>>? =
+        RegistryKey.of(RegistryKeys.CONFIGURED_FEATURE, Identifier(Ic2_120.MOD_ID, "rubber_tree"))
+}
+
 @ModBlock(name = "rubber_leaves", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
 class RubberLeavesBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_LEAVES).strength(0.2f)) : LeavesBlock(settings)
 
-/** 橡胶树苗（暂无生长逻辑，仅装饰）。 */
-@ModBlock(name = "rubber_sapling", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
-class RubberSaplingBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_SAPLING).strength(0.0f)) : Block(settings)
+/** 橡胶树苗，支持骨粉催熟与自然生长。 */
+@ModBlock(name = "rubber_sapling", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood", transparent = true)
+class RubberSaplingBlock(
+    settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_SAPLING).strength(0.0f)
+) : SaplingBlock(RubberSaplingGenerator(), settings)
 
 // ========== 告示牌 ==========
 
