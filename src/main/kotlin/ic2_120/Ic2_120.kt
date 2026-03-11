@@ -6,6 +6,7 @@ import ic2_120.content.block.ReactorChamberBlock
 import ic2_120.content.block.ReactorChamberEnergyProvider
 import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.content.fluid.ModFluids
+import ic2_120.content.network.NetworkManager
 import ic2_120.content.worldgen.OreGeneration
 import ic2_120.content.worldgen.RubberTreeGeneration
 import ic2_120.content.item.CellAndBucketFluidRegistration
@@ -116,6 +117,9 @@ object Ic2_120 : ModInitializer {
             fullStack.orCreateNbt.putBoolean(MfsuBlock.NBT_FULL, true)
             entries.add(fullStack)
         }
+
+        // 注册网络管理器
+        NetworkManager.register()
 
         logger.info("IC2 1.20 模组已加载（类注解驱动自动注册）")
     }

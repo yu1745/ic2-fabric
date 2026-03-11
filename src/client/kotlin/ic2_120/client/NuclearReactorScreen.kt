@@ -3,6 +3,7 @@ package ic2_120.client
 import ic2_120.client.compose.*
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.NuclearReactorBlock
+import ic2_120.content.network.SlotHeatEnergyInfo
 import ic2_120.content.screen.NuclearReactorScreenHandler
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.registry.annotation.ModScreen
@@ -37,8 +38,8 @@ class NuclearReactorScreen(
         GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            handler.playerInvY -4,
-            handler.hotbarY -4 ,
+            handler.playerInvY - 4,
+            handler.hotbarY - 4,
             NuclearReactorScreenHandler.SLOT_SIZE,
             playerInvX = NuclearReactorScreenHandler.PLAYER_INV_X
         )
@@ -65,7 +66,13 @@ class NuclearReactorScreen(
 
         // 右侧竖温度条（蓝→红，加宽）
         val tempBarX = x + NuclearReactorScreenHandler.SLOT_GRID_X + 9 * slotSize + 4
-        drawVerticalTemperatureBar(context, tempBarX, y + NuclearReactorScreenHandler.SLOT_GRID_Y, barWidth, 9 * slotSize)
+        drawVerticalTemperatureBar(
+            context,
+            tempBarX,
+            y + NuclearReactorScreenHandler.SLOT_GRID_Y,
+            barWidth,
+            9 * slotSize
+        )
     }
 
     private fun drawVerticalEnergyBar(context: DrawContext, barX: Int, barY: Int, w: Int, h: Int) {
@@ -124,9 +131,9 @@ class NuclearReactorScreen(
         val bg = (b shr 8) and 0xFF
         val bb = b and 0xFF
         return ((aa + (ba - aa) * u).toInt() and 0xFF shl 24) or
-            ((ar + (br - ar) * u).toInt() and 0xFF shl 16) or
-            ((ag + (bg - ag) * u).toInt() and 0xFF shl 8) or
-            ((ab + (bb - ab) * u).toInt() and 0xFF)
+                ((ar + (br - ar) * u).toInt() and 0xFF shl 16) or
+                ((ag + (bg - ag) * u).toInt() and 0xFF shl 8) or
+                ((ab + (bb - ab) * u).toInt() and 0xFF)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -155,18 +162,103 @@ class NuclearReactorScreen(
         // 能量数值与输出速率竖排叠加在能量条上（条与 drawBackground 同位置）
         val energyBarX = left + 9
         val energyBarY = y + NuclearReactorScreenHandler.SLOT_GRID_Y
-        drawVerticalTextOnBar(context, energyBarX, energyBarY, barWidth, barH, listOf(formatEu(energy), formatEu(cap), "EU", "${formatEu(outputRate)} EU/t"))
+        drawVerticalTextOnBar(
+            context,
+            energyBarX,
+            energyBarY,
+            barWidth,
+            barH,
+            listOf(formatEu(energy), formatEu(cap), "EU", "${formatEu(outputRate)} EU/t")
+        )
 
         // 温度数值竖排叠加在温度条上
         val tempBarX = left + NuclearReactorScreenHandler.SLOT_GRID_X + 9 * slotSize + 4
         val tempBarY = y + NuclearReactorScreenHandler.SLOT_GRID_Y
         drawVerticalTextOnBar(context, tempBarX, tempBarY, barWidth, barH, listOf("$temp", "堆温"))
 
+        // 在能量条下方显示产热/散热信息（左边，右边留给JEI）
+        val heatInfoY = energyBarY + barH -32
+
+        // 总产热/总散热：一直显示
+        val heatProduced = handler.sync.totalHeatProduced
+        val heatDissipated = handler.sync.totalHeatDissipated
+        context.drawText(textRenderer, "总产热: $heatProduced", left, heatInfoY, 0xFFFFFF, false)
+        context.drawText(
+            textRenderer,
+            "总散热: $heatDissipated",
+            left,
+            heatInfoY + textRenderer.fontHeight + 2,
+            0xFFFFFF,
+            false
+        )
+
+        // 槽位产热/散热/发电：只在鼠标悬停时显示
+        val hoveredSlotIndex = findHoveredReactorSlot(mouseX, mouseY)
+        if (hoveredSlotIndex != null) {
+            val reactor = handler.reactor
+            reactor?.let {
+                val heatInfo = it.slotHeatInfo[hoveredSlotIndex]
+                heatInfo?.let { info ->
+                    val slotInfoY = heatInfoY + textRenderer.fontHeight * 2 + 6
+                    context.drawText(textRenderer, "槽位产热: ${info.heatProduced}", left, slotInfoY, 0xFFFFAA, false)
+                    context.drawText(
+                        textRenderer,
+                        "槽位散热: ${info.heatDissipated}",
+                        left,
+                        slotInfoY + textRenderer.fontHeight + 2,
+                        0xFFFFAA,
+                        false
+                    )
+                    // 如果有发电输出，则显示
+                    if (info.energyOutput > 0) {
+                        context.drawText(
+                            textRenderer,
+                            "槽位发电: ${"%.2f".format(info.energyOutput)}",
+                            left,
+                            slotInfoY + (textRenderer.fontHeight + 2) * 2,
+                            0xAAFFAA,
+                            false
+                        )
+                    }
+                }
+            }
+        }
+
+        // 手动调用 tooltip 绘制，确保物品 tooltip 显示在最上层
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
+    override fun drawMouseoverTooltip(context: DrawContext, mouseX: Int, mouseY: Int) {
+        // 绘制默认的 tooltip（物品信息）
+        super.drawMouseoverTooltip(context, mouseX, mouseY)
+    }
+
+    /** 查找鼠标悬停的反应堆槽位索引，如果没有悬停则返回 null */
+    private fun findHoveredReactorSlot(mouseX: Int, mouseY: Int): Int? {
+        for (i in 0 until handler.reactorSlotCount) {
+            val slot = handler.slots[i]
+            if (isPointOverSlot(slot, mouseX, mouseY)) {
+                return i
+            }
+        }
+        return null
+    }
+
+    private fun isPointOverSlot(slot: net.minecraft.screen.slot.Slot, mouseX: Int, mouseY: Int): Boolean {
+        val slotX = x + slot.x
+        val slotY = y + slot.y
+        return mouseX >= slotX && mouseX < slotX + 18 && mouseY >= slotY && mouseY < slotY + 18
+    }
+
     /** 在竖条上竖排叠加显示文本（多行居中） */
-    private fun drawVerticalTextOnBar(context: DrawContext, barX: Int, barY: Int, barW: Int, barH: Int, lines: List<String>) {
+    private fun drawVerticalTextOnBar(
+        context: DrawContext,
+        barX: Int,
+        barY: Int,
+        barW: Int,
+        barH: Int,
+        lines: List<String>
+    ) {
         val lineH = textRenderer.fontHeight
         val totalH = lines.size * lineH + (lines.size - 1) * 2
         var y = barY + (barH - totalH) / 2

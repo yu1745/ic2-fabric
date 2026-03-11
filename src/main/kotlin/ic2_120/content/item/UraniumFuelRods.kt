@@ -12,12 +12,30 @@ import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 
-/** 三角数 (x²+x)/2 */
-private fun triangularNumber(x: Int): Int = (x * x + x) / 2
+// 发热计算
+private fun triangularNumber(x: Int): Int = (x * x + x) * 2
 
-private fun checkPulseable(reactor: IReactor, x: Int, y: Int, stack: ItemStack, mex: Int, mey: Int, heatRun: Boolean): Int {
+private fun checkPulseable(
+    reactor: IReactor,
+    x: Int,
+    y: Int,
+    stack: ItemStack,
+    mex: Int,
+    mey: Int,
+    heatRun: Boolean
+): Int {
     val other = reactor.getItemAt(x, y) ?: return 0
-    return if (other.item is IReactorComponent && (other.item as IReactorComponent).acceptUraniumPulse(other, reactor, stack, x, y, mex, mey, heatRun)) 1 else 0
+    return if (other.item is IReactorComponent && (other.item as IReactorComponent).acceptUraniumPulse(
+            other,
+            reactor,
+            stack,
+            x,
+            y,
+            mex,
+            mey,
+            heatRun
+        )
+    ) 1 else 0
 }
 
 private fun checkHeatAcceptor(reactor: IReactor, x: Int, y: Int, out: MutableList<Triple<ItemStack, Int, Int>>) {
@@ -27,40 +45,57 @@ private fun checkHeatAcceptor(reactor: IReactor, x: Int, y: Int, out: MutableLis
     }
 }
 
-abstract class AbstractUraniumFuelRodItem(settings: FabricItemSettings, maxUse: Int, val numberOfCells: Int) : AbstractDamageableReactorComponent(settings, maxUse) {
+abstract class AbstractUraniumFuelRodItem(settings: FabricItemSettings, maxUse: Int, val numberOfCells: Int) :
+    AbstractDamageableReactorComponent(settings, maxUse) {
     override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {
         if (!reactor.produceEnergy()) return
 
         val basePulses = 1 + numberOfCells / 2
         val neighborPulses = checkPulseable(reactor, x - 1, y, stack, x, y, heatRun) +
-            checkPulseable(reactor, x + 1, y, stack, x, y, heatRun) +
-            checkPulseable(reactor, x, y - 1, stack, x, y, heatRun) +
-            checkPulseable(reactor, x, y + 1, stack, x, y, heatRun)
+                checkPulseable(reactor, x + 1, y, stack, x, y, heatRun) +
+                checkPulseable(reactor, x, y - 1, stack, x, y, heatRun) +
+                checkPulseable(reactor, x, y + 1, stack, x, y, heatRun)
 
         if (!heatRun) {
             // 一次性计算总发电量
-            val totalPulses = basePulses * numberOfCells
-            for (p in 0 until totalPulses) {
-                acceptUraniumPulse(stack, reactor, stack, x, y, x, y, heatRun)
-            }
+            val totalPulses = (basePulses + neighborPulses) * numberOfCells
+            // for (p in 0 until totalPulses) {
+            //     acceptUraniumPulse(stack, reactor, stack, x, y, x, y, heatRun)
+            // }
+            reactor.addOutput(totalPulses.toFloat())
         } else {
             // 一次性计算总热量
-            val totalPulses = (basePulses + neighborPulses) * numberOfCells
-            var heat = triangularNumber(totalPulses) * 4
+            val totalPulses = (basePulses + neighborPulses)
+            // println("totalPulses: $totalPulses")
+            var heat = triangularNumber(basePulses + neighborPulses) * numberOfCells
+            // 报告总产热
+            reactor.addHeatProduced(heat)
+            // 报告槽位产热和发电（每个脉冲产生1单位输出）
+            val energyOutput = totalPulses.toFloat() * numberOfCells
+            reactor.addSlotHeatInfo(x * 9 + y, heat, 0, energyOutput)
+            // println("heat: $heat")
             val heatAcceptors = mutableListOf<Triple<ItemStack, Int, Int>>()
             checkHeatAcceptor(reactor, x - 1, y, heatAcceptors)
             checkHeatAcceptor(reactor, x + 1, y, heatAcceptors)
             checkHeatAcceptor(reactor, x, y - 1, heatAcceptors)
             checkHeatAcceptor(reactor, x, y + 1, heatAcceptors)
 
+            // 热量分配循环：将燃料棒产生的热量优先传给邻接可储热组件
+            // 算法：每轮将剩余热量平均分配给所有待处理组件，组件无法吸收的溢出热量返回池中继续分配
             while (heatAcceptors.isNotEmpty() && heat > 0) {
+                // 计算每个组件本轮应分得的热量（平均分配）
                 val dheat = heat / heatAcceptors.size
                 heat -= dheat
+                // 取出第一个待处理的组件
                 val (acceptorStack, ax, ay) = heatAcceptors.removeAt(0)
                 val comp = acceptorStack.item as IReactorComponent
+                // 尝试向组件传递热量，返回无法吸收的溢出热量
+                // 例如：散热片热容量已满时，alterHeat 返回传入的热量作为 overflow
                 val overflow = comp.alterHeat(acceptorStack, reactor, ax, ay, dheat)
+                // 溢出热量重新加入待分配池，继续分配给剩余组件
                 heat += overflow
             }
+            // 四周器件无法吸收全部热量，把热量加到堆温
             if (heat > 0) reactor.addHeat(heat)
         }
 
@@ -85,8 +120,8 @@ abstract class AbstractUraniumFuelRodItem(settings: FabricItemSettings, maxUse: 
         pulseY: Int,
         heatRun: Boolean
     ): Boolean {
-        if (!heatRun) reactor.addOutput(1f)
-        return true
+        // 燃料棒枯竭后不再接受铀脉冲
+        return getUse(stack) < maxUse - 1
     }
 
     override fun influenceExplosion(stack: ItemStack, reactor: IReactor): Float = (2 * numberOfCells).toFloat()
@@ -121,27 +156,37 @@ class DepletedDualUraniumFuelRodItem : AbstractReactorComponent(FabricItemSettin
 @ModItem(name = "depleted_quad_uranium_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
 class DepletedQuadUraniumFuelRodItem : AbstractReactorComponent(FabricItemSettings())
 
-abstract class AbstractMoxFuelRodItem(settings: FabricItemSettings, maxUse: Int, val numberOfCells: Int) : AbstractDamageableReactorComponent(settings, maxUse) {
+abstract class AbstractMoxFuelRodItem(settings: FabricItemSettings, maxUse: Int, val numberOfCells: Int) :
+    AbstractDamageableReactorComponent(settings, maxUse) {
     override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {
         if (!reactor.produceEnergy()) return
 
         val basePulses = 1 + numberOfCells / 2
         val neighborPulses = checkPulseable(reactor, x - 1, y, stack, x, y, heatRun) +
-            checkPulseable(reactor, x + 1, y, stack, x, y, heatRun) +
-            checkPulseable(reactor, x, y - 1, stack, x, y, heatRun) +
-            checkPulseable(reactor, x, y + 1, stack, x, y, heatRun)
+                checkPulseable(reactor, x + 1, y, stack, x, y, heatRun) +
+                checkPulseable(reactor, x, y - 1, stack, x, y, heatRun) +
+                checkPulseable(reactor, x, y + 1, stack, x, y, heatRun)
 
         if (!heatRun) {
             // 一次性计算总发电量
-            val totalPulses = basePulses * numberOfCells
-            for (p in 0 until totalPulses) {
-                acceptUraniumPulse(stack, reactor, stack, x, y, x, y, heatRun)
-            }
+            val totalPulses = (basePulses + neighborPulses) * numberOfCells
+            // for (p in 0 until totalPulses) {
+            //     acceptUraniumPulse(stack, reactor, stack, x, y, x, y, heatRun)
+            // }
+            val breedereffectiveness = reactor.getHeat().toFloat() / reactor.getMaxHeat().toFloat()
+            val reaktorOutput = 4.0f * breedereffectiveness + 1.0f
+            //     reactor.addOutput(reaktorOutput)
+            reactor.addOutput(totalPulses.toFloat() * reaktorOutput)
         } else {
             // 一次性计算总热量
-            val totalPulses = (basePulses + neighborPulses) * numberOfCells
-            var heat = triangularNumber(totalPulses) * 4
+            val totalPulses = (basePulses + neighborPulses)
+            var heat = triangularNumber(totalPulses) * numberOfCells
             heat = getFinalHeat(stack, reactor, x, y, heat)
+            // 报告总产热
+            reactor.addHeatProduced(heat)
+            // 报告槽位产热和发电（每个脉冲产生1单位输出）
+            val energyOutput = (totalPulses * numberOfCells).toFloat()
+            reactor.addSlotHeatInfo(x * 9 + y, heat, 0, energyOutput)
             val heatAcceptors = mutableListOf<Triple<ItemStack, Int, Int>>()
             checkHeatAcceptor(reactor, x - 1, y, heatAcceptors)
             checkHeatAcceptor(reactor, x + 1, y, heatAcceptors)
@@ -190,12 +235,8 @@ abstract class AbstractMoxFuelRodItem(settings: FabricItemSettings, maxUse: Int,
         pulseY: Int,
         heatRun: Boolean
     ): Boolean {
-        if (!heatRun) {
-            val breedereffectiveness = reactor.getHeat().toFloat() / reactor.getMaxHeat().toFloat()
-            val reaktorOutput = 4.0f * breedereffectiveness + 1.0f
-            reactor.addOutput(reaktorOutput)
-        }
-        return true
+        // 燃料棒枯竭后不再接受铀脉冲
+        return getUse(stack) < maxUse - 1
     }
 
     override fun influenceExplosion(stack: ItemStack, reactor: IReactor): Float = (2 * numberOfCells).toFloat()

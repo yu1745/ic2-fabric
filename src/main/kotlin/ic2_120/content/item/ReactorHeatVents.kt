@@ -49,6 +49,8 @@ abstract class ReactorHeatVentBase(
     override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {
         if (!heatRun) return
 
+        var totalDissipated = 0
+
         if (reactorVent > 0) {
             var rheat = reactor.getHeat()
             val reactorDrain = minOf(rheat, reactorVent)
@@ -57,7 +59,14 @@ abstract class ReactorHeatVentBase(
             reactor.setHeat(rheat)
         }
 
-        alterHeat(stack, reactor, x, y, -selfVent)
+        val dissipated = selfVent
+        alterHeat(stack, reactor, x, y, -dissipated)
+        totalDissipated += dissipated
+
+        // 报告总散热
+        reactor.addHeatDissipated(totalDissipated)
+        // 报告槽位散热
+        reactor.addSlotHeatInfo(x * 9 + y, 0, totalDissipated)
     }
 }
 
@@ -68,7 +77,7 @@ class HeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 6, 0)
 class ReactorHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 5, 5)
 
 @ModItem(name = "advanced_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class AdvancedHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 12, 12)
+class AdvancedHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 12, 0)
 
 @ModItem(name = "overclocked_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
 class OverclockedHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 20, 36)
@@ -81,17 +90,26 @@ class ComponentHeatVentItem(settings: FabricItemSettings = FabricItemSettings())
 
     override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {
         if (!heatRun) return
-        cool(reactor, x - 1, y)
-        cool(reactor, x + 1, y)
-        cool(reactor, x, y - 1)
-        cool(reactor, x, y + 1)
+        var totalDissipated = 0
+        totalDissipated += cool(reactor, x - 1, y, x, y)
+        totalDissipated += cool(reactor, x + 1, y, x, y)
+        totalDissipated += cool(reactor, x, y - 1, x, y)
+        totalDissipated += cool(reactor, x, y + 1, x, y)
+
+        // 报告总散热
+        reactor.addHeatDissipated(totalDissipated)
+        // 报告槽位散热（元件散热片自己没有散热，都是帮邻接散的）
+        reactor.addSlotHeatInfo(x * 9 + y, 0, 0)
     }
 
-    private fun cool(reactor: IReactor, x: Int, y: Int) {
-        val other = reactor.getItemAt(x, y) ?: return
-        if (other.item !is IReactorComponent) return
+    private fun cool(reactor: IReactor, targetX: Int, targetY: Int, sourceX: Int, sourceY: Int): Int {
+        val other = reactor.getItemAt(targetX, targetY) ?: return 0
+        if (other.item !is IReactorComponent) return 0
         val comp = other.item as IReactorComponent
-        if (!comp.canStoreHeat(other, reactor, x, y)) return
-        comp.alterHeat(other, reactor, x, y, -sideVent)
+        if (!comp.canStoreHeat(other, reactor, targetX, targetY)) return 0
+        comp.alterHeat(other, reactor, targetX, targetY, -sideVent)
+        // 记录散热量到被散热的组件槽位
+        reactor.addSlotHeatInfo(targetX * 9 + targetY, 0, sideVent)
+        return sideVent
     }
 }

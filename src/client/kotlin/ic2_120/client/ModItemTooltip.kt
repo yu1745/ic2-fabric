@@ -2,6 +2,7 @@ package ic2_120.client
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.cables.BaseCableBlock
+import ic2_120.content.block.machines.NuclearReactorBlockEntity
 import ic2_120.content.item.getFluidCellVariant
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback
 import net.minecraft.item.BlockItem
@@ -37,6 +38,14 @@ object ModItemTooltip {
                     val fluidId = Registries.FLUID.getId(variant.fluid)
                     lines.add(Text.translatable("fluid.${fluidId.namespace}.${fluidId.path}").formatted(Formatting.GRAY))
                 }
+            }
+            
+            // 反应堆组件 tooltip：显示产热和散热信息
+            if (item is ic2_120.content.reactor.IReactorComponent) {
+                // 这里可以添加默认的产热和散热信息
+                // 实际的产热和散热信息需要从反应堆方块实体中获取
+                // lines.add(Text.literal("产热: 0").formatted(Formatting.GRAY))
+                // lines.add(Text.literal("散热: 0").formatted(Formatting.GRAY))
             }
         }
     }

@@ -54,4 +54,13 @@ interface IReactor {
 
     /** 爆炸 */
     fun explode()
+
+    /** 报告组件产热 */
+    fun addHeatProduced(amount: Int)
+
+    /** 报告组件散热 */
+    fun addHeatDissipated(amount: Int)
+
+    /** 报告槽位产热、散热和发电 */
+    fun addSlotHeatInfo(slot: Int, heatProduced: Int, heatDissipated: Int, energyOutput: Float = 0f)
 }

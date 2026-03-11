@@ -35,7 +35,9 @@ class NuclearReactorScreenHandler(
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate,
     /** 打开时的反应堆槽位数量（27–81） */
-    val reactorSlotCount: Int
+    val reactorSlotCount: Int,
+    /** 核反应堆方块实体 */
+    val reactor: NuclearReactorBlockEntity? = null
 ) : ScreenHandler(ModScreenHandlers.getType(NuclearReactorScreenHandler::class), syncId) {
 
     val sync = NuclearReactorSync(
@@ -139,7 +141,9 @@ class NuclearReactorScreenHandler(
             val capacity = buf.readVarInt().coerceIn(NuclearReactorSync.BASE_SLOTS, NuclearReactorBlockEntity.MAX_SLOTS)
             val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
             val blockInv = SimpleInventory(capacity)
-            return NuclearReactorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount), capacity)
+            // 获取核反应堆方块实体
+            val reactor = playerInventory.player.world.getBlockEntity(pos) as? NuclearReactorBlockEntity
+            return NuclearReactorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount), capacity, reactor)
         }
     }
 }

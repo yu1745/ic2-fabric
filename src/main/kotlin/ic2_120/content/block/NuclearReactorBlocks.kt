@@ -30,7 +30,7 @@ import net.minecraft.world.World
  * 与核反应堆相邻时，右键等效于右键反应堆，打开反应堆的 UI。
  */
 @ModBlock(name = "reactor_chamber", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor")
-class ReactorChamberBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : BlockWithEntity(settings) {
+class ReactorChamberBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
 
     override fun onUse(
         state: BlockState,

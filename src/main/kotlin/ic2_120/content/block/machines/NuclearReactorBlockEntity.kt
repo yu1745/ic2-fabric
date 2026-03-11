@@ -3,12 +3,17 @@ package ic2_120.content.block.machines
 import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
+import ic2_120.content.block.MachineBlock
 import ic2_120.content.block.NuclearReactorBlock
 import ic2_120.Ic2_120
 import ic2_120.content.block.ReactorChamberBlock
+import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.reactor.IReactor
 import ic2_120.content.reactor.IBaseReactorComponent
 import ic2_120.content.reactor.IReactorComponent
+import ic2_120.content.network.NetworkManager
+import ic2_120.content.network.ReactorHeatInfoPacket
+import ic2_120.content.network.SlotHeatEnergyInfo
 import ic2_120.content.screen.NuclearReactorScreenHandler
 import ic2_120.content.sync.NuclearReactorSync
 import net.minecraft.registry.Registries
@@ -16,13 +21,6 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
-import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
-import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant
 import net.minecraft.block.AbstractFireBlock
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
@@ -69,12 +67,24 @@ class NuclearReactorBlockEntity(
 
     /** 计算周期偏移（0..19），使 (world.time + tickOffset) % 20 == 0 时执行 */
     private var tickOffset: Int = 0
+
     /** 本周期组件散热蒸发累加（负值表示降温），Pass 1 结束后加回堆温 */
     private var emitHeatBuffer: Int = 0
+
     /** 本周期发电累加（每脉冲 1.0），周期结束后转为 EU */
     private var outputAccumulator: Float = 0f
 
+    /** 本周期总产热 */
+    private var totalHeatProduced: Int = 0
+
+    /** 本周期总散热 */
+    private var totalHeatDissipated: Int = 0
+
+    /** 每个槽位的产热、散热和发电 */
+    val slotHeatInfo = mutableMapOf<Int, SlotHeatEnergyInfo>()
+
     val syncedData = SyncedData(this)
+
     @RegisterEnergy
     val sync = NuclearReactorSync(
         syncedData,
@@ -93,18 +103,26 @@ class NuclearReactorBlockEntity(
     override fun setStack(slot: Int, stack: ItemStack) {
         if (!stack.isEmpty) {
             if (stack.item !is IBaseReactorComponent) return
-            if (stack.item is IBaseReactorComponent && !(stack.item as IBaseReactorComponent).canBePlacedIn(stack, this)) return
+            if (stack.item is IBaseReactorComponent && !(stack.item as IBaseReactorComponent).canBePlacedIn(
+                    stack,
+                    this
+                )
+            ) return
             if (slot >= currentCapacity()) return  // 防止物流 mod 向超出容量的槽位强制插入
         }
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
     }
+
     override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
     override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() { super.markDirty() }
+    override fun markDirty() {
+        super.markDirty()
+    }
+
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
     override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
@@ -116,14 +134,22 @@ class NuclearReactorBlockEntity(
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.nuclear_reactor")
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        NuclearReactorScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, currentCapacity())
+        NuclearReactorScreenHandler(
+            syncId,
+            playerInventory,
+            this,
+            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
+            syncedData,
+            currentCapacity(),
+            this
+        )
 
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(NuclearReactorSync.NBT_ENERGY_STORED).coerceIn(0L, NuclearReactorSync.ENERGY_CAPACITY)
-        sync.syncCommittedAmount()
+        // sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         sync.temperature = nbt.getInt(NuclearReactorSync.NBT_HEAT_STORED).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
         tickOffset = if (nbt.contains("TickOffset")) nbt.getInt("TickOffset").coerceIn(0, 19) else -1
@@ -152,18 +178,29 @@ class NuclearReactorBlockEntity(
     override fun getWorld(): World? = world
     override fun getPos(): BlockPos = pos
     override fun getHeat(): Int = sync.temperature
-    override fun setHeat(heat: Int) { sync.temperature = heat.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY) }
+    override fun setHeat(heat: Int) {
+        sync.temperature = heat.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
+    }
+
     override fun addHeat(amount: Int): Int {
         sync.temperature = (sync.temperature + amount).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
         return sync.temperature
     }
+
     override fun getMaxHeat(): Int = NuclearReactorSync.HEAT_CAPACITY
     override fun setMaxHeat(maxHeat: Int) {} // 暂不动态修改
-    override fun addEmitHeat(heat: Int) { emitHeatBuffer += heat }
+    override fun addEmitHeat(heat: Int) {
+        emitHeatBuffer += heat
+    }
+
     override fun getHeatEffectModifier(): Float = 1f
     override fun setHeatEffectModifier(hem: Float) {}
     override fun getReactorEnergyOutput(): Float = outputAccumulator
-    override fun addOutput(energy: Float): Float { outputAccumulator += energy; return outputAccumulator }
+    override fun addOutput(energy: Float): Float {
+        // println("addOutput: $energy")  
+        outputAccumulator += energy; return outputAccumulator
+    }
+
     override fun getReactorCols(): Int = currentCapacity() / 9
     override fun getReactorRows(): Int = 9
     override fun getItemAt(x: Int, y: Int): ItemStack? {
@@ -171,14 +208,33 @@ class NuclearReactorBlockEntity(
         val stack = getStack(x * 9 + y)
         return if (stack.isEmpty) null else stack
     }
+
     override fun setItemAt(x: Int, y: Int, stack: ItemStack?) {
         if (x in 0 until getReactorCols() && y in 0 until 9) {
             setStack(x * 9 + y, stack ?: ItemStack.EMPTY)
         }
     }
+
     override fun produceEnergy(): Boolean = true
     override fun getTickRate(): Int = 20
     override fun isFluidCooled(): Boolean = false
+
+    override fun addHeatProduced(amount: Int) {
+        totalHeatProduced += amount
+    }
+
+    override fun addHeatDissipated(amount: Int) {
+        totalHeatDissipated += amount
+    }
+
+    override fun addSlotHeatInfo(slot: Int, heatProduced: Int, heatDissipated: Int, energyOutput: Float) {
+        val current = slotHeatInfo.getOrDefault(slot, SlotHeatEnergyInfo(0, 0, 0f))
+        slotHeatInfo[slot] = SlotHeatEnergyInfo(
+            current.heatProduced + heatProduced,
+            current.heatDissipated + heatDissipated,
+            current.energyOutput + energyOutput
+        )
+    }
 
     /**
      * 容量减少时，将超出新容量的槽位物品散落掉落。
@@ -190,7 +246,13 @@ class NuclearReactorBlockEntity(
         for (i in cap until MAX_SLOTS) {
             val stack = getStack(i)
             if (!stack.isEmpty) {
-                net.minecraft.util.ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), stack)
+                net.minecraft.util.ItemScatterer.spawn(
+                    world,
+                    pos.x.toDouble(),
+                    pos.y.toDouble(),
+                    pos.z.toDouble(),
+                    stack
+                )
                 setStack(i, ItemStack.EMPTY)
             }
         }
@@ -200,7 +262,7 @@ class NuclearReactorBlockEntity(
         if (world.isClient) return
 
         val newCapacity = currentCapacity()
-        sync.capacity = newCapacity
+        sync.capacity1 = newCapacity
 
         // 容量减少时，溢出槽位的物品掉落
         dropOverflowItems(world, pos)
@@ -217,6 +279,9 @@ class NuclearReactorBlockEntity(
             dropAllUnfittingStuff(world, pos)
             outputAccumulator = 0f
             emitHeatBuffer = 0
+            totalHeatProduced = 0
+            totalHeatDissipated = 0
+            slotHeatInfo.clear()
 
             processChambers()
 
@@ -225,11 +290,27 @@ class NuclearReactorBlockEntity(
 
             // 将 output 转为 EU
             val euToAdd = (outputAccumulator * NuclearReactorSync.EU_PER_OUTPUT).toLong()
-                .coerceAtMost(NuclearReactorSync.ENERGY_CAPACITY - sync.amount)
-            if (euToAdd > 0) sync.amount += euToAdd
-            
+            if (euToAdd > 0) {
+                sync.amount = (sync.amount + euToAdd).coerceAtMost(NuclearReactorSync.ENERGY_CAPACITY)
+                sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+                markDirty()
+            }
+
             // 计算发电速度（EU/t）
             sync.outputRate = (euToAdd / 20L).toInt().coerceAtLeast(0)
+
+            // 同步产热和散热数据
+            sync.totalHeatProduced = totalHeatProduced
+            sync.totalHeatDissipated = totalHeatDissipated
+
+            // 发送槽位产热散热信息到客户端（发电数值乘以5用于显示）
+            val displaySlotHeatInfo = slotHeatInfo.mapValues { (_, info) ->
+                SlotHeatEnergyInfo(info.heatProduced, info.heatDissipated, info.energyOutput * 5)
+            }
+            val packet = ReactorHeatInfoPacket(pos, displaySlotHeatInfo)
+            for (player in world.players) {
+                NetworkManager.sendToClient(player as net.minecraft.server.network.ServerPlayerEntity, packet)
+            }
 
             if (calculateHeatEffects(world, pos)) return
         }
@@ -257,21 +338,37 @@ class NuclearReactorBlockEntity(
         val cap = currentCapacity()
         for (i in 0 until cap) {
             val stack = getStack(i)
-            if (!stack.isEmpty && (stack.item !is IBaseReactorComponent || (stack.item is IBaseReactorComponent && !(stack.item as IBaseReactorComponent).canBePlacedIn(stack, this)))) {
+            if (!stack.isEmpty && (stack.item !is IBaseReactorComponent || (stack.item is IBaseReactorComponent && !(stack.item as IBaseReactorComponent).canBePlacedIn(
+                    stack,
+                    this
+                )))
+            ) {
                 setStack(i, ItemStack.EMPTY)
-                net.minecraft.util.ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), stack)
+                net.minecraft.util.ItemScatterer.spawn(
+                    world,
+                    pos.x.toDouble(),
+                    pos.y.toDouble(),
+                    pos.z.toDouble(),
+                    stack
+                )
             }
         }
         for (i in cap until MAX_SLOTS) {
             val stack = getStack(i)
             if (!stack.isEmpty) {
                 setStack(i, ItemStack.EMPTY)
-                net.minecraft.util.ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), stack)
+                net.minecraft.util.ItemScatterer.spawn(
+                    world,
+                    pos.x.toDouble(),
+                    pos.y.toDouble(),
+                    pos.z.toDouble(),
+                    stack
+                )
             }
         }
     }
 
-    /** 双阶段 processChambers：Pass 0 发电/脉冲，Pass 1 热量分配 */
+    /** 双阶段 processChambers：Pass 0 发电，Pass 1 热量分配 */
     private fun processChambers() {
         val cols = getReactorCols()
         for (pass in 0..1) {
@@ -382,7 +479,7 @@ class NuclearReactorBlockEntity(
                 if (!world.isInBuildLimit(p)) continue
                 val state = world.getBlockState(p)
                 val block = state.block
-                if (block === Blocks.BEDROCK || block is NuclearReactorBlock || block is ReactorChamberBlock) continue
+                if (block === Blocks.BEDROCK || block is NuclearReactorBlock || block is ReactorChamberBlock || block is MachineBlock || block is BaseCableBlock) continue
                 if (state.isSolidBlock(world, p) && state.getHardness(world, p) >= 0f) {
                     world.setBlockState(p, Blocks.LAVA.defaultState)
                 }
@@ -404,9 +501,17 @@ class NuclearReactorBlockEntity(
 
     private fun createNuclearHeatDamageSource(world: net.minecraft.server.world.ServerWorld): net.minecraft.entity.damage.DamageSource {
         val registry = world.registryManager.get(net.minecraft.registry.RegistryKeys.DAMAGE_TYPE)
-        val key = net.minecraft.registry.RegistryKey.of(net.minecraft.registry.RegistryKeys.DAMAGE_TYPE, Identifier(Ic2_120.MOD_ID, "nuclear_heat"))
+        val key = net.minecraft.registry.RegistryKey.of(
+            net.minecraft.registry.RegistryKeys.DAMAGE_TYPE,
+            Identifier(Ic2_120.MOD_ID, "nuclear_heat")
+        )
         val entry = registry.getEntry(key).orElse(null)
-            ?: registry.getEntry(net.minecraft.registry.RegistryKey.of(net.minecraft.registry.RegistryKeys.DAMAGE_TYPE, Identifier("minecraft", "lava"))).orElseThrow()
+            ?: registry.getEntry(
+                net.minecraft.registry.RegistryKey.of(
+                    net.minecraft.registry.RegistryKeys.DAMAGE_TYPE,
+                    Identifier("minecraft", "lava")
+                )
+            ).orElseThrow()
         return net.minecraft.entity.damage.DamageSource(entry)
     }
 

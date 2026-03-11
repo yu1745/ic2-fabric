@@ -10,6 +10,7 @@ import ic2_120.client.FluidCellColorProvider
 import ic2_120.client.RubberLeavesColorProvider
 import ic2_120.client.RubberLogModelPlugin
 import ic2_120.client.StorageBoxColorProvider
+import ic2_120.client.network.NetworkManager
 import net.fabricmc.api.ClientModInitializer
 
 object Ic2_120Client : ClientModInitializer {
@@ -20,6 +21,9 @@ object Ic2_120Client : ClientModInitializer {
 		ClientEntityRenderers.register()
 		ClientBlockRenderLayers.register()
 		BatteryModelPredicates.register() // 注册电池模型 predicate
+
+		// 注册网络管理器
+		NetworkManager.register()
 
 		// 注册储物箱着色器
 		StorageBoxColorProvider.register()
