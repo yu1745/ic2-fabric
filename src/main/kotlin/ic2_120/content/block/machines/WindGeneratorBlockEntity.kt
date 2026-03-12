@@ -89,14 +89,7 @@ class WindGeneratorBlockEntity(
         batterySlot = BATTERY_SLOT,
         machineTierProvider = { tier },
         machineEnergyProvider = { sync.amount },
-        extractEnergy = { requested ->
-            val extracted = requested.coerceIn(0L, sync.amount)
-            if (extracted > 0L) {
-                sync.amount -= extracted
-                sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            }
-            extracted
-        },
+        extractEnergy = { requested -> sync.extractEnergy(requested) },
         canChargeNow = { sync.amount > 0 }
     )
 
@@ -193,7 +186,7 @@ class WindGeneratorBlockEntity(
                     euToAdd++
                 }
                 if (euToAdd > 0L) {
-                    sync.amount = (sync.amount + euToAdd).coerceAtMost(WindGeneratorSync.ENERGY_CAPACITY)
+                    sync.generateEnergy(euToAdd)
                     sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
                     markDirty()
                 }
@@ -276,3 +269,5 @@ class WindGeneratorBlockEntity(
         return count
     }
 }
+
+

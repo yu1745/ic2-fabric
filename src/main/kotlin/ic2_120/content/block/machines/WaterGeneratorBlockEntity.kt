@@ -160,14 +160,7 @@ class WaterGeneratorBlockEntity(
         batterySlot = BATTERY_SLOT,
         machineTierProvider = { tier },
         machineEnergyProvider = { sync.amount },
-        extractEnergy = { requested ->
-            val extracted = requested.coerceIn(0L, sync.amount)
-            if (extracted > 0L) {
-                sync.amount -= extracted
-                sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            }
-            extracted
-        },
+        extractEnergy = { requested -> sync.extractEnergy(requested) },
         canChargeNow = { sync.amount > 0L }
     )
 
@@ -300,7 +293,7 @@ class WaterGeneratorBlockEntity(
             }
 
             if (euToAdd > 0L) {
-                sync.amount = (sync.amount + euToAdd).coerceAtMost(WaterGeneratorSync.ENERGY_CAPACITY)
+                sync.generateEnergy(euToAdd)
                 sync.energy = sync.amount.toInt().coerceAtLeast(0)
                 markDirty()
             }
@@ -372,3 +365,5 @@ class WaterGeneratorBlockEntity(
         return count
     }
 }
+
+

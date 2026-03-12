@@ -34,8 +34,7 @@ class GeoGeneratorSync(
 
     var energy by schema.int("Energy")
     var lavaAmountMb by schema.int("LavaAmountMb")
-    /** 上一次 tick 的实际输出量（EU/t） */
-    var lastExtractedAmount by schema.int("LastExtracted")
+    private val flow = EnergyFlowSync(schema, this, useGeneratedAsInput = true)
 
     override fun getSideMaxInsert(side: Direction?): Long = 0L
 
@@ -47,8 +46,11 @@ class GeoGeneratorSync(
     }
 
     fun syncCurrentTickFlow() {
-        lastExtractedAmount = getCurrentTickExtracted().toInt()
+        flow.syncCurrentTickFlow()
     }
 
-    fun getSyncedExtractedAmount(): Long = lastExtractedAmount.toLong()
+    fun getSyncedInsertedAmount(): Long = flow.getSyncedInsertedAmount()
+
+    fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
 }
+

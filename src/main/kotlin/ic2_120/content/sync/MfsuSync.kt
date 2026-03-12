@@ -31,10 +31,7 @@ class MfsuSync(
     private val maxRate = ITieredMachine.euPerTickFromTier(tier)
 
     var energy by schema.int("Energy")
-    /** 滤波后的输入速率（EU/t），滑动窗口平均 */
-    var avgInsertedAmount by schema.intAveraged("AvgInserted", windowSize = 20)
-    /** 滤波后的输出速率（EU/t），滑动窗口平均 */
-    var avgExtractedAmount by schema.intAveraged("AvgExtract", windowSize = 20)
+    private val flow = EnergyFlowSync(schema, this)
 
     override fun getSideMaxInsert(side: Direction?): Long {
         if (side == null) return maxRate
@@ -54,13 +51,13 @@ class MfsuSync(
      * 在 tick 结束时调用，同步当前 tick 的实际输入/输出
      */
     fun syncCurrentTickFlow() {
-        avgInsertedAmount = getCurrentTickInserted().toInt()
-        avgExtractedAmount = getCurrentTickExtracted().toInt()
+        flow.syncCurrentTickFlow()
     }
 
     /** 获取同步的滤波后输入量（EU/t） */
-    fun getSyncedInsertedAmount(): Long = avgInsertedAmount.toLong()
+    fun getSyncedInsertedAmount(): Long = flow.getSyncedInsertedAmount()
 
     /** 获取同步的滤波后输出量（EU/t） */
-    fun getSyncedExtractedAmount(): Long = avgExtractedAmount.toLong()
+    fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
 }
+

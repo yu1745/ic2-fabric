@@ -56,8 +56,7 @@ class NuclearReactorSync(
     var capacity1 by schema.int("Capacity", default = BASE_SLOTS)
     /** 反应堆温度/贮存热量（0–10000），贮存的热量即堆温 */
     var temperature by schema.int("Temperature", default = 0)
-    /** 发电速度（EU/t） */
-    var outputRate by schema.int("OutputRate", default = 0)
+    private val flow = EnergyFlowSync(schema, this, useGeneratedAsInput = true)
     /** 总产热 */
     var totalHeatProduced by schema.int("TotalHeatProduced", default = 0)
     /** 总散热 */
@@ -71,4 +70,14 @@ class NuclearReactorSync(
     // override fun onEnergyCommitted() {
     //     energy = amount.toInt().coerceIn(0, Int.MAX_VALUE)
     // }
+
+    fun syncCurrentTickFlow() {
+        flow.syncCurrentTickFlow()
+    }
+
+    fun getSyncedInsertedAmount(): Long = flow.getSyncedInsertedAmount()
+
+    fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
 }
+
+

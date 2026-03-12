@@ -48,12 +48,9 @@ class MetalFormerSync(
     var progress by schema.int("Progress")
     var mode by schema.int("Mode")
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
-    /** 滤波后的输入速率（EU/t），滑动窗口平均 */
-    var avgInsertedAmount by schema.intAveraged("AvgInserted", windowSize = 20)
-    /** 滤波后的耗能速率（EU/t），滑动窗口平均 */
-    var avgConsumedAmount by schema.intAveraged("AvgConsumed", windowSize = 20)
+    private val flow = EnergyFlowSync(schema, this)
 
-    override fun onFinalCommit() {
+    override fun onEnergyCommitted() {
         energy = amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
@@ -70,16 +67,20 @@ class MetalFormerSync(
     }
 
     /**
-     * 在 tick 结束时调用，同步当前 tick 的实际输入/耗能
+     * 在 tick 结束时调用，同步当前 tick 的实际输入/输出
      */
     fun syncCurrentTickFlow() {
-        avgInsertedAmount = getCurrentTickInserted().toInt()
-        avgConsumedAmount = getCurrentTickConsumed().toInt()
+        flow.syncCurrentTickFlow()
     }
 
     /** 获取同步的滤波后输入量（EU/t） */
-    fun getSyncedInsertedAmount(): Long = avgInsertedAmount.toLong()
+    fun getSyncedInsertedAmount(): Long = flow.getSyncedInsertedAmount()
+
+    /** 获取同步的滤波后输出量（EU/t） */
+    fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
 
     /** 获取同步的滤波后耗能量（EU/t） */
-    fun getSyncedConsumedAmount(): Long = avgConsumedAmount.toLong()
+    fun getSyncedConsumedAmount(): Long = flow.getSyncedConsumedAmount()
 }
+
+

@@ -65,6 +65,7 @@ class GeneratorScreen(
         val top = y
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         // 直接使用后端滤波后的值
+        val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()
         val cap = GeneratorSync.ENERGY_CAPACITY
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
@@ -94,7 +95,7 @@ class GeneratorScreen(
                         shadow = false
                     )
                     Text(
-                        "输出 ${formatEu(outputRate)} EU/t",
+                        "发电 ${formatEu(inputRate)} EU/t · 输出 ${formatEu(outputRate)} EU/t",
                         color = 0xAAAAAA,
                         shadow = false
                     )
@@ -120,3 +121,4 @@ class GeneratorScreen(
         private const val PANEL_HEIGHT = 166
     }
 }
+

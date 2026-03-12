@@ -88,10 +88,7 @@ class TransformerSync(
 
     var energy by schema.int("Energy")
     var mode by schema.int("Mode")
-    /** 滤波后的输入速率（EU/t），滑动窗口平均 */
-    var avgInsertedAmount by schema.intAveraged("AvgInserted", windowSize = 20)
-    /** 滤波后的输出速率（EU/t），滑动窗口平均 */
-    var avgExtractedAmount by schema.intAveraged("AvgExtract", windowSize = 20)
+    private val flow = EnergyFlowSync(schema, this)
 
     private val facing: Direction
         get() = getFacing()
@@ -185,15 +182,14 @@ class TransformerSync(
      */
     fun syncCurrentTickFlow() {
         // 更新滑动窗口平均值
-        avgInsertedAmount = getCurrentTickInserted().toInt()
-        avgExtractedAmount = getCurrentTickExtracted().toInt()
+        flow.syncCurrentTickFlow()
     }
 
     /** 获取同步的滤波后输入量（EU/t） */
-    fun getSyncedInsertedAmount(): Long = avgInsertedAmount.toLong()
+    fun getSyncedInsertedAmount(): Long = flow.getSyncedInsertedAmount()
 
     /** 获取同步的滤波后输出量（EU/t） */
-    fun getSyncedExtractedAmount(): Long = avgExtractedAmount.toLong()
+    fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
 }
 
 /**
@@ -208,3 +204,4 @@ private object ITieredMachine {
         return m
     }
 }
+

@@ -61,14 +61,7 @@ class GeneratorBlockEntity(
         batterySlot = BATTERY_SLOT,
         machineTierProvider = { tier },
         machineEnergyProvider = { sync.amount },
-        extractEnergy = { requested ->
-            val extracted = requested.coerceIn(0L, sync.amount)
-            if (extracted > 0L) {
-                sync.amount -= extracted
-                sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            }
-            extracted
-        },
+        extractEnergy = { requested -> sync.extractEnergy(requested) },
         canChargeNow = { sync.amount > 0 }
     )
 
@@ -178,8 +171,8 @@ class GeneratorBlockEntity(
             // 已点燃的燃料会持续燃烧；有剩余空间就写入能量，溢出则钳制到上限
             if (space > 0L) {
                 val actualAdded = minOf(euToAdd, space)
-                // 重要：使用 addInternalGeneration 让基类追踪内部产生的能量
-                sync.addInternalGeneration(actualAdded)
+                // 重要：使用统一发电入口追踪内部能量产生
+                sync.generateEnergy(actualAdded)
             }
             sync.burnTime = (sync.burnTime - 1).coerceAtLeast(0)
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)

@@ -2,11 +2,8 @@ package ic2_120.content.block.machines
 
 import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.GeoGeneratorBlock
-import ic2_120.content.block.IGenerator
 import ic2_120.content.energy.charge.BatteryChargerComponent
-import ic2_120.content.item.EmptyCell
-import ic2_120.content.item.isLavaFuel
-import ic2_120.content.item.energy.IElectricTool
+import ic2_120.content.item.LavaCell
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.Ic2_120
 import ic2_120.content.sync.GeoGeneratorSync
@@ -53,7 +50,7 @@ class GeoGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IGenerator,
+) : MachineBlockEntity(type, pos, state), Inventory,
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     companion object {
@@ -116,6 +113,8 @@ class GeoGeneratorBlockEntity(
         fun hasAtLeastOneLavaBucket(): Boolean =
             amount >= FluidConstants.BUCKET && variant.fluid == Fluids.LAVA
 
+        fun canAcceptFullBucket(): Boolean = (tankCapacity - amount) >= FluidConstants.BUCKET
+
         /** 尝试插入岩浆（用于岩浆桶倒入），返回实际插入量 */
         fun tryInsertLava(toInsert: Long): Long {
             if (toInsert <= 0L || (amount > 0L && variant.fluid != Fluids.LAVA)) return 0L
@@ -147,14 +146,7 @@ class GeoGeneratorBlockEntity(
         batterySlot = BATTERY_SLOT,
         machineTierProvider = { tier },
         machineEnergyProvider = { sync.amount },
-        extractEnergy = { requested ->
-            val extracted = requested.coerceIn(0L, sync.amount)
-            if (extracted > 0L) {
-                sync.amount -= extracted
-                sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            }
-            extracted
-        },
+        extractEnergy = { requested -> sync.extractEnergy(requested) },
         canChargeNow = { sync.amount > 0L }
     )
 
@@ -191,9 +183,9 @@ class GeoGeneratorBlockEntity(
     fun canPlaceInSlot(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         return when (slot) {
-            FUEL_SLOT -> stack.isLavaFuel()
+            FUEL_SLOT -> stack.item == Items.LAVA_BUCKET || stack.item is LavaCell
             EMPTY_CONTAINER_SLOT -> false  // 仅机器输出，玩家不可放入
-            BATTERY_SLOT -> stack.item is IBatteryItem || stack.item is IElectricTool
+            BATTERY_SLOT -> stack.item is IBatteryItem
             else -> false
         }
     }
@@ -213,6 +205,17 @@ class GeoGeneratorBlockEntity(
                 true
             } else false
         } else false
+    }
+
+    /** 检查 EMPTY_CONTAINER_SLOT 是否可放入指定空容器（不修改库存） */
+    private fun canInsertEmptyContainer(emptyStack: ItemStack): Boolean {
+        if (emptyStack.isEmpty) return false
+        val current = getStack(EMPTY_CONTAINER_SLOT)
+        return if (current.isEmpty) {
+            true
+        } else {
+            ItemStack.canCombine(current, emptyStack) && current.count + emptyStack.count <= current.maxCount
+        }
     }
 
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
@@ -254,26 +257,26 @@ class GeoGeneratorBlockEntity(
 
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
 
-        // 燃料槽位：岩浆桶、岩浆单元、通用流体单元（NBT 为岩浆）倒入储罐，空容器放入 EMPTY_CONTAINER_SLOT
+        // 燃料槽位：岩浆桶或岩浆单元倒入储罐，空容器放入 EMPTY_CONTAINER_SLOT
         val fuelStack = getStack(FUEL_SLOT)
         when {
             fuelStack.item == Items.LAVA_BUCKET -> {
-                val inserted = lavaTankInternal.tryInsertLava(FluidConstants.BUCKET)
-                if (inserted >= FluidConstants.BUCKET) {
-                    val emptyBucket = ItemStack(Items.BUCKET)
-                    if (tryInsertEmptyContainer(emptyBucket)) {
+                val emptyBucket = ItemStack(Items.BUCKET)
+                if (lavaTankInternal.canAcceptFullBucket() && canInsertEmptyContainer(emptyBucket)) {
+                    val inserted = lavaTankInternal.tryInsertLava(FluidConstants.BUCKET)
+                    if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyBucket)) {
                         fuelStack.decrement(1)
                         if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)
                         markDirty()
                     }
                 }
             }
-            fuelStack.isLavaFuel() -> {
-                // 岩浆单元 / 通用流体单元（NBT 为岩浆）= 1 桶 = 1000 mB
-                val inserted = lavaTankInternal.tryInsertLava(FluidConstants.BUCKET)
-                if (inserted >= FluidConstants.BUCKET) {
-                    val emptyCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
-                    if (tryInsertEmptyContainer(emptyCell)) {
+            fuelStack.item is LavaCell -> {
+                // 岩浆单元 = 1 桶 = 1000 mB
+                val emptyCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
+                if (lavaTankInternal.canAcceptFullBucket() && canInsertEmptyContainer(emptyCell)) {
+                    val inserted = lavaTankInternal.tryInsertLava(FluidConstants.BUCKET)
+                    if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyCell)) {
                         fuelStack.decrement(1)
                         if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)
                         markDirty()
@@ -290,8 +293,7 @@ class GeoGeneratorBlockEntity(
             val consumed = lavaTankInternal.consumeInternal(toConsume)
             if (consumed > 0L) {
                 val euToAdd = consumed * GeoGeneratorSync.EU_PER_BURN_TICK / consumePerTick
-                sync.amount += minOf(euToAdd, space)
-                sync.energy = sync.amount.toInt().coerceAtLeast(0)
+                sync.generateEnergy(minOf(euToAdd, space))
                 markDirty()
             }
         }
@@ -306,9 +308,7 @@ class GeoGeneratorBlockEntity(
         if (state.get(GeoGeneratorBlock.ACTIVE) != active) {
             world.setBlockState(pos, state.with(GeoGeneratorBlock.ACTIVE, active))
         }
-        // 同步当前 tick 的实际输出/输入
         sync.syncCurrentTickFlow()
-
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {

@@ -63,6 +63,7 @@ class RtGeneratorScreen(
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
 
         // 使用后端同步的实际输出
+        val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()
 
         // 能量信息放在右侧（x=88），避免与左侧燃料槽（x=8~62）重叠
@@ -97,7 +98,7 @@ class RtGeneratorScreen(
                 )
                 // 第二行：输出，避免溢出
                 Text(
-                    "输出 ${formatEu(outputRate)} EU/t",
+                    "发电 ${formatEu(inputRate)} EU/t · 输出 ${formatEu(outputRate)} EU/t",
                     color = 0xAAAAAA,
                     shadow = false
                 )
@@ -122,3 +123,4 @@ class RtGeneratorScreen(
         private const val PANEL_HEIGHT = 166
     }
 }
+

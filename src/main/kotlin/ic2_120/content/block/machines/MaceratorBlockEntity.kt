@@ -95,6 +95,7 @@ class MaceratorBlockEntity(
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(MaceratorSync.NBT_ENERGY_STORED)
+        sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
@@ -118,11 +119,13 @@ class MaceratorBlockEntity(
         val input = getStack(SLOT_INPUT)
         if (input.isEmpty()) {
             if (sync.progress != 0) sync.progress = 0
+            sync.syncCurrentTickFlow()
             return
         }
 
         val result = MaceratorRecipes.getOutput(input) ?: run {
             if (sync.progress != 0) sync.progress = 0
+            sync.syncCurrentTickFlow()
             return
         }
         val outputSlot = getStack(1)
@@ -132,6 +135,7 @@ class MaceratorBlockEntity(
 
         if (!canAccept) {
             if (sync.progress != 0) sync.progress = 0
+            sync.syncCurrentTickFlow()
             return
         }
 
@@ -141,12 +145,12 @@ class MaceratorBlockEntity(
             else outputSlot.increment(result.count)
             sync.progress = 0
             markDirty()
+            sync.syncCurrentTickFlow()
             return
         }
 
         val need = MaceratorSync.ENERGY_PER_TICK
-        if (sync.amount >= need) {
-            sync.amount = (sync.amount - need).coerceAtLeast(0L)
+        if (sync.consumeEnergy(need) > 0L) {
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
             sync.progress += 1
             markDirty()
@@ -156,8 +160,8 @@ class MaceratorBlockEntity(
         if (state.get(MaceratorBlock.ACTIVE) != active) {
             world.setBlockState(pos, state.with(MaceratorBlock.ACTIVE, active))
         }
+        sync.syncCurrentTickFlow()
     }
-
     /**
      * 从放电槽提取能量（如果需要）
      */
@@ -169,8 +173,17 @@ class MaceratorBlockEntity(
         val extracted = batteryDischarger.tick(request)
         if (extracted <= 0L) return
 
-        sync.amount = (sync.amount + extracted).coerceAtMost(MaceratorSync.ENERGY_CAPACITY)
+        sync.insertEnergy(extracted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         markDirty()
     }
 }
+
+
+
+
+
+
+
+
+

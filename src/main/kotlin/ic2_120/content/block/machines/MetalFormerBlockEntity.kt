@@ -171,8 +171,7 @@ class MetalFormerBlockEntity(
         if (input.isEmpty) {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
-            // 同步当前 tick 的实际输入/耗能
-//            sync.syncCurrentTickFlow()
+            sync.syncCurrentTickFlow()
             return
         }
 
@@ -183,8 +182,7 @@ class MetalFormerBlockEntity(
         val result = MetalFormerRecipes.getOutput(currentMode, input, secondaryInput) ?: run {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
-            // 同步当前 tick 的实际输入/耗能
-//            sync.syncCurrentTickFlow()
+            sync.syncCurrentTickFlow()
             return
         }
 
@@ -196,8 +194,7 @@ class MetalFormerBlockEntity(
         if (!canAccept) {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
-            // 同步当前 tick 的实际输入/耗能
-//            sync.syncCurrentTickFlow()
+            sync.syncCurrentTickFlow()
             return
         }
 
@@ -218,14 +215,12 @@ class MetalFormerBlockEntity(
             sync.progress = 0
             markDirty()
             setActiveState(world, pos, state, false)
-            // 同步当前 tick 的实际输入/耗能
-//            sync.syncCurrentTickFlow()
+            sync.syncCurrentTickFlow()
             return
         }
 
         val need = (MetalFormerSync.ENERGY_PER_TICK * energyMultiplier).toLong().coerceAtLeast(1L)
-        if (sync.amount >= need) {
-            sync.amount = (sync.amount - need).coerceAtLeast(0L)
+        if (sync.consumeEnergy(need) > 0L) {
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
             sync.progress += progressIncrement
             markDirty()
@@ -257,7 +252,7 @@ class MetalFormerBlockEntity(
         val extracted = batteryDischarger.tick(request)
         if (extracted <= 0L) return
 
-        sync.amount = (sync.amount + extracted).coerceAtMost(sync.getEffectiveCapacity())
+        sync.insertEnergy(extracted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         markDirty()
     }
@@ -268,3 +263,4 @@ class MetalFormerBlockEntity(
         }
     }
 }
+

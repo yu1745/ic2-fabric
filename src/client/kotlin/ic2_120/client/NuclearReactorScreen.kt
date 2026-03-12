@@ -143,7 +143,8 @@ class NuclearReactorScreen(
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = NuclearReactorSync.ENERGY_CAPACITY
         val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
-        val outputRate = handler.sync.outputRate.toLong()
+        val inputRate = handler.sync.getSyncedInsertedAmount()
+        val outputRate = handler.sync.getSyncedExtractedAmount()
         val slotSize = NuclearReactorScreenHandler.SLOT_SIZE
         val barH = 9 * slotSize
 
@@ -168,7 +169,13 @@ class NuclearReactorScreen(
             energyBarY,
             barWidth,
             barH,
-            listOf(formatEu(energy), formatEu(cap), "EU", "${formatEu(outputRate)} EU/t")
+            listOf(
+                formatEu(energy),
+                formatEu(cap),
+                "EU",
+                "发电 ${formatEu(inputRate)} EU/t",
+                "输出 ${formatEu(outputRate)} EU/t"
+            )
         )
 
         // 温度数值竖排叠加在温度条上
@@ -279,3 +286,4 @@ class NuclearReactorScreen(
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
 }
+

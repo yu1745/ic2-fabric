@@ -44,8 +44,7 @@ class RtGeneratorSync(
     }
 
     var energy by schema.int("Energy")
-    /** 上一次 tick 的实际输出量（EU/t） */
-    var lastExtractedAmount by schema.int("LastExtracted")
+    private val flow = EnergyFlowSync(schema, this, useGeneratedAsInput = true)
 
     override fun getSideMaxInsert(side: Direction?): Long = 0L
 
@@ -57,12 +56,18 @@ class RtGeneratorSync(
     }
 
     /**
-     * 在 tick 结束时调用，同步当前 tick 的实际输出
+     * 在 tick 结束时调用，同步当前 tick 的实际输入/输出
+     * 发电机不支持输入：输入字段用于存储发电速度
      */
     fun syncCurrentTickFlow() {
-        lastExtractedAmount = getCurrentTickExtracted().toInt()
+        flow.syncCurrentTickFlow()
     }
 
-    /** 获取同步的上一次 tick 的实际输出量（EU/t） */
-    fun getSyncedExtractedAmount(): Long = lastExtractedAmount.toLong()
+    /** 获取同步的滤波后输入量（EU/t，发电速度） */
+    fun getSyncedInsertedAmount(): Long = flow.getSyncedInsertedAmount()
+
+    /** 获取同步的滤波后输出量（EU/t） */
+    fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
 }
+
+

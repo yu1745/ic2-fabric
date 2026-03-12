@@ -43,8 +43,7 @@ class LuminatorFlatBlockEntity(
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(LuminatorSync.NBT_ENERGY_STORED).coerceIn(0L, LuminatorSync.ENERGY_CAPACITY)
-        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        sync.restoreEnergy(nbt.getLong(LuminatorSync.NBT_ENERGY_STORED))
         cycleTicks = nbt.getInt("CycleTicks")
     }
 
@@ -64,11 +63,10 @@ class LuminatorFlatBlockEntity(
         cycleTicks++
         if (cycleTicks >= LuminatorSync.CYCLE_TICKS) {
             cycleTicks = 0
-            if (sync.amount >= LuminatorSync.ENERGY_PER_CYCLE) {
-                sync.amount = (sync.amount - LuminatorSync.ENERGY_PER_CYCLE).coerceAtLeast(0L)
-                sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+            if (sync.consumeEnergy(LuminatorSync.ENERGY_PER_CYCLE) > 0L) {
                 setActiveState(world, pos, state, true)
                 markDirty()
+                sync.syncCurrentTickFlow()
                 return
             }
         }
@@ -76,11 +74,20 @@ class LuminatorFlatBlockEntity(
         if (sync.amount < LuminatorSync.ENERGY_PER_CYCLE) {
             setActiveState(world, pos, state, false)
         }
+        sync.syncCurrentTickFlow()
     }
-
     private fun setActiveState(world: World, pos: BlockPos, state: BlockState, active: Boolean) {
         if (state.get(LuminatorFlatBlock.ACTIVE) != active) {
             world.setBlockState(pos, state.with(LuminatorFlatBlock.ACTIVE, active))
         }
     }
 }
+
+
+
+
+
+
+
+
+

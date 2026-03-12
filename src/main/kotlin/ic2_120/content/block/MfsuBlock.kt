@@ -86,8 +86,7 @@ class MfsuBlock : MachineBlock() {
                 val nbt = context.stack.nbt ?: return result
                 if (nbt.getBoolean(NBT_FULL)) {
                     val be = context.world.getBlockEntity(context.blockPos) as? MfsuBlockEntity ?: return result
-                    be.sync.amount = MfsuSync.ENERGY_CAPACITY
-                    be.sync.syncCommittedAmount()
+                    be.sync.restoreEnergy(MfsuSync.ENERGY_CAPACITY)
                     be.markDirty()
                 }
             }

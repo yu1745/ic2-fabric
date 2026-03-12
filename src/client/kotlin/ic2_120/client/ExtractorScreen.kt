@@ -61,6 +61,8 @@ class ExtractorScreen(
         val left = x
         val top = y
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+        val inputRate = handler.sync.getSyncedInsertedAmount()
+        val consumeRate = handler.sync.getSyncedConsumedAmount()
         val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1L)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
         val contentW = (backgroundWidth - 16).coerceAtLeast(0)
@@ -87,6 +89,11 @@ class ExtractorScreen(
                     color = 0xCCCCCC,
                     shadow = false
                 )
+                Text(
+                    "输入 ${formatEu(inputRate)} EU/t · 耗能 ${formatEu(consumeRate)} EU/t",
+                    color = 0xAAAAAA,
+                    shadow = false
+                )
             }
         }
         drawMouseoverTooltip(context, mouseX, mouseY)
@@ -100,4 +107,13 @@ class ExtractorScreen(
         private val PANEL_WIDTH = UpgradeSlotLayout.VANILLA_UI_WIDTH + UpgradeSlotLayout.SLOT_SPACING
         private const val PANEL_HEIGHT = 166
     }
+
+    private fun formatEu(value: Long): String {
+        return when {
+            value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000.0)
+            value >= 1_000 -> String.format("%.1fK", value / 1_000.0)
+            else -> value.toString()
+        }
+    }
 }
+

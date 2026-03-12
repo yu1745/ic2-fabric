@@ -291,13 +291,10 @@ class NuclearReactorBlockEntity(
             // 将 output 转为 EU
             val euToAdd = (outputAccumulator * NuclearReactorSync.EU_PER_OUTPUT).toLong()
             if (euToAdd > 0) {
-                sync.amount = (sync.amount + euToAdd).coerceAtMost(NuclearReactorSync.ENERGY_CAPACITY)
+                sync.generateEnergy(euToAdd)
                 sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
                 markDirty()
             }
-
-            // 计算发电速度（EU/t）
-            sync.outputRate = (euToAdd / 20L).toInt().coerceAtLeast(0)
 
             // 同步产热和散热数据
             sync.totalHeatProduced = totalHeatProduced
@@ -331,6 +328,8 @@ class NuclearReactorBlockEntity(
         if (state.get(NuclearReactorBlock.ACTIVE) != active) {
             world.setBlockState(pos, state.with(NuclearReactorBlock.ACTIVE, active))
         }
+
+        sync.syncCurrentTickFlow()
     }
 
     /** 移除无效组件、超出容量的物品 */
@@ -519,3 +518,5 @@ class NuclearReactorBlockEntity(
         const val MAX_SLOTS = 81
     }
 }
+
+

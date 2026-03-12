@@ -118,7 +118,7 @@ class MetalFormerScreen(
         }
         // 直接使用后端滤波后的值
         val inputRate = handler.sync.getSyncedInsertedAmount()
-        val consumedRate = handler.sync.getSyncedConsumedAmount()
+        val consumeRate = handler.sync.getSyncedConsumedAmount()
 
         ui.render(context, textRenderer, mouseX, mouseY) {
             Column(x = left + 8, y = top + 6, spacing = 2, modifier = Modifier.EMPTY.width(contentW).padding(0, 0, 8, 0)) {
@@ -154,7 +154,7 @@ class MetalFormerScreen(
                 }
                 // 第三行：输入/耗能速率
                 Text(
-                    "输入 ${formatEu(inputRate)} EU/t · 耗能 ${formatEu(consumedRate)} EU/t",
+                    "输入 ${formatEu(inputRate)} EU/t · 耗能 ${formatEu(consumeRate)} EU/t",
                     color = 0xAAAAAA,
                     shadow = false
                 )
@@ -183,3 +183,4 @@ class MetalFormerScreen(
         private const val PANEL_HEIGHT = 184
     }
 }
+

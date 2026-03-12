@@ -84,14 +84,7 @@ class RtGeneratorBlockEntity(
         batterySlot = BATTERY_SLOT,
         machineTierProvider = { tier },
         machineEnergyProvider = { sync.amount },
-        extractEnergy = { requested ->
-            val extracted = requested.coerceIn(0L, sync.amount)
-            if (extracted > 0L) {
-                sync.amount -= extracted
-                sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            }
-            extracted
-        },
+        extractEnergy = { requested -> sync.extractEnergy(requested) },
         canChargeNow = { sync.amount > 0 }
     )
 
@@ -185,7 +178,7 @@ class RtGeneratorBlockEntity(
             val space = (RtGeneratorSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0L)
             if (space > 0L) {
                 val euToAdd = minOf(euPerTick, space)
-                sync.amount = (sync.amount + euToAdd).coerceAtMost(RtGeneratorSync.ENERGY_CAPACITY)
+                sync.generateEnergy(euToAdd)
                 sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
                 markDirty()
             }
@@ -202,3 +195,5 @@ class RtGeneratorBlockEntity(
 
     }
 }
+
+

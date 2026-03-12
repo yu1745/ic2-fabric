@@ -162,8 +162,8 @@ open class TransformerBlockEntity(
 
         // 调试日志：记录能量流动
         val energyAfter = sync.amount
-        val inputAfter = sync.avgInsertedAmount
-        val outputAfter = sync.avgExtractedAmount
+        val inputAfter = sync.getSyncedInsertedAmount()
+        val outputAfter = sync.getSyncedExtractedAmount()
 
         if (inputAfter > 0 || outputAfter > 0) {
             val modeText = when (currentMode) {
@@ -231,3 +231,5 @@ object TransformerUtils {
         else -> 32 * (1 shl (tier - 1).coerceIn(0, 4))
     }
 }
+
+

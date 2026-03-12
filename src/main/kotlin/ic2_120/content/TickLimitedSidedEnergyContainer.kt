@@ -16,7 +16,7 @@ import team.reborn.energy.api.EnergyStorage
  * 三个能量速度指标：
  * - 输入速度：外部 → 机器（通过 Transfer API 插入）
  * - 输出速度：机器 → 外部（通过 Transfer API 提取）
- * - 耗能速度：机器内部消耗（通过 [consumeForOperation] 方法）
+ * - 耗能速度：机器内部消耗（通过 [consumeEnergy] 方法）
  */
 open class TickLimitedSidedEnergyContainer(
     private val baseCapacity: Long,
@@ -143,9 +143,11 @@ open class TickLimitedSidedEnergyContainer(
     private var insertedThisTick: Long = 0L
     private var extractedThisTick: Long = 0L
     private var consumedThisTick: Long = 0L
+    private var generatedThisTick: Long = 0L
     private var lastInsertedAmount: Long = 0L
     private var lastExtractedAmount: Long = 0L
     private var lastConsumedAmount: Long = 0L
+    private var lastGeneratedAmount: Long = 0L
     private var lastCommittedAmount: Long = amount
 
     /**
@@ -156,9 +158,9 @@ open class TickLimitedSidedEnergyContainer(
         normalizeTickBudget()
         val delta = amount - lastCommittedAmount
         if (delta > 0L) {
-            insertedThisTick = (insertedThisTick + delta).coerceAtMost(maxInsertPerTick)
+            insertedThisTick += delta
         } else if (delta < 0L) {
-            extractedThisTick = (extractedThisTick - delta).coerceAtMost(maxExtractPerTick)
+            extractedThisTick -= delta
         }
         lastCommittedAmount = amount
         onEnergyCommitted()
@@ -171,11 +173,13 @@ open class TickLimitedSidedEnergyContainer(
             lastInsertedAmount = insertedThisTick
             lastExtractedAmount = extractedThisTick
             lastConsumedAmount = consumedThisTick
+            lastGeneratedAmount = generatedThisTick
             // 重置当前 tick 的累计值
             budgetTrackedTick = now
             insertedThisTick = 0L
             extractedThisTick = 0L
             consumedThisTick = 0L
+            generatedThisTick = 0L
         }
     }
 
@@ -190,6 +194,12 @@ open class TickLimitedSidedEnergyContainer(
     /** 获取上一次 tick 的实际耗能量（EU/t） */
     fun getLastConsumedAmount(): Long = lastConsumedAmount
 
+    fun getLastGeneratedAmount(): Long = lastGeneratedAmount
+
+    fun finalizeFlowSnapshot() {
+        normalizeTickBudget()
+    }
+
     /** 获取当前 tick 的累计输入量（子类用于同步） */
     protected fun getCurrentTickInserted(): Long = insertedThisTick
 
@@ -199,49 +209,97 @@ open class TickLimitedSidedEnergyContainer(
     /** 获取当前 tick 的累计耗能量（子类用于同步） */
     protected fun getCurrentTickConsumed(): Long = consumedThisTick
 
+    /** 获取当前 tick 的累计发电量（子类用于同步） */
+    protected fun getCurrentTickGenerated(): Long = generatedThisTick
+
+    /** 对外暴露：当前 tick 的累计输入量（用于同步层复用） */
+    fun getCurrentTickInsertedAmount(): Long = insertedThisTick
+
+    /** 对外暴露：当前 tick 的累计输出量（用于同步层复用） */
+    fun getCurrentTickExtractedAmount(): Long = extractedThisTick
+
+    /** 对外暴露：当前 tick 的累计耗能量（用于同步层复用） */
+    fun getCurrentTickConsumedAmount(): Long = consumedThisTick
+
+    /** 对外暴露：当前 tick 的累计发电量（用于同步层复用） */
+    fun getCurrentTickGeneratedAmount(): Long = generatedThisTick
+
     /**
-     * 内部能量产生（用于发电机等）。
-     *
-     * ⚠️ 与直接修改 amount 不同：
-     * - 直接修改：不会更新 lastCommittedAmount，导致外部提取时 delta 计算错误
-     * - 此方法：正确更新 lastCommittedAmount，确保外部提取能正确记录到 extractedThisTick
-     *
-     * @param amount 产生的能量数量（EU）
+     * 统一内部发电入口：发电机等应使用此方法。
+     * 返回实际增加量（会受容量限制）。
      */
-    fun addInternalGeneration(amount: Long) {
-        this.amount += amount
-        // 更新 lastCommittedAmount，避免影响后续外部提取的 delta 计算
-        lastCommittedAmount = this.amount
+    fun generateEnergy(requested: Long): Long {
+        if (requested <= 0L) return 0L
+        val space = (capacity - amount).coerceAtLeast(0L)
+        val actual = minOf(requested, space)
+        if (actual <= 0L) return 0L
+        amount += actual
+        trackInternalMutation {
+            generatedThisTick += actual
+        }
+        return actual
+    }
+
+    /**
+     * 统一内部注能入口（非事务路径，如放电槽回充）。
+     * 返回实际增加量（会受容量限制）。
+     */
+    fun insertEnergy(requested: Long): Long {
+        if (requested <= 0L) return 0L
+        val space = (capacity - amount).coerceAtLeast(0L)
+        val actual = minOf(requested, space)
+        if (actual <= 0L) return 0L
+        amount += actual
+        trackInternalMutation {
+            insertedThisTick += actual
+        }
+        return actual
+    }
+
+    /**
+     * 统一内部取能入口（机器给电池/电动工具充电等）。
+     * 返回实际取出量。
+     */
+    fun extractEnergy(requested: Long): Long {
+        if (requested <= 0L) return 0L
+        val actual = minOf(requested, amount)
+        if (actual <= 0L) return 0L
+        amount -= actual
+        trackInternalMutation {
+            extractedThisTick += actual
+        }
+        return actual
+    }
+
+    /**
+     * 统一内部耗能入口（加工、攻击等机器自身运行消耗）。
+     * 行为保持为“全有全无”：能量不足时返回 0。
+     */
+    fun consumeEnergy(requested: Long): Long {
+        if (requested <= 0L || amount < requested) return 0L
+        amount -= requested
+        trackInternalMutation {
+            consumedThisTick += requested
+        }
+        return requested
+    }
+
+    /** 从存档恢复能量并同步提交基线，避免首个事务误记账。 */
+    fun restoreEnergy(storedAmount: Long) {
+        amount = storedAmount.coerceIn(0L, capacity)
+        syncCommittedAmount()
         onEnergyCommitted()
     }
 
-    // ========== 机器耗能 ==========
-
-    /**
-     * 机器内部工作耗能（如电炉冶炼、压缩机加工）。
-     *
-     * ⚠️ 重要：机器耗能必须调用此方法，禁止直接修改 `amount` 属性！
-     *
-     * 原因：
-     * - 直接修改 `amount` 无法区分是"耗能"还是"输出到外部"
-     * - 通过方法调用才能正确记录耗能指标，与输入/输出区分开
-     * - 三个速度指标需要不同的记录路径：
-     *   - 输入：外部 → 机器（电网/电池输入）
-     *   - 输出：机器 → 外部（发电机输出到电网）
-     *   - 耗能：机器内部消耗（电炉工作、压缩机加工）
-     *
-     * @param amount 耗能数量（EU）
-     * @return 实际消耗数量（可能因能量不足而少于请求）
-     */
-    fun consumeForOperation(amount: Long): Long {
-        if (this.amount < amount) return 0L
-        this.amount -= amount
+    private inline fun trackInternalMutation(record: () -> Unit) {
         val now = currentTickProvider()
         if (now != null) {
             normalizeTickBudget()
-            consumedThisTick = (consumedThisTick + amount).coerceAtMost(capacity)
+            record()
         }
-        return amount
+        // 关键：内部路径必须推进基线，避免后续事务 delta 误判。
+        lastCommittedAmount = amount
+        onEnergyCommitted()
     }
 
     // ========== 子类覆写点 ==========
@@ -312,3 +370,4 @@ open class UpgradeableTickLimitedSidedEnergyContainer(
         return minOf(transformerMax, space)
     }
 }
+

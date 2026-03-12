@@ -85,6 +85,7 @@ class ElectricFurnaceBlockEntity(
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ElectricFurnaceSync.NBT_ENERGY_STORED)
+        sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
@@ -106,6 +107,7 @@ class ElectricFurnaceBlockEntity(
                 sync.progress = 0
             }
             setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
             return
         }
 
@@ -114,6 +116,7 @@ class ElectricFurnaceBlockEntity(
         if (match.isEmpty) {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
             return
         }
 
@@ -127,6 +130,7 @@ class ElectricFurnaceBlockEntity(
         if (!canAccept) {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
             return
         }
 
@@ -137,13 +141,13 @@ class ElectricFurnaceBlockEntity(
             sync.progress = 0
             markDirty()
             setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
             return
         }
 
         // 内部消耗：直接扣减 amount（不经过 extract，故对外 MAX_EXTRACT=0 仍生效，电缆无法拉电）
         val need = ElectricFurnaceSync.ENERGY_PER_TICK
-        if (sync.amount >= need) {
-            sync.amount = (sync.amount - need).coerceAtLeast(0L)
+        if (sync.consumeEnergy(need) > 0L) {
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
             sync.progress += 1
             markDirty()
@@ -151,6 +155,7 @@ class ElectricFurnaceBlockEntity(
         } else {
             setActiveState(world, pos, state, false)
         }
+        sync.syncCurrentTickFlow()
     }
 
     /** 根据是否在工作更新方块的 active 状态，配合 blockstate 切换模型。 */
@@ -160,3 +165,13 @@ class ElectricFurnaceBlockEntity(
         }
     }
 }
+
+
+
+
+
+
+
+
+
+

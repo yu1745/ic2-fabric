@@ -100,6 +100,7 @@ class ExtractorBlockEntity(
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ExtractorSync.NBT_ENERGY_STORED)
+        sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
@@ -126,6 +127,7 @@ class ExtractorBlockEntity(
         val result = ExtractorRecipes.getOutput(input) ?: run {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
             return
         }
         val outputSlot = getStack(SLOT_OUTPUT)
@@ -136,6 +138,7 @@ class ExtractorBlockEntity(
         if (!canAccept) {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
             return
         }
 
@@ -147,12 +150,12 @@ class ExtractorBlockEntity(
             sync.progress = 0
             markDirty()
             setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
             return
         }
 
         val need = (ExtractorSync.ENERGY_PER_TICK * energyMultiplier).toLong().coerceAtLeast(1L)
-        if (sync.amount >= need) {
-            sync.amount = (sync.amount - need).coerceAtLeast(0L)
+        if (sync.consumeEnergy(need) > 0L) {
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
             sync.progress += progressIncrement
             markDirty()
@@ -160,11 +163,20 @@ class ExtractorBlockEntity(
         } else {
             setActiveState(world, pos, state, false)
         }
+        sync.syncCurrentTickFlow()
     }
-
     private fun setActiveState(world: World, pos: BlockPos, state: BlockState, active: Boolean) {
         if (state.get(ExtractorBlock.ACTIVE) != active) {
             world.setBlockState(pos, state.with(ExtractorBlock.ACTIVE, active))
         }
     }
 }
+
+
+
+
+
+
+
+
+

@@ -66,6 +66,7 @@ class WaterGeneratorScreen(
         val left = x
         val top = y
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+        val inputRate = handler.sync.getSyncedInsertedAmount()
         filteredOutputRate = handler.sync.getSyncedExtractedAmount()
         val cap = WaterGeneratorSync.ENERGY_CAPACITY
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
@@ -96,7 +97,7 @@ class WaterGeneratorScreen(
                         shadow = false
                     )
                     Text(
-                        "输出 ${formatEu(filteredOutputRate)} EU/t",
+                        "发电 ${formatEu(inputRate)} EU/t · 输出 ${formatEu(filteredOutputRate)} EU/t",
                         color = 0xAAAAAA,
                         shadow = false
                     )
@@ -122,3 +123,5 @@ class WaterGeneratorScreen(
         private const val PANEL_HEIGHT = 166
     }
 }
+
+

@@ -37,6 +37,8 @@ class TeslaCoilScreen(
         val left = x
         val top = y
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+        val inputRate = handler.sync.getSyncedInsertedAmount()
+        val consumeRate = handler.sync.getSyncedConsumedAmount()
         val cap = TeslaCoilSync.ENERGY_CAPACITY
         val fraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
 
@@ -62,6 +64,11 @@ class TeslaCoilScreen(
                     color = 0xCCCCCC,
                     shadow = false
                 )
+                Text(
+                    "输入 ${formatEu(inputRate)} EU/t · 耗能 ${formatEu(consumeRate)} EU/t",
+                    color = 0xAAAAAA,
+                    shadow = false
+                )
             }
         }
         drawMouseoverTooltip(context, mouseX, mouseY)
@@ -76,4 +83,13 @@ class TeslaCoilScreen(
         private const val CONTENT_WIDTH = PANEL_WIDTH - 16
         private const val LABEL_WIDTH = 36
     }
+
+    private fun formatEu(value: Long): String {
+        return when {
+            value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000.0)
+            value >= 1_000 -> String.format("%.1fK", value / 1_000.0)
+            else -> value.toString()
+        }
+    }
 }
+

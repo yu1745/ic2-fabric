@@ -1,6 +1,7 @@
 package ic2_120.content.sync
 
 import ic2_120.content.UpgradeableTickLimitedSidedEnergyContainer
+import ic2_120.content.sync.EnergyFlowSync
 import ic2_120.content.syncs.SyncSchema
 
 /**
@@ -37,7 +38,23 @@ class CompressorSync(
     var progress by schema.int("Progress")
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
 
-    override fun onFinalCommit() {
+    private val flow = EnergyFlowSync(schema, this)
+
+    override fun onEnergyCommitted() {
         energy = amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
+
+    fun syncCurrentTickFlow() {
+        flow.syncCurrentTickFlow()
+    }
+
+    fun getSyncedInsertedAmount(): Long = flow.getSyncedInsertedAmount()
+
+    fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
+
+    fun getSyncedConsumedAmount(): Long = flow.getSyncedConsumedAmount()
 }
+
+
+
+

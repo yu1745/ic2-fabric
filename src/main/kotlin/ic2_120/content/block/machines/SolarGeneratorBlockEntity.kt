@@ -76,14 +76,7 @@ class SolarGeneratorBlockEntity(
         batterySlot = BATTERY_SLOT,
         machineTierProvider = { tier },
         machineEnergyProvider = { sync.amount },
-        extractEnergy = { requested ->
-            val extracted = requested.coerceIn(0L, sync.amount)
-            if (extracted > 0L) {
-                sync.amount -= extracted
-                sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            }
-            extracted
-        },
+        extractEnergy = { requested -> sync.extractEnergy(requested) },
         canChargeNow = { sync.amount > 0 }
     )
 
@@ -161,7 +154,7 @@ class SolarGeneratorBlockEntity(
             val space = (SolarGeneratorSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0L)
             if (space > 0L) {
                 val euToAdd = minOf(SolarGeneratorSync.EU_PER_TICK, space)
-                sync.amount = (sync.amount + euToAdd).coerceAtMost(SolarGeneratorSync.ENERGY_CAPACITY)
+                sync.generateEnergy(euToAdd)
                 sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
                 markDirty()
             }
@@ -215,3 +208,5 @@ class SolarGeneratorBlockEntity(
         return true
     }
 }
+
+

@@ -40,8 +40,7 @@ class GeneratorSync(
     var burnTime by schema.int("BurnTime")
     /** 当前燃料总燃烧时间（tick），用于 GUI 进度条 */
     var totalBurnTime by schema.int("TotalBurnTime")
-    /** 滤波后的输出速率（EU/t），滑动窗口平均 */
-    var avgExtractedAmount by schema.intAveraged("AvgExtract", windowSize = 20)
+    private val flow = EnergyFlowSync(schema, this, useGeneratedAsInput = true)
 
     override fun getSideMaxInsert(side: Direction?): Long = 0L
     /** 正面不输出；其余面可输出，整机总输出由基类限制为 MAX_EXTRACT/tick（多面共享）。 */
@@ -53,13 +52,17 @@ class GeneratorSync(
     }
 
     /**
-     * 在 tick 结束时调用，同步当前 tick 的实际输出
-     * 发电机只有输出，没有输入
+     * 在 tick 结束时调用，同步当前 tick 的实际输入/输出
+     * 发电机不支持输入：输入字段用于存储发电速度
      */
     fun syncCurrentTickFlow() {
-        avgExtractedAmount = getCurrentTickExtracted().toInt()
+        flow.syncCurrentTickFlow()
     }
 
+    /** 获取同步的滤波后输入量（EU/t，发电速度） */
+    fun getSyncedInsertedAmount(): Long = flow.getSyncedInsertedAmount()
+
     /** 获取同步的滤波后输出量（EU/t） */
-    fun getSyncedExtractedAmount(): Long = avgExtractedAmount.toLong()
+    fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
 }
+

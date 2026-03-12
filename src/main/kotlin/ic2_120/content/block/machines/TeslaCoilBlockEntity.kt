@@ -77,6 +77,7 @@ class TeslaCoilBlockEntity(
         super.readNbt(nbt)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(TeslaCoilSync.NBT_ENERGY_STORED).coerceIn(0L, TeslaCoilSync.ENERGY_CAPACITY)
+        sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         shotCooldown = nbt.getInt("ShotCooldown")
         lastHitTargetUuid = if (nbt.contains("LastHitTarget")) nbt.getUuid("LastHitTarget") else null
@@ -103,6 +104,7 @@ class TeslaCoilBlockEntity(
             if (state.get(TeslaCoilBlock.ACTIVE)) {
                 world.setBlockState(pos, state.with(TeslaCoilBlock.ACTIVE, false))
             }
+            sync.syncCurrentTickFlow()
             return
         }
 
@@ -112,6 +114,7 @@ class TeslaCoilBlockEntity(
                 world.setBlockState(pos, state.with(TeslaCoilBlock.ACTIVE, false))
             }
             markDirty()
+            sync.syncCurrentTickFlow()
             return
         }
 
@@ -119,10 +122,14 @@ class TeslaCoilBlockEntity(
             if (state.get(TeslaCoilBlock.ACTIVE)) {
                 world.setBlockState(pos, state.with(TeslaCoilBlock.ACTIVE, false))
             }
+            sync.syncCurrentTickFlow()
             return
         }
 
-        val serverWorld = world as? ServerWorld ?: return
+        val serverWorld = world as? ServerWorld ?: run {
+            sync.syncCurrentTickFlow()
+            return
+        }
         val center = Vec3d(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
         val range = 9.0
         val box = Box(
@@ -137,7 +144,7 @@ class TeslaCoilBlockEntity(
 
         val target = targets.minByOrNull { it.squaredDistanceTo(center) }
         if (target != null) {
-            sync.amount = (sync.amount - TeslaCoilSync.ENERGY_PER_SHOT).coerceAtLeast(0L)
+            sync.consumeEnergy(TeslaCoilSync.ENERGY_PER_SHOT)
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
             val isRepeatTarget = lastHitTargetUuid == target.uuid
@@ -164,6 +171,7 @@ class TeslaCoilBlockEntity(
             }
         }
         markDirty()
+        sync.syncCurrentTickFlow()
     }
 
     private fun createTeslaDamageSource(world: ServerWorld): DamageSource {
@@ -184,3 +192,7 @@ class TeslaCoilBlockEntity(
         }
     }
 }
+
+
+
+
