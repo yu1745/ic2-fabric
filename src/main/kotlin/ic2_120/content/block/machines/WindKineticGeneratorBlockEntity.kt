@@ -22,6 +22,7 @@ import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
@@ -97,6 +98,8 @@ class WindKineticGeneratorBlockEntity(
         if (!world.isClient) {
             val state = world.getBlockState(pos)
             world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
+            // 立即将 BlockEntity NBT 同步到客户端，否则取出转子后螺旋桨渲染不会消失
+            (world as? ServerWorld)?.chunkManager?.markForUpdate(pos)
         }
     }
 
@@ -143,6 +146,8 @@ class WindKineticGeneratorBlockEntity(
 
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
+        // Inventories.readNbt 不会在 nbt 中缺失该槽位时自动清空旧值，先清槽避免客户端残留渲染状态
+        inventory[ROTOR_SLOT] = ItemStack.EMPTY
         Inventories.readNbt(nbt, inventory)
     }
 
