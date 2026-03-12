@@ -788,24 +788,24 @@
 ### 服装与护甲类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | item.ic2.alloy_chestplate | 复合胸甲 |
-| - [ ] | item.ic2.bronze_boots | 青铜靴子 |
-| - [ ] | item.ic2.bronze_chestplate | 青铜胸甲 |
-| - [ ] | item.ic2.bronze_helmet | 青铜头盔 |
-| - [ ] | item.ic2.bronze_leggings | 青铜护腿 |
-| - [ ] | item.ic2.hazmat_chestplate | 防化服 |
-| - [ ] | item.ic2.hazmat_helmet | 防化头盔 |
-| - [ ] | item.ic2.hazmat_leggings | 防化裤 |
-| - [ ] | item.ic2.nano_boots | 纳米靴子 |
-| - [ ] | item.ic2.nano_chestplate | 纳米胸甲 |
-| - [ ] | item.ic2.nano_helmet | 纳米头盔 |
-| - [ ] | item.ic2.nano_leggings | 纳米护腿 |
-| - [ ] | item.ic2.quantum_boots | 量子靴子 |
-| - [ ] | item.ic2.quantum_chestplate | 量子护甲 |
-| - [ ] | item.ic2.quantum_helmet | 量子头盔 |
-| - [ ] | item.ic2.quantum_leggings | 量子护腿 |
-| - [ ] | item.ic2.rubber_boots | 橡胶靴 |
-| - [ ] | item.ic2.cf_pack | 建筑泡沫背包 |
+| - [x] | item.ic2.alloy_chestplate | 复合胸甲 |
+| - [x] | item.ic2.bronze_boots | 青铜靴子 |
+| - [x] | item.ic2.bronze_chestplate | 青铜胸甲 |
+| - [x] | item.ic2.bronze_helmet | 青铜头盔 |
+| - [x] | item.ic2.bronze_leggings | 青铜护腿 |
+| - [x] | item.ic2.hazmat_chestplate | 防化服 |
+| - [x] | item.ic2.hazmat_helmet | 防化头盔 |
+| - [x] | item.ic2.hazmat_leggings | 防化裤 |
+| - [x] | item.ic2.nano_boots | 纳米靴子 |
+| - [x] | item.ic2.nano_chestplate | 纳米胸甲 |
+| - [x] | item.ic2.nano_helmet | 纳米头盔 |
+| - [x] | item.ic2.nano_leggings | 纳米护腿 |
+| - [x] | item.ic2.quantum_boots | 量子靴子 |
+| - [x] | item.ic2.quantum_chestplate | 量子护甲 |
+| - [x] | item.ic2.quantum_helmet | 量子头盔 |
+| - [x] | item.ic2.quantum_leggings | 量子护腿 |
+| - [x] | item.ic2.rubber_boots | 橡胶靴 |
+| - [x] | item.ic2.cf_pack | 建筑泡沫背包 |
 
 ### 电池类
 |  | ID | 名称 |
