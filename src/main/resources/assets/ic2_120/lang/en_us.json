@@ -409,5 +409,13 @@
   "item.ic2_120.quantum_helmet": "QuantumSuit Helmet",
   "item.ic2_120.quantum_leggings": "QuantumSuit Leggings",
   "item.ic2_120.rubber_boots": "Rubber Boots",
-  "item.ic2_120.cf_pack": "CF Backpack"
+  "item.ic2_120.cf_pack": "CF Backpack",
+  "item.ic2_120.jetpack": "Jetpack",
+  "item.ic2_120.electric_jetpack": "Electric Jetpack",
+  "item.ic2_120.night_vision_goggles": "Night Vision Goggles",
+  "item.ic2_120.solar_helmet": "Solar Helmet",
+  "item.ic2_120.batpack": "BatPack",
+  "item.ic2_120.advanced_batpack": "Advanced BatPack",
+  "item.ic2_120.energy_pack": "Energy Pack",
+  "item.ic2_120.lappack": "Lapotron Pack"
 }

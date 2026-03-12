@@ -75,6 +75,27 @@ private val iridium = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.
 
 // ========== 护甲材料定义 ==========
 
+// ========== 太阳能护甲 (Solar Armor) ==========
+/**
+ * 太阳能护甲材料，用于太阳能头盔。
+ * 可在日光下自动充电的太阳能装备。
+ */
+private val SOLAR_ARMOR = createArmorMaterial(
+    name = "ic2_solar",  // 使用 "solar" 作为名称，这样会查找 solar_1.png 和 solar_2.png
+    durabilityMultiplier = 8,
+    protection = mapOf(
+        ArmorItem.Type.HELMET to 2,      // 2 点护甲（与青铜相同）
+        ArmorItem.Type.CHESTPLATE to 0,
+        ArmorItem.Type.LEGGINGS to 0,
+        ArmorItem.Type.BOOTS to 0
+    ),
+    enchantability = 10,
+    equipSound = SoundEvents.ITEM_ARMOR_EQUIP_IRON,
+    toughness = 0f,
+    knockbackResistance = 0f,
+    repairIngredient = bronzeIngot  // 用青铜修复
+)
+
 // ========== 青铜护甲 (Bronze Armor) ==========
 /**
  * IC2 模组的基础护甲套装，提供全面的四件套防护。
@@ -221,6 +242,112 @@ private val ALLOY_ARMOR = createArmorMaterial(
     repairIngredient = advancedAlloy
 )
 
+// ========== 背包护甲材料 ==========
+/**
+ * 背包类护甲材料，用于各种电池背包和喷气背包。
+ * 提供基础的胸甲防护，主要功能在于储能或飞行。
+ */
+private val BACKPACK_ARMOR = createArmorMaterial(
+    name = "batpack",  // 使用 batpack 作为基础，会查找 batpack_1.png
+    durabilityMultiplier = 10,
+    protection = mapOf(
+        ArmorItem.Type.HELMET to 0,
+        ArmorItem.Type.CHESTPLATE to 3, // 3 点护甲（同铁胸甲）
+        ArmorItem.Type.LEGGINGS to 0,
+        ArmorItem.Type.BOOTS to 0
+    ),
+    enchantability = 10,
+    equipSound = SoundEvents.ITEM_ARMOR_EQUIP_LEATHER,
+    toughness = 0f,
+    knockbackResistance = 0f,
+    repairIngredient = bronzeIngot
+)
+
+// 高级电池背包护甲材料
+private val ADVANCED_BATPACK_ARMOR = createArmorMaterial(
+    name = "advbatpack",  // 查找 advbatpack_1.png
+    durabilityMultiplier = 12,
+    protection = mapOf(
+        ArmorItem.Type.HELMET to 0,
+        ArmorItem.Type.CHESTPLATE to 3,
+        ArmorItem.Type.LEGGINGS to 0,
+        ArmorItem.Type.BOOTS to 0
+    ),
+    enchantability = 10,
+    equipSound = SoundEvents.ITEM_ARMOR_EQUIP_LEATHER,
+    toughness = 0f,
+    knockbackResistance = 0f,
+    repairIngredient = advancedAlloy
+)
+
+// 能量背包护甲材料
+private val ENERGY_PACK_ARMOR = createArmorMaterial(
+    name = "energypack",  // 查找 energypack_1.png
+    durabilityMultiplier = 15,
+    protection = mapOf(
+        ArmorItem.Type.HELMET to 0,
+        ArmorItem.Type.CHESTPLATE to 4,
+        ArmorItem.Type.LEGGINGS to 0,
+        ArmorItem.Type.BOOTS to 0
+    ),
+    enchantability = 10,
+    equipSound = SoundEvents.ITEM_ARMOR_EQUIP_LEATHER,
+    toughness = 0f,
+    knockbackResistance = 0f,
+    repairIngredient = carbonFibre
+)
+
+// 兰波顿背包护甲材料
+private val LAPPACK_ARMOR = createArmorMaterial(
+    name = "lappack",  // 查找 lappack_1.png
+    durabilityMultiplier = 20,
+    protection = mapOf(
+        ArmorItem.Type.HELMET to 0,
+        ArmorItem.Type.CHESTPLATE to 5,
+        ArmorItem.Type.LEGGINGS to 0,
+        ArmorItem.Type.BOOTS to 0
+    ),
+    enchantability = 10,
+    equipSound = SoundEvents.ITEM_ARMOR_EQUIP_LEATHER,
+    toughness = 0f,
+    knockbackResistance = 0f,
+    repairIngredient = iridium
+)
+
+// 喷气背包护甲材料
+private val JETPACK_ARMOR = createArmorMaterial(
+    name = "ic2_jet_pack",  // 查找 ic2_jet_pack_layer_1.png
+    durabilityMultiplier = 10,
+    protection = mapOf(
+        ArmorItem.Type.HELMET to 0,
+        ArmorItem.Type.CHESTPLATE to 3,
+        ArmorItem.Type.LEGGINGS to 0,
+        ArmorItem.Type.BOOTS to 0
+    ),
+    enchantability = 10,
+    equipSound = SoundEvents.ITEM_ARMOR_EQUIP_LEATHER,
+    toughness = 0f,
+    knockbackResistance = 0f,
+    repairIngredient = bronzeIngot
+)
+
+// 建筑泡沫背包护甲材料
+private val CF_PACK_ARMOR = createArmorMaterial(
+    name = "cf_pack",  // 需要创建 cf_pack_1.png
+    durabilityMultiplier = 8,
+    protection = mapOf(
+        ArmorItem.Type.HELMET to 0,
+        ArmorItem.Type.CHESTPLATE to 2,
+        ArmorItem.Type.LEGGINGS to 0,
+        ArmorItem.Type.BOOTS to 0
+    ),
+    enchantability = 10,
+    equipSound = SoundEvents.ITEM_ARMOR_EQUIP_LEATHER,
+    toughness = 0f,
+    knockbackResistance = 0f,
+    repairIngredient = carbonFibre
+)
+
 // ========== 护甲类实现 ==========
 
 // ========== 青铜护甲套装 (Bronze Armor Set) ==========
@@ -306,6 +433,14 @@ class QuantumLeggings : ArmorItem(QUANTUM_ARMOR, ArmorItem.Type.LEGGINGS, Fabric
 @ModItem(name = "quantum_boots", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
 class QuantumBoots : ArmorItem(QUANTUM_ARMOR, ArmorItem.Type.BOOTS, FabricItemSettings().maxCount(1))
 
+// ========== 太阳能头盔 ==========
+/**
+ * 太阳能头盔 (Solar Helmet)
+ * 可在日光下自动为玩家装备中的电池物品充电的头盔。
+ */
+@ModItem(name = "solar_helmet", tab = CreativeTab.IC2_MATERIALS, group = "solar_armor")
+class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1))
+
 // ========== 复合胸甲 (Alloy Chestplate) ==========
 /**
  * 先进合金单件胸甲，专为战术灵活性设计。
@@ -314,12 +449,68 @@ class QuantumBoots : ArmorItem(QUANTUM_ARMOR, ArmorItem.Type.BOOTS, FabricItemSe
 @ModItem(name = "alloy_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "armor")
 class AlloyChestplate : ArmorItem(ALLOY_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1))
 
-// ========== 背包与配饰 ==========
+// ========== 背包与胸甲类装备 ==========
 
 /**
  * 建筑泡沫背包 (CF Pack)
  * 碳纤维强化背包，用于存储和喷射建筑泡沫的特殊物品。
- * 不属于护甲类，继承自基础 Item 而非 ArmorItem。
+ * 作为胸甲装备。
  */
 @ModItem(name = "cf_pack", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-class CfPack : Item(FabricItemSettings().maxCount(1))
+class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1))
+
+/**
+ * 喷气背包 (Jetpack)
+ * 允许玩家在空中飞行的喷气推进装置。
+ * 需要燃料才能运行。
+ * 作为胸甲装备。
+ */
+@ModItem(name = "jetpack", tab = CreativeTab.IC2_MATERIALS, group = "armor")
+class Jetpack : ArmorItem(JETPACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1))
+
+/**
+ * 电力喷气背包 (Electric Jetpack)
+ * 电力驱动的喷气背包，使用 EU 作为能源而非燃料。
+ * 作为胸甲装备。
+ */
+@ModItem(name = "electric_jetpack", tab = CreativeTab.IC2_MATERIALS, group = "armor")
+class ElectricJetpack : ArmorItem(JETPACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1))
+
+/**
+ * 夜视镜 (Night Vision Goggles)
+ * 提供夜视效果的头戴式装备。
+ */
+@ModItem(name = "night_vision_goggles", tab = CreativeTab.IC2_MATERIALS, group = "armor")
+class NightVisionGoggles : Item(FabricItemSettings().maxCount(1))
+
+/**
+ * 电池背包 (BatPack)
+ * 基础级电池背包，可存储中等容量的 EU 并为装备充电。
+ * 作为胸甲装备。
+ */
+@ModItem(name = "batpack", tab = CreativeTab.IC2_MATERIALS, group = "battery_pack")
+class BatPack : ArmorItem(BACKPACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1))
+
+/**
+ * 高级电池背包 (Advanced BatPack)
+ * 高级电池背包，提供更大的 EU 容量。
+ * 作为胸甲装备。
+ */
+@ModItem(name = "advanced_batpack", tab = CreativeTab.IC2_MATERIALS, group = "battery_pack")
+class AdvancedBatPack : ArmorItem(ADVANCED_BATPACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1))
+
+/**
+ * 能量背包 (Energy Pack)
+ * 使用能量水晶的高容量背包，可存储大量 EU。
+ * 作为胸甲装备。
+ */
+@ModItem(name = "energy_pack", tab = CreativeTab.IC2_MATERIALS, group = "battery_pack")
+class EnergyPack : ArmorItem(ENERGY_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1))
+
+/**
+ * 兰波顿背包 (Lapotron Pack)
+ * 使用兰波顿水晶的超大容量背包，顶级 EU 存储设备。
+ * 作为胸甲装备。
+ */
+@ModItem(name = "lappack", tab = CreativeTab.IC2_MATERIALS, group = "battery_pack")
+class LapPack : ArmorItem(LAPPACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1))

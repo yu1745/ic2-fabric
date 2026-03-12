@@ -806,6 +806,14 @@
 | - [x] | item.ic2.quantum_leggings | 量子护腿 |
 | - [x] | item.ic2.rubber_boots | 橡胶靴 |
 | - [x] | item.ic2.cf_pack | 建筑泡沫背包 |
+| - [x] | item.ic2.jetpack | 喷气背包 |
+| - [x] | item.ic2.electric_jetpack | 电力喷气背包 |
+| - [x] | item.ic2.night_vision_goggles | 夜视镜 |
+| - [x] | item.ic2.solar_helmet | 太阳能头盔 |
+| - [x] | item.ic2.batpack | 电池背包 |
+| - [x] | item.ic2.advanced_batpack | 高级电池背包 |
+| - [x] | item.ic2.energy_pack | 能量背包 |
+| - [x] | item.ic2.lappack | 兰波顿背包 |
 
 ### 电池类
 |  | ID | 名称 |

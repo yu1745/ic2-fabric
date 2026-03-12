@@ -409,5 +409,13 @@
   "item.ic2_120.quantum_helmet": "量子头盔",
   "item.ic2_120.quantum_leggings": "量子护腿",
   "item.ic2_120.rubber_boots": "橡胶靴",
-  "item.ic2_120.cf_pack": "建筑泡沫背包"
+  "item.ic2_120.cf_pack": "建筑泡沫背包",
+  "item.ic2_120.jetpack": "喷气背包",
+  "item.ic2_120.electric_jetpack": "电力喷气背包",
+  "item.ic2_120.night_vision_goggles": "夜视镜",
+  "item.ic2_120.solar_helmet": "太阳能头盔",
+  "item.ic2_120.batpack": "电池背包",
+  "item.ic2_120.advanced_batpack": "高级电池背包",
+  "item.ic2_120.energy_pack": "能量背包",
+  "item.ic2_120.lappack": "兰波顿背包"
 }
