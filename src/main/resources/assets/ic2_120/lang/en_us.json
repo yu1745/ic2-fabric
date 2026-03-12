@@ -86,6 +86,7 @@
   "block.ic2_120.water_generator": "Water Mill",
   "block.ic2_120.solar_generator": "Solar Generator",
   "block.ic2_120.wind_generator": "Wind Mill",
+  "block.ic2_120.wind_kinetic_generator": "Wind Kinetic Generator",
   "block.ic2_120.rt_generator": "Radioisotope Thermoelectric Generator",
   "block.ic2_120.nuclear_reactor": "Nuclear Reactor",
   "block.ic2_120.reactor_chamber": "Reactor Chamber",

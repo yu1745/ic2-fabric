@@ -86,6 +86,7 @@
   "block.ic2_120.water_generator": "水力发电机",
   "block.ic2_120.solar_generator": "太阳能发电机",
   "block.ic2_120.wind_generator": "风力发电机",
+  "block.ic2_120.wind_kinetic_generator": "风力动能发生机",
   "block.ic2_120.rt_generator": "放射性同位素温差发电机",
   "block.ic2_120.nuclear_reactor": "核反应堆",
   "block.ic2_120.reactor_chamber": "核反应仓",

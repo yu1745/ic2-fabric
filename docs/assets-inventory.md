@@ -118,7 +118,7 @@
 | - [ ] | block.ic2.steam_kinetic_generator | 蒸汽动能发生机 |
 | - [ ] | block.ic2.stirling_kinetic_generator | 斯特林动能发生器 |
 | - [ ] | block.ic2.water_kinetic_generator | 水力动能发生机 |
-| - [ ] | block.ic2.wind_kinetic_generator | 风力动能发生机 |
+| - [x] | block.ic2.wind_kinetic_generator | 风力动能发生机 |
 | - [ ] | block.ic2.creative_generator | 创造模式发电器 |
 
 ### 机器 - 核反应堆类

@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "ic2:block/generator/kinetic/wind_kinetic_generator",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "ic2:block/generator/kinetic/wind_kinetic_generator"
+    },
+    "facing=south": {
+      "model": "ic2:block/generator/kinetic/wind_kinetic_generator",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "ic2:block/generator/kinetic/wind_kinetic_generator",
+      "y": 270
+    }
+  }
+}
