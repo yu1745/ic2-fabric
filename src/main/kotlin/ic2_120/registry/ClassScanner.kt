@@ -1,6 +1,8 @@
 package ic2_120.registry
 
 import ic2_120.content.TickLimitedSidedEnergyContainer
+import ic2_120.content.item.energy.IBatteryItem
+import ic2_120.content.item.energy.IElectricTool
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.ModCreativeTab
@@ -19,6 +21,7 @@ import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
 import net.minecraft.item.ItemGroup
+import net.minecraft.item.ItemStack
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
@@ -59,7 +62,8 @@ object ClassScanner {
     private val logger = LoggerFactory.getLogger("ic2_120/ClassScanner")
 
     // 跟踪每个物品栏应该包含的物品ID及分组（group 用于排序，相同 group 排在一起；空字符串表示不分组）
-    private val tabItems = mutableMapOf<CreativeTab, MutableList<Pair<Identifier, String>>>()
+    // 同时存储类类型，用于在创建物品栏时检查是否需要添加多个电量变体
+    private val tabItems = mutableMapOf<CreativeTab, MutableList<TabEntry>>()
 
     /** 方块类 -> 注册名（path），供 ModBlockEntity/ModScreenHandler 等从 block 解析 name */
     private val blockClassToName = mutableMapOf<kotlin.reflect.KClass<*>, String>()
@@ -288,22 +292,53 @@ object ClassScanner {
 
                 // 获取应该添加到这个物品栏的物品ID列表，按 group 排序（相同 group 放一起，组内按 id 稳定排序）
                 val rawEntries = tabItems[tabEnum] ?: emptyList()
-                val itemIds = rawEntries
-                    .sortedWith(compareBy({ it.second }, { it.first.toString() }))
-                    .map { it.first }
+                val entries = rawEntries
+                    .sortedWith(compareBy({ it.group }, { it.itemId.toString() }))
 
-                logger.info("物品栏 {} 包含 {} 个物品: {}", name, itemIds.size, itemIds)
+                logger.info("物品栏 {} 包含 {} 个物品: {}", name, entries.size, entries.map { it.itemId })
 
                 // 创建物品栏，使用 entries() 方法添加物品
                 val itemGroup = FabricItemGroup.builder()
                     .icon { net.minecraft.item.ItemStack(Registries.ITEM.get(iconId)) }
                     .displayName(Text.translatable("itemGroup.$modId.$name"))
-                    .entries { _, entries ->
+                    .entries { _, collector ->
                         // 添加所有属于这个物品栏的物品（已按 group 排序）
-                        for (itemId in itemIds) {
-                            val item = Registries.ITEM.get(itemId)
-                            if (item != net.minecraft.item.Items.AIR) {
-                                entries.add(item)
+                        for (entry in entries) {
+                            val item = Registries.ITEM.get(entry.itemId)
+                            if (item !== net.minecraft.item.Items.AIR) {
+                                // 检查物品是否实现了 IBatteryItem 或 IElectricTool 接口
+                                // 如果实现了，添加空电和满电两个版本
+                                val isBatteryItem = entry.itemClass != null &&
+                                    entry.itemClass.isSubclassOf(IBatteryItem::class)
+                                val isElectricTool = entry.itemClass != null &&
+                                    entry.itemClass.isSubclassOf(IElectricTool::class)
+
+                                if (isBatteryItem || isElectricTool) {
+                                    // 添加空电版本
+                                    val emptyStack = ItemStack(item)
+                                    if (isBatteryItem) {
+                                        val batteryItem = item as IBatteryItem
+                                        batteryItem.setCurrentCharge(emptyStack, 0)
+                                    } else if (isElectricTool) {
+                                        val electricTool = item as IElectricTool
+                                        electricTool.setEnergy(emptyStack, 0)
+                                    }
+                                    collector.add(emptyStack)
+
+                                    // 添加满电版本
+                                    val fullStack = ItemStack(item)
+                                    if (isBatteryItem) {
+                                        val batteryItem = item as IBatteryItem
+                                        batteryItem.setCurrentCharge(fullStack, batteryItem.maxCapacity)
+                                    } else if (isElectricTool) {
+                                        val electricTool = item as IElectricTool
+                                        electricTool.setEnergy(fullStack, electricTool.maxCapacity)
+                                    }
+                                    collector.add(fullStack)
+                                } else {
+                                    // 普通物品，直接添加
+                                    collector.add(item)
+                                }
                             }
                         }
                     }
@@ -441,9 +476,9 @@ object ClassScanner {
                     Registry.register(Registries.ITEM, id, blockItem)
                     logger.debug("已注册方块物品: {}", id)
 
-                    // 记录物品应该添加到哪个物品栏（带 group 以便排序）
+                    // 记录物品应该添加到哪个物品栏（带 group 以便排序，不包含类类型因为方块物品不是电池/电动工具）
                     if (annotation.tab != CreativeTab.MINECRAFT_MISC) {
-                        tabItems.getOrPut(annotation.tab) { mutableListOf() }.add(id to annotation.group)
+                        tabItems.getOrPut(annotation.tab) { mutableListOf() }.add(TabEntry(id, annotation.group))
                     }
                 }
             } catch (e: Exception) {
@@ -468,9 +503,9 @@ object ClassScanner {
                 Registry.register(Registries.ITEM, id, instance)
                 logger.debug("已注册物品: {}", id)
 
-                // 记录物品应该添加到哪个物品栏（带 group 以便排序）
+                // 记录物品应该添加到哪个物品栏（带 group 以便排序，包含类类型用于检查电池/电动工具）
                 if (annotation.tab != CreativeTab.MINECRAFT_MISC) {
-                    tabItems.getOrPut(annotation.tab) { mutableListOf() }.add(id to annotation.group)
+                    tabItems.getOrPut(annotation.tab) { mutableListOf() }.add(TabEntry(id, annotation.group, clazz))
                 }
             } catch (e: Exception) {
                 logger.error("注册物品 {} 失败: {}", clazz.simpleName, e.message, e)
@@ -499,6 +534,15 @@ object ClassScanner {
         val id = Identifier(tab.getNamespacedId(modId))
         return RegistryKey.of(RegistryKeys.ITEM_GROUP, id)
     }
+
+    /**
+     * 物品栏条目，包含物品ID、分组信息和类类型
+     */
+    private data class TabEntry(
+        val itemId: Identifier,
+        val group: String,
+        val itemClass: kotlin.reflect.KClass<*>? = null
+    )
 
     private data class TabClassInfo(
         val clazz: kotlin.reflect.KClass<*>,
