@@ -3,6 +3,7 @@ package ic2_120.content.block.cables
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.block.energy.EnergyNetwork
 import ic2_120.content.block.energy.EnergyNetworkManager
+import ic2_120.content.block.misc.FilteredValue
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.Block
@@ -33,11 +34,15 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     /** 本地暂存能量，仅用于 NBT 存取和电网重建时的中转。 */
     var localEnergy: Long = 0
 
+    /** 导线当前负载（本 tick 内已传输的能量），仅用于 Jade 显示。不影响实际能量传输逻辑。 */
+    var cableLoad: Long by FilteredValue(20)
+
     /** 对外暴露的 [EnergyStorage]，insert/extract 均委托给电网池。 */
     val energyStorage: EnergyStorage = object : EnergyStorage {
         override fun supportsInsertion(): Boolean = true
         override fun supportsExtraction(): Boolean = true
-        override fun getAmount(): Long = network?.energy ?: localEnergy
+        // 返回导线当前负载（供 Jade 显示），而不是网络总能量
+        override fun getAmount(): Long = if (network != null) cableLoad else localEnergy
         override fun getCapacity(): Long = network?.capacity ?: defaultTransferRate()
 
         override fun insert(maxAmount: Long, transaction: TransactionContext): Long =

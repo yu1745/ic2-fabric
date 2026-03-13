@@ -2,7 +2,7 @@ package ic2_120.client
 
 import ic2_120.client.compose.*
 import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.FilteredValue
+import ic2_120.content.block.misc.FilteredValue
 import ic2_120.client.ui.GuiBackground
 import ic2_120.client.ui.ProgressBar
 import ic2_120.content.block.WaterGeneratorBlock

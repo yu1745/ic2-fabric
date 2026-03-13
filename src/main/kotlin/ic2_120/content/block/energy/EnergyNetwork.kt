@@ -422,6 +422,9 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         for ((_, consumer) in consumers) {
             pullFromProvidersByPath(world, consumer, providers, topology.neighbors, remainingCableCapacity)
         }
+
+        // 同步导线负载到 localEnergy（供 Jade 显示）
+        syncCableLoadToLocalStorage(world, topology.cableRates, remainingCableCapacity)
     }
 
     private fun pullFromBufferedEnergyByPath(
@@ -552,6 +555,38 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
             if (!progressed) break
             //todo 这里好像和ticklimited冲突了
             break
+        }
+    }
+
+    /**
+     * 同步导线负载到 cableLoad（供 Jade 显示）。
+     *
+     * 负载 = 已使用量 = transferRate - remainingCableCapacity
+     *
+     * 注意：这仅用于显示目的，不影响电网的实际能量传输逻辑。
+     * localEnergy 仍然会在电网重建时被并入网络（保持兼容性）。
+     */
+    private fun syncCableLoadToLocalStorage(
+        world: World,
+        cableRates: Map<Long, Long>,
+        remainingCableCapacity: Map<Long, Long>
+    ) {
+        if (world.isClient) return
+
+        for (cablePosLong in cables) {
+            // 只处理已知导线（避免无效导线）
+            if (cablePosLong !in cableLossMilliEu) continue
+
+            val transferRate = cableRates[cablePosLong] ?: continue
+            val remaining = remainingCableCapacity[cablePosLong] ?: transferRate
+            val used = transferRate - remaining
+
+            // 获取导线方块实体并更新 cableLoad
+            val pos = BlockPos.fromLong(cablePosLong)
+            val be = world.getBlockEntity(pos)
+            if (be is ic2_120.content.block.cables.CableBlockEntity) {
+                be.cableLoad = used
+            }
         }
     }
 
