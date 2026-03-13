@@ -25,8 +25,8 @@ class NuclearReactorSync(
     companion object {
         /** 电力等级 5 */
         const val REACTOR_TIER = 5
-        /** 电力缓存容量 100000 EU */
-        const val ENERGY_CAPACITY = 100_000L
+        /** 电力缓存容量 1M EU */
+        const val ENERGY_CAPACITY = 1_000_000L
         /** 整机每 tick 最大输出（8192 EU/t，tier 5） */
         val MAX_EXTRACT = ITieredMachine.euPerTickFromTier(REACTOR_TIER)
         const val NBT_ENERGY_STORED = "EnergyStored"

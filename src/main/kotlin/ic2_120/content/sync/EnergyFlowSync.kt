@@ -60,16 +60,16 @@ class EnergyFlowSync(
             lastLoggedExtracted = extracted
             lastLoggedGenerated = generated
             lastLoggedConsumed = consumed
-            logger.info(
-                "EnergyFlow[{}] tick: ins={} ext={} gen={} con={} avgIns={} avgExt={}",
-                label,
-                inserted,
-                extracted,
-                generated,
-                consumed,
-                avgInsertedAmount,
-                avgExtractedAmount
-            )
+            // logger.info(
+            //     "EnergyFlow[{}] tick: ins={} ext={} gen={} con={} avgIns={} avgExt={}",
+            //     label,
+            //     inserted,
+            //     extracted,
+            //     generated,
+            //     consumed,
+            //     avgInsertedAmount,
+            //     avgExtractedAmount
+            // )
         }
     }
 

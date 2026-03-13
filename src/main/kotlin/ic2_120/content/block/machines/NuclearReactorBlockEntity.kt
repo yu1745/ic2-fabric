@@ -74,6 +74,9 @@ class NuclearReactorBlockEntity(
     /** 本周期发电累加（每脉冲 1.0），周期结束后转为 EU */
     private var outputAccumulator: Float = 0f
 
+    /** 本周期总发电量（EU），将均摊到20个tick中输出 */
+    private var pendingEnergyOutput: Long = 0L
+
     /** 本周期总产热 */
     private var totalHeatProduced: Int = 0
 
@@ -153,6 +156,7 @@ class NuclearReactorBlockEntity(
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         sync.temperature = nbt.getInt(NuclearReactorSync.NBT_HEAT_STORED).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
         tickOffset = if (nbt.contains("TickOffset")) nbt.getInt("TickOffset").coerceIn(0, 19) else -1
+        pendingEnergyOutput = nbt.getLong("PendingEnergyOutput").coerceIn(0L, NuclearReactorSync.ENERGY_CAPACITY)
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -162,6 +166,7 @@ class NuclearReactorBlockEntity(
         nbt.putLong(NuclearReactorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NuclearReactorSync.NBT_HEAT_STORED, sync.temperature)
         if (tickOffset >= 0) nbt.putInt("TickOffset", tickOffset)
+        nbt.putLong("PendingEnergyOutput", pendingEnergyOutput)
     }
 
     /** 当前有效容量（27 + 相邻反应仓数 * 9），供 setStack 等服务端逻辑校验 */
@@ -197,8 +202,9 @@ class NuclearReactorBlockEntity(
     override fun setHeatEffectModifier(hem: Float) {}
     override fun getReactorEnergyOutput(): Float = outputAccumulator
     override fun addOutput(energy: Float): Float {
-        // println("addOutput: $energy")  
-        outputAccumulator += energy; return outputAccumulator
+        // println("addOutput: $energy")
+        outputAccumulator += energy;
+        return outputAccumulator
     }
 
     override fun getReactorCols(): Int = currentCapacity() / 9
@@ -288,13 +294,10 @@ class NuclearReactorBlockEntity(
             // 将 emitHeatBuffer 加回堆温（组件散热蒸发为负值，即降温）
             sync.temperature = (sync.temperature + emitHeatBuffer).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
 
-            // 将 output 转为 EU
-            val euToAdd = (outputAccumulator * NuclearReactorSync.EU_PER_OUTPUT).toLong()
-            if (euToAdd > 0) {
-                sync.generateEnergy(euToAdd)
-                sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-                markDirty()
-            }
+            // 将 output 转为 EU 并存储到 pendingEnergyOutput，将在后续20个tick中均摊输出
+            val euTotal = (outputAccumulator * NuclearReactorSync.EU_PER_OUTPUT).toLong()
+            pendingEnergyOutput = euTotal.coerceIn(0L, NuclearReactorSync.ENERGY_CAPACITY)
+            println("pendingEnergyOutput: $pendingEnergyOutput")
 
             // 同步产热和散热数据
             sync.totalHeatProduced = totalHeatProduced
@@ -321,6 +324,25 @@ class NuclearReactorBlockEntity(
 
         if (shouldTick) {
             applyHeatEffects(world, pos)
+        }
+
+        // 每个tick都输出 pendingEnergyOutput 的 1/20（向下取整）
+        if (pendingEnergyOutput > 0) {
+            val euToAdd = pendingEnergyOutput / 20
+            if (euToAdd > 0) {
+                sync.generateEnergy(euToAdd)
+                // println("add $euToAdd EU")
+                // println("avg: ${sync.flow.getSyncedInsertedAmount()}")
+                pendingEnergyOutput -= euToAdd
+            }
+            // 最后一次剩下的全部输出
+            if ((world.time + tickOffset) % 20L == 19L) {
+                if (pendingEnergyOutput > 0) {
+                    sync.generateEnergy(pendingEnergyOutput)
+                    pendingEnergyOutput = 0
+                }
+            }
+            markDirty()
         }
 
         val hasFuel = (0 until newCapacity).any { !getStack(it).isEmpty }

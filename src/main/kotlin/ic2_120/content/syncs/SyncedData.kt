@@ -79,8 +79,9 @@ class SyncedData(private val blockEntity: BlockEntity? = null) : PropertyDelegat
                 if (window.size > windowSize) {
                     window.removeFirst()
                 }
-                // 同步当前值到 entry（用于 NBT 序列化）
-                entries[index].value = value
+                // 同步平均值到 entry（用于 NBT 序列化） 
+                // 绝对不要同步当前值到 entry，否则滑动窗口的平均值就没有任何意义了
+                entries[index].value = window.sum() / window.size
                 markDirtyIfNeeded()
             }
         }
