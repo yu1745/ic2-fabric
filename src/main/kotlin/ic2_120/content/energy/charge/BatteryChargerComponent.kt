@@ -18,6 +18,8 @@ class BatteryChargerComponent(
     private val batterySlot: Int,
     private val machineTierProvider: () -> Int,
     private val machineEnergyProvider: () -> Long,
+    //从机器提取能量的函数，返回实际提取量（EU）
+    //机器通常需要传入自己的consumeEnergy函数的lambda
     private val extractEnergy: (Long) -> Long,
     private val canChargeNow: () -> Boolean = { true }
 ) {
@@ -43,7 +45,7 @@ class BatteryChargerComponent(
 
         val machineEnergy = machineEnergyProvider().coerceAtLeast(0L)
         val remaining = (battery.maxCapacity - battery.getCurrentCharge(stack)).coerceAtLeast(0L)
-        val transferLimit = battery.transferSpeed.toLong().coerceAtLeast(0L)
+        val transferLimit = battery.transferSpeed.toLong().coerceAtLeast(0L) * 4 //充电速度设置为4倍
         val requested = minOf(transferLimit, machineEnergy, remaining)
         if (requested <= 0L) return 0L
 
@@ -65,10 +67,9 @@ class BatteryChargerComponent(
 
         val machineEnergy = machineEnergyProvider().coerceAtLeast(0L)
         val remaining = (tool.maxCapacity - tool.getEnergy(stack)).coerceAtLeast(0L)
-        val transferLimit = (ELECTRIC_TOOL_CHARGE_SPEED_BASE * tool.tier).toLong().coerceAtLeast(1L)
+        val transferLimit = (ELECTRIC_TOOL_CHARGE_SPEED_BASE * tool.tier * 4).toLong().coerceAtLeast(1L) * 4 //充电速度设置为放电4倍
         val requested = minOf(transferLimit, machineEnergy, remaining)
         if (requested <= 0L) return 0L
-
         val extracted = extractEnergy(requested).coerceIn(0L, requested)
         if (extracted <= 0L) return 0L
 

@@ -89,7 +89,7 @@ class WindGeneratorBlockEntity(
         batterySlot = BATTERY_SLOT,
         machineTierProvider = { tier },
         machineEnergyProvider = { sync.amount },
-        extractEnergy = { requested -> sync.extractEnergy(requested) },
+        extractEnergy = { requested -> sync.consumeEnergy(requested) },
         canChargeNow = { sync.amount > 0 }
     )
 

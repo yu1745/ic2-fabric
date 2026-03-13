@@ -20,7 +20,7 @@ fun FilteredValue(windowSize: Int = 20): FilteredRateDelegate =
         }
 
         override fun setValue(thisRef: Any?, property: KProperty<*>, value: Long) {
-            if (value == lastValue) return  // 跳过重复帧
+            // if (value == lastValue) return  // 跳过重复帧
             lastValue = value
 
             window.addLast(value)

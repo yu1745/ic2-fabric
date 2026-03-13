@@ -79,7 +79,7 @@ class MfsuBlockEntity(
                     batterySlot = slot,
                     machineTierProvider = { tier },
                     machineEnergyProvider = { sync.amount },
-                    extractEnergy = { requested -> sync.insertEnergy(requested) },
+                    extractEnergy = { requested -> sync.consumeEnergy(requested) },
                     canChargeNow = { true }
                 )
             )

@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory
 import team.reborn.energy.api.EnergyStorage
 import kotlin.math.pow
 import java.util.PriorityQueue
+import ic2_120.content.block.cables.Nothing
 
 /**
  * 电网：一组相互连接的导线共享的能量池。
@@ -341,9 +342,9 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
             if (ENABLE_OVERVOLTAGE_LOG) {
                 log.info(
                     "[超压检测-详细] 方块=$blockState @ $neighborPos" +
-                    "\n  → lookupFromNeighborSide=$lookupSide（机器看导线），cableSide=$cableSide（导线看机器）" +
-                    "\n  → 基础tier=$machineTier，该面电压=$sidedTier，有效耐压=$effectiveTier" +
-                    "\n  → 电网输出等级=$outputLevel，检查方向=$lookupSide"
+                            "\n  → lookupFromNeighborSide=$lookupSide（机器看导线），cableSide=$cableSide（导线看机器）" +
+                            "\n  → 基础tier=$machineTier，该面电压=$sidedTier，有效耐压=$effectiveTier" +
+                            "\n  → 电网输出等级=$outputLevel，检查方向=$lookupSide"
                 )
             }
 
@@ -388,6 +389,10 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         if (cables.isEmpty()) return
 
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
+
+        // 初始化所有导线的剩余容量为本 tick 最大载流量
+        val remainingCableCapacity = topology.cableRates.toMutableMap()
+
         val consumers = mutableMapOf<Long, Endpoint>()
         val providers = mutableMapOf<Long, Endpoint>()
 
@@ -406,24 +411,21 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
             }
         }
 
-        if (consumers.isEmpty()) return
-
-        val remainingCableCapacity = topology.cableRates.toMutableMap()
-
         // 先尝试让消费者从电网缓冲池取能（按路径损耗与路径容量计算）。
         for ((_, consumer) in consumers) {
             if (energy <= 0) break
             pullFromBufferedEnergyByPath(world, consumer, topology.neighbors, remainingCableCapacity)
         }
 
-        if (providers.isEmpty()) return
-
-        // 再按路径损耗从小到大，从所有供电者拉取。
-        for ((_, consumer) in consumers) {
-            pullFromProvidersByPath(world, consumer, providers, topology.neighbors, remainingCableCapacity)
+        if (providers.isNotEmpty()) {
+            // 再按路径损耗从小到大，从所有供电者拉取。
+            for ((_, consumer) in consumers) {
+                pullFromProvidersByPath(world, consumer, providers, topology.neighbors, remainingCableCapacity)
+            }
         }
 
-        // 同步导线负载到 localEnergy（供 Jade 显示）
+        // 同步导线负载到 cableLoad（供 Jade 显示）
+        // 无论是否有能量传输都会调用，确保负载显示正确（包括 0）
         syncCableLoadToLocalStorage(world, topology.cableRates, remainingCableCapacity)
     }
 
@@ -474,7 +476,7 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
                             val destBlock = world.getBlockState(destPos).block
                             log.info(
                                 "[能量传输] 电网缓冲 → $destBlock @ $destPos | " +
-                                "传输=$inserted EU, 路径损耗=$pathLossEu EU, 路径长度=${candidate.path.size}"
+                                        "传输=$inserted EU, 路径损耗=$pathLossEu EU, 路径长度=${candidate.path.size}"
                             )
                         }
 
@@ -542,7 +544,7 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
                             val destBlock = world.getBlockState(destPos).block
                             log.info(
                                 "[能量传输] $sourceBlock @ $sourcePos → $destBlock @ $destPos | " +
-                                "提取=$extracted EU, 传输=$inserted EU, 路径损耗=$pathLossEu EU, 路径长度=${candidate.path.size}"
+                                        "提取=$extracted EU, 传输=$inserted EU, 路径损耗=$pathLossEu EU, 路径长度=${candidate.path.size}"
                             )
                         }
 
@@ -572,6 +574,7 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         remainingCableCapacity: Map<Long, Long>
     ) {
         if (world.isClient) return
+        // println("====================")
 
         for (cablePosLong in cables) {
             // 只处理已知导线（避免无效导线）
@@ -586,8 +589,19 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
             val be = world.getBlockEntity(pos)
             if (be is ic2_120.content.block.cables.CableBlockEntity) {
                 be.cableLoad = used
+                //实验失败，不会触发刷新
+                // Transaction.openOuter().use { tx ->
+                //     be.energyStorage.insert(1,tx)
+                //     be.energyStorage.extract(1,tx)
+                //     tx.commit()
+                // }
+                // be.energyStorage.insert(used, Nothing)
+                //todo 这样网络开销很大，想个办法按需开启或者20秒只更新一次
+                // be.markDirty()
+                // println("cableLoad: $used")
             }
         }
+        // println("====================")
     }
 
     private fun buildProviderCandidates(
@@ -710,9 +724,9 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
 
                             log.info(
                                 "[电网拓扑-输出检测] 方块=$blockName @ $neighborPos，方向=$dir（导线->机器）" +
-                                "\n  → 基础tier=$machineTier，该面电压=$sidedTier，有效电压=$effectiveTier" +
-                                "\n  → 该面只输出不输入，判定为真正的输出面" +
-                                "\n  → 当前电网输出等级=$oldMax，更新后=$maxLevel"
+                                        "\n  → 基础tier=$machineTier，该面电压=$sidedTier，有效电压=$effectiveTier" +
+                                        "\n  → 该面只输出不输入，判定为真正的输出面" +
+                                        "\n  → 当前电网输出等级=$oldMax，更新后=$maxLevel"
                             )
 
                             if (maxLevel != oldMax) {
@@ -729,8 +743,8 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
 
                         log.info(
                             "[电网拓扑-跳过输入输出面] 方块=$blockName @ $neighborPos，方向=$dir（导线->机器）" +
-                            "\n  → 该面同时支持输入和输出，判定为输入面，跳过电网输出等级计算" +
-                            "\n  → 基础tier=$machineTier，该面电压=$sidedTier"
+                                    "\n  → 该面同时支持输入和输出，判定为输入面，跳过电网输出等级计算" +
+                                    "\n  → 基础tier=$machineTier，该面电压=$sidedTier"
                         )
                     }
                 }

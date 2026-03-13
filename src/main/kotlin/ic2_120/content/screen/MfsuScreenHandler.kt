@@ -93,7 +93,7 @@ class MfsuScreenHandler(
 
         // 装备槽（UI下方，横向）
         val armorSlotX = 8
-        val armorSlotY = 70
+        val armorSlotY = 55
         val armorSlotSpacing = 18
         addSlot(PredicateSlot(blockInventory, MfsuBlockEntity.SLOT_HELMET, armorSlotX, armorSlotY, helmetSlotSpec))
         addSlot(PredicateSlot(blockInventory, MfsuBlockEntity.SLOT_CHESTPLATE, armorSlotX + armorSlotSpacing, armorSlotY, chestplateSlotSpec))

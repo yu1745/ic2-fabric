@@ -18,6 +18,9 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import org.slf4j.LoggerFactory
 import team.reborn.energy.api.EnergyStorage
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
+
+val Nothing = Transaction.openOuter()
 
 /**
  * 导线方块实体。能量存储委托给所属的 [EnergyNetwork]（电网共享池）。
@@ -37,19 +40,27 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     /** 导线当前负载（本 tick 内已传输的能量），仅用于 Jade 显示。不影响实际能量传输逻辑。 */
     var cableLoad: Long by FilteredValue(20)
 
+
     /** 对外暴露的 [EnergyStorage]，insert/extract 均委托给电网池。 */
     val energyStorage: EnergyStorage = object : EnergyStorage {
         override fun supportsInsertion(): Boolean = true
         override fun supportsExtraction(): Boolean = true
+
         // 返回导线当前负载（供 Jade 显示），而不是网络总能量
-        override fun getAmount(): Long = if (network != null) cableLoad else localEnergy
-        override fun getCapacity(): Long = network?.capacity ?: defaultTransferRate()
+        override fun getAmount(): Long = /* if (network != null) cableLoad else localEnergy */ cableLoad
 
-        override fun insert(maxAmount: Long, transaction: TransactionContext): Long =
-            network?.insert(maxAmount, transaction) ?: 0
+        override fun getCapacity(): Long = /* network?.capacity ?:  */defaultTransferRate()
 
-        override fun extract(maxAmount: Long, transaction: TransactionContext): Long =
-            network?.extract(maxAmount, transaction) ?: 0
+        override fun insert(maxAmount: Long, transaction: TransactionContext): Long {
+            return if (transaction != Nothing) network?.insert(maxAmount, transaction) ?: 0
+            else 0L
+        }
+
+
+        override fun extract(maxAmount: Long, transaction: TransactionContext): Long {
+            return if (transaction != Nothing) network?.extract(maxAmount, transaction) ?: 0
+            else 0L
+        }
     }
 
     private fun defaultTransferRate(): Long =
@@ -58,11 +69,16 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         localEnergy = nbt.getLong(NBT_ENERGY)
+        // println("readNbt load: ${nbt.getLong(NBT_LOAD)}")
+        // repeat(20) {
+        //     cableLoad = nbt.getLong(NBT_LOAD)
+        // }
     }
 
     override fun writeNbt(nbt: NbtCompound) {
         super.writeNbt(nbt)
         nbt.putLong(NBT_ENERGY, network?.getEnergySharePerCable() ?: localEnergy)
+        // nbt.putLong(NBT_LOAD, cableLoad)
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -74,6 +90,7 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     companion object {
         private val logger = LoggerFactory.getLogger("ic2_120/CableBlockEntity")
         private const val NBT_ENERGY = "CableEnergy"
+        // private const val NBT_LOAD = "CableLoad"
 
         lateinit var TYPE: BlockEntityType<CableBlockEntity>
             private set

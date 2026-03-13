@@ -38,7 +38,7 @@ class MfsuScreen(
         val slotSize = 18
         val borderOffset = 1
         val armorSlotX = 8
-        val armorSlotY = 70
+        val armorSlotY = 55
         for (i in 0 until 4) {
             context.drawBorder(x + armorSlotX + i * 18 - borderOffset, y + armorSlotY - borderOffset, slotSize, slotSize, borderColor)
         }
