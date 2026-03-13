@@ -1,5 +1,7 @@
 package ic2_120
 
+import ic2_120.client.ArmorKeybinds
+import ic2_120.client.ArmorTooltipHandler
 import ic2_120.client.BatteryModelPredicates
 import ic2_120.client.ModItemTooltip
 import ic2_120.client.ModFluidClient
@@ -11,7 +13,6 @@ import ic2_120.client.RubberLeavesColorProvider
 import ic2_120.client.RubberLogModelPlugin
 import ic2_120.client.StorageBoxColorProvider
 import ic2_120.client.ClientBlockEntityRenderers
-import ic2_120.client.NightVisionKeybinds
 import ic2_120.client.network.NetworkManager
 import net.fabricmc.api.ClientModInitializer
 
@@ -27,7 +28,8 @@ object Ic2_120Client : ClientModInitializer {
 
 		// 注册网络管理器
 		NetworkManager.register()
-		NightVisionKeybinds.register()
+		ArmorKeybinds.register()
+		ArmorTooltipHandler.register()
 
 		// 注册储物箱着色器
 		StorageBoxColorProvider.register()

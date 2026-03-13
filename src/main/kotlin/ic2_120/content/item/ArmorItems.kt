@@ -537,41 +537,6 @@ class HazmatChestplate : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.CHESTPLATE, Fabr
 class HazmatLeggings : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.LEGGINGS, FabricItemSettings().maxCount(1))
 
 // ========== 纳米护甲套装 (Nano Armor Set) ==========
-/**
- * IC2 高级能量护甲，用电力损耗代替生命值损耗。
- * 载电量 1 MEU，每抵挡 1 伤害消耗 5,000 EU。头盔夜视、靴子摔落减免。
- * 参考 MC百科 https://www.mcmod.cn/item/208.html
- */
-@ModItem(name = "nano_helmet", tab = CreativeTab.IC2_MATERIALS, group = "nano_armor")
-class NanoHelmet : ArmorItem(NANO_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1))
-
-@ModItem(name = "nano_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "nano_armor")
-class NanoChestplate : ArmorItem(NANO_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1))
-
-@ModItem(name = "nano_leggings", tab = CreativeTab.IC2_MATERIALS, group = "nano_armor")
-class NanoLeggings : ArmorItem(NANO_ARMOR, ArmorItem.Type.LEGGINGS, FabricItemSettings().maxCount(1))
-
-@ModItem(name = "nano_boots", tab = CreativeTab.IC2_MATERIALS, group = "nano_armor")
-class NanoBoots : ArmorItem(NANO_ARMOR, ArmorItem.Type.BOOTS, FabricItemSettings().maxCount(1))
-
-// ========== 量子护甲套装 (Quantum Armor Set) ==========
-/**
- * IC2 终极护甲套装，载电量 10 MEU。
- * 穿齐可抵挡岩浆、爆炸等；头盔水下呼吸/夜视/消 debuff；胸甲飞行；护腿 3 倍速；靴子超级跳。
- * 参考 MC百科 https://www.mcmod.cn/item/212.html
- */
-@ModItem(name = "quantum_helmet", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumHelmet : ArmorItem(QUANTUM_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1))
-
-@ModItem(name = "quantum_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumChestplate : ArmorItem(QUANTUM_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1))
-
-@ModItem(name = "quantum_leggings", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumLeggings : ArmorItem(QUANTUM_ARMOR, ArmorItem.Type.LEGGINGS, FabricItemSettings().maxCount(1))
-
-@ModItem(name = "quantum_boots", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumBoots : ArmorItem(QUANTUM_ARMOR, ArmorItem.Type.BOOTS, FabricItemSettings().maxCount(1))
-
 // ========== 太阳能头盔 ==========
 /**
  * 太阳能头盔 (Solar Helmet)

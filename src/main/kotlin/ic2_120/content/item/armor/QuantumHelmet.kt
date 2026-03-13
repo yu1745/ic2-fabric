@@ -1,0 +1,186 @@
+package ic2_120.content.item.armor
+
+import ic2_120.Ic2_120
+import ic2_120.content.item.ModArmorMaterials
+import ic2_120.registry.CreativeTab
+import ic2_120.registry.annotation.ModItem
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+import net.minecraft.entity.EquipmentSlot
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.ArmorItem
+import net.minecraft.item.ItemStack
+import net.minecraft.registry.Registries
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
+import net.minecraft.world.World
+
+/**
+ * 量子头盔 (Quantum Helmet)
+ *
+ * 量子套装的头盔部件，提供多种辅助功能。
+ *
+ * ## 核心参数
+ *
+ * - 载电量：10,000,000 EU（10 MEU）
+ * - 能量等级：4
+ * - 减伤比例：15%
+ *
+ * ## 特殊功能
+ *
+ * 1. **夜视**：694 EU/tick（10M EU / 8小时 = 576000 ticks）
+ * 2. **水下呼吸**：消耗 air_cell → empty_cell
+ * 3. **补充饱食度**：消耗 filled_tin_can → tin_can，1000 EU/次
+ * 4. **消除 debuff**：中毒/凋零，100 EU/次
+ *
+ * **夜视快捷键**：Alt + N
+ *
+ * ## 能量消耗
+ *
+ * - 每减免 1 点伤害消耗 5000 EU
+ * - 能量从所有量子装备均匀扣除
+ */
+@ModItem(name = "quantum_helmet", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
+class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1)) {
+
+    companion object {
+        private const val NIGHT_VISION_COST = 17L  // 10M EU / 8h = 576000 ticks ≈ 17 EU/t
+        private const val FOOD_FILL_COST = 1000L
+        private const val CURE_EFFECT_COST = 100L
+        private const val NIGHT_VISION_KEY = "NightVisionEnabled"
+        private const val AIR_CHECK_COOLDOWN_KEY = "AirCheckCooldown"
+        private const val FOOD_CHECK_COOLDOWN_KEY = "FoodCheckCooldown"
+        private const val AIR_THRESHOLD = 60
+
+        fun toggleNightVision(stack: ItemStack): Boolean {
+            val nbt = stack.orCreateNbt
+            val enabled = !nbt.getBoolean(NIGHT_VISION_KEY)
+            nbt.putBoolean(NIGHT_VISION_KEY, enabled)
+            return enabled
+        }
+    }
+
+    override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
+        super.inventoryTick(stack, world, entity, slot, selected)
+        if (world.isClient) return
+
+        val player = entity as? PlayerEntity ?: return
+        if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) return
+
+        val nbt = stack.orCreateNbt
+        var energy = getEnergy(stack)
+
+        // 功能 1: 水下呼吸（复用 HazmatHelmet 逻辑）
+        if (player.isTouchingWater && player.air <= AIR_THRESHOLD) {
+            val cooldown = nbt.getInt(AIR_CHECK_COOLDOWN_KEY)
+            if (cooldown <= 0) {
+                if (consumeAirCellIfAvailable(player)) {
+                    player.air = player.maxAir
+                    nbt.putInt(AIR_CHECK_COOLDOWN_KEY, 20)  // 1 秒冷却
+                }
+            } else {
+                nbt.putInt(AIR_CHECK_COOLDOWN_KEY, cooldown - 1)
+            }
+        }
+
+        // 功能 2: 夜视
+        if (nbt.getBoolean(NIGHT_VISION_KEY)) {
+            if (energy >= NIGHT_VISION_COST) {
+                energy -= NIGHT_VISION_COST
+                applyNightVisionEffect(player, world)
+            } else {
+                nbt.putBoolean(NIGHT_VISION_KEY, false)
+                player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+            }
+        }
+
+        // 功能 3: 补充饱食度
+        if (player.hungerManager.foodLevel < 20 && energy >= FOOD_FILL_COST) {
+            val cooldown = nbt.getInt(FOOD_CHECK_COOLDOWN_KEY)
+            if (cooldown <= 0) {
+                if (consumeFilledTinCanIfAvailable(player)) {
+                    energy -= FOOD_FILL_COST
+                    player.hungerManager.foodLevel = 20
+                    player.hungerManager.saturationLevel = 5f
+                    nbt.putInt(FOOD_CHECK_COOLDOWN_KEY, 20)  // 1 秒冷却
+                }
+            } else {
+                nbt.putInt(FOOD_CHECK_COOLDOWN_KEY, cooldown - 1)
+            }
+        }
+
+        // 功能 4: 消除负面效果
+        if (energy >= CURE_EFFECT_COST) {
+            val harmfulEffects = listOf(StatusEffects.POISON, StatusEffects.WITHER)
+            for (effect in harmfulEffects) {
+                if (player.hasStatusEffect(effect)) {
+                    player.removeStatusEffect(effect)
+                    energy -= CURE_EFFECT_COST
+                    break
+                }
+            }
+        }
+
+        setEnergy(stack, energy)
+    }
+
+    private fun consumeAirCellIfAvailable(player: PlayerEntity): Boolean {
+        val airCellItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "air_cell"))
+        val emptyCellItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
+        val slot = player.inventory.main.find { !it.isEmpty && it.item === airCellItem }
+        if (slot != null) {
+            slot.decrement(1)
+            val emptyCell = ItemStack(emptyCellItem)
+            if (!player.inventory.insertStack(emptyCell)) {
+                player.dropItem(emptyCell, false)
+            }
+            return true
+        }
+        return false
+    }
+
+    private fun consumeFilledTinCanIfAvailable(player: PlayerEntity): Boolean {
+        val filledCanItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "filled_tin_can"))
+        val emptyCanItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "tin_can"))
+        val slot = player.inventory.main.find { !it.isEmpty && it.item === filledCanItem }
+        if (slot != null) {
+            slot.decrement(1)
+            val emptyCan = ItemStack(emptyCanItem)
+            if (!player.inventory.insertStack(emptyCan)) {
+                player.dropItem(emptyCan, false)
+            }
+            return true
+        }
+        return false
+    }
+
+    private fun applyNightVisionEffect(player: PlayerEntity, world: World) {
+        val brightness = world.getLightLevel(player.blockPos)
+        if (brightness >= 8) {
+            player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+        } else {
+            player.addStatusEffect(
+                StatusEffectInstance(StatusEffects.NIGHT_VISION, 220, 0, true, false, true)
+            )
+        }
+    }
+
+    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
+        super.appendTooltip(stack, world, tooltip, context)
+        val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
+        val energy = getEnergy(stack)
+
+        // 计算夜视剩余时间（分钟）
+        val remainingMinutes = if (energy > 0 && nvEnabled) {
+            val ticks = energy / NIGHT_VISION_COST
+            val seconds = ticks / 20.0
+            val minutes = seconds / 60.0
+            "%.1f".format(minutes)
+        } else "N/A"
+
+        tooltip.add(Text.literal("夜视: ${if (nvEnabled) "§aON" else "§cOFF"} §8[${remainingMinutes}分钟]").formatted(Formatting.GRAY))
+        tooltip.add(Text.literal("减伤: 15% | 水下呼吸 | 消除debuff").formatted(Formatting.GRAY))
+    }
+}
