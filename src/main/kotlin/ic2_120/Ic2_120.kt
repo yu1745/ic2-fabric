@@ -20,6 +20,8 @@ import ic2_120.content.block.machines.SolarDistillerBlockEntity
 import ic2_120.content.block.machines.WaterGeneratorBlockEntity
 import ic2_120.content.block.storage.StorageBoxBlockEntity
 import ic2_120.content.block.transmission.TransmissionBlockEntity
+import ic2_120.content.block.pipes.PipeBlockEntity
+import ic2_120.content.block.pipes.PipeNetworkManager
 import ic2_120.content.entity.ModEntities
 import ic2_120.content.ModBlockEntities
 import ic2_120.registry.ClassScanner
@@ -92,6 +94,8 @@ object Ic2_120 : ModInitializer {
 
         // 传动轴/伞齿轮 BlockEntity（仅用于 BER 动画渲染）
         TransmissionBlockEntity.register(MOD_ID)
+        // 流体管道 BlockEntity（统一网络）
+        PipeBlockEntity.register(MOD_ID)
 
         // 地热/水力/洗矿发电机流体能力注册（Fabric Transfer API）
         GeoGeneratorBlockEntity.registerFluidStorageLookup()
@@ -112,6 +116,7 @@ object Ic2_120 : ModInitializer {
         // 世界卸载时清理电网缓存
         ServerWorldEvents.UNLOAD.register { _, world ->
             EnergyNetworkManager.onWorldUnload(world)
+            PipeNetworkManager.onWorldUnload(world)
         }
 
         // 添加特殊物品：MFSU 满电变体（仅创造模式物品栏可拿，放置即满电）

@@ -13,6 +13,8 @@ import ic2_120.content.screen.SolarDistillerScreenHandler
 import ic2_120.content.sync.SolarDistillerSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
+import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
+import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -28,6 +30,7 @@ import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluids
+import net.minecraft.fluid.Fluid
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
@@ -50,8 +53,12 @@ class SolarDistillerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, IEjectorUpgradeSupport,
+) : BlockEntity(type, pos, state), Inventory, IEjectorUpgradeSupport, IFluidPipeUpgradeSupport,
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+    override var fluidPipeProviderEnabled: Boolean = false
+    override var fluidPipeReceiverEnabled: Boolean = false
+    override var fluidPipeProviderFilter: Fluid? = null
+    override var fluidPipeReceiverFilter: Fluid? = null
 
     companion object {
         const val SLOT_INPUT_WATER = 0
@@ -260,6 +267,8 @@ class SolarDistillerBlockEntity(
         nbt.putLong(NBT_OUTPUT_TANK, outputTankInternal.getStoredAmount())
     }
 
+    private fun mbToDroppers(mb: Int): Long = mb * FluidConstants.BUCKET / 1000
+
     private fun canWorkNow(world: World, pos: BlockPos): Boolean {
         if (world.registryKey != World.OVERWORLD) return false
         if (world.isRaining) return false
@@ -278,21 +287,23 @@ class SolarDistillerBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+        FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
 
         handleWaterInputSlot()
         handleDistilledCellFill()
 
         val canWork = canWorkNow(world, pos) &&
-            inputTankInternal.getStoredAmount() >= SolarDistillerSync.PRODUCE_MB_PER_CYCLE &&
+            inputTankInternal.getStoredAmount() >= mbToDroppers(SolarDistillerSync.PRODUCE_MB_PER_CYCLE) &&
             outputTankInternal.getStoredAmount() < outputTankInternal.getTankCapacity()
         sync.isWorking = if (canWork) 1 else 0
 
         if (canWork) {
             sync.progress += 1
             if (sync.progress >= SolarDistillerSync.PRODUCE_INTERVAL_TICKS) {
-                val consumed = inputTankInternal.consumeInternal(SolarDistillerSync.PRODUCE_MB_PER_CYCLE.toLong())
-                if (consumed >= SolarDistillerSync.PRODUCE_MB_PER_CYCLE) {
-                    outputTankInternal.insertInternal(SolarDistillerSync.PRODUCE_MB_PER_CYCLE.toLong())
+                val produceDroppers = mbToDroppers(SolarDistillerSync.PRODUCE_MB_PER_CYCLE)
+                val consumed = inputTankInternal.consumeInternal(produceDroppers)
+                if (consumed >= produceDroppers) {
+                    outputTankInternal.insertInternal(produceDroppers)
                 }
                 sync.progress = 0
             }

@@ -12,6 +12,7 @@ import ic2_120.client.FluidCellColorProvider
 import ic2_120.client.RubberLeavesColorProvider
 import ic2_120.client.RubberLogModelPlugin
 import ic2_120.client.StorageBoxColorProvider
+import ic2_120.client.PipeColorProvider
 import ic2_120.client.ClientBlockEntityRenderers
 import ic2_120.client.network.NetworkManager
 import net.fabricmc.api.ClientModInitializer
@@ -39,5 +40,7 @@ object Ic2_120Client : ClientModInitializer {
 		RubberLeavesColorProvider.register()
 		// 橡胶树原木动态模型（替代 243 个 blockstate 变体）
 		RubberLogModelPlugin.register()
+		// 注册管道着色器（青铜和碳纤维材质）
+		PipeColorProvider.register()
 	}
 }

@@ -2,6 +2,7 @@ package ic2_120.content.recipes
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.MachineBlock
+import ic2_120.content.block.pipes.BasePipeBlock
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider
 import net.minecraft.registry.Registries
@@ -25,10 +26,11 @@ class ModBlockTagProvider(
 
         for (block in Registries.BLOCK) {
             val id = Registries.BLOCK.getId(block)
-            if (id.namespace == Ic2_120.MOD_ID && block is MachineBlock) {
+            if (id.namespace == Ic2_120.MOD_ID && (block is MachineBlock || block is BasePipeBlock)) {
                 pickaxeBuilder.add(block)
                 ironToolBuilder.add(block)
             }
         }
     }
 }
+

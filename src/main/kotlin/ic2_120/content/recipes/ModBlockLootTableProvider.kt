@@ -40,6 +40,15 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
 
         // 日光灯：直接掉落自身（无物品槽，无外壳）
         addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "luminator_flat")))
+        // 流体管道：直接掉落自身
+        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "bronze_pipe_tiny")))
+        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "bronze_pipe_small")))
+        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "bronze_pipe_medium")))
+        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "bronze_pipe_large")))
+        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pipe_tiny")))
+        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pipe_small")))
+        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pipe_medium")))
+        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pipe_large")))
 
         // 机器方块：条件掉落
         for (block in Registries.BLOCK) {
@@ -72,3 +81,4 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
             )
     }
 }
+

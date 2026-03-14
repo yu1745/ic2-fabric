@@ -151,10 +151,10 @@ object ModFluidClient {
         val stillExists = javaClass.getResource(stillPath) != null
         val flowExists = javaClass.getResource(flowPath) != null
         val tintInfo = tintColor?.let { String.format("#%08X", it) } ?: "<none>"
-        logger.info(
-            "Register fluid render: stillFluid={}, flowFluid={}, stillTex={}, flowTex={}, tint={}, stillExists={}, flowExists={}",
-            stillFluid, flowingFluid, stillId, flowId, tintInfo, stillExists, flowExists
-        )
+        // logger.info(
+        //     "Register fluid render: stillFluid={}, flowFluid={}, stillTex={}, flowTex={}, tint={}, stillExists={}, flowExists={}",
+        //     stillFluid, flowingFluid, stillId, flowId, tintInfo, stillExists, flowExists
+        // )
         if (!stillExists || !flowExists) {
             logger.warn("Missing fluid texture resource: stillPath={}, flowPath={}", stillPath, flowPath)
         }

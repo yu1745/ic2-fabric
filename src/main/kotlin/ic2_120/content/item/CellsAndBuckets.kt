@@ -4,12 +4,10 @@ import ic2_120.Ic2_120
 import ic2_120.content.fluid.ModFluids
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
-import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
@@ -17,7 +15,6 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.FluidDrainable
 import net.minecraft.block.FluidFillable
 import net.minecraft.fluid.Fluid
@@ -156,14 +153,8 @@ class FluidCellItem : Item(FabricItemSettings()), FluidModificationItem {
 
         val fluid = stack.getFluidCellVariant()?.fluid ?: return ActionResult.PASS
 
-        // 1. 先尝试 Fabric FluidStorage（储罐、地热发电机等）
-        val storage = FluidStorage.SIDED.find(world, pos, context.side)
-            ?: FluidStorage.SIDED.find(world, pos, null)
-        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
-            return ActionResult.SUCCESS
-        }
-
-        // 2. 放置流体到世界
+        // 注意：与 FluidStorage 的交互已在 UseBlockCallback 中处理，这里只处理放置流体到世界
+        // 放置流体到世界
         val hitResult = BlockHitResult(context.hitPos, context.side, pos, context.hitsInsideBlock())
         if (placeFluid(player, world, pos, hitResult)) {
             if (!player.abilities.creativeMode) {
@@ -263,14 +254,8 @@ abstract class EmptyCellItem(settings: FabricItemSettings) : Item(settings) {
 
         val pos = hitResult.blockPos
 
-        // 1. 先尝试 Fabric FluidStorage（储罐等）
-        val storage = FluidStorage.SIDED.find(world, pos, hitResult.side)
-            ?: FluidStorage.SIDED.find(world, pos, null)
-        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, user, hand)) {
-            return TypedActionResult.success(user.getStackInHand(hand))
-        }
-
-        // 2. 从世界流体方块收集（FluidDrainable：水、岩浆等）
+        // 注意：与 FluidStorage 的交互已在 UseBlockCallback 中处理，这里只处理从世界流体方块收集
+        // 从世界流体方块收集（FluidDrainable：水、岩浆等）
         val state = world.getBlockState(pos)
         if (state.block is FluidDrainable) {
             val drainable = state.block as FluidDrainable
@@ -304,14 +289,8 @@ abstract class EmptyCellItem(settings: FabricItemSettings) : Item(settings) {
         val hand = context.hand
         if (world.isClient) return ActionResult.SUCCESS
 
-        // 1. 先尝试 Fabric FluidStorage（储罐等）
-        val storage = FluidStorage.SIDED.find(world, pos, context.side)
-            ?: FluidStorage.SIDED.find(world, pos, null)
-        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
-            return ActionResult.SUCCESS
-        }
-
-        // 2. 从世界流体方块收集（FluidDrainable：水、岩浆等）
+        // 注意：与 FluidStorage 的交互已在 UseBlockCallback 中处理，这里只处理从世界流体方块收集
+        // 从世界流体方块收集（FluidDrainable：水、岩浆等）
         val state = world.getBlockState(pos)
         if (state.block is FluidDrainable) {
             val drainable = state.block as FluidDrainable
@@ -367,14 +346,8 @@ abstract class ModFluidCell(settings: FabricItemSettings) : Item(settings), Flui
         val stack = player.getStackInHand(hand)
         if (world.isClient) return ActionResult.SUCCESS
 
-        // 1. 先尝试 Fabric FluidStorage（储罐、地热发电机等）
-        val storage = FluidStorage.SIDED.find(world, pos, context.side)
-            ?: FluidStorage.SIDED.find(world, pos, null)
-        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
-            return ActionResult.SUCCESS
-        }
-
-        // 2. 放置流体到世界
+        // 注意：与 FluidStorage 的交互已在 UseBlockCallback 中处理，这里只处理放置流体到世界
+        // 放置流体到世界
         val hitResult = BlockHitResult(context.hitPos, context.side, pos, context.hitsInsideBlock())
         if (placeFluid(player, world, pos, hitResult)) {
             if (!player.abilities.creativeMode) {
@@ -695,54 +668,6 @@ object CellAndBucketFluidRegistration {
                     ModFluidCellStorage(ctx, item)
                 }
             }
-        }
-
-        // UseBlockCallback：在默认交互前拦截，用 FluidHandling.ANY 射线检测流体方块
-        // （默认 useOnBlock 的射线会穿透水/岩浆，导致无法收集）
-        UseBlockCallback.EVENT.register { player, world, hand, _ ->
-            val stack = player.getStackInHand(hand)
-            if (stack.item != emptyCell) return@register ActionResult.PASS
-
-            if (world.isClient) return@register ActionResult.PASS
-
-            val start = player.eyePos
-            val end = start.add(player.rotationVector.multiply(5.0))
-            val rayCtx = RaycastContext(start, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, player)
-            val hitResult = world.raycast(rayCtx)
-            val pos = hitResult.blockPos
-
-            // 1. FluidStorage（储罐等）
-            val storage = FluidStorage.SIDED.find(world, pos, hitResult.side)
-                ?: FluidStorage.SIDED.find(world, pos, null)
-            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
-                return@register ActionResult.SUCCESS
-            }
-
-            // 2. FluidDrainable（水、岩浆方块）- 需用 FluidHandling.ANY 射线才能命中
-            val state = world.getBlockState(pos)
-            if (state.block is FluidDrainable) {
-                val drainable = state.block as FluidDrainable
-                val drained = drainable.tryDrainFluid(world, pos, state)
-                if (!drained.isEmpty) {
-                    val filled = bucketToFilledFluidCell(drained) ?: return@register ActionResult.PASS
-                    drainable.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
-                    world.emitGameEvent(player, GameEvent.FLUID_PICKUP, pos)
-                    if (!player.abilities.creativeMode) {
-                        stack.decrement(1)
-                        if (stack.isEmpty) {
-                            player.setStackInHand(hand, filled)
-                        } else if (!player.inventory.insertStack(filled)) {
-                            player.dropItem(filled, false)
-                        }
-                    } else {
-                        if (!player.inventory.insertStack(filled)) {
-                            player.dropItem(filled, false)
-                        }
-                    }
-                    return@register ActionResult.SUCCESS
-                }
-            }
-            ActionResult.PASS
         }
 
         // 遍历所有流体，将满流体单元注册到创造模式物品栏（IC2 材料）

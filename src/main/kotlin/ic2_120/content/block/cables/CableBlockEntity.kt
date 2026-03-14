@@ -18,9 +18,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import org.slf4j.LoggerFactory
 import team.reborn.energy.api.EnergyStorage
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-
-val Nothing = Transaction.openOuter()
 
 /**
  * 导线方块实体。能量存储委托给所属的 [EnergyNetwork]（电网共享池）。
@@ -52,14 +49,12 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         override fun getCapacity(): Long = /* network?.capacity ?:  */defaultTransferRate()
 
         override fun insert(maxAmount: Long, transaction: TransactionContext): Long {
-            return if (transaction != Nothing) network?.insert(maxAmount, transaction) ?: 0
-            else 0L
+            return network?.insert(maxAmount, transaction) ?: 0
         }
 
 
         override fun extract(maxAmount: Long, transaction: TransactionContext): Long {
-            return if (transaction != Nothing) network?.extract(maxAmount, transaction) ?: 0
-            else 0L
+            return network?.extract(maxAmount, transaction) ?: 0
         }
     }
 

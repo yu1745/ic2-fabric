@@ -138,6 +138,78 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
             item("ic2_120:iron_cable"), rubber, rubber, rubber
         )
 
+        // ==================== 流体管道配方 ====================
+        val bronzeCasing = item("ic2_120:bronze_casing")
+        val bronzePlate = item("ic2_120:bronze_plate")
+        val carbonFibre = item("ic2_120:carbon_fibre")
+        val carbonMesh = item("ic2_120:carbon_mesh")
+        val bronzePipeTiny = item("ic2_120:bronze_pipe_tiny")
+        val bronzePipeSmall = item("ic2_120:bronze_pipe_small")
+        val bronzePipeMedium = item("ic2_120:bronze_pipe_medium")
+        val bronzePipeLarge = item("ic2_120:bronze_pipe_large")
+        val carbonPipeTiny = item("ic2_120:carbon_pipe_tiny")
+        val carbonPipeSmall = item("ic2_120:carbon_pipe_small")
+        val carbonPipeMedium = item("ic2_120:carbon_pipe_medium")
+        val carbonPipeLarge = item("ic2_120:carbon_pipe_large")
+
+        if (bronzeCasing != Items.AIR && bronzePipeTiny != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, bronzePipeTiny, 6)
+                .pattern("XXX").pattern("   ").pattern("XXX")
+                .input('X', bronzeCasing)
+                .criterion(hasItem(bronzeCasing), conditionsFromItem(bronzeCasing))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "bronze_pipe_tiny"))
+        }
+        if (bronzeCasing != Items.AIR && bronzePipeSmall != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, bronzePipeSmall, 3)
+                .pattern("X X").pattern("X X").pattern("X X")
+                .input('X', bronzeCasing)
+                .criterion(hasItem(bronzeCasing), conditionsFromItem(bronzeCasing))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "bronze_pipe_small"))
+        }
+        if (bronzePlate != Items.AIR && bronzePipeMedium != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, bronzePipeMedium, 2)
+                .pattern("XXX").pattern("   ").pattern("XXX")
+                .input('X', bronzePlate)
+                .criterion(hasItem(bronzePlate), conditionsFromItem(bronzePlate))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "bronze_pipe_medium"))
+        }
+        if (bronzePlate != Items.AIR && bronzePipeLarge != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, bronzePipeLarge, 1)
+                .pattern("X X").pattern("X X").pattern("X X")
+                .input('X', bronzePlate)
+                .criterion(hasItem(bronzePlate), conditionsFromItem(bronzePlate))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "bronze_pipe_large"))
+        }
+
+        if (carbonFibre != Items.AIR && carbonPipeTiny != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, carbonPipeTiny, 6)
+                .pattern("XXX").pattern("   ").pattern("XXX")
+                .input('X', carbonFibre)
+                .criterion(hasItem(carbonFibre), conditionsFromItem(carbonFibre))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "carbon_pipe_tiny"))
+        }
+        if (carbonFibre != Items.AIR && carbonPipeSmall != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, carbonPipeSmall, 3)
+                .pattern("X X").pattern("X X").pattern("X X")
+                .input('X', carbonFibre)
+                .criterion(hasItem(carbonFibre), conditionsFromItem(carbonFibre))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "carbon_pipe_small"))
+        }
+        if (carbonMesh != Items.AIR && carbonPipeMedium != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, carbonPipeMedium, 2)
+                .pattern("XXX").pattern("   ").pattern("XXX")
+                .input('X', carbonMesh)
+                .criterion(hasItem(carbonMesh), conditionsFromItem(carbonMesh))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "carbon_pipe_medium"))
+        }
+        if (carbonMesh != Items.AIR && carbonPipeLarge != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, carbonPipeLarge, 1)
+                .pattern("X X").pattern("X X").pattern("X X")
+                .input('X', carbonMesh)
+                .criterion(hasItem(carbonMesh), conditionsFromItem(carbonMesh))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "carbon_pipe_large"))
+        }
+
         // ==================== 锡罐工作台配方 ====================
         val tinIngot = item("ic2_120:tin_ingot")
         val tinCan = item("ic2_120:tin_can")

@@ -2,9 +2,13 @@ package ic2_120.content
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.MachineBlock
+import ic2_120.content.block.pipes.BasePipeBlock
+import ic2_120.content.block.pipes.PipeBlockEntity
+import ic2_120.content.block.pipes.PipeNetworkManager
 import ic2_120.content.item.energy.IElectricTool
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
+import net.minecraft.block.Block
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
@@ -48,6 +52,18 @@ object WrenchHandler {
             val pos = hitResult.blockPos
             val state = world.getBlockState(pos)
             val block = state.block
+
+            if (block is BasePipeBlock) {
+                if (!world.isClient) {
+                    val be = world.getBlockEntity(pos) as? PipeBlockEntity ?: return@register ActionResult.PASS
+                    be.toggleDisabled(hitResult.side)
+                    val recomputed = block.recomputeState(world, pos, state, be)
+                    world.setBlockState(pos, recomputed, Block.NOTIFY_ALL)
+                    PipeNetworkManager.invalidateConnectionCachesAt(world, pos)
+                    PipeNetworkManager.invalidateConnectionCachesAt(world, pos.offset(hitResult.side))
+                }
+                return@register ActionResult.SUCCESS
+            }
 
             if (block !is MachineBlock) return@register ActionResult.PASS
 

@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory
 import team.reborn.energy.api.EnergyStorage
 import kotlin.math.pow
 import java.util.PriorityQueue
-import ic2_120.content.block.cables.Nothing
 
 /**
  * 电网：一组相互连接的导线共享的能量池。
@@ -589,16 +588,6 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
             val be = world.getBlockEntity(pos)
             if (be is ic2_120.content.block.cables.CableBlockEntity) {
                 be.cableLoad = used
-                //实验失败，不会触发刷新
-                // Transaction.openOuter().use { tx ->
-                //     be.energyStorage.insert(1,tx)
-                //     be.energyStorage.extract(1,tx)
-                //     tx.commit()
-                // }
-                // be.energyStorage.insert(used, Nothing)
-                //todo 这样网络开销很大，想个办法按需开启或者20秒只更新一次
-                // be.markDirty()
-                // println("cableLoad: $used")
             }
         }
         // println("====================")
@@ -882,5 +871,4 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         return if (count > 0) energy / count else 0
     }
 }
-
 
