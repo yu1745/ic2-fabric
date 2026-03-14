@@ -16,6 +16,7 @@ import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
 import ic2_120.content.block.machines.OreWashingPlantBlockEntity
 import ic2_120.content.block.machines.ReactorChamberBlockEntity
+import ic2_120.content.block.machines.SolarDistillerBlockEntity
 import ic2_120.content.block.machines.WaterGeneratorBlockEntity
 import ic2_120.content.block.storage.StorageBoxBlockEntity
 import ic2_120.content.block.transmission.TransmissionBlockEntity
@@ -96,6 +97,7 @@ object Ic2_120 : ModInitializer {
         GeoGeneratorBlockEntity.registerFluidStorageLookup()
         WaterGeneratorBlockEntity.registerFluidStorageLookup()
         OreWashingPlantBlockEntity.registerFluidStorageLookup()
+        SolarDistillerBlockEntity.registerFluidStorageLookup()
         
         // 核反应仓能量能力注册（Fabric Transfer API）
         val reactorChamberType = ModBlockEntities.getType(ReactorChamberBlockEntity::class)

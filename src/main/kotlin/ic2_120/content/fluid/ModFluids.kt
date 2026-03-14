@@ -8,10 +8,12 @@ import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.FluidBlock
+import net.minecraft.block.FluidFillable
 import net.minecraft.block.AbstractBlock
 import net.minecraft.fluid.FlowableFluid
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.FluidState
+import net.minecraft.fluid.Fluids
 import net.minecraft.item.BucketItem
 import net.minecraft.item.Item
 import net.minecraft.item.Items
@@ -22,11 +24,14 @@ import net.minecraft.registry.RegistryKeys
 import net.minecraft.sound.SoundEvents
 import net.minecraft.state.StateManager
 import net.minecraft.util.Identifier
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import net.minecraft.world.WorldView
+import net.minecraft.world.event.GameEvent
+import net.minecraft.sound.SoundCategory
 
 /**
  * IC2 模组流体注册。
@@ -81,6 +86,12 @@ object ModFluids {
     lateinit var BIOMASS_BLOCK: Block
     lateinit var BIOMASS_BUCKET: Item
 
+    // Distilled Water - 蒸馏水
+    val DISTILLED_WATER_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "distilled_water")) as FlowableFluid }
+    val DISTILLED_WATER_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_distilled_water")) as FlowableFluid }
+    lateinit var DISTILLED_WATER_BLOCK: Block
+    lateinit var DISTILLED_WATER_BUCKET: Item
+
     fun register() {
         registerFluid("coolant", "coolant", "coolant")
         registerFluid("hot_coolant", "hot_coolant", "hot_coolant")
@@ -89,6 +100,8 @@ object ModFluids {
         registerFluid("pahoehoe_lava", "pahoehoe_lava", "pahoehoe_lava")  // 仅 still，flow 用 still
         registerFluid("biofuel", "biofuel", "biofuel")
         registerFluid("biomass", "biomass", "biomass")
+        // 蒸馏水视觉复用原版水纹理
+        registerFluid("distilled_water", "water_still", "water_flow")
     }
 
     private fun registerFluid(name: String, stillTex: String, flowTex: String) {
@@ -114,10 +127,55 @@ object ModFluids {
         )
 
         // 3. 注册 Bucket
+        val bucketItem = if (name == "distilled_water") {
+            // 蒸馏水右键放出到世界时会被污染，实际放置为普通水。
+            object : BucketItem(still, FabricItemSettings().recipeRemainder(Items.BUCKET).maxCount(1)) {
+                override fun placeFluid(
+                    player: net.minecraft.entity.player.PlayerEntity?,
+                    world: World,
+                    pos: BlockPos,
+                    hitResult: BlockHitResult?
+                ): Boolean {
+                    val fluid = Fluids.WATER
+                    val state = world.getBlockState(pos)
+                    val block = state.block
+
+                    if (block is FluidFillable) {
+                        if (block.canFillWithFluid(world, pos, state, fluid)) {
+                            block.tryFillWithFluid(world, pos, state, fluid.defaultState)
+                            fluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
+                            world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos)
+                            return true
+                        }
+                    }
+
+                    if (state.isReplaceable || state.fluidState.isStill) {
+                        if (world.setBlockState(pos, fluid.defaultState.blockState)) {
+                            fluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
+                            world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos)
+                            return true
+                        }
+                    }
+
+                    val adjacentPos = hitResult?.side?.let { pos.offset(it) } ?: pos.up()
+                    val adjacentState = world.getBlockState(adjacentPos)
+                    if (adjacentState.isReplaceable || adjacentState.fluidState.isStill) {
+                        if (world.setBlockState(adjacentPos, fluid.defaultState.blockState)) {
+                            fluid.getBucketFillSound().ifPresent { world.playSound(player, adjacentPos, it, SoundCategory.BLOCKS, 1f, 1f) }
+                            world.emitGameEvent(player, GameEvent.FLUID_PLACE, adjacentPos)
+                            return true
+                        }
+                    }
+                    return false
+                }
+            }
+        } else {
+            BucketItem(still, FabricItemSettings().recipeRemainder(Items.BUCKET).maxCount(1))
+        }
         val bucket = Registry.register(
             Registries.ITEM,
             Identifier(modId, "${name}_bucket"),
-            BucketItem(still, FabricItemSettings().recipeRemainder(Items.BUCKET).maxCount(1))
+            bucketItem
         )
 
         // 4. 设置流体类的 block 和 bucket 引用（通过反射或延迟初始化）
@@ -149,6 +207,10 @@ object ModFluids {
             "biomass" -> {
                 BIOMASS_BLOCK = block
                 BIOMASS_BUCKET = bucket
+            }
+            "distilled_water" -> {
+                DISTILLED_WATER_BLOCK = block
+                DISTILLED_WATER_BUCKET = bucket
             }
         }
 
@@ -209,6 +271,7 @@ object ModFluids {
                 "pahoehoe_lava" -> PAHOEHOE_LAVA_STILL
                 "biofuel" -> BIOFUEL_STILL
                 "biomass" -> BIOMASS_STILL
+                "distilled_water" -> DISTILLED_WATER_STILL
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getFlowingFluid(): Fluid = when (name) {
@@ -219,6 +282,7 @@ object ModFluids {
                 "pahoehoe_lava" -> PAHOEHOE_LAVA_FLOWING
                 "biofuel" -> BIOFUEL_FLOWING
                 "biomass" -> BIOMASS_FLOWING
+                "distilled_water" -> DISTILLED_WATER_FLOWING
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getBlock(): Block = when (name) {
@@ -229,6 +293,7 @@ object ModFluids {
                 "pahoehoe_lava" -> PAHOEHOE_LAVA_BLOCK
                 "biofuel" -> BIOFUEL_BLOCK
                 "biomass" -> BIOMASS_BLOCK
+                "distilled_water" -> DISTILLED_WATER_BLOCK
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getBucket(): Item = when (name) {
@@ -239,6 +304,7 @@ object ModFluids {
                 "pahoehoe_lava" -> PAHOEHOE_LAVA_BUCKET
                 "biofuel" -> BIOFUEL_BUCKET
                 "biomass" -> BIOMASS_BUCKET
+                "distilled_water" -> DISTILLED_WATER_BUCKET
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
         }
@@ -258,6 +324,7 @@ object ModFluids {
                 "pahoehoe_lava" -> PAHOEHOE_LAVA_STILL
                 "biofuel" -> BIOFUEL_STILL
                 "biomass" -> BIOMASS_STILL
+                "distilled_water" -> DISTILLED_WATER_STILL
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getFlowingFluid(): Fluid = when (name) {
@@ -268,6 +335,7 @@ object ModFluids {
                 "pahoehoe_lava" -> PAHOEHOE_LAVA_FLOWING
                 "biofuel" -> BIOFUEL_FLOWING
                 "biomass" -> BIOMASS_FLOWING
+                "distilled_water" -> DISTILLED_WATER_FLOWING
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getBlock(): Block = when (name) {
@@ -278,6 +346,7 @@ object ModFluids {
                 "pahoehoe_lava" -> PAHOEHOE_LAVA_BLOCK
                 "biofuel" -> BIOFUEL_BLOCK
                 "biomass" -> BIOMASS_BLOCK
+                "distilled_water" -> DISTILLED_WATER_BLOCK
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getBucket(): Item = when (name) {
@@ -288,6 +357,7 @@ object ModFluids {
                 "pahoehoe_lava" -> PAHOEHOE_LAVA_BUCKET
                 "biofuel" -> BIOFUEL_BUCKET
                 "biomass" -> BIOMASS_BUCKET
+                "distilled_water" -> DISTILLED_WATER_BUCKET
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
         }

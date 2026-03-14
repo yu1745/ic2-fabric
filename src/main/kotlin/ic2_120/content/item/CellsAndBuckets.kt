@@ -81,9 +81,11 @@ fun ItemStack.isWaterFuel(): Boolean {
     return when (item) {
         Items.WATER_BUCKET -> true
         Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "water_cell")) -> true
+        Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "distilled_water_cell")) -> true
         Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) -> {
             val fluid = getFluidCellVariant()?.fluid ?: return false
-            fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER
+            fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER ||
+                fluid == ModFluids.DISTILLED_WATER_STILL || fluid == ModFluids.DISTILLED_WATER_FLOWING
         }
         else -> false
     }
@@ -96,6 +98,7 @@ fun ItemStack.isWaterFuel(): Boolean {
 internal fun fluidToFilledCellStack(fluid: Fluid): ItemStack {
     val cellId = when (fluid) {
         Fluids.WATER, Fluids.FLOWING_WATER -> "water_cell"
+        ModFluids.DISTILLED_WATER_STILL, ModFluids.DISTILLED_WATER_FLOWING -> "distilled_water_cell"
         Fluids.LAVA, Fluids.FLOWING_LAVA -> "lava_cell"
         ModFluids.COOLANT_STILL, ModFluids.COOLANT_FLOWING -> "coolant_cell"
         ModFluids.HOT_COOLANT_STILL, ModFluids.HOT_COOLANT_FLOWING -> "hot_coolant_cell"
@@ -185,9 +188,13 @@ class FluidCellItem : Item(FabricItemSettings()), FluidModificationItem {
     ): Boolean {
         val state = world.getBlockState(pos)
         val block = state.block
-        val fluid = player?.getStackInHand(Hand.MAIN_HAND)?.getFluidCellVariant()?.fluid
+        val rawFluid = player?.getStackInHand(Hand.MAIN_HAND)?.getFluidCellVariant()?.fluid
             ?: player?.getStackInHand(Hand.OFF_HAND)?.getFluidCellVariant()?.fluid
             ?: return false
+        // 蒸馏水接触世界后视为被污染，直接按普通水放置
+        val fluid = if (rawFluid == ModFluids.DISTILLED_WATER_STILL || rawFluid == ModFluids.DISTILLED_WATER_FLOWING) {
+            Fluids.WATER
+        } else rawFluid
 
         // FluidFillable：如炼药锅等可注入液体的方块
         if (block is FluidFillable) {
@@ -390,7 +397,11 @@ abstract class ModFluidCell(settings: FabricItemSettings) : Item(settings), Flui
         pos: BlockPos,
         hitResult: BlockHitResult?
     ): Boolean {
-        val fluid = getFluid()
+        // 蒸馏水单元放出到世界时直接转为普通水
+        val rawFluid = getFluid()
+        val fluid = if (rawFluid == ModFluids.DISTILLED_WATER_STILL || rawFluid == ModFluids.DISTILLED_WATER_FLOWING) {
+            Fluids.WATER
+        } else rawFluid
         val state = world.getBlockState(pos)
         val block = state.block
 
@@ -436,6 +447,7 @@ class EmptyCell : EmptyCellItem(FabricItemSettings()) {
         // 优先映射到本模组流体单元
         return when (bucketStack.item) {
             Items.WATER_BUCKET -> ItemStack(cellItem("water_cell"))
+            ModFluids.DISTILLED_WATER_BUCKET -> ItemStack(cellItem("distilled_water_cell"))
             Items.LAVA_BUCKET -> ItemStack(cellItem("lava_cell"))
             ModFluids.COOLANT_BUCKET -> ItemStack(cellItem("coolant_cell"))
             ModFluids.HOT_COOLANT_BUCKET -> ItemStack(cellItem("hot_coolant_cell"))
@@ -458,6 +470,13 @@ class EmptyCell : EmptyCellItem(FabricItemSettings()) {
 @ModItem(name = "water_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
 class WaterCell : ModFluidCell(FabricItemSettings()) {
     override fun getFluid(): Fluid = Fluids.WATER
+    override fun getEmptyCell(): Item = cellItem("empty_cell")
+}
+
+/** 蒸馏水单元（放出世界会污染成普通水） */
+@ModItem(name = "distilled_water_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
+class DistilledWaterCell : ModFluidCell(FabricItemSettings()) {
+    override fun getFluid(): Fluid = ModFluids.DISTILLED_WATER_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
@@ -666,7 +685,7 @@ object CellAndBucketFluidRegistration {
 
         // ModFluidCell 子类：专用流体单元，需注册 FluidStorage 才能右键储罐添加流体
         val modFluidCellIds = listOf(
-            "water_cell", "lava_cell", "coolant_cell", "hot_coolant_cell",
+            "water_cell", "distilled_water_cell", "lava_cell", "coolant_cell", "hot_coolant_cell",
             "uu_matter_cell", "weed_ex_cell", "pahoehoe_lava_cell", "biofuel_cell", "biomass_cell"
         )
         for (id in modFluidCellIds) {
@@ -731,6 +750,7 @@ object CellAndBucketFluidRegistration {
         val modFluidCells = setOf(
             Fluids.WATER,
             Fluids.LAVA,
+            ModFluids.DISTILLED_WATER_STILL,
             ModFluids.COOLANT_STILL,
             ModFluids.HOT_COOLANT_STILL,
             ModFluids.UU_MATTER_STILL,
