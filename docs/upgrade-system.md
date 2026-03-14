@@ -73,12 +73,20 @@ UpgradeItemRegistry.getRequiredInterface(item)
 | `IOverclockerUpgradeSupport` | `speedMultiplier`, `energyMultiplier` | 速度与耗能倍率 |
 | `ITransformerUpgradeSupport` | `voltageTierBonus` | 电压等级加成 |
 | `IEnergyStorageUpgradeSupport` | `capacityBonus` | 储能容量加成 |
-| `IRedstoneInverterUpgradeSupport` | — | 红石反转（待实现） |
+| `IRedstoneInverterUpgradeSupport` | `redstoneInverted`（继承自 `IRedstoneControlSupport`） | 红石反转（按需接入） |
 | `IEjectorUpgradeSupport` | — | 弹出/抽入（待实现） |
 
 ### 4. 升级组件（*UpgradeComponent）
 
 单例对象，负责从升级槽统计升级数量，计算效果，并写入实现对应接口的机器。
+
+### 5. 红石控制组件（RedstoneControlComponent）
+
+- 通用组件：`RedstoneControlComponent.canRun(world, pos, machine)`
+- 机器只要实现 `IRedstoneControlSupport` 即可被红石控制启停
+- 逻辑：
+  - 默认（`redstoneInverted = false`）：有红石信号运行，无信号停机
+  - 反转（`redstoneInverted = true`）：有红石信号停机，无信号运行
 
 ---
 
@@ -103,6 +111,33 @@ UpgradeItemRegistry.getRequiredInterface(item)
 
 - **效果**：每个储能升级增加 1 万 EU 电量缓冲
 - **常量**：`EnergyStorageUpgradeComponent.CAPACITY_PER_UPGRADE = 10_000L`
+
+### 红石反转升级（RedstoneInverterUpgrade）
+
+- **当前状态**：项目里暂时没有机器实现 `IRedstoneInverterUpgradeSupport`，因此该升级暂不可用
+- **设计目标**：仅对“明确需要红石控制”的少数机器接入，和“是否有升级槽”无直接关系
+
+接入示例（按需给某台机器启用）：
+
+```kotlin
+class MyMachineBlockEntity(...) : BlockEntity(...),
+    IRedstoneInverterUpgradeSupport {
+
+    override var redstoneInverted: Boolean = false
+
+    fun tick(world: World, pos: BlockPos) {
+        // 1) 从升级槽检测是否安装了红石反转升级
+        RedstoneInverterUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+
+        // 2) 统一红石门控
+        if (!RedstoneControlComponent.canRun(world, pos, this)) {
+            return
+        }
+
+        // 3) 正常机器逻辑...
+    }
+}
+```
 
 ---
 

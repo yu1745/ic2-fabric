@@ -16,6 +16,8 @@ import ic2_120.content.network.ReactorHeatInfoPacket
 import ic2_120.content.network.SlotHeatEnergyInfo
 import ic2_120.content.screen.NuclearReactorScreenHandler
 import ic2_120.content.sync.NuclearReactorSync
+import ic2_120.content.upgrade.IRedstoneControlSupport
+import ic2_120.content.upgrade.RedstoneControlComponent
 import net.minecraft.registry.Registries
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
@@ -59,7 +61,7 @@ class NuclearReactorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : BlockEntity(type, pos, state), Inventory, IGenerator, ITieredMachine, IReactor,
-    ExtendedScreenHandlerFactory {
+    ExtendedScreenHandlerFactory, IRedstoneControlSupport {
 
     override val tier: Int = NuclearReactorSync.REACTOR_TIER
 
@@ -76,6 +78,8 @@ class NuclearReactorBlockEntity(
 
     /** 本周期总发电量（EU），将均摊到20个tick中输出 */
     private var pendingEnergyOutput: Long = 0L
+
+    override var redstoneInverted: Boolean = false
 
     /** 本周期总产热 */
     private var totalHeatProduced: Int = 0
@@ -157,6 +161,7 @@ class NuclearReactorBlockEntity(
         sync.temperature = nbt.getInt(NuclearReactorSync.NBT_HEAT_STORED).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
         tickOffset = if (nbt.contains("TickOffset")) nbt.getInt("TickOffset").coerceIn(0, 19) else -1
         pendingEnergyOutput = nbt.getLong("PendingEnergyOutput").coerceIn(0L, NuclearReactorSync.ENERGY_CAPACITY)
+        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -167,6 +172,7 @@ class NuclearReactorBlockEntity(
         nbt.putInt(NuclearReactorSync.NBT_HEAT_STORED, sync.temperature)
         if (tickOffset >= 0) nbt.putInt("TickOffset", tickOffset)
         nbt.putLong("PendingEnergyOutput", pendingEnergyOutput)
+        nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }
 
     /** 当前有效容量（27 + 相邻反应仓数 * 9），供 setStack 等服务端逻辑校验 */
@@ -281,7 +287,8 @@ class NuclearReactorBlockEntity(
 
         // 仅当 (world.time + tickOffset) % 20 == 0 时执行核电计算（每秒一次）
         val shouldTick = (world.time + tickOffset) % 20L == 0L
-        if (shouldTick) {
+        val redstoneAllowsRun = RedstoneControlComponent.canRun(world, pos, this)
+        if (shouldTick && redstoneAllowsRun) {
             dropAllUnfittingStuff(world, pos)
             outputAccumulator = 0f
             emitHeatBuffer = 0
@@ -345,7 +352,7 @@ class NuclearReactorBlockEntity(
         }
 
         val hasFuel = (0 until newCapacity).any { !getStack(it).isEmpty }
-        val active = hasFuel
+        val active = hasFuel && redstoneAllowsRun
         if (state.get(NuclearReactorBlock.ACTIVE) != active) {
             world.setBlockState(pos, state.with(NuclearReactorBlock.ACTIVE, active))
         }
@@ -539,5 +546,4 @@ class NuclearReactorBlockEntity(
         const val MAX_SLOTS = 81
     }
 }
-
 

@@ -17,15 +17,12 @@ interface IUpgradeItem
 // ========== 工具升级类 ==========
 
 @ModItem(name = "overclocker_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-// 加速升级（效果待实现）
 class OverclockerUpgrade : Item(FabricItemSettings()), IUpgradeItem
 
 @ModItem(name = "transformer_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-// 高压升级（效果待实现）
 class TransformerUpgrade : Item(FabricItemSettings()), IUpgradeItem
 
 @ModItem(name = "energy_storage_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-// 储能升级（效果待实现）
 class EnergyStorageUpgrade : Item(FabricItemSettings()), IUpgradeItem
 
 @ModItem(name = "redstone_inverter_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
