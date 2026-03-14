@@ -175,7 +175,7 @@ class GeoGeneratorBlockEntity(
 
     override fun getInventory(): Inventory = this
 
-    override fun size(): Int = 3
+    override fun size(): Int = INVENTORY_SIZE
 
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
 
