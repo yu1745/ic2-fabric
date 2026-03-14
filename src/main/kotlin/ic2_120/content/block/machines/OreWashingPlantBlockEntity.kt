@@ -1,0 +1,401 @@
+package ic2_120.content.block.machines
+
+import ic2_120.content.ModBlockEntities
+import ic2_120.content.block.OreWashingPlantBlock
+import ic2_120.content.block.ITieredMachine
+import ic2_120.content.energy.charge.BatteryDischargerComponent
+import ic2_120.content.item.WaterCell
+import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.recipes.OreWashingPlantRecipes
+import ic2_120.content.screen.OreWashingPlantScreenHandler
+import ic2_120.content.sync.OreWashingPlantSync
+import ic2_120.content.syncs.SyncedData
+import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
+import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
+import ic2_120.content.upgrade.IOverclockerUpgradeSupport
+import ic2_120.content.upgrade.ITransformerUpgradeSupport
+import ic2_120.content.upgrade.OverclockerUpgradeComponent
+import ic2_120.content.upgrade.TransformerUpgradeComponent
+import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.annotation.RegisterEnergy
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
+import net.minecraft.block.BlockState
+import net.minecraft.block.entity.BlockEntity
+import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluids
+import net.minecraft.inventory.Inventories
+import net.minecraft.inventory.Inventory
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.nbt.NbtCompound
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.screen.ScreenHandler
+import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.text.Text
+import net.minecraft.util.collection.DefaultedList
+import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
+import ic2_120.Ic2_120
+import net.minecraft.registry.Registries
+import net.minecraft.util.Identifier
+
+/**
+ * 洗矿机方块实体。
+ * - 输入槽1：粉碎矿石
+ * - 输入槽2：水桶/水单元
+ * - 输出槽1：纯净的粉碎矿石
+ * - 输出槽2：石粉
+ * - 输出槽3：小撮金属粉（2个）
+ * - 输出槽4：空桶/空单元
+ * - 电池槽：放电
+ * - 升级槽：4个
+ * - 流体：水（内部储罐8桶）
+ * - 每次加工消耗：1桶水 + 8000 EU（2000 ticks @ 4 EU/t）
+ */
+@ModBlockEntity(block = OreWashingPlantBlock::class)
+class OreWashingPlantBlockEntity(
+    type: BlockEntityType<*>,
+    pos: BlockPos,
+    state: BlockState
+) : BlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
+    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+
+    override val tier: Int = ORE_WASHING_PLANT_TIER
+
+    override var speedMultiplier: Float = 1f
+    override var energyMultiplier: Float = 1f
+    override var capacityBonus: Long = 0L
+    override var voltageTierBonus: Int = 0
+
+    companion object {
+        const val ORE_WASHING_PLANT_TIER = 1
+        const val SLOT_INPUT_ORE = 0        // 粉碎矿石输入
+        const val SLOT_INPUT_WATER = 1      // 水桶/水单元输入
+        const val SLOT_OUTPUT_1 = 2         // 纯净的粉碎矿石
+        const val SLOT_OUTPUT_2 = 3         // 石粉
+        const val SLOT_OUTPUT_3 = 4         // 小撮金属粉
+        const val SLOT_OUTPUT_EMPTY = 5     // 空桶/空单元
+        const val SLOT_DISCHARGING = 6
+        const val SLOT_UPGRADE_0 = 7
+        const val SLOT_UPGRADE_1 = 8
+        const val SLOT_UPGRADE_2 = 9
+        const val SLOT_UPGRADE_3 = 10
+        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        const val INVENTORY_SIZE = 11
+        private const val NBT_WATER_AMOUNT = "WaterAmount"
+
+        @Volatile
+        private var fluidLookupRegistered = false
+
+        fun registerFluidStorageLookup() {
+            if (fluidLookupRegistered) return
+            val type = ModBlockEntities.getType(OreWashingPlantBlockEntity::class)
+            FluidStorage.SIDED.registerForBlockEntity({ be, side -> be.getFluidStorageForSide(side) }, type)
+            fluidLookupRegistered = true
+        }
+    }
+
+    private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+
+    val syncedData = SyncedData(this)
+
+    @RegisterEnergy
+    val sync = OreWashingPlantSync(
+        syncedData,
+        { world?.time },
+        { capacityBonus },
+        { TransformerUpgradeComponent.maxInsertForTier(ORE_WASHING_PLANT_TIER + voltageTierBonus) }
+    )
+
+    // 水储罐（8桶容量）
+    private val waterTankInternal = object : SingleVariantStorage<FluidVariant>() {
+        private val tankCapacity: Long = FluidConstants.BUCKET * 8
+
+        override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
+
+        override fun getCapacity(variant: FluidVariant): Long = tankCapacity
+
+        override fun canInsert(variant: FluidVariant): Boolean =
+            variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER
+
+        override fun canExtract(variant: FluidVariant): Boolean = false
+
+        override fun onFinalCommit() {
+            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            markDirty()
+        }
+
+        fun getTankCapacity(): Long = tankCapacity
+
+        fun setStoredWater(newAmount: Long) {
+            amount = newAmount.coerceIn(0L, tankCapacity)
+            variant = if (amount > 0L) FluidVariant.of(Fluids.WATER) else FluidVariant.blank()
+            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        }
+
+        fun getStoredAmount(): Long = amount
+
+        fun hasAtLeastOneBucket(): Boolean = amount >= FluidConstants.BUCKET && variant.fluid == Fluids.WATER
+
+        /** 内部消耗水（用于加工） */
+        fun consumeInternal(toConsume: Long): Long {
+            if (toConsume <= 0L || variant.fluid != Fluids.WATER) return 0L
+            val actual = minOf(toConsume, amount)
+            if (actual <= 0L) return 0L
+            amount -= actual
+            if (amount <= 0L) variant = FluidVariant.blank()
+            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            return actual
+        }
+    }
+
+    val waterTank: Storage<FluidVariant> = waterTankInternal
+
+    private val batteryDischarger = BatteryDischargerComponent(
+        inventory = this,
+        batterySlot = SLOT_DISCHARGING,
+        machineTierProvider = { ORE_WASHING_PLANT_TIER },
+        canDischargeNow = { sync.amount < sync.getEffectiveCapacity() }
+    )
+
+    constructor(pos: BlockPos, state: BlockState) : this(
+        ModBlockEntities.getType(OreWashingPlantBlockEntity::class),
+        pos,
+        state
+    )
+
+    override fun size(): Int = INVENTORY_SIZE
+    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setStack(slot: Int, stack: ItemStack) {
+        if (slot == SLOT_DISCHARGING && stack.count > 1) {
+            stack.count = 1
+        }
+        inventory[slot] = stack
+        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
+        markDirty()
+    }
+    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun clear() = inventory.clear()
+    override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
+    override fun markDirty() { super.markDirty() }
+    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+        buf.writeBlockPos(pos)
+        buf.writeVarInt(syncedData.size())
+    }
+
+    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.ore_washing_plant")
+
+    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
+        OreWashingPlantScreenHandler(syncId, playerInventory, this,
+            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
+
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
+        syncedData.readNbt(nbt)
+        sync.amount = nbt.getLong(OreWashingPlantSync.NBT_ENERGY_STORED)
+        sync.syncCommittedAmount()
+        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        waterTankInternal.setStoredWater(nbt.getLong(NBT_WATER_AMOUNT))
+    }
+
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
+        syncedData.writeNbt(nbt)
+        nbt.putLong(OreWashingPlantSync.NBT_ENERGY_STORED, sync.amount)
+        nbt.putLong(NBT_WATER_AMOUNT, waterTankInternal.getStoredAmount())
+    }
+
+    private fun getFluidStorageForSide(side: net.minecraft.util.math.Direction?): Storage<FluidVariant>? {
+        // 前方不提供流体存储
+        val facing = world?.getBlockState(pos)?.get(OreWashingPlantBlock.ACTIVE)
+        val front = when (facing) {
+            true -> net.minecraft.util.math.Direction.SOUTH
+            false -> net.minecraft.util.math.Direction.NORTH
+            else -> null
+        }
+        if (side == front) return null
+        return waterTank
+    }
+
+    fun tick(world: World, pos: BlockPos, state: BlockState) {
+        if (world.isClient) return
+        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+
+        // 应用升级效果
+        OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
+
+        // 从相邻方块或导线提取能量
+        pullEnergyFromNeighbors(world, pos, sync)
+
+        // 从放电槽提取能量
+        extractFromDischargingSlot()
+
+        // 处理水输入槽（水桶/水单元 -> 储罐）
+        extractFromWaterInputSlot()
+
+        // 检查输入物品
+        val input = getStack(SLOT_INPUT_ORE)
+        if (input.isEmpty) {
+            if (sync.progress != 0) sync.progress = 0
+            setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
+            return
+        }
+
+        // 检查配方
+        val result = OreWashingPlantRecipes.getOutput(input) ?: run {
+            if (sync.progress != 0) sync.progress = 0
+            setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
+            return
+        }
+
+        // 检查输出槽是否有空间
+        val output1Slot = getStack(SLOT_OUTPUT_1)
+        val output2Slot = getStack(SLOT_OUTPUT_2)
+        val output3Slot = getStack(SLOT_OUTPUT_3)
+        val outputEmptySlot = getStack(SLOT_OUTPUT_EMPTY)
+
+        val canAccept1 = output1Slot.isEmpty() ||
+            (ItemStack.areItemsEqual(output1Slot, result.output1) && output1Slot.count + result.output1.count <= result.output1.maxCount)
+        val canAccept2 = output2Slot.isEmpty() ||
+            (ItemStack.areItemsEqual(output2Slot, result.output2) && output2Slot.count + result.output2.count <= result.output2.maxCount)
+        val canAccept3 = output3Slot.isEmpty() ||
+            (ItemStack.areItemsEqual(output3Slot, result.output3) && output3Slot.count + result.output3.count <= result.output3.maxCount)
+
+        if (!canAccept1 || !canAccept2 || !canAccept3) {
+            if (sync.progress != 0) sync.progress = 0
+            setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
+            return
+        }
+
+        // 加工完成
+        if (sync.progress >= OreWashingPlantSync.PROGRESS_MAX) {
+            input.decrement(1)
+            // 放入输出槽
+            if (output1Slot.isEmpty()) setStack(SLOT_OUTPUT_1, result.output1.copy())
+            else output1Slot.increment(result.output1.count)
+
+            if (output2Slot.isEmpty()) setStack(SLOT_OUTPUT_2, result.output2.copy())
+            else output2Slot.increment(result.output2.count)
+
+            if (output3Slot.isEmpty()) setStack(SLOT_OUTPUT_3, result.output3.copy())
+            else output3Slot.increment(result.output3.count)
+
+            sync.progress = 0
+            markDirty()
+            setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
+            return
+        }
+
+        // 消耗能量并增加进度
+        val progressIncrement = speedMultiplier.toInt().coerceAtLeast(1)
+        val need = (OreWashingPlantSync.ENERGY_PER_TICK * energyMultiplier).toLong().coerceAtLeast(1L)
+        if (sync.consumeEnergy(need) > 0L) {
+            val currentProgress = sync.progress.coerceIn(0, OreWashingPlantSync.PROGRESS_MAX)
+            val nextProgress = (currentProgress + progressIncrement).coerceAtMost(OreWashingPlantSync.PROGRESS_MAX)
+            val waterNeed = waterNeededForProgressRange(currentProgress, nextProgress)
+            if (waterTankInternal.consumeInternal(waterNeed) < waterNeed) {
+                setActiveState(world, pos, state, false)
+                sync.syncCurrentTickFlow()
+                return
+            }
+            sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+            sync.progress = nextProgress
+            markDirty()
+            setActiveState(world, pos, state, true)
+        } else {
+            setActiveState(world, pos, state, false)
+        }
+
+        sync.syncCurrentTickFlow()
+    }
+
+    private fun setActiveState(world: World, pos: BlockPos, state: BlockState, active: Boolean) {
+        if (state.get(OreWashingPlantBlock.ACTIVE) != active) {
+            world.setBlockState(pos, state.with(OreWashingPlantBlock.ACTIVE, active))
+        }
+    }
+
+    private fun extractFromDischargingSlot() {
+        val space = (sync.getEffectiveCapacity() - sync.amount).coerceAtLeast(0L)
+        if (space <= 0L) return
+
+        val request = minOf(space, sync.getEffectiveMaxInsertPerTick())
+        val extracted = batteryDischarger.tick(request)
+        if (extracted <= 0L) return
+
+        sync.insertEnergy(extracted)
+        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        markDirty()
+    }
+
+    private fun extractFromWaterInputSlot() {
+        val waterInput = getStack(SLOT_INPUT_WATER)
+        if (waterInput.isEmpty) return
+
+        // 检查储罐是否有空间
+        val space = (waterTankInternal.getTankCapacity() - waterTankInternal.amount).coerceAtLeast(0L)
+        if (space < FluidConstants.BUCKET) return
+
+        val emptySlot = getStack(SLOT_OUTPUT_EMPTY)
+        val emptyStack = when (waterInput.item) {
+            Items.WATER_BUCKET -> ItemStack(Items.BUCKET)
+            is WaterCell -> {
+                val cellId = Identifier(Ic2_120.MOD_ID, "empty_cell")
+                ItemStack(Registries.ITEM.get(cellId))
+            }
+            else -> return
+        }
+
+        // 检查空容器槽是否有空间
+        val canAcceptEmpty = emptySlot.isEmpty() ||
+            (ItemStack.areItemsEqual(emptySlot, emptyStack) && emptySlot.count + 1 <= emptyStack.maxCount)
+
+        if (!canAcceptEmpty) return
+
+        // 插入水到储罐
+        val inserted = waterTankInternal.amount + FluidConstants.BUCKET
+        waterTankInternal.amount = inserted.coerceAtMost(waterTankInternal.getTankCapacity())
+        if (waterTankInternal.amount > 0L && waterTankInternal.variant.isBlank) {
+            waterTankInternal.variant = FluidVariant.of(Fluids.WATER)
+        }
+        sync.waterAmountMb = (waterTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+
+        // 消耗水输入
+        waterInput.decrement(1)
+        if (waterInput.isEmpty) setStack(SLOT_INPUT_WATER, ItemStack.EMPTY)
+
+        // 放入空容器
+        if (emptySlot.isEmpty) setStack(SLOT_OUTPUT_EMPTY, emptyStack)
+        else emptySlot.increment(1)
+
+        markDirty()
+    }
+
+    private fun waterNeededForProgressRange(fromProgress: Int, toProgress: Int): Long {
+        if (toProgress <= fromProgress) return 0L
+        val perOperation = OreWashingPlantSync.WATER_PER_OPERATION
+        val max = OreWashingPlantSync.PROGRESS_MAX.toLong().coerceAtLeast(1L)
+        val before = perOperation * fromProgress.toLong() / max
+        val after = perOperation * toProgress.toLong() / max
+        return (after - before).coerceAtLeast(0L)
+    }
+}

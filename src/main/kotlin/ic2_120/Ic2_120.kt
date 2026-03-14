@@ -14,6 +14,7 @@ import ic2_120.content.item.CellAndBucketFluidRegistration
 import ic2_120.content.block.MfsuBlock
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
+import ic2_120.content.block.machines.OreWashingPlantBlockEntity
 import ic2_120.content.block.machines.ReactorChamberBlockEntity
 import ic2_120.content.block.machines.WaterGeneratorBlockEntity
 import ic2_120.content.block.storage.StorageBoxBlockEntity
@@ -91,9 +92,10 @@ object Ic2_120 : ModInitializer {
         // 传动轴/伞齿轮 BlockEntity（仅用于 BER 动画渲染）
         TransmissionBlockEntity.register(MOD_ID)
 
-        // 地热/水力发电机流体能力注册（Fabric Transfer API）
+        // 地热/水力/洗矿发电机流体能力注册（Fabric Transfer API）
         GeoGeneratorBlockEntity.registerFluidStorageLookup()
         WaterGeneratorBlockEntity.registerFluidStorageLookup()
+        OreWashingPlantBlockEntity.registerFluidStorageLookup()
         
         // 核反应仓能量能力注册（Fabric Transfer API）
         val reactorChamberType = ModBlockEntities.getType(ReactorChamberBlockEntity::class)

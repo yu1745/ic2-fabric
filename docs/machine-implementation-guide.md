@@ -678,28 +678,42 @@ class XxxScreen(
 
 ## 7. 添加模型资源
 
-### 7.1 方块模型
+说明：本项目里**实际机器模型与贴图在 `assets/ic2`**，`assets/ic2_120` 主要放索引（`blockstates`、`models/item`、`lang` 等）。
 
-**文件**：`src/main/resources/assets/ic2_120/models/block/xxx.json`
+### 7.1 方块状态索引（ic2_120）
+
+**文件**：`src/main/resources/assets/ic2_120/blockstates/xxx.json`
 
 ```json
 {
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "ic2_120:block/xxx"
+  "variants": {
+    "facing=north,active=false": { "model": "ic2:block/machine/processing/basic/xxx" },
+    "facing=north,active=true":  { "model": "ic2:block/machine/processing/basic/xxx_active" },
+    "facing=east,active=false":  { "model": "ic2:block/machine/processing/basic/xxx", "y": 90 },
+    "facing=east,active=true":   { "model": "ic2:block/machine/processing/basic/xxx_active", "y": 90 },
+    "facing=south,active=false": { "model": "ic2:block/machine/processing/basic/xxx", "y": 180 },
+    "facing=south,active=true":  { "model": "ic2:block/machine/processing/basic/xxx_active", "y": 180 },
+    "facing=west,active=false":  { "model": "ic2:block/machine/processing/basic/xxx", "y": 270 },
+    "facing=west,active=true":   { "model": "ic2:block/machine/processing/basic/xxx_active", "y": 270 }
   }
 }
 ```
 
-### 7.2 物品模型
+### 7.2 物品模型索引（ic2_120）
 
 **文件**：`src/main/resources/assets/ic2_120/models/item/xxx.json`
 
 ```json
 {
-  "parent": "ic2_120:block/xxx"
+  "parent": "ic2:block/machine/processing/basic/xxx"
 }
 ```
+
+### 7.3 实际模型与贴图（ic2）
+
+- 方块模型：`src/main/resources/assets/ic2/models/block/machine/processing/basic/xxx.json`
+- 激活模型：`src/main/resources/assets/ic2/models/block/machine/processing/basic/xxx_active.json`
+- 贴图目录：`src/main/resources/assets/ic2/textures/block/machine/processing/basic/`
 
 ---
 
