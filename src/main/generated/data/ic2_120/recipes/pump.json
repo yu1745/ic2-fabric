@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:circuit"
+    },
+    "E": {
+      "item": "ic2_120:empty_cell"
+    },
+    "M": {
+      "item": "ic2_120:machine"
+    },
+    "P": {
+      "item": "ic2_120:mining_pipe"
+    },
+    "T": {
+      "item": "ic2_120:treetap"
+    }
+  },
+  "pattern": [
+    "ECE",
+    " M ",
+    "PTP"
+  ],
+  "result": {
+    "item": "ic2_120:pump"
+  },
+  "show_notification": true
+}
+

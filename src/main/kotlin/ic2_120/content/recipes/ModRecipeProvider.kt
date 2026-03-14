@@ -259,12 +259,24 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
         val machine = item("ic2_120:machine")
         val circuit = item("ic2_120:circuit")
         val treetap = item("ic2_120:treetap")
+        val miningPipe = item("ic2_120:mining_pipe")
         // 提取机：4 木龙头 + 1 基础机械外壳 + 1 电路板
         ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, item("ic2_120:extractor"), 1)
             .pattern("   ").pattern("TMT").pattern("TCT")
             .input('T', treetap).input('M', machine).input('C', circuit)
             .criterion(hasItem(machine), conditionsFromItem(machine))
             .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "extractor"))
+
+        // 泵：空单元 + 基础电路 + 空单元 / 空 + 基础机械外壳 + 空 / 采矿管道 + 木龙头 + 采矿管道
+        val pump = item("ic2_120:pump")
+        val emptyCell = item("ic2_120:empty_cell")
+        if (pump != Items.AIR && emptyCell != Items.AIR && miningPipe != Items.AIR && treetap != Items.AIR && machine != Items.AIR && circuit != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, pump, 1)
+                .pattern("ECE").pattern(" M ").pattern("PTP")
+                .input('E', emptyCell).input('C', circuit).input('M', machine).input('P', miningPipe).input('T', treetap)
+                .criterion(hasItem(machine), conditionsFromItem(machine))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "pump"))
+        }
 
         // ==================== 变压器配方 ====================
         val lvTransformer = item("ic2_120:lv_transformer")
