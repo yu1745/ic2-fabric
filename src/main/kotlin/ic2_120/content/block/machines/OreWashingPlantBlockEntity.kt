@@ -11,7 +11,9 @@ import ic2_120.content.screen.OreWashingPlantScreenHandler
 import ic2_120.content.sync.OreWashingPlantSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
+import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
+import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
@@ -57,6 +59,10 @@ import net.minecraft.util.Identifier
  * - 升级槽：4个
  * - 流体：水（内部储罐8桶）
  * - 每次加工消耗：1桶水 + 8000 EU（2000 ticks @ 4 EU/t）
+ *
+ * 升级支持：
+ * - 加速、储能、高压升级
+ * - 流体抽取升级：作为 receiver 从管道接收水
  */
 @ModBlockEntity(block = OreWashingPlantBlock::class)
 class OreWashingPlantBlockEntity(
@@ -64,8 +70,14 @@ class OreWashingPlantBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : BlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+
+    // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
+    override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
+    override var fluidPipeReceiverEnabled: Boolean = false  // 是否作为 receiver 从管道接收流体
+    override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null     // provider 流体过滤器（null = 不过滤）
+    override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null    // receiver 流体过滤器（null = 不过滤）
 
     override val tier: Int = ORE_WASHING_PLANT_TIER
 
@@ -237,6 +249,7 @@ class OreWashingPlantBlockEntity(
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         // 从相邻方块或导线提取能量

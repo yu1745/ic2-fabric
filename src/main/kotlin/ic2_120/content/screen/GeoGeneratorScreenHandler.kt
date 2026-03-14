@@ -4,6 +4,7 @@ import ic2_120.content.block.GeoGeneratorBlock
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
 import ic2_120.content.block.machines.MachineBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
+import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
@@ -40,14 +41,31 @@ class GeoGeneratorScreenHandler(
         currentTickProvider = { null }
     )
 
+    private val upgradeSlotSpec: SlotSpec by lazy {
+        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
+    }
+
     init {
-        checkSize(blockInventory, 3)
+        checkSize(blockInventory, GeoGeneratorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
         // 燃料槽：岩浆桶或岩浆单元；空容器槽：输出空桶/空单元；电池槽
         addSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.FUEL_SLOT, FUEL_SLOT_X, BLOCK_SLOTS_Y, FUEL_SLOT_SPEC))
         addSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, EMPTY_CONTAINER_SLOT_X, BLOCK_SLOTS_Y, EMPTY_CONTAINER_SLOT_SPEC))
         addSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.BATTERY_SLOT, BATTERY_SLOT_X, BLOCK_SLOTS_Y, BATTERY_SLOT_SPEC))
+
+        // 4 个升级槽
+        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
+            addSlot(
+                PredicateSlot(
+                    blockInventory,
+                    GeoGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i],
+                    UpgradeSlotLayout.SLOT_X,
+                    UpgradeSlotLayout.slotY(i),
+                    upgradeSlotSpec
+                )
+            )
+        }
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -69,13 +87,20 @@ class GeoGeneratorScreenHandler(
                 index == GeoGeneratorBlockEntity.FUEL_SLOT -> if (!insertItem(stackInSlot, 3, 39, true)) return ItemStack.EMPTY
                 index == GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT -> if (!insertItem(stackInSlot, 3, 39, true)) return ItemStack.EMPTY
                 index == GeoGeneratorBlockEntity.BATTERY_SLOT -> if (!insertItem(stackInSlot, 3, 39, true)) return ItemStack.EMPTY
-                index in 3..38 -> {
+                index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    slot.onQuickTransfer(stackInSlot, stack)
+                }
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
+                        SlotTarget(slots[it], upgradeSlotSpec)
+                    }
                     val moved = SlotMoveHelper.insertIntoTargets(
                         stackInSlot,
                         listOf(
                             SlotTarget(slots[GeoGeneratorBlockEntity.FUEL_SLOT], FUEL_SLOT_SPEC),
                             SlotTarget(slots[GeoGeneratorBlockEntity.BATTERY_SLOT], BATTERY_SLOT_SPEC)
-                        )
+                        ) + upgradeTargets
                     )
                     if (!moved) return ItemStack.EMPTY
                 }
@@ -117,11 +142,17 @@ class GeoGeneratorScreenHandler(
             canInsert = { stack -> stack.item is IBatteryItem || stack.item is IElectricTool }
         )
 
+        // 槽位索引
+        const val SLOT_UPGRADE_INDEX_START = 3
+        const val SLOT_UPGRADE_INDEX_END = 6
+        const val PLAYER_INV_START = 7
+        const val HOTBAR_END = 43
+
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): GeoGeneratorScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(3)
+            val blockInv = SimpleInventory(GeoGeneratorBlockEntity.INVENTORY_SIZE)
             return GeoGeneratorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
         }
     }

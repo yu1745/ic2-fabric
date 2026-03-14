@@ -9,24 +9,25 @@ import ic2_120.content.sync.GeoGeneratorSync
 import ic2_120.content.block.GeoGeneratorBlock
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
 import ic2_120.content.screen.GeoGeneratorScreenHandler
+import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
+import net.minecraft.text.Text as McText
 
 @ModScreen(block = GeoGeneratorBlock::class)
 class GeoGeneratorScreen(
     handler: GeoGeneratorScreenHandler,
     playerInventory: PlayerInventory,
-    title: Text
+    title: McText
 ) : HandledScreen<GeoGeneratorScreenHandler>(handler, playerInventory, title) {
 
     private val ui = ComposeUI()
     private var filteredOutputRate by FilteredValue()
 
     init {
-        backgroundWidth = PANEL_WIDTH
+        backgroundWidth = UpgradeSlotLayout.VANILLA_UI_WIDTH + UpgradeSlotLayout.SLOT_SPACING
         backgroundHeight = PANEL_HEIGHT
     }
 

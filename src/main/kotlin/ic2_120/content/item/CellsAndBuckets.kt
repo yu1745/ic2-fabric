@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
@@ -237,10 +238,67 @@ class FluidCellItem : Item(FabricItemSettings()), FluidModificationItem {
 private fun cellItem(id: String): Item = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, id))
 
 /**
- * 空单元：可从 FluidDrainable（水/岩浆方块）收集液体，也可与 FluidStorage 储罐交互。
+ * 空单元：通过 Fabric FluidStorage 与世界/方块流体交互（收集与转移）。
  * 使用 use() + RaycastContext.FluidHandling.ANY 射线检测，才能命中流体方块（默认射线会穿透水/岩浆）。
  */
 abstract class EmptyCellItem(settings: FabricItemSettings) : Item(settings) {
+
+    private fun interactAt(world: World, user: net.minecraft.entity.player.PlayerEntity, hand: Hand, hit: BlockHitResult): Boolean {
+        val sided = FluidStorage.SIDED.find(world, hit.blockPos, hit.side) ?: return false
+        return FluidStorageUtil.interactWithFluidStorage(sided, user, hand)
+    }
+
+    private fun resolveFluidSourcePos(world: World, hit: BlockHitResult): BlockPos? {
+        val pos = hit.blockPos
+        val posState = world.getBlockState(pos)
+        if (!posState.fluidState.isEmpty && posState.fluidState.isStill) return pos
+
+        val adjacent = pos.offset(hit.side)
+        val adjacentState = world.getBlockState(adjacent)
+        if (!adjacentState.fluidState.isEmpty && adjacentState.fluidState.isStill) return adjacent
+
+        return null
+    }
+
+    private fun pickupWorldFluid(
+        world: World,
+        user: net.minecraft.entity.player.PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): Boolean {
+        val sourcePos = resolveFluidSourcePos(world, hit) ?: return false
+        val state = world.getBlockState(sourcePos)
+        val fluidState = state.fluidState
+        if (fluidState.isEmpty || !fluidState.isStill) return false
+
+        val fluid = fluidState.fluid
+        val stack = user.getStackInHand(hand)
+        val filled = fluidToFilledCellStack(fluid)
+
+        if (state.block is FluidDrainable) {
+            val drained = (state.block as FluidDrainable).tryDrainFluid(world, sourcePos, state)
+            if (drained.isEmpty) return false
+        } else {
+            if (!world.setBlockState(sourcePos, net.minecraft.block.Blocks.AIR.defaultState)) return false
+        }
+
+        fluid.getBucketFillSound().ifPresent { world.playSound(user, sourcePos, it, SoundCategory.BLOCKS, 1f, 1f) }
+        world.emitGameEvent(user, GameEvent.FLUID_PICKUP, sourcePos)
+
+        if (!user.abilities.creativeMode) {
+            stack.decrement(1)
+            if (stack.isEmpty) {
+                user.setStackInHand(hand, filled)
+            } else if (!user.inventory.insertStack(filled)) {
+                user.dropItem(filled, false)
+            }
+        } else {
+            if (!user.inventory.insertStack(filled)) {
+                user.dropItem(filled, false)
+            }
+        }
+        return true
+    }
 
     override fun use(world: World, user: net.minecraft.entity.player.PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
         val stack = user.getStackInHand(hand)
@@ -252,68 +310,27 @@ abstract class EmptyCellItem(settings: FabricItemSettings) : Item(settings) {
             return TypedActionResult.pass(stack)
         }
 
-        val pos = hitResult.blockPos
-
-        // 注意：与 FluidStorage 的交互已在 UseBlockCallback 中处理，这里只处理从世界流体方块收集
-        // 从世界流体方块收集（FluidDrainable：水、岩浆等）
-        val state = world.getBlockState(pos)
-        if (state.block is FluidDrainable) {
-            val drainable = state.block as FluidDrainable
-            val drained = drainable.tryDrainFluid(world, pos, state)
-            if (!drained.isEmpty) {
-                val filled = mapBucketToFilledCell(drained) ?: return TypedActionResult.pass(stack)
-                drainable.getBucketFillSound().ifPresent { world.playSound(user, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
-                world.emitGameEvent(user, GameEvent.FLUID_PICKUP, pos)
-                if (!user.abilities.creativeMode) {
-                    stack.decrement(1)
-                    if (stack.isEmpty) {
-                        user.setStackInHand(hand, filled)
-                    } else if (!user.inventory.insertStack(filled)) {
-                        user.dropItem(filled, false)
-                    }
-                } else {
-                    if (!user.inventory.insertStack(filled)) {
-                        user.dropItem(filled, false)
-                    }
-                }
-                return TypedActionResult.success(user.getStackInHand(hand))
-            }
+        if (pickupWorldFluid(world, user, hand, hitResult)) {
+            return TypedActionResult.success(user.getStackInHand(hand))
+        }
+        if (interactAt(world, user, hand, hitResult)) {
+            return TypedActionResult.success(user.getStackInHand(hand))
         }
         return TypedActionResult.pass(stack)
     }
 
     override fun useOnBlock(context: ItemUsageContext): ActionResult {
         val world = context.world
-        val pos = context.blockPos
         val player = context.player ?: return ActionResult.PASS
         val hand = context.hand
         if (world.isClient) return ActionResult.SUCCESS
 
-        // 注意：与 FluidStorage 的交互已在 UseBlockCallback 中处理，这里只处理从世界流体方块收集
-        // 从世界流体方块收集（FluidDrainable：水、岩浆等）
-        val state = world.getBlockState(pos)
-        if (state.block is FluidDrainable) {
-            val drainable = state.block as FluidDrainable
-            val drained = drainable.tryDrainFluid(world, pos, state)
-            if (!drained.isEmpty) {
-                val filled = mapBucketToFilledCell(drained) ?: return ActionResult.PASS
-                drainable.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
-                world.emitGameEvent(player, GameEvent.FLUID_PICKUP, pos)
-                val stack = player.getStackInHand(hand)
-                if (!player.abilities.creativeMode) {
-                    stack.decrement(1)
-                    if (stack.isEmpty) {
-                        player.setStackInHand(hand, filled)
-                    } else if (!player.inventory.insertStack(filled)) {
-                        player.dropItem(filled, false)
-                    }
-                } else {
-                    if (!player.inventory.insertStack(filled)) {
-                        player.dropItem(filled, false)
-                    }
-                }
-                return ActionResult.SUCCESS
-            }
+        val hit = BlockHitResult(context.hitPos, context.side, context.blockPos, context.hitsInsideBlock())
+        if (pickupWorldFluid(world, player, hand, hit)) {
+            return ActionResult.SUCCESS
+        }
+        if (interactAt(world, player, hand, hit)) {
+            return ActionResult.SUCCESS
         }
         return ActionResult.PASS
     }
@@ -649,12 +666,8 @@ object CellAndBucketFluidRegistration {
         val fluidCell = Registries.ITEM.get(Identifier(modId, "fluid_cell"))
 
         // 空单元 + 满流体单元：通用 FluidStorage（支持任意流体）
-        FluidStorage.combinedItemApiProvider(emptyCell).register { ctx ->
-            FluidCellStorage(ctx)
-        }
-        FluidStorage.combinedItemApiProvider(fluidCell).register { ctx ->
-            FluidCellStorage(ctx)
-        }
+        FluidStorage.ITEM.registerForItems({ _, ctx -> FluidCellStorage(ctx) }, emptyCell)
+        FluidStorage.ITEM.registerForItems({ _, ctx -> FluidCellStorage(ctx) }, fluidCell)
 
         // ModFluidCell 子类：专用流体单元，需注册 FluidStorage 才能右键储罐添加流体
         val modFluidCellIds = listOf(
@@ -664,9 +677,7 @@ object CellAndBucketFluidRegistration {
         for (id in modFluidCellIds) {
             val item = Registries.ITEM.get(Identifier(modId, id))
             if (item is ModFluidCell) {
-                FluidStorage.combinedItemApiProvider(item).register { ctx ->
-                    ModFluidCellStorage(ctx, item)
-                }
+                FluidStorage.ITEM.registerForItems({ _, ctx -> ModFluidCellStorage(ctx, item) }, item)
             }
         }
 
