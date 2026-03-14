@@ -15,6 +15,9 @@ import net.minecraft.item.ItemPlacementContext
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.state.property.Properties
+import net.minecraft.util.ActionResult
+import net.minecraft.util.Hand
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.shape.VoxelShape
@@ -85,7 +88,7 @@ abstract class BasePipeBlock(
         return next
     }
 
-    private fun canConnect(world: WorldAccess, pos: BlockPos, direction: Direction, be: PipeBlockEntity?): Boolean {
+    protected open fun canConnect(world: WorldAccess, pos: BlockPos, direction: Direction, be: PipeBlockEntity?): Boolean {
         if (be?.isDisabled(direction) == true) return false
         val neighborPos = pos.offset(direction)
         val neighborState = world.getBlockState(neighborPos)
@@ -123,7 +126,7 @@ abstract class BasePipeBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getOutlineShape(state: BlockState, world: BlockView, pos: BlockPos, context: ShapeContext): VoxelShape = pipeShape(state)
 
-    private fun pipeShape(state: BlockState): VoxelShape {
+    protected open fun pipeShape(state: BlockState): VoxelShape {
         val r = size.radius
         val min = 0.5 - r
         val max = 0.5 + r
@@ -156,6 +159,109 @@ abstract class BasePipeBlock(
     }
 }
 
+abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeSize.TINY, material) {
+    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+        super.appendProperties(builder)
+        builder.add(Properties.FACING)
+    }
+
+    init {
+        defaultState = stateManager.defaultState
+            .with(NORTH, false)
+            .with(SOUTH, false)
+            .with(EAST, false)
+            .with(WEST, false)
+            .with(UP, false)
+            .with(DOWN, false)
+            .with(Properties.FACING, Direction.NORTH)
+    }
+
+    override fun getPlacementState(ctx: ItemPlacementContext): BlockState {
+        val world = ctx.world
+        val pos = ctx.blockPos
+        val facing = ctx.side.opposite
+        val back = facing.opposite
+        val be = world.getBlockEntity(pos) as? PipeBlockEntity
+        return defaultState
+            .with(Properties.FACING, facing)
+            .with(propertyFor(back), canConnect(world, pos, back, be))
+    }
+
+    override fun canConnect(world: WorldAccess, pos: BlockPos, direction: Direction, be: PipeBlockEntity?): Boolean {
+        if (be?.isDisabled(direction) == true) return false
+        val state = world.getBlockState(pos)
+        val facing = if (state.contains(Properties.FACING)) state.get(Properties.FACING) else Direction.NORTH
+        val neighborPos = pos.offset(direction)
+        val neighborState = world.getBlockState(neighborPos)
+        val neighbor = neighborState.block
+
+        // 前方（贴住目标机器的一面）只允许连接非管道且拥有流体能力的方块。
+        if (direction == facing) {
+            if (neighbor is BasePipeBlock) return false
+            if (world is World) {
+                return FluidStorage.SIDED.find(world, neighborPos, direction.opposite) != null
+            }
+            return false
+        }
+
+        // 后方（背面）只连接管道，不连接机器，避免歧义。
+        if (direction == facing.opposite) {
+            if (neighbor !is BasePipeBlock) return false
+            val neighborBe = world.getBlockEntity(neighborPos) as? PipeBlockEntity
+            return neighborBe?.isDisabled(direction.opposite) != true
+        }
+        return false
+    }
+
+    override fun pipeShape(state: BlockState): VoxelShape {
+        val facing = state.get(Properties.FACING)
+        val back = facing.opposite
+        val min = 6.0 / 16.0
+        val max = 10.0 / 16.0
+        var shape = VoxelShapes.cuboid(min, min, min, max, max, max)
+
+        if (state.get(propertyFor(back))) {
+            shape = when (back) {
+                Direction.NORTH -> VoxelShapes.union(shape, VoxelShapes.cuboid(min, min, 0.0, max, max, min))
+                Direction.SOUTH -> VoxelShapes.union(shape, VoxelShapes.cuboid(min, min, max, max, max, 1.0))
+                Direction.WEST -> VoxelShapes.union(shape, VoxelShapes.cuboid(0.0, min, min, min, max, max))
+                Direction.EAST -> VoxelShapes.union(shape, VoxelShapes.cuboid(max, min, min, 1.0, max, max))
+                Direction.DOWN -> VoxelShapes.union(shape, VoxelShapes.cuboid(min, 0.0, min, max, min, max))
+                Direction.UP -> VoxelShapes.union(shape, VoxelShapes.cuboid(min, max, min, max, 1.0, max))
+            }
+        }
+
+        val plate = when (facing) {
+            Direction.NORTH -> VoxelShapes.cuboid(2.0 / 16.0, 2.0 / 16.0, 0.0, 14.0 / 16.0, 14.0 / 16.0, 2.0 / 16.0)
+            Direction.SOUTH -> VoxelShapes.cuboid(2.0 / 16.0, 2.0 / 16.0, 14.0 / 16.0, 14.0 / 16.0, 14.0 / 16.0, 1.0)
+            Direction.WEST -> VoxelShapes.cuboid(0.0, 2.0 / 16.0, 2.0 / 16.0, 2.0 / 16.0, 14.0 / 16.0, 14.0 / 16.0)
+            Direction.EAST -> VoxelShapes.cuboid(14.0 / 16.0, 2.0 / 16.0, 2.0 / 16.0, 1.0, 14.0 / 16.0, 14.0 / 16.0)
+            Direction.DOWN -> VoxelShapes.cuboid(2.0 / 16.0, 0.0, 2.0 / 16.0, 14.0 / 16.0, 2.0 / 16.0, 14.0 / 16.0)
+            Direction.UP -> VoxelShapes.cuboid(2.0 / 16.0, 14.0 / 16.0, 2.0 / 16.0, 14.0 / 16.0, 1.0, 14.0 / 16.0)
+        }
+        return VoxelShapes.union(shape, plate)
+    }
+
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun onUse(
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: net.minecraft.entity.player.PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ActionResult {
+        if (!world.isClient) {
+            val be = world.getBlockEntity(pos) as? net.minecraft.screen.NamedScreenHandlerFactory
+            if (be != null) {
+                player.openHandledScreen(be)
+                return ActionResult.SUCCESS
+            }
+        }
+        return ActionResult.SUCCESS
+    }
+}
+
 @ModBlock(name = "bronze_pipe_tiny", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
 class BronzePipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.BRONZE)
 
@@ -179,3 +285,9 @@ class CarbonPipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.CARBON
 
 @ModBlock(name = "carbon_pipe_large", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
 class CarbonPipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.CARBON)
+
+@ModBlock(name = "bronze_pump_attachment", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
+class BronzePumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.BRONZE)
+
+@ModBlock(name = "carbon_pump_attachment", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
+class CarbonPumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.CARBON)

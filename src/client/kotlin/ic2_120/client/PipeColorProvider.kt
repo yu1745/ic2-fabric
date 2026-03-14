@@ -35,8 +35,8 @@ object PipeColorProvider {
             if (tintIndex != 0) return@BlockColorProvider 0xFFFFFF
             val blockId = Registries.BLOCK.getId(state.block)
             when {
-                blockId.path.startsWith("bronze_pipe") -> BRONZE_COLOR
-                blockId.path.startsWith("carbon_pipe") -> CARBON_COLOR
+                blockId.path.startsWith("bronze_pipe") || blockId.path == "bronze_pump_attachment" -> BRONZE_COLOR
+                blockId.path.startsWith("carbon_pipe") || blockId.path == "carbon_pump_attachment" -> CARBON_COLOR
                 else -> 0xFFFFFF
             }
         }
@@ -46,8 +46,8 @@ object PipeColorProvider {
             val item = stack.item
             val itemId = Registries.ITEM.getId(item)
             when {
-                itemId.path.startsWith("bronze_pipe") -> BRONZE_COLOR
-                itemId.path.startsWith("carbon_pipe") -> CARBON_COLOR
+                itemId.path.startsWith("bronze_pipe") || itemId.path == "bronze_pump_attachment" -> BRONZE_COLOR
+                itemId.path.startsWith("carbon_pipe") || itemId.path == "carbon_pump_attachment" -> CARBON_COLOR
                 else -> 0xFFFFFF
             }
         }
@@ -61,7 +61,9 @@ object PipeColorProvider {
             "carbon_pipe_tiny",
             "carbon_pipe_small",
             "carbon_pipe_medium",
-            "carbon_pipe_large"
+            "carbon_pipe_large",
+            "bronze_pump_attachment",
+            "carbon_pump_attachment"
         )
 
         var registeredBlockCount = 0

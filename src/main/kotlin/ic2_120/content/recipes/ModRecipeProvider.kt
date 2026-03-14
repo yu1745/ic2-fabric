@@ -143,6 +143,7 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
         val bronzePlate = item("ic2_120:bronze_plate")
         val carbonFibre = item("ic2_120:carbon_fibre")
         val carbonMesh = item("ic2_120:carbon_mesh")
+        val carbonPlate = item("ic2_120:carbon_plate")
         val bronzePipeTiny = item("ic2_120:bronze_pipe_tiny")
         val bronzePipeSmall = item("ic2_120:bronze_pipe_small")
         val bronzePipeMedium = item("ic2_120:bronze_pipe_medium")
@@ -151,6 +152,8 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
         val carbonPipeSmall = item("ic2_120:carbon_pipe_small")
         val carbonPipeMedium = item("ic2_120:carbon_pipe_medium")
         val carbonPipeLarge = item("ic2_120:carbon_pipe_large")
+        val bronzePumpAttachment = item("ic2_120:bronze_pump_attachment")
+        val carbonPumpAttachment = item("ic2_120:carbon_pump_attachment")
 
         if (bronzeCasing != Items.AIR && bronzePipeTiny != Items.AIR) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, bronzePipeTiny, 6)
@@ -208,6 +211,22 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
                 .input('X', carbonMesh)
                 .criterion(hasItem(carbonMesh), conditionsFromItem(carbonMesh))
                 .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "carbon_pipe_large"))
+        }
+        if (bronzePipeTiny != Items.AIR && bronzePlate != Items.AIR && bronzePumpAttachment != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, bronzePumpAttachment, 1)
+                .pattern(" P ").pattern(" T ").pattern(" P ")
+                .input('P', bronzePlate)
+                .input('T', bronzePipeTiny)
+                .criterion(hasItem(bronzePipeTiny), conditionsFromItem(bronzePipeTiny))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "bronze_pump_attachment"))
+        }
+        if (carbonPipeTiny != Items.AIR && carbonPlate != Items.AIR && carbonPumpAttachment != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, carbonPumpAttachment, 1)
+                .pattern(" P ").pattern(" T ").pattern(" P ")
+                .input('P', carbonPlate)
+                .input('T', carbonPipeTiny)
+                .criterion(hasItem(carbonPipeTiny), conditionsFromItem(carbonPipeTiny))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "carbon_pump_attachment"))
         }
 
         // ==================== 锡罐工作台配方 ====================

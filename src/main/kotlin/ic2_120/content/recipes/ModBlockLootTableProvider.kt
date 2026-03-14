@@ -49,6 +49,8 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
         addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pipe_small")))
         addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pipe_medium")))
         addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pipe_large")))
+        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "bronze_pump_attachment")))
+        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pump_attachment")))
 
         // 机器方块：条件掉落
         for (block in Registries.BLOCK) {
