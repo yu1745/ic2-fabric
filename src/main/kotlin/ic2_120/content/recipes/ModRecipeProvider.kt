@@ -351,6 +351,21 @@ class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output)
                 .criterion(hasItem(insulatedCopperCable), conditionsFromItem(insulatedCopperCable))
                 .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "luminator_flat"))
         }
+
+        // ==================== 铁炉配方 ====================
+        // 铁板 x5 + 熔炉 x1 -> 铁炉 x1
+        // 配方：[空] [铁板] [空]
+        //      [铁板] [熔炉] [铁板]
+        //      [铁板] [空] [铁板]
+        val ironFurnace = item("ic2_120:iron_furnace")
+        val ironPlate = item("ic2_120:iron_plate")
+        if (ironFurnace != Items.AIR && ironPlate != Items.AIR) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ironFurnace, 1)
+                .pattern(" I ").pattern("IFI").pattern("I I")
+                .input('I', ironPlate).input('F', Items.FURNACE)
+                .criterion(hasItem(ironPlate), conditionsFromItem(ironPlate))
+                .offerTo(recipeExporter, Identifier(Ic2_120.MOD_ID, "iron_furnace"))
+        }
     }
 
     private fun createShapeless(

@@ -136,7 +136,7 @@
 | - [x] | block.ic2.compressor | 压缩机 |
 | - [x] | block.ic2.electric_furnace | 电炉 |
 | - [x] | block.ic2.extractor | 提取机 |
-| - [ ] | block.ic2.iron_furnace | 铁炉 |
+| - [x] | block.ic2.iron_furnace | 铁炉 |
 | - [x] | block.ic2.macerator | 打粉机 |
 | - [ ] | block.ic2.recycler | 回收机 |
 | - [ ] | block.ic2.blast_furnace | 高炉 |
@@ -145,7 +145,7 @@
 | - [ ] | block.ic2.fermenter | 发酵机 |
 | - [ ] | block.ic2.induction_furnace | 感应炉 |
 | - [x] | block.ic2.metal_former | 金属成型机 |
-| - [ ] | block.ic2.ore_washing_plant | 洗矿机 |
+| - [x] | block.ic2.ore_washing_plant | 洗矿机 |
 
 ### 机器 - 高级类
 |  | ID | 名称 |

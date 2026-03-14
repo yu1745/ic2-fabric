@@ -105,6 +105,7 @@
   "block.ic2_120.mv_transformer": "MV Transformer",
   "block.ic2_120.hv_transformer": "HV Transformer",
   "block.ic2_120.ev_transformer": "EV Transformer",
+  "block.ic2_120.iron_furnace": "Iron Furnace",
   "block.ic2_120.wood_transmission_shaft": "Wood Transmission Shaft",
   "block.ic2_120.iron_transmission_shaft": "Iron Transmission Shaft",
   "block.ic2_120.steel_transmission_shaft": "Steel Transmission Shaft",

@@ -105,6 +105,7 @@
   "block.ic2_120.mv_transformer": "中压变压器",
   "block.ic2_120.hv_transformer": "高压变压器",
   "block.ic2_120.ev_transformer": "超高压变压器",
+  "block.ic2_120.iron_furnace": "铁炉",
   "block.ic2_120.wood_transmission_shaft": "木制传动轴",
   "block.ic2_120.iron_transmission_shaft": "铁制传动轴",
   "block.ic2_120.steel_transmission_shaft": "钢制传动轴",
