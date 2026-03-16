@@ -1,6 +1,5 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.sync.TransformerSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.block.ITieredMachine
@@ -10,7 +9,9 @@ import ic2_120.content.block.MvTransformerBlock
 import ic2_120.content.block.HvTransformerBlock
 import ic2_120.content.block.EvTransformerBlock
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -191,28 +192,28 @@ open class TransformerBlockEntity(
  */
 @ModBlockEntity(block = LvTransformerBlock::class)
 class LvTransformerBlockEntity(pos: BlockPos, state: BlockState) :
-    TransformerBlockEntity(ModBlockEntities.getType(LvTransformerBlockEntity::class), pos, state, transformerTier = 1)
+    TransformerBlockEntity(LvTransformerBlockEntity::class.type(), pos, state, transformerTier = 1)
 
 /**
  * MV 变压器方块实体 (2级)
  */
 @ModBlockEntity(block = MvTransformerBlock::class)
 class MvTransformerBlockEntity(pos: BlockPos, state: BlockState) :
-    TransformerBlockEntity(ModBlockEntities.getType(MvTransformerBlockEntity::class), pos, state, transformerTier = 2)
+    TransformerBlockEntity(MvTransformerBlockEntity::class.type(), pos, state, transformerTier = 2)
 
 /**
  * HV 变压器方块实体 (3级)
  */
 @ModBlockEntity(block = HvTransformerBlock::class)
 class HvTransformerBlockEntity(pos: BlockPos, state: BlockState) :
-    TransformerBlockEntity(ModBlockEntities.getType(HvTransformerBlockEntity::class), pos, state, transformerTier = 3)
+    TransformerBlockEntity(HvTransformerBlockEntity::class.type(), pos, state, transformerTier = 3)
 
 /**
  * EV 变压器方块实体 (4级)
  */
 @ModBlockEntity(block = EvTransformerBlock::class)
 class EvTransformerBlockEntity(pos: BlockPos, state: BlockState) :
-    TransformerBlockEntity(ModBlockEntities.getType(EvTransformerBlockEntity::class), pos, state, transformerTier = 4)
+    TransformerBlockEntity(EvTransformerBlockEntity::class.type(), pos, state, transformerTier = 4)
 
 /**
  * 变压器工具类

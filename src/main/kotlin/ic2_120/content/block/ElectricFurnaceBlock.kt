@@ -1,9 +1,9 @@
 package ic2_120.content.block
 
-import ic2_120.content.ModBlockEntities
-import ic2_120.content.block.machines.ElectricFurnaceBlockEntity
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
+import ic2_120.content.block.machines.ElectricFurnaceBlockEntity
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -34,7 +34,7 @@ class ElectricFurnaceBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, ModBlockEntities.getType(ElectricFurnaceBlockEntity::class)) { world1, pos, state, be -> (be as ElectricFurnaceBlockEntity).tick(world1, pos, state) }
+        else checkType(type, ElectricFurnaceBlockEntity::class.type()) { world1, pos, state, be -> (be as ElectricFurnaceBlockEntity).tick(world1, pos, state) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)

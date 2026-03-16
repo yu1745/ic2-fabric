@@ -1,10 +1,11 @@
 package ic2_120.content.block
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.machines.NuclearReactorBlockEntity
 import ic2_120.content.block.machines.ReactorChamberBlockEntity
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -104,7 +105,7 @@ class NuclearReactorBlock(settings: AbstractBlock.Settings = AbstractBlock.Setti
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, ModBlockEntities.getType(NuclearReactorBlockEntity::class)) { w, p, s, be ->
+        else checkType(type, NuclearReactorBlockEntity::class.type()) { w, p, s, be ->
             (be as NuclearReactorBlockEntity).tick(w, p, s)
         }
 

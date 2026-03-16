@@ -5,13 +5,16 @@ import ic2_120.content.block.machines.FluidHeatGeneratorBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.sync.FluidHeatGeneratorSync
+import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -26,9 +29,17 @@ class FluidHeatGeneratorScreenHandler(
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(ModScreenHandlers.getType(FluidHeatGeneratorScreenHandler::class), syncId) {
+) : ScreenHandler(FluidHeatGeneratorScreenHandler::class.type(), syncId) {
 
-    val sync = FluidHeatGeneratorSync(SyncedDataView(propertyDelegate))
+    private val syncedView = SyncedDataView(propertyDelegate)
+    private val heatFlow = HeatFlowSync(
+        syncedView,
+        object : HeatFlowSync.HeatProducer {
+            override fun getLastGeneratedHeat(): Long = 0L
+            override fun getLastOutputHeat(): Long = 0L
+        }
+    )
+    val sync = FluidHeatGeneratorSync(syncedView, heatFlow)
 
     init {
         checkSize(blockInventory, FluidHeatGeneratorBlockEntity.INVENTORY_SIZE)
@@ -85,6 +96,7 @@ class FluidHeatGeneratorScreenHandler(
     companion object {
         private val FUEL_SLOT_SPEC = SlotSpec(canInsert = { stack ->
             !stack.isEmpty && (
+                stack.item == Items.LAVA_BUCKET ||
                 stack.item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier("ic2_120", "biofuel_bucket")) ||
                 stack.item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier("ic2_120", "biofuel_cell")) ||
                 stack.item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier("ic2_120", "fluid_cell"))

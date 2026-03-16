@@ -1,9 +1,10 @@
 package ic2_120.content.block
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.machines.ElectricHeatGeneratorBlockEntity
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -30,7 +31,7 @@ class ElectricHeatGeneratorBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, ModBlockEntities.getType(ElectricHeatGeneratorBlockEntity::class)) { w, p, s, be ->
+        else checkType(type, ElectricHeatGeneratorBlockEntity::class.type()) { w, p, s, be ->
             (be as ElectricHeatGeneratorBlockEntity).tick(w, p, s)
         }
 

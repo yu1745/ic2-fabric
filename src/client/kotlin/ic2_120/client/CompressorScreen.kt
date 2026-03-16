@@ -9,6 +9,7 @@ import ic2_120.content.block.CompressorBlock
 import ic2_120.content.screen.CompressorScreenHandler
 import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.registry.annotation.ModScreen
+import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory

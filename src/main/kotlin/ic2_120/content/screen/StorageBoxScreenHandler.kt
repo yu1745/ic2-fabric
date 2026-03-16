@@ -2,6 +2,7 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.storage.StorageBoxBlockEntity
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -21,7 +22,7 @@ class StorageBoxScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
     val inventory: Inventory  // 改为 public 以便客户端访问
-) : ScreenHandler(ModScreenHandlers.getType(StorageBoxScreenHandler::class), syncId) {
+) : ScreenHandler(StorageBoxScreenHandler::class.type(), syncId) {
 
     init {
         // 储物箱槽位

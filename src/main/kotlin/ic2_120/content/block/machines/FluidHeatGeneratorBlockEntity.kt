@@ -1,6 +1,5 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.FluidHeatGeneratorBlock
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.getFluidCellVariant
@@ -9,6 +8,7 @@ import ic2_120.content.sync.FluidHeatGeneratorSync
 import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -77,6 +77,7 @@ class FluidHeatGeneratorBlockEntity(
         private const val NBT_FUEL_AMOUNT = "FuelAmount"
         private const val NBT_BUFFERED_HEAT = "BufferedHeat"
         private const val NBT_FUEL_TYPE = "FuelType"
+        private const val NBT_FUEL_MB_ACCUMULATOR = "FuelMbAccumulator"
 
         const val FUEL_SLOT = 0
         const val EMPTY_CONTAINER_SLOT = 1
@@ -87,7 +88,7 @@ class FluidHeatGeneratorBlockEntity(
 
         fun registerFluidStorageLookup() {
             if (fluidLookupRegistered) return
-            val type = ModBlockEntities.getType(FluidHeatGeneratorBlockEntity::class)
+            val type = FluidHeatGeneratorBlockEntity::class.type()
             FluidStorage.SIDED.registerForBlockEntity({ be, side -> be.getFluidStorageForSide(side) }, type)
             fluidLookupRegistered = true
         }
@@ -100,6 +101,8 @@ class FluidHeatGeneratorBlockEntity(
     val sync = FluidHeatGeneratorSync(syncedData, heatFlow)
 
     private var currentFuelType: FuelType? = null
+
+    private var fuelMbAccumulator: Long = 0L
 
     private val fuelTankInternal = object : SingleVariantStorage<FluidVariant>() {
         private val tankCapacity = FluidConstants.BUCKET * 8
@@ -149,7 +152,7 @@ class FluidHeatGeneratorBlockEntity(
     val fuelTank: Storage<FluidVariant> = fuelTankInternal
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(FluidHeatGeneratorBlockEntity::class),
+        FluidHeatGeneratorBlockEntity::class.type(),
         pos,
         state
     )
@@ -182,6 +185,7 @@ class FluidHeatGeneratorBlockEntity(
         val item = stack.item
         // 支持沼气桶
         if (item == Items.BUCKET) return false // 空桶不是燃料
+        if (item == Items.LAVA_BUCKET) return true
         // 检查是否是沼气桶
         val itemId = Registries.ITEM.getId(item)
         if (itemId.path == "biofuel_bucket" && itemId.namespace == "ic2_120") return true
@@ -190,7 +194,7 @@ class FluidHeatGeneratorBlockEntity(
         // 检查是否是流体单元（包含沼气）
         if (itemId.path == "fluid_cell" && itemId.namespace == "ic2_120") {
             val fluid = stack.getFluidCellVariant()?.fluid
-            return fluid == ModFluids.BIOFUEL_STILL || fluid == ModFluids.BIOFUEL_FLOWING
+            return fluid != null && isSupportedFuelFluid(fluid)
         }
         return false
     }
@@ -243,6 +247,7 @@ class FluidHeatGeneratorBlockEntity(
         fuelTankInternal.setStoredFuel(nbt.getLong(NBT_FUEL_AMOUNT), fluid)
         val fuelTypeName = nbt.getString(NBT_FUEL_TYPE)
         currentFuelType = if (fuelTypeName.isNotBlank()) FuelType.valueOf(fuelTypeName) else null
+        fuelMbAccumulator = nbt.getLong(NBT_FUEL_MB_ACCUMULATOR)
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -254,24 +259,28 @@ class FluidHeatGeneratorBlockEntity(
             nbt.putString("FuelFluid", Registries.FLUID.getId(fuelTankInternal.variant.fluid).toString())
         }
         currentFuelType?.let { nbt.putString(NBT_FUEL_TYPE, it.name) }
+        nbt.putLong(NBT_FUEL_MB_ACCUMULATOR, fuelMbAccumulator)
     }
 
     override fun generateHeat(world: World, pos: BlockPos, state: BlockState): Long {
-        var generatedThisTick = 0L
-        if (world.time % 20L == 0L) {
-            val fuelType = currentFuelType ?: FuelType.fromFluid(fuelTankInternal.variant.fluid)
-            if (fuelType != null) {
-                currentFuelType = fuelType
-                val consumeAmount = FluidConstants.BUCKET * fuelType.mbPerSecond / 1000L
-                if (fuelTankInternal.tryConsume(consumeAmount) > 0L) {
-                    generatedThisTick = fuelType.heatPerSecond
+        val fuelType = currentFuelType ?: FuelType.fromFluid(fuelTankInternal.variant.fluid)
+        if (fuelType != null) {
+            currentFuelType = fuelType
+            val consumePerTickMilliBuckets = FluidConstants.BUCKET * fuelType.mbPerSecond / 1000L / 20 * 1000
+            fuelMbAccumulator += consumePerTickMilliBuckets
+            val toConsume = fuelMbAccumulator / 1000
+            fuelMbAccumulator %= 1000
+            if (toConsume > 0L) {
+                val consumed = fuelTankInternal.tryConsume(toConsume)
+                if (consumed > 0L) {
                     markDirty()
+                    return fuelType.heatPerTick
                 } else {
                     currentFuelType = null
                 }
             }
         }
-        return generatedThisTick
+        return 0L
     }
 
     override fun shouldActivate(generatedHeat: Long, hasValidConsumer: Boolean): Boolean =
@@ -294,6 +303,17 @@ class FluidHeatGeneratorBlockEntity(
     private fun processFuelContainers() {
         val fuelStack = getStack(FUEL_SLOT)
         when {
+            fuelStack.item == Items.LAVA_BUCKET -> {
+                val emptyBucket = ItemStack(Items.BUCKET)
+                if (canInsertEmptyContainer(emptyBucket)) {
+                    val inserted = fuelTankInternal.tryInsertFuel(net.minecraft.fluid.Fluids.LAVA, FluidConstants.BUCKET)
+                    if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyBucket)) {
+                        fuelStack.decrement(1)
+                        if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)
+                        markDirty()
+                    }
+                }
+            }
             fuelStack.item == Registries.ITEM.get(Identifier("ic2_120", "biofuel_bucket")) -> {
                 val emptyBucket = ItemStack(Items.BUCKET)
                 if (canInsertEmptyContainer(emptyBucket)) {
@@ -318,10 +338,10 @@ class FluidHeatGeneratorBlockEntity(
             }
             fuelStack.item == Registries.ITEM.get(Identifier("ic2_120", "fluid_cell")) -> {
                 val fluid = fuelStack.getFluidCellVariant()?.fluid
-                if (fluid == ModFluids.BIOFUEL_STILL || fluid == ModFluids.BIOFUEL_FLOWING) {
+                if (fluid != null && isSupportedFuelFluid(fluid)) {
                     val emptyCell = ItemStack(Registries.ITEM.get(Identifier("ic2_120", "empty_cell")))
                     if (canInsertEmptyContainer(emptyCell)) {
-                        val inserted = fuelTankInternal.tryInsertFuel(fluid ?: ModFluids.BIOFUEL_STILL, FluidConstants.BUCKET)
+                        val inserted = fuelTankInternal.tryInsertFuel(fluid, FluidConstants.BUCKET)
                         if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyCell)) {
                             fuelStack.decrement(1)
                             if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)

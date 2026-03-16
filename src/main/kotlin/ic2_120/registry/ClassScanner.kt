@@ -4,11 +4,17 @@ import ic2_120.content.TickLimitedSidedEnergyContainer
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModCreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.minecraft.util.math.Direction
 import team.reborn.energy.api.EnergyStorage
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
@@ -46,6 +52,8 @@ import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.superclasses
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
+import java.util.function.Consumer
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 
 /**
  * 基于类注解的注册扫描器。
@@ -67,6 +75,21 @@ object ClassScanner {
 
     /** 方块类 -> 注册名（path），供 ModBlockEntity/ModScreenHandler 等从 block 解析 name */
     private val blockClassToName = mutableMapOf<kotlin.reflect.KClass<*>, String>()
+
+    /** 存储 Block 实例（供扩展方法访问） */
+    private val blockInstances = mutableMapOf<kotlin.reflect.KClass<*>, Block>()
+
+    /** 存储 Item 实例（供扩展方法访问） */
+    private val itemInstances = mutableMapOf<kotlin.reflect.KClass<*>, Item>()
+
+    /** 存储 BlockEntityType（供扩展方法访问） */
+    private val blockEntityTypes = mutableMapOf<kotlin.reflect.KClass<*>, BlockEntityType<*>>()
+
+    /** 存储 ScreenHandlerType（供扩展方法访问） */
+    private val screenHandlerTypes = mutableMapOf<kotlin.reflect.KClass<*>, ScreenHandlerType<*>>()
+
+    /** 配方生成器列表 */
+    private val recipeGenerators = mutableListOf<(Consumer<RecipeJsonProvider>) -> Unit>()
 
     /**
      * 扫描并注册所有带注解的类。
@@ -95,6 +118,9 @@ object ClassScanner {
         tabItems.clear()
         blockClassToName.clear()
         TransparentBlockRegistry.clear()
+        blockInstances.clear()
+        itemInstances.clear()
+        recipeGenerators.clear()
 
         // 按顺序注册：方块 → 方块实体类型 → ScreenHandler → 物品 → 物品栏
         registerBlocks(modId, blockClasses)
@@ -102,6 +128,7 @@ object ClassScanner {
         registerScreenHandlers(modId, screenHandlerClasses)
         registerItems(modId, itemClasses)
         registerCreativeTabs(modId, tabClasses)
+        collectRecipeGenerators(blockClasses, itemClasses)
 
         logger.info("自动注册完成")
     }
@@ -387,7 +414,7 @@ object ClassScanner {
                     }
 
                     Registry.register(Registries.SCREEN_HANDLER, id, type)
-                    ScreenHandlerTypeStore.registerType(clazz, type)
+                    screenHandlerTypes[clazz] = type
                     logger.debug("已注册 ScreenHandler 类型: {} (来自类 {})", id, clazz.simpleName)
                 }
             } catch (e: Exception) {
@@ -425,7 +452,7 @@ object ClassScanner {
                 @Suppress("UNCHECKED_CAST")
                 val type = FabricBlockEntityTypeBuilder.create(factory, block).build() as BlockEntityType<BlockEntity>
                 Registry.register(Registries.BLOCK_ENTITY_TYPE, id, type)
-                BlockEntityTypeStore.registerType(clazz, type)
+                blockEntityTypes[clazz] = type
                 logger.debug("已注册方块实体类型: {}", id)
 
                 // 若存在 @RegisterEnergy 字段，则向 Energy API 注册 SIDED 查找
@@ -465,6 +492,7 @@ object ClassScanner {
                 // 注册方块
                 Registry.register(Registries.BLOCK, id, instance)
                 blockClassToName[clazz] = name
+                blockInstances[clazz] = instance
                 if (annotation.transparent) {
                     TransparentBlockRegistry.add(id)
                 }
@@ -501,6 +529,7 @@ object ClassScanner {
 
                 // 注册物品
                 Registry.register(Registries.ITEM, id, instance)
+                itemInstances[clazz] = instance
                 logger.debug("已注册物品: {}", id)
 
                 // 记录物品应该添加到哪个物品栏（带 group 以便排序，包含类类型用于检查电池/电动工具）
@@ -563,6 +592,96 @@ object ClassScanner {
         val clazz: kotlin.reflect.KClass<*>,
         val annotation: ModScreenHandler
     )
+
+    /**
+     * 收集 Block/Item 类 companion 中的配方生成器
+     */
+    private fun collectRecipeGenerators(
+        blockClasses: List<BlockClassInfo>,
+        itemClasses: List<ItemClassInfo>
+    ) {
+        val allClasses = (blockClasses.map { it.clazz } + itemClasses.map { it.clazz })
+
+        for (clazz in allClasses) {
+            try {
+                val companion = clazz.companionObjectInstance ?: continue
+                val generateRecipesMethod = clazz.companionObject?.memberFunctions?.find {
+                    it.name == "generateRecipes"
+                } ?: continue
+
+                // 验证方法签名
+                val parameters = generateRecipesMethod.parameters
+                if (parameters.size != 2 ||
+                    parameters[1].type.classifier != Consumer::class) {
+                    logger.warn("类 {} 的 generateRecipes 方法签名不正确，应为 (Consumer<RecipeJsonProvider>) -> Unit", clazz.simpleName)
+                    continue
+                }
+
+                // 创建生成器闭包
+                val generator: (Consumer<RecipeJsonProvider>) -> Unit = { exporter ->
+                    @Suppress("UNCHECKED_CAST")
+                    generateRecipesMethod.call(companion, exporter as Any?)
+                }
+
+                recipeGenerators.add(generator)
+                logger.debug("已收集配方生成器: {}", clazz.simpleName)
+            } catch (e: Exception) {
+                logger.debug("收集配方生成器失败 {}: {}", clazz.simpleName, e.message)
+            }
+        }
+
+        logger.info("共收集 {} 个配方生成器", recipeGenerators.size)
+    }
+
+    /**
+     * 执行所有配方生成
+     * 供 ModRecipeProvider 调用
+     */
+    fun generateAllRecipes(recipeExporter: Consumer<RecipeJsonProvider>) {
+        logger.info("开始生成配方...")
+        recipeGenerators.forEach { it(recipeExporter) }
+        logger.info("配方生成完成，共生成 {} 个配方", recipeGenerators.size)
+    }
+
+    /**
+     * 获取 Block 实例
+     * 供扩展方法调用
+     */
+    internal fun getBlockInstance(clazz: kotlin.reflect.KClass<out Block>): Block =
+        blockInstances[clazz] ?: error("Block instance not found: ${clazz.simpleName}")
+
+    /**
+     * 获取 Item 实例
+     * 供扩展方法调用
+     */
+    internal fun getItemInstance(clazz: kotlin.reflect.KClass<out Item>): Item =
+        itemInstances[clazz] ?: error("Item instance not found: ${clazz.simpleName}")
+
+    /**
+     * 手动注册 BlockEntityType（供未通过注解自动注册的类使用）
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun <T : BlockEntity> registerBlockEntityType(clazz: kotlin.reflect.KClass<T>, type: BlockEntityType<T>) {
+        blockEntityTypes[clazz] = type
+    }
+
+    /**
+     * 获取 BlockEntityType
+     * 供扩展方法调用
+     */
+    @Suppress("UNCHECKED_CAST")
+    internal fun <T : BlockEntity> getBlockEntityType(clazz: kotlin.reflect.KClass<T>): BlockEntityType<T> =
+        blockEntityTypes[clazz] as? BlockEntityType<T>
+            ?: error("BlockEntityType not found: ${clazz.simpleName}")
+
+    /**
+     * 获取 ScreenHandlerType
+     * 供扩展方法调用
+     */
+    @Suppress("UNCHECKED_CAST")
+    internal fun <T : ScreenHandler> getScreenHandlerType(clazz: kotlin.reflect.KClass<T>): ScreenHandlerType<T> =
+        screenHandlerTypes[clazz] as? ScreenHandlerType<T>
+            ?: error("ScreenHandlerType not found: ${clazz.simpleName}")
 
     private data class ItemClassInfo(
         val clazz: kotlin.reflect.KClass<*>,

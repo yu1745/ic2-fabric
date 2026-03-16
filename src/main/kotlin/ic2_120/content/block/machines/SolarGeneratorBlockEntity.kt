@@ -1,6 +1,5 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.SolarGeneratorBlock
@@ -11,7 +10,9 @@ import ic2_120.content.screen.SolarGeneratorScreenHandler
 import ic2_120.content.sync.SolarGeneratorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntityType
@@ -81,7 +82,7 @@ class SolarGeneratorBlockEntity(
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(SolarGeneratorBlockEntity::class),
+        SolarGeneratorBlockEntity::class.type(),
         pos,
         state
     )

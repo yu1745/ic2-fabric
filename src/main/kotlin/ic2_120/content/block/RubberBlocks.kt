@@ -1,9 +1,10 @@
 package ic2_120.content.block
 
 import ic2_120.Ic2_120
-import ic2_120.content.ModBlockEntities
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -52,7 +53,7 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, ModBlockEntities.getType(RubberLogBlockEntity::class)) { w, p, s, be -> RubberLogBlockEntity.tick(w, p, s, be as RubberLogBlockEntity) }
+        else checkType(type, RubberLogBlockEntity::class.type()) { w, p, s, be -> RubberLogBlockEntity.tick(w, p, s, be as RubberLogBlockEntity) }
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         super.appendProperties(builder)

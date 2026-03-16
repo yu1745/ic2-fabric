@@ -2,7 +2,9 @@ package ic2_120.content.item
 
 import ic2_120.content.entity.ModEntities
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 
 /** 破损的橡胶船 - 使用后在水面生成可乘坐的船实体 */

@@ -12,6 +12,7 @@ import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -31,7 +32,7 @@ class MetalFormerScreenHandler(
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     propertyDelegate: PropertyDelegate
-) : ScreenHandler(ModScreenHandlers.getType(MetalFormerScreenHandler::class), syncId) {
+) : ScreenHandler(MetalFormerScreenHandler::class.type(), syncId) {
 
     val sync = MetalFormerSync(SyncedDataView(propertyDelegate))
 

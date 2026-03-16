@@ -11,6 +11,7 @@ import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -30,7 +31,7 @@ class SolarGeneratorScreenHandler(
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(ModScreenHandlers.getType(SolarGeneratorScreenHandler::class), syncId) {
+) : ScreenHandler(SolarGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = SolarGeneratorSync(
         SyncedDataView(propertyDelegate),

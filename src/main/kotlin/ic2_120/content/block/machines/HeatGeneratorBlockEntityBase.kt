@@ -9,7 +9,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.state.property.Properties
 import net.minecraft.world.World
-import org.slf4j.LoggerFactory
 
 /**
  * 热机基类：默认仅背面传热，不建立热网，直接邻接传输。
@@ -20,10 +19,6 @@ abstract class HeatGeneratorBlockEntityBase(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), IHeatNode, HeatFlowSync.HeatProducer {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger("ic2_120/HeatGeneratorBase")
-    }
 
     private var lastGeneratedHeat: Long = 0L
     private var lastOutputHeat: Long = 0L
@@ -58,70 +53,49 @@ abstract class HeatGeneratorBlockEntityBase(
         val neighborPos = pos.offset(myFace)
         val neighbor = world.getBlockEntity(neighborPos) as? IHeatConsumer ?: return 0L
 
-        logger.info("[{}] transferHeatToBack: 可用热量 {} HU, 我的传热面 {}, 邻居位置 {}",
-            this.javaClass.simpleName, availableHu, myFace, neighborPos)
-
         // 只有双方传热面相对贴合才允许传热
         val neighborFace = neighbor.getHeatTransferFace()
         if (neighborFace != myFace.opposite) {
-            logger.info("[{}] 传热失败：邻居传热面 {} != 预期 {}",
-                this.javaClass.simpleName, neighborFace, myFace.opposite)
             return 0L
         }
 
-        // receiveHeat 的 fromSide 以“接收方视角”表示，因此要传邻居看到的入热面
+        // receiveHeat 的 fromSide 以"接收方视角"表示，因此要传邻居看到的入热面
         val transferred = neighbor.receiveHeat(availableHu, myFace.opposite).coerceIn(0L, availableHu)
         lastOutputHeat = transferred
-        logger.info("[{}] 传热成功：传输 {} HU / 可用 {} HU, 从我的传热面 {} 到邻居",
-            this.javaClass.simpleName, transferred, availableHu, myFace)
         return transferred
     }
 
     protected fun hasValidHeatConsumer(): Boolean {
         val world = world ?: return false
-        val facing = world.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH
         val myFace = getHeatTransferFace()
         val neighborPos = pos.offset(myFace)
-        val neighbor = world.getBlockEntity(neighborPos) as? IHeatConsumer ?: run {
-            logger.info("[{}] hasValidHeatConsumer: 邻居位置 {} 没有IHeatConsumer, 我的位置={}, facing={}, 传热面={}",
-                this.javaClass.simpleName, neighborPos, pos, facing, myFace)
-            return false
-        }
+        val neighbor = world.getBlockEntity(neighborPos) as? IHeatConsumer ?: return false
 
         val neighborFace = neighbor.getHeatTransferFace()
-        val isValid = neighborFace == myFace.opposite
-        logger.info("[{}] hasValidHeatConsumer: 我的位置={}, facing={}, 传热面={}, 邻居位置={}, 邻居传热面={}, 有效={}",
-            this.javaClass.simpleName, pos, facing, myFace, neighborPos, neighborFace, isValid)
-        return isValid
+        return neighborFace == myFace.opposite
     }
 
     protected fun tickHeatMachine(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         resetHeatTracking()
+        preGenerate(world, pos, state)
 
-        val generatedThisTick = generateHeat(world, pos, state)
-        logger.info("[{}] tick: 我的={}, 产生热量={} HU",
-            this.javaClass.simpleName, pos, generatedThisTick)
-
-        logger.info("[{}] tick: facing={}, 传热面={}",
-            this.javaClass.simpleName,
-            world.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING),
-            getHeatTransferFace())
+        val hasValidConsumer = hasValidHeatConsumer()
+        val generatedThisTick = if (hasValidConsumer) generateHeat(world, pos, state) else 0L
 
         transferHeatToBack(generatedThisTick)
         recordGeneratedHeat(generatedThisTick)
         heatFlow.syncCurrentTickFlow()
         syncAdditionalData()
 
-        val hasValidConsumer = hasValidHeatConsumer()
         val shouldRun = shouldActivate(generatedThisTick, hasValidConsumer)
-        logger.info("[{}] 激活状态: 产生={}, 有耗热机={}, 应激活={}",
-            this.javaClass.simpleName, generatedThisTick > 0, hasValidConsumer, shouldRun)
         if (getActiveState(state) != shouldRun) {
             setActiveState(world, pos, state, shouldRun)
         }
     }
+
+    protected open fun preGenerate(world: World, pos: BlockPos, state: BlockState) {}
 
     protected abstract fun generateHeat(world: World, pos: BlockPos, state: BlockState): Long
 

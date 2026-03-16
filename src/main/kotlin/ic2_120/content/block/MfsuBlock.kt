@@ -3,9 +3,10 @@ package ic2_120.content.block
 import ic2_120.Ic2_120
 import ic2_120.content.sync.MfsuSync
 import ic2_120.content.block.machines.MfsuBlockEntity
-import ic2_120.content.ModBlockEntities
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -48,7 +49,7 @@ class MfsuBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, ModBlockEntities.getType(MfsuBlockEntity::class)) { w, p, s, be -> (be as MfsuBlockEntity).tick(w, p, s) }
+        else checkType(type, MfsuBlockEntity::class.type()) { w, p, s, be -> (be as MfsuBlockEntity).tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)

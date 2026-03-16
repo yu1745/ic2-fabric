@@ -10,6 +10,7 @@ import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -38,7 +39,7 @@ class NuclearReactorScreenHandler(
     val reactorSlotCount: Int,
     /** 核反应堆方块实体 */
     val reactor: NuclearReactorBlockEntity? = null
-) : ScreenHandler(ModScreenHandlers.getType(NuclearReactorScreenHandler::class), syncId) {
+) : ScreenHandler(NuclearReactorScreenHandler::class.type(), syncId) {
 
     val sync = NuclearReactorSync(
         SyncedDataView(propertyDelegate),

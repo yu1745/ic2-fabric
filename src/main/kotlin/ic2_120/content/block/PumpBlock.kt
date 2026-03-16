@@ -1,9 +1,10 @@
 package ic2_120.content.block
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.machines.PumpBlockEntity
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
 import net.minecraft.block.BlockState
@@ -31,7 +32,7 @@ class PumpBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, ModBlockEntities.getType(PumpBlockEntity::class)) { w, p, s, be ->
+        else checkType(type, PumpBlockEntity::class.type()) { w, p, s, be ->
             (be as PumpBlockEntity).tick(w, p, s)
         }
 

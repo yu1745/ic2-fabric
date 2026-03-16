@@ -9,6 +9,7 @@ import ic2_120.content.block.MetalFormerBlock
 import ic2_120.content.screen.MetalFormerScreenHandler
 import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.registry.annotation.ModScreen
+import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory

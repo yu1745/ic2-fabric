@@ -10,6 +10,7 @@ import ic2_120.content.block.machines.GeneratorBlockEntity
 import ic2_120.content.block.machines.MachineBlockEntity
 import ic2_120.content.screen.GeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
+import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory

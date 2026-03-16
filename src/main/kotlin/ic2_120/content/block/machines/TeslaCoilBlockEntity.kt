@@ -1,6 +1,5 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.TeslaCoilBlock
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.pullEnergyFromNeighbors
@@ -8,7 +7,9 @@ import ic2_120.content.screen.TeslaCoilScreenHandler
 import ic2_120.content.sync.TeslaCoilSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -58,7 +59,7 @@ class TeslaCoilBlockEntity(
     private var lastHitTargetUuid: java.util.UUID? = null
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(TeslaCoilBlockEntity::class),
+        TeslaCoilBlockEntity::class.type(),
         pos,
         state
     )

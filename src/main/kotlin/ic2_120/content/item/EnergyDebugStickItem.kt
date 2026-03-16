@@ -3,7 +3,9 @@ package ic2_120.content.item
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.Item

@@ -1,9 +1,10 @@
 package ic2_120.content.block
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
 import net.minecraft.block.BlockState
@@ -34,7 +35,7 @@ class GeoGeneratorBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, ModBlockEntities.getType(GeoGeneratorBlockEntity::class)) { w, p, s, be ->
+        else checkType(type, GeoGeneratorBlockEntity::class.type()) { w, p, s, be ->
             (be as GeoGeneratorBlockEntity).tick(w, p, s)
         }
 

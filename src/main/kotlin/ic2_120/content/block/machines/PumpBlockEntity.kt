@@ -1,7 +1,6 @@
 package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.PumpBlock
 import ic2_120.content.pullEnergyFromNeighbors
@@ -22,7 +21,9 @@ import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -99,7 +100,7 @@ class PumpBlockEntity(
 
         fun registerFluidStorageLookup() {
             if (fluidLookupRegistered) return
-            val type = ModBlockEntities.getType(PumpBlockEntity::class)
+            val type = PumpBlockEntity::class.type()
             FluidStorage.SIDED.registerForBlockEntity({ be, side -> be.getFluidStorageForSide(side) }, type)
             fluidLookupRegistered = true
         }
@@ -152,7 +153,7 @@ class PumpBlockEntity(
     val tank: Storage<FluidVariant> = tankInternal
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(PumpBlockEntity::class),
+        PumpBlockEntity::class.type(),
         pos,
         state
     )

@@ -7,6 +7,7 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import ic2_120.content.item.energy.IBatteryItem
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -27,7 +28,7 @@ class StirlingGeneratorScreenHandler(
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(ModScreenHandlers.getType(StirlingGeneratorScreenHandler::class), syncId) {
+) : ScreenHandler(StirlingGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = StirlingGeneratorSync(
         SyncedDataView(propertyDelegate),

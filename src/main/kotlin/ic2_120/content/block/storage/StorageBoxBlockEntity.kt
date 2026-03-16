@@ -1,7 +1,7 @@
 package ic2_120.content.block.storage
 
 import ic2_120.content.screen.StorageBoxScreenHandler
-import ic2_120.registry.BlockEntityTypeStore
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -98,10 +98,6 @@ class StorageBoxBlockEntity(
 
             val id = Identifier(modId, "storage_box")
             Registry.register(Registries.BLOCK_ENTITY_TYPE, id, type)
-            BlockEntityTypeStore.registerType(StorageBoxBlockEntity::class, type)
-
-            // 为了兼容 getType 方法，也注册到 ModBlockEntities
-            ic2_120.content.ModBlockEntities.getType(StorageBoxBlockEntity::class)
         }
     }
 

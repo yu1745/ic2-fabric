@@ -1,6 +1,6 @@
 package ic2_120.content.block.pipes
 
-import ic2_120.registry.BlockEntityTypeStore
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.minecraft.block.BlockState
@@ -119,7 +119,6 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos,
             @Suppress("UNCHECKED_CAST")
             TYPE = FabricBlockEntityTypeBuilder.create(factory, *blocks.toTypedArray()).build() as BlockEntityType<PipeBlockEntity>
             Registry.register(Registries.BLOCK_ENTITY_TYPE, Identifier(modId, "pipe"), TYPE)
-            BlockEntityTypeStore.registerType(PipeBlockEntity::class, TYPE)
         }
     }
 }

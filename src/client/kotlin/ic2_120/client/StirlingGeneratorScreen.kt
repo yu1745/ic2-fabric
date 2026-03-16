@@ -4,9 +4,11 @@ import ic2_120.client.compose.*
 import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.StirlingGeneratorBlock
+import ic2_120.content.block.machines.StirlingGeneratorBlockEntity
 import ic2_120.content.screen.StirlingGeneratorScreenHandler
 import ic2_120.content.sync.StirlingGeneratorSync
 import ic2_120.registry.annotation.ModScreen
+import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
@@ -45,17 +47,20 @@ class StirlingGeneratorScreen(
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = StirlingGeneratorSync.ENERGY_CAPACITY
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
+        val generationRate = handler.sync.getSyncedInsertedAmount().coerceAtLeast(0L)
+        val heatConsumeRate = (generationRate * StirlingGeneratorBlockEntity.HU_PER_EU).coerceAtLeast(0L)
         val outputRate = handler.sync.getSyncedExtractedAmount()
 
+        val generationText = "发电 ${formatEu(generationRate)} EU/t"
+        val heatConsumeText = "耗热 ${formatHu(heatConsumeRate)} HU/t"
         val outputText = "输出 ${formatEu(outputRate)} EU/t"
+        val generationTextWidth = generationText.length * 6
+        val heatConsumeTextWidth = heatConsumeText.length * 6
         val outputTextWidth = outputText.length * 6
-        val textX = left - outputTextWidth - 4
-        context.drawText(textRenderer, outputText, textX, top + 8, 0xAAAAAA, false)
-
-        val heatBuffered = handler.sync.heatBuffered
-        val heatBufferedText = "热量缓冲: $heatBuffered HU"
-        val heatBufferedTextWidth = heatBufferedText.length * 6
-        context.drawText(textRenderer, heatBufferedText, left - heatBufferedTextWidth - 4, top + 20, 0xAAAAAA, false)
+        val textX = left - maxOf(generationTextWidth, heatConsumeTextWidth, outputTextWidth) - 4
+        context.drawText(textRenderer, generationText, textX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, heatConsumeText, textX, top + 20, 0xAAAAAA, false)
+        context.drawText(textRenderer, outputText, textX, top + 32, 0xAAAAAA, false)
 
         ui.render(context, textRenderer, mouseX, mouseY) {
             Column(x = left + 8, y = top + 8, spacing = 6) {
@@ -83,6 +88,14 @@ class StirlingGeneratorScreen(
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
 
     private fun formatEu(value: Long): String {
+        return when {
+            value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000.0)
+            value >= 1_000 -> String.format("%.1fK", value / 1_000.0)
+            else -> value.toString()
+        }
+    }
+
+    private fun formatHu(value: Long): String {
         return when {
             value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000.0)
             value >= 1_000 -> String.format("%.1fK", value / 1_000.0)

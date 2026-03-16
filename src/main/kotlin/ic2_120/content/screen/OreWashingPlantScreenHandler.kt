@@ -13,6 +13,7 @@ import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.sync.OreWashingPlantSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -33,7 +34,7 @@ class OreWashingPlantScreenHandler(
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(ModScreenHandlers.getType(OreWashingPlantScreenHandler::class), syncId) {
+) : ScreenHandler(OreWashingPlantScreenHandler::class.type(), syncId) {
 
     val sync = OreWashingPlantSync(SyncedDataView(propertyDelegate))
 

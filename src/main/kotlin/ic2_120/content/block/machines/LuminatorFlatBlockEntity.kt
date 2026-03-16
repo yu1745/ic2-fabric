@@ -1,13 +1,14 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.LuminatorFlatBlock
 import ic2_120.content.pullEnergyFromNeighbors
 import ic2_120.content.sync.LuminatorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.nbt.NbtCompound
@@ -35,7 +36,7 @@ class LuminatorFlatBlockEntity(
     private var cycleTicks = 0
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(LuminatorFlatBlockEntity::class),
+        LuminatorFlatBlockEntity::class.type(),
         pos,
         state
     )

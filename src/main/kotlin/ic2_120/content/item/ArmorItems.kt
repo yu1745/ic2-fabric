@@ -5,7 +5,9 @@ import ic2_120.content.effect.ModStatusEffects
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.chargePlayerInventory
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity

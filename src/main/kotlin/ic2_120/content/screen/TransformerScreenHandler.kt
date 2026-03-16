@@ -3,6 +3,7 @@ package ic2_120.content.screen
 import ic2_120.content.sync.TransformerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.network.PacketByteBuf
@@ -26,7 +27,7 @@ class TransformerScreenHandler(
     private val context: ScreenHandlerContext,
     propertyDelegate: PropertyDelegate,
     private val tier: Int = 1  // 变压器等级
-) : ScreenHandler(ModScreenHandlers.getType(TransformerScreenHandler::class), syncId) {
+) : ScreenHandler(TransformerScreenHandler::class.type(), syncId) {
 
     val sync = TransformerSync(
         SyncedDataView(propertyDelegate),

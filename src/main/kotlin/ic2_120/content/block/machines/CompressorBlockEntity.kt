@@ -2,7 +2,6 @@ package ic2_120.content.block.machines
 
 import ic2_120.content.recipes.CompressorRecipes
 import ic2_120.content.sync.CompressorSync
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.pullEnergyFromNeighbors
 import ic2_120.content.block.CompressorBlock
 import ic2_120.content.block.ITieredMachine
@@ -16,7 +15,9 @@ import ic2_120.content.upgrade.OverclockerUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -74,7 +75,7 @@ class CompressorBlockEntity(
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(CompressorBlockEntity::class),
+        CompressorBlockEntity::class.type(),
         pos,
         state
     )

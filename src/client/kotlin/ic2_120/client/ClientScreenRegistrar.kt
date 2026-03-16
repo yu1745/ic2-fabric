@@ -1,6 +1,7 @@
 package ic2_120.client
 
 import ic2_120.registry.annotation.ModScreen
+import ic2_120.registry.type
 import net.minecraft.block.Block
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.HandledScreens

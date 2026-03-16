@@ -1,10 +1,10 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.ReactorChamberBlock
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -35,7 +35,7 @@ class ReactorChamberBlockEntity(
     override val tier: Int = CHAMBER_TIER
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(ReactorChamberBlockEntity::class),
+        ReactorChamberBlockEntity::class.type(),
         pos,
         state
     )

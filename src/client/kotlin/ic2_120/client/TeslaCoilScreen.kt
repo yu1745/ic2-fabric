@@ -7,6 +7,7 @@ import ic2_120.content.sync.TeslaCoilSync
 import ic2_120.content.block.TeslaCoilBlock
 import ic2_120.content.screen.TeslaCoilScreenHandler
 import ic2_120.registry.annotation.ModScreen
+import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory

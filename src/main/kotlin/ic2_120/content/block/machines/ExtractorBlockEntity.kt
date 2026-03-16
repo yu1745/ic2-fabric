@@ -1,6 +1,5 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.ExtractorBlock
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.pullEnergyFromNeighbors
@@ -16,7 +15,9 @@ import ic2_120.content.upgrade.OverclockerUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -75,7 +76,7 @@ class ExtractorBlockEntity(
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(ExtractorBlockEntity::class),
+        ExtractorBlockEntity::class.type(),
         pos,
         state
     )

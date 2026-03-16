@@ -26,7 +26,9 @@ import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
 
 enum class PipeSize(val baseBucketsPerSecond: Double, val radius: Double) {
     TINY(0.4, 2.0 / 16.0),

@@ -1,7 +1,7 @@
 package ic2_120.content.block
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -28,7 +28,7 @@ class RubberLogBlockEntity(
     private val extractedAt = LongArray(4)
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(RubberLogBlockEntity::class),
+        RubberLogBlockEntity::class.type(),
         pos,
         state
     )

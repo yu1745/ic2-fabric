@@ -2,7 +2,9 @@ package ic2_120.content.item
 
 import ic2_120.content.reactor.AbstractReactorComponent
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
+import ic2_120.registry.type
 import net.minecraft.item.Item
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 

@@ -1,6 +1,7 @@
 package ic2_120.registry.annotation
 
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 
 /**
  * 标记需要自动注册的方块类。

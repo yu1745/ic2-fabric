@@ -11,6 +11,7 @@ import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -30,7 +31,7 @@ class WindGeneratorScreenHandler(
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(ModScreenHandlers.getType(WindGeneratorScreenHandler::class), syncId) {
+) : ScreenHandler(WindGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = WindGeneratorSync(
         SyncedDataView(propertyDelegate),

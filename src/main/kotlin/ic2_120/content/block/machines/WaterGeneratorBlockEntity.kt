@@ -1,7 +1,6 @@
 package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.WaterGeneratorBlock
 import ic2_120.content.block.IGenerator
 import ic2_120.content.energy.charge.BatteryChargerComponent
@@ -12,7 +11,9 @@ import ic2_120.content.sync.WaterGeneratorSync
 import ic2_120.content.screen.WaterGeneratorScreenHandler
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -77,7 +78,7 @@ class WaterGeneratorBlockEntity(
 
         fun registerFluidStorageLookup() {
             if (fluidLookupRegistered) return
-            val type = ModBlockEntities.getType(WaterGeneratorBlockEntity::class)
+            val type = WaterGeneratorBlockEntity::class.type()
             FluidStorage.SIDED.registerForBlockEntity({ be, side -> be.getFluidStorageForSide(side) }, type)
             fluidLookupRegistered = true
         }
@@ -165,7 +166,7 @@ class WaterGeneratorBlockEntity(
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(WaterGeneratorBlockEntity::class),
+        WaterGeneratorBlockEntity::class.type(),
         pos,
         state
     ) {

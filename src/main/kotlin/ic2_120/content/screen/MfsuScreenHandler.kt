@@ -9,6 +9,7 @@ import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Direction
@@ -34,7 +35,7 @@ class MfsuScreenHandler(
     private val blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(ModScreenHandlers.getType(MfsuScreenHandler::class), syncId) {
+) : ScreenHandler(MfsuScreenHandler::class.type(), syncId) {
 
     /** 客户端仅用于 GUI 显示，getFacing 用占位即可（SIDED 仅在服务端 BlockEntity 使用）。 */
     val sync = MfsuSync(

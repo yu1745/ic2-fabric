@@ -8,6 +8,7 @@ import ic2_120.content.block.machines.WindGeneratorBlockEntity
 import ic2_120.content.screen.WindGeneratorScreenHandler
 import ic2_120.content.sync.WindGeneratorSync
 import ic2_120.registry.annotation.ModScreen
+import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory

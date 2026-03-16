@@ -2,6 +2,7 @@ package ic2_120.client
 
 import ic2_120.Ic2_120
 import ic2_120.registry.TransparentBlockRegistry
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap
 import net.minecraft.block.Block
 import net.minecraft.client.render.RenderLayer

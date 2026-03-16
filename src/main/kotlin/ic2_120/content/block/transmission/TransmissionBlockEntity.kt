@@ -1,6 +1,6 @@
 package ic2_120.content.block.transmission
 
-import ic2_120.registry.BlockEntityTypeStore
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -47,7 +47,7 @@ class TransmissionBlockEntity(
 
             TYPE = type
             Registry.register(Registries.BLOCK_ENTITY_TYPE, Identifier(modId, "transmission"), type)
-            BlockEntityTypeStore.registerType(TransmissionBlockEntity::class, type)
+            ic2_120.registry.ClassScanner.registerBlockEntityType(TransmissionBlockEntity::class, type)
         }
     }
 }

@@ -26,9 +26,10 @@ import ic2_120.content.block.transmission.TransmissionBlockEntity
 import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.pipes.PipeNetworkManager
 import ic2_120.content.entity.ModEntities
-import ic2_120.content.ModBlockEntities
 import ic2_120.registry.ClassScanner
+import ic2_120.registry.type
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
@@ -110,7 +111,7 @@ object Ic2_120 : ModInitializer {
         PumpBlockEntity.registerFluidStorageLookup()
         
         // 核反应仓能量能力注册（Fabric Transfer API）
-        val reactorChamberType = ModBlockEntities.getType(ReactorChamberBlockEntity::class)
+        val reactorChamberType = ReactorChamberBlockEntity::class.type()
         team.reborn.energy.api.EnergyStorage.SIDED.registerForBlockEntity(
             { be, side -> ReactorChamberEnergyProvider.getEnergyStorage(be as ReactorChamberBlockEntity, side) },
             reactorChamberType

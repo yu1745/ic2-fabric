@@ -1,12 +1,13 @@
 package ic2_120.content.block
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.machines.LvTransformerBlockEntity
 import ic2_120.content.block.machines.MvTransformerBlockEntity
 import ic2_120.content.block.machines.HvTransformerBlockEntity
 import ic2_120.content.block.machines.EvTransformerBlockEntity
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -77,10 +78,10 @@ abstract class TransformerBlock : DirectionalMachineBlock() {
         if (world.isClient) null
         else {
             val beType = when (this) {
-                is LvTransformerBlock -> ModBlockEntities.getType(LvTransformerBlockEntity::class)
-                is MvTransformerBlock -> ModBlockEntities.getType(MvTransformerBlockEntity::class)
-                is HvTransformerBlock -> ModBlockEntities.getType(HvTransformerBlockEntity::class)
-                is EvTransformerBlock -> ModBlockEntities.getType(EvTransformerBlockEntity::class)
+                is LvTransformerBlock -> LvTransformerBlockEntity::class.type()
+                is MvTransformerBlock -> MvTransformerBlockEntity::class.type()
+                is HvTransformerBlock -> HvTransformerBlockEntity::class.type()
+                is EvTransformerBlock -> EvTransformerBlockEntity::class.type()
                 else -> return null
             }
             checkType(type, beType) { world1, pos, state, be ->

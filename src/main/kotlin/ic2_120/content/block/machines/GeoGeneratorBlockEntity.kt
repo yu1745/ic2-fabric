@@ -1,7 +1,7 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.GeoGeneratorBlock
+import ic2_120.content.block.IGenerator
 import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.item.LavaCell
 import ic2_120.content.item.energy.IBatteryItem
@@ -9,7 +9,9 @@ import ic2_120.Ic2_120
 import ic2_120.content.sync.GeoGeneratorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
@@ -55,7 +57,7 @@ class GeoGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IFluidPipeUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Inventory, IGenerator, IFluidPipeUpgradeSupport,
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
@@ -86,7 +88,7 @@ class GeoGeneratorBlockEntity(
 
         fun registerFluidStorageLookup() {
             if (fluidLookupRegistered) return
-            val type = ModBlockEntities.getType(GeoGeneratorBlockEntity::class)
+            val type = GeoGeneratorBlockEntity::class.type()
             FluidStorage.SIDED.registerForBlockEntity({ be, side -> be.getFluidStorageForSide(side) }, type)
             fluidLookupRegistered = true
         }
@@ -170,7 +172,7 @@ class GeoGeneratorBlockEntity(
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(GeoGeneratorBlockEntity::class),
+        GeoGeneratorBlockEntity::class.type(),
         pos,
         state
     )

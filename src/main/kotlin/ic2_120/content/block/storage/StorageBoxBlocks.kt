@@ -1,8 +1,9 @@
 package ic2_120.content.block.storage
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.BlockState
 import net.minecraft.block.BlockRenderType

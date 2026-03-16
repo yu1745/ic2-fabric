@@ -1,11 +1,11 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.IronFurnaceBlock
 import ic2_120.content.screen.IronFurnaceScreenHandler
 import ic2_120.content.sync.IronFurnaceSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.registry.FuelRegistry
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
@@ -60,7 +60,7 @@ class IronFurnaceBlockEntity(
     val sync = IronFurnaceSync(syncedData)
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(IronFurnaceBlockEntity::class),
+        IronFurnaceBlockEntity::class.type(),
         pos,
         state
     )

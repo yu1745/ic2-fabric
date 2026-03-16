@@ -7,6 +7,7 @@ import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -27,7 +28,7 @@ class WindKineticGeneratorScreenHandler(
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(ModScreenHandlers.getType(WindKineticGeneratorScreenHandler::class), syncId) {
+) : ScreenHandler(WindKineticGeneratorScreenHandler::class.type(), syncId) {
 
     init {
         checkSize(blockInventory, 1)

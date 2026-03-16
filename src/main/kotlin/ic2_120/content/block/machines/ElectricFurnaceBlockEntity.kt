@@ -1,7 +1,6 @@
 package ic2_120.content.block.machines
 
 import ic2_120.content.sync.ElectricFurnaceSync
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.pullEnergyFromNeighbors
 import ic2_120.content.block.ElectricFurnaceBlock
 import ic2_120.content.block.ITieredMachine
@@ -9,7 +8,9 @@ import ic2_120.content.screen.ElectricFurnaceScreenHandler
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -62,7 +63,7 @@ class ElectricFurnaceBlockEntity(
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(ElectricFurnaceBlockEntity::class),
+        ElectricFurnaceBlockEntity::class.type(),
         pos,
         state
     )

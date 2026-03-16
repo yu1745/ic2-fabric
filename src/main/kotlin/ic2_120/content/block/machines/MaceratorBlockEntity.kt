@@ -2,7 +2,6 @@ package ic2_120.content.block.machines
 
 import ic2_120.content.recipes.MaceratorRecipes
 import ic2_120.content.sync.MaceratorSync
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
@@ -17,7 +16,9 @@ import ic2_120.content.screen.MaceratorScreenHandler
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -80,7 +81,7 @@ class MaceratorBlockEntity(
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(MaceratorBlockEntity::class),
+        MaceratorBlockEntity::class.type(),
         pos,
         state
     )

@@ -1,8 +1,8 @@
 package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.SemifluidGeneratorBlock
+import ic2_120.content.block.IGenerator
 import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.energy.IBatteryItem
@@ -14,7 +14,9 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -46,7 +48,7 @@ class SemifluidGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IFluidPipeUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Inventory, IGenerator, IFluidPipeUpgradeSupport,
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     override var fluidPipeProviderEnabled: Boolean = false
@@ -85,7 +87,7 @@ class SemifluidGeneratorBlockEntity(
 
         fun registerFluidStorageLookup() {
             if (fluidLookupRegistered) return
-            val type = ModBlockEntities.getType(SemifluidGeneratorBlockEntity::class)
+            val type = SemifluidGeneratorBlockEntity::class.type()
             FluidStorage.SIDED.registerForBlockEntity({ be, side -> be.getFluidStorageForSide(side) }, type)
             fluidLookupRegistered = true
         }
@@ -171,7 +173,7 @@ class SemifluidGeneratorBlockEntity(
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(SemifluidGeneratorBlockEntity::class),
+        SemifluidGeneratorBlockEntity::class.type(),
         pos,
         state
     )

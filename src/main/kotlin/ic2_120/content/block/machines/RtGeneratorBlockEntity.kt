@@ -1,7 +1,6 @@
 package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.RtGeneratorBlock
@@ -12,7 +11,9 @@ import ic2_120.content.screen.RtGeneratorScreenHandler
 import ic2_120.content.sync.RtGeneratorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -89,7 +90,7 @@ class RtGeneratorBlockEntity(
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(RtGeneratorBlockEntity::class),
+        RtGeneratorBlockEntity::class.type(),
         pos,
         state
     )

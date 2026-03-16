@@ -14,6 +14,7 @@ import ic2_120.content.item.isLavaFuel
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -33,7 +34,7 @@ class GeoGeneratorScreenHandler(
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(ModScreenHandlers.getType(GeoGeneratorScreenHandler::class), syncId) {
+) : ScreenHandler(GeoGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = GeoGeneratorSync(
         SyncedDataView(propertyDelegate),

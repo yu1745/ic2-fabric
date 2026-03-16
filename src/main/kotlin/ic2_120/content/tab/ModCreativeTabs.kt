@@ -1,6 +1,7 @@
 package ic2_120.content.tab
 
 import ic2_120.registry.annotation.ModCreativeTab
+import ic2_120.registry.type
 
 /**
  * IC2 材料物品栏。

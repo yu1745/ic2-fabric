@@ -1,9 +1,10 @@
 package ic2_120.content.block
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.machines.IronFurnaceBlockEntity
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -39,7 +40,7 @@ class IronFurnaceBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, ModBlockEntities.getType(IronFurnaceBlockEntity::class)) { world1, pos, state, be -> (be as IronFurnaceBlockEntity).tick(world1, pos, state) }
+        else checkType(type, IronFurnaceBlockEntity::class.type()) { world1, pos, state, be -> (be as IronFurnaceBlockEntity).tick(world1, pos, state) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)

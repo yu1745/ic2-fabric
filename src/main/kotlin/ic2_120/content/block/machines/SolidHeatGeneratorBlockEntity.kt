@@ -1,12 +1,12 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.SolidHeatGeneratorBlock
 import ic2_120.content.screen.SolidHeatGeneratorScreenHandler
 import ic2_120.content.sync.SolidHeatGeneratorSync
 import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
@@ -54,7 +54,7 @@ class SolidHeatGeneratorBlockEntity(
     val sync = SolidHeatGeneratorSync(syncedData, heatFlow)
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(SolidHeatGeneratorBlockEntity::class),
+        SolidHeatGeneratorBlockEntity::class.type(),
         pos,
         state
     )

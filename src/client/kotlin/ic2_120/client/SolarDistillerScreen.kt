@@ -9,6 +9,7 @@ import ic2_120.content.screen.SolarDistillerScreenHandler
 import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.sync.SolarDistillerSync
 import ic2_120.registry.annotation.ModScreen
+import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory

@@ -3,6 +3,7 @@ package ic2_120.content.screen
 import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.pipes.PumpAttachmentBlock
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
@@ -18,7 +19,7 @@ class PumpAttachmentScreenHandler(
     playerInventory: PlayerInventory,
     private val blockEntity: PipeBlockEntity?,
     private val context: ScreenHandlerContext
-) : ScreenHandler(ModScreenHandlers.getType(PumpAttachmentScreenHandler::class), syncId) {
+) : ScreenHandler(PumpAttachmentScreenHandler::class.type(), syncId) {
 
     constructor(syncId: Int, playerInventory: PlayerInventory, be: PipeBlockEntity) :
         this(syncId, playerInventory, be, ScreenHandlerContext.create(playerInventory.player.world, be.pos))

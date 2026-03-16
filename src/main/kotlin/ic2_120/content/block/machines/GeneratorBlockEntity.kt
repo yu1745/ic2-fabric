@@ -1,7 +1,6 @@
 package ic2_120.content.block.machines
 
 import ic2_120.content.sync.GeneratorSync
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.GeneratorBlock
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
@@ -9,7 +8,9 @@ import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.screen.GeneratorScreenHandler
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.registry.FuelRegistry
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -66,7 +67,7 @@ class GeneratorBlockEntity(
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(GeneratorBlockEntity::class),
+        GeneratorBlockEntity::class.type(),
         pos,
         state
     )

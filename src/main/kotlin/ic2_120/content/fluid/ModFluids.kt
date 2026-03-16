@@ -2,6 +2,7 @@ package ic2_120.content.fluid
 
 import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.Block

@@ -2,7 +2,6 @@ package ic2_120.content.block.machines
 
 import ic2_120.content.recipes.MetalFormerRecipes
 import ic2_120.content.sync.MetalFormerSync
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
@@ -16,7 +15,9 @@ import ic2_120.content.block.ITieredMachine
 import ic2_120.content.screen.MetalFormerScreenHandler
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -80,7 +81,7 @@ class MetalFormerBlockEntity(
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(MetalFormerBlockEntity::class),
+        MetalFormerBlockEntity::class.type(),
         pos,
         state
     )

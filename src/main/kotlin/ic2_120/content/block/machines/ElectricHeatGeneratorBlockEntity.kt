@@ -1,6 +1,5 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.ElectricHeatGeneratorBlock
 import ic2_120.content.pullEnergyFromNeighbors
 import ic2_120.content.sync.ElectricHeatGeneratorSync
@@ -10,7 +9,9 @@ import ic2_120.content.upgrade.IRedstoneControlSupport
 import ic2_120.content.upgrade.RedstoneControlComponent
 import ic2_120.content.screen.ElectricHeatGeneratorScreenHandler
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
@@ -66,7 +67,7 @@ class ElectricHeatGeneratorBlockEntity(
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(ElectricHeatGeneratorBlockEntity::class),
+        ElectricHeatGeneratorBlockEntity::class.type(),
         pos,
         state
     )
@@ -128,10 +129,13 @@ class ElectricHeatGeneratorBlockEntity(
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }
 
-    override fun generateHeat(world: World, pos: BlockPos, state: BlockState): Long {
+    override fun preGenerate(world: World, pos: BlockPos, state: BlockState) {
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         pullEnergyFromNeighbors(world, pos, sync)
+        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+    }
 
+    override fun generateHeat(world: World, pos: BlockPos, state: BlockState): Long {
         val redstoneAllowsRun = RedstoneControlComponent.canRun(world, pos, this)
         val coilCount = inventory.count { !it.isEmpty && it.item == coilItem }
         val maxHuPerTick = coilCount * HU_PER_COIL_PER_TICK

@@ -1,13 +1,16 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.StirlingGeneratorBlock
+import ic2_120.content.block.IGenerator
+import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.screen.StirlingGeneratorScreenHandler
 import ic2_120.content.sync.StirlingGeneratorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.heat.IHeatConsumer
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
@@ -26,14 +29,13 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-import org.slf4j.LoggerFactory
 
 @ModBlockEntity(block = StirlingGeneratorBlock::class)
 class StirlingGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, ExtendedScreenHandlerFactory {
+) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IGenerator, ExtendedScreenHandlerFactory {
 
     companion object {
         const val STIRLING_TIER = 2
@@ -45,8 +47,6 @@ class StirlingGeneratorBlockEntity(
         const val HU_PER_EU = 2L
         const val MAX_OUTPUT_EU_PER_TICK = 50L
         const val MAX_HEAT_PER_TICK = MAX_OUTPUT_EU_PER_TICK * HU_PER_EU
-
-        private val logger = LoggerFactory.getLogger("ic2_120/StirlingGenerator")
     }
 
     override val tier: Int = STIRLING_TIER
@@ -59,11 +59,19 @@ class StirlingGeneratorBlockEntity(
         { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
         { world?.time }
     )
+    private val batteryCharger = BatteryChargerComponent(
+        inventory = this,
+        batterySlot = BATTERY_SLOT,
+        machineTierProvider = { tier },
+        machineEnergyProvider = { sync.amount },
+        extractEnergy = { requested -> sync.consumeEnergy(requested) },
+        canChargeNow = { sync.amount > 0L }
+    )
 
     private var heatBuffered: Long = 0L
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(StirlingGeneratorBlockEntity::class),
+        StirlingGeneratorBlockEntity::class.type(),
         pos,
         state
     )
@@ -107,6 +115,7 @@ class StirlingGeneratorBlockEntity(
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         heatBuffered = nbt.getLong(NBT_HEAT_BUFFERED)
+        sync.heatBuffered = heatBuffered.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -121,35 +130,31 @@ class StirlingGeneratorBlockEntity(
         if (hu <= 0L) return 0L
         val toAdd = hu.coerceAtMost(MAX_HEAT_PER_TICK - heatBuffered)
         if (toAdd <= 0L) {
-            logger.info("[StirlingGenerator] receiveHeatInternal: 接收 {} HU, 但缓冲已满 (当前 {}/最大 {})",
-                hu, heatBuffered, MAX_HEAT_PER_TICK)
             return 0L
         }
         heatBuffered += toAdd
+        sync.heatBuffered = heatBuffered.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
         markDirty()
-        logger.info("[StirlingGenerator] receiveHeatInternal: 接收 {} HU, 缓冲: {} -> {}",
-            toAdd, heatBuffered - toAdd, heatBuffered)
         return toAdd
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
+        sync.heatBuffered = heatBuffered.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
 
         val euToGenerate = (heatBuffered / HU_PER_EU).coerceAtMost(MAX_OUTPUT_EU_PER_TICK)
-        logger.info("[StirlingGenerator] tick: 热缓冲={}, 可产生EU={}, HU/EU={}",
-            heatBuffered, euToGenerate, HU_PER_EU)
         if (euToGenerate > 0L) {
             val space = (StirlingGeneratorSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0L)
             val actualGenerate = minOf(euToGenerate, space)
             if (actualGenerate > 0L) {
                 sync.generateEnergy(actualGenerate)
                 heatBuffered -= actualGenerate * HU_PER_EU
-                logger.info("[StirlingGenerator] tick: 产生 {} EU, 消耗 {} HU, 缓冲剩余 {}",
-                    actualGenerate, actualGenerate * HU_PER_EU, heatBuffered)
+                sync.heatBuffered = heatBuffered.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
                 markDirty()
             }
         }
+        batteryCharger.tick()
 
         val active = sync.amount < StirlingGeneratorSync.ENERGY_CAPACITY &&
             heatBuffered > 0L &&
@@ -164,16 +169,9 @@ class StirlingGeneratorBlockEntity(
         val world = world ?: return false
         val myFace = getHeatTransferFace()
         val neighborPos = pos.offset(myFace)
-        val neighbor = world.getBlockEntity(neighborPos) as? ic2_120.content.heat.IHeatNode ?: run {
-            logger.info("[StirlingGenerator] hasValidHeatSource: 邻居位置 {} 没有IHeatNode",
-                neighborPos)
-            return false
-        }
+        val neighbor = world.getBlockEntity(neighborPos) as? ic2_120.content.heat.IHeatNode ?: return false
         val neighborFace = neighbor.getHeatTransferFace()
-        val isValid = neighborFace == myFace.opposite
-        logger.info("[StirlingGenerator] hasValidHeatSource: 我的传热面 {}, 邻居传热面 {}, 有效 = {}",
-            myFace, neighborFace, isValid)
-        return isValid
+        return neighborFace == myFace.opposite
     }
 
     fun onNeighborUpdate() {

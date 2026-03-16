@@ -2,7 +2,9 @@ package ic2_120.content.block.cables
 
 import ic2_120.content.item.energy.ITiered
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.type
 import net.minecraft.block.AbstractBlock
 
 /**

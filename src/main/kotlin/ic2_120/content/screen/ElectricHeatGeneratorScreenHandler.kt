@@ -7,8 +7,10 @@ import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.sync.ElectricHeatGeneratorSync
+import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -30,9 +32,17 @@ class ElectricHeatGeneratorScreenHandler(
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(ModScreenHandlers.getType(ElectricHeatGeneratorScreenHandler::class), syncId) {
+) : ScreenHandler(ElectricHeatGeneratorScreenHandler::class.type(), syncId) {
 
-    val sync = ElectricHeatGeneratorSync(SyncedDataView(propertyDelegate))
+    private val syncedView = SyncedDataView(propertyDelegate)
+    private val heatFlow = HeatFlowSync(
+        syncedView,
+        object : HeatFlowSync.HeatProducer {
+            override fun getLastGeneratedHeat(): Long = 0L
+            override fun getLastOutputHeat(): Long = 0L
+        }
+    )
+    val sync = ElectricHeatGeneratorSync(syncedView, heatFlow = heatFlow)
     private val coilItem = Registries.ITEM.get(Identifier("ic2_120", "coil"))
 
     init {

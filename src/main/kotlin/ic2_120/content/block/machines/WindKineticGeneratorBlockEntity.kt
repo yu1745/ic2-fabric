@@ -1,9 +1,9 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.screen.WindKineticGeneratorScreenHandler
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
@@ -46,7 +46,7 @@ class WindKineticGeneratorBlockEntity(
     private val inventory = DefaultedList.ofSize(1, ItemStack.EMPTY)
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(WindKineticGeneratorBlockEntity::class),
+        WindKineticGeneratorBlockEntity::class.type(),
         pos,
         state
     )

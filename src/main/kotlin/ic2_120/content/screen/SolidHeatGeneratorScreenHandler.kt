@@ -4,9 +4,11 @@ import ic2_120.content.block.SolidHeatGeneratorBlock
 import ic2_120.content.block.machines.SolidHeatGeneratorBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
+import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.sync.SolidHeatGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.registry.FuelRegistry
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -27,9 +29,17 @@ class SolidHeatGeneratorScreenHandler(
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(ModScreenHandlers.getType(SolidHeatGeneratorScreenHandler::class), syncId) {
+) : ScreenHandler(SolidHeatGeneratorScreenHandler::class.type(), syncId) {
 
-    val sync = SolidHeatGeneratorSync(SyncedDataView(propertyDelegate))
+    private val syncedView = SyncedDataView(propertyDelegate)
+    private val heatFlow = HeatFlowSync(
+        syncedView,
+        object : HeatFlowSync.HeatProducer {
+            override fun getLastGeneratedHeat(): Long = 0L
+            override fun getLastOutputHeat(): Long = 0L
+        }
+    )
+    val sync = SolidHeatGeneratorSync(syncedView, heatFlow)
 
     init {
         checkSize(blockInventory, 1)

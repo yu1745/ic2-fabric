@@ -1,7 +1,6 @@
 package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
-import ic2_120.content.ModBlockEntities
 import ic2_120.content.block.SolarDistillerBlock
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.FluidCellItem
@@ -15,6 +14,7 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -109,7 +109,7 @@ class SolarDistillerBlockEntity(
          */
         fun registerFluidStorageLookup() {
             if (fluidLookupRegistered) return
-            val type = ModBlockEntities.getType(SolarDistillerBlockEntity::class)
+            val type = SolarDistillerBlockEntity::class.type()
             FluidStorage.SIDED.registerForBlockEntity({ be, side -> be.getFluidStorageForSide(side) }, type)
             fluidLookupRegistered = true
         }
@@ -302,7 +302,7 @@ class SolarDistillerBlockEntity(
     }
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(SolarDistillerBlockEntity::class),
+        SolarDistillerBlockEntity::class.type(),
         pos,
         state
     )
