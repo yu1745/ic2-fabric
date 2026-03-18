@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,active=false": { "model": "ic2:block/machine/processing/basic/recycler" },
+    "facing=north,active=true":  { "model": "ic2:block/machine/processing/basic/recycler_active" },
+    "facing=east,active=false":  { "model": "ic2:block/machine/processing/basic/recycler", "y": 90 },
+    "facing=east,active=true":   { "model": "ic2:block/machine/processing/basic/recycler_active", "y": 90 },
+    "facing=south,active=false": { "model": "ic2:block/machine/processing/basic/recycler", "y": 180 },
+    "facing=south,active=true":  { "model": "ic2:block/machine/processing/basic/recycler_active", "y": 180 },
+    "facing=west,active=false":  { "model": "ic2:block/machine/processing/basic/recycler", "y": 270 },
+    "facing=west,active=true":   { "model": "ic2:block/machine/processing/basic/recycler_active", "y": 270 }
+  }
+}
