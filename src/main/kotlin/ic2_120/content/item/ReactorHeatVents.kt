@@ -22,6 +22,8 @@ abstract class ReactorHeatVentBase(
     private val reactorVent: Int
 ) : AbstractDamageableReactorComponent(settings, heatStorage) {
 
+    fun hasSelfVent(): Boolean = selfVent > 0
+
     override fun canStoreHeat(stack: ItemStack, reactor: IReactor, x: Int, y: Int): Boolean = true
 
     override fun getMaxHeat(stack: ItemStack, reactor: IReactor, x: Int, y: Int): Int = maxUse
@@ -51,23 +53,41 @@ abstract class ReactorHeatVentBase(
     override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {
         if (!heatRun) return
 
+        val isThermal = reactor.isFluidCooled()
         var totalDissipated = 0
 
+        // 从反应堆吸收热量（reactorVent - 不是散失热量）
         if (reactorVent > 0) {
-            var rheat = reactor.getHeat()
-            val reactorDrain = minOf(rheat, reactorVent)
-            rheat -= reactorDrain
+            // 使用“有效堆温”防止同周期内多个散热片重复预扣同一份热量。
+            val reactorDrain = minOf(reactor.getEffectiveHeatForDrain(), reactorVent)
             if (alterHeat(stack, reactor, x, y, reactorDrain) > 0) return
-            reactor.setHeat(rheat)
+            // reactorVent 改回即时扣减，避免“先顶满再周期末回扣”造成温度振荡。
+            reactor.setHeat(reactor.getHeat() - reactorDrain)
         }
 
+        // 自身蒸发热量（selfVent - 这才是真正的散失热量）
         val dissipated = selfVent
-        alterHeat(stack, reactor, x, y, -dissipated)
-        totalDissipated += dissipated
+        if (dissipated > 0) {
+            if (isThermal) {
+                // 热模式：记录到 addHeatDissipated（用于冷却液转换）
+                // 耐久修复条件：检查冷却液是否充足
+                val hasCoolant = reactor.hasCoolant()
+
+                if (hasCoolant) {
+                    // 有冷却液时，可以修复耐久
+                    alterHeat(stack, reactor, x, y, -dissipated)
+                }
+                // 记录额定散热能力
+                reactor.addHeatDissipated(dissipated)
+            } else {
+                // 电模式：正常蒸发，修复自身耐久
+                alterHeat(stack, reactor, x, y, -dissipated)
+                reactor.addHeatDissipated(dissipated)
+            }
+            totalDissipated += dissipated
+        }
 
         // 报告总散热
-        reactor.addHeatDissipated(totalDissipated)
-        // 报告槽位散热
         reactor.addSlotHeatInfo(x * 9 + y, 0, totalDissipated)
     }
 }
@@ -92,11 +112,18 @@ class ComponentHeatVentItem(settings: FabricItemSettings = FabricItemSettings())
 
     override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {
         if (!heatRun) return
+        val isThermal = reactor.isFluidCooled()
+        // 热模式下无冷却液时，不允许元件散热片“免费散热”。
+        if (isThermal && !reactor.hasCoolant()) {
+            reactor.addSlotHeatInfo(x * 9 + y, 0, 0)
+            return
+        }
+        val scaledSideVent = sideVent
         var totalDissipated = 0
-        totalDissipated += cool(reactor, x - 1, y, x, y)
-        totalDissipated += cool(reactor, x + 1, y, x, y)
-        totalDissipated += cool(reactor, x, y - 1, x, y)
-        totalDissipated += cool(reactor, x, y + 1, x, y)
+        totalDissipated += cool(reactor, x - 1, y, scaledSideVent)
+        totalDissipated += cool(reactor, x + 1, y, scaledSideVent)
+        totalDissipated += cool(reactor, x, y - 1, scaledSideVent)
+        totalDissipated += cool(reactor, x, y + 1, scaledSideVent)
 
         // 报告总散热
         reactor.addHeatDissipated(totalDissipated)
@@ -104,14 +131,14 @@ class ComponentHeatVentItem(settings: FabricItemSettings = FabricItemSettings())
         reactor.addSlotHeatInfo(x * 9 + y, 0, 0)
     }
 
-    private fun cool(reactor: IReactor, targetX: Int, targetY: Int, sourceX: Int, sourceY: Int): Int {
+    private fun cool(reactor: IReactor, targetX: Int, targetY: Int, sideVentAmount: Int): Int {
         val other = reactor.getItemAt(targetX, targetY) ?: return 0
         if (other.item !is IReactorComponent) return 0
         val comp = other.item as IReactorComponent
         if (!comp.canStoreHeat(other, reactor, targetX, targetY)) return 0
-        comp.alterHeat(other, reactor, targetX, targetY, -sideVent)
+        comp.alterHeat(other, reactor, targetX, targetY, -sideVentAmount)
         // 记录散热量到被散热的组件槽位
-        reactor.addSlotHeatInfo(targetX * 9 + targetY, 0, sideVent)
-        return sideVent
+        reactor.addSlotHeatInfo(targetX * 9 + targetY, 0, sideVentAmount)
+        return sideVentAmount
     }
 }

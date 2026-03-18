@@ -69,6 +69,7 @@ abstract class ReactorHeatExchangerBase(
 
         // 与邻接可储热组件交换热量
         if (switchSide > 0) {
+            val scaledSwitchSide = switchSide
             val heatAcceptors = mutableListOf<Triple<ItemStack, Int, Int>>()
             checkHeatAcceptor(reactor, x - 1, y, heatAcceptors)
             checkHeatAcceptor(reactor, x + 1, y, heatAcceptors)
@@ -85,15 +86,15 @@ abstract class ReactorHeatExchangerBase(
                 // 计算热交换量：基于邻接组件的热容量和双方温度差异
                 var add = (comp.getMaxHeat(otherStack, reactor, ox, oy) / 100.0 * (othermed + mymed / 2)).roundToInt()
                 // 限制热交换量不超过最大交换速率
-                add = add.coerceIn(-switchSide, switchSide)
+                add = add.coerceIn(-scaledSwitchSide, scaledSwitchSide)
                 
                 // 根据平均温度调整交换量，温度越低交换越慢
                 val avgTemp = othermed + mymed / 2
                 // 与Java版保持一致的判断顺序和计算逻辑：直接使用switchSide的固定比例
-                if (avgTemp < 1.0) add = switchSide / 2  // 高温：1/2最大交换速率
-                if (avgTemp < 0.75) add = switchSide / 4  // 中温：1/4最大交换速率
-                if (avgTemp < 0.5) add = switchSide / 8   // 较低温：1/8最大交换速率
-                if (avgTemp < 0.25) add = 1              // 低温：最小交换速率
+                if (avgTemp < 1.0) add = scaledSwitchSide / 2  // 高温：1/2最大交换速率
+                if (avgTemp < 0.75) add = scaledSwitchSide / 4  // 中温：1/4最大交换速率
+                if (avgTemp < 0.5) add = scaledSwitchSide / 8   // 较低温：1/8最大交换速率
+                if (avgTemp < 0.25) add = 1                    // 低温：最小交换速率
                 
                 // 热量从高温向低温流动
                 if (kotlin.math.round(othermed * 10) / 10.0 > kotlin.math.round(mymed * 10) / 10.0) add = -add
@@ -108,6 +109,7 @@ abstract class ReactorHeatExchangerBase(
 
         // 与反应堆交换热量
         if (switchReactor > 0) {
+            val scaledSwitchReactor = switchReactor
             // 计算热交换器的热容量使用率
             val mymed = getCurrentHeat(stack, reactor, x, y) * 100.0 / getMaxHeat(stack, reactor, x, y)
             // 计算反应堆的热容量使用率
@@ -116,15 +118,15 @@ abstract class ReactorHeatExchangerBase(
             // 计算热交换量：基于反应堆的热容量和双方温度差异
             var add = (reactor.getMaxHeat() / 100.0 * (reactorMed + mymed / 2)).roundToInt()
             // 限制热交换量不超过最大交换速率
-            add = add.coerceIn(-switchReactor, switchReactor)
+            add = add.coerceIn(-scaledSwitchReactor, scaledSwitchReactor)
             
             // 根据平均温度调整交换量
             val avg = reactorMed + mymed / 2
             // 与Java版保持一致的判断顺序和计算逻辑：直接使用switchReactor的固定比例
-            if (avg < 1.0) add = switchReactor / 2  // 高温：1/2最大交换速率
-            if (avg < 0.75) add = switchReactor / 4  // 中温：1/4最大交换速率
-            if (avg < 0.5) add = switchReactor / 8   // 较低温：1/8最大交换速率
-            if (avg < 0.25) add = 1              // 低温：最小交换速率
+            if (avg < 1.0) add = scaledSwitchReactor / 2  // 高温：1/2最大交换速率
+            if (avg < 0.75) add = scaledSwitchReactor / 4  // 中温：1/4最大交换速率
+            if (avg < 0.5) add = scaledSwitchReactor / 8   // 较低温：1/8最大交换速率
+            if (avg < 0.25) add = 1                        // 低温：最小交换速率
             
             // 热量从高温向低温流动
             if (kotlin.math.round(reactorMed * 10) / 10.0 > kotlin.math.round(mymed * 10) / 10.0) add = -add

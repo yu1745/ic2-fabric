@@ -59,9 +59,11 @@ abstract class AbstractUraniumFuelRodItem(settings: FabricItemSettings, maxUse: 
                 checkPulseable(reactor, x, y + 1, stack, x, y, heatRun)
 
         if (!heatRun) {
-            // 一次性计算总发电量
-            val totalPulses = (basePulses + neighborPulses) * numberOfCells
-            reactor.addOutput(totalPulses.toFloat())
+            // 一次性计算总发电量（热模式下不发电）
+            if (!reactor.isFluidCooled()) {
+                val totalPulses = (basePulses + neighborPulses) * numberOfCells
+                reactor.addOutput(totalPulses.toFloat())
+            }
         } else {
             // 一次性计算总热量
             val totalPulses = (basePulses + neighborPulses)
@@ -166,20 +168,23 @@ abstract class AbstractMoxFuelRodItem(settings: FabricItemSettings, maxUse: Int,
                 checkPulseable(reactor, x, y + 1, stack, x, y, heatRun)
 
         if (!heatRun) {
-            // 一次性计算总发电量
-            val totalPulses = (basePulses + neighborPulses) * numberOfCells
-            // for (p in 0 until totalPulses) {
-            //     acceptUraniumPulse(stack, reactor, stack, x, y, x, y, heatRun)
-            // }
-            val breedereffectiveness = reactor.getHeat().toFloat() / reactor.getMaxHeat().toFloat()
-            val reaktorOutput = 4.0f * breedereffectiveness + 1.0f
-            //     reactor.addOutput(reaktorOutput)
-            reactor.addOutput(totalPulses.toFloat() * reaktorOutput)
+            // 一次性计算总发电量（热模式下不发电）
+            if (!reactor.isFluidCooled()) {
+                val totalPulses = (basePulses + neighborPulses) * numberOfCells
+                // for (p in 0 until totalPulses) {
+                //     acceptUraniumPulse(stack, reactor, stack, x, y, x, y, heatRun)
+                // }
+                val breedereffectiveness = reactor.getHeat().toFloat() / reactor.getMaxHeat().toFloat()
+                val reaktorOutput = 4.0f * breedereffectiveness + 1.0f
+                //     reactor.addOutput(reaktorOutput)
+                reactor.addOutput(totalPulses.toFloat() * reaktorOutput)
+            }
         } else {
             // 一次性计算总热量
             val totalPulses = (basePulses + neighborPulses)
-            var heat = triangularNumber(totalPulses) * numberOfCells
-            heat = getFinalHeat(stack, reactor, x, y, heat)
+            val rawHeat = triangularNumber(totalPulses) * numberOfCells
+            val finalHeat = getFinalHeat(stack, reactor, x, y, rawHeat)
+            var heat = finalHeat
             // 报告总产热
             reactor.addHeatProduced(heat)
             // 报告槽位产热和发电（每个脉冲产生1单位输出）
@@ -200,6 +205,7 @@ abstract class AbstractMoxFuelRodItem(settings: FabricItemSettings, maxUse: Int,
                 heat += overflow
             }
             if (heat > 0) reactor.addHeat(heat)
+
         }
 
         if (!heatRun) {
@@ -213,7 +219,7 @@ abstract class AbstractMoxFuelRodItem(settings: FabricItemSettings, maxUse: Int,
 
     protected fun getFinalHeat(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heat: Int): Int {
         if (reactor.isFluidCooled()) {
-            val breedereffectiveness = reactor.getHeat().toFloat() / reactor.getMaxHeat().toFloat()
+            val breedereffectiveness = reactor.getCycleStartHeat().toFloat() / reactor.getMaxHeat().toFloat()
             if (breedereffectiveness > 0.5) {
                 return heat * 2
             }

@@ -49,6 +49,8 @@ class NuclearReactorSync(
         const val HEAT_EXPLODE_THRESHOLD = 10_000
         /** 每 output 点对应的 EU 数（与 IC2 平衡，output 每脉冲 +1） */
         const val EU_PER_OUTPUT = 100
+        /** 冷却液/热冷却液储罐容量（mB），16 桶 */
+        const val COOLANT_TANK_CAPACITY_MB = 16 * 1000
     }
 
     var energy by schema.int("Energy")
@@ -61,6 +63,18 @@ class NuclearReactorSync(
     var totalHeatProduced by schema.int("TotalHeatProduced", default = 0)
     /** 总散热 */
     var totalHeatDissipated by schema.int("TotalHeatDissipated", default = 0)
+    /** 实际散热（结算后实际被处理掉的热量） */
+    var actualHeatDissipated by schema.int("ActualHeatDissipated", default = 0)
+    /** 热模式实际热输出（已成功转换为热冷却液的 HU/周期） */
+    var thermalHeatOutput by schema.int("ThermalHeatOutput", default = 0)
+
+    // 热模式相关同步数据
+    /** 是否为热模式（0 = false, 1 = true） */
+    var isThermalMode by schema.int("IsThermalMode", default = 0)
+    /** 冷却液输入量（mB） */
+    var inputCoolantMb by schema.int("InputCoolantMb", default = 0)
+    /** 热冷却液输出量（mB） */
+    var outputHotCoolantMb by schema.int("OutputHotCoolantMb", default = 0)
 
     // override fun getSideMaxInsert(side: Direction?): Long = 0L
     // /** 正面不输出；其余面可输出 */
@@ -79,5 +93,3 @@ class NuclearReactorSync(
 
     fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
 }
-
-

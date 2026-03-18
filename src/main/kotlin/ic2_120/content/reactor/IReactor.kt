@@ -52,6 +52,15 @@ interface IReactor {
     /** 流体冷却模式（暂不实现，恒为 false） */
     fun isFluidCooled(): Boolean
 
+    /** 本计算周期开始时的堆温快照，用于避免同周期内的槽位顺序依赖。 */
+    fun getCycleStartHeat(): Int = getHeat()
+
+    /** 当前可用于 reactorVent 抽取的有效堆温（含本周期待结算热量变更）。 */
+    fun getEffectiveHeatForDrain(): Int = getHeat()
+
+    /** 检查是否有足够的冷却液（热模式中散热片耐久修复的条件） */
+    fun hasCoolant(): Boolean = false
+
     /** 爆炸 */
     fun explode()
 

@@ -2,9 +2,11 @@ package ic2_120
 
 import ic2_120.content.RubberTreetapHandler
 import ic2_120.content.WrenchHandler
+import ic2_120.content.block.nuclear.NuclearReactorBlockEntity
 import ic2_120.content.block.nuclear.ReactorChamberBlock
 import ic2_120.content.block.nuclear.ReactorChamberBlockEntity
 import ic2_120.content.block.nuclear.ReactorChamberEnergyProvider
+import ic2_120.content.block.nuclear.ReactorFluidPortBlockEntity
 import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.network.NetworkManager
@@ -111,7 +113,11 @@ object Ic2_120 : ModInitializer {
         OreWashingPlantBlockEntity.registerFluidStorageLookup()
         SolarDistillerBlockEntity.registerFluidStorageLookup()
         PumpBlockEntity.registerFluidStorageLookup()
-        
+
+        // 核反应堆的流体存储注册
+        NuclearReactorBlockEntity.registerFluidStorageLookup()
+        ReactorFluidPortBlockEntity.registerFluidStorageLookup()
+
         // 核反应仓能量能力注册（Fabric Transfer API）
         val reactorChamberType = ReactorChamberBlockEntity::class.type()
         team.reborn.energy.api.EnergyStorage.SIDED.registerForBlockEntity(

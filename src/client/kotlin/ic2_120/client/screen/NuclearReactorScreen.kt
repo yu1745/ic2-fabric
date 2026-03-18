@@ -31,6 +31,13 @@ class NuclearReactorScreen(
     /** 左侧文本边距 */
     private val leftTextMargin = 4
 
+    /** 热模式时左右各多出的流体条宽度（barWidth + 间距） */
+    private val thermalExtraWidth = barWidth + 4
+
+    /** 流体条高度：能量条高度 - 2个slot高度，使 流体条+两槽 总高等于能量条 */
+    private val fluidBarHeight =
+        9 * NuclearReactorScreenHandler.SLOT_SIZE - 2 * NuclearReactorScreenHandler.SLOT_SIZE  // 126 = 7*18
+
     init {
         backgroundWidth = NuclearReactorScreenHandler.FRAME_WIDTH
         backgroundHeight = handler.hotbarY + 18 + 8
@@ -39,7 +46,11 @@ class NuclearReactorScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
+        val isThermal = isThermalLayout()
+        val effectiveWidth =
+            if (isThermal) NuclearReactorScreenHandler.FRAME_WIDTH + thermalExtraWidth * 2 else NuclearReactorScreenHandler.FRAME_WIDTH
+        val bgX = if (isThermal) x - thermalExtraWidth else x
+        GuiBackground.draw(context, bgX, y, effectiveWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
             handler.playerInvY - 4,
@@ -64,12 +75,47 @@ class NuclearReactorScreen(
             context.drawBorder(x + slot.x - borderOffset, y + slot.y - borderOffset, slotSize, slotSize, borderColor)
         }
 
-        // 左侧竖能量条（加宽，与 SLOT_GRID_X 配合使满容量时槽位区域居中）
-        val energyBarX = x + 9
-        drawVerticalEnergyBar(context, energyBarX, y + NuclearReactorScreenHandler.SLOT_GRID_Y, barWidth, 9 * slotSize)
+        // 热模式：为 4 个流体槽绘制边框
+        if (isThermal) {
+            for (i in handler.reactorSlotCount until handler.reactorSlotCount + 4) {
+                val slot = handler.slots[i]
+                context.drawBorder(
+                    x + slot.x - borderOffset,
+                    y + slot.y - borderOffset,
+                    slotSize,
+                    slotSize,
+                    borderColor
+                )
+            }
+        }
 
-        // 右侧竖温度条（蓝→红，加宽）
+        // 能量条和温度条位置（固定）
+        val energyBarX = x + 9
         val tempBarX = x + NuclearReactorScreenHandler.SLOT_GRID_X + 9 * slotSize + 4
+
+        if (isThermal) {
+            // 热模式：流体条+两槽 与能量条垂直对齐（能量条 y=18~180）
+            val fluidBarY = NuclearReactorScreenHandler.SLOT_GRID_Y + slotSize  // 上槽(18-36) + 条(36-162) + 下槽(162-180)
+
+            // 冷却液条（左侧）
+            val inputFraction = handler.sync.inputCoolantMb.toFloat() / NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
+            val inputX = energyBarX - barWidth - 4
+            drawVerticalFluidBar(
+                context, inputX, y + fluidBarY,
+                barWidth, fluidBarHeight, 0xFF00CCFF.toInt(), inputFraction
+            )
+
+            // 热冷却液条（右侧）
+            val outputFraction = handler.sync.outputHotCoolantMb.toFloat() / NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
+            val outputX = tempBarX + barWidth + 4
+            drawVerticalFluidBar(
+                context, outputX, y + fluidBarY,
+                barWidth, fluidBarHeight, 0xFFFF6600.toInt(), outputFraction
+            )
+        }
+
+        // 绘制能量和温度条（位置不变）
+        drawVerticalEnergyBar(context, energyBarX, y + NuclearReactorScreenHandler.SLOT_GRID_Y, barWidth, 9 * slotSize)
         drawVerticalTemperatureBar(
             context,
             tempBarX,
@@ -124,6 +170,26 @@ class NuclearReactorScreen(
         context.drawBorder(barX, barY, w, h, 0xFF888888.toInt())
     }
 
+    private fun drawVerticalFluidBar(
+        context: DrawContext,
+        barX: Int,
+        barY: Int,
+        w: Int,
+        h: Int,
+        color: Int,
+        fraction: Float
+    ) {
+        context.fill(barX, barY, barX + w, barY + h, 0xFF333333.toInt())
+        val filledH = (fraction.coerceIn(0f, 1f) * h).toInt()
+        if (filledH > 0) {
+            val fillY = barY + h - filledH
+            context.enableScissor(barX, fillY, barX + w, barY + h)
+            context.fill(barX, fillY, barX + w, barY + h, color)
+            context.disableScissor()
+        }
+        context.drawBorder(barX, barY, w, h, 0xFF888888.toInt())
+    }
+
     private fun lerpArgb(a: Int, b: Int, t: Float): Int {
         val u = t.coerceIn(0f, 1f)
         val aa = (a shr 24) and 0xFF
@@ -150,20 +216,39 @@ class NuclearReactorScreen(
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()
 
-        // 在 GUI 左侧外部绘制状态信息（参考 MfsuScreen）
-        val lines = mutableListOf<String>()
-        lines.add("能量: ${formatEu(energy)}")
-        lines.add("容量: ${formatEu(cap)}")
-        lines.add("发电: ${formatEu(inputRate)} EU/t")
-        lines.add("输出: ${formatEu(outputRate)} EU/t")
-        lines.add("")
-        lines.add("堆温: $temp HU")
 
         val heatProduced = handler.sync.totalHeatProduced
         val heatDissipated = handler.sync.totalHeatDissipated
-        lines.add("")
-        lines.add("总产热: $heatProduced")
-        lines.add("总散热: $heatDissipated")
+        val actualHeatDissipated = handler.sync.actualHeatDissipated
+        val thermalHeatOutput = handler.sync.thermalHeatOutput
+        // 在 GUI 左侧外部绘制状态信息（缩短文本避免溢出）
+        val lines = mutableListOf<String>()
+        if (!isThermalLayout()) {
+            lines.add("能量 ${formatEu(energy)}/${formatEu(cap)}")
+            lines.add("发电 ${formatEu(inputRate)} 输出 ${formatEu(outputRate)} EU/t")
+        }
+        lines.add("堆温 $temp")
+        if (isThermalLayout()) {
+            lines.add("(流体堆发热翻倍)")
+            lines.add("热输出 ${thermalHeatOutput/20} HU/t")
+            lines.add("产热 ${heatProduced} 散热能力 ${heatDissipated}")
+            lines.add("实际散热 ${actualHeatDissipated/20} HU/t")
+        } else {
+            lines.add("产热 ${heatProduced} 散热能力 ${heatDissipated}")
+            lines.add("HU/s")
+        }
+
+
+        // 热模式：冷却液数据
+        if (isThermalLayout()) {
+            val inputMb = handler.sync.inputCoolantMb.coerceAtLeast(0)
+            val outputMb = handler.sync.outputHotCoolantMb.coerceAtLeast(0)
+            val capMb = NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
+            lines.add("冷液 $inputMb/$capMb")
+            lines.add("${"%.1f".format(inputMb.toFloat() / capMb.toFloat() * 100)}%")
+            lines.add("热液 $outputMb/$capMb")
+            lines.add("${"%.1f".format(outputMb.toFloat() / capMb.toFloat() * 100)}%")
+        }
 
         // 槽位产热/散热/发电：只在鼠标悬停时显示
         val hoveredSlotIndex = findHoveredReactorSlot(mouseX, mouseY)
@@ -172,20 +257,19 @@ class NuclearReactorScreen(
             reactor?.let {
                 val heatInfo = it.slotHeatInfo[hoveredSlotIndex]
                 heatInfo?.let { info ->
-                    lines.add("")
-                    lines.add("§e槽位产热: ${info.heatProduced}")
-                    lines.add("§e槽位散热: ${info.heatDissipated}")
-                    if (info.energyOutput > 0) {
-                        lines.add("§a槽位发电: ${"%.2f".format(info.energyOutput)}")
+                    lines.add("§e产热 ${info.heatProduced} 散热 ${info.heatDissipated}")
+                    if (info.energyOutput > 0 && !isThermalLayout()) {
+                        lines.add("§a发电 ${if (isThermalLayout()) info.energyOutput / 5 else info.energyOutput}")
                     }
                 }
             }
         }
 
-        // 绘制所有文本在 GUI 左侧外部
+        // 绘制所有文本在 GUI 左侧外部；热模式时多两个流体条，需额外左移避免重叠
         var textY = y + 42
         val maxWidth = lines.maxOf { textRenderer.getWidth(it) }
-        val textX = left - maxWidth - leftTextMargin
+        val thermalTextOffset = if (isThermalLayout()) thermalExtraWidth else 0
+        val textX = left - maxWidth - leftTextMargin - thermalTextOffset
 
         for (line in lines) {
             val color = when {
@@ -231,7 +315,28 @@ class NuclearReactorScreen(
         else -> value.toString()
     }
 
+    private fun formatMb(value: Int): String = when {
+        value >= 1_000_000 -> String.format("%.3fM", value / 1_000_000.0)
+        value >= 1_000 -> String.format("%.3fk", value / 1_000.0)
+        else -> value.toString()
+    }
+
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+
+    override fun isClickOutsideBounds(mouseX: Double, mouseY: Double, left: Int, top: Int, button: Int): Boolean {
+        if (!isThermalLayout()) {
+            return super.isClickOutsideBounds(mouseX, mouseY, left, top, button)
+        }
+
+        // 热模式下两侧有额外的流体槽和流体条，需要扩展“界面内点击区域”。
+        val extendedLeft = left - thermalExtraWidth
+        val extendedWidth = backgroundWidth + thermalExtraWidth * 2
+        val withinX = mouseX >= extendedLeft && mouseX < (extendedLeft + extendedWidth)
+        val withinY = mouseY >= top && mouseY < (top + backgroundHeight)
+        return !(withinX && withinY)
+    }
+
+    private fun isThermalLayout(): Boolean = handler.isThermalMode || handler.sync.isThermalMode == 1
 }
 

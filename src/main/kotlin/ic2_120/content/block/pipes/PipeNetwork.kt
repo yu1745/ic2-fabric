@@ -1,7 +1,7 @@
 package ic2_120.content.block.pipes
 
-import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.block.MachineBlock
+import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -85,26 +85,23 @@ class PipeNetwork {
         }
 
         val fluidKinds = providers.map { it.variant.fluid }.toSet()
-        if (fluidKinds.size > 1) {
-            stalledByMixedProviders = true
-            syncPipeLoad(world, topology.pipeRates, remaining)
-            return
-        }
-        stalledByMixedProviders = false
+        stalledByMixedProviders = fluidKinds.size > 1
 
-        val workingFluid = providers.firstOrNull()?.variant ?: run {
+        if (providers.isEmpty()) {
             syncPipeLoad(world, topology.pipeRates, remaining)
             return
         }
 
         for (receiver in receivers) {
-            if (receiver.filter != null && receiver.filter != workingFluid.fluid) continue
-            var progress = true
-            while (progress) {
-                progress = false
+            val receiverTarget = receiver.filter
+            val failedProviderEntries = mutableSetOf<Long>()
+
+            while (true) {
                 val best = providers
                     .mapNotNull { provider ->
-                        if (provider.variant.fluid != workingFluid.fluid) return@mapNotNull null
+                        if (provider.entryPipe in failedProviderEntries) return@mapNotNull null
+                        if (receiverTarget != null && provider.variant.fluid != receiverTarget) return@mapNotNull null
+                        if (!canReceiverAccept(receiver.storage, provider.variant)) return@mapNotNull null
                         val path = shortestPath(provider.entryPipe, receiver.entryPipe, topology.neighbors, remaining) ?: return@mapNotNull null
                         Triple(provider, path, path.minOf { remaining[it] ?: 0L })
                     }
@@ -115,13 +112,16 @@ class PipeNetwork {
                 val path = best.second
                 val pathCap = best.third
 
-                val moved = transferOnce(provider.storage, receiver.storage, workingFluid, pathCap)
-                if (moved <= 0L) continue
+                val moved = transferOnce(provider.storage, receiver.storage, provider.variant, pathCap)
+                if (moved <= 0L) {
+                    failedProviderEntries.add(provider.entryPipe)
+                    if (failedProviderEntries.size >= providers.size) break
+                    continue
+                }
 
                 for (pipe in path) {
                     remaining[pipe] = (remaining[pipe] ?: 0L) - moved
                 }
-                progress = true
             }
         }
 
@@ -148,10 +148,17 @@ class PipeNetwork {
 
     private fun resolveProviderVariant(storage: Storage<FluidVariant>, filterFluid: net.minecraft.fluid.Fluid?): FluidVariant? {
         if (filterFluid != null) {
-            return FluidVariant.of(filterFluid)
+            val filtered = FluidVariant.of(filterFluid)
+            val available = Transaction.openOuter().use { tx ->
+                storage.extract(filtered, 1L, tx) > 0L
+            }
+            return if (available) filtered else null
         }
         return storage.iterator().asSequence().firstOrNull { !it.resource.isBlank && it.amount > 0L }?.resource
     }
+
+    private fun canReceiverAccept(receiver: Storage<FluidVariant>, variant: FluidVariant): Boolean =
+        Transaction.openOuter().use { tx -> receiver.insert(variant, 1L, tx) > 0L }
 
     // 规则：一方指定方向、另一方任意时，任意方自动排除已指定方向，避免同一面既入又出。
     private fun allowsProviderOnSide(be: IFluidPipeUpgradeSupport, side: Direction): Boolean {
