@@ -99,6 +99,7 @@
   "block.ic2_120.solid_heat_generator": "Solid Heat Generator",
   "block.ic2_120.rt_heat_generator": "RTG Heat Generator",
   "block.ic2_120.stirling_generator": "Stirling Generator",
+  "block.ic2_120.creative_generator": "Creative Generator",
   "block.ic2_120.semifluid_generator": "Semifluid Generator",
   "block.ic2_120.water_generator": "Water Mill",
   "block.ic2_120.solar_generator": "Solar Generator",
