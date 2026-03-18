@@ -109,17 +109,17 @@
 | - [ ] | block.ic2.stirling_generator | 斯特林发电机 |
 | - [x] | block.ic2.water_generator | 水力发电机 |
 | - [x] | block.ic2.wind_generator | 风力发电机 |
-| - [ ] | block.ic2.electric_heat_generator | 电力加热机 |
-| - [ ] | block.ic2.fluid_heat_generator | 流体加热机 |
-| - [ ] | block.ic2.rt_heat_generator | 放射性同位素温差加热机 |
-| - [ ] | block.ic2.solid_heat_generator | 固体加热机 |
+| - [x] | block.ic2.electric_heat_generator | 电力加热机 |
+| - [x] | block.ic2.fluid_heat_generator | 流体加热机 |
+| - [x] | block.ic2.rt_heat_generator | 放射性同位素温差加热机 |
+| - [x] | block.ic2.solid_heat_generator | 固体加热机 |
 | - [ ] | block.ic2.electric_kinetic_generator | 电力动能发生机 |
 | - [ ] | block.ic2.manual_kinetic_generator | 手摇动能发生机 |
 | - [ ] | block.ic2.steam_kinetic_generator | 蒸汽动能发生机 |
 | - [ ] | block.ic2.stirling_kinetic_generator | 斯特林动能发生器 |
 | - [ ] | block.ic2.water_kinetic_generator | 水力动能发生机 |
 | - [x] | block.ic2.wind_kinetic_generator | 风力动能发生机 |
-| - [ ] | block.ic2.creative_generator | 创造模式发电器 |
+| - [ ] | block.ic2.creative_generator | 创造模式发电机 |
 
 ### 机器 - 核反应堆类
 |  | ID | 名称 |

@@ -97,6 +97,7 @@
   "block.ic2_120.fluid_heat_generator": "Liquid Fuel Firebox",
   "block.ic2_120.electric_heat_generator": "Electric Heat Generator",
   "block.ic2_120.solid_heat_generator": "Solid Heat Generator",
+  "block.ic2_120.rt_heat_generator": "RTG Heat Generator",
   "block.ic2_120.stirling_generator": "Stirling Generator",
   "block.ic2_120.semifluid_generator": "Semifluid Generator",
   "block.ic2_120.water_generator": "Water Mill",

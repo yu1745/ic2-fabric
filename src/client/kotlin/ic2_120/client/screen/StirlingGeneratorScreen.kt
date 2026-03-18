@@ -64,7 +64,15 @@ class StirlingGeneratorScreen(
 
         ui.render(context, textRenderer, mouseX, mouseY) {
             Column(x = left + 8, y = top + 8, spacing = 6) {
-                Text(title.string, color = 0xFFFFFF)
+                Flex(
+                    direction = FlexDirection.ROW,
+                    alignItems = AlignItems.CENTER,
+                    gap = 8,
+                    modifier = Modifier.EMPTY.width(160)
+                ) {
+                    Text(title.string, color = 0xFFFFFF)
+                    Text("$energy / $cap EU", color = 0xCCCCCC, shadow = false)
+                }
                 Flex(
                     direction = FlexDirection.ROW,
                     alignItems = AlignItems.CENTER,
@@ -78,7 +86,6 @@ class StirlingGeneratorScreen(
                         barHeight = 9
                     )
                 }
-                Text("$energy / $cap EU", color = 0xCCCCCC, shadow = false)
             }
         }
         drawMouseoverTooltip(context, mouseX, mouseY)

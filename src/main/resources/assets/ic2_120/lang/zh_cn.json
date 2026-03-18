@@ -97,6 +97,7 @@
   "block.ic2_120.fluid_heat_generator": "流体加热机",
   "block.ic2_120.electric_heat_generator": "电力加热机",
   "block.ic2_120.solid_heat_generator": "固体加热机",
+  "block.ic2_120.rt_heat_generator": "放射性同位素温差加热机",
   "block.ic2_120.stirling_generator": "斯特林发电机",
   "block.ic2_120.semifluid_generator": "半流质发电机",
   "block.ic2_120.water_generator": "水力发电机",
