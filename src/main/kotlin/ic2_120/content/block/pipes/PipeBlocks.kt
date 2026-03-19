@@ -200,6 +200,12 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
             .with(Properties.FACING, facing)
             .with(propertyFor(back), canConnect(world, pos, back, be, facing))
             .with(propertyFor(facing), canConnect(world, pos, facing, be, facing))
+            .with(NORTH, canConnect(world, pos, Direction.NORTH, be, facing))
+            .with(SOUTH, canConnect(world, pos, Direction.SOUTH, be, facing))
+            .with(EAST, canConnect(world, pos, Direction.EAST, be, facing))
+            .with(WEST, canConnect(world, pos, Direction.WEST, be, facing))
+            .with(UP, canConnect(world, pos, Direction.UP, be, facing))
+            .with(DOWN, canConnect(world, pos, Direction.DOWN, be, facing))
     }
 
     override fun canConnect(world: WorldAccess, pos: BlockPos, direction: Direction, be: PipeBlockEntity?): Boolean =
@@ -222,13 +228,10 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
             return false
         }
 
-        // 后方（背面）只连接管道，不连接机器，避免歧义。
-        if (direction == facing.opposite) {
-            if (neighbor !is BasePipeBlock) return false
-            val neighborBe = world.getBlockEntity(neighborPos) as? PipeBlockEntity
-            return neighborBe?.isDisabled(direction.opposite) != true
-        }
-        return false
+        // 后方和四面（除正面外的所有面）只连接管道，不连接机器，避免歧义。
+        if (neighbor !is BasePipeBlock) return false
+        val neighborBe = world.getBlockEntity(neighborPos) as? PipeBlockEntity
+        return neighborBe?.isDisabled(direction.opposite) != true
     }
 
     override fun pipeShape(state: BlockState): VoxelShape {
@@ -238,14 +241,17 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
         val max = 10.0 / 16.0
         var shape = VoxelShapes.cuboid(min, min, min, max, max, max)
 
-        if (state.get(propertyFor(back))) {
-            shape = when (back) {
-                Direction.NORTH -> VoxelShapes.union(shape, VoxelShapes.cuboid(min, min, 0.0, max, max, min))
-                Direction.SOUTH -> VoxelShapes.union(shape, VoxelShapes.cuboid(min, min, max, max, max, 1.0))
-                Direction.WEST -> VoxelShapes.union(shape, VoxelShapes.cuboid(0.0, min, min, min, max, max))
-                Direction.EAST -> VoxelShapes.union(shape, VoxelShapes.cuboid(max, min, min, 1.0, max, max))
-                Direction.DOWN -> VoxelShapes.union(shape, VoxelShapes.cuboid(min, 0.0, min, max, min, max))
-                Direction.UP -> VoxelShapes.union(shape, VoxelShapes.cuboid(min, max, min, max, 1.0, max))
+        for (dir in Direction.entries) {
+            if (dir == facing) continue
+            if (state.get(propertyFor(dir))) {
+                shape = when (dir) {
+                    Direction.NORTH -> VoxelShapes.union(shape, VoxelShapes.cuboid(min, min, 0.0, max, max, min))
+                    Direction.SOUTH -> VoxelShapes.union(shape, VoxelShapes.cuboid(min, min, max, max, max, 1.0))
+                    Direction.WEST -> VoxelShapes.union(shape, VoxelShapes.cuboid(0.0, min, min, min, max, max))
+                    Direction.EAST -> VoxelShapes.union(shape, VoxelShapes.cuboid(max, min, min, 1.0, max, max))
+                    Direction.DOWN -> VoxelShapes.union(shape, VoxelShapes.cuboid(min, 0.0, min, max, min, max))
+                    Direction.UP -> VoxelShapes.union(shape, VoxelShapes.cuboid(min, max, min, max, 1.0, max))
+                }
             }
         }
 
