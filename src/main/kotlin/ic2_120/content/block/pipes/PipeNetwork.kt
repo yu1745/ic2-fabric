@@ -60,20 +60,21 @@ class PipeNetwork {
             val sourceBlock = sourceState.block
             val sourceBe = world.getBlockEntity(sourcePipePos) as? PipeBlockEntity
 
-            val forcedByPumpAttachment = sourceBlock is PumpAttachmentBlock &&
-                sourceState.get(Properties.FACING) == machineSide.opposite &&
-                storage.supportsExtraction()
+            val isPumpBlock = sourceBlock is PumpAttachmentBlock
+            val pumpFacingCorrect = isPumpBlock && sourceState.get(Properties.FACING) == machineSide.opposite
+            val forcedByPumpAttachment = isPumpBlock && pumpFacingCorrect && storage.supportsExtraction()
             val forcedFilter = if (forcedByPumpAttachment) sourceBe?.pumpFilterFluid() else null
 
-            if (
-                (be != null && be.fluidPipeProviderEnabled && allowsProviderOnSide(be, machineSide) && storage.supportsExtraction()) ||
-                forcedByPumpAttachment
-            ) {
+            val providerCond = be != null && be.fluidPipeProviderEnabled && allowsProviderOnSide(be, machineSide) && storage.supportsExtraction()
+            val isProvider = providerCond || forcedByPumpAttachment
+            if (isProvider) {
                 val filter = if (forcedByPumpAttachment) forcedFilter else be?.fluidPipeProviderFilter
-                val variant = resolveProviderVariant(storage, filter) ?: continue
-                providers.add(ProviderEndpoint(storage, edge.cablePosLong, variant))
+                val variant = resolveProviderVariant(storage, filter)
+                if (variant != null) {
+                    providers.add(ProviderEndpoint(storage, edge.cablePosLong, variant))
+                }
             }
-            if (storage.supportsInsertion()) {
+            if (storage.supportsInsertion() && !forcedByPumpAttachment) {
                 if (block is MachineBlock) {
                     if (be?.fluidPipeReceiverEnabled == true && allowsReceiverOnSide(be, machineSide)) {
                         receivers.add(ReceiverEndpoint(storage, edge.cablePosLong, be.fluidPipeReceiverFilter))
@@ -87,7 +88,7 @@ class PipeNetwork {
         val fluidKinds = providers.map { it.variant.fluid }.toSet()
         stalledByMixedProviders = fluidKinds.size > 1
 
-        if (providers.isEmpty()) {
+        if (providers.isEmpty() || receivers.isEmpty()) {
             syncPipeLoad(world, topology.pipeRates, remaining)
             return
         }
@@ -106,7 +107,9 @@ class PipeNetwork {
                         Triple(provider, path, path.minOf { remaining[it] ?: 0L })
                     }
                     .filter { it.third > 0L }
-                    .minByOrNull { it.second.size } ?: break
+                    .minByOrNull { it.second.size }
+
+                if (best == null) break
 
                 val provider = best.first
                 val path = best.second
@@ -118,7 +121,6 @@ class PipeNetwork {
                     if (failedProviderEntries.size >= providers.size) break
                     continue
                 }
-
                 for (pipe in path) {
                     remaining[pipe] = (remaining[pipe] ?: 0L) - moved
                 }

@@ -198,13 +198,17 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
         val be = world.getBlockEntity(pos) as? PipeBlockEntity
         return defaultState
             .with(Properties.FACING, facing)
-            .with(propertyFor(back), canConnect(world, pos, back, be))
+            .with(propertyFor(back), canConnect(world, pos, back, be, facing))
+            .with(propertyFor(facing), canConnect(world, pos, facing, be, facing))
     }
 
-    override fun canConnect(world: WorldAccess, pos: BlockPos, direction: Direction, be: PipeBlockEntity?): Boolean {
+    override fun canConnect(world: WorldAccess, pos: BlockPos, direction: Direction, be: PipeBlockEntity?): Boolean =
+        canConnect(world, pos, direction, be, null)
+
+    private fun canConnect(world: WorldAccess, pos: BlockPos, direction: Direction, be: PipeBlockEntity?, overrideFacing: Direction?): Boolean {
         if (be?.isDisabled(direction) == true) return false
         val state = world.getBlockState(pos)
-        val facing = if (state.contains(Properties.FACING)) state.get(Properties.FACING) else Direction.NORTH
+        val facing = overrideFacing ?: (if (state.contains(Properties.FACING)) state.get(Properties.FACING) else Direction.NORTH)
         val neighborPos = pos.offset(direction)
         val neighborState = world.getBlockState(neighborPos)
         val neighbor = neighborState.block
