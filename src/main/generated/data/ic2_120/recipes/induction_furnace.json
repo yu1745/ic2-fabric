@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "ic2_120:re_battery"
+    },
+    "C": {
+      "item": "ic2_120:advanced_circuit"
+    },
+    "F": {
+      "item": "ic2_120:iron_furnace"
+    },
+    "G": {
+      "item": "ic2_120:gold_cable"
+    },
+    "M": {
+      "item": "ic2_120:machine"
+    }
+  },
+  "pattern": [
+    "CGC",
+    "MFM",
+    "BBB"
+  ],
+  "result": {
+    "item": "ic2_120:induction_furnace"
+  },
+  "show_notification": true
+}
