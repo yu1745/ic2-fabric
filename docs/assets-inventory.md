@@ -140,7 +140,7 @@
 | - [x] | block.ic2.macerator | 打粉机 |
 | - [ ] | block.ic2.recycler | 回收机 |
 | - [ ] | block.ic2.blast_furnace | 高炉 |
-| - [ ] | block.ic2.block_cutter | 方块切割机 |
+| - [x] | block.ic2.block_cutter | 方块切割机 |
 | - [ ] | block.ic2.centrifuge | 热能离心机 |
 | - [ ] | block.ic2.fermenter | 发酵机 |
 | - [x] | block.ic2.induction_furnace | 感应炉 |
@@ -913,7 +913,7 @@
 | - [ ] | item.ic2.batbox_chargepad | 充电座 (BatBox) |
 | - [ ] | item.ic2.batch_crafter | 批量工作台 |
 | - [ ] | item.ic2.blast_furnace | 高炉 |
-| - [ ] | item.ic2.block_cutter | 方块切割机 |
+| - [x] | item.ic2.block_cutter | 方块切割机 |
 | - [x] | item.ic2.bronze_block | 青铜块 |
 | - [ ] | item.ic2.bronze_storage_box | 青铜储物箱 |
 | - [ ] | item.ic2.bronze_tank | 青铜储罐 |

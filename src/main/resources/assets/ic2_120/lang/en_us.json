@@ -116,6 +116,7 @@
   "block.ic2_120.macerator": "Macerator",
   "block.ic2_120.ore_washing_plant": "Ore Washing Plant",
   "block.ic2_120.compressor": "Compressor",
+  "block.ic2_120.block_cutter": "Block Cutting Machine",
   "block.ic2_120.extractor": "Extractor",
   "block.ic2_120.pump": "Pump",
   "block.ic2_120.metal_former": "Metal Former",
@@ -175,6 +176,9 @@
   "item.ic2_120.copper_plate": "Copper Plate",
   "item.ic2_120.gold_plate": "Gold Plate",
   "item.ic2_120.iron_plate": "Iron Plate",
+  "item.ic2_120.iron_block_cutting_blade": "Block Cutting Blade (Iron)",
+  "item.ic2_120.steel_block_cutting_blade": "Block Cutting Blade (Steel)",
+  "item.ic2_120.diamond_block_cutting_blade": "Block Cutting Blade (Diamond)",
   "item.ic2_120.lapis_plate": "Lapis Plate",
   "item.ic2_120.lead_plate": "Lead Plate",
   "item.ic2_120.obsidian_plate": "Obsidian Plate",
@@ -469,5 +473,6 @@
   "effect.ic2_120.solar_generating": "Solar Charging",
   "effect.ic2_120.solar_generating.description": "Solar helmet is generating 1 EU/t",
   "block.ic2_120.liquid_heat_exchanger": "Liquid Heat Exchanger",
-  "container.ic2_120.liquid_heat_exchanger": "Liquid Heat Exchanger"
+  "container.ic2_120.liquid_heat_exchanger": "Liquid Heat Exchanger",
+  "gui.ic2_120.block_cutter.blade_too_weak": "Block Cutting Blade is too weak or missing"
 }

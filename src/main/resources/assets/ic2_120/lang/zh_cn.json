@@ -116,6 +116,7 @@
   "block.ic2_120.macerator": "粉碎机",
   "block.ic2_120.ore_washing_plant": "洗矿机",
   "block.ic2_120.compressor": "压缩机",
+  "block.ic2_120.block_cutter": "方块切割机",
   "block.ic2_120.extractor": "提取机",
   "block.ic2_120.pump": "泵",
   "block.ic2_120.metal_former": "金属成型机",
@@ -175,6 +176,9 @@
   "item.ic2_120.copper_plate": "铜板",
   "item.ic2_120.gold_plate": "金板",
   "item.ic2_120.iron_plate": "铁板",
+  "item.ic2_120.iron_block_cutting_blade": "切割锯片（铁）",
+  "item.ic2_120.steel_block_cutting_blade": "切割锯片（钢）",
+  "item.ic2_120.diamond_block_cutting_blade": "切割锯片（钻石）",
   "item.ic2_120.lapis_plate": "青金石板",
   "item.ic2_120.lead_plate": "铅板",
   "item.ic2_120.obsidian_plate": "黑曜石板",
@@ -469,5 +473,6 @@
   "effect.ic2_120.solar_generating": "正在发电",
   "effect.ic2_120.solar_generating.description": "太阳能头盔正在输出 1 EU/t",
   "block.ic2_120.liquid_heat_exchanger": "流体热交换机",
-  "container.ic2_120.liquid_heat_exchanger": "流体热交换机"
+  "container.ic2_120.liquid_heat_exchanger": "流体热交换机",
+  "gui.ic2_120.block_cutter.blade_too_weak": "锯片硬度不够或者没有锯片"
 }
