@@ -139,7 +139,7 @@
 | - [x] | block.ic2.iron_furnace | 铁炉 |
 | - [x] | block.ic2.macerator | 打粉机 |
 | - [ ] | block.ic2.recycler | 回收机 |
-| - [ ] | block.ic2.blast_furnace | 高炉 |
+| - [x] | block.ic2.blast_furnace | 高炉 |
 | - [x] | block.ic2.block_cutter | 方块切割机 |
 | - [ ] | block.ic2.centrifuge | 热能离心机 |
 | - [ ] | block.ic2.fermenter | 发酵机 |
