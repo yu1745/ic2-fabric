@@ -14,7 +14,11 @@ import ic2_120.content.effect.ModStatusEffects
 import ic2_120.content.worldgen.OreGeneration
 import ic2_120.content.worldgen.RubberTreeGeneration
 import ic2_120.content.item.CellAndBucketFluidRegistration
+import ic2_120.content.block.BatBoxBlock
+import ic2_120.content.block.CesuBlock
+import ic2_120.content.block.MfeBlock
 import ic2_120.content.block.MfsuBlock
+import ic2_120.content.block.storage.EnergyStorageBlock
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
 import ic2_120.content.block.machines.FluidHeatGeneratorBlockEntity
@@ -136,19 +140,28 @@ object Ic2_120 : ModInitializer {
             PipeNetworkManager.onWorldUnload(world)
         }
 
-        // 添加特殊物品：MFSU 满电变体（仅创造模式物品栏可拿，放置即满电）
-        val mfsuId = Identifier(MOD_ID, "mfsu")
-        val mfsuBlock = Registries.BLOCK.get(mfsuId)
-        val mfsuKey = RegistryKey.of(RegistryKeys.ITEM, mfsuId)
-        val existingMfsu = Registries.ITEM.get(mfsuId)
-        val rawId = Registries.ITEM.getRawId(existingMfsu)
-        val customMfsuItem = MfsuBlock.MfsuBlockItem(mfsuBlock, net.fabricmc.fabric.api.item.v1.FabricItemSettings())
-        (Registries.ITEM as SimpleRegistry<Item>).set(rawId, mfsuKey, customMfsuItem, Lifecycle.stable())
+        // 储电盒自定义 BlockItem（支持满电变体）及创造模式满电物品
+        val storageConfigs = listOf(
+            "batbox" to { b: net.minecraft.block.Block -> BatBoxBlock.BatBoxBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) },
+            "cesu" to { b: net.minecraft.block.Block -> CesuBlock.CesuBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) },
+            "mfe" to { b: net.minecraft.block.Block -> MfeBlock.MfeBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) },
+            "mfsu" to { b: net.minecraft.block.Block -> MfsuBlock.MfsuBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) }
+        )
+        for ((id, factory) in storageConfigs) {
+            val blockId = Identifier(MOD_ID, id)
+            val block = Registries.BLOCK.get(blockId)
+            val itemKey = RegistryKey.of(RegistryKeys.ITEM, blockId)
+            val existingItem = Registries.ITEM.get(blockId)
+            val rawId = Registries.ITEM.getRawId(existingItem)
+            (Registries.ITEM as SimpleRegistry<Item>).set(rawId, itemKey, factory(block), Lifecycle.stable())
+        }
         val ic2MachinesKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_MACHINES.id))
         ItemGroupEvents.modifyEntriesEvent(ic2MachinesKey).register { entries ->
-            val fullStack = ItemStack(Registries.ITEM.get(mfsuId))
-            fullStack.orCreateNbt.putBoolean(MfsuBlock.NBT_FULL, true)
-            entries.add(fullStack)
+            for ((id, _) in storageConfigs) {
+                val fullStack = ItemStack(Registries.ITEM.get(Identifier(MOD_ID, id)))
+                fullStack.orCreateNbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
+                entries.add(fullStack)
+            }
         }
 
         // 注册网络管理器

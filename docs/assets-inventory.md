@@ -201,9 +201,9 @@
 ### 机器 - 储能设备类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | block.ic2.batbox | 储电箱 |
-| - [ ] | block.ic2.cesu | CESU 储电箱 |
-| - [ ] | block.ic2.mfe | MFE 储电箱 |
+| - [x] | block.ic2.batbox | 储电箱 |
+| - [x] | block.ic2.cesu | CESU 储电箱 |
+| - [x] | block.ic2.mfe | MFE 储电箱 |
 | - [x] | block.ic2.mfsu | MFSU 储电箱 |
 | - [ ] | block.ic2.batbox_chargepad | 充电座 (BatBox) |
 | - [ ] | block.ic2.cesu_chargepad | 充电座 (CESU) |

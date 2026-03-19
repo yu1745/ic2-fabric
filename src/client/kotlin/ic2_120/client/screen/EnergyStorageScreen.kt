@@ -2,26 +2,45 @@ package ic2_120.client.screen
 
 import ic2_120.client.compose.*
 import ic2_120.client.ui.GuiBackground
-import ic2_120.client.ui.EnergyBar
-import ic2_120.content.sync.MfsuSync
-import ic2_120.content.block.MfsuBlock
-import ic2_120.content.block.machines.MfsuBlockEntity
-import ic2_120.content.screen.MfsuScreenHandler
+import ic2_120.client.ui.ProgressBar
+import ic2_120.content.block.storage.EnergyStorageConfig
+import ic2_120.content.screen.EnergyStorageScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 
-@ModScreen(block = MfsuBlock::class)
-class MfsuScreen(
-    handler: MfsuScreenHandler,
+/**
+ * 储电盒 GUI。四个等级（BatBox/CESU/MFE/MFSU）共用。
+ */
+@ModScreen(handlers = ["batbox", "cesu", "mfe", "mfsu"])
+class EnergyStorageScreen(
+    handler: EnergyStorageScreenHandler,
     playerInventory: PlayerInventory,
     title: Text
-) : HandledScreen<MfsuScreenHandler>(handler, playerInventory, title) {
+) : HandledScreen<EnergyStorageScreenHandler>(handler, playerInventory, title) {
 
     private val ui = ComposeUI()
+    private val capacity: Long = resolveCapacity()
+    private val useEquipmentSlots: Boolean = resolveUseEquipmentSlots()
+
+    private fun resolveCapacity(): Long {
+        return handler.context.get({ world, pos ->
+            val block = world.getBlockState(pos).block
+            val id = Registries.BLOCK.getId(block)
+            EnergyStorageConfig.fromBlockPath(id.path)?.capacity ?: EnergyStorageConfig.BATBOX.capacity
+        }, EnergyStorageConfig.BATBOX.capacity)
+    }
+
+    private fun resolveUseEquipmentSlots(): Boolean {
+        return handler.context.get({ world, pos ->
+            val block = world.getBlockState(pos).block
+            val id = Registries.BLOCK.getId(block)
+            EnergyStorageConfig.fromBlockPath(id.path)?.useEquipmentSlots ?: false
+        }, false)
+    }
 
     init {
         backgroundWidth = PANEL_WIDTH
@@ -34,15 +53,26 @@ class MfsuScreen(
         GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(context, x, y, 84, 142, 18)
 
-        // 绘制4个装备槽的边框（UI下方横向）
         val borderColor = GuiBackground.BORDER_COLOR
         val slotSize = 18
         val borderOffset = 1
-        val armorSlotX = 8
-        val armorSlotY = 55
+        val slotY = 55
+        val slotSpacing = 18
+
+        val equipLabel = Text.translatable("ic2_120.gui.equipment_slots")
+        val chargeLabel = Text.translatable("ic2_120.gui.charge_slots")
+
+        // 装备槽标签（左侧，4 格上方）
+        context.drawText(textRenderer, equipLabel, x + 8, y + 37, 0xAAAAAA, false)
+        // 充电槽标签（右侧，1 格上方）
+        context.drawText(textRenderer, chargeLabel, x + 8 + slotSpacing * 4, y + 37, 0xAAAAAA, false)
+
+        // 装备槽边框（左侧 4 格）
         for (i in 0 until 4) {
-            context.drawBorder(x + armorSlotX + i * 18 - borderOffset, y + armorSlotY - borderOffset, slotSize, slotSize, borderColor)
+            context.drawBorder(x + 8 + i * slotSpacing - borderOffset, y + slotY - borderOffset, slotSize, slotSize, borderColor)
         }
+        // 充电槽边框（右侧 1 格）
+        context.drawBorder(x + 8 + 4 * slotSpacing - borderOffset, y + slotY - borderOffset, slotSize, slotSize, borderColor)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -51,41 +81,28 @@ class MfsuScreen(
         val left = (width - backgroundWidth) / 2
         val top = (height - backgroundHeight) / 2
 
-        // 计算数据
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()
-        val cap = MfsuSync.ENERGY_CAPACITY
+        val cap = capacity
         val fraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
 
-        // 在UI左侧绘制速度文本
         val inputText = "输入 ${formatEu(inputRate)} EU/t"
         val outputText = "输出 ${formatEu(outputRate)} EU/t"
-        val inputTextWidth = inputText.length * 6
-        val outputTextWidth = outputText.length * 6
-        val textX = left - maxOf(inputTextWidth, outputTextWidth) - 4  // 留4像素边距
+        val textX = left - maxOf(inputText.length * 6, outputText.length * 6) - 4
         context.drawText(textRenderer, inputText, textX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, outputText, textX, top + 20, 0xAAAAAA, false)
+
+        val barW = CONTENT_WIDTH - LABEL_WIDTH
+        val barX = left + 8 + LABEL_WIDTH
+        val barY = top + 18
+        ProgressBar.draw(context, barX, barY, barW, 9, fraction, gradient = true)
 
         ui.render(context, textRenderer, mouseX, mouseY) {
             Column(x = left + 8, y = top + 8, spacing = 6) {
                 Text(title.string, color = 0xFFFFFF)
-                Flex(
-                    direction = FlexDirection.ROW,
-                    alignItems = AlignItems.CENTER,
-                    gap = 8,
-                    modifier = Modifier.EMPTY.width(CONTENT_WIDTH)
-                ) {
-                    Text("能量", color = 0xAAAAAA)
-                    EnergyBar(
-                        fraction,
-                        barWidth = 0,
-                        barHeight = 9,
-                        modifier = Modifier.EMPTY.width(CONTENT_WIDTH - LABEL_WIDTH)
-                    )
-                }
                 Text(
-                    "${formatEu(energy)} / ${formatEu(MfsuSync.ENERGY_CAPACITY)} EU",
+                    "${formatEu(energy)} / ${formatEu(cap)} EU",
                     color = 0xCCCCCC,
                     shadow = false
                 )
@@ -109,9 +126,7 @@ class MfsuScreen(
     companion object {
         private const val PANEL_WIDTH = 176
         private const val PANEL_HEIGHT = 166
-        /** 内容区宽度（左右各 8 边距） */
         private const val CONTENT_WIDTH = PANEL_WIDTH - 16
-        /** “能量”标签预估宽度 */
         private const val LABEL_WIDTH = 36
     }
 }
