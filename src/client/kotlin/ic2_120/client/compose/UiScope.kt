@@ -1,6 +1,7 @@
 package ic2_120.client.compose
 
 import ic2_120.client.ui.GuiBackground
+import ic2_120.client.ui.HeatProgressBar
 import net.minecraft.util.Identifier
 
 /**

@@ -141,7 +141,7 @@
 | - [ ] | block.ic2.recycler | 回收机 |
 | - [x] | block.ic2.blast_furnace | 高炉 |
 | - [x] | block.ic2.block_cutter | 方块切割机 |
-| - [ ] | block.ic2.centrifuge | 热能离心机 |
+| - [x] | block.ic2.centrifuge | 热能离心机 |
 | - [ ] | block.ic2.fermenter | 发酵机 |
 | - [x] | block.ic2.induction_furnace | 感应炉 |
 | - [x] | block.ic2.metal_former | 金属成型机 |
