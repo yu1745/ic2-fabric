@@ -3,22 +3,22 @@
   "category": "misc",
   "key": {
     "C": {
-      "item": "ic2_120:circuit"
+      "item": "ic2_120:empty_cell"
     },
     "M": {
       "item": "ic2_120:machine"
     },
     "T": {
-      "item": "ic2_120:tin_ingot"
+      "item": "ic2_120:circuit"
     }
   },
   "pattern": [
-    "TCT",
-    "TMT",
-    "TTT"
+    " C ",
+    " C ",
+    "TMT"
   ],
   "result": {
-    "item": "ic2_120:solid_canner"
+    "item": "ic2_120:fluid_bottler"
   },
   "show_notification": true
 }

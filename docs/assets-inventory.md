@@ -164,7 +164,7 @@
 |  | ID | 名称 |
 |--|----|------|
 | - [ ] | block.ic2.condenser | 冷凝机 |
-| - [ ] | block.ic2.fluid_bottler | 流体装罐机 |
+| - [x] | block.ic2.fluid_bottler | 流体装罐机 |
 | - [ ] | block.ic2.fluid_distributor | 流体分配机 |
 | - [ ] | block.ic2.fluid_regulator | 流体流量调节机 |
 | - [ ] | block.ic2.liquid_heat_exchanger | 流体热交换机 |
