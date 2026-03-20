@@ -27,8 +27,6 @@ object CompressorRecipes {
             val ident = Identifier.tryParse(id) ?: return ItemStack.EMPTY
             return ItemStack(Registries.ITEM.get(ident), count)
         }
-        // 4 煤炭 -> 1 煤炭块（煤球 -> 压缩煤球的前置）
-        add("minecraft:coal", 4, stack("minecraft:coal_block", 1))
         // 9 铁锭 -> 1 铁块（金属锭 -> 金属块）
         add("minecraft:iron_ingot", 9, stack("minecraft:iron_block", 1))
         // 9 金锭 -> 1 金块（金属锭 -> 金属块）
@@ -71,6 +69,28 @@ object CompressorRecipes {
         add("ic2_120:steel_plate", 9, stack("ic2_120:dense_steel_plate", 1))
         // 9 锡板 -> 1 致密锡板（矿物板 -> 致密板）
         add("ic2_120:tin_plate", 9, stack("ic2_120:dense_tin_plate", 1))
+        // 碳网 -> 碳板（1:1）
+        add("ic2_120:carbon_mesh", 1, stack("ic2_120:carbon_plate", 1))
+        // 煤球 -> 压缩煤球（1:1）
+        add("ic2_120:coal_ball", 1, stack("ic2_120:coal_chunk", 1))
+        // 能量水晶粉 -> 能量水晶（9个粉 -> 1个水晶）
+        add("ic2_120:energium_dust", 9, stack("ic2_120:energy_crystal", 1))
+        // 烈焰粉 -> 烈焰棒（5个粉 -> 1个烈焰棒）
+        add("minecraft:blaze_powder", 5, stack("minecraft:blaze_rod", 1))
+        // 雪块 -> 冰
+        add("minecraft:snow_block", 1, stack("minecraft:ice", 1))
+        // 2 冰 -> 浮冰
+        add("minecraft:ice", 2, stack("minecraft:packed_ice", 1))
+        // 9 小撮钚 -> 钚
+        add("ic2_120:small_plutonium", 9, stack("ic2_120:plutonium", 1))
+        // 9 小撮铀-235 -> 铀-235
+        add("ic2_120:small_uranium_235", 9, stack("ic2_120:uranium_235", 1))
+        // 9 小撮铀-238 -> 铀-238
+        add("ic2_120:small_uranium_238", 9, stack("ic2_120:uranium_238", 1))
+        // 混合金属锭 -> 高级合金（1:1）
+        add("ic2_120:mixed_metal_ingot", 1, stack("ic2_120:alloy", 1))
+        // 煤块 -> 钻石
+        add("minecraft:coal_block", 1, stack("minecraft:diamond", 1))
     }
 
     private fun add(inputId: String, inputCount: Int, output: ItemStack) {

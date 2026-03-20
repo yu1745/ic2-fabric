@@ -15,3 +15,4 @@ IC2特有船的特有逻辑实现 各种电动工具的逻辑
 修复流体管道对非mod机器时灵时不灵的问题
 Jade插件实现管道的流体流量显示
 流体固体装罐机配方和功能实现
+compose ui支持只计算不渲染，然后可以被screen handler在init中运行以拿到slot位置，然后就可以把slot也作为compose组件，控制是否实际渲染使用threadlocal或者别的什么东西

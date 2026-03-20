@@ -1,11 +1,21 @@
 package ic2_120.content.item
 
+import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.instance
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.Item
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.util.Identifier
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import java.util.function.Consumer
 
 // ========== 碳材料类 ==========
 
@@ -74,10 +84,33 @@ class CopperBoiler : Item(FabricItemSettings())
 // ========== 能源球类 ==========
 
 @ModItem(name = "coal_ball", tab = CreativeTab.IC2_MATERIALS, group = "energy_balls")
-class CoalBall : Item(FabricItemSettings())
+class CoalBall : Item(FabricItemSettings()) {
+    companion object {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CoalBall::class.instance(), 1)
+                .pattern("DCD").pattern("CFC").pattern("DCD")
+                .input('D', CoalDust::class.instance())
+                .input('C', CoalDust::class.instance())
+                .input('F', Items.FLINT)
+                .criterion(hasItem(CoalDust::class.instance()), conditionsFromItem(CoalDust::class.instance()))
+                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "coal_ball"))
+        }
+    }
+}
 
 @ModItem(name = "coal_chunk", tab = CreativeTab.IC2_MATERIALS, group = "energy_balls")
-class CoalChunk : Item(FabricItemSettings())
+class CoalChunk : Item(FabricItemSettings()) {
+    companion object {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Items.COAL_BLOCK, 1)
+                .pattern("C C").pattern("COC").pattern("C C")
+                .input('C', CoalChunk::class.instance())
+                .input('O', Items.OBSIDIAN)
+                .criterion(hasItem(CoalChunk::class.instance()), conditionsFromItem(CoalChunk::class.instance()))
+                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "coal_block"))
+        }
+    }
+}
 
 @ModItem(name = "industrial_diamond", tab = CreativeTab.IC2_MATERIALS, group = "energy_balls")
 class IndustrialDiamond : Item(FabricItemSettings())

@@ -1,11 +1,21 @@
 package ic2_120.content.item
 
+import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.instance
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.type
+import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.Item
+import net.minecraft.item.Items
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.util.Identifier
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import java.util.function.Consumer
 
 // ========== 粉尘类 ==========
 
@@ -23,7 +33,23 @@ class CoalDust : Item(FabricItemSettings())
 
 /** 湿煤粉 */
 @ModItem(name = "coal_fuel_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
-class CoalFuelDust : Item(FabricItemSettings())
+class CoalFuelDust : Item(FabricItemSettings()) {
+    companion object {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, CoalFuelDust::class.instance(), 1)
+                .input(CoalDust::class.instance())
+                .input(Items.WATER_BUCKET)
+                .criterion(hasItem(CoalDust::class.instance()), conditionsFromItem(CoalDust::class.instance()))
+                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "coal_fuel_dust_from_bucket"))
+
+            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, CoalFuelDust::class.instance(), 1)
+                .input(CoalDust::class.instance())
+                .input(WaterCell::class.instance())
+                .criterion(hasItem(CoalDust::class.instance()), conditionsFromItem(CoalDust::class.instance()))
+                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "coal_fuel_dust_from_cell"))
+        }
+    }
+}
 
 /** 铜粉 */
 @ModItem(name = "copper_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
