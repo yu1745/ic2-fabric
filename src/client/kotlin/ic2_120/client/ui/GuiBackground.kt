@@ -35,6 +35,73 @@ object GuiBackground {
         context.drawBorder(x, y, width, height, borderColor)
     }
 
+    private const val VANILLA_BASE_GRAY = 0xFFC6C6C6.toInt()
+    private const val VANILLA_HILIGHT_OUTER = 0xFFFFFFFF.toInt()
+    private const val VANILLA_HILIGHT_INNER = 0xFFE6E6E6.toInt()
+    private const val VANILLA_SHADOW_INNER = 0xFF555555.toInt()
+    private const val VANILLA_SHADOW_OUTER = 0xFF373737.toInt()
+    private const val VANILLA_SLOT_INNER = 0xFF8B8B8B.toInt()
+    private const val VANILLA_SLOT_DARK = 0xFF373737.toInt()
+    private const val VANILLA_SLOT_HILIGHT = 0xFFFFFFFF.toInt()
+
+    /**
+     * 程序化复刻原版容器亮灰背景（无贴图空洞），并支持任意尺寸拉伸。
+     */
+    @JvmStatic
+    fun drawVanillaLikePanel(
+        context: DrawContext,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int
+    ) {
+        val w = width.coerceAtLeast(4)
+        val h = height.coerceAtLeast(4)
+        val x1 = x + w
+        val y1 = y + h
+
+        // 主体填充：原版亮灰底色。
+        context.fill(x, y, x1, y1, VANILLA_BASE_GRAY)
+
+        // 外层浮雕边框。
+        context.fill(x, y, x1, y + 1, VANILLA_HILIGHT_OUTER) // top
+        context.fill(x, y, x + 1, y1, VANILLA_HILIGHT_OUTER) // left
+        context.fill(x, y1 - 1, x1, y1, VANILLA_SHADOW_OUTER) // bottom
+        context.fill(x1 - 1, y, x1, y1, VANILLA_SHADOW_OUTER) // right
+
+        // 内层次级边框。
+        if (w > 3 && h > 3) {
+            context.fill(x + 1, y + 1, x1 - 1, y + 2, VANILLA_HILIGHT_INNER)
+            context.fill(x + 1, y + 1, x + 2, y1 - 1, VANILLA_HILIGHT_INNER)
+            context.fill(x + 1, y1 - 2, x1 - 1, y1 - 1, VANILLA_SHADOW_INNER)
+            context.fill(x1 - 2, y + 1, x1 - 1, y1 - 1, VANILLA_SHADOW_INNER)
+        }
+    }
+
+    /**
+     * 程序化绘制原版风格槽位（亮左上、暗右下、灰色内底），可随尺寸拉伸。
+     */
+    @JvmStatic
+    fun drawVanillaLikeSlot(
+        context: DrawContext,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int
+    ) {
+        val w = width.coerceAtLeast(4)
+        val h = height.coerceAtLeast(4)
+        val x1 = x + w
+        val y1 = y + h
+
+        // Vanilla-like slot: flat gray fill with dark top/left and light bottom/right.
+        context.fill(x, y, x1, y1, VANILLA_SLOT_INNER)
+        context.fill(x, y, x1, y + 1, VANILLA_SLOT_DARK)     // top
+        context.fill(x, y, x + 1, y1, VANILLA_SLOT_DARK)     // left
+        context.fill(x, y1 - 1, x1, y1, VANILLA_SLOT_HILIGHT) // bottom
+        context.fill(x1 - 1, y, x1, y1, VANILLA_SLOT_HILIGHT) // right
+    }
+
     private const val BORDER_OFFSET = 1
     private const val PLAYER_INV_COLS = 9
     private const val PLAYER_INV_MAIN_ROWS = 3
@@ -63,25 +130,43 @@ object GuiBackground {
             for (col in 0 until PLAYER_INV_COLS) {
                 val slotX = playerInvX + col * slotSize
                 val slotY = playerInvY + row * slotSize
-                context.drawBorder(
+                drawVanillaLikeSlot(
+                    context,
                     screenX + slotX - BORDER_OFFSET,
                     screenY + slotY - BORDER_OFFSET,
                     w,
-                    w,
-                    borderColor
+                    w
                 )
+                if (borderColor != BORDER_COLOR) {
+                    context.drawBorder(
+                        screenX + slotX - BORDER_OFFSET,
+                        screenY + slotY - BORDER_OFFSET,
+                        w,
+                        w,
+                        borderColor
+                    )
+                }
             }
         }
         // 快捷栏 1 行 x 9 列
         for (col in 0 until PLAYER_INV_COLS) {
             val slotX = playerInvX + col * slotSize
-            context.drawBorder(
+            drawVanillaLikeSlot(
+                context,
                 screenX + slotX - BORDER_OFFSET,
                 screenY + hotbarY - BORDER_OFFSET,
                 w,
-                w,
-                borderColor
+                w
             )
+            if (borderColor != BORDER_COLOR) {
+                context.drawBorder(
+                    screenX + slotX - BORDER_OFFSET,
+                    screenY + hotbarY - BORDER_OFFSET,
+                    w,
+                    w,
+                    borderColor
+                )
+            }
         }
     }
 }

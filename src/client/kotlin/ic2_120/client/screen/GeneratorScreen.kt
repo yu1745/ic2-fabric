@@ -37,32 +37,15 @@ class GeneratorScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            GeneratorScreenHandler.PLAYER_INV_Y,
-            GeneratorScreenHandler.HOTBAR_Y,
-            GeneratorScreenHandler.SLOT_SIZE
+            context = context,
+            screenX = x,
+            screenY = y,
+            playerInvY = GeneratorScreenHandler.PLAYER_INV_Y,
+            hotbarY = GeneratorScreenHandler.HOTBAR_Y,
+            slotSize = GeneratorScreenHandler.SLOT_SIZE
         )
-        val borderColor = GuiBackground.BORDER_COLOR
-        val slotSize = GeneratorScreenHandler.SLOT_SIZE
-        val borderOffset = 1
-        val fuelSlot = handler.slots[MachineBlockEntity.FUEL_SLOT]
-        val batterySlot = handler.slots[MachineBlockEntity.BATTERY_SLOT]
-        // context.drawBorder(
-        //     x + fuelSlot.x - borderOffset,
-        //     y + fuelSlot.y - borderOffset,
-        //     slotSize,
-        //     slotSize,
-        //     borderColor
-        // )
-        // context.drawBorder(
-        //     x + batterySlot.x - borderOffset,
-        //     y + batterySlot.y - borderOffset,
-        //     slotSize,
-        //     slotSize,
-        //     borderColor
-        // )
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -97,7 +80,7 @@ class GeneratorScreen(
             ) {
                 Row(spacing = 8) {
                     Text(title.string, color = 0xFFFFFF)
-                    Text(energyText)
+                    Text(energyText, color = 0xFFFFFF)
                 }
                 EnergyBar(energyFraction)
 

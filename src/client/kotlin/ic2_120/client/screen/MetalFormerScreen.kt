@@ -35,7 +35,7 @@ class MetalFormerScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
             MetalFormerScreenHandler.PLAYER_INV_Y,

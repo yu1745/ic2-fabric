@@ -50,29 +50,54 @@ class ExtractorScreenHandler(
     init {
         checkSize(blockInventory, ExtractorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
-        addSlot(PredicateSlot(blockInventory, ExtractorBlockEntity.SLOT_INPUT, INPUT_SLOT_X, BLOCK_SLOTS_Y, inputSlotSpec))
-        addSlot(PredicateSlot(blockInventory, ExtractorBlockEntity.SLOT_OUTPUT, OUTPUT_SLOT_X, BLOCK_SLOTS_Y, outputSlotSpec))
-        // 放电槽（第二行左侧）
-        addSlot(PredicateSlot(blockInventory, ExtractorBlockEntity.SLOT_DISCHARGING, INPUT_SLOT_X, BLOCK_SLOTS_Y + SLOT_SIZE, dischargingSlotSpec))
-        // 升级槽（右侧纵向）
+
+        // 机器槽位：Compose 屏幕会在客户端通过 SlotAnchor 回写真实坐标，这里仅放占位坐标。
+        addSlot(
+            PredicateSlot(
+                blockInventory,
+                ExtractorBlockEntity.SLOT_INPUT,
+                COMPOSE_PLACEHOLDER_X,
+                COMPOSE_PLACEHOLDER_Y,
+                inputSlotSpec
+            )
+        )
+        addSlot(
+            PredicateSlot(
+                blockInventory,
+                ExtractorBlockEntity.SLOT_OUTPUT,
+                COMPOSE_PLACEHOLDER_X,
+                COMPOSE_PLACEHOLDER_Y,
+                outputSlotSpec
+            )
+        )
+        addSlot(
+            PredicateSlot(
+                blockInventory,
+                ExtractorBlockEntity.SLOT_DISCHARGING,
+                COMPOSE_PLACEHOLDER_X,
+                COMPOSE_PLACEHOLDER_Y,
+                dischargingSlotSpec
+            )
+        )
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
             addSlot(
                 PredicateSlot(
                     blockInventory,
                     ExtractorBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    UpgradeSlotLayout.SLOT_X,
-                    UpgradeSlotLayout.slotY(i),
+                    COMPOSE_PLACEHOLDER_X,
+                    COMPOSE_PLACEHOLDER_Y,
                     upgradeSlotSpec
                 )
             )
         }
+
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, PLAYER_INV_Y + row * 18))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, PLAYER_INV_X + col * 18, PLAYER_INV_Y + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 8 + col * 18, HOTBAR_Y))
+            addSlot(Slot(playerInventory, col, PLAYER_INV_X + col * 18, HOTBAR_Y))
         }
     }
 
@@ -124,12 +149,13 @@ class ExtractorScreenHandler(
         }, true)
 
     companion object {
-        const val INPUT_SLOT_X = 56
-        const val OUTPUT_SLOT_X = 116
-        const val BLOCK_SLOTS_Y = 54
-        const val PLAYER_INV_Y = 84
-        const val HOTBAR_Y = 142
+        private const val COMPOSE_PLACEHOLDER_X = 0
+        private const val COMPOSE_PLACEHOLDER_Y = 0
+
         const val SLOT_SIZE = 18
+        const val PLAYER_INV_X = 8
+        const val PLAYER_INV_Y = 108
+        const val HOTBAR_Y = 166
 
         const val SLOT_INPUT_INDEX = 0
         const val SLOT_OUTPUT_INDEX = 1

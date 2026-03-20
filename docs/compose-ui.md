@@ -6,6 +6,18 @@ ComposeUI 是一个基于 `DrawContext` 的声明式 UI DSL，适用于 `Handled
 
 ---
 
+## 近期更新（2026-03）
+
+- `SlotAnchor` 的默认槽位框绘制已更新为“原版风格”：
+  - 不再是单线 `drawBorder`。
+  - 现在使用亮左上 + 暗右下 + 灰色内底的凹槽样式，尽量贴近原版容器槽位视觉。
+  - 若传入自定义 `borderColor`，会在原版槽位样式外再叠加该边框色。
+- 背景工具新增可复用原版风格绘制方法（`GuiBackground`）：
+  - `drawVanillaLikePanel(context, x, y, width, height)`：程序化绘制原版亮灰面板（可随 `GuiSize` 拉伸，无贴图空洞）。
+  - `drawVanillaLikeSlot(context, x, y, width, height)`：程序化绘制原版槽位框（可拉伸）。
+
+---
+
 ## 你应该先看哪篇
 
 - 快速上手：`docs/compose-ui/quick-start.md`

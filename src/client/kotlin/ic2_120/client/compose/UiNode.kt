@@ -1,9 +1,11 @@
 package ic2_120.client.compose
 
 import ic2_120.client.ui.GuiBackground
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.util.Identifier
+import org.lwjgl.glfw.GLFW
 
 /**
  * 渲染上下文，在整棵节点树中共享，避免逐层传参。
@@ -236,6 +238,10 @@ class ButtonNode(
     val text: String,
     val onClick: () -> Unit = {}
 ) : UiNode() {
+    private val vanillaFace = 0xFF8B8B8B.toInt()
+    private val vanillaFaceHover = 0xFF9D9D9D.toInt()
+    private val vanillaDark = 0xFF373737.toInt()
+    private val vanillaLight = 0xFFFFFFFF.toInt()
 
     override fun measure(ctx: RenderContext, constraints: Constraints) {
         val pad = modifier.padding.let {
@@ -254,21 +260,43 @@ class ButtonNode(
 
         val hovered = ctx.mouseX in originX until originX + measuredWidth
                 && ctx.mouseY in originY until originY + measuredHeight
-
-        val bgColor = modifier.backgroundColor
-            ?: if (hovered) 0xFF666666.toInt() else 0xFF555555.toInt()
-        val bdColor = modifier.borderColor
-            ?: if (hovered) 0xFFFFFFFF.toInt() else 0xFFAAAAAA.toInt()
+        val mousePressed = GLFW.glfwGetMouseButton(
+            MinecraftClient.getInstance().window.handle,
+            GLFW.GLFW_MOUSE_BUTTON_LEFT
+        ) == GLFW.GLFW_PRESS
+        val pressed = hovered && mousePressed
 
         if (ctx.drawEnabled) {
-            ctx.drawContext.fill(originX, originY, originX + measuredWidth, originY + measuredHeight, bgColor)
-            ctx.drawContext.drawBorder(originX, originY, measuredWidth, measuredHeight, bdColor)
+            val x0 = originX
+            val y0 = originY
+            val x1 = originX + measuredWidth
+            val y1 = originY + measuredHeight
+            val faceColor = modifier.backgroundColor ?: if (hovered) vanillaFaceHover else vanillaFace
+            val dark = modifier.borderColor ?: vanillaDark
+            val light = vanillaLight
+
+            // Vanilla-like button: gray face with beveled border.
+            ctx.drawContext.fill(x0, y0, x1, y1, faceColor)
+            val topLeft = if (pressed) dark else light
+            val bottomRight = if (pressed) light else dark
+            ctx.drawContext.fill(x0, y0, x1, y0 + 1, topLeft)      // top
+            ctx.drawContext.fill(x0, y0, x0 + 1, y1, topLeft)      // left
+            ctx.drawContext.fill(x0, y1 - 1, x1, y1, bottomRight)  // bottom
+            ctx.drawContext.fill(x1 - 1, y0, x1, y1, bottomRight)  // right
+            if (measuredWidth > 3 && measuredHeight > 3) {
+                val innerTopLeft = if (pressed) 0xFF555555.toInt() else 0xFFE6E6E6.toInt()
+                val innerBottomRight = if (pressed) 0xFFE6E6E6.toInt() else 0xFF555555.toInt()
+                ctx.drawContext.fill(x0 + 1, y0 + 1, x1 - 1, y0 + 2, innerTopLeft)
+                ctx.drawContext.fill(x0 + 1, y0 + 1, x0 + 2, y1 - 1, innerTopLeft)
+                ctx.drawContext.fill(x0 + 1, y1 - 2, x1 - 1, y1 - 1, innerBottomRight)
+                ctx.drawContext.fill(x1 - 2, y0 + 1, x1 - 1, y1 - 1, innerBottomRight)
+            }
         }
 
-        val tx = originX + pad.left
-        val ty = originY + pad.top
+        val tx = originX + pad.left + if (pressed) 1 else 0
+        val ty = originY + pad.top + if (pressed) 1 else 0
         if (ctx.drawEnabled) {
-            ctx.drawContext.drawTextWithShadow(ctx.textRenderer, text, tx, ty, 0xFFFFFF)
+            ctx.drawContext.drawTextWithShadow(ctx.textRenderer, text, tx, ty, if (hovered) 0xFFFFE080.toInt() else 0xFFE0E0E0.toInt())
         }
 
         if (ctx.interactionEnabled) {
@@ -284,6 +312,7 @@ class SlotAnchorNode(
     private val showBorder: Boolean = true,
     private val borderColor: Int = GuiBackground.BORDER_COLOR
 ) : UiNode() {
+    private val hoverOverlayColor = 0x80FFFFFF.toInt()
 
     override fun measure(ctx: RenderContext, constraints: Constraints) {
         val pad = modifier.padding
@@ -299,8 +328,24 @@ class SlotAnchorNode(
         val anchorH = (measuredHeight - pad.vertical).coerceAtLeast(0)
 
         if (ctx.drawEnabled && showBorder) {
-            // Draw border inside the anchored slot rect.
-            ctx.drawContext.drawBorder(anchorX, anchorY, anchorW, anchorH, borderColor)
+            // Render a vanilla-like slot frame so anchored slots look close to native containers.
+            GuiBackground.drawVanillaLikeSlot(ctx.drawContext, anchorX, anchorY, anchorW, anchorH)
+            if (borderColor != GuiBackground.BORDER_COLOR) {
+                ctx.drawContext.drawBorder(anchorX, anchorY, anchorW, anchorH, borderColor)
+            }
+            // ui.render happens after super.render, so we need to redraw slot hover highlight here.
+            val hovered = ctx.mouseX in anchorX until (anchorX + anchorW) &&
+                ctx.mouseY in anchorY until (anchorY + anchorH)
+            if (hovered) {
+                ctx.drawContext.fillGradient(
+                    anchorX,
+                    anchorY,
+                    anchorX + anchorW,
+                    anchorY + anchorH,
+                    hoverOverlayColor,
+                    hoverOverlayColor
+                )
+            }
         }
 
         ctx.anchors[id] = RenderContext.AnchorRect(

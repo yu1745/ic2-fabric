@@ -1,7 +1,10 @@
 package ic2_120.client.compose
 
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.sound.PositionedSoundInstance
+import net.minecraft.sound.SoundEvents
 import net.minecraft.text.Text
 
 /**
@@ -88,6 +91,9 @@ class ComposeUI {
             mx in h.x until (h.x + h.w) && my in h.y until (h.y + h.h)
         }
         if (btnHit != null) {
+            MinecraftClient.getInstance().soundManager.play(
+                PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
+            )
             btnHit.onClick()
             return true
         }
