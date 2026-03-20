@@ -34,6 +34,12 @@
 				"adapter": "kotlin"
 			}
 		],
+		"jade": [
+			{
+				"value": "ic2_120.integration.jade.Ic2JadePlugin",
+				"adapter": "kotlin"
+			}
+		],
 		"fabric-datagen": [
 			{
 				"value": "ic2_120.Ic2_120DataGenerator",
@@ -55,5 +61,8 @@
 		"fabric-api": "*",
 		"fabric-language-kotlin": "*",
 		"team_reborn_energy": ">=3.0.0"
+	},
+	"suggests": {
+		"jade": ">=11.0"
 	}
 }

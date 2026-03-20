@@ -15,6 +15,7 @@
 | 流体升级 | `src/main/kotlin/ic2_120/content/upgrade/IFluidPipeUpgradeSupport.kt` |
 | 升级组件 | `src/main/kotlin/ic2_120/content/upgrade/FluidPipeUpgradeComponent.kt` |
 | 扳手交互 | `src/main/kotlin/ic2_120/content/WrenchHandler.kt` |
+| Jade 渲染 | `src/main/kotlin/ic2_120/integration/jade/Ic2JadePlugin.kt` |
 
 ---
 
@@ -115,7 +116,7 @@ floor(baseBucketsPerSecond × materialMultiplier × FluidConstants.BUCKET / 20)
 ### 5.4 负载统计
 
 - 每根管道记录 `pipeLoad`（本 tick 实际使用量）。
-- 当前仅统计，未接 Jade 渲染。
+- Jade HUD 显示（需安装 Jade）：悬停管道方块显示 "Flow: X / Y mB/t" 进度条，混流停机时显示 "Stalled: Mixed Fluids"，泵附件额外显示 "Pump Attachment" 标签。
 
 ---
 
@@ -201,10 +202,10 @@ MachineBlock 必须安装 `fluid_pulling_upgrade` 才能作为 Receiver。
 - Provider：泵附件强制 + 升级驱动。
 - Receiver：非 MachineBlock 自动 + 升级驱动。
 - `SolarDistiller` / `GeoGenerator` / `Pump` / `OreWashingPlant` 接入升级驱动。
+- Jade 管道实时流量与停机原因渲染（`Ic2JadePlugin`）。
 
 **待扩展：**
 - 将 `IFluidPipeUpgradeSupport` 扩展到更多流体机器（如 WaterGenerator 等）。
-- Jade 管道实时流量与停机原因渲染。
 - 升级配置 GUI（物品界面）替代当前快捷交互。
 
 ---

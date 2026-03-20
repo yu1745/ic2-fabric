@@ -502,5 +502,9 @@
   "container.ic2_120.bronze_tank": "青铜储罐",
   "container.ic2_120.iron_tank": "铁储罐",
   "container.ic2_120.steel_tank": "钢制储罐",
-  "container.ic2_120.iridium_tank": "铱储罐"
+  "container.ic2_120.iridium_tank": "铱储罐",
+  "ic2_120.jade.flow": "流量: %d / %d mB/t",
+  "ic2_120.jade.flow_rate": "%s",
+  "ic2_120.jade.stalled": "停滞: 流体种类冲突",
+  "ic2_120.jade.pump": "泵附件"
 }

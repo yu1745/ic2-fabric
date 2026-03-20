@@ -17,6 +17,7 @@ repositories {
 	}
 	// maven { url "https://maven.fabricmc.net/" }
 	maven { url "https://maven.blamejared.com/" } // JEI
+	maven { url "https://api.modrinth.com/maven" } // Jade
 }
 
 loom {
@@ -61,6 +62,8 @@ dependencies {
 	// compile against JEI API in intermediary namespace for Yarn dev env
 	modCompileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api-intermediary:${project.jei_version}")
 	// runtime JEI is loaded from run/mods to avoid classpath mapping conflicts in dev
+	// Jade / Waila API for pipe flow rate HUD rendering
+	modCompileOnlyApi("maven.modrinth:jade:${project.jade_version}")
 }
 
 processResources {
