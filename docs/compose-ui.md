@@ -71,3 +71,42 @@ ui.render(context, textRenderer, mouseX, mouseY) {
    4) `ui.render(...)` 画 overlay
 
 详细见：`docs/compose-ui/slot-anchor-pipeline.md`
+
+---
+
+## 布局原则：让容器自己安排宽度
+
+**原则：除非明确要求，否则不主动指定子元素的 `x` / `y`。**
+
+正确的做法是：根容器通过 `modifier = Modifier.EMPTY.width(gui.contentWidth)` 固定宽度，内部的 Column / Row / Flex 等容器依靠 flow 布局自行排列。子元素只管自己内部的内容，不需要知道父容器放在屏幕哪个位置。
+
+```kotlin
+// ✅ 正确：根容器定宽，子元素不写 x/y
+ui.render(context, textRenderer, mouseX, mouseY) {
+    Flex(
+        x = x + 8,
+        y = y + 6,
+        direction = FlexDirection.ROW,
+        gap = 12,
+        modifier = Modifier.EMPTY.width(gui.contentWidth)
+    ) {
+        Column(spacing = 4) { ... }       // 不写 x/y
+        Column(spacing = 4) { ... }       // 不写 x/y
+    }
+}
+
+// ❌ 错误：子元素自己算 left/right，每个都带 x/y
+Flex(direction = FlexDirection.ROW, gap = 12) {
+    Column(spacing = 4) {
+        Text("信息")
+    }
+    Column(x = left + 132, spacing = 4) {   // 自己算 left，呼吸刻度不一致
+        ScrollView(width = contentW - 128) { ... }
+    }
+}
+```
+
+**何时需要主动指定 `x` / `y`：**
+- 根容器定位到屏幕坐标时（`x = this.x + 8`, `y = this.y + 6`）
+- 需要精确覆盖特定屏幕区域时（如与背景纹理对齐的局部面板）
+- `absolute = true` 时表示绝对定位，绕开 flow 布局

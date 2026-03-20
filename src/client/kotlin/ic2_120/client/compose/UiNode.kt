@@ -50,11 +50,14 @@ class RenderContext {
     )
 
     data class ScrollHit(
-        val x: Int, val y: Int,
-        val w: Int, val h: Int,
+        val viewportX: Int, val viewportY: Int,
+        val viewportW: Int, val viewportH: Int,
+        val trackX: Int, val trackY: Int,
+        val trackW: Int, val trackH: Int,
         val nodeId: Int,
         val maxScroll: Int,
-        val thumbHit: Boolean
+        val thumbY: Int,
+        val thumbH: Int
     )
 }
 
@@ -724,25 +727,38 @@ class TableNode(
 class ScrollViewNode(
     val nodeId: Int,
     val scrollbarWidth: Int = 6,
+    val contentEndInset: Int = 1,
     val scrollbarTrackColor: Int = 0xFF333333.toInt(),
     val thumbColor: Int = 0xFF888888.toInt(),
     val thumbHoverColor: Int = 0xFFAAAAAA.toInt(),
     val children: List<UiNode>
 ) : UiNode() {
 
+    private var contentW: Int = 0
     private var contentH: Int = 0
 
     override fun measure(ctx: RenderContext, constraints: Constraints) {
         val pad = modifier.padding
-        val innerMaxW = (modifier.width?.let { it - pad.horizontal - scrollbarWidth } ?: constraints.maxWidth)
-            .coerceAtLeast(0)
+        val hasBoundedParentWidth = constraints.maxWidth < Int.MAX_VALUE
+        val viewportMaxW = when {
+            modifier.width != null ->
+                (modifier.width!! - pad.horizontal - scrollbarWidth - contentEndInset).coerceAtLeast(0)
+            hasBoundedParentWidth ->
+                (constraints.maxWidth - pad.horizontal - scrollbarWidth - contentEndInset).coerceAtLeast(0)
+            else -> Int.MAX_VALUE
+        }
         // Width constrained; height unconstrained so content can extend freely
-        val childConstraints = Constraints(innerMaxW, Int.MAX_VALUE)
+        val childConstraints = Constraints(viewportMaxW, Int.MAX_VALUE)
 
         children.forEach { it.measure(ctx, childConstraints) }
+        contentW = children.maxOfOrNull { it.measuredWidth } ?: 0
         contentH = children.sumOf { it.measuredHeight }
 
-        measuredWidth = (modifier.width ?: (innerMaxW + pad.horizontal + scrollbarWidth))
+        val resolvedViewportW = when {
+            modifier.width != null || hasBoundedParentWidth -> viewportMaxW
+            else -> contentW
+        }
+        measuredWidth = (resolvedViewportW + pad.horizontal + scrollbarWidth + contentEndInset)
             .coerceAtMost(constraints.maxWidth)
         // fractionHeight overrides explicit height: resolved from parent constraints (set by Flex's inner size)
         measuredHeight = (when {
@@ -756,7 +772,7 @@ class ScrollViewNode(
         val pad = modifier.padding
         val vpX = originX + pad.left
         val vpY = originY + pad.top
-        val vpW = measuredWidth - pad.horizontal - scrollbarWidth
+        val vpW = (measuredWidth - pad.horizontal - scrollbarWidth - contentEndInset).coerceAtLeast(0)
         val vpH = measuredHeight - pad.vertical
 
         val maxScroll = (contentH - vpH).coerceAtLeast(0)
@@ -777,7 +793,7 @@ class ScrollViewNode(
 
         // 2. Scrollbar
         if (maxScroll > 0) {
-            val trackX = vpX + vpW
+            val trackX = vpX + vpW + contentEndInset
             val thumbH = (vpH.toFloat() * vpH / contentH).toInt().coerceAtLeast(10)
             val thumbMaxY = vpH - thumbH
             val thumbY = vpY + (scrollY.toFloat() * thumbMaxY / maxScroll).toInt()
@@ -792,10 +808,21 @@ class ScrollViewNode(
                 ctx.drawContext.drawBorder(trackX, vpY, scrollbarWidth, vpH, 0xFF444444.toInt())
             }
 
-            val thumbHit = ctx.mouseX in trackX until (trackX + scrollbarWidth)
-                    && ctx.mouseY in thumbY until (thumbY + thumbH)
             if (ctx.interactionEnabled) {
-                ctx.scrollHits += RenderContext.ScrollHit(trackX, vpY, scrollbarWidth, vpH, nodeId, maxScroll, thumbHit)
+                ctx.scrollHits += RenderContext.ScrollHit(
+                    viewportX = vpX,
+                    viewportY = vpY,
+                    viewportW = vpW,
+                    viewportH = vpH,
+                    trackX = trackX,
+                    trackY = vpY,
+                    trackW = scrollbarWidth,
+                    trackH = vpH,
+                    nodeId = nodeId,
+                    maxScroll = maxScroll,
+                    thumbY = thumbY,
+                    thumbH = thumbH
+                )
             }
         }
     }

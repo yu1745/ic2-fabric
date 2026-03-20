@@ -123,11 +123,11 @@ class ScannerScreenHandler(
         val oreCounts = mutableMapOf<Identifier, Int>()
 
         val minY = world.bottomY
-        val maxY = world.topY - 1
+        val topY = world.topY
 
         for (dx in -radius..radius) {
             for (dz in -radius..radius) {
-                for (y in minY..maxY) {
+                for (y in minY until topY) {
                     val pos = center.add(dx, 0, dz).withY(y)
                     val state = world.getBlockState(pos)
                     if (state.isAir) continue

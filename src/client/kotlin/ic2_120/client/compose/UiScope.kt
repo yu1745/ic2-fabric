@@ -215,9 +215,10 @@ class UiScope {
      * 滚动视图。支持鼠标滚轮滚动、点击 track 跳转、拖拽 thumb 滚动。
      * 注意：不支持嵌套 ScrollView（scissor 无法嵌套）。
      *
-     * @param width          视口宽度（不含滚动条）
-     * @param height         视口高度
+     * @param width          视口宽度（不含滚动条）；为 null 时使用父容器/约束推导
+     * @param height         视口高度；为 null 时使用父容器/约束推导
      * @param scrollbarWidth 滚动条宽度，默认 6
+     * @param contentEndInset 内容区与滚动条之间的间隙，默认 1
      * @param x              布局 x 偏移
      * @param y              布局 y 偏移
      * @param absolute       是否使用绝对定位
@@ -225,9 +226,10 @@ class UiScope {
      * @param content        子节点（内容高度可超出 [height]）
      */
     fun ScrollView(
-        width: Int,
-        height: Int,
+        width: Int? = null,
+        height: Int? = null,
         scrollbarWidth: Int = 6,
+        contentEndInset: Int = 1,
         x: Int = 0,
         y: Int = 0,
         absolute: Boolean = false,
@@ -237,9 +239,21 @@ class UiScope {
         val inner = UiScope().apply { nodeIdGen = this@UiScope.nodeIdGen }.apply(content)
         // nodeIdGen is called for any nested ScrollViews already; now call for this one
         val nodeId = nodeIdGen()
-        val node = ScrollViewNode(nodeId, scrollbarWidth, children = inner.children).apply {
+        val node = ScrollViewNode(
+            nodeId = nodeId,
+            scrollbarWidth = scrollbarWidth,
+            contentEndInset = contentEndInset,
+            children = inner.children
+        ).apply {
             this.position = if (absolute) Position.Absolute(x, y) else Position.Flow(x, y)
-            this.modifier = modifier.width(width + scrollbarWidth).height(height)
+            var resolvedModifier = modifier
+            if (width != null) {
+                resolvedModifier = resolvedModifier.width(width + scrollbarWidth + contentEndInset)
+            }
+            if (height != null) {
+                resolvedModifier = resolvedModifier.height(height)
+            }
+            this.modifier = resolvedModifier
         }
         children += node
     }

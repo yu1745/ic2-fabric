@@ -32,6 +32,7 @@ class ComposeUI {
     private val renderCtx = RenderContext()
     private var draggingNodeId: Int = -1
     private var thumbHit: Boolean = false
+    private val scrollStepPixels: Int = 12
     data class LayoutSnapshot(val anchors: Map<String, RenderContext.AnchorRect>)
 
     /**
@@ -93,22 +94,30 @@ class ComposeUI {
 
         // ScrollView track click → jump to position
         val scrollHit = renderCtx.scrollHits.lastOrNull { h ->
-            mx in h.x until (h.x + h.w) && my in h.y until (h.y + h.h)
+            val inViewport = mx in h.viewportX until (h.viewportX + h.viewportW) &&
+                my in h.viewportY until (h.viewportY + h.viewportH)
+            val inTrack = mx in h.trackX until (h.trackX + h.trackW) &&
+                my in h.trackY until (h.trackY + h.trackH)
+            inViewport || inTrack
         }
-        if (scrollHit != null && !scrollHit.thumbHit) {
-            // Clicked track (not thumb): jump to clicked position
-            val trackH = scrollHit.h
-            val relative = (my - scrollHit.y).toFloat() / trackH
-            val newScroll = (relative * scrollHit.maxScroll).toInt().coerceIn(0, scrollHit.maxScroll)
-            renderCtx.setScrollOffset(scrollHit.nodeId, newScroll)
-            return true
-        }
-
-        // ScrollView thumb click → start drag
-        if (scrollHit?.thumbHit == true) {
-            draggingNodeId = scrollHit.nodeId
-            thumbHit = true
-            return true
+        if (scrollHit != null) {
+            val inTrack = mx in scrollHit.trackX until (scrollHit.trackX + scrollHit.trackW) &&
+                my in scrollHit.trackY until (scrollHit.trackY + scrollHit.trackH)
+            if (inTrack) {
+                val onThumb = my in scrollHit.thumbY until (scrollHit.thumbY + scrollHit.thumbH)
+                if (onThumb) {
+                    // ScrollView thumb click → start drag
+                    draggingNodeId = scrollHit.nodeId
+                    thumbHit = true
+                    return true
+                }
+                // Clicked track (not thumb): jump to clicked position
+                val trackH = scrollHit.trackH
+                val relative = (my - scrollHit.trackY).toFloat() / trackH
+                val newScroll = (relative * scrollHit.maxScroll).toInt().coerceIn(0, scrollHit.maxScroll)
+                renderCtx.setScrollOffset(scrollHit.nodeId, newScroll)
+                return true
+            }
         }
 
         return false
@@ -123,9 +132,13 @@ class ComposeUI {
         val mx = mouseX.toInt()
         val my = mouseY.toInt()
         val hit = renderCtx.scrollHits.lastOrNull { h ->
-            mx in h.x until (h.x + h.w) && my in h.y until (h.y + h.h)
+            val inViewport = mx in h.viewportX until (h.viewportX + h.viewportW) &&
+                my in h.viewportY until (h.viewportY + h.viewportH)
+            val inTrack = mx in h.trackX until (h.trackX + h.trackW) &&
+                my in h.trackY until (h.trackY + h.trackH)
+            inViewport || inTrack
         } ?: return false
-        val delta = verticalAmount.toInt().coerceIn(-1, 1) * 3
+        val delta = -verticalAmount.toInt().coerceIn(-1, 1) * scrollStepPixels
         val current = renderCtx.getScrollOffset(hit.nodeId)
         renderCtx.setScrollOffset(hit.nodeId, (current + delta).coerceIn(0, hit.maxScroll))
         return true
@@ -138,9 +151,9 @@ class ComposeUI {
         if (!thumbHit || button != 0 || draggingNodeId < 0) return false
         val my = mouseY.toInt()
         val hit = renderCtx.scrollHits.lastOrNull { it.nodeId == draggingNodeId } ?: return false
-        val trackH = hit.h
+        val trackH = hit.trackH
         if (trackH <= 0) return false
-        val relative = (my - hit.y).toFloat() / trackH
+        val relative = (my - hit.trackY).toFloat() / trackH
         val newScroll = (relative * hit.maxScroll).toInt().coerceIn(0, hit.maxScroll)
         renderCtx.setScrollOffset(draggingNodeId, newScroll)
         return true
