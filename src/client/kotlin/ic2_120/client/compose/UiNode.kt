@@ -299,8 +299,8 @@ class SlotAnchorNode(
         val anchorH = (measuredHeight - pad.vertical).coerceAtLeast(0)
 
         if (ctx.drawEnabled && showBorder) {
-            // Align with vanilla slot border convention used across screens: offset by -1, keep slot size.
-            ctx.drawContext.drawBorder(anchorX - 1, anchorY - 1, anchorW, anchorH, borderColor)
+            // Draw border inside the anchored slot rect.
+            ctx.drawContext.drawBorder(anchorX, anchorY, anchorW, anchorH, borderColor)
         }
 
         ctx.anchors[id] = RenderContext.AnchorRect(

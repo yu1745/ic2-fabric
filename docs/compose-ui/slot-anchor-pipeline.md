@@ -169,6 +169,7 @@ SlotAnchor(
 - `id`：锚点唯一标识，建议稳定命名（如 `slot.0`、`machine.input`）
 - `showBorder`：是否绘制默认边框
 - `borderColor`：边框颜色
+- 默认边框为**内缩绘制**（与锚点矩形同起点，不再向外偏移 1 像素）
 
 ---
 
