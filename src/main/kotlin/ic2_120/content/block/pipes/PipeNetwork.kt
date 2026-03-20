@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.state.property.Properties
+import net.minecraft.registry.Registries
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
@@ -19,6 +20,9 @@ class PipeNetwork {
     var lastTickTime: Long = -1
 
     var stalledByMixedProviders: Boolean = false
+        private set
+
+    var primaryFluidId: String? = null
         private set
 
     fun addPipe(pos: BlockPos, block: BasePipeBlock) {
@@ -87,6 +91,7 @@ class PipeNetwork {
 
         val fluidKinds = providers.map { it.variant.fluid }.toSet()
         stalledByMixedProviders = fluidKinds.size > 1
+        primaryFluidId = providers.firstOrNull()?.variant?.fluid?.let { Registries.FLUID.getId(it).toString() }
 
         if (providers.isEmpty() || receivers.isEmpty()) {
             syncPipeLoad(world, topology.pipeRates, remaining)

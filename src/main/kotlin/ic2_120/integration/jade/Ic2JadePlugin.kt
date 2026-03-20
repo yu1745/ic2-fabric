@@ -2,10 +2,12 @@ package ic2_120.integration.jade
 
 import ic2_120.content.block.pipes.BasePipeBlock
 import ic2_120.content.block.pipes.PipeBlockEntity
-import ic2_120.content.block.pipes.PumpAttachmentBlock
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.registry.Registries
+import net.minecraft.text.Style
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import snownee.jade.api.BlockAccessor
 import snownee.jade.api.IBlockComponentProvider
@@ -28,7 +30,6 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
 
     override fun registerClient(registration: snownee.jade.api.IWailaClientRegistration) {
         registration.registerBlockComponent(PipeJadeProvider, BasePipeBlock::class.java)
-        registration.registerBlockComponent(PipeJadeProvider, PumpAttachmentBlock::class.java)
     }
 }
 
@@ -85,6 +86,10 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         val network = be.network
         if (network != null) {
             data.putBoolean("stalled", network.stalledByMixedProviders)
+            val fluidId = network.primaryFluidId
+            if (fluidId != null) {
+                data.putString("fluidName", fluidId)
+            }
         }
     }
 
@@ -97,12 +102,34 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         val capacity = accessor.serverData.getLong("pipeCapacity")
         val posLong = be.pos.asLong()
         val load = filteredLoad(posLong, rawLoad)
-        tooltip.add(Text.translatable("ic2_120.jade.flow_rate", formatFlow(load)))
+        val percent = if (capacity > 0) (load * 100 / capacity).toInt() else 0
+
+        val flowText = Text.literal("")
+            .append(Text.translatable("ic2_120.jade.flow_label"))
+            .append(Text.literal("$load / ").setStyle(Style.EMPTY.withColor(Formatting.YELLOW)))
+            .append(Text.literal("${capacity}mb/s = ").setStyle(Style.EMPTY.withColor(Formatting.GRAY)))
+            .append(Text.literal("${percent}%").setStyle(Style.EMPTY.withColor(flowColor(percent))))
+        tooltip.add(flowText)
+        if (accessor.serverData.contains("fluidName")) {
+            val fluidId = accessor.serverData.getString("fluidName")
+            val fluid = Registries.FLUID.get(Identifier.tryParse(fluidId) ?: return)
+            val fluidText = Registries.FLUID.getId(fluid).toTranslationKey().let { Text.translatable("block.$it") }
+            tooltip.add(Text.translatable("ic2_120.jade.fluid_name", fluidText))
+        }
         if (accessor.serverData.getBoolean("stalled")) {
             tooltip.add(Text.translatable("ic2_120.jade.stalled"))
         }
         if (accessor.serverData.getBoolean("isPump")) {
             tooltip.add(Text.translatable("ic2_120.jade.pump"))
+        }
+    }
+
+    private fun flowColor(percent: Int): Formatting {
+        return when {
+            percent >= 90 -> Formatting.RED
+            percent >= 70 -> Formatting.GOLD
+            percent >= 50 -> Formatting.YELLOW
+            else -> Formatting.GREEN
         }
     }
 
@@ -112,9 +139,5 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         return kotlin.math.floor(
             block.size.baseBucketsPerSecond * block.material.multiplier * FluidConstants.BUCKET.toDouble() / 20.0
         ).toLong().coerceAtLeast(1L)
-    }
-
-    private fun formatFlow(load: Long): String {
-        return "$load mB/s"
     }
 }

@@ -503,8 +503,8 @@
   "container.ic2_120.iron_tank": "Iron Tank",
   "container.ic2_120.steel_tank": "Steel Tank",
   "container.ic2_120.iridium_tank": "Iridium Tank",
-  "ic2_120.jade.flow": "Flow: %d / %d mB/t",
-  "ic2_120.jade.flow_rate": "%s",
+  "ic2_120.jade.flow_label": "Flow: ",
+  "ic2_120.jade.fluid_name": "Fluid: %s",
   "ic2_120.jade.stalled": "Stalled: Mixed Fluids",
   "ic2_120.jade.pump": "Pump Attachment"
 }
