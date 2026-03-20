@@ -201,9 +201,9 @@
 ### 机器 - 储能设备类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | block.ic2.batbox | 储电箱 |
-| - [ ] | block.ic2.cesu | CESU 储电箱 |
-| - [ ] | block.ic2.mfe | MFE 储电箱 |
+| - [x] | block.ic2.batbox | 储电箱 |
+| - [x] | block.ic2.cesu | CESU 储电箱 |
+| - [x] | block.ic2.mfe | MFE 储电箱 |
 | - [x] | block.ic2.mfsu | MFSU 储电箱 |
 | - [ ] | block.ic2.batbox_chargepad | 充电座 (BatBox) |
 | - [ ] | block.ic2.cesu_chargepad | 充电座 (CESU) |
@@ -252,8 +252,11 @@
 | - [x] | block.ic2.bronze_storage_box | 青铜储物箱 |
 | - [x] | block.ic2.steel_storage_box | 钢制储物箱 |
 | - [x] | block.ic2.iridium_storage_box | 铱储物箱 |
-| - [ ] | block.ic2.bronze_tank | 青铜储罐 |
-| - [ ] | block.ic2.iridium_tank | 铱储罐 |
+| - [x] | block.ic2.tank | 流体储存器 |
+| - [x] | block.ic2.bronze_tank | 青铜储罐 |
+| - [x] | block.ic2.iron_tank | 铁储罐 |
+| - [x] | block.ic2.steel_tank | 钢制储罐 |
+| - [x] | block.ic2.iridium_tank | 铱储罐 |
 
 ### 机器 - 输入输出类
 |  | ID | 名称 |
@@ -312,11 +315,11 @@
 |  | 模型文件 | 对应方块类型 |
 |--|---------|-------------|
 | - [ ] | `bronze_storage_box.json` | 青铜储物箱 |
-| - [ ] | `bronze_tank.json` | 青铜储罐 |
+| - [x] | `bronze_tank.json` | 青铜储罐 |
 | - [ ] | `iridium_storage_box.json` | 铱储物箱 |
-| - [ ] | `iridium_tank.json` | 铱储罐 |
+| - [x] | `iridium_tank.json` | 铱储罐 |
 | - [ ] | `iron_storage_box.json` | 铁质储物箱 |
-| - [ ] | `iron_tank.json` | 铁储罐 |
+| - [x] | `iron_tank.json` | 铁储罐 |
 | - [ ] | `reinforced_door_bottom_left.json` | 防爆门下半左 |
 | - [ ] | `reinforced_door_bottom_left_open.json` | 防爆门下半左（打开） |
 | - [ ] | `reinforced_door_bottom_right.json` | 防爆门下半右 |
@@ -331,9 +334,9 @@
 | - [ ] | `rubber_sheet.json` | 橡胶垫 |
 | - [ ] | `sheet_base.json` | 垫子基座（用于羊毛垫等） |
 | - [ ] | `steel_storage_box.json` | 钢制储物箱 |
-| - [ ] | `steel_tank.json` | 钢储罐 |
+| - [x] | `steel_tank.json` | 钢储罐 |
 | - [ ] | `storage_box.json` | 储物箱基座 |
-| - [ ] | `tank.json` | 储罐基座 |
+| - [x] | `tank.json` | 储罐基座 |
 | - [ ] | `wooden_storage_box.json` | 木质储物箱 |
 | - [ ] | `wool_sheet.json` | 羊毛垫 |
 
@@ -916,7 +919,10 @@
 | - [x] | item.ic2.block_cutter | 方块切割机 |
 | - [x] | item.ic2.bronze_block | 青铜块 |
 | - [ ] | item.ic2.bronze_storage_box | 青铜储物箱 |
-| - [ ] | item.ic2.bronze_tank | 青铜储罐 |
+| - [x] | item.ic2.bronze_tank | 青铜储罐 |
+| - [ ] | item.ic2.iron_tank | 铁储罐 |
+| - [ ] | item.ic2.steel_tank | 钢制储罐 |
+| - [ ] | item.ic2.iridium_tank | 铱储罐 |
 | - [ ] | item.ic2.canner | 流体/固体装罐机 |
 | - [ ] | item.ic2.cesu | CESU 储电箱 |
 | - [ ] | item.ic2.cesu_chargepad | 充电座 (CESU) |

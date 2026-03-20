@@ -1,0 +1,6 @@
+{
+	"parent": "minecraft:block/cube_all",
+	"textures": {
+		"all": "ic2_120:block/steel_tank_side"
+	}
+}

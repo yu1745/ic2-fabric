@@ -28,8 +28,8 @@ class WindKineticGeneratorBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, WindKineticGeneratorBlockEntity::class.type()) { _, _, _, _ ->
-            // 当前版本不需要服务端逻辑；旋转由客户端渲染按世界时间驱动。
+        else checkType(type, WindKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
+            (be as WindKineticGeneratorBlockEntity).tick(w, p, s)
         }
 
     override fun onUse(

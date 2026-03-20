@@ -1,0 +1,6 @@
+{
+	"parent": "minecraft:block/cube_all",
+	"textures": {
+		"all": "ic2:block/machine/fluid/tank_top"
+	}
+}

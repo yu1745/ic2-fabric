@@ -365,7 +365,7 @@ abstract class EmptyCellItem(settings: FabricItemSettings) : Item(settings) {
 abstract class ModFluidCell(settings: FabricItemSettings) : Item(settings), FluidModificationItem {
 
     /** 子类实现：返回对应的流体 */
-    internal abstract fun getFluid(): Fluid
+    abstract fun getFluid(): Fluid
 
     /** 子类实现：返回对应的空单元物品（用于配方剩余物） */
     internal abstract fun getEmptyCell(): Item

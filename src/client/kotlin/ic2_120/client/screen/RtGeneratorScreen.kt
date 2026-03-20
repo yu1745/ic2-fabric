@@ -67,40 +67,33 @@ class RtGeneratorScreen(
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()
 
-        // 能量信息放在右侧（x=88），避免与左侧燃料槽（x=8~62）重叠
-        val infoX = left + 88
-        val infoW = (backgroundWidth - 88 - 8).coerceAtLeast(0)
-        val barW = (infoW - 36).coerceAtLeast(0)
+        // 能量 I/O 率显示在面板左侧外部（与火力发电机一致）
+        val generationText = "发电 ${formatEu(inputRate)} EU/t"
+        val outputText = "输出 ${formatEu(outputRate)} EU/t"
+        val textX = x - maxOf(generationText.length * 6, outputText.length * 6) - 4
+        context.drawText(textRenderer, generationText, textX, y + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, outputText, textX, y + 20, 0xAAAAAA, false)
 
+        // 面板内部显示：标题 + 能量缓冲条
         ui.render(context, textRenderer, mouseX, mouseY) {
-            // 标题在左侧（使用 container 翻译键可显示较短标题）
-            Text(title.string, x = left + 8, y = top + 8, color = 0xFFFFFF, absolute = true)
-            // 能量信息在右侧
-            Column(x = infoX, y = top + 8, spacing = 6, absolute = true) {
+            Column(x = left + 8, y = top + 8, spacing = 6, absolute = true) {
+                Text(title.string, color = 0xFFFFFF)
                 Flex(
                     direction = FlexDirection.ROW,
                     alignItems = AlignItems.CENTER,
                     gap = 8,
-                    modifier = Modifier.EMPTY.width(infoW)
+                    modifier = Modifier.EMPTY.width(backgroundWidth - 16)
                 ) {
                     Text("缓冲", color = 0xAAAAAA)
                     EnergyBar(
                         energyFraction,
-                        barWidth = 0,
-                        barHeight = 9,
-                        modifier = Modifier.EMPTY.width(barW)
+                        barWidth = 120,
+                        barHeight = 9
                     )
                 }
-                // 第一行：能量值
                 Text(
                     "${formatEu(energy)} / ${formatEu(cap)} EU",
                     color = 0xCCCCCC,
-                    shadow = false
-                )
-                // 第二行：输出，避免溢出
-                Text(
-                    "发电 ${formatEu(inputRate)} EU/t · 输出 ${formatEu(outputRate)} EU/t",
-                    color = 0xAAAAAA,
                     shadow = false
                 )
             }

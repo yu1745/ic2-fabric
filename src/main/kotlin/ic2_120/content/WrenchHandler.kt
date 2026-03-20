@@ -5,11 +5,18 @@ import ic2_120.content.block.MachineBlock
 import ic2_120.content.block.pipes.BasePipeBlock
 import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.pipes.PipeNetworkManager
+import ic2_120.content.block.storage.TankBlock
+import ic2_120.content.block.storage.TankBlockEntity
 import ic2_120.content.item.energy.IElectricTool
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.Block
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -26,6 +33,8 @@ import net.minecraft.world.World
  * - 电动扳手左键拆机器：瞬间拆，掉完整机器，耗 1000 EU（电量不足则无法拆卸）
  * - 扳手/电扳手右键：旋转机器朝向，不耗耐久/不耗电
  * - 非扳手拆卸：只掉机器外壳（由 MachineBlock.getCasingDrop 决定）
+ *
+ * 储罐：扳手拆卸保留 80% 流体
  */
 object WrenchHandler {
 
@@ -89,7 +98,20 @@ object WrenchHandler {
             if (!isWrench(stack)) return@register ActionResult.PASS
 
             val state = world.getBlockState(pos)
-            if (state.block !is MachineBlock) return@register ActionResult.PASS
+            val block = state.block
+
+            // 储罐：扳手拆卸保留 80% 流体
+            if (block is TankBlock) {
+                if (!world.isClient) {
+                    val be = world.getBlockEntity(pos) as? TankBlockEntity
+                    if (be != null) {
+                        be.retainFluidPercent(0.8)
+                    }
+                }
+                // fall through to normal break
+            }
+
+            if (block !is MachineBlock && block !is TankBlock) return@register ActionResult.PASS
 
             // 电动扳手：电量不足 1000 EU 则不允许拆卸
             if (isElectricWrench(stack)) {
