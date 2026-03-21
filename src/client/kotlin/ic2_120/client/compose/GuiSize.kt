@@ -69,11 +69,11 @@ enum class GuiSize(val width: Int, val height: Int) {
     val contentWidth: Int get() = width - 16
 
     companion object {
-        /** 玩家背包 Y 起始坐标（标准高度 GUI 中紧跟在主内容区下方） */
-        const val PLAYER_INVENTORY_Y = 139
+        /** 玩家背包 Y 起始坐标（标准高度 GUI 中） */
+        const val PLAYER_INVENTORY_Y = 84
 
         /** 快捷栏 Y 起始坐标 */
-        const val HOTBAR_Y = 197
+        const val HOTBAR_Y = 142
 
         /**
          * 根据玩家背包上方的主内容区高度，自动计算 GUI 总高度。

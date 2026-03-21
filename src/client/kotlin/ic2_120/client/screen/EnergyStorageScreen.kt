@@ -53,9 +53,9 @@ class EnergyStorageScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            GuiSize.PLAYER_INVENTORY_Y,
-            GuiSize.HOTBAR_Y,
-            18
+            EnergyStorageScreenHandler.PLAYER_INV_Y,
+            EnergyStorageScreenHandler.HOTBAR_Y,
+            EnergyStorageScreenHandler.SLOT_SIZE
         )
     }
 

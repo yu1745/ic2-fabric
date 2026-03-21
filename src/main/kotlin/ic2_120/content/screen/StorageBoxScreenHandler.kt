@@ -24,6 +24,11 @@ class StorageBoxScreenHandler(
     val inventory: Inventory  // 改为 public 以便客户端访问
 ) : ScreenHandler(StorageBoxScreenHandler::class.type(), syncId) {
 
+    /** 动态计算的玩家背包 Y 坐标 */
+    val playerInventoryY: Int
+    /** 动态计算的快捷栏 Y 坐标 */
+    val hotbarY: Int
+
     init {
         // 储物箱槽位
         val inventorySize = inventory.size()
@@ -37,6 +42,23 @@ class StorageBoxScreenHandler(
         } else {
             (inventorySize + 8) / 9   // 单列时每行9格
         }
+
+        // 计算储物箱区域高度
+        val boxSlotsHeight = if (useDoubleColumn) {
+            val rightColumnSlots = inventorySize.coerceAtMost(81)
+            val rightColumnRows = (rightColumnSlots + 8) / 9
+            val rightColumnHeight = rightColumnRows * 18 + 18
+            val leftColumnSlots = inventorySize - rightColumnSlots
+            val leftColumnRows = (leftColumnSlots + 8) / 9
+            val leftColumnHeight = leftColumnRows * 18 + 18
+            maxOf(rightColumnHeight, leftColumnHeight)
+        } else {
+            rows * 18 + 18
+        }
+
+        // 计算玩家背包位置
+        playerInventoryY = boxSlotsHeight + 14
+        hotbarY = playerInventoryY + 58
 
         if (useDoubleColumn) {
             // 双列布局（钢制63格、铱126格）
@@ -79,13 +101,13 @@ class StorageBoxScreenHandler(
         // 玩家背包槽位（3x9）
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 139 + row * 18))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, playerInventoryY + row * 18))
             }
         }
 
         // 玩家快捷栏槽位
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 8 + col * 18, 197))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, hotbarY))
         }
     }
 

@@ -96,11 +96,11 @@ class EnergyStorageScreenHandler(
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, PLAYER_INV_Y + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, HOTBAR_Y))
         }
     }
 
@@ -141,6 +141,10 @@ class EnergyStorageScreenHandler(
         }, true)
 
     companion object {
+        const val PLAYER_INV_Y = 84
+        const val HOTBAR_Y = 142
+        const val SLOT_SIZE = 18
+
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): EnergyStorageScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
