@@ -51,27 +51,39 @@ class SyncedData(private val blockEntity: BlockEntity? = null) : PropertyDelegat
     }
 
     override fun int(name: String, default: Int): ReadWriteProperty<Any?, Int> {
-        val index = entries.size
-        entries.add(Entry(name, default))
+        val indexHigh = entries.size
+        entries.add(Entry("${name}_High", default ushr 16))
+        val indexLow = entries.size
+        entries.add(Entry("${name}_Low", default and 0xFFFF))
         return object : ReadWriteProperty<Any?, Int> {
-            override fun getValue(thisRef: Any?, property: KProperty<*>): Int = entries[index].value
+            override fun getValue(thisRef: Any?, property: KProperty<*>): Int {
+                val high = entries[indexHigh].value
+                val low = entries[indexLow].value
+                return (high shl 16) or (low and 0xFFFF)
+            }
             override fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
-                entries[index].value = value
+                entries[indexHigh].value = value ushr 16
+                entries[indexLow].value = value and 0xFFFF
                 markDirtyIfNeeded()
             }
         }
     }
 
     override fun intAveraged(name: String, default: Int, windowSize: Int): ReadWriteProperty<Any?, Int> {
-        val index = entries.size
-        entries.add(Entry(name, default))
+        val indexHigh = entries.size
+        entries.add(Entry("${name}_High", default ushr 16))
+        val indexLow = entries.size
+        entries.add(Entry("${name}_Low", default and 0xFFFF))
         // 为每个属性维护独立的滑动窗口
         val window = ArrayDeque<Int>()
         return object : ReadWriteProperty<Any?, Int> {
             override fun getValue(thisRef: Any?, property: KProperty<*>): Int {
                 // 返回滑动窗口的平均值
-                return if (window.isEmpty()) entries[index].value
-                else window.sum() / window.size
+                return if (window.isEmpty()) {
+                    val high = entries[indexHigh].value
+                    val low = entries[indexLow].value
+                    (high shl 16) or (low and 0xFFFF)
+                } else window.sum() / window.size
             }
             override fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
                 // 更新滑动窗口
@@ -79,9 +91,10 @@ class SyncedData(private val blockEntity: BlockEntity? = null) : PropertyDelegat
                 if (window.size > windowSize) {
                     window.removeFirst()
                 }
-                // 同步平均值到 entry（用于 NBT 序列化） 
-                // 绝对不要同步当前值到 entry，否则滑动窗口的平均值就没有任何意义了
-                entries[index].value = window.sum() / window.size
+                // 同步平均值到 entry（用于 NBT 序列化）
+                val avg = window.sum() / window.size
+                entries[indexHigh].value = avg ushr 16
+                entries[indexLow].value = avg and 0xFFFF
                 markDirtyIfNeeded()
             }
         }
@@ -112,11 +125,17 @@ class SyncedDataView(private val delegate: PropertyDelegate) : SyncSchema {
     private var nextIndex = 0
 
     override fun int(name: String, default: Int): ReadWriteProperty<Any?, Int> {
-        val index = nextIndex++
+        val indexHigh = nextIndex++
+        val indexLow = nextIndex++
         return object : ReadWriteProperty<Any?, Int> {
-            override fun getValue(thisRef: Any?, property: KProperty<*>): Int = delegate.get(index)
+            override fun getValue(thisRef: Any?, property: KProperty<*>): Int {
+                val high = delegate.get(indexHigh)
+                val low = delegate.get(indexLow)
+                return (high shl 16) or (low and 0xFFFF)
+            }
             override fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
-                delegate.set(index, value)
+                delegate.set(indexHigh, value ushr 16)
+                delegate.set(indexLow, value and 0xFFFF)
             }
         }
     }
