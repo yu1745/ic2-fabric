@@ -7,7 +7,6 @@ import ic2_120.content.sync.BlockCutterSync
 import ic2_120.content.block.BlockCutterBlock
 import ic2_120.content.screen.BlockCutterScreenHandler
 import ic2_120.registry.annotation.ModScreen
-import ic2_120.client.utils.SlotReflection
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
@@ -137,8 +136,8 @@ class BlockCutterScreen(
     private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
         handler.slots.forEachIndexed { index, slot ->
             val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            SlotReflection.setX(slot, anchor.x - left)
-            SlotReflection.setY(slot, anchor.y - top)
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
         }
     }
 

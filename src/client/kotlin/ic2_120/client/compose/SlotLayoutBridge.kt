@@ -1,6 +1,5 @@
 package ic2_120.client.compose
 
-import ic2_120.client.utils.SlotReflection
 import net.minecraft.screen.ScreenHandler
 
 /**
@@ -26,8 +25,8 @@ object SlotLayoutBridge {
             val slot = handler.slots.getOrNull(slotIndex) ?: continue
             val relativeX = anchor.x - screenLeft
             val relativeY = anchor.y - screenTop
-            SlotReflection.setX(slot, relativeX)
-            SlotReflection.setY(slot, relativeY)
+            slot.x = relativeX
+            slot.y = relativeY
         }
     }
 }

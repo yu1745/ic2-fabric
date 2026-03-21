@@ -4,7 +4,6 @@ import ic2_120.client.compose.*
 import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.client.ui.FluidBar
-import ic2_120.client.utils.SlotReflection
 import ic2_120.content.sync.OreWashingPlantSync
 import ic2_120.content.block.OreWashingPlantBlock
 import ic2_120.content.screen.OreWashingPlantScreenHandler
@@ -128,8 +127,8 @@ class OreWashingPlantScreen(
         // 2) 锚点写回 slot 相对坐标
         handler.slots.forEachIndexed { index, slot ->
             val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
-            SlotReflection.setX(slot, anchor.x - left)
-            SlotReflection.setY(slot, anchor.y - top)
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
         }
 
         // 3) 原生 slot 渲染 + 交互

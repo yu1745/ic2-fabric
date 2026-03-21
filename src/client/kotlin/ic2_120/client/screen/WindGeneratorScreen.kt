@@ -3,7 +3,6 @@ package ic2_120.client.screen
 import ic2_120.client.compose.*
 import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
-import ic2_120.client.utils.SlotReflection
 import ic2_120.content.block.WindGeneratorBlock
 import ic2_120.content.block.machines.WindGeneratorBlockEntity
 import ic2_120.content.screen.WindGeneratorScreenHandler
@@ -108,8 +107,8 @@ class WindGeneratorScreen(
     private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
         handler.slots.forEachIndexed { index, slot ->
             val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            SlotReflection.setX(slot, anchor.x - left)
-            SlotReflection.setY(slot, anchor.y - top)
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
         }
     }
 

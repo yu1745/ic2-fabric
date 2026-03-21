@@ -9,7 +9,6 @@ import ic2_120.content.block.machines.MachineBlockEntity
 import ic2_120.content.screen.GeneratorScreenHandler
 import ic2_120.content.sync.GeneratorSync
 import ic2_120.registry.annotation.ModScreen
-import ic2_120.client.utils.SlotReflection
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
@@ -107,8 +106,8 @@ class GeneratorScreen(
         // 2) 锚点写回 slot 相对坐标
         handler.slots.forEachIndexed { index, slot ->
             val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
-            SlotReflection.setX(slot, anchor.x - left)
-            SlotReflection.setY(slot, anchor.y - top)
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
         }
 
         // 3) 原生 slot 渲染 + 交互

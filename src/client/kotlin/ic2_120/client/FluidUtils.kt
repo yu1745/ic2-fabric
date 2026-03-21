@@ -5,7 +5,6 @@ import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.SpriteContents
 import net.minecraft.fluid.Fluid
 import org.slf4j.LoggerFactory
-import java.lang.reflect.Field
 
 /**
  * 流体工具类：提供流体相关的实用函数
@@ -13,13 +12,6 @@ import java.lang.reflect.Field
 object FluidUtils {
 
     private val logger = LoggerFactory.getLogger("ic2_120/FluidUtils")
-
-    private val spriteImageField: Field = run {
-        SpriteContents::class.java.declaredFields
-            .firstOrNull { it.type == NativeImage::class.java }
-            ?.apply { isAccessible = true }
-            ?: throw NoSuchFieldException("SpriteContents has no NativeImage field (mapping may differ)")
-    }
 
     private val colorCache = mutableMapOf<Fluid, Int>()
 
@@ -52,8 +44,7 @@ object FluidUtils {
         if (sprites.isEmpty()) return -1
 
         val stillSprite = sprites[0]
-        @Suppress("UNCHECKED_CAST")
-        val image = spriteImageField.get(stillSprite.contents) as? NativeImage ?: return -1
+        val image = stillSprite.contents.image ?: return -1
         return sampleAverageColor(image)
     }
 

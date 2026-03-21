@@ -3,7 +3,6 @@ package ic2_120.client.screen
 import ic2_120.client.compose.*
 import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
-import ic2_120.client.utils.SlotReflection
 import ic2_120.content.sync.ChunkLoaderSync
 import ic2_120.content.block.ChunkLoaderBlock
 import ic2_120.content.screen.ChunkLoaderScreenHandler
@@ -89,8 +88,8 @@ class ChunkLoaderScreen(
         // 2) 锚点写回 slot 相对坐标
         handler.slots.forEachIndexed { index, slot ->
             val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
-            SlotReflection.setX(slot, anchor.x - left)
-            SlotReflection.setY(slot, anchor.y - top)
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
         }
 
         // 3) 原生 slot 渲染 + 交互
