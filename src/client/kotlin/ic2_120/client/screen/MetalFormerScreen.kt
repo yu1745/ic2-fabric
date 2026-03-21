@@ -83,7 +83,7 @@ class MetalFormerScreen(
                 ) {
                     Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
                         Text(title.string, color = 0xFFFFFF)
-                        Text("$energy / $cap EU", color = 0xCCCCCC, shadow = false)
+                        Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
                     }
                     EnergyBar(
                         energyFraction,

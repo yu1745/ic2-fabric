@@ -8,10 +8,10 @@ import ic2_120.content.block.machines.CreativeGeneratorBlockEntity
 import ic2_120.content.screen.CreativeGeneratorScreenHandler
 import ic2_120.content.sync.CreativeGeneratorSync
 import ic2_120.registry.annotation.ModScreen
-import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text as McText
 
 @ModScreen(block = CreativeGeneratorBlock::class)
@@ -22,32 +22,29 @@ class CreativeGeneratorScreen(
 ) : HandledScreen<CreativeGeneratorScreenHandler>(handler, playerInventory, title) {
 
     private val ui = ComposeUI()
+    private val slotXField by lazy {
+        Slot::class.java.getDeclaredField("x").apply { isAccessible = true }
+    }
+    private val slotYField by lazy {
+        Slot::class.java.getDeclaredField("y").apply { isAccessible = true }
+    }
 
     init {
-        backgroundWidth = PANEL_WIDTH
-        backgroundHeight = PANEL_HEIGHT
+        backgroundWidth = GUI_SIZE.width
+        backgroundHeight = GUI_SIZE.height
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(context, x, y, PLAYER_INV_Y, HOTBAR_Y, SLOT_SIZE)
-
-        val borderColor = GuiBackground.BORDER_COLOR
-        val slotSize = SLOT_SIZE
-        val borderOffset = 1
-
-        val batterySlot = handler.slots[CreativeGeneratorBlockEntity.BATTERY_SLOT]
-        context.drawBorder(
-            x + batterySlot.x - borderOffset,
-            y + batterySlot.y - borderOffset,
-            slotSize,
-            slotSize,
-            borderColor
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context, x, y,
+            CreativeGeneratorScreenHandler.PLAYER_INV_Y,
+            CreativeGeneratorScreenHandler.HOTBAR_Y,
+            CreativeGeneratorScreenHandler.SLOT_SIZE
         )
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        super.render(context, mouseX, mouseY, delta)
         val left = x
         val top = y
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
@@ -60,45 +57,63 @@ class CreativeGeneratorScreen(
         val generationText = "发电 ${formatEu(generationRate)} EU/t"
         val outputText = "输出 ${formatEu(outputRate)} EU/t"
         val totalText = "累计 ${formatEu(total)} EU"
-        val generationTextWidth = generationText.length * 6
-        val outputTextWidth = outputText.length * 6
-        val totalTextWidth = totalText.length * 6
-        val textX = left - maxOf(generationTextWidth, outputTextWidth, totalTextWidth) - 4
-        context.drawText(textRenderer, generationText, textX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, textX, top + 20, 0xAAAAAA, false)
-        context.drawText(textRenderer, totalText, textX, top + 32, 0xAAAAAA, false)
+        val sideTextWidth = maxOf(
+            textRenderer.getWidth(generationText),
+            textRenderer.getWidth(outputText),
+            textRenderer.getWidth(totalText)
+        )
+        val sideTextX = left - sideTextWidth - 4
 
-        ui.render(context, textRenderer, mouseX, mouseY) {
-            Column(x = left + 8, y = top + 8, spacing = 6) {
-                Flex(
-                    direction = FlexDirection.ROW,
-                    alignItems = AlignItems.CENTER,
-                    gap = 8,
-                    modifier = Modifier.EMPTY.width(160)
-                ) {
+        val content: UiScope.() -> Unit = {
+            Column(
+                x = left + 8,
+                y = top + 8,
+                spacing = 6,
+                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
+            ) {
+                Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
                     Text(title.string, color = 0xFFFFFF)
-                    Text("$energy / $cap EU", color = 0xCCCCCC, shadow = false)
+                    Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
                 }
+                EnergyBar(
+                    energyFraction,
+                    barHeight = 12,
+                )
+
                 Flex(
                     direction = FlexDirection.ROW,
                     alignItems = AlignItems.CENTER,
-                    gap = 8,
-                    modifier = Modifier.EMPTY.width(160)
+                    gap = 4
                 ) {
-                    Text("能量", color = 0xAAAAAA)
-                    EnergyBar(
-                        energyFraction,
-                        barWidth = 120,
-                        barHeight = 9
+                    SlotAnchor(
+                        id = slotAnchorId(CreativeGeneratorBlockEntity.BATTERY_SLOT),
+                        width = CreativeGeneratorScreenHandler.SLOT_SIZE,
+                        height = CreativeGeneratorScreenHandler.SLOT_SIZE
                     )
                 }
             }
         }
+
+        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
+        applyAnchoredSlots(layout, left, top)
+
+        super.render(context, mouseX, mouseY, delta)
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        context.drawText(textRenderer, generationText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
+        context.drawText(textRenderer, totalText, sideTextX, top + 32, 0xAAAAAA, false)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
+            slotXField.setInt(slot, anchor.x - left)
+            slotYField.setInt(slot, anchor.y - top)
+        }
+    }
+
+    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
 
     private fun formatEu(value: Long): String {
         return when {
@@ -108,11 +123,10 @@ class CreativeGeneratorScreen(
         }
     }
 
+    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
+        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+
     companion object {
-        private const val PANEL_WIDTH = 176
-        private const val PANEL_HEIGHT = 166
-        private const val SLOT_SIZE = 18
-        private const val PLAYER_INV_Y = 84
-        private const val HOTBAR_Y = 142
+        private val GUI_SIZE = GuiSize.STANDARD
     }
 }

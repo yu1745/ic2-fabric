@@ -44,31 +44,41 @@ class MaceratorScreenHandler(
         checkSize(blockInventory, MaceratorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        // 机器槽位
-        addSlot(PredicateSlot(blockInventory, MaceratorBlockEntity.SLOT_INPUT, INPUT_SLOT_X, INPUT_SLOT_Y, INPUT_SLOT_SPEC))
-
-        // 左下：放电槽（放置电池）
+        // 机器槽位：Compose 屏幕会在客户端通过 SlotAnchor 回写真实坐标，这里仅放占位坐标。
+        addSlot(
+            PredicateSlot(
+                blockInventory,
+                MaceratorBlockEntity.SLOT_INPUT,
+                COMPOSE_PLACEHOLDER_X,
+                COMPOSE_PLACEHOLDER_Y,
+                INPUT_SLOT_SPEC
+            )
+        )
         addSlot(
             PredicateSlot(
                 blockInventory,
                 MaceratorBlockEntity.SLOT_DISCHARGING,
-                DISCHARGING_SLOT_X,
-                DISCHARGING_SLOT_Y,
+                COMPOSE_PLACEHOLDER_X,
+                COMPOSE_PLACEHOLDER_Y,
                 DISCHARGING_SLOT_SPEC
             )
         )
-
-        // 中间右侧：输出槽
-        addSlot(PredicateSlot(blockInventory, MaceratorBlockEntity.SLOT_OUTPUT, OUTPUT_SLOT_X, OUTPUT_SLOT_Y, OUTPUT_SLOT_SPEC))
-
-        // 最右侧：4 个升级槽（纵向排列，紧贴原版 UI 右侧）
+        addSlot(
+            PredicateSlot(
+                blockInventory,
+                MaceratorBlockEntity.SLOT_OUTPUT,
+                COMPOSE_PLACEHOLDER_X,
+                COMPOSE_PLACEHOLDER_Y,
+                OUTPUT_SLOT_SPEC
+            )
+        )
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
             addSlot(
                 PredicateSlot(
                     blockInventory,
                     MaceratorBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    UpgradeSlotLayout.SLOT_X,
-                    UpgradeSlotLayout.slotY(i),
+                    COMPOSE_PLACEHOLDER_X,
+                    COMPOSE_PLACEHOLDER_Y,
                     upgradeSlotSpec
                 )
             )
@@ -144,15 +154,8 @@ class MaceratorScreenHandler(
         }, true)
 
     companion object {
-        // 机器槽位位置
-        const val INPUT_SLOT_X = 56
-        const val INPUT_SLOT_Y = 35
-
-        const val DISCHARGING_SLOT_X = 56
-        const val DISCHARGING_SLOT_Y = 59
-
-        const val OUTPUT_SLOT_X = 116
-        const val OUTPUT_SLOT_Y = 47
+        private const val COMPOSE_PLACEHOLDER_X = 0
+        private const val COMPOSE_PLACEHOLDER_Y = 0
 
         const val SLOT_SIZE = 18
         private val INPUT_SLOT_SPEC = SlotSpec(

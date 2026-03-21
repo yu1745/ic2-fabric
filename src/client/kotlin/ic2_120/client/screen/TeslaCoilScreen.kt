@@ -28,13 +28,18 @@ class TeslaCoilScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(context, x, y, 84, 142, 18)
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context,
+            x,
+            y,
+            84,
+            142,
+            18
+        )
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        super.render(context, mouseX, mouseY, delta)
-
         val left = x
         val top = y
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
@@ -42,40 +47,36 @@ class TeslaCoilScreen(
         val consumeRate = handler.sync.getSyncedConsumedAmount()
         val cap = TeslaCoilSync.ENERGY_CAPACITY
         val fraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
+        val contentW = (backgroundWidth - 16).coerceAtLeast(0)
 
-        // 在UI左侧绘制速度文本
+        val energyText = "$energy / $cap EU"
         val inputText = "输入 ${formatEu(inputRate)} EU/t"
         val consumeText = "耗能 ${formatEu(consumeRate)} EU/t"
-        val inputTextWidth = inputText.length * 6
-        val consumeTextWidth = consumeText.length * 6
-        val textX = left - maxOf(inputTextWidth, consumeTextWidth) - 4  // 留4像素边距
-        context.drawText(textRenderer, inputText, textX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, textX, top + 20, 0xAAAAAA, false)
+        val sideTextWidth = maxOf(
+            textRenderer.getWidth(energyText),
+            textRenderer.getWidth(inputText),
+            textRenderer.getWidth(consumeText)
+        )
+        val sideTextX = left - sideTextWidth - 4
 
         ui.render(context, textRenderer, mouseX, mouseY) {
-            Column(x = left + 8, y = top + 8, spacing = 6) {
-                Text(title.string, color = 0xFFFFFF)
-                Flex(
-                    direction = FlexDirection.ROW,
-                    alignItems = AlignItems.CENTER,
-                    gap = 8,
-                    modifier = Modifier.EMPTY.width(CONTENT_WIDTH)
-                ) {
-                    Text("能量", color = 0xAAAAAA)
-                    EnergyBar(
-                        fraction,
-                        barWidth = 0,
-                        barHeight = 9,
-                        modifier = Modifier.EMPTY.width(CONTENT_WIDTH - LABEL_WIDTH)
-                    )
+            Column(
+                x = left + 8,
+                y = top + 8,
+                spacing = 6,
+                modifier = Modifier().width(contentW).height(backgroundHeight - 16),
+            ) {
+                Row(spacing = 8) {
+                    Text(title.string, color = 0xFFFFFF)
+                    Text(energyText, color = 0xFFFFFF)
                 }
-                Text(
-                    "$energy / $cap EU",
-                    color = 0xCCCCCC,
-                    shadow = false
-                )
+                EnergyBar(fraction, modifier = Modifier().width(contentW - 36))
             }
         }
+
+        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
@@ -85,8 +86,6 @@ class TeslaCoilScreen(
     companion object {
         private const val PANEL_WIDTH = 176
         private const val PANEL_HEIGHT = 166
-        private const val CONTENT_WIDTH = PANEL_WIDTH - 16
-        private const val LABEL_WIDTH = 36
     }
 
     private fun formatEu(value: Long): String {

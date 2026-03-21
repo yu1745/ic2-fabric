@@ -12,6 +12,7 @@ import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text as McText
 
 @ModScreen(block = FluidHeatExchangerBlock::class)
@@ -23,14 +24,21 @@ class FluidHeatExchangerScreen(
 
     private val ui = ComposeUI()
 
+    private val slotXField by lazy {
+        Slot::class.java.getDeclaredField("x").apply { isAccessible = true }
+    }
+    private val slotYField by lazy {
+        Slot::class.java.getDeclaredField("y").apply { isAccessible = true }
+    }
+
     init {
-        backgroundWidth = 176
-        backgroundHeight = 184
+        backgroundWidth = PANEL_WIDTH
+        backgroundHeight = PANEL_HEIGHT
         titleY = 4
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context,
             x,
@@ -39,73 +47,115 @@ class FluidHeatExchangerScreen(
             FluidHeatExchangerScreenHandler.HOTBAR_Y,
             FluidHeatExchangerScreenHandler.SLOT_SIZE
         )
-
-        val borderColor = GuiBackground.BORDER_COLOR
-        val borderOffset = 1
-        val slotSize = FluidHeatExchangerScreenHandler.SLOT_SIZE
-
-        for (i in FluidHeatExchangerScreenHandler.EXCHANGER_SLOT_INDEX_START..FluidHeatExchangerScreenHandler.SLOT_OUTPUT_FILLED_CONTAINER_INDEX) {
-            val slot = handler.slots[i]
-            context.drawBorder(x + slot.x - borderOffset, y + slot.y - borderOffset, slotSize, slotSize, borderColor)
-        }
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        super.render(context, mouseX, mouseY, delta)
-
         val left = x
         val top = y
         val centerX = left + backgroundWidth / 2
-        val leftBarX = left + BAR_SIDE_PADDING
-        val rightBarX = left + backgroundWidth - BAR_SIDE_PADDING - BAR_WIDTH
-        val barTop = top + BAR_TOP
-
         val inputFraction = (handler.sync.inputFluidMb.toFloat() / FluidHeatExchangerSync.TANK_CAPACITY_MB).coerceIn(0f, 1f)
         val outputFraction = (handler.sync.outputFluidMb.toFloat() / FluidHeatExchangerSync.TANK_CAPACITY_MB).coerceIn(0f, 1f)
         val exchangerCount = FluidHeatExchangerBlockEntity.SLOT_EXCHANGER_INDICES.count { handler.slots[it].hasStack() }
         val generatedRate = handler.sync.getSyncedGeneratedHeat()
         val outputRate = handler.sync.getSyncedOutputHeat()
 
-        ui.render(context, textRenderer, mouseX, mouseY) {
-            FluidBar(
-                inputFraction,
-                barWidth = BAR_WIDTH,
-                barHeight = BAR_HEIGHT,
-                vertical = true,
-                x = leftBarX,
-                y = barTop,
-                absolute = true,
-                modifier = Modifier.EMPTY.width(BAR_WIDTH).height(BAR_HEIGHT)
-            )
-            FluidBar(
-                outputFraction,
-                barWidth = BAR_WIDTH,
-                barHeight = BAR_HEIGHT,
-                vertical = true,
-                x = rightBarX,
-                y = barTop,
-                absolute = true,
-                modifier = Modifier.EMPTY.width(BAR_WIDTH).height(BAR_HEIGHT)
-            )
+        val content: UiScope.() -> Unit = {
+            Column(
+                x = left + 8,
+                y = top + 8,
+                spacing = 6,
+                modifier = Modifier().width(backgroundWidth - 16).height(backgroundHeight - 16),
+            ) {
+                // 标题居中
+                Flex(
+                    direction = FlexDirection.ROW,
+                    justifyContent = JustifyContent.CENTER,
+                ) {
+                    Text(title.string, color = 0xFFFFFF)
+                }
+                Flex(
+                    direction = FlexDirection.ROW,
+                    justifyContent = JustifyContent.CENTER,
+                ) {
+                    Text("换热器: $exchangerCount/10", color = 0xAAAAAA)
+                }
+
+                // 两个流体槽
+                Flex(
+                    direction = FlexDirection.ROW,
+                    justifyContent = JustifyContent.SPACE_BETWEEN,
+                ) {
+                    Column(spacing = 2) {
+                        Text("输入液", color = 0xAAAAAA)
+                        FluidBar(inputFraction, barWidth = 8, barHeight = 58, vertical = true, modifier = Modifier.EMPTY.width(8).height(58))
+                        Text("${handler.sync.inputFluidMb} mB", color = 0xFFFFFF, shadow = false)
+                    }
+                    Column(spacing = 2) {
+                        Text("输出液", color = 0xAAAAAA)
+                        FluidBar(outputFraction, barWidth = 8, barHeight = 58, vertical = true, modifier = Modifier.EMPTY.width(8).height(58))
+                        Text("${handler.sync.outputFluidMb} mB", color = 0xFFFFFF, shadow = false)
+                    }
+                }
+
+                // 状态信息
+                Flex(
+                    direction = FlexDirection.ROW,
+                    justifyContent = JustifyContent.CENTER,
+                ) {
+                    Text(
+                        if (handler.sync.isWorking != 0) "状态: 工作中" else "状态: 停止",
+                        color = 0xAAAAAA,
+                        shadow = false
+                    )
+                }
+                Flex(
+                    direction = FlexDirection.ROW,
+                    justifyContent = JustifyContent.CENTER,
+                ) {
+                    Text("产热: $generatedRate HU/t  输出热: $outputRate HU/t", color = 0xAAAAAA)
+                }
+
+                // 机器槽位（8个槽位）
+                Flex(
+                    direction = FlexDirection.ROW,
+                    justifyContent = JustifyContent.SPACE_BETWEEN,
+                ) {
+                    Row(spacing = 4) {
+                        repeat(4) { index ->
+                            val slotIndex = FluidHeatExchangerScreenHandler.EXCHANGER_SLOT_INDEX_START + index
+                            SlotAnchor(id = "slot.$slotIndex")
+                        }
+                    }
+                }
+                Flex(
+                    direction = FlexDirection.ROW,
+                    justifyContent = JustifyContent.SPACE_BETWEEN,
+                ) {
+                    Row(spacing = 4) {
+                        repeat(4) { index ->
+                            val slotIndex = FluidHeatExchangerScreenHandler.EXCHANGER_SLOT_INDEX_START + index + 4
+                            SlotAnchor(id = "slot.$slotIndex")
+                        }
+                    }
+                }
+            }
         }
 
-        drawCenteredText(context, title.string, centerX, top + 6, 0xFFFFFF, shadow = true)
-        drawCenteredText(context, "换热器: $exchangerCount/10", centerX, top + 14, 0xAAAAAA)
-        drawCenteredText(
-            context,
-            if (handler.sync.isWorking != 0) "状态: 工作中" else "状态: 停止",
-            centerX,
-            top + 88,
-            0xAAAAAA
-        )
-        drawCenteredText(context, "产热: $generatedRate HU/t  输出热: $outputRate HU/t", centerX, top + 97, 0xAAAAAA)
+        // 1) 预布局，不绘制
+        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
 
-        val inputCenter = leftBarX + BAR_WIDTH / 2
-        val outputCenter = rightBarX + BAR_WIDTH / 2
-        drawCenteredText(context, "输入液", inputCenter, top + 14, 0xAAAAAA)
-        drawCenteredText(context, "输出液", outputCenter, top + 14, 0xAAAAAA)
-        drawCenteredText(context, "${handler.sync.inputFluidMb} mB", inputCenter, barTop + BAR_HEIGHT + 2, 0xCCCCCC)
-        drawCenteredText(context, "${handler.sync.outputFluidMb} mB", outputCenter, barTop + BAR_HEIGHT + 2, 0xCCCCCC)
+        // 2) 锚点写回 slot 相对坐标
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
+            slotXField.setInt(slot, anchor.x - left)
+            slotYField.setInt(slot, anchor.y - top)
+        }
+
+        // 3) 原生 slot 渲染 + 交互
+        super.render(context, mouseX, mouseY, delta)
+
+        // 4) Compose overlay
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
@@ -113,23 +163,8 @@ class FluidHeatExchangerScreen(
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
 
-    private fun drawCenteredText(
-        context: DrawContext,
-        text: String,
-        centerX: Int,
-        y: Int,
-        color: Int,
-        shadow: Boolean = false
-    ) {
-        val textX = centerX - textRenderer.getWidth(text) / 2
-        if (shadow) context.drawTextWithShadow(textRenderer, text, textX, y, color)
-        else context.drawText(textRenderer, text, textX, y, color, false)
-    }
-
     companion object {
-        private const val BAR_WIDTH = 8
-        private const val BAR_HEIGHT = 58
-        private const val BAR_TOP = 22
-        private const val BAR_SIDE_PADDING = 12
+        private const val PANEL_WIDTH = 176
+        private const val PANEL_HEIGHT = 184
     }
 }

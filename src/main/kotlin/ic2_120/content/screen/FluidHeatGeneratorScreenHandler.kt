@@ -94,6 +94,10 @@ class FluidHeatGeneratorScreenHandler(
         }, true)
 
     companion object {
+        const val PLAYER_INV_Y = 84
+        const val HOTBAR_Y = 142
+        const val SLOT_SIZE = 18
+
         private val FUEL_SLOT_SPEC = SlotSpec(canInsert = { stack ->
             !stack.isEmpty && (
                 stack.item == Items.LAVA_BUCKET ||

@@ -107,6 +107,7 @@ class ElectricHeatGeneratorScreenHandler(
         const val COIL_START_Y = 35
         const val PLAYER_INV_Y = 84
         const val HOTBAR_Y = 142
+        const val SLOT_SIZE = 18
 
         const val PLAYER_INV_START = ElectricHeatGeneratorBlockEntity.SLOT_COUNT
         const val HOTBAR_END = PLAYER_INV_START + 36

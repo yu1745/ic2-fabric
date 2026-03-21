@@ -34,7 +34,7 @@ class ExtractorScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
             ExtractorScreenHandler.PLAYER_INV_Y,
@@ -74,7 +74,7 @@ class ExtractorScreen(
                 ) {
                     Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
                         Text(title.string, color = 0xFFFFFF)
-                        Text("$energy / $cap EU", color = 0xCCCCCC, shadow = false)
+                        Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
                     }
                     EnergyBar(
                         energyFraction,

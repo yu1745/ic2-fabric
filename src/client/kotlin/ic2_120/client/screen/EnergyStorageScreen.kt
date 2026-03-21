@@ -1,8 +1,8 @@
 package ic2_120.client.screen
 
 import ic2_120.client.compose.*
+import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
-import ic2_120.client.ui.ProgressBar
 import ic2_120.content.block.storage.EnergyStorageConfig
 import ic2_120.content.screen.EnergyStorageScreenHandler
 import ic2_120.registry.annotation.ModScreen
@@ -10,6 +10,7 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.registry.Registries
+import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
 
 /**
@@ -25,6 +26,12 @@ class EnergyStorageScreen(
     private val ui = ComposeUI()
     private val capacity: Long = resolveCapacity()
     private val useEquipmentSlots: Boolean = resolveUseEquipmentSlots()
+    private val slotXField by lazy {
+        Slot::class.java.getDeclaredField("x").apply { isAccessible = true }
+    }
+    private val slotYField by lazy {
+        Slot::class.java.getDeclaredField("y").apply { isAccessible = true }
+    }
 
     private fun resolveCapacity(): Long {
         return handler.context.get({ world, pos ->
@@ -43,44 +50,23 @@ class EnergyStorageScreen(
     }
 
     init {
-        backgroundWidth = PANEL_WIDTH
-        backgroundHeight = PANEL_HEIGHT
+        backgroundWidth = GUI_SIZE.width
+        backgroundHeight = GUI_SIZE.height
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        val x = (width - backgroundWidth) / 2
-        val y = (height - backgroundHeight) / 2
-        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(context, x, y, 84, 142, 18)
-
-        val borderColor = GuiBackground.BORDER_COLOR
-        val slotSize = 18
-        val borderOffset = 1
-        val slotY = 55
-        val slotSpacing = 18
-
-        val equipLabel = Text.translatable("ic2_120.gui.equipment_slots")
-        val chargeLabel = Text.translatable("ic2_120.gui.charge_slots")
-
-        // 装备槽标签（左侧，4 格上方）
-        context.drawText(textRenderer, equipLabel, x + 8, y + 37, 0xAAAAAA, false)
-        // 充电槽标签（右侧，1 格上方）
-        context.drawText(textRenderer, chargeLabel, x + 8 + slotSpacing * 4, y + 37, 0xAAAAAA, false)
-
-        // 装备槽边框（左侧 4 格）
-        for (i in 0 until 4) {
-            context.drawBorder(x + 8 + i * slotSpacing - borderOffset, y + slotY - borderOffset, slotSize, slotSize, borderColor)
-        }
-        // 充电槽边框（右侧 1 格）
-        context.drawBorder(x + 8 + 4 * slotSpacing - borderOffset, y + slotY - borderOffset, slotSize, slotSize, borderColor)
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context, x, y,
+            GuiSize.PLAYER_INVENTORY_Y,
+            GuiSize.HOTBAR_Y,
+            18
+        )
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        super.render(context, mouseX, mouseY, delta)
-
-        val left = (width - backgroundWidth) / 2
-        val top = (height - backgroundHeight) / 2
-
+        val left = x
+        val top = y
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()
@@ -89,31 +75,83 @@ class EnergyStorageScreen(
 
         val inputText = "输入 ${formatEu(inputRate)} EU/t"
         val outputText = "输出 ${formatEu(outputRate)} EU/t"
-        val textX = left - maxOf(inputText.length * 6, outputText.length * 6) - 4
-        context.drawText(textRenderer, inputText, textX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, textX, top + 20, 0xAAAAAA, false)
+        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(outputText))
+        val sideTextX = left - sideTextWidth - 4
 
-        val barW = CONTENT_WIDTH - LABEL_WIDTH
-        val barX = left + 8 + LABEL_WIDTH
-        val barY = top + 18
-        ProgressBar.draw(context, barX, barY, barW, 9, fraction, gradient = true)
+        val equipLabel = Text.translatable("ic2_120.gui.equipment_slots")
+        val chargeLabel = Text.translatable("ic2_120.gui.charge_slots")
 
-        ui.render(context, textRenderer, mouseX, mouseY) {
-            Column(x = left + 8, y = top + 8, spacing = 6) {
-                Text(title.string, color = 0xFFFFFF)
-                Text(
-                    "${formatEu(energy)} / ${formatEu(cap)} EU",
-                    color = 0xCCCCCC,
-                    shadow = false
-                )
+        val content: UiScope.() -> Unit = {
+            Column(
+                x = left + 8,
+                y = top + 8,
+                spacing = 6,
+                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
+            ) {
+                Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
+                    Text(title.string, color = 0xFFFFFF)
+                    Text(
+                        "${formatEu(energy)} / ${formatEu(cap)} EU",
+                        color = 0xFFFFFF,
+                        shadow = false
+                    )
+                }
+                EnergyBar(fraction, barHeight = 12)
+
+                if (useEquipmentSlots) {
+                    Column(spacing = 4) {
+                        Flex(
+                            direction = FlexDirection.ROW,
+                            alignItems = AlignItems.CENTER,
+                            gap = 4
+                        ) {
+                            Text(equipLabel.string, color = 0xAAAAAA, shadow = false)
+                            // 装备槽（左侧 4 格）
+                            for (i in 0 until 4) {
+                                SlotAnchor(
+                                    id = slotAnchorId(i),
+                                    width = 18,
+                                    height = 18
+                                )
+                            }
+                        }
+                        Flex(
+                            direction = FlexDirection.ROW,
+                            alignItems = AlignItems.CENTER,
+                            gap = 4
+                        ) {
+                            Text(chargeLabel.string, color = 0xAAAAAA, shadow = false)
+                            // 充电槽（右侧 1 格）
+                            SlotAnchor(
+                                id = slotAnchorId(4),
+                                width = 18,
+                                height = 18
+                            )
+                        }
+                    }
+                }
             }
         }
 
+        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
+        applyAnchoredSlots(layout, left, top)
+
+        super.render(context, mouseX, mouseY, delta)
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
+            slotXField.setInt(slot, anchor.x - left)
+            slotYField.setInt(slot, anchor.y - top)
+        }
+    }
+
+    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
 
     private fun formatEu(value: Long): String {
         return when {
@@ -123,10 +161,10 @@ class EnergyStorageScreen(
         }
     }
 
+    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
+        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+
     companion object {
-        private const val PANEL_WIDTH = 176
-        private const val PANEL_HEIGHT = 166
-        private const val CONTENT_WIDTH = PANEL_WIDTH - 16
-        private const val LABEL_WIDTH = 36
+        private val GUI_SIZE = GuiSize.STANDARD
     }
 }

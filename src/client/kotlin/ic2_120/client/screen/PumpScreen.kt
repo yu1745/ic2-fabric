@@ -11,6 +11,7 @@ import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
 
 @ModScreen(block = PumpBlock::class)
@@ -22,37 +23,31 @@ class PumpScreen(
 
     private val ui = ComposeUI()
 
+    private val slotXField by lazy {
+        Slot::class.java.getDeclaredField("x").apply { isAccessible = true }
+    }
+    private val slotYField by lazy {
+        Slot::class.java.getDeclaredField("y").apply { isAccessible = true }
+    }
+
     init {
-        backgroundWidth = UpgradeSlotLayout.VANILLA_UI_WIDTH + UpgradeSlotLayout.SLOT_SPACING
-        backgroundHeight = 166
+        backgroundWidth = PANEL_WIDTH
+        backgroundHeight = PANEL_HEIGHT
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
+            context,
+            x,
+            y,
             PumpScreenHandler.PLAYER_INV_Y,
             PumpScreenHandler.HOTBAR_Y,
             PumpScreenHandler.SLOT_SIZE
         )
-
-        val borderColor = GuiBackground.BORDER_COLOR
-        val slotSize = PumpScreenHandler.SLOT_SIZE
-        val borderOffset = 1
-        val inputSlot = handler.slots[PumpScreenHandler.SLOT_INPUT_INDEX]
-        val outputSlot = handler.slots[PumpScreenHandler.SLOT_OUTPUT_INDEX]
-        val dischargeSlot = handler.slots[PumpScreenHandler.SLOT_DISCHARGING_INDEX]
-        context.drawBorder(x + inputSlot.x - borderOffset, y + inputSlot.y - borderOffset, slotSize, slotSize, borderColor)
-        context.drawBorder(x + outputSlot.x - borderOffset, y + outputSlot.y - borderOffset, slotSize, slotSize, borderColor)
-        context.drawBorder(x + dischargeSlot.x - borderOffset, y + dischargeSlot.y - borderOffset, slotSize, slotSize, borderColor)
-        for (i in PumpScreenHandler.SLOT_UPGRADE_INDEX_START..PumpScreenHandler.SLOT_UPGRADE_INDEX_END) {
-            val slot = handler.slots[i]
-            context.drawBorder(x + slot.x - borderOffset, y + slot.y - borderOffset, slotSize, slotSize, borderColor)
-        }
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        super.render(context, mouseX, mouseY, delta)
         val left = x
         val top = y
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
@@ -62,21 +57,74 @@ class PumpScreen(
         val barW = (contentW - 36).coerceAtLeast(0)
         val fluidAmount = handler.sync.fluidAmountMb.coerceAtLeast(0)
 
-        ui.render(context, textRenderer, mouseX, mouseY) {
-            Column(x = left + 8, y = top + 8, spacing = 6) {
-                Text(title.string, color = 0xFFFFFF)
-                Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8, modifier = Modifier.EMPTY.width(contentW)) {
-                    Text("能量", color = 0xAAAAAA)
-                    EnergyBar(energyFraction, barWidth = 0, barHeight = 9, modifier = Modifier.EMPTY.width(barW))
+        val energyText = "$energy / $cap EU"
+        val fluidText = "液体 $fluidAmount mB"
+        val statusText = if (fluidAmount > 0) "状态: 已填充" else "状态: 空"
+
+        val content: UiScope.() -> Unit = {
+            Column(
+                x = left + 8,
+                y = top + 8,
+                spacing = 6,
+                modifier = Modifier().width(contentW).height(backgroundHeight - 16),
+            ) {
+                Row(spacing = 8) {
+                    Text(title.string, color = 0xFFFFFF)
+                    Text(energyText, color = 0xFFFFFF)
                 }
-                Text("$energy / $cap EU", color = 0xCCCCCC, shadow = false)
-                Text("液体 $fluidAmount mB", color = 0xAAAAAA, shadow = false)
-                Text(if (fluidAmount > 0) "状态: 已填充" else "状态: 空", color = 0xAAAAAA, shadow = false)
+                EnergyBar(energyFraction, modifier = Modifier().width(barW))
+
+                // 机器槽位
+                Flex(
+                    direction = FlexDirection.ROW,
+                    justifyContent = JustifyContent.SPACE_BETWEEN,
+                ) {
+                    SlotAnchor(id = "slot.${PumpScreenHandler.SLOT_INPUT_INDEX}")
+                    SlotAnchor(id = "slot.${PumpScreenHandler.SLOT_OUTPUT_INDEX}")
+                }
+
+                // 放电槽
+                SlotAnchor(id = "slot.${PumpScreenHandler.SLOT_DISCHARGING_INDEX}")
+
+                Text(fluidText, color = 0xFFFFFF, shadow = false)
+                Text(statusText, color = 0xAAAAAA, shadow = false)
+
+                // 升级槽
+                Flex(
+                    direction = FlexDirection.ROW,
+                    justifyContent = JustifyContent.SPACE_BETWEEN,
+                ) {
+                    repeat(4) { index ->
+                        SlotAnchor(id = "slot.${PumpScreenHandler.SLOT_UPGRADE_INDEX_START + index}")
+                    }
+                }
             }
         }
+
+        // 1) 预布局，不绘制
+        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
+
+        // 2) 锚点写回 slot 相对坐标
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
+            slotXField.setInt(slot, anchor.x - left)
+            slotYField.setInt(slot, anchor.y - top)
+        }
+
+        // 3) 原生 slot 渲染 + 交互
+        super.render(context, mouseX, mouseY, delta)
+
+        // 4) Compose overlay
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+
+    companion object {
+        private val PANEL_WIDTH = GuiSize.STANDARD_UPGRADE.width
+        private val PANEL_HEIGHT = GuiSize.STANDARD_UPGRADE.height
+    }
 }

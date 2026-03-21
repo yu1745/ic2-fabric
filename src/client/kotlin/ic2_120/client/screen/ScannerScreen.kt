@@ -189,7 +189,7 @@ class ScannerScreen(
 //                                            entry.blockId.substringAfterLast("/")
 //                                                .replace("_", " ")
 //                                                .replaceFirstChar { it.uppercase() },
-//                                            color = 0xDDDDDD,
+//                                            color = 0xFFFFFF,
 //                                            shadow = false
 //                                        )
                                         Text(

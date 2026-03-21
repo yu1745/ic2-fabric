@@ -5,12 +5,12 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.client.ui.HeatProgressBar
 import ic2_120.content.block.BlastFurnaceBlock
 import ic2_120.content.screen.BlastFurnaceScreenHandler
-import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.sync.BlastFurnaceSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
 
 @ModScreen(block = BlastFurnaceBlock::class)
@@ -21,45 +21,29 @@ class BlastFurnaceScreen(
 ) : HandledScreen<BlastFurnaceScreenHandler>(handler, playerInventory, title) {
 
     private val ui = ComposeUI()
+    private val slotXField by lazy {
+        Slot::class.java.getDeclaredField("x").apply { isAccessible = true }
+    }
+    private val slotYField by lazy {
+        Slot::class.java.getDeclaredField("y").apply { isAccessible = true }
+    }
 
     init {
-        backgroundWidth = PANEL_WIDTH
-        backgroundHeight = PANEL_HEIGHT
-        titleY = 4
+        backgroundWidth = GUI_SIZE.width
+        backgroundHeight = GUI_SIZE.height
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
             BlastFurnaceScreenHandler.PLAYER_INV_Y,
             BlastFurnaceScreenHandler.HOTBAR_Y,
             BlastFurnaceScreenHandler.SLOT_SIZE
         )
-        val borderColor = GuiBackground.BORDER_COLOR
-        val slotSize = BlastFurnaceScreenHandler.SLOT_SIZE
-        val borderOffset = 1
-
-        val inputSlot = handler.slots[BlastFurnaceScreenHandler.SLOT_INPUT_INDEX]
-        val airInputSlot = handler.slots[BlastFurnaceScreenHandler.SLOT_AIR_INPUT_INDEX]
-        val outputSteelSlot = handler.slots[BlastFurnaceScreenHandler.SLOT_OUTPUT_STEEL_INDEX]
-        val outputSlagSlot = handler.slots[BlastFurnaceScreenHandler.SLOT_OUTPUT_SLAG_INDEX]
-        val emptyOutputSlot = handler.slots[BlastFurnaceScreenHandler.SLOT_OUTPUT_EMPTY_INDEX]
-
-        context.drawBorder(x + inputSlot.x - borderOffset, y + inputSlot.y - borderOffset, slotSize, slotSize, borderColor)
-        context.drawBorder(x + airInputSlot.x - borderOffset, y + airInputSlot.y - borderOffset, slotSize, slotSize, borderColor)
-        context.drawBorder(x + outputSteelSlot.x - borderOffset, y + outputSteelSlot.y - borderOffset, slotSize, slotSize, borderColor)
-        context.drawBorder(x + outputSlagSlot.x - borderOffset, y + outputSlagSlot.y - borderOffset, slotSize, slotSize, borderColor)
-        context.drawBorder(x + emptyOutputSlot.x - borderOffset, y + emptyOutputSlot.y - borderOffset, slotSize, slotSize, borderColor)
-
-        for (i in BlastFurnaceScreenHandler.SLOT_UPGRADE_INDEX_START..BlastFurnaceScreenHandler.SLOT_UPGRADE_INDEX_END) {
-            val slot = handler.slots[i]
-            context.drawBorder(x + slot.x - borderOffset, y + slot.y - borderOffset, slotSize, slotSize, borderColor)
-        }
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        super.render(context, mouseX, mouseY, delta)
         val left = x
         val top = y
 
@@ -72,54 +56,121 @@ class BlastFurnaceScreen(
 
         val airUsed = handler.sync.progress / BlastFurnaceSync.TICKS_PER_AIR_CELL
 
-        ui.render(context, textRenderer, mouseX, mouseY) {
-            // 热量区
-            Column(x = left + 8, y = top + 4, spacing = 2) {
-                Text("热量", color = 0xAAAAAA)
-                HeatProgressBar(
-                    preheatFrac,
-                    barWidth = 60,
-                    barHeight = 8,
-                    startColor = 0xFF660000.toInt(),
-                    endColor = 0xFFCC0000.toInt(),
-                    gradient = true,
-                    modifier = Modifier.EMPTY
-                )
-                Text(
-                    "$preheat / $preheatCap HU",
-                    color = 0xCCCCCC,
-                    shadow = false
-                )
-                Text(
-                    "空气: $airUsed/${BlastFurnaceSync.AIR_CELLS_PER_STEEL} 瓶/周期",
-                    color = 0xAAAAAA,
-                    shadow = false
-                )
-            }
+        val content: UiScope.() -> Unit = {
+            Row(
+                x = left + 8,
+                y = top + 8,
+                spacing = 8,
+                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
+            ) {
+                Column(
+                    spacing = 6,
+                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
+                ) {
+                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
+                        Text(title.string, color = 0xFFFFFF)
+                    }
 
-            // 周期进度条（置于槽位上方，避免遮挡）
-            // 位置：inputSlot.x(56) + slotSize(18) + 2 = 76, y = 27
-            HeatProgressBar(
-                progressFrac,
-                barWidth = 36,
-                barHeight = 8,
-                startColor = 0xFFCC4400.toInt(),
-                endColor = 0xFFCC0000.toInt(),
-                gradient = true,
-                x = left + 76,
-                y = top + 27,
-                absolute = true
-            )
+                    // 热量条
+                    Flex(
+                        direction = FlexDirection.ROW,
+                        alignItems = AlignItems.CENTER,
+                        gap = 8
+                    ) {
+                        Text("热量", color = 0xAAAAAA)
+                        HeatProgressBar(
+                            preheatFrac,
+                            barWidth = 0,
+                            barHeight = 8,
+                            startColor = 0xFF660000.toInt(),
+                            endColor = 0xFFCC0000.toInt(),
+                            gradient = true,
+                            modifier = Modifier.EMPTY.fractionWidth(1.0f)
+                        )
+                        Text("$preheat / $preheatCap HU", color = 0xFFFFFF, shadow = false)
+                    }
+
+                    Text(
+                        "空气: $airUsed/${BlastFurnaceSync.AIR_CELLS_PER_STEEL} 瓶/周期",
+                        color = 0xAAAAAA,
+                        shadow = false
+                    )
+
+                    // 槽位布局
+                    Flex(
+                        direction = FlexDirection.ROW,
+                        alignItems = AlignItems.CENTER,
+                        gap = 4
+                    ) {
+                        SlotHost(BlastFurnaceScreenHandler.SLOT_INPUT_INDEX)
+                        HeatProgressBar(
+                            progressFrac,
+                            barWidth = 0,
+                            barHeight = 8,
+                            startColor = 0xFFCC4400.toInt(),
+                            endColor = 0xFFCC0000.toInt(),
+                            gradient = true,
+                            modifier = Modifier.EMPTY.fractionWidth(1.0f)
+                        )
+                        SlotHost(BlastFurnaceScreenHandler.SLOT_OUTPUT_STEEL_INDEX)
+                    }
+
+                    Flex(
+                        direction = FlexDirection.ROW,
+                        alignItems = AlignItems.CENTER,
+                        gap = 4
+                    ) {
+                        SlotHost(BlastFurnaceScreenHandler.SLOT_AIR_INPUT_INDEX)
+                        SlotHost(BlastFurnaceScreenHandler.SLOT_OUTPUT_SLAG_INDEX)
+                        SlotHost(BlastFurnaceScreenHandler.SLOT_OUTPUT_EMPTY_INDEX)
+                    }
+                }
+
+                Column(
+                    spacing = 4,
+                    modifier = Modifier.EMPTY
+                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
+                        .padding(0, 8, 0, 0)
+                ) {
+                    for (slotIndex in BlastFurnaceScreenHandler.SLOT_UPGRADE_INDEX_START..BlastFurnaceScreenHandler.SLOT_UPGRADE_INDEX_END) {
+                        SlotHost(slotIndex)
+                    }
+                }
+            }
         }
 
+        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
+        applyAnchoredSlots(layout, left, top)
+
+        super.render(context, mouseX, mouseY, delta)
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+    private fun UiScope.SlotHost(slotIndex: Int) {
+        SlotAnchor(
+            id = slotAnchorId(slotIndex),
+            width = BlastFurnaceScreenHandler.SLOT_SIZE,
+            height = BlastFurnaceScreenHandler.SLOT_SIZE
+        )
+    }
+
+    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
+            slotXField.setInt(slot, anchor.x - left)
+            slotYField.setInt(slot, anchor.y - top)
+        }
+    }
+
+    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
+
+    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (ui.mouseClicked(mouseX, mouseY, button)) return true
+        return super.mouseClicked(mouseX, mouseY, button)
+    }
 
     companion object {
-        private val PANEL_WIDTH = UpgradeSlotLayout.VANILLA_UI_WIDTH + UpgradeSlotLayout.SLOT_SPACING
-        private const val PANEL_HEIGHT = 184
+        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
     }
 }
