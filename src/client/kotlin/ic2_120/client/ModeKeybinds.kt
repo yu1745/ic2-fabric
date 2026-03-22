@@ -1,6 +1,7 @@
 package ic2_120.client
 
 import ic2_120.content.item.IridiumDrill
+import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.network.NetworkManager
 import io.netty.buffer.Unpooled
@@ -45,7 +46,7 @@ object ModeKeybinds {
 
                 // 优先级 1：胸甲 → 喷气背包飞行开关
                 val chest = player.getEquippedStack(EquipmentSlot.CHEST)
-                if (chest.item is JetpackItem) {
+                if (chest.item is JetpackItem || chest.item is ElectricJetpack) {
                     ClientPlayNetworking.send(
                         NetworkManager.TOGGLE_JETPACK_FLIGHT_PACKET,
                         PacketByteBuf(Unpooled.buffer())

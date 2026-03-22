@@ -3,6 +3,7 @@ package ic2_120.content.network
 import ic2_120.Ic2_120
 import ic2_120.content.item.IridiumDrill
 import ic2_120.content.item.NightVisionGoggles
+import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.NanoHelmet
 import ic2_120.content.item.armor.QuantumChestplate
@@ -96,8 +97,12 @@ object NetworkManager {
         ServerPlayNetworking.registerGlobalReceiver(TOGGLE_JETPACK_FLIGHT_PACKET) { server, player, _, _, _ ->
             server.execute {
                 val stack = player.getEquippedStack(EquipmentSlot.CHEST)
-                if (stack.item is JetpackItem) {
-                    val enabled = JetpackItem.toggleFlightEnabled(stack)
+                if (stack.item is JetpackItem || stack.item is ElectricJetpack) {
+                    val enabled = when (val item = stack.item) {
+                        is JetpackItem -> JetpackItem.toggleFlightEnabled(stack)
+                        is ElectricJetpack -> item.toggleFlightEnabled(stack)
+                        else -> false
+                    }
                     val messageKey = if (enabled) {
                         "message.ic2_120.jetpack.flight_on"
                     } else {

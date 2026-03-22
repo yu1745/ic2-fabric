@@ -1,6 +1,7 @@
 package ic2_120.mixin;
 
 import ic2_120.content.item.armor.ElectricArmorItem;
+import ic2_120.content.item.ElectricJetpack;
 import ic2_120.content.item.armor.JetpackItem;
 import ic2_120.content.item.armor.NanoArmorItem;
 import ic2_120.content.item.armor.QuantumArmorItem;
@@ -10,6 +11,9 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -43,7 +47,13 @@ public abstract class PlayerEntityMixin {
     @Unique
     private static final String JETPACK_HOVER_KEY = "IsHover";
     @Unique
+    private static final SoundEvent JETPACK_LOOP_SOUND = SoundEvent.of(new Identifier("ic2", "item.drill.idle"));
+    @Unique
+    private static final int JETPACK_SOUND_INTERVAL_TICKS = 8;
+    @Unique
     private boolean jetpackFlightGranted = false;
+    @Unique
+    private int jetpackSoundCooldown = 0;
 
     // ========== 伤害减伤 Mixin ==========
 
@@ -161,6 +171,10 @@ public abstract class PlayerEntityMixin {
         if (chestStack.getItem() instanceof JetpackItem) {
             handleJetpackFlight(player, chestStack);
             // 如果正在使用喷气背包，不继续处理量子胸甲
+            return;
+        }
+        if (chestStack.getItem() instanceof ElectricJetpack) {
+            handleElectricJetpackFlight(player, chestStack);
             return;
         }
         // 卸下喷气背包后，清理由喷气背包赋予的飞行能力
@@ -319,6 +333,33 @@ public abstract class PlayerEntityMixin {
         // 消耗燃料并启用飞行
         JetpackItem.setFuel(jetpackStack, fuel - JetpackItem.FUEL_CONSUMPTION);
         enableJetpackFlight(player, nbt);
+        playJetpackFlightSound(player, false);
+    }
+
+    @Unique
+    private void handleElectricJetpackFlight(PlayerEntity player, ItemStack jetpackStack) {
+        ElectricJetpack jetpack = (ElectricJetpack) jetpackStack.getItem();
+        NbtCompound nbt = jetpackStack.getOrCreateNbt();
+
+        if (player.isCreative() || player.isSpectator()) {
+            disableJetpackFlight(player, nbt);
+            return;
+        }
+        if (!jetpack.isFlightEnabled(jetpackStack)) {
+            disableJetpackFlight(player, nbt);
+            return;
+        }
+        if (player.isOnGround() || player.isTouchingWater() || player.isClimbing()) {
+            disableJetpackFlight(player, nbt);
+            return;
+        }
+        if (!jetpack.consumeFlightEnergyPerTick(jetpackStack)) {
+            disableJetpackFlight(player, nbt);
+            return;
+        }
+
+        enableJetpackFlight(player, nbt);
+        playJetpackFlightSound(player, true);
     }
 
     @Unique
@@ -364,5 +405,28 @@ public abstract class PlayerEntityMixin {
             nbt.putBoolean(JETPACK_HOVER_KEY, false);
         }
         jetpackFlightGranted = false;
+        jetpackSoundCooldown = 0;
+    }
+
+    @Unique
+    private void playJetpackFlightSound(PlayerEntity player, boolean electric) {
+        if (jetpackSoundCooldown > 0) {
+            jetpackSoundCooldown--;
+            return;
+        }
+
+        float volume = electric ? 0.45F : 0.4F;
+        float pitch = electric ? 1.05F : 0.95F;
+        player.getWorld().playSound(
+            null,
+            player.getX(),
+            player.getY(),
+            player.getZ(),
+            JETPACK_LOOP_SOUND,
+            SoundCategory.PLAYERS,
+            volume,
+            pitch
+        );
+        jetpackSoundCooldown = JETPACK_SOUND_INTERVAL_TICKS;
     }
 }

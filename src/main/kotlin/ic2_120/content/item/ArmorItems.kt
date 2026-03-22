@@ -27,6 +27,7 @@ import net.minecraft.util.Formatting
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import ic2_120.content.item.armor.JetpackItem
+import ic2_120.content.item.armor.ElectricArmorItem
 
 
 //todo 全套防化服，防化三件套加橡胶靴 可免疫特斯拉线圈伤害 可免疫触电伤害，只要有单个防化头盔，物品栏有压缩空气单元，就可以在气泡值用尽时消耗压缩空气单元回满
@@ -614,7 +615,70 @@ class Jetpack : JetpackItem()
  * 作为胸甲装备。
  */
 @ModItem(name = "electric_jetpack", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-class ElectricJetpack : ArmorItem(ModArmorMaterials.ELECTRIC_JETPACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1))
+class ElectricJetpack : ElectricArmorItem(
+    ModArmorMaterials.ELECTRIC_JETPACK_ARMOR,
+    ArmorItem.Type.CHESTPLATE,
+    FabricItemSettings().maxCount(1)
+) {
+    companion object {
+        private const val FLIGHT_ENABLED_KEY = "FlightEnabled"
+        private const val FLIGHT_REMAINDER_KEY = "ElectricJetpackFlightRemainder"
+        private const val FLIGHT_COST_BASE = 8L
+        private const val FLIGHT_COST_REM_NUM = 1
+        private const val FLIGHT_COST_REM_DEN = 3
+    }
+
+    override val tier: Int = 1
+    override val maxCapacity: Long = 30_000L
+
+    override fun getDamageReduction(): Float = 0f
+
+    fun isFlightEnabled(stack: ItemStack): Boolean =
+        stack.orCreateNbt.getBoolean(FLIGHT_ENABLED_KEY)
+
+    fun setFlightEnabled(stack: ItemStack, enabled: Boolean) {
+        stack.orCreateNbt.putBoolean(FLIGHT_ENABLED_KEY, enabled)
+    }
+
+    fun toggleFlightEnabled(stack: ItemStack): Boolean {
+        val enabled = !isFlightEnabled(stack)
+        setFlightEnabled(stack, enabled)
+        return enabled
+    }
+
+    fun consumeFlightEnergyPerTick(stack: ItemStack): Boolean {
+        val nbt = stack.orCreateNbt
+        var rem = nbt.getInt(FLIGHT_REMAINDER_KEY).coerceIn(0, FLIGHT_COST_REM_DEN - 1)
+        var cost = FLIGHT_COST_BASE
+
+        rem += FLIGHT_COST_REM_NUM
+        if (rem >= FLIGHT_COST_REM_DEN) {
+            cost += 1L
+            rem -= FLIGHT_COST_REM_DEN
+        }
+
+        val energy = getEnergy(stack)
+        if (energy < cost) {
+            return false
+        }
+
+        setEnergy(stack, energy - cost)
+        nbt.putInt(FLIGHT_REMAINDER_KEY, rem)
+        return true
+    }
+
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: World?,
+        tooltip: MutableList<Text>,
+        context: net.minecraft.client.item.TooltipContext
+    ) {
+        super.appendTooltip(stack, world, tooltip, context)
+        val enabled = isFlightEnabled(stack)
+        tooltip.add(Text.literal("飞行: ${if (enabled) "§aON" else "§cOFF"}").formatted(Formatting.GRAY))
+        tooltip.add(Text.literal("Alt+M：切换飞行开关").formatted(Formatting.DARK_GRAY))
+    }
+}
 
 /**
  * 夜视镜 (Night Vision Goggles)
