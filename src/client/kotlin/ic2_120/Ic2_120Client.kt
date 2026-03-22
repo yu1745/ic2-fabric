@@ -16,6 +16,7 @@ import ic2_120.client.RubberLogModelPlugin
 import ic2_120.client.colorprovider.StorageBoxColorProvider
 import ic2_120.client.colorprovider.PipeColorProvider
 import ic2_120.client.ClientBlockEntityRenderers
+import ic2_120.client.JetpackSoundController
 import ic2_120.client.network.NetworkManager
 import net.fabricmc.api.ClientModInitializer
 
@@ -35,6 +36,7 @@ object Ic2_120Client : ClientModInitializer {
 		ArmorKeybinds.register()
 		ArmorTooltipHandler.register()
 		DrillTooltipHandler.register()
+		JetpackSoundController.register()
 
 		// 注册储物箱着色器
 		StorageBoxColorProvider.register()

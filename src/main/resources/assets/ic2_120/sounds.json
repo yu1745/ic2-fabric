@@ -1,0 +1,7 @@
+{
+  "item.jetpack.loop": {
+    "sounds": [
+      "ic2_120:jetpack/jetpack_loop"
+    ]
+  }
+}

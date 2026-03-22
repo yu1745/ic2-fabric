@@ -35,12 +35,14 @@ import ic2_120.content.block.storage.TankBlockEntity
 import ic2_120.content.block.transmission.TransmissionBlockEntity
 import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.pipes.PipeNetworkManager
+import ic2_120.content.player.FlightManager
 import ic2_120.content.entity.ModEntities
 import ic2_120.registry.ClassScanner
 import ic2_120.registry.type
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import ic2_120.content.item.armor.JetpackItem
@@ -146,6 +148,11 @@ object Ic2_120 : ModInitializer {
         ServerWorldEvents.UNLOAD.register { _, world ->
             EnergyNetworkManager.onWorldUnload(world)
             PipeNetworkManager.onWorldUnload(world)
+        }
+
+        // 统一处理喷气背包/电力喷气背包/量子胸甲飞行（服务端 tick）
+        ServerTickEvents.END_SERVER_TICK.register { server ->
+            FlightManager.tick(server)
         }
 
         // 储电盒自定义 BlockItem（支持满电变体）及创造模式满电物品
