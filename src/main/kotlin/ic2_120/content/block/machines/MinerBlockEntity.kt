@@ -62,7 +62,6 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import kotlin.math.floor
 import kotlin.random.Random
-import org.slf4j.LoggerFactory
 
 abstract class BaseMinerBlockEntity(
     type: BlockEntityType<*>,
@@ -103,7 +102,6 @@ abstract class BaseMinerBlockEntity(
     override var itemEjectorSide: Direction? = null
 
     companion object {
-        private val LOGGER = LoggerFactory.getLogger("ic2_120/Miner")
         const val SLOT_SCANNER = 0
         const val SLOT_DRILL = 1
         const val SLOT_DISCHARGING = 2
@@ -315,18 +313,6 @@ abstract class BaseMinerBlockEntity(
                 minedThisCycle = true
             }
             break
-        }
-
-        if (scannedThisCycle > 0) {
-            LOGGER.info(
-                "[{}] cycle scanned={}, mined={}, pumped={}, energy={}/{}",
-                blockKey,
-                scannedThisCycle,
-                minedThisCycle,
-                pumpedThisCycle,
-                sync.amount,
-                sync.getEffectiveCapacity()
-            )
         }
 
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
