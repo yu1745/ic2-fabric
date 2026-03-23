@@ -29,6 +29,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -96,8 +97,8 @@ class RtGeneratorBlock : MachineBlock() {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RtGeneratorBlock::class.item(), 1)
                     .pattern("III").pattern("IGI").pattern("IRI")
                     .input('I', ironCasing).input('G', generator).input('R', reactorChamber)
-                    .criterion(hasItem(reactorChamber), conditionsFromItem(reactorChamber))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "rt_generator"))
+                    .criterion(hasItem(generator), conditionsFromItem(generator))
+                    .offerTo(exporter, RtGeneratorBlock::class.id())
             }
         }
     }

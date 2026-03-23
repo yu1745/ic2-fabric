@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_copper_plate": {
+    "has_bronze_ingot": {
       "conditions": {
         "items": [
           {
             "items": [
-              "ic2_120:copper_plate"
+              "ic2_120:bronze_ingot"
             ]
           }
         ]
@@ -15,20 +15,20 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "ic2_120:copper_casing_from_hammer"
+        "recipe": "ic2_120:bronze_plate"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
   },
   "requirements": [
     [
-      "has_copper_plate",
+      "has_bronze_ingot",
       "has_the_recipe"
     ]
   ],
   "rewards": {
     "recipes": [
-      "ic2_120:copper_casing_from_hammer"
+      "ic2_120:bronze_plate"
     ]
   },
   "sends_telemetry_event": false

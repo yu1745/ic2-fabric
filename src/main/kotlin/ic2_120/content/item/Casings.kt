@@ -1,9 +1,12 @@
 package ic2_120.content.item
 
+import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.id
+import ic2_120.registry.instance
+import ic2_120.registry.item
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
-import ic2_120.registry.type
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
@@ -12,9 +15,6 @@ import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
 import java.util.function.Consumer
-import ic2_120.Ic2_120
-import ic2_120.registry.instance
-import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 
@@ -29,7 +29,7 @@ class BronzeCasing : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(BronzePlate::class.instance())
                 .criterion(hasItem(BronzePlate::class.instance()), conditionsFromItem(BronzePlate::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "bronze_casing_from_hammer"))
+                .offerTo(exporter, BronzeCasing::class.id())
         }
     }
 }
@@ -43,7 +43,7 @@ class CopperCasing : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(CopperPlate::class.instance())
                 .criterion(hasItem(CopperPlate::class.instance()), conditionsFromItem(CopperPlate::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "copper_casing_from_hammer"))
+                .offerTo(exporter, CopperCasing::class.id())
         }
     }
 }
@@ -57,7 +57,7 @@ class GoldCasing : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(GoldPlate::class.instance())
                 .criterion(hasItem(GoldPlate::class.instance()), conditionsFromItem(GoldPlate::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "gold_casing_from_hammer"))
+                .offerTo(exporter, GoldCasing::class.id())
         }
     }
 }
@@ -71,7 +71,7 @@ class IronCasing : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(IronPlate::class.instance())
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "iron_casing_from_hammer"))
+                .offerTo(exporter, IronCasing::class.id())
         }
     }
 }
@@ -85,7 +85,7 @@ class LeadCasing : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(LeadPlate::class.instance())
                 .criterion(hasItem(LeadPlate::class.instance()), conditionsFromItem(LeadPlate::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "lead_casing_from_hammer"))
+                .offerTo(exporter, LeadCasing::class.id())
         }
     }
 }
@@ -99,7 +99,7 @@ class SteelCasing : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(SteelPlate::class.instance())
                 .criterion(hasItem(SteelPlate::class.instance()), conditionsFromItem(SteelPlate::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "steel_casing_from_hammer"))
+                .offerTo(exporter, SteelCasing::class.id())
         }
     }
 }
@@ -113,7 +113,7 @@ class TinCasing : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(TinPlate::class.instance())
                 .criterion(hasItem(TinPlate::class.instance()), conditionsFromItem(TinPlate::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "tin_casing_from_hammer"))
+                .offerTo(exporter, TinCasing::class.id())
         }
     }
 }

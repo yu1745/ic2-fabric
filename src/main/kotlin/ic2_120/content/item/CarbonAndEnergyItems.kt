@@ -2,6 +2,7 @@ package ic2_120.content.item
 
 import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
@@ -93,7 +94,7 @@ class CoalBall : Item(FabricItemSettings()) {
                 .input('C', CoalDust::class.instance())
                 .input('F', Items.FLINT)
                 .criterion(hasItem(CoalDust::class.instance()), conditionsFromItem(CoalDust::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "coal_ball"))
+                .offerTo(exporter, CoalBall::class.id())
         }
     }
 }
@@ -107,7 +108,7 @@ class CoalChunk : Item(FabricItemSettings()) {
                 .input('C', CoalChunk::class.instance())
                 .input('O', Items.OBSIDIAN)
                 .criterion(hasItem(CoalChunk::class.instance()), conditionsFromItem(CoalChunk::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "coal_block"))
+                .offerTo(exporter, CoalChunk::class.id())
         }
     }
 }

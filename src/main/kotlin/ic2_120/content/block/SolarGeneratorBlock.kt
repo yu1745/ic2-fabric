@@ -28,6 +28,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -91,7 +92,7 @@ class SolarGeneratorBlock : MachineBlock() {
                     .pattern("CGC").pattern("GTG").pattern("BB ")
                     .input('C', coalDust).input('G', Items.GLASS).input('T', generator).input('B', circuit)
                     .criterion(hasItem(generator), conditionsFromItem(generator))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "solar_generator"))
+                    .offerTo(exporter, SolarGeneratorBlock::class.id())
             }
         }
     }

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "D": {
+      "item": "ic2_120:diamond_drill"
+    },
+    "E": {
+      "item": "ic2_120:energy_crystal"
+    },
+    "R": {
+      "item": "ic2_120:iridium"
+    }
+  },
+  "pattern": [
+    " R ",
+    "RDR",
+    " E "
+  ],
+  "result": {
+    "item": "ic2_120:iridium_drill"
+  },
+  "show_notification": true
+}

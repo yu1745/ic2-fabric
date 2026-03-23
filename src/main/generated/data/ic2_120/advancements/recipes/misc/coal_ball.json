@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_generator": {
+    "has_coal_dust": {
       "conditions": {
         "items": [
           {
             "items": [
-              "ic2_120:generator"
+              "ic2_120:coal_dust"
             ]
           }
         ]
@@ -15,20 +15,20 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "ic2_120:rt_generator"
+        "recipe": "ic2_120:coal_ball"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
   },
   "requirements": [
     [
-      "has_generator",
+      "has_coal_dust",
       "has_the_recipe"
     ]
   ],
   "rewards": {
     "recipes": [
-      "ic2_120:rt_generator"
+      "ic2_120:coal_ball"
     ]
   },
   "sends_telemetry_event": false

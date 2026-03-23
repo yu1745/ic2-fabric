@@ -28,6 +28,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -94,7 +95,7 @@ class CannerBlock : MachineBlock() {
                         .pattern("FS").pattern("CM")
                         .input('F', fluidBottler).input('S', solidCanner).input('C', circuit).input('M', machine)
                         .criterion(hasItem(machine), conditionsFromItem(machine))
-                        .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "canner"))
+                        .offerTo(exporter, CannerBlock::class.id())
                 }
             }
         }

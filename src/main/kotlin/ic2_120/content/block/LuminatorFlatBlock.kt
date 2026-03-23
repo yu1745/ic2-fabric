@@ -37,6 +37,7 @@ import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -130,7 +131,7 @@ class LuminatorFlatBlock : BlockWithEntity(
                     .pattern(" C ").pattern("GTG").pattern("GGG")
                     .input('C', insulatedCopperCable).input('G', Items.GLASS).input('T', tinCable)
                     .criterion(hasItem(insulatedCopperCable), conditionsFromItem(insulatedCopperCable))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "luminator_flat"))
+                    .offerTo(exporter, LuminatorFlatBlock::class.id())
             }
         }
     }

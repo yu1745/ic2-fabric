@@ -3,6 +3,8 @@ package ic2_120.content.item
 import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
+import ic2_120.registry.id
+import ic2_120.registry.recipeId
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
@@ -34,13 +36,13 @@ class EmptyTinCanItem : Item(FabricItemSettings()) {
                 .pattern("TTT").pattern("T T").pattern("TTT")
                 .input('T', tinIngot)
                 .criterion(hasItem(tinIngot), conditionsFromItem(tinIngot))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "tin_can_from_ingots_8"))
+                .offerTo(exporter, EmptyTinCanItem::class.recipeId("from_ingots_8"))
 
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 4)
                 .pattern(" T ").pattern("T T").pattern("TTT")
                 .input('T', tinIngot)
                 .criterion(hasItem(tinIngot), conditionsFromItem(tinIngot))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "tin_can_from_ingots_6"))
+                .offerTo(exporter, EmptyTinCanItem::class.recipeId("from_ingots_6"))
         }
     }
 }

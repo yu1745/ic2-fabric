@@ -27,6 +27,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -84,10 +85,10 @@ class CompressorBlock : MachineBlock() {
             val circuit = ic2_120.content.item.Circuit::class.instance()
             if (machine != Items.AIR && circuit != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CompressorBlock::class.item(), 1)
-                    .pattern("S S").pattern("SMS").pattern("S S")
+                    .pattern("S S").pattern("SMS").pattern("SCS")
                     .input('S', Items.STONE).input('M', machine).input('C', circuit)
                     .criterion(hasItem(machine), conditionsFromItem(machine))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "compressor"))
+                    .offerTo(exporter, CompressorBlock::class.id())
             }
         }
     }

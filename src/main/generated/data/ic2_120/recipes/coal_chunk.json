@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:coal_chunk"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    }
+  },
+  "pattern": [
+    "C C",
+    "COC",
+    "C C"
+  ],
+  "result": {
+    "item": "minecraft:coal_block"
+  },
+  "show_notification": true
+}

@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_advanced_circuit": {
+    "has_machine": {
       "conditions": {
         "items": [
           {
             "items": [
-              "ic2_120:advanced_circuit"
+              "ic2_120:machine"
             ]
           }
         ]
@@ -22,7 +22,7 @@
   },
   "requirements": [
     [
-      "has_advanced_circuit",
+      "has_machine",
       "has_the_recipe"
     ]
   ],

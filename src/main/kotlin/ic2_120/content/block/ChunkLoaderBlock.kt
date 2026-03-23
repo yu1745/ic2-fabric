@@ -14,7 +14,7 @@ import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
-import java.util.function.Consumer
+import ic2_120.registry.id
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
@@ -27,6 +27,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.function.Consumer
 
 /**
  * 区块加载器。消耗 EU 强制加载周围 1～25 个区块，运行时显示绿色。
@@ -94,8 +95,8 @@ class ChunkLoaderBlock : MachineBlock() {
                     .pattern("TET").pattern("LML").pattern("TCT")
                     .input('T', tinPlate).input('E', Items.ENDER_PEARL).input('L', Items.LAPIS_LAZULI)
                     .input('M', machine).input('C', circuit)
-                    .criterion(hasItem(tinPlate), conditionsFromItem(tinPlate))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "chunk_loader"))
+                    .criterion(hasItem(machine), conditionsFromItem(machine))
+                    .offerTo(exporter, ChunkLoaderBlock::class.id())
             }
         }
     }

@@ -28,6 +28,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -84,12 +85,12 @@ class ExtractorBlock : MachineBlock() {
             val machine = MachineCasingBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             val treetap = ic2_120.content.item.Treetap::class.instance()
-            if (machine != Items.AIR) {
+            if (machine != Items.AIR && circuit != Items.AIR && treetap != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ExtractorBlock::class.item(), 1)
                     .pattern("   ").pattern("TMT").pattern("TCT")
                     .input('T', treetap).input('M', machine).input('C', circuit)
                     .criterion(hasItem(machine), conditionsFromItem(machine))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "extractor"))
+                    .offerTo(exporter, ExtractorBlock::class.id())
             }
         }
     }

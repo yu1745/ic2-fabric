@@ -15,7 +15,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "ic2_120:steel_plate_from_hammer"
+        "recipe": "ic2_120:steel_plate"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -28,7 +28,7 @@
   ],
   "rewards": {
     "recipes": [
-      "ic2_120:steel_plate_from_hammer"
+      "ic2_120:steel_plate"
     ]
   },
   "sends_telemetry_event": false

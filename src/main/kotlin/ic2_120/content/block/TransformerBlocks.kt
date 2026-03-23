@@ -38,6 +38,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -146,7 +147,7 @@ class LvTransformerBlock : TransformerBlock() {
                     .pattern("PWP").pattern("PCP").pattern("PWP")
                     .input('P', planks).input('W', insulatedTinCable).input('C', coil)
                     .criterion(hasItem(coil), conditionsFromItem(coil))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "lv_transformer"))
+                    .offerTo(exporter, LvTransformerBlock::class.id())
             }
         }
     }
@@ -166,7 +167,7 @@ class MvTransformerBlock : TransformerBlock() {
                     .pattern(" W ").pattern(" M ").pattern(" W ")
                     .input('W', insulatedCopperCable).input('M', machine)
                     .criterion(hasItem(machine), conditionsFromItem(machine))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "mv_transformer"))
+                    .offerTo(exporter, MvTransformerBlock::class.id())
             }
         }
     }
@@ -187,7 +188,7 @@ class HvTransformerBlock : TransformerBlock() {
                     .pattern(" W ").pattern("CTB").pattern(" W ")
                     .input('W', insulatedGoldCable).input('C', circuit).input('T', MvTransformerBlock::class.item()).input('B', advancedReBattery)
                     .criterion(hasItem(MvTransformerBlock::class.item()), conditionsFromItem(MvTransformerBlock::class.item()))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "hv_transformer"))
+                    .offerTo(exporter, HvTransformerBlock::class.id())
             }
         }
     }
@@ -208,7 +209,7 @@ class EvTransformerBlock : TransformerBlock() {
                     .pattern(" W ").pattern("CTL").pattern(" W ")
                     .input('W', insulatedIronCable).input('C', advancedCircuit).input('T', HvTransformerBlock::class.item()).input('L', lapotronCrystal)
                     .criterion(hasItem(HvTransformerBlock::class.item()), conditionsFromItem(HvTransformerBlock::class.item()))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "ev_transformer"))
+                    .offerTo(exporter, EvTransformerBlock::class.id())
             }
         }
     }

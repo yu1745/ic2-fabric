@@ -2,8 +2,9 @@ package ic2_120.content.item
 
 import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.id
 import ic2_120.registry.instance
-import ic2_120.registry.type
+import ic2_120.registry.recipeId
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.type
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
@@ -40,13 +41,13 @@ class CoalFuelDust : Item(FabricItemSettings()) {
                 .input(CoalDust::class.instance())
                 .input(Items.WATER_BUCKET)
                 .criterion(hasItem(CoalDust::class.instance()), conditionsFromItem(CoalDust::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "coal_fuel_dust_from_bucket"))
+                .offerTo(exporter, CoalFuelDust::class.recipeId("from_bucket"))
 
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, CoalFuelDust::class.instance(), 1)
                 .input(CoalDust::class.instance())
                 .input(WaterCell::class.instance())
                 .criterion(hasItem(CoalDust::class.instance()), conditionsFromItem(CoalDust::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "coal_fuel_dust_from_cell"))
+                .offerTo(exporter, CoalFuelDust::class.recipeId("from_cell"))
         }
     }
 }

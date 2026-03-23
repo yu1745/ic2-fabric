@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "I": {
+      "item": "ic2_120:iron_plate"
+    },
+    "P": {
+      "item": "ic2_120:power_unit"
+    }
+  },
+  "pattern": [
+    " I ",
+    "III",
+    "IPI"
+  ],
+  "result": {
+    "item": "ic2_120:drill"
+  },
+  "show_notification": true
+}

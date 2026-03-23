@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_generator": {
+    "has_gold_plate": {
       "conditions": {
         "items": [
           {
             "items": [
-              "ic2_120:generator"
+              "ic2_120:gold_plate"
             ]
           }
         ]
@@ -15,20 +15,20 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "ic2_120:rt_generator"
+        "recipe": "ic2_120:gold_casing"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
   },
   "requirements": [
     [
-      "has_generator",
+      "has_gold_plate",
       "has_the_recipe"
     ]
   ],
   "rewards": {
     "recipes": [
-      "ic2_120:rt_generator"
+      "ic2_120:gold_casing"
     ]
   },
   "sends_telemetry_event": false

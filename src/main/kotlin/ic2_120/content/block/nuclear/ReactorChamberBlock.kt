@@ -28,6 +28,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -85,7 +86,7 @@ class ReactorChamberBlock(settings: AbstractBlock.Settings = AbstractBlock.Setti
                     .pattern("L L").pattern(" M ").pattern("L L")
                     .input('L', leadPlate).input('M', machine)
                     .criterion(hasItem(leadPlate), conditionsFromItem(leadPlate))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "reactor_chamber"))
+                    .offerTo(exporter, ReactorChamberBlock::class.id())
             }
         }
     }

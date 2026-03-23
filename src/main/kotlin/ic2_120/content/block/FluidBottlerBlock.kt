@@ -30,6 +30,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -93,7 +94,7 @@ class FluidBottlerBlock : MachineBlock() {
                     .pattern(" C ").pattern(" C ").pattern("TMT")
                     .input('C', emptyCell).input('T', circuit).input('M', machine)
                     .criterion(hasItem(machine), conditionsFromItem(machine))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "fluid_bottler"))
+                    .offerTo(exporter, FluidBottlerBlock::class.id())
             }
         }
     }

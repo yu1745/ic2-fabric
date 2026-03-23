@@ -25,6 +25,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -95,8 +96,8 @@ class InductionFurnaceBlock : MachineBlock() {
                     .input('M', machineCasing)
                     .input('F', ironFurnace)
                     .input('B', reBattery)
-                    .criterion(hasItem(circuit), conditionsFromItem(circuit))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "induction_furnace"))
+                    .criterion(hasItem(machineCasing), conditionsFromItem(machineCasing))
+                    .offerTo(exporter, InductionFurnaceBlock::class.id())
             }
         }
     }

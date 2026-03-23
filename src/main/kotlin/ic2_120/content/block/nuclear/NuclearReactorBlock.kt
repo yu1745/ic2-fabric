@@ -33,6 +33,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -119,7 +120,7 @@ class NuclearReactorBlock(settings: AbstractBlock.Settings = AbstractBlock.Setti
                     .pattern("DCD").pattern("RRR").pattern("DGD")
                     .input('D', denseLeadPlate).input('C', advancedCircuit).input('R', reactorChamber).input('G', generator)
                     .criterion(hasItem(reactorChamber), conditionsFromItem(reactorChamber))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "nuclear_reactor"))
+                    .offerTo(exporter, NuclearReactorBlock::class.id())
             }
         }
     }

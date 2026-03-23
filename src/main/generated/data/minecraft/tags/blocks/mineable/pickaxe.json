@@ -1,10 +1,12 @@
 {
   "replace": false,
   "values": [
+    "ic2_120:batbox",
     "ic2_120:blast_furnace",
     "ic2_120:block_cutter",
     "ic2_120:canner",
     "ic2_120:centrifuge",
+    "ic2_120:cesu",
     "ic2_120:chunk_loader",
     "ic2_120:compressor",
     "ic2_120:creative_generator",
@@ -20,6 +22,7 @@
     "ic2_120:iron_furnace",
     "ic2_120:macerator",
     "ic2_120:metal_former",
+    "ic2_120:mfe",
     "ic2_120:mfsu",
     "ic2_120:nuclear_reactor",
     "ic2_120:reactor_access_hatch",

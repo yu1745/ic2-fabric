@@ -37,7 +37,7 @@ class TinCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Base
                 .input(Cutter::class.instance())
                 .input(TinPlate::class.instance())
                 .criterion(hasItem(TinPlate::class.instance()), conditionsFromItem(TinPlate::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "tin_cable_from_plate"))
+                .offerTo(exporter, TinCableBlock::class.id())
         }
     }
 }
@@ -58,7 +58,7 @@ class CopperCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : B
                 .input(Cutter::class.instance())
                 .input(CopperPlate::class.instance())
                 .criterion(hasItem(CopperPlate::class.instance()), conditionsFromItem(CopperPlate::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "copper_cable_from_plate"))
+                .offerTo(exporter, CopperCableBlock::class.id())
         }
     }
 }
@@ -82,7 +82,7 @@ class GoldCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Bas
                 .input(Cutter::class.instance())
                 .input(GoldPlate::class.instance())
                 .criterion(hasItem(GoldPlate::class.instance()), conditionsFromItem(GoldPlate::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "gold_cable_from_plate"))
+                .offerTo(exporter, GoldCableBlock::class.id())
         }
     }
 }
@@ -106,7 +106,7 @@ class IronCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Bas
                 .input(Cutter::class.instance())
                 .input(IronPlate::class.instance())
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "iron_cable_from_plate"))
+                .offerTo(exporter, IronCableBlock::class.id())
         }
     }
 }
@@ -128,7 +128,7 @@ class GlassFibreCableBlock(settings: AbstractBlock.Settings = defaultSettings().
                 .input(Cutter::class.instance())
                 .input(Items.GLASS)
                 .criterion(hasItem(Items.GLASS), conditionsFromItem(Items.GLASS))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "glass_fibre_cable"))
+                .offerTo(exporter, GlassFibreCableBlock::class.id())
         }
     }
 }
@@ -152,7 +152,7 @@ class InsulatedCopperCableBlock(settings: AbstractBlock.Settings = defaultSettin
                 .input(CopperCableBlock::class.item())
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(CopperCableBlock::class.item()), conditionsFromItem(CopperCableBlock::class.item()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "insulated_copper_cable"))
+                .offerTo(exporter, InsulatedCopperCableBlock::class.id())
         }
     }
 }
@@ -174,7 +174,7 @@ class InsulatedTinCableBlock(settings: AbstractBlock.Settings = defaultSettings(
                 .input(TinCableBlock::class.item())
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(TinCableBlock::class.item()), conditionsFromItem(TinCableBlock::class.item()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "insulated_tin_cable"))
+                .offerTo(exporter, InsulatedTinCableBlock::class.id())
         }
     }
 }
@@ -199,7 +199,7 @@ class InsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSettings
                 .input(GoldCableBlock::class.item())
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(GoldCableBlock::class.item()), conditionsFromItem(GoldCableBlock::class.item()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "insulated_gold_cable"))
+                .offerTo(exporter, InsulatedGoldCableBlock::class.id())
         }
     }
 }
@@ -225,7 +225,7 @@ class DoubleInsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSe
                 .input(RubberItem::class.instance())
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(GoldCableBlock::class.item()), conditionsFromItem(GoldCableBlock::class.item()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "double_insulated_gold_cable"))
+                .offerTo(exporter, DoubleInsulatedGoldCableBlock::class.id())
         }
     }
 }
@@ -250,7 +250,7 @@ class InsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSettings
                 .input(IronCableBlock::class.item())
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(IronCableBlock::class.item()), conditionsFromItem(IronCableBlock::class.item()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "insulated_iron_cable"))
+                .offerTo(exporter, InsulatedIronCableBlock::class.id())
         }
     }
 }
@@ -276,7 +276,7 @@ class DoubleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
                 .input(RubberItem::class.instance())
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(IronCableBlock::class.item()), conditionsFromItem(IronCableBlock::class.item()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "double_insulated_iron_cable"))
+                .offerTo(exporter, DoubleInsulatedIronCableBlock::class.id())
         }
     }
 }
@@ -303,7 +303,7 @@ class TripleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
                 .input(RubberItem::class.instance())
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(IronCableBlock::class.item()), conditionsFromItem(IronCableBlock::class.item()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "triple_insulated_iron_cable"))
+                .offerTo(exporter, TripleInsulatedIronCableBlock::class.id())
         }
     }
 }

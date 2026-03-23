@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_lead_plate": {
+    "has_coal_dust": {
       "conditions": {
         "items": [
           {
             "items": [
-              "ic2_120:lead_plate"
+              "ic2_120:coal_dust"
             ]
           }
         ]
@@ -15,20 +15,20 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "ic2_120:lead_casing_from_hammer"
+        "recipe": "ic2_120:coal_fuel_dust_from_cell"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
   },
   "requirements": [
     [
-      "has_lead_plate",
+      "has_coal_dust",
       "has_the_recipe"
     ]
   ],
   "rewards": {
     "recipes": [
-      "ic2_120:lead_casing_from_hammer"
+      "ic2_120:coal_fuel_dust_from_cell"
     ]
   },
   "sends_telemetry_event": false

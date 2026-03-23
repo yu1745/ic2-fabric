@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_iron_plate": {
+    "has_copper_plate": {
       "conditions": {
         "items": [
           {
             "items": [
-              "ic2_120:iron_plate"
+              "ic2_120:copper_plate"
             ]
           }
         ]
@@ -15,20 +15,20 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "ic2_120:iron_cable_from_plate"
+        "recipe": "ic2_120:copper_cable"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
   },
   "requirements": [
     [
-      "has_iron_plate",
+      "has_copper_plate",
       "has_the_recipe"
     ]
   ],
   "rewards": {
     "recipes": [
-      "ic2_120:iron_cable_from_plate"
+      "ic2_120:copper_cable"
     ]
   },
   "sends_telemetry_event": false

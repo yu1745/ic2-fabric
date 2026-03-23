@@ -5,6 +5,7 @@ import ic2_120.content.screen.ScannerScreenHandler
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
+import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
@@ -173,7 +174,7 @@ class OdScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
                     net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem(battery),
                     net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem(battery)
                 )
-                .offerTo(exporter, net.minecraft.util.Identifier("ic2_120", "od_scanner"))
+                .offerTo(exporter, OdScannerItem::class.id())
         }
     }
 }
@@ -238,7 +239,7 @@ class AdvancedScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricToo
                 AdvancedScannerItem::class.instance(),
                 1
             )
-                .pattern("gCg").pattern("gAg").pattern("igi")
+                .pattern("gCg").pattern("gAg").pattern("iIi")
                 .input('g', glowstone)
                 .input('C', circuitAdvanced)
                 .input('A', energyCrystal)
@@ -248,7 +249,7 @@ class AdvancedScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricToo
                     net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem(odScanner),
                     net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem(odScanner)
                 )
-                .offerTo(exporter, net.minecraft.util.Identifier("ic2_120", "advanced_scanner"))
+                .offerTo(exporter, AdvancedScannerItem::class.id())
         }
     }
 }

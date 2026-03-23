@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_steel_plate": {
+    "has_copper_plate": {
       "conditions": {
         "items": [
           {
             "items": [
-              "ic2_120:steel_plate"
+              "ic2_120:copper_plate"
             ]
           }
         ]
@@ -15,20 +15,20 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "ic2_120:steel_casing_from_hammer"
+        "recipe": "ic2_120:copper_casing"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
   },
   "requirements": [
     [
-      "has_steel_plate",
+      "has_copper_plate",
       "has_the_recipe"
     ]
   ],
   "rewards": {
     "recipes": [
-      "ic2_120:steel_casing_from_hammer"
+      "ic2_120:copper_casing"
     ]
   },
   "sends_telemetry_event": false

@@ -3,8 +3,11 @@ package ic2_120.content.item
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
-import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
+import ic2_120.registry.id
+import ic2_120.registry.instance
+import ic2_120.registry.item
+import ic2_120.registry.recipeId
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.AxeItem
@@ -54,7 +57,7 @@ class ForgeHammer : Item(FabricItemSettings().maxDamage(80)) {
                 .pattern("II").pattern("IS").pattern("II")
                 .input('I', iron).input('S', stick)
                 .criterion(hasItem(iron), conditionsFromItem(iron))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "forge_hammer"))
+                .offerTo(exporter, ForgeHammer::class.id())
         }
     }
 
@@ -82,14 +85,14 @@ class Cutter : Item(FabricItemSettings().maxDamage(60)) {
                 .pattern("P P").pattern(" P ").pattern("I I")
                 .input('P', ironPlate).input('I', ironIngot)
                 .criterion(hasItem(ironPlate), conditionsFromItem(ironPlate))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "cutter_iron_plate"))
+                .offerTo(exporter, Cutter::class.recipeId("iron_plate"))
 
             // 配方 2：钢锭制作切割机
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, Cutter::class.instance(), 1)
                 .pattern("P P").pattern(" P ").pattern("I I")
                 .input('P', steelIngot).input('I', ironIngot)
                 .criterion(hasItem(steelIngot), conditionsFromItem(steelIngot))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "cutter_steel"))
+                .offerTo(exporter, Cutter::class.recipeId("steel"))
         }
     }
 
@@ -115,7 +118,7 @@ class BronzeAxe : AxeItem(BronzeToolMaterial, 5f, -3f, FabricItemSettings().maxC
                 .pattern("MM").pattern("MS").pattern(" S")
                 .input('M', bronze).input('S', stick)
                 .criterion(hasItem(bronze), conditionsFromItem(bronze))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "bronze_axe"))
+                .offerTo(exporter, BronzeAxe::class.id())
         }
     }
 }
@@ -130,7 +133,7 @@ class BronzeHoe : HoeItem(BronzeToolMaterial, -1, 0f, FabricItemSettings().maxCo
                 .pattern("MM").pattern(" S").pattern(" S")
                 .input('M', bronze).input('S', stick)
                 .criterion(hasItem(bronze), conditionsFromItem(bronze))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "bronze_hoe"))
+                .offerTo(exporter, BronzeHoe::class.id())
         }
     }
 }
@@ -145,7 +148,7 @@ class BronzeSword : SwordItem(BronzeToolMaterial, 3, -2.4f, FabricItemSettings()
                 .pattern("M").pattern("M").pattern("S")
                 .input('M', bronze).input('S', stick)
                 .criterion(hasItem(bronze), conditionsFromItem(bronze))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "bronze_sword"))
+                .offerTo(exporter, BronzeSword::class.id())
         }
     }
 }
@@ -160,7 +163,7 @@ class BronzeShovel : ShovelItem(BronzeToolMaterial, 1.5f, -3f, FabricItemSetting
                 .pattern("M").pattern("S").pattern("S")
                 .input('M', bronze).input('S', stick)
                 .criterion(hasItem(bronze), conditionsFromItem(bronze))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "bronze_shovel"))
+                .offerTo(exporter, BronzeShovel::class.id())
         }
     }
 }
@@ -175,7 +178,7 @@ class BronzePickaxe : PickaxeItem(BronzeToolMaterial, 1, -2.8f, FabricItemSettin
                 .pattern("MMM").pattern(" S ").pattern(" S ")
                 .input('M', bronze).input('S', stick)
                 .criterion(hasItem(bronze), conditionsFromItem(bronze))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "bronze_pickaxe"))
+                .offerTo(exporter, BronzePickaxe::class.id())
         }
     }
 }
@@ -251,7 +254,7 @@ class DiamondDrill : Item(FabricItemSettings().maxCount(1)), IElectricTool {
                 .pattern("   ").pattern(" D ").pattern("DVD")
                 .input('D', diamond).input('V', drill)
                 .criterion(hasItem(drill), conditionsFromItem(drill))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "diamond_drill"))
+                .offerTo(exporter, DiamondDrill::class.id())
         }
     }
     override val tier = 1
@@ -278,7 +281,7 @@ class Drill : Item(FabricItemSettings().maxCount(1)), IElectricTool {
                 .pattern(" I ").pattern("III").pattern("IPI")
                 .input('I', ironPlate).input('P', powerUnit)
                 .criterion(hasItem(ironPlate), conditionsFromItem(ironPlate))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "drill"))
+                .offerTo(exporter, Drill::class.id())
         }
     }
     override val tier = 1
@@ -341,7 +344,7 @@ class IridiumDrill : Item(FabricItemSettings().maxCount(1)), IElectricTool {
                 .pattern(" R ").pattern("RDR").pattern(" E ")
                 .input('R', reinforcedIridium).input('D', diamondDrill).input('E', energyCrystal)
                 .criterion(hasItem(diamondDrill), conditionsFromItem(diamondDrill))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "iridium_drill"))
+                .offerTo(exporter, IridiumDrill::class.id())
         }
         private const val SILK_TOUCH_KEY = "SilkTouchEnabled"
 

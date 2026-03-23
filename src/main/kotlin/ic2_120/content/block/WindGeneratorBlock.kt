@@ -6,6 +6,9 @@ import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.item
 import ic2_120.registry.type
+import ic2_120.registry.instance
+import ic2_120.registry.id
+import java.util.function.Consumer
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -26,7 +29,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import java.util.function.Consumer
+import ic2_120.registry.id
 
 /**
  * 风力发电机方块。
@@ -89,7 +92,7 @@ class WindGeneratorBlock : MachineBlock() {
                     .pattern("I I").pattern(" G ").pattern("I I")
                     .input('I', Items.IRON_INGOT).input('G', generator)
                     .criterion(hasItem(generator), conditionsFromItem(generator))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "wind_generator"))
+                    .offerTo(exporter, WindGeneratorBlock::class.id())
             }
         }
     }

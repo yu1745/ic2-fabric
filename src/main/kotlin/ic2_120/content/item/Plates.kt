@@ -1,8 +1,11 @@
 package ic2_120.content.item
 
+import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
-import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
+import ic2_120.registry.id
+import ic2_120.registry.instance
+import ic2_120.registry.item
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.Item
@@ -13,9 +16,6 @@ import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
 import java.util.function.Consumer
-import ic2_120.Ic2_120
-import ic2_120.registry.instance
-import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 
@@ -29,7 +29,7 @@ class BronzePlate : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(BronzeIngot::class.instance())
                 .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "bronze_plate_from_hammer"))
+                .offerTo(exporter, BronzePlate::class.id())
         }
     }
 }
@@ -42,7 +42,7 @@ class CopperPlate : Item(FabricItemSettings()) {
                 .input(Items.COPPER_INGOT)
                 .input(ForgeHammer::class.instance())
                 .criterion(hasItem(Items.COPPER_INGOT), conditionsFromItem(Items.COPPER_INGOT))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "copper_plate_from_hammer"))
+                .offerTo(exporter, CopperPlate::class.id())
         }
     }
 }
@@ -55,7 +55,7 @@ class GoldPlate : Item(FabricItemSettings()) {
                 .input(Items.GOLD_INGOT)
                 .input(ForgeHammer::class.instance())
                 .criterion(hasItem(Items.GOLD_INGOT), conditionsFromItem(Items.GOLD_INGOT))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "gold_plate_from_hammer"))
+                .offerTo(exporter, GoldPlate::class.id())
         }
     }
 }
@@ -68,7 +68,7 @@ class IronPlate : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(Items.IRON_INGOT)
                 .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "iron_plate_from_hammer"))
+                .offerTo(exporter, IronPlate::class.id())
         }
     }
 }
@@ -81,7 +81,7 @@ class LapisPlate : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(Items.LAPIS_LAZULI)
                 .criterion(hasItem(Items.LAPIS_LAZULI), conditionsFromItem(Items.LAPIS_LAZULI))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "lapis_plate_from_hammer"))
+                .offerTo(exporter, LapisPlate::class.id())
         }
     }
 }
@@ -94,7 +94,7 @@ class LeadPlate : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(LeadIngot::class.instance())
                 .criterion(hasItem(LeadIngot::class.instance()), conditionsFromItem(LeadIngot::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "lead_plate_from_hammer"))
+                .offerTo(exporter, LeadPlate::class.id())
         }
     }
 }
@@ -110,7 +110,7 @@ class SteelPlate : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(SteelIngot::class.instance())
                 .criterion(hasItem(SteelIngot::class.instance()), conditionsFromItem(SteelIngot::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "steel_plate_from_hammer"))
+                .offerTo(exporter, SteelPlate::class.id())
         }
     }
 }
@@ -123,7 +123,7 @@ class TinPlate : Item(FabricItemSettings()) {
                 .input(ForgeHammer::class.instance())
                 .input(TinIngot::class.instance())
                 .criterion(hasItem(TinIngot::class.instance()), conditionsFromItem(TinIngot::class.instance()))
-                .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "tin_plate_from_hammer"))
+                .offerTo(exporter, TinPlate::class.id())
         }
     }
 }

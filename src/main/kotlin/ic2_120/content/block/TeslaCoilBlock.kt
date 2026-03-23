@@ -29,6 +29,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.id
+import ic2_120.registry.recipeId
 import java.util.function.Consumer
 
 /**
@@ -113,7 +115,7 @@ class TeslaCoilBlock : MachineBlock() {
                     .pattern("RRR").pattern("RTR").pattern("ICI")
                     .input('R', redstone).input('T', centerItem).input('I', ironCasing).input('C', circuit)
                     .criterion(hasItem(ironCasing), conditionsFromItem(ironCasing))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "tesla_coil_iron"))
+                    .offerTo(exporter, TeslaCoilBlock::class.recipeId("iron"))
             }
 
             // 配方二：5 红石粉 + 1 中压变压器 + 2 钢锭 + 1 电路板
@@ -122,7 +124,7 @@ class TeslaCoilBlock : MachineBlock() {
                     .pattern("RRR").pattern("RTR").pattern("SCS")
                     .input('R', redstone).input('T', centerItem).input('S', steelIngot).input('C', circuit)
                     .criterion(hasItem(steelIngot), conditionsFromItem(steelIngot))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "tesla_coil_steel"))
+                    .offerTo(exporter, TeslaCoilBlock::class.recipeId("steel"))
             }
         }
     }

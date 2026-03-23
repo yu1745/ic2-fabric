@@ -9,6 +9,8 @@ import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
+import ic2_120.registry.id
+import java.util.function.Consumer
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -29,7 +31,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import java.util.function.Consumer
+import ic2_120.registry.id
 
 @ModBlock(name = "stirling_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
 class StirlingGeneratorBlock : MachineBlock() {
@@ -88,7 +90,7 @@ class StirlingGeneratorBlock : MachineBlock() {
                     .pattern("ICI").pattern("IGI").pattern("III")
                     .input('I', ironCasing).input('G', generator).input('C', heatConductor)
                     .criterion(hasItem(ironCasing), conditionsFromItem(ironCasing))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "stirling_generator"))
+                    .offerTo(exporter, StirlingGeneratorBlock::class.id())
             }
         }
     }

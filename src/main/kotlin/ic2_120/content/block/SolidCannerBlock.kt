@@ -29,6 +29,7 @@ import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -93,7 +94,7 @@ class SolidCannerBlock : MachineBlock() {
                     .pattern(" C ").pattern(" C ").pattern("TMT")
                     .input('C', tinCan).input('T', circuit).input('M', machine)
                     .criterion(hasItem(machine), conditionsFromItem(machine))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "solid_canner"))
+                    .offerTo(exporter, SolidCannerBlock::class.id())
             }
             // if (machine != Items.AIR && circuit != Items.AIR && tinIngot != Items.AIR) {
             //     // LF 配方：7 锡锭 + 1 电路板 + 1 基础机械外壳

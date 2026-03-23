@@ -28,6 +28,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 /**
@@ -92,7 +93,7 @@ class IronFurnaceBlock : MachineBlock() {
                     .pattern(" I ").pattern("IFI").pattern("I I")
                     .input('I', ironPlate).input('F', Items.FURNACE)
                     .criterion(hasItem(ironPlate), conditionsFromItem(ironPlate))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "iron_furnace"))
+                    .offerTo(exporter, IronFurnaceBlock::class.id())
             }
         }
     }

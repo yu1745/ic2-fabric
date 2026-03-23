@@ -31,6 +31,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.id
 import java.util.function.Consumer
 
 @ModBlock(name = "pump", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
@@ -98,9 +99,8 @@ class PumpBlock : MachineBlock() {
                     .pattern("ECE").pattern(" M ").pattern("PTP")
                     .input('E', emptyCell).input('C', circuit).input('M', machine).input('P', miningPipe).input('T', treetap)
                     .criterion(hasItem(machine), conditionsFromItem(machine))
-                    .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "pump"))
+                    .offerTo(exporter, PumpBlock::class.id())
             }
         }
     }
 }
-
