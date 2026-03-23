@@ -1,6 +1,7 @@
 package ic2_120.content.block
 
 import ic2_120.content.block.machines.CentrifugeBlockEntity
+import ic2_120.content.recipes.centrifuge.CentrifugeRecipeDatagen
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.type
@@ -8,6 +9,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.registry.Registries
@@ -20,6 +22,7 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import ic2_120.Ic2_120
+import java.util.function.Consumer
 
 /**
  * 热能离心机方块。
@@ -74,5 +77,12 @@ class CentrifugeBlock : MachineBlock() {
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+
+        /**
+         * 为 ClassScanner 生成配方
+         */
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            CentrifugeRecipeDatagen.generateRecipes(exporter)
+        }
     }
 }

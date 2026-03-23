@@ -5,7 +5,8 @@ import ic2_120.content.block.ITieredMachine
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.pullEnergyFromNeighbors
-import ic2_120.content.recipes.CentrifugeRecipes
+import ic2_120.content.recipes.ModMachineRecipes
+import ic2_120.content.recipes.centrifuge.CentrifugeRecipe
 import ic2_120.content.screen.CentrifugeScreenHandler
 import ic2_120.content.sync.CentrifugeSync
 import ic2_120.content.syncs.SyncedData
@@ -24,10 +25,12 @@ import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.recipe.RecipeManager
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -157,7 +160,7 @@ class CentrifugeBlockEntity(
         val hasRedstone = world.isReceivingRedstonePower(pos)
 
         // 热量逻辑：有红石时加热至 5000；无红石时降至当前配方最低热量
-        val recipe = CentrifugeRecipes.getRecipe(input)
+        val recipe = getRecipe()
         val targetHeat = when {
             hasRedstone -> CentrifugeSync.HEAT_MAX
             recipe != null -> recipe.minHeat
@@ -257,5 +260,24 @@ class CentrifugeBlockEntity(
         sync.insertEnergy(extracted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         markDirty()
+    }
+
+    /**
+     * 获取当前输入的配方
+     */
+    private fun getRecipe(): CentrifugeRecipe? {
+        val input = getStack(SLOT_INPUT)
+        if (input.isEmpty) return null
+
+        val inv = SimpleInventory(input)
+        val recipeManager = world?.recipeManager ?: return null
+
+        val optionalRecipe = recipeManager.getFirstMatch(
+            ModMachineRecipes.CENTRIFUGE_TYPE,
+            inv,
+            world ?: return null
+        )
+
+        return optionalRecipe.orElse(null)
     }
 }

@@ -1,6 +1,7 @@
 package ic2_120.content.block
 
 import ic2_120.content.block.machines.BlockCutterBlockEntity
+import ic2_120.content.recipes.blockcutter.BlockCutterRecipeDatagen
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.type
@@ -8,6 +9,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.state.StateManager
@@ -17,6 +19,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.function.Consumer
 
 /**
  * 方块切割机。将方块锯成 9 个对应板，或增产 50% 木板和木棍。
@@ -68,5 +71,12 @@ class BlockCutterBlock : MachineBlock() {
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+
+        /**
+         * 为 ClassScanner 生成配方
+         */
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            BlockCutterRecipeDatagen.generateRecipes(exporter)
+        }
     }
 }

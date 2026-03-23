@@ -2,6 +2,7 @@ package ic2_120.content.block
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.machines.CompressorBlockEntity
+import ic2_120.content.recipes.compressor.CompressorRecipeDatagen
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.instance
@@ -81,6 +82,7 @@ class CompressorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // 机器本身合成配方
             val machine = MachineCasingBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             if (machine != Items.AIR && circuit != Items.AIR) {
@@ -90,6 +92,9 @@ class CompressorBlock : MachineBlock() {
                     .criterion(hasItem(machine), conditionsFromItem(machine))
                     .offerTo(exporter, CompressorBlock::class.id())
             }
+
+            // 机器配方
+            CompressorRecipeDatagen.generateRecipes(exporter)
         }
     }
 }

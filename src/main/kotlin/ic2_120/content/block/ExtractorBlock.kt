@@ -2,6 +2,7 @@ package ic2_120.content.block
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.machines.ExtractorBlockEntity
+import ic2_120.content.recipes.extractor.ExtractorRecipeDatagen
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.instance
 import ic2_120.registry.item
@@ -82,6 +83,7 @@ class ExtractorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // 机器本身合成配方
             val machine = MachineCasingBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             val treetap = ic2_120.content.item.Treetap::class.instance()
@@ -92,6 +94,9 @@ class ExtractorBlock : MachineBlock() {
                     .criterion(hasItem(machine), conditionsFromItem(machine))
                     .offerTo(exporter, ExtractorBlock::class.id())
             }
+
+            // 机器配方
+            ExtractorRecipeDatagen.generateRecipes(exporter)
         }
     }
 }

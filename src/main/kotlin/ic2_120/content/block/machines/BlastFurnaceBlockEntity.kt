@@ -4,7 +4,8 @@ import ic2_120.Ic2_120
 import ic2_120.content.block.BlastFurnaceBlock
 import ic2_120.content.heat.IHeatConsumer
 import ic2_120.content.item.AirCell
-import ic2_120.content.recipes.BlastFurnaceRecipes
+import ic2_120.content.recipes.ModMachineRecipes
+import ic2_120.content.recipes.blastfurnace.BlastFurnaceRecipe
 import ic2_120.content.screen.BlastFurnaceScreenHandler
 import ic2_120.content.sync.BlastFurnaceSync
 import ic2_120.content.syncs.SyncedData
@@ -19,9 +20,11 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.recipe.RecipeManager
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
@@ -145,6 +148,18 @@ class BlastFurnaceBlockEntity(
         return toAdd
     }
 
+    /**
+     * 获取当前输入的配方
+     */
+    private fun getRecipeForInput(input: ItemStack): BlastFurnaceRecipe? {
+        if (input.isEmpty) return null
+
+        val inv = BlastFurnaceRecipe.Input(input)
+        val recipeManager = world?.recipeManager ?: return null
+
+        return recipeManager.getFirstMatch(ModMachineRecipes.BLAST_FURNACE_TYPE, inv, world ?: return null).orElse(null)
+    }
+
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
@@ -166,13 +181,16 @@ class BlastFurnaceBlockEntity(
             return
         }
 
-        val recipe = BlastFurnaceRecipes.getSteelOutput(input)
+        val recipe = getRecipeForInput(input)
         if (recipe == null) {
             if (sync.progress != 0) sync.progress = 0
             regressPreheat()
             setActiveState(world, pos, state, false)
             return
         }
+
+        val steelOutput = BlastFurnaceRecipe.getSteelOutput(recipe)
+        val slagOutput = BlastFurnaceRecipe.getSlagOutput(recipe)
 
         // 上一 tick 未收到热量：进度暂停，预热衰减
         if (!heatReceivedLastTick) {
@@ -199,11 +217,10 @@ class BlastFurnaceBlockEntity(
         // 加工完成
         if (nextProgress >= BlastFurnaceSync.PROGRESS_MAX) {
             input.decrement(1)
-            if (outputSteel.isEmpty) setStack(SLOT_OUTPUT_STEEL, recipe.copy())
-            else outputSteel.increment(recipe.count)
-            val slag = BlastFurnaceRecipes.getSlagOutput()
-            if (outputSlag.isEmpty) setStack(SLOT_OUTPUT_SLAG, slag)
-            else outputSlag.increment(slag.count)
+            if (outputSteel.isEmpty) setStack(SLOT_OUTPUT_STEEL, steelOutput)
+            else outputSteel.increment(steelOutput.count)
+            if (outputSlag.isEmpty) setStack(SLOT_OUTPUT_SLAG, slagOutput)
+            else outputSlag.increment(slagOutput.count)
             sync.progress = 0
             markDirty()
             setActiveState(world, pos, state, false)
@@ -251,8 +268,9 @@ class BlastFurnaceBlockEntity(
     }
 
     private fun canAcceptOutput(steel: ItemStack, slag: ItemStack): Boolean {
-        val steelOut = BlastFurnaceRecipes.getSteelOutput(getStack(SLOT_INPUT)) ?: return true
-        val slagOut = BlastFurnaceRecipes.getSlagOutput()
+        val recipe = getRecipeForInput(getStack(SLOT_INPUT)) ?: return true
+        val steelOut = BlastFurnaceRecipe.getSteelOutput(recipe)
+        val slagOut = BlastFurnaceRecipe.getSlagOutput(recipe)
         val steelOk = steel.isEmpty || (ItemStack.areItemsEqual(steel, steelOut) && steel.count + steelOut.count <= steel.maxCount)
         val slagOk = slag.isEmpty || (ItemStack.areItemsEqual(slag, slagOut) && slag.count + slagOut.count <= slag.maxCount)
         return steelOk && slagOk

@@ -1,6 +1,7 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.recipes.CompressorRecipes
+import ic2_120.content.recipes.ModMachineRecipes
+import ic2_120.content.recipes.compressor.CompressorRecipe
 import ic2_120.content.sync.CompressorSync
 import ic2_120.content.pullEnergyFromNeighbors
 import ic2_120.content.block.CompressorBlock
@@ -25,9 +26,11 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.recipe.RecipeManager
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
@@ -151,13 +154,14 @@ class CompressorBlockEntity(
         extractFromDischargingSlot()
 
         val input = getStack(SLOT_INPUT)
-        val recipe = CompressorRecipes.getRecipe(input) ?: run {
+        val recipe = getRecipe(world, input) ?: run {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
         }
-        val (inputCount, result) = recipe
+        val inputCount = recipe.inputCount
+        val result = recipe.output
         val outputSlot = getStack(SLOT_OUTPUT)
         val maxStack = result.maxCount
         val canAccept = outputSlot.isEmpty() ||
@@ -192,6 +196,14 @@ class CompressorBlockEntity(
             setActiveState(world, pos, state, false)
         }
         sync.syncCurrentTickFlow()
+    }
+
+    private fun getRecipe(world: World, input: ItemStack): CompressorRecipe? {
+        if (input.isEmpty) return null
+        val inventory = SimpleInventory(input)
+        val recipeManager = world.recipeManager
+        val optionalRecipe = recipeManager.getFirstMatch(ModMachineRecipes.COMPRESSOR_TYPE, inventory, world)
+        return optionalRecipe.orElse(null)
     }
     /**
      * 从放电槽提取能量（如果需要）

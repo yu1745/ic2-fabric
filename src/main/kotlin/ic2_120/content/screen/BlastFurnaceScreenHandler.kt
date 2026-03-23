@@ -3,7 +3,6 @@ package ic2_120.content.screen
 import ic2_120.content.block.BlastFurnaceBlock
 import ic2_120.content.block.machines.BlastFurnaceBlockEntity
 import ic2_120.content.item.AirCell
-import ic2_120.content.recipes.BlastFurnaceRecipes
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.screen.slot.SlotMoveHelper
@@ -140,7 +139,7 @@ class BlastFurnaceScreenHandler(
         const val HOTBAR_Y = 166
 
         private val INPUT_SLOT_SPEC = SlotSpec(
-            canInsert = { stack -> BlastFurnaceRecipes.isValidInput(stack) }
+            canInsert = { stack -> !stack.isEmpty }
         )
         private val AIR_INPUT_SLOT_SPEC = SlotSpec(
             canInsert = { stack -> stack.item is AirCell }

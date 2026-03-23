@@ -1,7 +1,25 @@
 package ic2_120.integration.jei
 
-import ic2_120.content.recipes.macerator.ModMachineRecipes
+import ic2_120.content.recipes.blastfurnace.BlastFurnaceRecipeDatagen
+import ic2_120.content.recipes.blockcutter.BlockCutterRecipeDatagen
+import ic2_120.content.recipes.centrifuge.CentrifugeRecipeDatagen
+import ic2_120.content.recipes.compressor.CompressorRecipeDatagen
+import ic2_120.content.recipes.extractor.ExtractorRecipeDatagen
 import ic2_120.content.recipes.macerator.MaceratorRecipeDatagen
+import ic2_120.content.recipes.metalformer.MetalFormerRecipeDatagen
+import ic2_120.content.recipes.orewashing.OreWashingRecipeDatagen
+import ic2_120.integration.jei.BlastFurnaceJeiRecipe
+import ic2_120.integration.jei.BlastFurnaceRecipeCategory
+import ic2_120.integration.jei.BlockCutterJeiRecipe
+import ic2_120.integration.jei.BlockCutterRecipeCategory
+import ic2_120.integration.jei.MetalFormerCuttingJeiRecipe
+import ic2_120.integration.jei.MetalFormerCuttingRecipeCategory
+import ic2_120.integration.jei.MetalFormerExtrudingJeiRecipe
+import ic2_120.integration.jei.MetalFormerExtrudingRecipeCategory
+import ic2_120.integration.jei.MetalFormerRollingJeiRecipe
+import ic2_120.integration.jei.MetalFormerRollingRecipeCategory
+import ic2_120.integration.jei.OreWashingJeiRecipe
+import ic2_120.integration.jei.OreWashingRecipeCategory
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
@@ -95,25 +113,174 @@ class Ic2JeiPlugin : IModPlugin {
     }
 
     override fun registerCategories(registration: IRecipeCategoryRegistration) {
-        registration.addRecipeCategories(MaceratorRecipeCategory(registration.jeiHelpers.guiHelper))
+        registration.addRecipeCategories(
+            MaceratorRecipeCategory(registration.jeiHelpers.guiHelper),
+            CompressorRecipeCategory(registration.jeiHelpers.guiHelper),
+            ExtractorRecipeCategory(registration.jeiHelpers.guiHelper),
+            CentrifugeRecipeCategory(registration.jeiHelpers.guiHelper),
+            BlastFurnaceRecipeCategory(registration.jeiHelpers.guiHelper),
+            OreWashingRecipeCategory(registration.jeiHelpers.guiHelper),
+            BlockCutterRecipeCategory(registration.jeiHelpers.guiHelper),
+            MetalFormerRollingRecipeCategory(registration.jeiHelpers.guiHelper),
+            MetalFormerCuttingRecipeCategory(registration.jeiHelpers.guiHelper),
+            MetalFormerExtrudingRecipeCategory(registration.jeiHelpers.guiHelper)
+        )
     }
 
     override fun registerRecipes(registration: IRecipeRegistration) {
-        val recipes = MaceratorRecipeDatagen.allEntries()
+        // Macerator 配方
+        val maceratorRecipes = MaceratorRecipeDatagen.allEntries()
             .map { entry ->
                 MaceratorJeiRecipe(
                     Ingredient.ofItems(entry.input),
                     ItemStack(entry.output, entry.count)
                 )
             }
-        registration.addRecipes(Ic2JeiRecipeTypes.MACERATOR, recipes)
+        registration.addRecipes(Ic2JeiRecipeTypes.MACERATOR, maceratorRecipes)
+
+        // Compressor 配方
+        val compressorRecipes = CompressorRecipeDatagen.allEntries()
+            .map { entry ->
+                CompressorJeiRecipe(
+                    Ingredient.ofItems(entry.input),
+                    entry.inputCount,
+                    ItemStack(entry.output, entry.count)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.COMPRESSOR, compressorRecipes)
+
+        // Extractor 配方
+        val extractorRecipes = ExtractorRecipeDatagen.allEntries()
+            .map { entry ->
+                ExtractorJeiRecipe(
+                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.output, entry.count)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.EXTRACTOR, extractorRecipes)
+
+        // Centrifuge 配方
+        val centrifugeRecipes = CentrifugeRecipeDatagen.allEntries()
+            .map { entry ->
+                CentrifugeJeiRecipe(
+                    Ingredient.ofItems(entry.input),
+                    entry.minHeat,
+                    entry.outputs.map { ItemStack(it.item, it.count) }
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.CENTRIFUGE, centrifugeRecipes)
+
+        // BlastFurnace 配方
+        val blastFurnaceRecipes = BlastFurnaceRecipeDatagen.allEntries()
+            .map { entry ->
+                BlastFurnaceJeiRecipe(
+                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.steelOutput, entry.steelCount),
+                    ItemStack(entry.slagOutput, entry.slagCount)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.BLAST_FURNACE, blastFurnaceRecipes)
+
+        // OreWashing 配方
+        val oreWashingRecipes = OreWashingRecipeDatagen.allEntries()
+            .map { entry ->
+                OreWashingJeiRecipe(
+                    Ingredient.ofItems(entry.input),
+                    entry.outputs.map { ItemStack(it.item, it.count) },
+                    entry.waterConsumptionMb
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.ORE_WASHING, oreWashingRecipes)
+
+        // BlockCutter 配方
+        val blockCutterRecipes = BlockCutterRecipeDatagen.allEntries()
+            .map { entry ->
+                BlockCutterJeiRecipe(
+                    Ingredient.ofItems(entry.input),
+                    entry.inputCount,
+                    ItemStack(entry.output, entry.count)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.BLOCK_CUTTER, blockCutterRecipes)
+
+        // MetalFormer 配方 - 按模式分组
+        val metalFormerRecipes = MetalFormerRecipeDatagen.allEntries()
+        val rollingRecipes = metalFormerRecipes.filter { it.mode == MetalFormerRecipeDatagen.Mode.ROLLING }
+            .map { entry ->
+                MetalFormerRollingJeiRecipe(
+                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.output, entry.outputCount)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.METAL_FORMER_ROLLING, rollingRecipes)
+
+        val cuttingRecipes = metalFormerRecipes.filter { it.mode == MetalFormerRecipeDatagen.Mode.CUTTING }
+            .map { entry ->
+                MetalFormerCuttingJeiRecipe(
+                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.output, entry.outputCount)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.METAL_FORMER_CUTTING, cuttingRecipes)
+
+        val extrudingRecipes = metalFormerRecipes.filter { it.mode == MetalFormerRecipeDatagen.Mode.EXTRUDING }
+            .map { entry ->
+                MetalFormerExtrudingJeiRecipe(
+                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.output, entry.outputCount)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.METAL_FORMER_EXTRUDING, extrudingRecipes)
     }
 
     override fun registerRecipeCatalysts(registration: IRecipeCatalystRegistration) {
+        // Macerator
         registration.addRecipeCatalyst(
             ItemStack(Registries.ITEM.get(Identifier("ic2_120", "macerator"))),
             Ic2JeiRecipeTypes.MACERATOR
         )
+
+        // Compressor
+        registration.addRecipeCatalyst(
+            ItemStack(Registries.ITEM.get(Identifier("ic2_120", "compressor"))),
+            Ic2JeiRecipeTypes.COMPRESSOR
+        )
+
+        // Extractor
+        registration.addRecipeCatalyst(
+            ItemStack(Registries.ITEM.get(Identifier("ic2_120", "extractor"))),
+            Ic2JeiRecipeTypes.EXTRACTOR
+        )
+
+        // Centrifuge
+        registration.addRecipeCatalyst(
+            ItemStack(Registries.ITEM.get(Identifier("ic2_120", "centrifuge"))),
+            Ic2JeiRecipeTypes.CENTRIFUGE
+        )
+
+        // BlockCutter
+        registration.addRecipeCatalyst(
+            ItemStack(Registries.ITEM.get(Identifier("ic2_120", "block_cutter"))),
+            Ic2JeiRecipeTypes.BLOCK_CUTTER
+        )
+
+        // BlastFurnace
+        registration.addRecipeCatalyst(
+            ItemStack(Registries.ITEM.get(Identifier("ic2_120", "blast_furnace"))),
+            Ic2JeiRecipeTypes.BLAST_FURNACE
+        )
+
+        // OreWashing
+        registration.addRecipeCatalyst(
+            ItemStack(Registries.ITEM.get(Identifier("ic2_120", "ore_washing_plant"))),
+            Ic2JeiRecipeTypes.ORE_WASHING
+        )
+
+        // MetalFormer - 同一机器显示在三个分类下
+        val metalFormerStack = ItemStack(Registries.ITEM.get(Identifier("ic2_120", "metal_former")))
+        registration.addRecipeCatalyst(metalFormerStack, Ic2JeiRecipeTypes.METAL_FORMER_ROLLING)
+        registration.addRecipeCatalyst(metalFormerStack, Ic2JeiRecipeTypes.METAL_FORMER_CUTTING)
+        registration.addRecipeCatalyst(metalFormerStack, Ic2JeiRecipeTypes.METAL_FORMER_EXTRUDING)
     }
 
     /**

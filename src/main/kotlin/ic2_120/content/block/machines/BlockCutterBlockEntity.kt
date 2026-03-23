@@ -1,7 +1,8 @@
 package ic2_120.content.block.machines
 
 import ic2_120.content.item.IBlockCuttingBlade
-import ic2_120.content.recipes.BlockCutterRecipes
+import ic2_120.content.recipes.ModMachineRecipes
+import ic2_120.content.recipes.blockcutter.BlockCutterRecipe
 import ic2_120.content.sync.BlockCutterSync
 import ic2_120.content.pullEnergyFromNeighbors
 import ic2_120.content.block.BlockCutterBlock
@@ -23,10 +24,12 @@ import net.minecraft.block.BlockState
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.recipe.RecipeManager
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -147,8 +150,59 @@ class BlockCutterBlockEntity(
         if (bladeHardness < 0f) return true
         val input = getStack(SLOT_INPUT)
         if (input.isEmpty) return false
-        val materialHardness = BlockCutterRecipes.getMaterialHardness(input)
-        return materialHardness >= bladeHardness
+        val recipe = getRecipeForInput(input) ?: return false
+        return !recipe.isBladeSufficient(bladeHardness)
+    }
+
+    /**
+     * 获取当前输入的配方（不考虑刀片硬度）
+     */
+    private fun getRecipeForInput(input: ItemStack): BlockCutterRecipe? {
+        if (input.isEmpty) return null
+
+        val inv = SimpleInventory(input)
+        val recipeManager = world?.recipeManager ?: return null
+
+        // 获取第一个匹配的配方（优先选择inputCount较大的配方）
+        val recipe = recipeManager.getFirstMatch(ModMachineRecipes.BLOCK_CUTTER_TYPE, inv, world ?: return null).orElse(null)
+
+        // 对于木板，尝试获取匹配2个输入的配方（木棍配方）
+        if (input.count >= 2) {
+            val inv2 = SimpleInventory(ItemStack(input.item, 2))
+            val recipe2 = recipeManager.getFirstMatch(ModMachineRecipes.BLOCK_CUTTER_TYPE, inv2, world ?: return null).orElse(null)
+            if (recipe2 != null && recipe2.inputCount == 2) {
+                return recipe2
+            }
+        }
+
+        return recipe
+    }
+
+    /**
+     * 获取配方（检查刀片硬度）
+     */
+    private fun getRecipe(): BlockCutterRecipe? {
+        val bladeHardness = getBladeHardness()
+        if (bladeHardness < 0f) return null
+
+        val input = getStack(SLOT_INPUT)
+        if (input.isEmpty) return null
+
+        val recipe = getRecipeForInput(input) ?: return null
+
+        // 检查刀片硬度
+        if (!recipe.isBladeSufficient(bladeHardness)) return null
+
+        return recipe
+    }
+
+    /** 获取材料硬度（用于锯片检查） */
+    fun getMaterialHardness(): Float {
+        val input = getStack(SLOT_INPUT)
+        if (input.isEmpty) return 0f
+
+        val recipe = getRecipeForInput(input)
+        return recipe?.materialHardness ?: 0f
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -181,14 +235,14 @@ class BlockCutterBlockEntity(
             return
         }
 
-        val recipe = BlockCutterRecipes.getRecipe(input, bladeHardness) ?: run {
+        val recipe = getRecipe() ?: run {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
         }
 
-        val (result, inputCount) = recipe
+        val inputCount = recipe.inputCount
         if (input.count < inputCount) {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
@@ -196,6 +250,7 @@ class BlockCutterBlockEntity(
             return
         }
 
+        val result = recipe.output
         val outputSlot = getStack(SLOT_OUTPUT)
         val maxStack = result.maxCount
         val canAccept = outputSlot.isEmpty() ||

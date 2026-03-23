@@ -5,7 +5,8 @@ import ic2_120.content.block.ITieredMachine
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.WaterCell
 import ic2_120.content.pullEnergyFromNeighbors
-import ic2_120.content.recipes.OreWashingPlantRecipes
+import ic2_120.content.recipes.ModMachineRecipes
+import ic2_120.content.recipes.orewashing.OreWashingRecipe
 import ic2_120.content.screen.OreWashingPlantScreenHandler
 import ic2_120.content.sync.OreWashingPlantSync
 import ic2_120.content.syncs.SyncedData
@@ -33,10 +34,12 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluids
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.recipe.RecipeManager
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -176,6 +179,9 @@ class OreWashingPlantBlockEntity(
 
     val waterTank: Storage<FluidVariant> = waterTankInternal
 
+    // 当前加工配方的缓存（用于计算水消耗）
+    private var currentRecipe: OreWashingRecipe? = null
+
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -247,6 +253,18 @@ class OreWashingPlantBlockEntity(
         return waterTank
     }
 
+    /**
+     * 获取当前输入的配方
+     */
+    private fun getRecipeForInput(input: ItemStack): OreWashingRecipe? {
+        if (input.isEmpty) return null
+
+        val inv = OreWashingRecipe.Input(input)
+        val recipeManager = world?.recipeManager ?: return null
+
+        return recipeManager.getFirstMatch(ModMachineRecipes.ORE_WASHING_TYPE, inv, world ?: return null).orElse(null)
+    }
+
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
@@ -271,18 +289,29 @@ class OreWashingPlantBlockEntity(
         val input = getStack(SLOT_INPUT_ORE)
         if (input.isEmpty) {
             if (sync.progress != 0) sync.progress = 0
+            currentRecipe = null
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
         }
 
         // 检查配方
-        val result = OreWashingPlantRecipes.getOutput(input) ?: run {
+        val recipe = getRecipeForInput(input) ?: run {
             if (sync.progress != 0) sync.progress = 0
+            currentRecipe = null
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
         }
+
+        // 缓存当前配方
+        currentRecipe = recipe
+
+        // 获取所有输出（补齐到3个）
+        val allOutputs = OreWashingRecipe.getAllOutputs(recipe)
+        val output1 = allOutputs[0]
+        val output2 = allOutputs[1]
+        val output3 = allOutputs[2]
 
         // 检查输出槽是否有空间
         val output1Slot = getStack(SLOT_OUTPUT_1)
@@ -291,11 +320,11 @@ class OreWashingPlantBlockEntity(
         val outputEmptySlot = getStack(SLOT_OUTPUT_EMPTY)
 
         val canAccept1 = output1Slot.isEmpty() ||
-            (ItemStack.areItemsEqual(output1Slot, result.output1) && output1Slot.count + result.output1.count <= result.output1.maxCount)
+            (ItemStack.areItemsEqual(output1Slot, output1) && output1Slot.count + output1.count <= output1.maxCount)
         val canAccept2 = output2Slot.isEmpty() ||
-            (ItemStack.areItemsEqual(output2Slot, result.output2) && output2Slot.count + result.output2.count <= result.output2.maxCount)
+            (ItemStack.areItemsEqual(output2Slot, output2) && output2Slot.count + output2.count <= output2.maxCount)
         val canAccept3 = output3Slot.isEmpty() ||
-            (ItemStack.areItemsEqual(output3Slot, result.output3) && output3Slot.count + result.output3.count <= result.output3.maxCount)
+            (ItemStack.areItemsEqual(output3Slot, output3) && output3Slot.count + output3.count <= output3.maxCount)
 
         if (!canAccept1 || !canAccept2 || !canAccept3) {
             if (sync.progress != 0) sync.progress = 0
@@ -308,14 +337,14 @@ class OreWashingPlantBlockEntity(
         if (sync.progress >= OreWashingPlantSync.PROGRESS_MAX) {
             input.decrement(1)
             // 放入输出槽
-            if (output1Slot.isEmpty()) setStack(SLOT_OUTPUT_1, result.output1.copy())
-            else output1Slot.increment(result.output1.count)
+            if (output1Slot.isEmpty()) setStack(SLOT_OUTPUT_1, output1)
+            else if (!output1.isEmpty) output1Slot.increment(output1.count)
 
-            if (output2Slot.isEmpty()) setStack(SLOT_OUTPUT_2, result.output2.copy())
-            else output2Slot.increment(result.output2.count)
+            if (output2Slot.isEmpty()) setStack(SLOT_OUTPUT_2, output2)
+            else if (!output2.isEmpty) output2Slot.increment(output2.count)
 
-            if (output3Slot.isEmpty()) setStack(SLOT_OUTPUT_3, result.output3.copy())
-            else output3Slot.increment(result.output3.count)
+            if (output3Slot.isEmpty()) setStack(SLOT_OUTPUT_3, output3)
+            else if (!output3.isEmpty) output3Slot.increment(output3.count)
 
             sync.progress = 0
             markDirty()
@@ -405,7 +434,10 @@ class OreWashingPlantBlockEntity(
 
     private fun waterNeededForProgressRange(fromProgress: Int, toProgress: Int): Long {
         if (toProgress <= fromProgress) return 0L
-        val perOperation = OreWashingPlantSync.WATER_PER_OPERATION
+
+        // 使用当前配方的水消耗量，默认1000mB（1桶）
+        val perOperation = currentRecipe?.waterConsumptionMb ?: 1000L
+
         val max = OreWashingPlantSync.PROGRESS_MAX.toLong().coerceAtLeast(1L)
         val before = perOperation * fromProgress.toLong() / max
         val after = perOperation * toProgress.toLong() / max

@@ -4,7 +4,8 @@ import ic2_120.content.block.ExtractorBlock
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.pullEnergyFromNeighbors
-import ic2_120.content.recipes.ExtractorRecipes
+import ic2_120.content.recipes.ModMachineRecipes
+import ic2_120.content.recipes.extractor.ExtractorRecipe
 import ic2_120.content.screen.ExtractorScreenHandler
 import ic2_120.content.sync.ExtractorSync
 import ic2_120.content.syncs.SyncedData
@@ -25,9 +26,11 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.recipe.RecipeManager
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
@@ -151,12 +154,13 @@ class ExtractorBlockEntity(
         extractFromDischargingSlot()
 
         val input = getStack(SLOT_INPUT)
-        val result = ExtractorRecipes.getOutput(input) ?: run {
+        val recipe = getRecipe(world, input) ?: run {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
         }
+        val result = recipe.output
         val outputSlot = getStack(SLOT_OUTPUT)
         val maxStack = result.maxCount
         val canAccept = outputSlot.isEmpty() ||
@@ -191,6 +195,14 @@ class ExtractorBlockEntity(
             setActiveState(world, pos, state, false)
         }
         sync.syncCurrentTickFlow()
+    }
+
+    private fun getRecipe(world: World, input: ItemStack): ExtractorRecipe? {
+        if (input.isEmpty) return null
+        val inventory = SimpleInventory(input)
+        val recipeManager = world.recipeManager
+        val optionalRecipe = recipeManager.getFirstMatch(ModMachineRecipes.EXTRACTOR_TYPE, inventory, world)
+        return optionalRecipe.orElse(null)
     }
     /**
      * 从放电槽提取能量（如果需要）

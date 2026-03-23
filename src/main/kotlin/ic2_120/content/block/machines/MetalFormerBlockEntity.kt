@@ -1,6 +1,7 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.recipes.MetalFormerRecipes
+import ic2_120.content.recipes.ModMachineRecipes
+import ic2_120.content.recipes.metalformer.MetalFormerRecipe
 import ic2_120.content.sync.MetalFormerSync
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
@@ -28,6 +29,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandler
+import net.minecraft.recipe.RecipeManager
 import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
@@ -180,8 +182,21 @@ class MetalFormerBlockEntity(
 
         val currentMode = sync.getMode()
 
-        // 检查配方
-        val result = MetalFormerRecipes.getOutput(currentMode, input, null) ?: run {
+        // 根据当前模式获取对应的配方类
+        val recipeType = when (currentMode) {
+            MetalFormerSync.Mode.ROLLING -> ic2_120.content.recipes.metalformer.RollingRecipe::class
+            MetalFormerSync.Mode.CUTTING -> ic2_120.content.recipes.metalformer.CuttingRecipe::class
+            MetalFormerSync.Mode.EXTRUDING -> ic2_120.content.recipes.metalformer.ExtrudingRecipe::class
+        }
+
+        // 通过 RecipeManager 查找配方
+        val recipeManager = world?.recipeManager ?: return
+        val recipeInput = MetalFormerRecipe.Input(input)
+        // 遍历所有匹配该 RecipeType 的配方，找到当前模式对应的
+        val recipe = recipeManager.listAllOfType(ModMachineRecipes.METAL_FORMER_TYPE)
+            .filterIsInstance(recipeType.java)
+            .firstOrNull { it.matches(recipeInput, world) }
+        val result = recipe?.let { MetalFormerRecipe.getOutput(it) } ?: run {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()

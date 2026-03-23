@@ -1,6 +1,7 @@
 package ic2_120.content.block
 
 import ic2_120.content.block.machines.BlastFurnaceBlockEntity
+import ic2_120.content.recipes.blastfurnace.BlastFurnaceRecipeDatagen
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.type
@@ -10,12 +11,14 @@ import net.minecraft.state.property.BooleanProperty
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.function.Consumer
 
 /**
  * 高炉方块。
@@ -66,5 +69,12 @@ class BlastFurnaceBlock : MachineBlock() {
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+
+        /**
+         * 为 ClassScanner 生成配方
+         */
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            BlastFurnaceRecipeDatagen.generateRecipes(exporter)
+        }
     }
 }

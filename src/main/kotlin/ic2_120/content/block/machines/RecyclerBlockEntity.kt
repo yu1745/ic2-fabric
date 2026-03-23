@@ -39,6 +39,23 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import kotlin.random.Random
 
+/**
+ * ================================================================================
+ * ⚠️ 回收机 - 不使用原生配方系统
+ * ================================================================================
+ *
+ * 本机器使用 RecyclerRecipes 的黑名单机制，而非传统的配方系统。
+ *
+ * 原因说明：
+ * - 回收机可处理几乎所有物品（黑名单除外）
+ * - 使用概率性输出（不一定每次都产生废料）
+ * - 这是动态计算逻辑，不适合静态配方 JSON
+ *
+ * 详细说明请参阅：ic2_120.content.recipes.RecyclerRecipes
+ *
+ * @see ic2_120.content.recipes.RecyclerRecipes
+ * ================================================================================
+ */
 @ModBlockEntity(block = RecyclerBlock::class)
 class RecyclerBlockEntity(
     type: BlockEntityType<*>,
