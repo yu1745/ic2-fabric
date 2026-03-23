@@ -7,7 +7,7 @@ import net.minecraft.util.math.Direction
  * 机器参与管道流体网络分配的能力接口。
  * 仅在安装对应流体升级后才会被管道网识别。
  */
-interface IFluidPipeUpgradeSupport : IEjectorUpgradeSupport {
+interface IFluidPipeUpgradeSupport {
     var fluidPipeProviderEnabled: Boolean
     var fluidPipeReceiverEnabled: Boolean
     var fluidPipeProviderFilter: Fluid?

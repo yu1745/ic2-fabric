@@ -19,6 +19,8 @@ import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.sync.MinerSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
+import ic2_120.content.upgrade.EjectorUpgradeComponent
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
@@ -38,13 +40,11 @@ import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.block.entity.HopperBlockEntity
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SidedInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
@@ -62,6 +62,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import kotlin.math.floor
 import kotlin.random.Random
+import org.slf4j.LoggerFactory
 
 abstract class BaseMinerBlockEntity(
     type: BlockEntityType<*>,
@@ -72,7 +73,7 @@ abstract class BaseMinerBlockEntity(
     private val acceptsAdvancedScanner: Boolean
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
     IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
-    IFluidPipeUpgradeSupport, ExtendedScreenHandlerFactory {
+    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty = BaseMinerBlock.ACTIVE
 
@@ -97,8 +98,12 @@ abstract class BaseMinerBlockEntity(
     override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
     override var fluidPipeProviderSide: Direction? = null
     override var fluidPipeReceiverSide: Direction? = null
+    override var itemEjectorEnabled: Boolean = false
+    override var itemEjectorFilter: net.minecraft.item.Item? = null
+    override var itemEjectorSide: Direction? = null
 
     companion object {
+        private val LOGGER = LoggerFactory.getLogger("ic2_120/Miner")
         const val SLOT_SCANNER = 0
         const val SLOT_DRILL = 1
         const val SLOT_DISCHARGING = 2
@@ -110,7 +115,10 @@ abstract class BaseMinerBlockEntity(
         const val SLOT_UPGRADE_2 = SLOT_FILTER_END + 3
         const val SLOT_UPGRADE_3 = SLOT_FILTER_END + 4
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
-        const val INVENTORY_SIZE = SLOT_UPGRADE_3 + 1
+        const val SLOT_OUTPUT_0 = SLOT_UPGRADE_3 + 1
+        const val SLOT_OUTPUT_1 = SLOT_UPGRADE_3 + 2
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_0, SLOT_OUTPUT_1)
+        const val INVENTORY_SIZE = SLOT_OUTPUT_1 + 1
 
         private const val NBT_WORK_OFFSET = "WorkOffset"
         private const val NBT_CURSOR_INITIALIZED = "CursorInitialized"
@@ -228,6 +236,7 @@ abstract class BaseMinerBlockEntity(
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+        EjectorUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
 
         pullEnergyFromNeighbors(world, pos, sync)
         extractFromDischargingSlot()
@@ -245,20 +254,6 @@ abstract class BaseMinerBlockEntity(
             return
         }
 
-        val effectivePeriod = getEffectivePeriodTicks()
-        if (((world.time + workOffset) % effectivePeriod) != 0L) {
-            setActiveState(world, pos, state, false)
-            sync.syncCurrentTickFlow()
-            return
-        }
-
-        val scanCost = (MinerSync.SCAN_ENERGY_PER_STEP * energyMultiplier).toLong().coerceAtLeast(1L)
-        if (sync.consumeEnergy(scanCost) <= 0L) {
-            setActiveState(world, pos, state, false)
-            sync.syncCurrentTickFlow()
-            return
-        }
-
         val scannerType = getScannerType(getStack(SLOT_SCANNER))
         if (scannerType == null) {
             setActiveState(world, pos, state, false)
@@ -266,37 +261,77 @@ abstract class BaseMinerBlockEntity(
             return
         }
 
-        val targetPos = ensureAndGetCursorTarget(scannerType.scanRadius)
-        advanceCursor(scannerType.scanRadius)
-
-        if (sync.running == 0 || targetPos.y < world.bottomY || targetPos.y < -64) {
-            sync.running = 0
+        val scanCost = (MinerSync.SCAN_ENERGY_PER_STEP * energyMultiplier).toLong().coerceAtLeast(1L)
+        if (sync.amount < scanCost) {
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
         }
 
-        var active = false
+        val effectivePeriod = getEffectivePeriodTicks()
+        if (((world.time + workOffset) % effectivePeriod) != 0L) {
+            // 周期间隔中的等待态仍视为“正在工作”。
+            setActiveState(world, pos, state, true)
+            sync.syncCurrentTickFlow()
+            return
+        }
 
-        if (tryAutoPumpFluid(world, pos, state, targetPos)) {
-            active = true
-        } else {
-            val blockState = world.getBlockState(targetPos)
-            if (shouldMine(world, targetPos, blockState)) {
-                val breakCost = getDrillBreakCost() ?: 0L
-                if (breakCost > 0L) {
-                    val silkMultiplier = if (sync.silkTouch != 0) MinerSync.SILK_TOUCH_MULTIPLIER else 1L
-                    val breakEnergy = (breakCost * silkMultiplier * energyMultiplier).toLong().coerceAtLeast(1L)
-                    if (sync.consumeEnergy(breakEnergy) > 0L) {
-                        mineBlock(world as ServerWorld, targetPos, blockState)
-                        active = true
-                    }
-                }
+        var active = false
+        var scannedThisCycle = 0
+        var minedThisCycle = false
+        var pumpedThisCycle = false
+
+        // 每个工作周期可连续扫描多个格子，但最多只执行一次有效挖掘。
+        while (sync.running != 0) {
+            if (sync.consumeEnergy(scanCost) <= 0L) break
+
+            val targetPos = ensureAndGetCursorTarget(scannerType.scanRadius)
+            advanceCursor(scannerType.scanRadius)
+            scannedThisCycle++
+
+            if (sync.running == 0 || targetPos.y < world.bottomY || targetPos.y < -64) {
+                sync.running = 0
+                break
             }
+
+            if (tryAutoPumpFluid(world, pos, state, targetPos)) {
+                active = true
+                pumpedThisCycle = true
+                break
+            }
+
+            val blockState = world.getBlockState(targetPos)
+            if (!shouldMine(world, targetPos, blockState)) continue
+            if (!canMineWithCurrentDrill(blockState)) continue
+
+            val breakCost = getDrillBreakCost() ?: 0L
+            if (breakCost <= 0L) break
+
+            val silkMultiplier = if (sync.silkTouch != 0) MinerSync.SILK_TOUCH_MULTIPLIER else 1L
+            val breakEnergy = (breakCost * silkMultiplier * energyMultiplier).toLong().coerceAtLeast(1L)
+            if (sync.consumeEnergy(breakEnergy) > 0L) {
+                mineBlock(world as ServerWorld, targetPos, blockState)
+                active = true
+                minedThisCycle = true
+            }
+            break
+        }
+
+        if (scannedThisCycle > 0) {
+            LOGGER.info(
+                "[{}] cycle scanned={}, mined={}, pumped={}, energy={}/{}",
+                blockKey,
+                scannedThisCycle,
+                minedThisCycle,
+                pumpedThisCycle,
+                sync.amount,
+                sync.getEffectiveCapacity()
+            )
         }
 
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
-        setActiveState(world, pos, state, active)
+        // 只要本周期执行了扫描，即视为工作中（不仅限于挖掘/抽液瞬间）。
+        setActiveState(world, pos, state, active || scannedThisCycle > 0)
         sync.syncCurrentTickFlow()
     }
 
@@ -400,14 +435,26 @@ abstract class BaseMinerBlockEntity(
         world.setBlockState(targetPos, net.minecraft.block.Blocks.AIR.defaultState, 3)
 
         for (drop in drops) {
-            var remaining = drop.copy()
-            for (dir in Direction.values()) {
-                val inv = HopperBlockEntity.getInventoryAt(world, targetPos.offset(dir)) ?: continue
-                remaining = insertIntoInventory(inv, remaining, dir.opposite)
-                if (remaining.isEmpty) break
-            }
+            insertIntoOutputBuffer(drop)
+        }
+
+        if (itemEjectorEnabled) {
+            EjectorUpgradeComponent.ejectFromOutputSlots(
+                world,
+                pos,
+                this,
+                SLOT_OUTPUT_INDICES,
+                itemEjectorSide,
+                itemEjectorFilter
+            )
+        }
+
+        // 本轮无法弹出的输出槽产物在机器位置掉落
+        for (slot in SLOT_OUTPUT_INDICES) {
+            val remaining = getStack(slot)
             if (!remaining.isEmpty) {
-                ItemScatterer.spawn(world, targetPos.x.toDouble(), targetPos.y.toDouble(), targetPos.z.toDouble(), remaining)
+                ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), remaining.copy())
+                setStack(slot, ItemStack.EMPTY)
             }
         }
 
@@ -427,20 +474,24 @@ abstract class BaseMinerBlockEntity(
         return baseTool
     }
 
-    private fun insertIntoInventory(inventory: Inventory, stack: ItemStack, fromSide: Direction): ItemStack {
+    private fun canMineWithCurrentDrill(state: BlockState): Boolean {
+        val tool = getLootToolStack()
+        return state.isToolRequired.not() || tool.isSuitableFor(state)
+    }
+
+    private fun insertIntoOutputBuffer(stack: ItemStack) {
         var remaining = stack.copy()
-        for (slot in 0 until inventory.size()) {
+        for (slot in SLOT_OUTPUT_INDICES) {
             if (remaining.isEmpty) break
-            if (!canInsertToSlot(inventory, slot, remaining, fromSide)) continue
-            val existing = inventory.getStack(slot)
+            val existing = getStack(slot)
             if (existing.isEmpty) {
-                val toInsert = minOf(remaining.count, inventory.maxCountPerStack)
+                val toInsert = minOf(remaining.count, maxCountPerStack)
                 val inserted = remaining.copy()
                 inserted.count = toInsert
-                inventory.setStack(slot, inserted)
+                setStack(slot, inserted)
                 remaining.decrement(toInsert)
             } else if (ItemStack.canCombine(existing, remaining)) {
-                val room = minOf(existing.maxCount, inventory.maxCountPerStack) - existing.count
+                val room = minOf(existing.maxCount, maxCountPerStack) - existing.count
                 if (room > 0) {
                     val move = minOf(room, remaining.count)
                     existing.increment(move)
@@ -448,13 +499,9 @@ abstract class BaseMinerBlockEntity(
                 }
             }
         }
-        return remaining
-    }
-
-    private fun canInsertToSlot(inventory: Inventory, slot: Int, stack: ItemStack, fromSide: Direction): Boolean {
-        if (!inventory.isValid(slot, stack)) return false
-        if (inventory is SidedInventory && !inventory.canInsert(slot, stack, fromSide)) return false
-        return true
+        if (!remaining.isEmpty) {
+            ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), remaining)
+        }
     }
 
     private fun tryAutoPumpFluid(world: World, pos: BlockPos, state: BlockState, targetPos: BlockPos): Boolean {

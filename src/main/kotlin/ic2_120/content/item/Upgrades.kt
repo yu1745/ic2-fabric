@@ -1,6 +1,7 @@
 package ic2_120.content.item
 
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
+import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
@@ -88,6 +89,60 @@ abstract class FluidFilterUpgradeItem : Item(FabricItemSettings()), IUpgradeItem
     }
 }
 
+abstract class ItemFilterUpgradeItem : Item(FabricItemSettings()), IUpgradeItem {
+    @Environment(EnvType.CLIENT)
+    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
+        super.appendTooltip(stack, world, tooltip, context)
+        val filterItem = EjectorUpgradeComponent.readFilter(stack)
+        if (filterItem != null) {
+            tooltip.add(Text.literal("过滤物品: ").append(filterItem.name).formatted(Formatting.GRAY))
+        } else {
+            tooltip.add(Text.literal("过滤物品: 全部").formatted(Formatting.GRAY))
+        }
+        val side = EjectorUpgradeComponent.readDirection(stack)
+        tooltip.add(Text.literal("方向: ${directionLabel(side)}").formatted(Formatting.GRAY))
+    }
+
+    override fun use(world: World, user: net.minecraft.entity.player.PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
+        val stack = user.getStackInHand(hand)
+        if (world.isClient) return TypedActionResult.success(stack)
+
+        if (user.isSneaking) {
+            val next = EjectorUpgradeComponent.nextDirection(EjectorUpgradeComponent.readDirection(stack))
+            EjectorUpgradeComponent.writeDirection(stack, next)
+            if (user is ServerPlayerEntity) {
+                user.sendMessage(Text.literal("已设置弹出方向: ${directionLabel(next)}"), true)
+            }
+            return TypedActionResult.success(stack)
+        }
+
+        val offhand = user.getStackInHand(if (hand == Hand.MAIN_HAND) Hand.OFF_HAND else Hand.MAIN_HAND)
+        if (offhand.isEmpty) {
+            EjectorUpgradeComponent.writeFilter(stack, null)
+            if (user is ServerPlayerEntity) {
+                user.sendMessage(Text.literal("已清除物品过滤（当前为全部物品）"), true)
+            }
+            return TypedActionResult.success(stack)
+        }
+
+        EjectorUpgradeComponent.writeFilter(stack, offhand.item)
+        if (user is ServerPlayerEntity) {
+            user.sendMessage(Text.literal("已设置过滤物品: ${offhand.name.string}"), true)
+        }
+        return TypedActionResult.success(stack)
+    }
+
+    private fun directionLabel(side: Direction?): String = when (side) {
+        null -> "任意"
+        Direction.DOWN -> "下"
+        Direction.UP -> "上"
+        Direction.NORTH -> "北"
+        Direction.SOUTH -> "南"
+        Direction.WEST -> "西"
+        Direction.EAST -> "东"
+    }
+}
+
 // ========== 工具升级类 ==========
 
 @ModItem(name = "overclocker_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
@@ -103,10 +158,10 @@ class EnergyStorageUpgrade : Item(FabricItemSettings()), IUpgradeItem
 class RedstoneInverterUpgrade : Item(FabricItemSettings()), IUpgradeItem
 
 @ModItem(name = "ejector_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-class EjectorUpgrade : Item(FabricItemSettings()), IUpgradeItem
+class EjectorUpgrade : ItemFilterUpgradeItem()
 
 @ModItem(name = "advanced_ejector_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-class AdvancedEjectorUpgrade : Item(FabricItemSettings()), IUpgradeItem
+class AdvancedEjectorUpgrade : ItemFilterUpgradeItem()
 
 @ModItem(name = "pulling_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
 class PullingUpgrade : Item(FabricItemSettings()), IUpgradeItem

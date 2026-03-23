@@ -83,7 +83,7 @@ class MinerScreen(
 //                            alignItems = AlignItems.CENTER,
                         ) {
                             Text("扫描器", center = true, modifier = Modifier.EMPTY.height(18))
-                            Text("管道", center = true, modifier = Modifier.EMPTY.height(18))
+                            Text("钻头", center = true, modifier = Modifier.EMPTY.height(18))
                             Text("电池", center = true, modifier = Modifier.EMPTY.height(18))
                         }
                         Column {
