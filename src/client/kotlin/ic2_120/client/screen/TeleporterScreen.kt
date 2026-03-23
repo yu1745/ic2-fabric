@@ -1,5 +1,6 @@
 package ic2_120.client.screen
 
+import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.compose.*
 import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
@@ -63,22 +64,35 @@ class TeleporterScreen(
                 modifier = Modifier().width(GUI_SIZE.contentWidth)
 //                    .height(backgroundHeight - 16)
             ) {
-                Flex {
+                Flex(
+                    alignItems = AlignItems.CENTER,
+                    gap = 2,
+                ) {
                     Text(title.string, color = 0xFFFFFF)
-                    EnergyBar(fraction, modifier = Modifier().fractionWidth(1f))
-                    Text("$energy / $cap EU", color = 0xFFFFFF)
+                    EnergyBar(fraction, barHeight = 8, modifier = Modifier().fractionWidth(1f))
+                    Text(
+                        "${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU",
+                        color = 0xFFFFFF
+                    )
                 }
-                Row {
+                Flex(
+                    justifyContent = JustifyContent.SPACE_BETWEEN,
+                    alignItems = AlignItems.CENTER,
+                ) {
                     Text(targetText, color = 0xFFFFFF)
-                    Text(cooldownText, color = 0xAAAAAA)
+                    Text(cooldownText, color = 0xFFFFFF)
                 }
-                Row(spacing = 6) {
-                    Text(rangeText, color = 0xFFFFFF)
+                Flex(
+                    justifyContent = JustifyContent.CENTER,
+                    alignItems = AlignItems.CENTER,
+                    gap = 6
+                ) {
                     Button("-", onClick = {
                         client?.player?.networkHandler?.sendPacket(
                             ButtonClickC2SPacket(handler.syncId, TeleporterScreenHandler.BUTTON_ID_RANGE_DEC)
                         )
                     })
+                    Text(rangeText, color = 0xFFFFFF)
                     Button("+", onClick = {
                         client?.player?.networkHandler?.sendPacket(
                             ButtonClickC2SPacket(handler.syncId, TeleporterScreenHandler.BUTTON_ID_RANGE_INC)
