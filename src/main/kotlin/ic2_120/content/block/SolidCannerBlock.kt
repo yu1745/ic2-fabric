@@ -26,7 +26,6 @@ import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -88,7 +87,6 @@ class SolidCannerBlock : MachineBlock() {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             val tinCan = EmptyTinCanItem::class.instance()
-            val tinIngot = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "tin_ingot"))
             if (machine != Items.AIR && circuit != Items.AIR && tinCan != Items.AIR) {
                 // 标准配方：2 空锡罐 + 2 电路板 + 1 基础机械外壳
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SolidCannerBlock::class.item(), 1)

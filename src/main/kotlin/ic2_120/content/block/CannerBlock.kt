@@ -18,7 +18,6 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.registry.Registries
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.state.StateManager
@@ -88,8 +87,8 @@ class CannerBlock : MachineBlock() {
             val circuit = Circuit::class.instance()
             if (machine != Items.AIR && circuit != Items.AIR) {
                 // 流体装罐机 + 固体装罐机 = 流体/固体装罐机
-                val fluidBottler = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_bottler"))
-                val solidCanner = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "solid_canner"))
+                val fluidBottler = FluidBottlerBlock::class.item()
+                val solidCanner = SolidCannerBlock::class.item()
                 if (fluidBottler != Items.AIR && solidCanner != Items.AIR) {
                     ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CannerBlock::class.item(), 1)
                         .pattern("FS").pattern("CM")

@@ -4,6 +4,7 @@ import ic2_120.Ic2_120
 import ic2_120.content.block.machines.ChunkLoaderBlockEntity
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
@@ -12,7 +13,6 @@ import net.minecraft.block.BlockState
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import java.util.function.Consumer
 import net.minecraft.block.entity.BlockEntity
@@ -86,9 +86,9 @@ class ChunkLoaderBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
-            val tinPlate = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "tin_plate"))
-            val machine = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "machine"))
-            val circuit = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "circuit"))
+            val tinPlate = ic2_120.content.item.TinPlate::class.instance()
+            val machine = MachineCasingBlock::class.item()
+            val circuit = ic2_120.content.item.Circuit::class.instance()
             if (tinPlate != Items.AIR && machine != Items.AIR && circuit != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ChunkLoaderBlock::class.item(), 1)
                     .pattern("TET").pattern("LML").pattern("TCT")
