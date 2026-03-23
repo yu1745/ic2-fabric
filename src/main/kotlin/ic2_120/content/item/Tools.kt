@@ -7,6 +7,11 @@ import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
+import ic2_120.content.block.TeleporterBlock
+import ic2_120.content.block.machines.TeleporterBlockEntity
+import net.minecraft.item.ItemUsageContext
+import net.minecraft.text.Text
+import net.minecraft.util.math.BlockPos
 import ic2_120.registry.recipeId
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
@@ -225,7 +230,92 @@ class Wrench : Item(FabricItemSettings().maxDamage(120)) {
 
 /** 遥控器 - 远程控制机器频率 */
 @ModItem(name = "frequency_transmitter", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class FrequencyTransmitter : Item(FabricItemSettings().maxCount(1))
+class FrequencyTransmitter : Item(FabricItemSettings().maxCount(1)) {
+    companion object {
+        private const val NBT_BIND_X = "BindX"
+        private const val NBT_BIND_Y = "BindY"
+        private const val NBT_BIND_Z = "BindZ"
+        private const val NBT_BIND_DIM = "BindDim"
+        private const val NBT_HAS_BIND = "HasBind"
+    }
+
+    override fun useOnBlock(context: ItemUsageContext): net.minecraft.util.ActionResult {
+        val world = context.world
+        val pos = context.blockPos
+        val stack = context.stack
+        val player = context.player
+        val state = world.getBlockState(pos)
+
+        if (state.block !is TeleporterBlock) return net.minecraft.util.ActionResult.PASS
+        if (player == null) return net.minecraft.util.ActionResult.SUCCESS
+
+        val nbt = stack.orCreateNbt
+        val dim = world.registryKey.value.toString()
+
+        if (player.isSneaking || !nbt.getBoolean(NBT_HAS_BIND)) {
+            nbt.putBoolean(NBT_HAS_BIND, true)
+            nbt.putInt(NBT_BIND_X, pos.x)
+            nbt.putInt(NBT_BIND_Y, pos.y)
+            nbt.putInt(NBT_BIND_Z, pos.z)
+            nbt.putString(NBT_BIND_DIM, dim)
+            if (!world.isClient) {
+                player.sendMessage(Text.literal("已记录第一台传送机: ${pos.x}, ${pos.y}, ${pos.z}"), true)
+            }
+            return net.minecraft.util.ActionResult.SUCCESS
+        }
+
+        val bindDim = nbt.getString(NBT_BIND_DIM)
+        if (bindDim != dim) {
+            if (!world.isClient) player.sendMessage(Text.literal("维度不一致，无法绑定。"), true)
+            return net.minecraft.util.ActionResult.SUCCESS
+        }
+
+        val bindPos = BlockPos(nbt.getInt(NBT_BIND_X), nbt.getInt(NBT_BIND_Y), nbt.getInt(NBT_BIND_Z))
+        if (bindPos == pos) {
+            if (!world.isClient) player.sendMessage(Text.literal("不能将传送机绑定到自身。"), true)
+            return net.minecraft.util.ActionResult.SUCCESS
+        }
+
+        val be = world.getBlockEntity(pos) as? TeleporterBlockEntity
+        val targetBe = world.getBlockEntity(bindPos) as? TeleporterBlockEntity
+        if (be == null || targetBe == null) {
+            if (!world.isClient) player.sendMessage(Text.literal("目标坐标不是有效的传送机。"), true)
+            return net.minecraft.util.ActionResult.SUCCESS
+        }
+
+        if (!world.isClient) {
+            be.setTarget(bindPos, bindDim)
+            targetBe.setTarget(pos, dim)
+            player.sendMessage(Text.literal("双向链接成功: (${pos.x},${pos.y},${pos.z}) <-> (${bindPos.x},${bindPos.y},${bindPos.z})"), true)
+            nbt.putBoolean(NBT_HAS_BIND, false)
+        }
+        return net.minecraft.util.ActionResult.SUCCESS
+    }
+
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: net.minecraft.world.World?,
+        tooltip: MutableList<Text>,
+        context: net.minecraft.client.item.TooltipContext
+    ) {
+        super.appendTooltip(stack, world, tooltip, context)
+        val nbt = stack.nbt
+        val hasBind = nbt?.getBoolean(NBT_HAS_BIND) == true
+        if (!hasBind) {
+            tooltip.add(Text.literal("未绑定传送机"))
+            tooltip.add(Text.literal("右击传送机记录第一台，再右击另一台完成双向绑定").formatted(net.minecraft.util.Formatting.DARK_GRAY))
+            return
+        }
+
+        val x = nbt!!.getInt(NBT_BIND_X)
+        val y = nbt.getInt(NBT_BIND_Y)
+        val z = nbt.getInt(NBT_BIND_Z)
+        val dim = nbt.getString(NBT_BIND_DIM).ifBlank { "unknown" }
+        tooltip.add(Text.literal("已记录第一台传送机").formatted(net.minecraft.util.Formatting.AQUA))
+        tooltip.add(Text.literal("坐标: $x, $y, $z"))
+        tooltip.add(Text.literal("维度: $dim").formatted(net.minecraft.util.Formatting.DARK_GRAY))
+    }
+}
 
 /** 链锯 - 电动伐木工具（等级 1，10k EU） */
 @ModItem(name = "chainsaw", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")

@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "active=false": { "model": "ic2_120:block/teleporter" },
+    "active=true": { "model": "ic2_120:block/teleporter_active" }
+  }
+}

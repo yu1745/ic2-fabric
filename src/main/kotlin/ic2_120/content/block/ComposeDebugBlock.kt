@@ -37,12 +37,13 @@ class ComposeDebugBlock : BlockWithEntity(
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         ComposeDebugBlockEntity(ComposeDebugBlockEntity::class.type(), pos, state)
 
-    @Suppress("DEPRECATION")
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
@@ -60,6 +61,7 @@ class ComposeDebugBlock : BlockWithEntity(
     }
 
     override fun getName(): MutableText = Text.translatable("block.ic2_120.compose_debug")
+
 }
 
 @ModBlockEntity(block = ComposeDebugBlock::class)
