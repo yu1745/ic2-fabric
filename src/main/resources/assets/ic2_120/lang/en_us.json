@@ -420,6 +420,7 @@
   "item.ic2_120.weed_ex_bucket": "Weed-EX Bucket",
   "item.ic2_120.pahoehoe_lava_bucket": "Pahoehoe Lava Bucket",
   "item.ic2_120.distilled_water_bucket": "Distilled Water Bucket",
+  "tooltip.ic2_120.distilled_water_places_water": "When placed, turns into normal water.",
   "item.ic2_120.reactor_coolant_cell": "10k Coolant Cell",
   "item.ic2_120.triple_reactor_coolant_cell": "30k Coolant Cell",
   "item.ic2_120.sextuple_reactor_coolant_cell": "60k Coolant Cell",

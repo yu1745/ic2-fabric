@@ -417,6 +417,7 @@
   "item.ic2_120.weed_ex_bucket": "除草剂桶",
   "item.ic2_120.pahoehoe_lava_bucket": "熔岩岩浆桶",
   "item.ic2_120.distilled_water_bucket": "蒸馏水桶",
+  "tooltip.ic2_120.distilled_water_places_water": "放置到世界后会变成普通水。",
   "item.ic2_120.reactor_coolant_cell": "10k 冷却单元",
   "item.ic2_120.triple_reactor_coolant_cell": "30k 冷却单元",
   "item.ic2_120.sextuple_reactor_coolant_cell": "60k 冷却单元",

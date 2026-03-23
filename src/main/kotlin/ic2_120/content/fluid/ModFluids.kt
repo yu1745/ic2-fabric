@@ -46,6 +46,11 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Hand
 import net.minecraft.util.ActionResult
+import net.fabricmc.api.EnvType
+import net.fabricmc.api.Environment
+import net.minecraft.client.item.TooltipContext
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 
 /**
  * IC2 模组流体注册。
@@ -381,6 +386,19 @@ object ModFluids {
         /** 实际放置到世界的流体（用于蒸馏水等特殊情况） */
         private val fluidToPlace: FlowableFluid
             get() = placeFluidOverride ?: bucketFluid
+
+        @Environment(EnvType.CLIENT)
+        override fun appendTooltip(
+            stack: ItemStack,
+            world: World?,
+            tooltip: MutableList<Text>,
+            context: TooltipContext
+        ) {
+            super.appendTooltip(stack, world, tooltip, context)
+            if (placeFluidOverride != null) {
+                tooltip.add(Text.translatable("tooltip.ic2_120.distilled_water_places_water").formatted(Formatting.GRAY))
+            }
+        }
 
         override fun placeFluid(
             player: net.minecraft.entity.player.PlayerEntity?,

@@ -42,6 +42,10 @@ import net.minecraft.world.RaycastContext
 import net.minecraft.world.World
 import net.minecraft.world.event.GameEvent
 import net.minecraft.item.Items
+import net.fabricmc.api.EnvType
+import net.fabricmc.api.Environment
+import net.minecraft.client.item.TooltipContext
+import net.minecraft.util.Formatting
 import org.slf4j.LoggerFactory
 
 /** 通用流体单元 NBT 键：存储 FluidVariant */
@@ -483,6 +487,12 @@ class WaterCell : ModFluidCell(FabricItemSettings()) {
 class DistilledWaterCell : ModFluidCell(FabricItemSettings()) {
     override fun getFluid(): Fluid = ModFluids.DISTILLED_WATER_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
+
+    @Environment(EnvType.CLIENT)
+    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
+        super.appendTooltip(stack, world, tooltip, context)
+        tooltip.add(Text.translatable("tooltip.ic2_120.distilled_water_places_water").formatted(Formatting.GRAY))
+    }
 }
 
 /** 岩浆单元 */
