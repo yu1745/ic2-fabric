@@ -32,18 +32,13 @@ class OreWashingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<OreWashi
     ) {
         // 输入槽（左侧）
         builder.addSlot(RecipeIngredientRole.INPUT, 20, 26)
-            .addIngredients(recipe.input)
+            .addItemStack(recipe.input)
 
         // 输出槽（右侧，垂直排列）
         recipe.outputs.forEachIndexed { index, output ->
             val y = 10 + index * 20
             builder.addSlot(RecipeIngredientRole.OUTPUT, 102, y)
                 .addItemStack(output)
-                .addTooltipCallback { _, tooltip ->
-                    if (output.count > 1) {
-                        tooltip.add(Text.literal("Output: ${output.count}"))
-                    }
-                }
         }
     }
 }

@@ -1,10 +1,9 @@
 package ic2_120.integration.jei
 
 import net.minecraft.item.ItemStack
-import net.minecraft.recipe.Ingredient
 
 data class MaceratorJeiRecipe(
-    val input: Ingredient,
+    val input: ItemStack,
     val output: ItemStack
 )
 

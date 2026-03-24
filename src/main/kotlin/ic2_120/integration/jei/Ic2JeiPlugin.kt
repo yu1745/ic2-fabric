@@ -136,7 +136,7 @@ class Ic2JeiPlugin : IModPlugin {
         val maceratorRecipes = MaceratorRecipeDatagen.allEntries()
             .map { entry ->
                 MaceratorJeiRecipe(
-                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.input, entry.inputCount),
                     ItemStack(entry.output, entry.count)
                 )
             }
@@ -156,7 +156,7 @@ class Ic2JeiPlugin : IModPlugin {
         val extractorRecipes = ExtractorRecipeDatagen.allEntries()
             .map { entry ->
                 ExtractorJeiRecipe(
-                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.input, 1),
                     ItemStack(entry.output, entry.count)
                 )
             }
@@ -166,7 +166,7 @@ class Ic2JeiPlugin : IModPlugin {
         val centrifugeRecipes = CentrifugeRecipeDatagen.allEntries()
             .map { entry ->
                 CentrifugeJeiRecipe(
-                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.input, entry.inputCount),
                     entry.minHeat,
                     entry.outputs.map { ItemStack(it.item, it.count) }
                 )
@@ -177,7 +177,7 @@ class Ic2JeiPlugin : IModPlugin {
         val blastFurnaceRecipes = BlastFurnaceRecipeDatagen.allEntries()
             .map { entry ->
                 BlastFurnaceJeiRecipe(
-                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.input, 1),
                     ItemStack(entry.steelOutput, entry.steelCount),
                     ItemStack(entry.slagOutput, entry.slagCount)
                 )
@@ -188,7 +188,7 @@ class Ic2JeiPlugin : IModPlugin {
         val oreWashingRecipes = OreWashingRecipeDatagen.allEntries()
             .map { entry ->
                 OreWashingJeiRecipe(
-                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.input, 1),
                     entry.outputs.map { ItemStack(it.item, it.count) },
                     entry.waterConsumptionMb
                 )
@@ -210,7 +210,7 @@ class Ic2JeiPlugin : IModPlugin {
         val rollingRecipes = metalFormerRecipes.filter { it.mode == MetalFormerRecipeDatagen.Mode.ROLLING }
             .map { entry ->
                 MetalFormerRollingJeiRecipe(
-                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.input, 1),
                     ItemStack(entry.output, entry.outputCount)
                 )
             }
@@ -219,7 +219,7 @@ class Ic2JeiPlugin : IModPlugin {
         val cuttingRecipes = metalFormerRecipes.filter { it.mode == MetalFormerRecipeDatagen.Mode.CUTTING }
             .map { entry ->
                 MetalFormerCuttingJeiRecipe(
-                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.input, 1),
                     ItemStack(entry.output, entry.outputCount)
                 )
             }
@@ -228,7 +228,7 @@ class Ic2JeiPlugin : IModPlugin {
         val extrudingRecipes = metalFormerRecipes.filter { it.mode == MetalFormerRecipeDatagen.Mode.EXTRUDING }
             .map { entry ->
                 MetalFormerExtrudingJeiRecipe(
-                    Ingredient.ofItems(entry.input),
+                    ItemStack(entry.input, 1),
                     ItemStack(entry.output, entry.outputCount)
                 )
             }

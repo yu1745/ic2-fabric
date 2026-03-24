@@ -32,7 +32,7 @@ class BlastFurnaceRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlastF
     ) {
         // 输入槽（左侧）
         builder.addSlot(RecipeIngredientRole.INPUT, 20, 16)
-            .addIngredients(recipe.input)
+            .addItemStack(recipe.input)
 
         // 钢锭输出（右侧中间）
         builder.addSlot(RecipeIngredientRole.OUTPUT, 100, 8)

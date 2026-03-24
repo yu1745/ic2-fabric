@@ -34,7 +34,7 @@ class MaceratorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Macerator
         focuses: IFocusGroup
     ) {
         builder.addSlot(RecipeIngredientRole.INPUT, 20, 18)
-            .addIngredients(recipe.input)
+            .addItemStack(recipe.input)
 
         builder.addSlot(RecipeIngredientRole.OUTPUT, 102, 18)
             .addItemStack(recipe.output)
