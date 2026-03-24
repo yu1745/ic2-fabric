@@ -1,0 +1,36 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ic2_120:small_obsidian_dust"
+    },
+    {
+      "item": "ic2_120:small_obsidian_dust"
+    },
+    {
+      "item": "ic2_120:small_obsidian_dust"
+    },
+    {
+      "item": "ic2_120:small_obsidian_dust"
+    },
+    {
+      "item": "ic2_120:small_obsidian_dust"
+    },
+    {
+      "item": "ic2_120:small_obsidian_dust"
+    },
+    {
+      "item": "ic2_120:small_obsidian_dust"
+    },
+    {
+      "item": "ic2_120:small_obsidian_dust"
+    },
+    {
+      "item": "ic2_120:small_obsidian_dust"
+    }
+  ],
+  "result": {
+    "item": "ic2_120:obsidian_dust"
+  }
+}
