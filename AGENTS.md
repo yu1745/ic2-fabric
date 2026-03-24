@@ -30,12 +30,13 @@
 主入口通过 `ClassScanner.scanAndRegister(...)` 扫描包。
 注册与参数细节以 `docs/registry/CLASS_BASED_REGISTRY.md` 为准。
 
-合成表同样遵循“基于约定的扫描”：
+合成表同样遵循”基于约定的扫描”：
 
 - 所有 `data/**/recipes/*.json` 合成表均由 Kotlin 代码导出（datagen），不手写、不直接维护 JSON。
 - `ClassScanner.scanAndRegister(...)` 会收集 Block/Item companion 中签名为 `generateRecipes(Consumer<RecipeJsonProvider>)` 的方法。
 - 统一由 `ClassScanner.generateAllRecipes(...)` 执行，不新增分散的手写配方注册入口。
 - 约定与实现细节以 `docs/registry/CLASS_BASED_REGISTRY.md` 为准。
+- **每个物品的合成配方必须写在对应物品类的 companion object 中，不得写在其他类里。**
 
 ## 4. 机器实现最小清单
 
