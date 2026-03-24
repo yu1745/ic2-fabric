@@ -4,7 +4,8 @@ import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.SolidCannerBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.pullEnergyFromNeighbors
-import ic2_120.content.recipes.SolidCannerRecipes
+import ic2_120.content.recipes.ModMachineRecipes
+import ic2_120.content.recipes.solidcanner.SolidCannerRecipe
 import ic2_120.content.screen.SolidCannerScreenHandler
 import ic2_120.content.sync.SolidCannerSync
 import ic2_120.content.syncs.SyncedData
@@ -24,6 +25,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
@@ -146,7 +148,28 @@ class SolidCannerBlockEntity(
 
         val tinCan = getStack(SLOT_TIN_CAN)
         val food = getStack(SLOT_FOOD)
-        val (recipe, result) = SolidCannerRecipes.getOutput(tinCan, food) ?: run {
+        if (tinCan.isEmpty || food.isEmpty) {
+            if (sync.progress != 0) sync.progress = 0
+            setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
+            return
+        }
+
+        val recipeInventory = SimpleInventory(tinCan.copyWithCount(1), food.copyWithCount(1))
+        val match = world.recipeManager.getFirstMatch(ModMachineRecipes.SOLID_CANNER_TYPE, recipeInventory, world)
+        if (match.isEmpty) {
+            if (sync.progress != 0) sync.progress = 0
+            setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
+            return
+        }
+
+        val recipe = match.get()
+        val result = recipe.output.copy()
+        val slot0InputCount = recipe.slot0Count
+        val slot1InputCount = recipe.slot1Count
+
+        if (tinCan.count < slot0InputCount || food.count < slot1InputCount) {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
@@ -166,8 +189,8 @@ class SolidCannerBlockEntity(
         }
 
         if (sync.progress >= SolidCannerSync.PROGRESS_MAX) {
-            tinCan.decrement(recipe.tinCanInputCount)
-            food.decrement(recipe.foodInputCount)
+            tinCan.decrement(slot0InputCount)
+            food.decrement(slot1InputCount)
             if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result)
             else outputSlot.increment(result.count)
             sync.progress = 0

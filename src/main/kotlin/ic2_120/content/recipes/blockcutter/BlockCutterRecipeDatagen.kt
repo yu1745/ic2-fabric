@@ -36,7 +36,7 @@ object BlockCutterRecipeDatagen {
         Entry("lead_block_to_plate", Registries.ITEM.get(Identifier("ic2_120", "lead_block")), 1, 5.0f, LeadPlate::class.instance(), 9),
         Entry("steel_block_to_plate", Registries.ITEM.get(Identifier("ic2_120", "steel_block")), 1, 6.0f, SteelPlate::class.instance(), 9),
         Entry("lapis_block_to_plate", Items.LAPIS_BLOCK, 1, 3.0f, LapisPlate::class.instance(), 9),
-        Entry("obsidian_to_plate", Items.OBSIDIAN, 1, 50.0f, ObsidianPlate::class.instance(), 9),
+        Entry("obsidian_to_plate", Items.OBSIDIAN, 1, 50.0f, ObsidianPlate::class.instance(), 4),
 
         // ===== 石头类 → 9 台阶 =====
         Entry("stone_to_slab", Items.STONE, 1, 1.5f, Items.STONE_SLAB, 9),

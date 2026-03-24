@@ -27,6 +27,7 @@
 - `docs/systems/upgrade-system.md`
 - `docs/systems/sync-system.md`
 - `docs/systems/sound-system.md`
+- `docs/systems/jei-integration.md`
 
 ### ui（界面与槽位）
 

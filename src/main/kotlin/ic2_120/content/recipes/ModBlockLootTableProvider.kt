@@ -20,6 +20,15 @@ import net.minecraft.util.Identifier
  * 机器方块：扳手/电扳手拆掉完整机器，否则掉外壳。
  */
 class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTableProvider(output) {
+    private val oreBlockIds = setOf(
+        "lead_ore",
+        "tin_ore",
+        "uranium_ore",
+        "iridium_ore",
+        "deepslate_lead_ore",
+        "deepslate_tin_ore",
+        "deepslate_uranium_ore",
+    )
 
     private val wrenchPredicateBuilder = ItemPredicate.Builder.create()
         .items(
@@ -58,6 +67,11 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
             if (id.namespace == Ic2_120.MOD_ID && block is MachineBlock) {
                 addDrop(block, createMachineLootTable(block))
             }
+        }
+
+        // 矿石方块：默认掉落自身（保留后续扩展为 raw ore/时运掉落的空间）
+        for (oreId in oreBlockIds) {
+            addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, oreId)))
         }
     }
 

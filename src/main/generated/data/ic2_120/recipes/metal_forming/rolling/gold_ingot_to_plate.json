@@ -1,0 +1,11 @@
+{
+  "type": "ic2_120:metal_forming",
+  "ingredient": {
+    "item": "minecraft:gold_ingot"
+  },
+  "mode": "rolling",
+  "result": {
+    "count": 1,
+    "item": "ic2_120:gold_plate"
+  }
+}

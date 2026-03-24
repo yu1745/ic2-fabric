@@ -10,6 +10,7 @@ import ic2_120.content.block.nuclear.ReactorFluidPortBlockEntity
 import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.network.NetworkManager
+import ic2_120.content.network.BandwidthStatsService
 import ic2_120.content.effect.ModStatusEffects
 import ic2_120.content.worldgen.OreGeneration
 import ic2_120.content.worldgen.RubberTreeGeneration
@@ -163,6 +164,7 @@ object Ic2_120 : ModInitializer {
         // 统一处理喷气背包/电力喷气背包/量子胸甲飞行（服务端 tick）
         ServerTickEvents.END_SERVER_TICK.register { server ->
             FlightManager.tick(server)
+            BandwidthStatsService.onServerTick(server)
         }
 
         // 储电盒自定义 BlockItem（支持满电变体）及创造模式满电物品
@@ -217,4 +219,3 @@ object Ic2_120 : ModInitializer {
      */
     fun id(path: String): Identifier = Identifier(MOD_ID, path)
 }
-

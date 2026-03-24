@@ -4,6 +4,7 @@ import ic2_120.Ic2_120
 import ic2_120.content.block.machines.SolidCannerBlockEntity
 import ic2_120.content.item.Circuit
 import ic2_120.content.item.EmptyTinCanItem
+import ic2_120.content.recipes.solidcanner.SolidCannerRecipeDatagen
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.instance
@@ -85,6 +86,10 @@ class SolidCannerBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // 固体装罐机机器配方
+            SolidCannerRecipeDatagen.generateRecipes(exporter)
+
+            // 机器合成表
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             val tinCan = EmptyTinCanItem::class.instance()

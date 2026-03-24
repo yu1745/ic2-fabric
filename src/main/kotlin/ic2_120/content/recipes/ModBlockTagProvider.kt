@@ -19,6 +19,15 @@ class ModBlockTagProvider(
     output: FabricDataOutput,
     registriesFuture: CompletableFuture<RegistryWrapper.WrapperLookup>,
 ) : FabricTagProvider.BlockTagProvider(output, registriesFuture) {
+    private val oreBlockIds = setOf(
+        "lead_ore",
+        "tin_ore",
+        "uranium_ore",
+        "iridium_ore",
+        "deepslate_lead_ore",
+        "deepslate_tin_ore",
+        "deepslate_uranium_ore",
+    )
 
     override fun configure(registries: RegistryWrapper.WrapperLookup) {
         val pickaxeBuilder = getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE).setReplace(false)
@@ -26,7 +35,7 @@ class ModBlockTagProvider(
 
         for (block in Registries.BLOCK) {
             val id = Registries.BLOCK.getId(block)
-            if (id.namespace == Ic2_120.MOD_ID && (block is MachineBlock || block is BasePipeBlock)) {
+            if (id.namespace == Ic2_120.MOD_ID && (block is MachineBlock || block is BasePipeBlock || id.path in oreBlockIds)) {
                 pickaxeBuilder.add(block)
                 ironToolBuilder.add(block)
             }

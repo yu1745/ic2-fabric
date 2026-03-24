@@ -75,5 +75,11 @@ object Ic2JeiRecipeTypes {
         "metal_forming_extruding",
         MetalFormerExtrudingJeiRecipe::class.java
     )
+
+    val SOLID_CANNER: RecipeType<SolidCannerJeiRecipe> = RecipeType.create(
+        "ic2_120",
+        "solid_canning",
+        SolidCannerJeiRecipe::class.java
+    )
 }
 

@@ -8,6 +8,7 @@ import ic2_120.content.recipes.extractor.ExtractorRecipeDatagen
 import ic2_120.content.recipes.macerator.MaceratorRecipeDatagen
 import ic2_120.content.recipes.metalformer.MetalFormerRecipeDatagen
 import ic2_120.content.recipes.orewashing.OreWashingRecipeDatagen
+import ic2_120.content.recipes.solidcanner.SolidCannerRecipeDatagen
 import ic2_120.integration.jei.BlastFurnaceJeiRecipe
 import ic2_120.integration.jei.BlastFurnaceRecipeCategory
 import ic2_120.integration.jei.BlockCutterJeiRecipe
@@ -20,6 +21,8 @@ import ic2_120.integration.jei.MetalFormerRollingJeiRecipe
 import ic2_120.integration.jei.MetalFormerRollingRecipeCategory
 import ic2_120.integration.jei.OreWashingJeiRecipe
 import ic2_120.integration.jei.OreWashingRecipeCategory
+import ic2_120.integration.jei.SolidCannerJeiRecipe
+import ic2_120.integration.jei.SolidCannerRecipeCategory
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
@@ -123,7 +126,8 @@ class Ic2JeiPlugin : IModPlugin {
             BlockCutterRecipeCategory(registration.jeiHelpers.guiHelper),
             MetalFormerRollingRecipeCategory(registration.jeiHelpers.guiHelper),
             MetalFormerCuttingRecipeCategory(registration.jeiHelpers.guiHelper),
-            MetalFormerExtrudingRecipeCategory(registration.jeiHelpers.guiHelper)
+            MetalFormerExtrudingRecipeCategory(registration.jeiHelpers.guiHelper),
+            SolidCannerRecipeCategory(registration.jeiHelpers.guiHelper)
         )
     }
 
@@ -229,6 +233,17 @@ class Ic2JeiPlugin : IModPlugin {
                 )
             }
         registration.addRecipes(Ic2JeiRecipeTypes.METAL_FORMER_EXTRUDING, extrudingRecipes)
+
+        // SolidCanner 配方
+        val solidCannerRecipes = SolidCannerRecipeDatagen.allEntries()
+            .map { entry ->
+                SolidCannerJeiRecipe(
+                    slot0 = ItemStack(entry.slot0Ingredient, entry.slot0Count),
+                    slot1 = ItemStack(entry.slot1Ingredient, entry.slot1Count),
+                    output = ItemStack(entry.outputItem, entry.outputCount)
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.SOLID_CANNER, solidCannerRecipes)
     }
 
     override fun registerRecipeCatalysts(registration: IRecipeCatalystRegistration) {
@@ -279,6 +294,12 @@ class Ic2JeiPlugin : IModPlugin {
         registration.addRecipeCatalyst(metalFormerStack, Ic2JeiRecipeTypes.METAL_FORMER_ROLLING)
         registration.addRecipeCatalyst(metalFormerStack, Ic2JeiRecipeTypes.METAL_FORMER_CUTTING)
         registration.addRecipeCatalyst(metalFormerStack, Ic2JeiRecipeTypes.METAL_FORMER_EXTRUDING)
+
+        // SolidCanner
+        registration.addRecipeCatalyst(
+            ItemStack(Registries.ITEM.get(Identifier("ic2_120", "solid_canner"))),
+            Ic2JeiRecipeTypes.SOLID_CANNER
+        )
     }
 
     /**

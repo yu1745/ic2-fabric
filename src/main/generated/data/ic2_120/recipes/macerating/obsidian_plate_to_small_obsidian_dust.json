@@ -1,0 +1,10 @@
+{
+  "type": "ic2_120:macerating",
+  "ingredient": {
+    "item": "ic2_120:obsidian_plate"
+  },
+  "result": {
+    "count": 8,
+    "item": "ic2_120:small_obsidian_dust"
+  }
+}

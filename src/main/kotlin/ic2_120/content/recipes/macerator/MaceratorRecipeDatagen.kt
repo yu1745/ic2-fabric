@@ -14,6 +14,9 @@ import ic2_120.content.item.CrushedLead
 import ic2_120.content.item.CrushedTin
 import ic2_120.content.item.CrushedUranium
 import ic2_120.content.item.NetherrackDust
+import ic2_120.content.item.ObsidianDust
+import ic2_120.content.item.ObsidianPlate
+import ic2_120.content.item.SmallObsidianDust
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.minecraft.data.server.recipe.RecipeJsonProvider
@@ -50,7 +53,9 @@ object MaceratorRecipeDatagen {
         Entry("granite_to_cobblestone", Items.GRANITE, Items.COBBLESTONE, 1),
         Entry("diorite_to_cobblestone", Items.DIORITE, Items.COBBLESTONE, 1),
         Entry("andesite_to_cobblestone", Items.ANDESITE, Items.COBBLESTONE, 1),
-        Entry("netherrack_to_netherrack_dust", Items.NETHERRACK, NetherrackDust::class.instance(), 1)
+        Entry("netherrack_to_netherrack_dust", Items.NETHERRACK, NetherrackDust::class.instance(), 1),
+        Entry("obsidian_to_obsidian_dust", Items.OBSIDIAN, ObsidianDust::class.instance(), 1),
+        Entry("obsidian_plate_to_small_obsidian_dust", ObsidianPlate::class.instance(), SmallObsidianDust::class.instance(), 8)
     )
 
     fun allEntries(): List<Entry> = entries

@@ -1,0 +1,15 @@
+{
+  "type": "ic2_120:solid_canning",
+  "result": {
+    "count": 6,
+    "item": "ic2_120:filled_tin_can"
+  },
+  "slot0_count": 6,
+  "slot0_ingredient": {
+    "item": "ic2_120:tin_can"
+  },
+  "slot1_count": 1,
+  "slot1_ingredient": {
+    "item": "minecraft:baked_potato"
+  }
+}

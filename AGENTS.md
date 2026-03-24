@@ -30,6 +30,13 @@
 主入口通过 `ClassScanner.scanAndRegister(...)` 扫描包。
 注册与参数细节以 `docs/registry/CLASS_BASED_REGISTRY.md` 为准。
 
+合成表同样遵循“基于约定的扫描”：
+
+- 所有 `data/**/recipes/*.json` 合成表均由 Kotlin 代码导出（datagen），不手写、不直接维护 JSON。
+- `ClassScanner.scanAndRegister(...)` 会收集 Block/Item companion 中签名为 `generateRecipes(Consumer<RecipeJsonProvider>)` 的方法。
+- 统一由 `ClassScanner.generateAllRecipes(...)` 执行，不新增分散的手写配方注册入口。
+- 约定与实现细节以 `docs/registry/CLASS_BASED_REGISTRY.md` 为准。
+
 ## 4. 机器实现最小清单
 
 1. Block + BlockEntity + Sync + ScreenHandler + Screen 成套落地。
@@ -49,6 +56,7 @@
 - 升级：`docs/systems/upgrade-system.md`
 - 同步：`docs/systems/sync-system.md`
 - 声音：`docs/systems/sound-system.md`
+- JEI 集成：`docs/systems/jei-integration.md`
 
 ## 6. UI 文档位置
 
@@ -67,6 +75,8 @@
 ```
 
 若只改文档，可跳过编译；若改 Kotlin/资源/注册链路，不可跳过。
+
+- 若遇到 Gradle lock（如 `gradle-*.zip.lck`）导致构建或 datagen 失败，直接删除对应 `.lck` 文件后重试（示例：`Remove-Item -Force "C:\Users\wangyu\.gradle\wrapper\dists\...\gradle-*.zip.lck" -ErrorAction SilentlyContinue`）。
 
 ## 8. 变更策略
 

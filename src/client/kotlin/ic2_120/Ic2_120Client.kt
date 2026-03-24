@@ -2,6 +2,7 @@ package ic2_120
 
 import ic2_120.client.ArmorKeybinds
 import ic2_120.client.ArmorTooltipHandler
+import ic2_120.client.BandwidthHudKeybinds
 import ic2_120.client.DrillTooltipHandler
 import ic2_120.client.ModeKeybinds
 import ic2_120.client.BatteryModelPredicates
@@ -34,6 +35,7 @@ object Ic2_120Client : ClientModInitializer {
 		// 注册网络管理器
 		NetworkManager.register()
 		ModeKeybinds.register()
+		BandwidthHudKeybinds.register()
 		ArmorKeybinds.register()
 		ArmorTooltipHandler.register()
 		DrillTooltipHandler.register()

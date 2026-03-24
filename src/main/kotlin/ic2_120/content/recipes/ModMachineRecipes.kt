@@ -17,6 +17,8 @@ import ic2_120.content.recipes.metalformer.MetalFormerRecipe
 import ic2_120.content.recipes.metalformer.MetalFormerRecipeSerializer
 import ic2_120.content.recipes.orewashing.OreWashingRecipe
 import ic2_120.content.recipes.orewashing.OreWashingRecipeSerializer
+import ic2_120.content.recipes.solidcanner.SolidCannerRecipe
+import ic2_120.content.recipes.solidcanner.SolidCannerRecipeSerializer
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.recipe.RecipeType
 import net.minecraft.registry.Registries
@@ -71,6 +73,12 @@ object ModMachineRecipes {
     }
     val METAL_FORMER_SERIALIZER: RecipeSerializer<MetalFormerRecipe> = MetalFormerRecipeSerializer
 
+    // SolidCanner
+    val SOLID_CANNER_TYPE: RecipeType<SolidCannerRecipe> = object : RecipeType<SolidCannerRecipe> {
+        override fun toString(): String = "${Ic2_120.MOD_ID}:solid_canning"
+    }
+    val SOLID_CANNER_SERIALIZER: RecipeSerializer<SolidCannerRecipe> = SolidCannerRecipeSerializer
+
     fun register() {
         // Register Macerator
         Registry.register(Registries.RECIPE_TYPE, Ic2_120.id("macerating"), MACERATOR_TYPE)
@@ -103,5 +111,9 @@ object ModMachineRecipes {
         // Register MetalFormer
         Registry.register(Registries.RECIPE_TYPE, Ic2_120.id("metal_forming"), METAL_FORMER_TYPE)
         Registry.register(Registries.RECIPE_SERIALIZER, Ic2_120.id("metal_forming"), METAL_FORMER_SERIALIZER)
+
+        // Register SolidCanner
+        Registry.register(Registries.RECIPE_TYPE, Ic2_120.id("solid_canning"), SOLID_CANNER_TYPE)
+        Registry.register(Registries.RECIPE_SERIALIZER, Ic2_120.id("solid_canning"), SOLID_CANNER_SERIALIZER)
     }
 }

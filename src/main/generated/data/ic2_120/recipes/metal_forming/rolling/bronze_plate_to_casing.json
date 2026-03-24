@@ -1,0 +1,11 @@
+{
+  "type": "ic2_120:metal_forming",
+  "ingredient": {
+    "item": "ic2_120:bronze_plate"
+  },
+  "mode": "rolling",
+  "result": {
+    "count": 2,
+    "item": "ic2_120:bronze_casing"
+  }
+}

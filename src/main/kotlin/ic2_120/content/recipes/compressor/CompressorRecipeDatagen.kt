@@ -47,8 +47,8 @@ object CompressorRecipeDatagen {
         // 青金石 -> 青金石块
         Entry("lapis_to_lapis_block", Items.LAPIS_LAZULI, 4, Items.LAPIS_BLOCK, 1),
 
-        // 黑曜石 -> 黑曜石板
-        Entry("obsidian_to_plate", Items.OBSIDIAN, 1, ObsidianPlate::class.instance(), 1),
+        // 黑曜石粉 -> 黑曜石板
+        Entry("obsidian_to_plate", ObsidianDust::class.instance(), 1, ObsidianPlate::class.instance(), 1),
 
         // 9 矿物板 -> 1 致密板
         Entry("bronze_plate_to_dense", BronzePlate::class.instance(), 9, DenseBronzePlate::class.instance(), 1),
