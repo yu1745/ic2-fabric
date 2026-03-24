@@ -1,0 +1,10 @@
+{
+  "type": "ic2_120:macerating",
+  "ingredient": {
+    "item": "minecraft:diamond"
+  },
+  "result": {
+    "count": 1,
+    "item": "ic2_120:diamond_dust"
+  }
+}
