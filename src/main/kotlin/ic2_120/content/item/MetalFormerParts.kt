@@ -8,6 +8,8 @@ import ic2_120.registry.recipeId
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
+import ic2_120.content.block.cables.InsulatedCopperCableBlock
+import ic2_120.content.item.energy.ReBatteryItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
@@ -93,10 +95,46 @@ class FilledTinCanItem : Item(
 }
 
 @ModItem(name = "small_power_unit", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class SmallPowerUnitItem : Item(FabricItemSettings())
+class SmallPowerUnitItem : Item(FabricItemSettings()) {
+    companion object {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            //   C F
+            // B X M
+            //   C F
+            // B=充电电池, C=铜线, F=铁质外壳, X=电路板, M=马达
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SmallPowerUnitItem::class.instance(), 1)
+                .pattern(" CF").pattern("BXM").pattern(" CF")
+                .input('B', ReBatteryItem::class.instance())
+                .input('C', InsulatedCopperCableBlock::class.instance())
+                .input('F', IronCasing::class.instance())
+                .input('X', Circuit::class.instance())
+                .input('M', ElectricMotor::class.instance())
+                .criterion(hasItem(ReBatteryItem::class.instance()), conditionsFromItem(ReBatteryItem::class.instance()))
+                .offerTo(exporter, SmallPowerUnitItem::class.recipeId("from_crafting"))
+        }
+    }
+}
 
 @ModItem(name = "power_unit", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class PowerUnitItem : Item(FabricItemSettings())
+class PowerUnitItem : Item(FabricItemSettings()) {
+    companion object {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // b c f
+            // b x m
+            // b c f
+            // b=充电电池, c=铜线, f=铁质外壳, x=电路板, m=马达
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, PowerUnitItem::class.instance(), 1)
+                .pattern("BCF").pattern("BXM").pattern("BCF")
+                .input('B', ReBatteryItem::class.instance())
+                .input('C', InsulatedCopperCableBlock::class.instance())
+                .input('F', IronCasing::class.instance())
+                .input('X', Circuit::class.instance())
+                .input('M', ElectricMotor::class.instance())
+                .criterion(hasItem(ReBatteryItem::class.instance()), conditionsFromItem(ReBatteryItem::class.instance()))
+                .offerTo(exporter, PowerUnitItem::class.recipeId("from_crafting"))
+        }
+    }
+}
 
 @ModItem(name = "fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "parts")
 class EmptyFuelRodItem : Item(FabricItemSettings())
@@ -106,6 +144,9 @@ class ToolHandleIronItem : Item(FabricItemSettings())
 
 @ModItem(name = "steel_shaft", tab = CreativeTab.IC2_MATERIALS, group = "parts")
 class ToolHandleSteelItem : Item(FabricItemSettings())
+
+@ModItem(name = "bronze_shaft", tab = CreativeTab.IC2_MATERIALS, group = "parts")
+class ToolHandleBronzeItem : Item(FabricItemSettings())
 
 @ModItem(name = "coin", tab = CreativeTab.IC2_MATERIALS, group = "parts")
 class IndustrialCurrencyItem : Item(FabricItemSettings())

@@ -5,6 +5,7 @@ import ic2_120.content.block.CompressedCoalBall
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.id
 import ic2_120.registry.instance
+import ic2_120.registry.item
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.recipeId
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
@@ -12,6 +13,8 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditio
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
+import net.minecraft.data.server.recipe.CookingRecipeJsonBuilder
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.recipe.Ingredient
@@ -117,8 +120,37 @@ class AdvancedCircuit : Item(FabricItemSettings()) {
 @ModItem(name = "alloy", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
 class Alloy : Item(FabricItemSettings())
 
+@ModItem(name = "iridium_shard", tab = CreativeTab.IC2_MATERIALS, group = "materials")
+class IridiumShard : Item(FabricItemSettings())
+
+@ModItem(name = "iridium_ore_item", tab = CreativeTab.IC2_MATERIALS, group = "materials")
+class IridiumOreItem : Item(FabricItemSettings())
+
 @ModItem(name = "iridium", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
-class IridiumPlate : Item(FabricItemSettings())
+class IridiumPlate : Item(FabricItemSettings()) {
+    companion object {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // 四个铱矿石和四个高级合金交替摆放围成一圈，中间一个钻石
+            // I A I
+            // A D A
+            // I A I
+            // I=铱矿石, A=高级合金, D=钻石
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IridiumPlate::class.instance(), 1)
+                .pattern("IAI").pattern("ADA").pattern("IAI")
+                .input('I', IridiumOreItem::class.instance())
+                .input('A', Alloy::class.instance())
+                .input('D', Items.DIAMOND)
+                .criterion(hasItem(IridiumOreItem::class.instance()), conditionsFromItem(IridiumOreItem::class.instance()))
+                .offerTo(exporter, IridiumPlate::class.id())
+
+            // 9个铱碎片合成1个铱矿石
+            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, IridiumOreItem::class.instance(), 1)
+                .input(IridiumShard::class.instance(), 9)
+                .criterion(hasItem(IridiumShard::class.instance()), conditionsFromItem(IridiumShard::class.instance()))
+                .offerTo(exporter, IridiumOreItem::class.recipeId("from_shards"))
+        }
+    }
+}
 
 @ModItem(name = "coil", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
 class Coil : Item(FabricItemSettings())
@@ -141,7 +173,21 @@ class ElectricMotor : Item(FabricItemSettings()) {
 class HeatConductor : Item(FabricItemSettings())
 
 @ModItem(name = "copper_boiler", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
-class CopperBoiler : Item(FabricItemSettings())
+class CopperBoiler : Item(FabricItemSettings()) {
+    companion object {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // 8个铜外壳围成一圈，中间空
+            // C C C
+            // C   C
+            // C C C
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CopperBoiler::class.instance(), 1)
+                .pattern("CCC").pattern("C C").pattern("CCC")
+                .input('C', CopperCasing::class.instance())
+                .criterion(hasItem(CopperCasing::class.instance()), conditionsFromItem(CopperCasing::class.instance()))
+                .offerTo(exporter, CopperBoiler::class.id())
+        }
+    }
+}
 
 // ========== 能源球类 ==========
 
@@ -302,6 +348,44 @@ class IodineTablet : Item(FabricItemSettings()) {
                 .input('T', TinPlate::class.instance())
                 .criterion(hasItem(Iodine::class.instance()), conditionsFromItem(Iodine::class.instance()))
                 .offerTo(exporter, IodineTablet::class.id())
+        }
+    }
+}
+
+// ========== 模式存储类 ==========
+
+@ModItem(name = "raw_crystal_memory", tab = CreativeTab.IC2_MATERIALS, group = "pattern_storage")
+class RawCrystalMemory : Item(FabricItemSettings()) {
+    companion object {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // 交叉摆法：5个二氧化硅粉 + 4个黑曜石粉
+            // O S O
+            // S O S
+            // O S O
+            // O=黑曜石粉, S=二氧化硅粉
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RawCrystalMemory::class.instance(), 1)
+                .pattern("OSO").pattern("SOS").pattern("OSO")
+                .input('O', ObsidianDust::class.instance())
+                .input('S', SiliconDioxideDust::class.instance())
+                .criterion(hasItem(SiliconDioxideDust::class.instance()), conditionsFromItem(SiliconDioxideDust::class.instance()))
+                .offerTo(exporter, RawCrystalMemory::class.id())
+        }
+    }
+}
+
+@ModItem(name = "crystal_memory", tab = CreativeTab.IC2_MATERIALS, group = "pattern_storage")
+class CrystalMemory : Item(FabricItemSettings()) {
+    companion object {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // 熔炉烧制：粗制模式存储水晶 -> 模式存储水晶 (200 tick = 10秒, 0.1f 经验)
+            CookingRecipeJsonBuilder.createSmelting(
+                Ingredient.ofItems(RawCrystalMemory::class.instance()),
+                RecipeCategory.MISC,
+                CrystalMemory::class.instance(),
+                0.1f,
+                200
+            ).criterion(hasItem(RawCrystalMemory::class.instance()), conditionsFromItem(RawCrystalMemory::class.instance()))
+                .offerTo(exporter, CrystalMemory::class.recipeId("from_smelting"))
         }
     }
 }

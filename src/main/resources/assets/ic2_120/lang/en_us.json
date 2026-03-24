@@ -299,6 +299,7 @@
   "item.ic2_120.fuel_rod": "Empty Fuel Rod",
   "item.ic2_120.iron_shaft": "Tool Handle (Iron)",
   "item.ic2_120.steel_shaft": "Tool Handle (Steel)",
+  "item.ic2_120.bronze_shaft": "Tool Handle (Bronze)",
   "item.ic2_120.coin": "Industrial Currency",
   "item.ic2_120.carbon_fibre": "Raw Carbon Fibre",
   "item.ic2_120.carbon_mesh": "Raw Carbon Mesh",
@@ -315,6 +316,8 @@
   "item.ic2_120.circuit": "Electronic Circuit",
   "item.ic2_120.advanced_circuit": "Advanced Circuit",
   "item.ic2_120.alloy": "Advanced Alloy",
+  "item.ic2_120.iridium_shard": "Iridium Shard",
+  "item.ic2_120.iridium_ore_item": "Iridium Ore",
   "item.ic2_120.iridium": "Iridium Reinforced Plate",
   "item.ic2_120.coil": "Coil",
   "item.ic2_120.electric_motor": "Electric Motor",
@@ -529,7 +532,9 @@
   "block.ic2_120.miner": "Miner",
   "block.ic2_120.advanced_miner": "Advanced Miner",
   "item.ic2_120.miner": "Miner",
-  "item.ic2_120.advanced_miner": "Advanced Miner"
+  "item.ic2_120.advanced_miner": "Advanced Miner",
+  "item.ic2_120.raw_crystal_memory": "Crystal Memory (raw)",
+  "item.ic2_120.crystal_memory": "Crystal Memory"
 }
 
 

@@ -104,7 +104,10 @@ object CompressorRecipeDatagen {
         Entry("mixed_metal_ingot_to_alloy", MixedMetalIngot::class.instance(), 1, Alloy::class.instance(), 1),
 
         // 煤块 -> 钻石
-        Entry("coal_block_to_diamond", CoalChunk::class.instance(), 1, Items.DIAMOND, 1)
+        Entry("coal_block_to_diamond", CoalChunk::class.instance(), 1, Items.DIAMOND, 1),
+
+        // 青铜块 -> 铁柄(青铜)
+        Entry("bronze_block_to_bronze_shaft", BronzeBlock::class.item(), 1, ToolHandleBronzeItem::class.instance(), 1)
     )
 
     fun allEntries(): List<Entry> = entries

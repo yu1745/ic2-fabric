@@ -34,11 +34,11 @@ class UraniumOreBlock : Block(
 //     AbstractBlock.Settings.copy(Blocks.IRON_ORE).strength(3.0f, 3.0f)
 // )
 
-/** 铱矿石 */
-@ModBlock(name = "iridium_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS)
-class IridiumOreBlock : Block(
-    AbstractBlock.Settings.copy(Blocks.IRON_ORE)
-)
+///** 铱矿石 */
+//@ModBlock(name = "iridium_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS)
+//class IridiumOreBlock : Block(
+//    AbstractBlock.Settings.copy(Blocks.IRON_ORE)
+//)
 
 // ========== 深层矿石（深板岩基质） ==========
 

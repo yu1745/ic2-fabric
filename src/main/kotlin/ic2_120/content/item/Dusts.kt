@@ -100,7 +100,23 @@ class DiamondDust : Item(FabricItemSettings())
 
 /** 能量水晶粉 */
 @ModItem(name = "energium_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
-class EnergiumDust : Item(FabricItemSettings())
+class EnergiumDust : Item(FabricItemSettings()) {
+    companion object {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // 交叉摆法：4个钻石粉 + 5个红石粉
+            // D R D
+            // R D R
+            // D R D
+            // D=钻石粉, R=红石粉
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnergiumDust::class.instance(), 1)
+                .pattern("DRD").pattern("RDR").pattern("DRD")
+                .input('D', DiamondDust::class.instance())
+                .input('R', Items.REDSTONE)
+                .criterion(hasItem(DiamondDust::class.instance()), conditionsFromItem(DiamondDust::class.instance()))
+                .offerTo(exporter, EnergiumDust::class.recipeId("from_crafting"))
+        }
+    }
+}
 
 /** 金粉 */
 @ModItem(name = "gold_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
@@ -275,7 +291,23 @@ class TinDust : Item(FabricItemSettings()) {
 
 /** 氢氧化锡粉 */
 @ModItem(name = "hydrated_tin_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
-class HydratedTinDust : Item(FabricItemSettings())
+class HydratedTinDust : Item(FabricItemSettings()) {
+    companion object {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // 锡粉 + 水桶 -> 氢氧化锡粉 (返回空桶)
+            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, HydratedTinDust::class.instance(), 1)
+                .input(TinDust::class.instance()).input(Items.WATER_BUCKET)
+                .criterion(hasItem(TinDust::class.instance()), conditionsFromItem(TinDust::class.instance()))
+                .offerTo(exporter, HydratedTinDust::class.recipeId("from_bucket"))
+
+            // 锡粉 + 水单元 -> 氢氧化锡粉 (返回空单元)
+            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, HydratedTinDust::class.instance(), 1)
+                .input(TinDust::class.instance()).input(WaterCell::class.instance())
+                .criterion(hasItem(TinDust::class.instance()), conditionsFromItem(TinDust::class.instance()))
+                .offerTo(exporter, HydratedTinDust::class.recipeId("from_cell"))
+        }
+    }
+}
 
 /** 地狱岩粉 */
 @ModItem(name = "netherrack_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")

@@ -631,7 +631,7 @@
 | - [ ] | item.ic2.near_depleted_uranium | 接近枯竭的铀 |
 | - [ ] | item.ic2.re_enriched_uranium | 重新浓缩的铀 |
 | - [ ] | item.ic2.ashes | 灰烬 |
-| - [ ] | item.ic2.iridium_shard | 铱碎片 |
+| - [x] | item.ic2.iridium_shard | 铱碎片 |
 | - [ ] | item.ic2.uu_matter | UU 物质 |
 
 ### 反应堆核心部件
@@ -719,14 +719,15 @@
 ### 模式存储类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | item.ic2.raw_crystal_memory | (粗制) 模式存储水晶 |
-| - [ ] | item.ic2.crystal_memory | 模式存储水晶 |
+| - [x] | item.ic2.raw_crystal_memory | (粗制) 模式存储水晶 |
+| - [x] | item.ic2.crystal_memory | 模式存储水晶 |
 
 ### 柄与转子类
 |  | ID | 名称 |
 |--|----|------|
 | - [x] | item.ic2.iron_shaft | 铁柄 (铁) |
 | - [x] | item.ic2.steel_shaft | 铁柄 (钢) |
+| - [x] | item.ic2.bronze_shaft | 铁柄 (青铜) |
 | - [x] | item.ic2.wooden_rotor_blade | 木扇叶 |
 | - [x] | item.ic2.iron_rotor_blade | 铁扇叶 |
 | - [x] | item.ic2.steel_rotor_blade | 钢扇叶 |

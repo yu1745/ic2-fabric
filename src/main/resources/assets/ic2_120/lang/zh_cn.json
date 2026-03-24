@@ -298,6 +298,7 @@
   "item.ic2_120.fuel_rod": "空燃料棒",
   "item.ic2_120.iron_shaft": "铁柄（铁）",
   "item.ic2_120.steel_shaft": "铁柄（钢）",
+  "item.ic2_120.bronze_shaft": "铁柄（青铜）",
   "item.ic2_120.coin": "工业货币",
   "item.ic2_120.carbon_fibre": "粗制碳网",
   "item.ic2_120.carbon_mesh": "粗制碳板",
@@ -314,6 +315,8 @@
   "item.ic2_120.circuit": "电路板",
   "item.ic2_120.advanced_circuit": "高级电路板",
   "item.ic2_120.alloy": "高级合金",
+  "item.ic2_120.iridium_shard": "铱碎片",
+  "item.ic2_120.iridium_ore_item": "铱矿石",
   "item.ic2_120.iridium": "强化铱板",
   "item.ic2_120.coil": "线圈",
   "item.ic2_120.electric_motor": "电动马达",
@@ -526,7 +529,9 @@
   "block.ic2_120.miner": "采矿机",
   "block.ic2_120.advanced_miner": "高级采矿机",
   "item.ic2_120.miner": "采矿机",
-  "item.ic2_120.advanced_miner": "高级采矿机"
+  "item.ic2_120.advanced_miner": "高级采矿机",
+  "item.ic2_120.raw_crystal_memory": "粗制模式存储水晶",
+  "item.ic2_120.crystal_memory": "模式存储水晶"
 }
 
 

@@ -21,6 +21,8 @@ import ic2_120.content.item.PlantBall
 import ic2_120.content.item.BioChaff
 import ic2_120.content.item.Weed
 import ic2_120.content.item.CoalDust
+import ic2_120.content.item.ClayDust
+import ic2_120.content.item.DiamondDust
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.minecraft.data.server.recipe.RecipeJsonProvider
@@ -62,6 +64,7 @@ object MaceratorRecipeDatagen {
         Entry("obsidian_to_obsidian_dust", Items.OBSIDIAN, ObsidianDust::class.instance(), 1),
         Entry("obsidian_plate_to_small_obsidian_dust", ObsidianPlate::class.instance(), SmallObsidianDust::class.instance(), 8),
         Entry("coal_block_to_coal_dust", Items.COAL_BLOCK, CoalDust::class.instance(), 9),
+        Entry("clay_block_to_clay_dust", Items.CLAY, ClayDust::class.instance(), 2),
         // 植物打粉配方
         Entry("plant_ball_to_bio_chaff", PlantBall::class.instance(), BioChaff::class.instance(), 1),
         Entry("pumpkin_to_bio_chaff", Items.PUMPKIN, BioChaff::class.instance(), 1, 8),
@@ -77,7 +80,8 @@ object MaceratorRecipeDatagen {
         Entry("sugar_cane_to_bio_chaff", Items.SUGAR_CANE, BioChaff::class.instance(), 1, 8),
         Entry("oak_leaves_to_bio_chaff", Items.OAK_LEAVES, BioChaff::class.instance(), 1, 8),
         Entry("dead_bush_to_bio_chaff", Items.DEAD_BUSH, BioChaff::class.instance(), 1, 8),
-        Entry("weed_to_bio_chaff", Weed::class.instance(), BioChaff::class.instance(), 1, 32)
+        Entry("weed_to_bio_chaff", Weed::class.instance(), BioChaff::class.instance(), 1, 32),
+        Entry("diamond_to_diamond_dust", Items.DIAMOND, DiamondDust::class.instance(), 1)
     )
 
     fun allEntries(): List<Entry> = entries
