@@ -3,12 +3,16 @@ package ic2_120.content.block
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.content.item.IronPlate
+import ic2_120.content.item.Resin
 import ic2_120.content.item.Treetap
 import ic2_120.registry.annotation.ModBlock
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.block.PillarBlock
+import net.minecraft.entity.Entity
+import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
@@ -34,10 +38,41 @@ class ReinforcedGlassBlock : Block(AbstractBlock.Settings.copy(Blocks.GLASS).str
 class FoamBlock : Block(AbstractBlock.Settings.copy(Blocks.WHITE_WOOL).strength(0.5f))
 
 @ModBlock(name = "resin_sheet", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "building")
-class ResinSheetBlock : Block(AbstractBlock.Settings.copy(Blocks.WHITE_CARPET).strength(0.5f))
+class ResinSheetBlock : Block(
+    AbstractBlock.Settings.copy(Blocks.OAK_PLANKS)
+        .strength(0.5f)
+        .solid()
+        .velocityMultiplier(0.4f)
+        .jumpVelocityMultiplier(0.0f)
+) {
+    override fun onLandedUpon(world: World, state: net.minecraft.block.BlockState, pos: BlockPos, entity: Entity, fallDistance: Float) {
+        entity.handleFallDamage(fallDistance, 0.2f, world.damageSources.fall())
+    }
+
+    companion object {
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val resin = Resin::class.instance()
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ResinSheetBlock::class.item(), 3)
+                .pattern("xxx")
+                .pattern("xxx")
+                .input('x', resin)
+                .criterion(hasItem(resin), conditionsFromItem(resin))
+                .offerTo(exporter, ResinSheetBlock::class.id())
+        }
+    }
+}
 
 @ModBlock(name = "rubber_sheet", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "building")
-class RubberSheetBlock : Block(AbstractBlock.Settings.copy(Blocks.WHITE_CARPET).strength(0.5f))
+class RubberSheetBlock : Block(
+    AbstractBlock.Settings.copy(Blocks.WHITE_CARPET)
+        .strength(0.5f)
+        .velocityMultiplier(0.4f)
+        .jumpVelocityMultiplier(0.0f)
+) {
+    override fun onLandedUpon(world: World, state: net.minecraft.block.BlockState, pos: BlockPos, entity: Entity, fallDistance: Float) {
+        entity.handleFallDamage(fallDistance, 0.2f, world.damageSources.fall())
+    }
+}
 
 @ModBlock(name = "wool_sheet", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "building")
 class WoolSheetBlock : Block(AbstractBlock.Settings.copy(Blocks.WHITE_CARPET).strength(0.5f))

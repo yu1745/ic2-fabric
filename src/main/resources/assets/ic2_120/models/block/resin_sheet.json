@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "ic2:block/sheet_base",
   "textures": {
-    "all": "ic2:block/cf/wall_white"
+    "texture": "ic2:block/resin_sheet"
   }
 }
