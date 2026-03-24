@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ic2_120:tin_dust"
+    },
+    {
+      "item": "ic2_120:water_cell"
+    }
+  ],
+  "result": {
+    "item": "ic2_120:hydrated_tin_dust"
+  }
+}
