@@ -24,6 +24,7 @@ import net.minecraft.registry.tag.ItemTags
 import net.minecraft.registry.tag.TagKey
 import net.minecraft.util.Identifier
 import java.util.function.Consumer
+import ic2_120.registry.annotation.RecipeProvider
 
 // ========== 碳材料类 ==========
 
@@ -33,6 +34,7 @@ class CarbonFibre : Item(FabricItemSettings())
 @ModItem(name = "carbon_mesh", tab = CreativeTab.IC2_MATERIALS, group = "carbon_materials")
 class CarbonMesh : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonMesh::class.instance(), 1)
                 .pattern("CC").pattern("CC")
@@ -46,6 +48,7 @@ class CarbonMesh : Item(FabricItemSettings()) {
 @ModItem(name = "carbon_plate", tab = CreativeTab.IC2_MATERIALS, group = "carbon_materials")
 class CarbonPlate : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonPlate::class.instance(), 1)
                 .pattern("CM")
@@ -89,6 +92,7 @@ class CarbonRotor : Item(FabricItemSettings())
 @ModItem(name = "circuit", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
 class Circuit : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Circuit::class.instance(), 1)
                 .pattern("xxx").pattern("rfr").pattern("xxx")
@@ -104,6 +108,7 @@ class Circuit : Item(FabricItemSettings()) {
 @ModItem(name = "advanced_circuit", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
 class AdvancedCircuit : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedCircuit::class.instance(), 1)
                 .pattern("rlr").pattern("bxb").pattern("rlr")
@@ -129,6 +134,7 @@ class IridiumOreItem : Item(FabricItemSettings())
 @ModItem(name = "iridium", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
 class IridiumPlate : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             // 四个铱矿石和四个高级合金交替摆放围成一圈，中间一个钻石
             // I A I
@@ -158,6 +164,7 @@ class Coil : Item(FabricItemSettings())
 @ModItem(name = "electric_motor", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
 class ElectricMotor : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ElectricMotor::class.instance(), 1)
                 .pattern(" Y ").pattern("YFY").pattern(" Y ")
@@ -175,6 +182,7 @@ class HeatConductor : Item(FabricItemSettings())
 @ModItem(name = "copper_boiler", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
 class CopperBoiler : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             // 8个铜外壳围成一圈，中间空
             // C C C
@@ -194,6 +202,7 @@ class CopperBoiler : Item(FabricItemSettings()) {
 @ModItem(name = "coal_ball", tab = CreativeTab.IC2_MATERIALS, group = "energy_balls")
 class CoalBall : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CoalBall::class.instance(), 1)
                 .pattern("DCD").pattern("CFC").pattern("DCD")
@@ -209,6 +218,7 @@ class CoalBall : Item(FabricItemSettings()) {
 @ModItem(name = "coal_chunk", tab = CreativeTab.IC2_MATERIALS, group = "energy_balls")
 class CoalChunk : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CoalChunk::class.instance(), 1)
                 .pattern("CCC")
@@ -228,6 +238,7 @@ class IndustrialDiamond : Item(FabricItemSettings())
 @ModItem(name = "plant_ball", tab = CreativeTab.IC2_MATERIALS, group = "energy_balls")
 class PlantBall : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             // 甘蔗配方
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, PlantBall::class.instance(), 1)
@@ -306,6 +317,7 @@ class Scrap : Item(FabricItemSettings())
 @ModItem(name = "scrap_box", tab = CreativeTab.IC2_MATERIALS, group = "energy_balls")
 class ScrapBox : ScrapBoxItem() {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ScrapBox::class.instance(), 1)
                 .pattern("SSS").pattern("SSS").pattern("SSS")
@@ -341,6 +353,7 @@ class Iodine : Item(FabricItemSettings())
 @ModItem(name = "iodine_tablet", tab = CreativeTab.IC2_MATERIALS, group = "misc")
 class IodineTablet : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IodineTablet::class.instance(), 1)
                 .pattern("IT")
@@ -357,6 +370,7 @@ class IodineTablet : Item(FabricItemSettings()) {
 @ModItem(name = "raw_crystal_memory", tab = CreativeTab.IC2_MATERIALS, group = "pattern_storage")
 class RawCrystalMemory : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             // 交叉摆法：5个二氧化硅粉 + 4个黑曜石粉
             // O S O
@@ -376,6 +390,7 @@ class RawCrystalMemory : Item(FabricItemSettings()) {
 @ModItem(name = "crystal_memory", tab = CreativeTab.IC2_MATERIALS, group = "pattern_storage")
 class CrystalMemory : Item(FabricItemSettings()) {
     companion object {
+        @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             // 熔炉烧制：粗制模式存储水晶 -> 模式存储水晶 (200 tick = 10秒, 0.1f 经验)
             CookingRecipeJsonBuilder.createSmelting(
