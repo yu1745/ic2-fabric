@@ -37,7 +37,9 @@ class ModBlockTagProvider(
             val id = Registries.BLOCK.getId(block)
             if (id.namespace == Ic2_120.MOD_ID && (block is MachineBlock || block is BasePipeBlock || id.path in oreBlockIds)) {
                 pickaxeBuilder.add(block)
-                ironToolBuilder.add(block)
+                if (block is MachineBlock || id.path in oreBlockIds) {
+                    ironToolBuilder.add(block)
+                }
             }
         }
     }

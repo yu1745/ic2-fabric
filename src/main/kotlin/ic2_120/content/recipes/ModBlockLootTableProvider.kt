@@ -69,6 +69,14 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
             }
         }
 
+        // 电缆方块（copy(Blocks.REDSTONE_WIRE/GLASS) 不会生成默认掉落）：直接掉落自身
+        for (block in Registries.BLOCK) {
+            val id = Registries.BLOCK.getId(block)
+            if (id.namespace == Ic2_120.MOD_ID && id.path.endsWith("_cable")) {
+                addDrop(block)
+            }
+        }
+
         // 矿石方块：默认掉落自身（保留后续扩展为 raw ore/时运掉落的空间）
         for (oreId in oreBlockIds) {
             addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, oreId)))
