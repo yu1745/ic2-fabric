@@ -5,7 +5,7 @@ import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.TransformerBlock
-import ic2_120.content.block.misc.FilteredValue
+import ic2_120.client.ui.FilteredValue
 import ic2_120.content.sync.TransformerSync
 import ic2_120.content.screen.TransformerScreenHandler
 import ic2_120.registry.annotation.ModScreen

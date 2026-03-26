@@ -560,12 +560,10 @@ class AirCell : Item(FabricItemSettings())
 class BioCell : Item(FabricItemSettings())
 
 // ========== 容器类 - 桶 ==========
+// construction_foam_bucket 由 ModFluids.registerFluid("construction_foam") 注册为 Ic2BucketItem
 
-@ModItem(name = "construction_foam_bucket", tab = CreativeTab.IC2_MATERIALS, group = "buckets")
-class ConstructionFoamBucket : Item(FabricItemSettings())
-
-@ModItem(name = "construct_foam_bucket", tab = CreativeTab.IC2_MATERIALS, group = "buckets")
-class ConstructFoamBucket : Item(FabricItemSettings())
+// @ModItem(name = "construct_foam_bucket", tab = CreativeTab.IC2_MATERIALS, group = "buckets")
+// class ConstructFoamBucket : Item(FabricItemSettings())
 
 // coolant_bucket, hot_coolant_bucket, uu_matter_bucket, weed_ex_bucket, pahoehoe_lava_bucket,
 // biofuel_bucket, biomass_bucket 由 ModFluids 注册为 BucketItem，此处不再重复注册

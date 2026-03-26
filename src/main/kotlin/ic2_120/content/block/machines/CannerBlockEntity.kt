@@ -62,7 +62,9 @@ import net.minecraft.world.World
  * 模式化工作：
  * - 单元->左槽：A(流体单元) -> 左液槽
  * - 右槽->单元：右液槽 -> C(空单元)
- * - 流体混合：左液槽 + B(固体) -> 右液槽
+ * - 流体混合：左液槽 + B(固体) -> 右液槽（配方见 CannerMixingRecipes）
+ *   - 水 + 8×青金石粉 → 冷却液；蒸馏水 + 1×青金石粉 → 冷却液
+ *   - 水 + 1×糠 → 生物质；水 + 建筑泡沫粉 → 建筑泡沫
  * - 固体装罐：A(锡罐) + B(食物) -> C(输出)
  */
 @ModBlockEntity(block = CannerBlock::class)

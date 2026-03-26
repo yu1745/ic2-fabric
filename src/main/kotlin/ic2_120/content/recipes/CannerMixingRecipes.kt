@@ -17,6 +17,7 @@ import net.minecraft.util.Identifier
  * - 水 + 8×青金石粉 → 冷却液
  * - 蒸馏水 + 1×青金石粉 → 冷却液
  * - 水 + 1×糠 → 生物质
+ * - 水 + 建筑泡沫粉 → 建筑泡沫
  */
 object CannerMixingRecipes {
 
@@ -30,6 +31,7 @@ object CannerMixingRecipes {
 
     private val lapisDust by lazy { Registries.ITEM.get(Identifier("ic2_120", "lapis_dust")) }
     private val bioChaff by lazy { Registries.ITEM.get(Identifier("ic2_120", "bio_chaff")) }
+    private val cfPowder by lazy { Registries.ITEM.get(Identifier("ic2_120", "cf_powder")) }
 
     private val recipes: List<Recipe> by lazy {
         listOf(
@@ -38,7 +40,9 @@ object CannerMixingRecipes {
             Recipe(ModFluids.DISTILLED_WATER_STILL, lapisDust, 1, ModFluids.COOLANT_STILL),
             Recipe(ModFluids.DISTILLED_WATER_FLOWING, lapisDust, 1, ModFluids.COOLANT_STILL),
             Recipe(Fluids.WATER, bioChaff, 1, ModFluids.BIOMASS_STILL),
-            Recipe(Fluids.FLOWING_WATER, bioChaff, 1, ModFluids.BIOMASS_STILL)
+            Recipe(Fluids.FLOWING_WATER, bioChaff, 1, ModFluids.BIOMASS_STILL),
+            Recipe(Fluids.WATER, cfPowder, 1, ModFluids.CONSTRUCTION_FOAM_STILL),
+            Recipe(Fluids.FLOWING_WATER, cfPowder, 1, ModFluids.CONSTRUCTION_FOAM_STILL)
         )
     }
 
@@ -70,6 +74,7 @@ object CannerMixingRecipes {
             ModFluids.DISTILLED_WATER_FLOWING -> recipeFluid == ModFluids.DISTILLED_WATER_STILL
             ModFluids.BIOMASS_FLOWING -> recipeFluid == ModFluids.BIOMASS_STILL
             ModFluids.COOLANT_FLOWING -> recipeFluid == ModFluids.COOLANT_STILL
+            ModFluids.CONSTRUCTION_FOAM_FLOWING -> recipeFluid == ModFluids.CONSTRUCTION_FOAM_STILL
             else -> false
         }
     }

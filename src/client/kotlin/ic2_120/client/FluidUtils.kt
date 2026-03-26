@@ -1,5 +1,6 @@
 package ic2_120.client
 
+import ic2_120.content.fluid.ModFluids
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.SpriteContents
@@ -22,7 +23,11 @@ object FluidUtils {
      */
     fun getFluidColor(fluid: Fluid): Int {
         return colorCache.getOrPut(fluid) {
-            sampleColorFromFluidTexture(fluid)
+            when (fluid) {
+                ModFluids.CONSTRUCTION_FOAM_STILL, ModFluids.CONSTRUCTION_FOAM_FLOWING ->
+                    (0xFF shl 24) or (180 shl 16) or (180 shl 8) or 175
+                else -> sampleColorFromFluidTexture(fluid)
+            }
         }
     }
 

@@ -77,6 +77,14 @@ object ModFluidClient {
             "block/fluid/fluid_flow",
             rgb(71, 106, 60)
         )
+        // Construction foam（浅灰，与 FluidUtils.getFluidColor 一致）
+        registerFluid(
+            ModFluids.CONSTRUCTION_FOAM_STILL,
+            ModFluids.CONSTRUCTION_FOAM_FLOWING,
+            "block/fluid/fluid_still",
+            "block/fluid/fluid_flow",
+            rgb(180, 180, 175)
+        )
 
         // 流体方块使用半透明渲染层
         BlockRenderLayerMap.INSTANCE.putFluids(
@@ -96,7 +104,9 @@ object ModFluidClient {
             ModFluids.BIOFUEL_STILL,
             ModFluids.BIOFUEL_FLOWING,
             ModFluids.BIOMASS_STILL,
-            ModFluids.BIOMASS_FLOWING
+            ModFluids.BIOMASS_FLOWING,
+            ModFluids.CONSTRUCTION_FOAM_STILL,
+            ModFluids.CONSTRUCTION_FOAM_FLOWING
         )
     }
 
