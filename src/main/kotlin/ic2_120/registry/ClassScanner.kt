@@ -13,6 +13,8 @@ import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
+import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.type
 import net.minecraft.util.math.Direction
@@ -389,8 +391,22 @@ object ClassScanner {
             try {
                 val companion = clazz.companionObjectInstance
                     ?: error("@ModScreenHandler 类 ${clazz.simpleName} 需有 companion 对象并提供 fromBuffer")
-                val fromBufferFn = clazz.companionObject?.memberFunctions?.find { it.name == "fromBuffer" }
-                    ?: error("@ModScreenHandler 类 ${clazz.simpleName} 的 companion 需提供 fromBuffer(syncId, playerInventory, buf)")
+                val fromBufferFn = clazz.companionObject?.memberFunctions?.find {
+                    it.findAnnotation<ScreenFactory>() != null
+                } ?: clazz.companionObject?.memberFunctions?.find { it.name == "fromBuffer" }
+                    ?: error("@ModScreenHandler 类 ${clazz.simpleName} 的 companion 需提供 @ScreenFactory 或 fromBuffer(syncId, playerInventory, buf)")
+
+                val parameters = fromBufferFn.parameters
+                if (parameters.size != 4 ||
+                    parameters[1].type.classifier != Int::class ||
+                    parameters[2].type.classifier != PlayerInventory::class ||
+                    parameters[3].type.classifier != PacketByteBuf::class
+                ) {
+                    error(
+                        "@ModScreenHandler 类 ${clazz.simpleName} 的 ${fromBufferFn.name} 签名不正确，" +
+                            "应为 (syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf)"
+                    )
+                }
 
                 // 收集所有需要注册的名称
                 val namesToRegister = when {
@@ -613,14 +629,19 @@ object ClassScanner {
             try {
                 val companion = clazz.companionObjectInstance ?: continue
                 val generateRecipesMethod = clazz.companionObject?.memberFunctions?.find {
-                    it.name == "generateRecipes"
-                } ?: continue
+                    it.findAnnotation<RecipeProvider>() != null
+                } ?: clazz.companionObject?.memberFunctions?.find { it.name == "generateRecipes" }
+                    ?: continue
 
                 // 验证方法签名
                 val parameters = generateRecipesMethod.parameters
                 if (parameters.size != 2 ||
                     parameters[1].type.classifier != Consumer::class) {
-                    logger.warn("类 {} 的 generateRecipes 方法签名不正确，应为 (Consumer<RecipeJsonProvider>) -> Unit", clazz.simpleName)
+                    logger.warn(
+                        "类 {} 的 {} 方法签名不正确，应为 (Consumer<RecipeJsonProvider>) -> Unit",
+                        clazz.simpleName,
+                        generateRecipesMethod.name
+                    )
                     continue
                 }
 
@@ -631,7 +652,7 @@ object ClassScanner {
                 }
 
                 recipeGenerators.add(generator)
-                logger.debug("已收集配方生成器: {}", clazz.simpleName)
+                logger.debug("已收集配方生成器: {}.{}", clazz.simpleName, generateRecipesMethod.name)
             } catch (e: Exception) {
                 logger.debug("收集配方生成器失败 {}: {}", clazz.simpleName, e.message)
             }
