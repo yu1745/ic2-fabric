@@ -17,9 +17,13 @@ import ic2_120.content.worldgen.RubberTreeGeneration
 import ic2_120.content.item.CellAndBucketFluidRegistration
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.block.BatBoxBlock
+import ic2_120.content.block.BatBoxChargepadBlock
 import ic2_120.content.block.CesuBlock
+import ic2_120.content.block.CesuChargepadBlock
 import ic2_120.content.block.MfeBlock
+import ic2_120.content.block.MfeChargepadBlock
 import ic2_120.content.block.MfsuBlock
+import ic2_120.content.block.MfsuChargepadBlock
 import ic2_120.content.block.storage.EnergyStorageBlock
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
@@ -174,7 +178,11 @@ object Ic2_120 : ModInitializer {
             "batbox" to { b: net.minecraft.block.Block -> BatBoxBlock.BatBoxBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) },
             "cesu" to { b: net.minecraft.block.Block -> CesuBlock.CesuBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) },
             "mfe" to { b: net.minecraft.block.Block -> MfeBlock.MfeBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) },
-            "mfsu" to { b: net.minecraft.block.Block -> MfsuBlock.MfsuBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) }
+            "mfsu" to { b: net.minecraft.block.Block -> MfsuBlock.MfsuBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) },
+            "batbox_chargepad" to { b: net.minecraft.block.Block -> BatBoxChargepadBlock.BatBoxChargepadBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) },
+            "cesu_chargepad" to { b: net.minecraft.block.Block -> CesuChargepadBlock.CesuChargepadBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) },
+            "mfe_chargepad" to { b: net.minecraft.block.Block -> MfeChargepadBlock.MfeChargepadBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) },
+            "mfsu_chargepad" to { b: net.minecraft.block.Block -> MfsuChargepadBlock.MfsuChargepadBlockItem(b, net.fabricmc.fabric.api.item.v1.FabricItemSettings()) }
         )
         for ((id, factory) in storageConfigs) {
             val blockId = Identifier(MOD_ID, id)

@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,active=false": { "model": "ic2:block/wiring/chargepad/cesu_chargepad" },
+    "facing=east,active=false": { "model": "ic2:block/wiring/chargepad/cesu_chargepad", "y": 90 },
+    "facing=south,active=false": { "model": "ic2:block/wiring/chargepad/cesu_chargepad", "y": 180 },
+    "facing=west,active=false": { "model": "ic2:block/wiring/chargepad/cesu_chargepad", "y": 270 },
+    "facing=north,active=true": { "model": "ic2:block/wiring/chargepad/cesu_chargepad_active" },
+    "facing=east,active=true": { "model": "ic2:block/wiring/chargepad/cesu_chargepad_active", "y": 90 },
+    "facing=south,active=true": { "model": "ic2:block/wiring/chargepad/cesu_chargepad_active", "y": 180 },
+    "facing=west,active=true": { "model": "ic2:block/wiring/chargepad/cesu_chargepad_active", "y": 270 }
+  }
+}
