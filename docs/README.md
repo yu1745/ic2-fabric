@@ -28,6 +28,9 @@
 - `docs/systems/sync-system.md`
 - `docs/systems/sound-system.md`
 - `docs/systems/jei-integration.md`
+- `docs/systems/crop-hybrid-system.md`
+- `docs/systems/crop-growth-requirements.md`
+- `docs/systems/crop-player-guide.md`
 
 ### ui（界面与槽位）
 
@@ -52,6 +55,10 @@
 
 - `docs/inventory/assets-inventory.md`
 - `docs/inventory/sounds-inventory.md`
+
+### pitfalls（踩坑记录）
+
+- `docs/pitfalls/common-pitfalls.md`
 
 ### archive（归档/TODO）
 

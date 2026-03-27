@@ -1,5 +1,9 @@
 package ic2_120.integration.jade
 
+import ic2_120.content.block.CropBlock
+import ic2_120.content.block.CropBlockEntity
+import ic2_120.content.block.CropStickBlock
+import ic2_120.content.block.CropStickBlockEntity
 import ic2_120.content.block.pipes.BasePipeBlock
 import ic2_120.content.block.pipes.PipeBlockEntity
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
@@ -26,10 +30,14 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
 
     override fun register(registration: snownee.jade.api.IWailaCommonRegistration) {
         registration.registerBlockDataProvider(PipeJadeProvider, PipeBlockEntity::class.java)
+        registration.registerBlockDataProvider(CropJadeProvider, CropBlockEntity::class.java)
+        registration.registerBlockDataProvider(CropJadeProvider, CropStickBlockEntity::class.java)
     }
 
     override fun registerClient(registration: snownee.jade.api.IWailaClientRegistration) {
         registration.registerBlockComponent(PipeJadeProvider, BasePipeBlock::class.java)
+        registration.registerBlockComponent(CropJadeProvider, CropBlock::class.java)
+        registration.registerBlockComponent(CropJadeProvider, CropStickBlock::class.java)
     }
 }
 
@@ -140,4 +148,138 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
             block.size.baseBucketsPerSecond * block.material.multiplier * FluidConstants.BUCKET.toDouble() / 20.0
         ).toLong().coerceAtLeast(1L)
     }
+}
+
+object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
+    private val CROP_GROWTH = Identifier("ic2_120", "crop_growth")
+
+    override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
+        val world = accessor.level
+        val blockEntity = accessor.blockEntity ?: return
+
+        if (blockEntity is CropStickBlockEntity) {
+            val (nutrients, water, weedEx) = blockEntity.storageSnapshot()
+            data.putBoolean("isStick", true)
+            data.putBoolean(
+                "crossingBase",
+                if (accessor.blockState.contains(CropStickBlock.CROSSING_BASE)) {
+                    accessor.blockState.get(CropStickBlock.CROSSING_BASE)
+                } else {
+                    false
+                }
+            )
+            data.putInt("nutrients", nutrients)
+            data.putInt("water", water)
+            data.putInt("weedEx", weedEx)
+            return
+        }
+
+        val be = blockEntity as? CropBlockEntity ?: return
+        val state = world.getBlockState(accessor.position)
+        if (!state.contains(CropBlock.CROP_TYPE) || !state.contains(CropBlock.AGE)) return
+        val estimate = be.estimateGrowth(world, accessor.position, state)
+        val (nutrients, water, weedEx) = be.storageSnapshot()
+
+        data.putInt("age", estimate.age)
+        data.putInt("maxAge", estimate.maxAge)
+        data.putInt("progress", estimate.progressPercent)
+        data.putBoolean("canGrowNow", estimate.canGrowNow)
+        data.putBoolean("isMature", estimate.isMature)
+        data.putInt("nutrients", nutrients)
+        data.putInt("water", water)
+        data.putInt("weedEx", weedEx)
+        if (estimate.remainingSeconds != null) {
+            data.putDouble("remainingSeconds", estimate.remainingSeconds)
+        }
+    }
+
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+        if (accessor.serverData.getBoolean("isStick")) {
+            val crossingBase = accessor.serverData.getBoolean("crossingBase")
+            val nutrients = accessor.serverData.getInt("nutrients")
+            val water = accessor.serverData.getInt("water")
+            val weedEx = accessor.serverData.getInt("weedEx")
+
+            tooltip.add(
+                if (crossingBase) Text.translatable("ic2_120.jade.crop_stick_crossing").formatted(Formatting.YELLOW)
+                else Text.translatable("ic2_120.jade.crop_stick_empty").formatted(Formatting.GRAY)
+            )
+            tooltip.add(
+                if (nutrients > 0) {
+                    Text.translatable("ic2_120.jade.crop_fertilized_yes", nutrients).formatted(Formatting.GREEN)
+                } else {
+                    Text.translatable("ic2_120.jade.crop_fertilized_no").formatted(Formatting.GRAY)
+                }
+            )
+            tooltip.add(
+                if (water > 0) {
+                    Text.translatable("ic2_120.jade.crop_hydrated_yes", water).formatted(Formatting.AQUA)
+                } else {
+                    Text.translatable("ic2_120.jade.crop_hydrated_no").formatted(Formatting.GRAY)
+                }
+            )
+            tooltip.add(
+                if (weedEx > 0) {
+                    Text.translatable("ic2_120.jade.crop_weedex_yes", weedEx).formatted(Formatting.GREEN)
+                } else {
+                    Text.translatable("ic2_120.jade.crop_weedex_no").formatted(Formatting.GRAY)
+                }
+            )
+            return
+        }
+
+        if (!accessor.serverData.contains("progress")) return
+
+        val age = accessor.serverData.getInt("age")
+        val maxAge = accessor.serverData.getInt("maxAge")
+        val progress = accessor.serverData.getInt("progress")
+        val canGrowNow = accessor.serverData.getBoolean("canGrowNow")
+        val isMature = accessor.serverData.getBoolean("isMature")
+        val nutrients = accessor.serverData.getInt("nutrients")
+        val water = accessor.serverData.getInt("water")
+        val weedEx = accessor.serverData.getInt("weedEx")
+
+        tooltip.add(Text.translatable("ic2_120.jade.crop_progress", age, maxAge, progress))
+        tooltip.add(
+            if (nutrients > 0) {
+                Text.translatable("ic2_120.jade.crop_fertilized_yes", nutrients).formatted(Formatting.GREEN)
+            } else {
+                Text.translatable("ic2_120.jade.crop_fertilized_no").formatted(Formatting.GRAY)
+            }
+        )
+        tooltip.add(
+            if (water > 0) {
+                Text.translatable("ic2_120.jade.crop_hydrated_yes", water).formatted(Formatting.AQUA)
+            } else {
+                Text.translatable("ic2_120.jade.crop_hydrated_no").formatted(Formatting.GRAY)
+            }
+        )
+        tooltip.add(
+            if (weedEx > 0) {
+                Text.translatable("ic2_120.jade.crop_weedex_yes", weedEx).formatted(Formatting.GREEN)
+            } else {
+                Text.translatable("ic2_120.jade.crop_weedex_no").formatted(Formatting.GRAY)
+            }
+        )
+
+        if (isMature) {
+            tooltip.add(Text.translatable("ic2_120.jade.crop_mature").formatted(Formatting.GREEN))
+            return
+        }
+
+        if (!canGrowNow) {
+            tooltip.add(Text.translatable("ic2_120.jade.crop_cannot_grow").formatted(Formatting.RED))
+            return
+        }
+
+        if (accessor.serverData.contains("remainingSeconds")) {
+            val sec = accessor.serverData.getDouble("remainingSeconds").coerceAtLeast(0.0)
+            val min = sec / 60.0
+            tooltip.add(Text.translatable("ic2_120.jade.crop_remaining_time", String.format("%.1f", sec), String.format("%.2f", min)))
+        } else {
+            tooltip.add(Text.translatable("ic2_120.jade.crop_remaining_unknown").formatted(Formatting.YELLOW))
+        }
+    }
+
+    override fun getUid(): Identifier = CROP_GROWTH
 }

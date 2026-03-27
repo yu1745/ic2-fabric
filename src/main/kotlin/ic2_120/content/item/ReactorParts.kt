@@ -1,10 +1,10 @@
 package ic2_120.content.item
 
+import ic2_120.content.reactor.AbstractFiniteNeutronReflectorItem
 import ic2_120.content.reactor.AbstractReactorComponent
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
-import ic2_120.registry.type
 import net.minecraft.item.Item
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 
@@ -29,32 +29,10 @@ class ReactorHeatPlatingItem : Item(FabricItemSettings())
 class ContainmentReactorPlatingItem : Item(FabricItemSettings())
 
 @ModItem(name = "neutron_reflector", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class NeutronReflectorItem : AbstractReactorComponent(FabricItemSettings()) {
-    override fun acceptUraniumPulse(
-        stack: net.minecraft.item.ItemStack,
-        reactor: ic2_120.content.reactor.IReactor,
-        pulsingStack: net.minecraft.item.ItemStack,
-        youX: Int,
-        youY: Int,
-        pulseX: Int,
-        pulseY: Int,
-        heatRun: Boolean
-    ): Boolean = true
-}
+class NeutronReflectorItem : AbstractFiniteNeutronReflectorItem(FabricItemSettings(), 30_000)
 
 @ModItem(name = "thick_neutron_reflector", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ThickNeutronReflectorItem : AbstractReactorComponent(FabricItemSettings()) {
-    override fun acceptUraniumPulse(
-        stack: net.minecraft.item.ItemStack,
-        reactor: ic2_120.content.reactor.IReactor,
-        pulsingStack: net.minecraft.item.ItemStack,
-        youX: Int,
-        youY: Int,
-        pulseX: Int,
-        pulseY: Int,
-        heatRun: Boolean
-    ): Boolean = true
-}
+class ThickNeutronReflectorItem : AbstractFiniteNeutronReflectorItem(FabricItemSettings(), 120_000)
 
 @ModItem(name = "iridium_neutron_reflector", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
 class IridiumNeutronReflectorItem : AbstractReactorComponent(FabricItemSettings()) {

@@ -22,6 +22,9 @@ abstract class AbstractDamageableReactorComponent(
         return nbt.getInt("use").coerceIn(0, maxUse)
     }
 
+    /** 燃料棒是否尚未枯竭（用于中子反射板等邻接判定） */
+    fun isOperationalFuelRod(stack: ItemStack): Boolean = getUse(stack) < maxUse - 1
+
     fun setUse(stack: ItemStack, use: Int) {
         stack.orCreateNbt.putInt("use", use.coerceIn(0, maxUse))
     }

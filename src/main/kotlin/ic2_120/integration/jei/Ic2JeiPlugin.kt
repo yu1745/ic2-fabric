@@ -25,6 +25,7 @@ import ic2_120.integration.jei.SolidCannerJeiRecipe
 import ic2_120.integration.jei.SolidCannerRecipeCategory
 import ic2_120.content.block.storage.EnergyStorageBlock
 import ic2_120.content.item.armor.JetpackItem
+import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
 import mezz.jei.api.IModPlugin
@@ -133,6 +134,8 @@ class Ic2JeiPlugin : IModPlugin {
 
         // 注册储电盒/充电座的满电变体（通过物品 ID 直接获取）
         registerEnergyStorageFullVariants(extraStacks)
+        // 注册杂交作物初始种子袋（1/1/1）
+        extraStacks += CropSeedBagItem.createInitialSeedStacks()
 
         if (extraStacks.isNotEmpty()) {
             registration.addExtraItemStacks(extraStacks)

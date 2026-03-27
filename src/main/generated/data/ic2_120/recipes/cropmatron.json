@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "minecraft:chest"
+    },
+    "C": {
+      "item": "ic2_120:crop_stick"
+    },
+    "M": {
+      "item": "ic2_120:machine"
+    },
+    "U": {
+      "item": "ic2_120:empty_cell"
+    },
+    "c": {
+      "item": "ic2_120:circuit"
+    }
+  },
+  "pattern": [
+    "cBc",
+    "UMU",
+    "CCC"
+  ],
+  "result": {
+    "item": "ic2_120:cropmatron"
+  },
+  "show_notification": true
+}

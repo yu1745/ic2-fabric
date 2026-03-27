@@ -15,6 +15,7 @@ import ic2_120.content.effect.ModStatusEffects
 import ic2_120.content.worldgen.OreGeneration
 import ic2_120.content.worldgen.RubberTreeGeneration
 import ic2_120.content.item.CellAndBucketFluidRegistration
+import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.block.BatBoxBlock
 import ic2_120.content.block.BatBoxChargepadBlock
@@ -213,6 +214,18 @@ object Ic2_120 : ModInitializer {
                     JetpackItem.setFuel(it, JetpackItem.MAX_FUEL)
                 }
                 entries.addAfter(jetpackItem, fullFuelJetpack)
+            }
+        }
+
+        // 杂交作物初始种子袋（三维属性 1/1/1）加入作物种子物品栏
+        val ic2CropSeedsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
+        ItemGroupEvents.modifyEntriesEvent(ic2CropSeedsKey).register { entries ->
+            val seedBag = Registries.ITEM.get(Identifier(MOD_ID, "crop_seed_bag"))
+            val initialSeeds = CropSeedBagItem.createInitialSeedStacks()
+            if (seedBag != net.minecraft.item.Items.AIR) {
+                for (stack in initialSeeds) entries.addAfter(seedBag, stack)
+            } else {
+                for (stack in initialSeeds) entries.add(stack)
             }
         }
 

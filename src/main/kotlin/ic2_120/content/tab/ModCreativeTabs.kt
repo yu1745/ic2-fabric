@@ -23,3 +23,10 @@ class Ic2MachinesTab
  */
 @ModCreativeTab(name = "ic2_tools", iconItem = "mining_laser")
 class Ic2ToolsTab
+
+/**
+ * IC2 作物种子物品栏。
+ * 包含杂交系统的种子袋与预制初始种子。
+ */
+@ModCreativeTab(name = "ic2_crop_seeds", iconItem = "crop_seed_bag")
+class Ic2CropSeedsTab

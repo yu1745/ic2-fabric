@@ -14,6 +14,9 @@ enum class CreativeTab(val id: String) {
     /** IC2 工具物品栏 */
     IC2_TOOLS("ic2_tools"),
 
+    /** IC2 作物种子物品栏 */
+    IC2_CROP_SEEDS("ic2_crop_seeds"),
+
     /** Minecraft 原版建筑方块 */
     MINECRAFT_BUILDING_BLOCKS("building_blocks"),
 
@@ -48,7 +51,7 @@ enum class CreativeTab(val id: String) {
      */
     fun getNamespacedId(modId: String): String {
         return when (this) {
-            IC2_MATERIALS, IC2_MACHINES, IC2_TOOLS -> "$modId:$id"
+            IC2_MATERIALS, IC2_MACHINES, IC2_TOOLS, IC2_CROP_SEEDS -> "$modId:$id"
             MINECRAFT_BUILDING_BLOCKS, MINECRAFT_DECORATIONS, MINECRAFT_REDSTONE,
             MINECRAFT_TRANSPORTATION, MINECRAFT_MISC, MINECRAFT_FOOD,
             MINECRAFT_TOOLS, MINECRAFT_COMBAT, MINECRAFT_BREWING -> "minecraft:$id"

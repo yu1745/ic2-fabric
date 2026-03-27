@@ -1,5 +1,7 @@
 package ic2_120.client.compose
 
+import ic2_120.content.screen.StandardGuiLayout
+
 /**
  * 项目通用 GUI 尺寸枚举，提供预定义的宽高组合。
  *
@@ -46,7 +48,7 @@ package ic2_120.client.compose
 enum class GuiSize(val width: Int, val height: Int) {
 
     /** 标准机器（176×166），如发电机、基础机器 */
-    STANDARD(176, 166),
+    STANDARD(StandardGuiLayout.WIDTH, StandardGuiLayout.HEIGHT),
 
     /** 标准机器 + 升级槽（194×184），如压缩机、冶炼炉 */
     STANDARD_UPGRADE(176+18+8, 184),
@@ -82,10 +84,13 @@ enum class GuiSize(val width: Int, val height: Int) {
 
     companion object {
         /** 玩家背包 Y 起始坐标（标准高度 GUI 中） */
-        const val PLAYER_INVENTORY_Y = 84
+        const val PLAYER_INVENTORY_Y = StandardGuiLayout.PLAYER_INV_Y
 
         /** 快捷栏 Y 起始坐标 */
-        const val HOTBAR_Y = 142
+        const val HOTBAR_Y = StandardGuiLayout.HOTBAR_Y
+
+        /** 槽位边长（与 [StandardGuiLayout.SLOT_SIZE] 一致） */
+        const val SLOT_SIZE = StandardGuiLayout.SLOT_SIZE
 
         /**
          * 根据玩家背包上方的主内容区高度，自动计算 GUI 总高度。

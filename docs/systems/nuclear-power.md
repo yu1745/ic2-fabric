@@ -253,9 +253,22 @@ if (breederEffectiveness > 0.5) 发热量 × 2
 
 ### 中子反射器
 
-- **neutron_reflector**、**thick_neutron_reflector**、**iridium_neutron_reflector**
-- `acceptUraniumPulse` 恒返回 `true`（简化实现，无耐久消耗）
-- 效果：增加邻接燃料棒的脉冲数（邻接数越多脉冲越多）
+| 物品 id | 脉冲容量 | 耐久 |
+|---------|----------|------|
+| **neutron_reflector**（中子反射板） | 30 000 | 有（见下） |
+| **thick_neutron_reflector**（加厚中子反射板） | 120 000 | 有（同上） |
+| **iridium_neutron_reflector**（铱中子反射板） | — | **无限**（无消耗） |
+
+**脉冲加成**：仅当反射板**尚未枯竭**且燃料棒向其发起 `acceptUraniumPulse` 时返回 `true`，邻接燃料棒多 1 个脉冲计数（与铀/MOX 燃料棒实现一致）。
+
+**有限反射板消耗**（`AbstractFiniteNeutronReflectorItem`）：
+
+- 每个反应堆**计算周期**结算一次（默认 `getTickRate() == 20` game ticks，即约 **1 秒** 一次），仅在**非热运行 pass**（`heatRun == false`）且 `produceEnergy()` 为真时扣减。
+- 对**四向邻格**中每一根**仍在工作**的铀/MOX 燃料棒，按格累加消耗：**单联 1**、**双联 2**、**四联 4**（与 `numberOfCells` 一致）。
+- 邻格无活性燃料时不扣减；枯竭后 `acceptUraniumPulse` 为 `false`，且**该格物品被清空**（`ItemStack.EMPTY`）。
+- NBT：`use` 为已消耗脉冲数；物品条与 tooltip 显示**剩余可工作脉冲数**（`tooltip.ic2_120.neutron_reflector_pulses`）。
+
+**铱反射板**：`acceptUraniumPulse` 恒为 `true`，无 `processChamber` 消耗逻辑。
 
 ### 其他反应堆物品
 

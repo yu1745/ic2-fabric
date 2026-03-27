@@ -8,6 +8,12 @@ import net.minecraft.client.gui.DrawContext
  */
 object GuiBackground {
 
+    /**
+     * 槽位程序化绘制时相对 [net.minecraft.screen.slot.Slot] 坐标的内缩（与原版容器一致）。
+     * [drawVanillaLikeSlot]、[drawPlayerInventorySlotBorders] 均使用此值。
+     */
+    const val SLOT_ANCHOR_INSET = 1
+
     /** 内层填充色（深灰） */
     const val FILL_COLOR = 0xFF3C3C3C.toInt()
 
@@ -102,7 +108,6 @@ object GuiBackground {
         context.fill(x1 - 1, y, x1, y1, VANILLA_SLOT_HILIGHT) // right
     }
 
-    private const val BORDER_OFFSET = 1
     private const val PLAYER_INV_COLS = 9
     private const val PLAYER_INV_MAIN_ROWS = 3
     private const val PLAYER_INV_HOTBAR_ROWS = 1
@@ -132,15 +137,15 @@ object GuiBackground {
                 val slotY = playerInvY + row * slotSize
                 drawVanillaLikeSlot(
                     context,
-                    screenX + slotX - BORDER_OFFSET,
-                    screenY + slotY - BORDER_OFFSET,
+                    screenX + slotX - SLOT_ANCHOR_INSET,
+                    screenY + slotY - SLOT_ANCHOR_INSET,
                     w,
                     w
                 )
                 if (borderColor != BORDER_COLOR) {
                     context.drawBorder(
-                        screenX + slotX - BORDER_OFFSET,
-                        screenY + slotY - BORDER_OFFSET,
+                        screenX + slotX - SLOT_ANCHOR_INSET,
+                        screenY + slotY - SLOT_ANCHOR_INSET,
                         w,
                         w,
                         borderColor
@@ -153,15 +158,15 @@ object GuiBackground {
             val slotX = playerInvX + col * slotSize
             drawVanillaLikeSlot(
                 context,
-                screenX + slotX - BORDER_OFFSET,
-                screenY + hotbarY - BORDER_OFFSET,
+                screenX + slotX - SLOT_ANCHOR_INSET,
+                screenY + hotbarY - SLOT_ANCHOR_INSET,
                 w,
                 w
             )
             if (borderColor != BORDER_COLOR) {
                 context.drawBorder(
-                    screenX + slotX - BORDER_OFFSET,
-                    screenY + hotbarY - BORDER_OFFSET,
+                    screenX + slotX - SLOT_ANCHOR_INSET,
+                    screenY + hotbarY - SLOT_ANCHOR_INSET,
                     w,
                     w,
                     borderColor

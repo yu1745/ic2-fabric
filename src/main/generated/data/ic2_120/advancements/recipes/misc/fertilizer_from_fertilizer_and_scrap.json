@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_fertilizer": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:fertilizer"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:fertilizer_from_fertilizer_and_scrap"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_fertilizer",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:fertilizer_from_fertilizer_and_scrap"
+    ]
+  },
+  "sends_telemetry_event": false
+}
