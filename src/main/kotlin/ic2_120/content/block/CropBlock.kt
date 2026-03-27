@@ -8,10 +8,21 @@ import ic2_120.content.crop.CropType
 import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.CropSeedData
 import ic2_120.content.item.CropnalyzerItem
+import ic2_120.content.item.CoffeeBeans
 import ic2_120.content.item.EmptyCell
 import ic2_120.content.item.Fertilizer
+import ic2_120.content.item.GrinPowder
+import ic2_120.content.item.Hops
+import ic2_120.content.item.Resin
+import ic2_120.content.item.TerraWart
 import ic2_120.content.item.Weed
 import ic2_120.content.item.WeedExCell
+import ic2_120.content.item.SmallCopperDust
+import ic2_120.content.item.SmallGoldDust
+import ic2_120.content.item.SmallIronDust
+import ic2_120.content.item.SmallLeadDust
+import ic2_120.content.item.SmallSilverDust
+import ic2_120.content.item.SmallTinDust
 import ic2_120.registry.instance
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
@@ -601,9 +612,14 @@ class CropBlockEntity(
 
     private fun createGainStacks(cropType: CropType, age: Int, world: World): List<ItemStack> {
         return when (cropType) {
+            CropType.DANDELION -> listOf(ItemStack(Items.YELLOW_DYE, 1))
+            CropType.POPPY -> listOf(ItemStack(Items.RED_DYE, 1))
+            CropType.BLACKTHORN -> listOf(ItemStack(Items.BLACK_DYE, 1))
+            CropType.TULIP -> listOf(ItemStack(Items.PURPLE_DYE, 1))
+            CropType.CYAZINT -> listOf(ItemStack(Items.BLUE_DYE, 1))
             CropType.REED -> listOf(ItemStack(Items.SUGAR_CANE, age.coerceAtLeast(1)))
             CropType.STICKY_REED -> {
-                if (age >= CropSystem.maxAge(cropType)) listOf(ItemStack(Items.SLIME_BALL, 1))
+                if (age >= CropSystem.maxAge(cropType)) listOf(ItemStack(Resin::class.instance(), 1))
                 else listOf(ItemStack(Items.SUGAR_CANE, age.coerceAtLeast(1)))
             }
             CropType.PUMPKIN -> listOf(ItemStack(Items.PUMPKIN))
@@ -613,10 +629,12 @@ class CropBlockEntity(
             }
             CropType.COFFEE -> {
                 val max = CropSystem.maxAge(cropType)
-                if (age == max - 1) emptyList() else listOf(ItemStack(Items.COCOA_BEANS, 1))
+                if (age == max - 1) emptyList() else listOf(ItemStack(CoffeeBeans::class.instance(), 1))
             }
+            CropType.HOPS -> listOf(ItemStack(Hops::class.instance(), 1))
+            CropType.FLAX -> listOf(ItemStack(Items.STRING, 1))
             CropType.VENOMILIA -> {
-                if (age == 4) listOf(ItemStack(Items.FERMENTED_SPIDER_EYE, 1))
+                if (age == 4) listOf(ItemStack(GrinPowder::class.instance(), 1))
                 else if (age >= 3) listOf(ItemStack(Items.PURPLE_DYE, 1))
                 else emptyList()
             }
@@ -632,6 +650,13 @@ class CropBlockEntity(
                 else listOf(ItemStack(Items.REDSTONE, 1))
             }
             CropType.EATING_PLANT -> listOf(ItemStack(Items.MELON, 1))
+            CropType.TERRA_WART -> listOf(ItemStack(TerraWart::class.instance(), 1))
+            CropType.FERRU -> listOf(ItemStack(SmallIronDust::class.instance(), 1))
+            CropType.CYPRIUM -> listOf(ItemStack(SmallCopperDust::class.instance(), 1))
+            CropType.STAGNIUM -> listOf(ItemStack(SmallTinDust::class.instance(), 1))
+            CropType.PLUMBISCUS -> listOf(ItemStack(SmallLeadDust::class.instance(), 1))
+            CropType.AURELIA -> listOf(ItemStack(SmallGoldDust::class.instance(), 1))
+            CropType.SHINING -> listOf(ItemStack(SmallSilverDust::class.instance(), 1))
             CropType.OAK_SAPLING -> {
                 val out = mutableListOf(ItemStack(Items.OAK_SAPLING))
                 if (world.random.nextInt(100) >= 75) out += ItemStack(Items.OAK_SAPLING)

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "ic2_120:iron_plate"
+    },
+    "S": {
+      "item": "ic2_120:triple_reactor_coolant_cell"
+    },
+    "T": {
+      "item": "ic2_120:tin_plate"
+    }
+  },
+  "pattern": [
+    "TTT",
+    "SIS",
+    "TTT"
+  ],
+  "result": {
+    "item": "ic2_120:sextuple_reactor_coolant_cell"
+  },
+  "show_notification": true
+}

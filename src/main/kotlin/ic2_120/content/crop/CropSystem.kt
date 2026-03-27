@@ -144,6 +144,7 @@ object CropSystem {
             CropType.REED, CropType.STICKY_REED -> age > 0
             CropType.VENOMILIA -> age >= 3
             CropType.COFFEE, CropType.POTATO -> age >= (max - 1)
+            CropType.EATING_PLANT -> age >= (max - 2) && age < max
             else -> age >= max
         }
     }
@@ -166,6 +167,7 @@ object CropSystem {
             CropType.COFFEE -> max - 2
             CropType.HOPS -> 2
             CropType.VENOMILIA -> 2
+            CropType.EATING_PLANT -> 0
             else -> null
         }
         return next?.coerceIn(0, 7)

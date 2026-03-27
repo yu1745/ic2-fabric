@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:copper_plate"
+    },
+    "P": {
+      "item": "ic2_120:reactor_plating"
+    }
+  },
+  "pattern": [
+    "CCC",
+    "CPC",
+    "CCC"
+  ],
+  "result": {
+    "item": "ic2_120:reactor_heat_plating"
+  },
+  "show_notification": true
+}

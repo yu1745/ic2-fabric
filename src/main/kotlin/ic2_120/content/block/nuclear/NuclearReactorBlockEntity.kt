@@ -387,7 +387,24 @@ class NuclearReactorBlockEntity(
         return sync.temperature
     }
 
-    override fun getMaxHeat(): Int = NuclearReactorSync.HEAT_CAPACITY
+    override fun getMaxHeat(): Int {
+        val base = NuclearReactorSync.HEAT_CAPACITY
+        var bonus = 0
+        val cols = getReactorCols()
+
+        // 统计反应堆隔板的热量加成
+        for (y in 0 until 9) {
+            for (x in 0 until cols) {
+                val stack = getItemAt(x, y) ?: continue
+                when (stack.item) {
+                    is ic2_120.content.item.ReactorPlatingItem -> bonus += ic2_120.content.item.ReactorPlatingItem.HEAT_BONUS
+                    is ic2_120.content.item.ReactorHeatPlatingItem -> bonus += ic2_120.content.item.ReactorHeatPlatingItem.HEAT_BONUS
+                }
+            }
+        }
+
+        return base + bonus
+    }
     override fun setMaxHeat(maxHeat: Int) {}
     override fun addEmitHeat(heat: Int) {
         emitHeatBuffer += heat

@@ -102,8 +102,12 @@ abstract class ReactorHeatExchangerBase(
                 
                 // 记录热交换器的热量变化（失去的热量）
                 myHeatDelta -= add
-                // 向邻接组件传递热量
-                comp.alterHeat(otherStack, reactor, ox, oy, add)
+                // 向邻接组件传递热量，并处理实际交换的热量
+                val actualExchange = comp.alterHeat(otherStack, reactor, ox, oy, add)
+                // 如果实际交换的热量与请求的不同，调整热交换器的热量变化
+                if (actualExchange != 0) {
+                    myHeatDelta += actualExchange
+                }
             }
         }
 

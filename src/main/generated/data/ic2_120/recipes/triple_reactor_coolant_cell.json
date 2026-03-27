@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:reactor_coolant_cell"
+    },
+    "T": {
+      "item": "ic2_120:tin_plate"
+    }
+  },
+  "pattern": [
+    "TTT",
+    "CCC",
+    "TTT"
+  ],
+  "result": {
+    "item": "ic2_120:triple_reactor_coolant_cell"
+  },
+  "show_notification": true
+}

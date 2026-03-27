@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_lzh_condensator": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:lzh_condensator"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:lzh_condensator_repair_with_lapis_lazuli"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_lzh_condensator",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:lzh_condensator_repair_with_lapis_lazuli"
+    ]
+  },
+  "sends_telemetry_event": false
+}
