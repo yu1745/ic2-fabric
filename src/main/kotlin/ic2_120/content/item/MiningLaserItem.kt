@@ -22,6 +22,9 @@ import net.minecraft.item.ItemStack
 import net.minecraft.registry.tag.BlockTags
 import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
+import net.minecraft.sound.SoundCategory
+import net.minecraft.sound.SoundEvent
+import net.minecraft.util.Identifier
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -35,6 +38,8 @@ class MiningLaserItem : Item(
     FabricItemSettings()
         .maxDamage(1000)
 ) {
+    private val laserShootSound: SoundEvent = SoundEvent.of(Identifier("ic2", "item.laser.shoot"))
+
 
     companion object {
         @RecipeProvider
@@ -68,6 +73,7 @@ class MiningLaserItem : Item(
                 val broken = world.breakBlock(pos, true, user)
                 if (broken) {
                     stack.damage(1, user as LivingEntity) { it.sendToolBreakStatus(hand) }
+                    world.playSound(null, user.blockPos, laserShootSound, SoundCategory.PLAYERS, 1.0f, 1.0f)
                     return TypedActionResult.success(stack, true)
                 }
             }

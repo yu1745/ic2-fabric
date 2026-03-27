@@ -32,7 +32,10 @@ import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.sound.SoundCategory
+import net.minecraft.sound.SoundEvent
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -68,6 +71,8 @@ class TeleporterBlockEntity(
 
     companion object {
         const val TELEPORTER_TIER = 4
+        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.of(Identifier("ic2", "machine.teleporter.charge"))
+        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.of(Identifier("ic2", "machine.teleporter.use"))
 
         const val SLOT_DISCHARGING = 0
         const val SLOT_UPGRADE_0 = 1
@@ -426,6 +431,16 @@ class TeleporterBlockEntity(
         sync.chargeMax = chargeTicksMax
 
         if (chargeTicksElapsed < chargeTicksMax) {
+            if (chargeTicksElapsed % 20 == 0) {
+                serverWorld.playSound(
+                    null,
+                    pos,
+                    TELEPORTER_CHARGE_SOUND,
+                    SoundCategory.BLOCKS,
+                    0.8f,
+                    1.0f
+                )
+            }
             markDirty()
             return true
         }
@@ -442,6 +457,7 @@ class TeleporterBlockEntity(
         if (sync.consumeEnergy(chargingEnergyNeed) > 0L) {
             sync.energy = sync.amount.toInt().coerceAtLeast(0)
             teleportEntity(entity, destX, destY, destZ)
+            serverWorld.playSound(null, pos, TELEPORTER_USE_SOUND, SoundCategory.BLOCKS, 1.0f, 1.0f)
 
             val cooldownTicks = 20
             teleportCooldown = cooldownTicks

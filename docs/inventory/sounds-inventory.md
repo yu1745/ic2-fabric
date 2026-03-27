@@ -59,11 +59,13 @@
 | `item.treetap.use` | `ic2:tools/treetap/treetap` | 木龙头采树脂使用音 |
 | `item.wrench.use` | `ic2:tools/wrench` | 扳手拆装/旋转方块音 |
 
+已接入触发（代码已实装）：`item.treetap.use`、`item.treetap.electric.use`、`item.wrench.use`、`item.scanner.use`、`item.laser.shoot`
+
 ### 1.4 机器
 | 事件 ID | 声音资源 | 猜测用途 | 状态 |
 |---|---|---|---|
-| `machine.canner.operate` | `ic2:machines/canner/operate` | 装罐机流体操作工作音 | ✅ 已实现（动态切换 operate/reverse） |
-| `machine.canner.reverse` | `ic2:machines/canner/reverse` | 装罐机固体装罐工作音 | ✅ 已实现（动态切换 operate/reverse） |
+| `machine.canner.operate` | `ic2:machines/canner/operate` | 装罐机流体操作工作音 | ✅ 已实现（当前固定 operate） |
+| `machine.canner.reverse` | `ic2:machines/canner/reverse` | 装罐机固体装罐工作音 | ⚠️ 未独立接入（尚未按分支切换 reverse） |
 | `machine.compressor.operate` | `ic2:machines/compressor/operate` | 压缩机工作循环音 | ✅ 已实现 |
 | `machine.electrolyzer.loop` | `ic2:machines/electrolyzer/loop` | 电解机工作循环音 | ❌ 未实现 |
 | `machine.extractor.operate` | `ic2:machines/extractor/operate` | 提取机工作循环音 | ✅ 已实现 |
@@ -78,13 +80,13 @@
 | `machine.furnace.iron.operate` | `ic2:machines/furnace/iron/operate` | 铁炉工作音 | ✅ 已实现 |
 | `machine.interrupt1` | `ic2:machines/state/interrupt1` | 机器被中断/停机提示音 | ❌ 未实现 |
 | `machine.macerator.operate` | `ic2:machines/macerator/operate` | 打粉机工作循环音 | ✅ 已实现 |
-| `machine.miner.operate` | `ic2:machines/miner/operate` | 采矿机工作循环音 | ❌ 未实现 |
+| `machine.miner.operate` | `ic2:machines/miner/operate` | 采矿机工作循环音 | ✅ 已实现 |
 | `machine.o_mat.operate` | `ic2:machines/o_mat/operate` | 交易机/物质机工作音 | ❌ 未实现 |
 | `machine.overload` | `ic2:machines/state/overload` | 机器过载/异常警告音 | ❌ 未实现 |
 | `machine.pump.operate` | `ic2:machines/pump/operate` | 泵工作循环音 | ✅ 已实现 |
 | `machine.recycler.operate` | `ic2:machines/recycler/operate` | 回收机工作循环音 | ✅ 已实现 |
-| `machine.teleporter.charge` | `ic2:machines/teleporter/charge` | 传送机充能阶段音 | ❌ 未实现 |
-| `machine.teleporter.use` | `ic2:machines/teleporter/use` | 传送触发音 | ❌ 未实现 |
+| `machine.teleporter.charge` | `ic2:machines/teleporter/charge` | 传送机充能阶段音 | ✅ 已实现 |
+| `machine.teleporter.use` | `ic2:machines/teleporter/use` | 传送触发音 | ✅ 已实现 |
 | `machine.terraformer.loop` | `ic2:machines/terraformer/loop` | 地形改造机运行循环音 | ❌ 未实现 |
 
 ---

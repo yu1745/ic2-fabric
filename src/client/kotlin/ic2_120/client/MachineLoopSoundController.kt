@@ -4,15 +4,18 @@ import ic2_120.content.block.CannerBlock
 import ic2_120.content.block.CompressorBlock
 import ic2_120.content.block.ElectricFurnaceBlock
 import ic2_120.content.block.ExtractorBlock
+import ic2_120.content.block.BaseMinerBlock
 import ic2_120.content.block.GeneratorBlock
 import ic2_120.content.block.GeoGeneratorBlock
 import ic2_120.content.block.InductionFurnaceBlock
 import ic2_120.content.block.IronFurnaceBlock
 import ic2_120.content.block.MaceratorBlock
+import ic2_120.content.block.MinerBlock
 import ic2_120.content.block.PumpBlock
 import ic2_120.content.block.RecyclerBlock
 import ic2_120.content.block.WaterGeneratorBlock
 import ic2_120.content.block.WindGeneratorBlock
+import ic2_120.content.block.nuclear.NuclearReactorBlock
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.minecraft.block.BlockState
 import net.minecraft.client.sound.MovingSoundInstance
@@ -86,6 +89,8 @@ object MachineLoopSoundController {
             is CannerBlock -> fromActive(state, CannerBlock.ACTIVE, "machine.canner.operate")
             is RecyclerBlock -> fromActive(state, RecyclerBlock.ACTIVE, "machine.recycler.operate")
             is PumpBlock -> fromActive(state, PumpBlock.ACTIVE, "machine.pump.operate")
+            is MinerBlock -> fromActive(state, BaseMinerBlock.ACTIVE, "machine.miner.operate")
+            is NuclearReactorBlock -> fromActive(state, NuclearReactorBlock.ACTIVE, "generator.nuclear.loop")
             else -> null
         }
     }

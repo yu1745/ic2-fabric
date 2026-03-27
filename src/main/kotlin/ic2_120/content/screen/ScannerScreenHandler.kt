@@ -13,6 +13,8 @@ import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
+import net.minecraft.sound.SoundCategory
+import net.minecraft.sound.SoundEvent
 import net.minecraft.util.Identifier
 
 import ic2_120.content.item.AdvancedScannerItem
@@ -39,6 +41,7 @@ class ScannerScreenHandler(
 
     private val syncedData = SyncedData()
     val sync = ScannerSync(syncedData)
+    private val scannerUseSound: SoundEvent = SoundEvent.of(Identifier("ic2", "item.scanner.use"))
 
     init {
         addProperties(syncedData)
@@ -96,6 +99,14 @@ class ScannerScreenHandler(
 
         // 执行扫描
         val results = performScan(player, type.scanRadius)
+        player.world.playSound(
+            null,
+            player.blockPos,
+            scannerUseSound,
+            SoundCategory.PLAYERS,
+            1.0f,
+            1.0f
+        )
 
         // 发送结果 S2C 包
         val buf = PacketByteBuf(Unpooled.buffer())

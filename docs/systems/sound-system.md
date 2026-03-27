@@ -36,6 +36,7 @@
 1. `setActiveState(world, pos, state, active)` 统一更新 blockstate。
 2. 仅服务端触发一次性事件：
 - `START_STOP` 机型：`start` 与 `stop`。
+ - 传送机阶段事件：`machine.teleporter.charge`（充能阶段）与 `machine.teleporter.use`（传送成功）。
 3. `LOOP/OPERATE` 类型不在服务端重复触发，由客户端循环控制器接管。
 
 ---
@@ -58,6 +59,7 @@
 - `generator.geothermal.loop`
 - `generator.water.loop`
 - `generator.wind.loop`
+- `generator.nuclear.loop`
 - `machine.furnace.iron.operate`
 - `machine.furnace.electric.loop`
 - `machine.furnace.induction.loop`
@@ -67,8 +69,26 @@
 - `machine.canner.operate`
 - `machine.recycler.operate`
 - `machine.pump.operate`
+- `machine.miner.operate`
 
-说明：`Canner` 当前循环音固定为 `machine.canner.operate`，未区分 reverse 分支循环音。
+说明：`Canner` 当前循环音固定为 `machine.canner.operate`，`machine.canner.reverse` 尚未接入独立循环分支。
+
+---
+
+## 物品交互音职责
+
+核心文件（服务端触发成功动作音）：
+- `src/main/kotlin/ic2_120/content/RubberTreetapHandler.kt`
+- `src/main/kotlin/ic2_120/content/WrenchHandler.kt`
+- `src/main/kotlin/ic2_120/content/screen/ScannerScreenHandler.kt`
+- `src/main/kotlin/ic2_120/content/item/MiningLaserItem.kt`
+
+当前已覆盖事件：
+- `item.treetap.use`
+- `item.treetap.electric.use`
+- `item.wrench.use`
+- `item.scanner.use`
+- `item.laser.shoot`
 
 ---
 

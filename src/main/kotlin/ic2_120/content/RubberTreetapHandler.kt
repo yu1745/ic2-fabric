@@ -9,6 +9,8 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
+import net.minecraft.sound.SoundCategory
+import net.minecraft.sound.SoundEvent
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
@@ -25,6 +27,8 @@ object RubberTreetapHandler {
     private val TREETAP_ID = Identifier(Ic2_120.MOD_ID, "treetap")
     private val ELECTRIC_TREETAP_ID = Identifier(Ic2_120.MOD_ID, "electric_treetap")
     private val RESIN_ID = Identifier(Ic2_120.MOD_ID, "resin")
+    private val TREETAP_SOUND = SoundEvent.of(Identifier("ic2", "item.treetap.use"))
+    private val ELECTRIC_TREETAP_SOUND = SoundEvent.of(Identifier("ic2", "item.treetap.electric.use"))
     private const val EU_PER_USE = 500L
 
     fun isTreetap(stack: ItemStack): Boolean {
@@ -97,7 +101,14 @@ object RubberTreetapHandler {
                 }
             }
 
-            // TODO: 播放音效 item.treetap.use / item.treetap.electric.use
+            world.playSound(
+                null,
+                pos,
+                if (isElectricTreetap(stack)) ELECTRIC_TREETAP_SOUND else TREETAP_SOUND,
+                SoundCategory.BLOCKS,
+                1.0f,
+                1.0f
+            )
             ActionResult.SUCCESS
         }
     }

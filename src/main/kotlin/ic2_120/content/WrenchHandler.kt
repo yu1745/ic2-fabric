@@ -23,6 +23,8 @@ import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.sound.SoundCategory
+import net.minecraft.sound.SoundEvent
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
@@ -43,6 +45,7 @@ object WrenchHandler {
 
     private val WRENCH_ID = Identifier(Ic2_120.MOD_ID, "wrench")
     private val ELECTRIC_WRENCH_ID = Identifier(Ic2_120.MOD_ID, "electric_wrench")
+    private val WRENCH_USE_SOUND = SoundEvent.of(Identifier("ic2", "item.wrench.use"))
     private const val ENERGY_RETAIN_RATIO = 0.8
 
     fun isWrench(stack: ItemStack): Boolean {
@@ -81,15 +84,15 @@ object WrenchHandler {
             if (block !is MachineBlock) return@register ActionResult.PASS
 
             if (!world.isClient) {
-                val facing = state.get(Properties.HORIZONTAL_FACING)
-                val next = when (facing) {
+                val next = when (state.get(Properties.HORIZONTAL_FACING)) {
                     Direction.NORTH -> Direction.EAST
                     Direction.EAST -> Direction.SOUTH
                     Direction.SOUTH -> Direction.WEST
                     Direction.WEST -> Direction.NORTH
-                    else -> facing
+                    else -> state.get(Properties.HORIZONTAL_FACING)
                 }
                 world.setBlockState(pos, state.with(Properties.HORIZONTAL_FACING, next))
+                world.playSound(null, pos, WRENCH_USE_SOUND, SoundCategory.BLOCKS, 1.0f, 1.0f)
             }
             ActionResult.SUCCESS
         }
@@ -108,9 +111,7 @@ object WrenchHandler {
             if (block is TankBlock) {
                 if (!world.isClient) {
                     val be = world.getBlockEntity(pos) as? TankBlockEntity
-                    if (be != null) {
-                        be.retainFluidPercent(0.8)
-                    }
+                    be?.retainFluidPercent(0.8)
                 }
                 // fall through to normal break
             }
@@ -175,6 +176,7 @@ object WrenchHandler {
                             stack.damage(10, player) { it.sendToolBreakStatus(hand) }
                         }
                     }
+                    world.playSound(null, pos, WRENCH_USE_SOUND, SoundCategory.BLOCKS, 1.0f, 1.0f)
                 }
             }
             ActionResult.SUCCESS
