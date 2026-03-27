@@ -3,11 +3,10 @@
   "category": "misc",
   "key": {
     "C": {
-      "item": "ic2_120:coal_dust"
+      "item": "ic2_120:carbon_fibre"
     }
   },
   "pattern": [
-    "CC",
     "CC"
   ],
   "result": {

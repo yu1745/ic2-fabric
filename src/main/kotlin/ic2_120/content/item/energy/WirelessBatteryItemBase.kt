@@ -26,13 +26,14 @@ abstract class WirelessBatteryItemBase(
     canChargeWireless = true // 支持无线充电
 ) {
     /**
-     * 给玩家物品栏中的装备充电
+     * 给玩家物品栏中的电动工具与能量护甲（[IElectricTool]）充电。
      *
-     * TODO: 待实现可充电装备系统后再完善此功能
+     * - 不充 [IBatteryItem] 电池，避免多枚无线电池互充死循环。
+     * - 仅当目标 [IElectricTool.tier] 小于等于本电池 [tier] 时才会充入。
      *
      * @param player 玩家
-     * @param amount 尝试充电的电量
-     * @return 实际充入的电量
+     * @param amount 尝试充电的电量（EU）
+     * @return 实际充入所有目标的电量总和（EU）
      */
     fun chargeEquipment(
         player: net.minecraft.entity.player.PlayerEntity,
@@ -41,33 +42,35 @@ abstract class WirelessBatteryItemBase(
         var remaining = amount
         var charged = 0L
 
-        // 遍历玩家物品栏（除了当前电池所在的槽位）
         val inventory = player.inventory
         for (i in 0 until inventory.size()) {
             if (remaining <= 0) break
 
             val stack = inventory.getStack(i)
             if (stack.isEmpty) continue
-            if (stack.item === this) continue // 跳过自己
+            if (stack.item === this) continue
 
-            // 检查是否为可充电装备
-            if (stack.item is IBatteryItem) {
-                val battery = stack.item as IBatteryItem
-                val transferred = battery.charge(stack, remaining)
-                charged += transferred
-                remaining -= transferred
-            }
+            val item = stack.item
+            if (item is IBatteryItem) continue
+            val tool = item as? IElectricTool ?: continue
+            if (tool.tier > tier) continue
 
-            // TODO: 添加更多可充电装备类型（如电动工具、量子盔甲等）
+            val current = tool.getEnergy(stack)
+            val maxCap = tool.maxCapacity
+            val canAccept = (maxCap - current).coerceAtLeast(0L)
+            if (canAccept <= 0L) continue
+
+            val toAdd = minOf(remaining, canAccept)
+            tool.setEnergy(stack, current + toAdd)
+            charged += toAdd
+            remaining -= toAdd
         }
 
         return charged
     }
 
     /**
-     * 每秒自动给装备充电
-     *
-     * TODO: 在物品 tick 系统中调用此方法
+     * 自动给背包内符合条件的 [IElectricTool] 充电（每 tick 由调用方触发时使用 [transferSpeed] 作为本帧上限）。
      */
     fun autoChargeEquipment(stack: net.minecraft.item.ItemStack, player: net.minecraft.entity.player.PlayerEntity) {
         if (!canChargeWireless) return

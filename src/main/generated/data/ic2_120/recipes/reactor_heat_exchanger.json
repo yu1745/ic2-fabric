@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "H": {
+      "item": "ic2_120:heat_exchanger"
+    },
+    "P": {
+      "item": "ic2_120:copper_plate"
+    }
+  },
+  "pattern": [
+    "PPP",
+    "PHP",
+    "PPP"
+  ],
+  "result": {
+    "item": "ic2_120:reactor_heat_exchanger"
+  },
+  "show_notification": true
+}

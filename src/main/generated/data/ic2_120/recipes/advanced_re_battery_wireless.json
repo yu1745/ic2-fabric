@@ -1,0 +1,24 @@
+{
+  "type": "ic2_120:battery_energy_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120:advanced_re_battery"
+    },
+    "H": {
+      "item": "ic2_120:heat_exchanger"
+    },
+    "W": {
+      "item": "ic2_120:re_battery_wireless"
+    }
+  },
+  "pattern": [
+    "HAH",
+    "AWA",
+    "HAH"
+  ],
+  "result": {
+    "item": "ic2_120:advanced_re_battery_wireless"
+  },
+  "show_notification": true
+}

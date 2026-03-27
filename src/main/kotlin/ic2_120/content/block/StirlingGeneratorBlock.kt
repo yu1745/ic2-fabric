@@ -89,9 +89,13 @@ class StirlingGeneratorBlock : MachineBlock() {
             val heatConductor = HeatConductor::class.instance()
             if (generator != Items.AIR && ironCasing != Items.AIR && heatConductor != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, StirlingGeneratorBlock::class.item(), 1)
-                    .pattern("ICI").pattern("IGI").pattern("III")
-                    .input('I', ironCasing).input('G', generator).input('C', heatConductor)
-                    .criterion(hasItem(ironCasing), conditionsFromItem(ironCasing))
+                    .pattern("CHC")
+                    .pattern("CGC")
+                    .pattern("CCC")
+                    .input('C', ironCasing)
+                    .input('H', heatConductor)
+                    .input('G', generator)
+                    .criterion(hasItem(generator), conditionsFromItem(generator))
                     .offerTo(exporter, StirlingGeneratorBlock::class.id())
             }
         }

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:iron_casing"
+    },
+    "H": {
+      "item": "ic2_120:heat_conductor"
+    },
+    "R": {
+      "item": "ic2_120:reactor_chamber"
+    }
+  },
+  "pattern": [
+    "CCC",
+    "CRC",
+    "CHC"
+  ],
+  "result": {
+    "item": "ic2_120:rt_heat_generator"
+  },
+  "show_notification": true
+}

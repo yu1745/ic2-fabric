@@ -8,12 +8,15 @@
     "G": {
       "item": "minecraft:glass"
     },
+    "I": {
+      "item": "ic2_120:iron_casing"
+    },
     "T": {
       "item": "ic2_120:tin_cable"
     }
   },
   "pattern": [
-    " C ",
+    "ICI",
     "GTG",
     "GGG"
   ],

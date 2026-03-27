@@ -1,16 +1,26 @@
 package ic2_120.content.block
 
 import ic2_120.content.block.machines.BlockCutterBlockEntity
+import ic2_120.content.item.Circuit
+import ic2_120.content.item.ElectricMotor
 import ic2_120.content.recipes.blockcutter.BlockCutterRecipeDatagen
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.id
+import ic2_120.registry.instance
+import ic2_120.registry.item
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
@@ -78,6 +88,20 @@ class BlockCutterBlock : MachineBlock() {
          */
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val machine = MachineCasingBlock::class.item()
+            val circuit = Circuit::class.instance()
+            val motor = ElectricMotor::class.instance()
+            if (machine != Items.AIR && circuit != Items.AIR && motor != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BlockCutterBlock::class.item(), 1)
+                    .pattern(" c ")
+                    .pattern(" M ")
+                    .pattern(" e ")
+                    .input('c', circuit)
+                    .input('M', machine)
+                    .input('e', motor)
+                    .criterion(hasItem(machine), conditionsFromItem(machine))
+                    .offerTo(exporter, BlockCutterBlock::class.id())
+            }
             BlockCutterRecipeDatagen.generateRecipes(exporter)
         }
     }

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "S": {
+      "item": "ic2_120:steel_ingot"
+    }
+  },
+  "pattern": [
+    "DDD",
+    "DSD",
+    "DDD"
+  ],
+  "result": {
+    "item": "ic2_120:diamond_block_cutting_blade"
+  },
+  "show_notification": true
+}

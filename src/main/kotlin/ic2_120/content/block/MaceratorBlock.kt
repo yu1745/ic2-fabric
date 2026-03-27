@@ -1,12 +1,20 @@
 package ic2_120.content.block
 
 import ic2_120.content.block.machines.MaceratorBlockEntity
+import ic2_120.content.item.Circuit
 import ic2_120.content.recipes.macerator.MaceratorRecipeDatagen
 import ic2_120.registry.CreativeTab
-import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.id
+import ic2_120.registry.instance
+import ic2_120.registry.item
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -75,6 +83,20 @@ class MaceratorBlock : MachineBlock() {
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val machine = MachineCasingBlock::class.item()
+            val circuit = Circuit::class.instance()
+            if (machine != Items.AIR && circuit != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MaceratorBlock::class.item(), 1)
+                    .pattern("FFF")
+                    .pattern("XMX")
+                    .pattern(" c ")
+                    .input('F', Items.FLINT)
+                    .input('X', Items.COBBLESTONE)
+                    .input('M', machine)
+                    .input('c', circuit)
+                    .criterion(hasItem(machine), conditionsFromItem(machine))
+                    .offerTo(exporter, MaceratorBlock::class.id())
+            }
             MaceratorRecipeDatagen.generateRecipes(exporter)
         }
     }

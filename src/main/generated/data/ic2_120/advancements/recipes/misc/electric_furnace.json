@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_iron_furnace": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:iron_furnace"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:electric_furnace"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_iron_furnace",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:electric_furnace"
+    ]
+  },
+  "sends_telemetry_event": false
+}

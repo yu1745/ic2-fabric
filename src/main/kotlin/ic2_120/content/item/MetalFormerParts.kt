@@ -9,7 +9,9 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
+import ic2_120.content.item.energy.BatteryItemBase
 import ic2_120.content.item.energy.ReBatteryItem
+import ic2_120.content.recipes.crafting.BatteryEnergyShapedRecipeDatagen
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
@@ -96,8 +98,17 @@ class FilledTinCanItem : Item(
     override fun getRecipeRemainder(stack: ItemStack): ItemStack = ItemStack(emptyTinCanItem)
 }
 
+/**
+ * 小型驱动把手：合成原料中的充电电池电量会写入成品（[BatteryEnergyShapedRecipeDatagen]）。
+ */
 @ModItem(name = "small_power_unit", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class SmallPowerUnitItem : Item(FabricItemSettings()) {
+class SmallPowerUnitItem : BatteryItemBase(
+    name = "small_power_unit",
+    tier = 1,
+    maxCapacity = 30_000,
+    transferSpeed = 32,
+    canChargeWireless = false
+) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
@@ -105,37 +116,54 @@ class SmallPowerUnitItem : Item(FabricItemSettings()) {
             // B X M
             //   C F
             // B=充电电池, C=铜线, F=铁质外壳, X=电路板, M=马达
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SmallPowerUnitItem::class.instance(), 1)
-                .pattern(" CF").pattern("BXM").pattern(" CF")
-                .input('B', ReBatteryItem::class.instance())
-                .input('C', InsulatedCopperCableBlock::class.instance())
-                .input('F', IronCasing::class.instance())
-                .input('X', Circuit::class.instance())
-                .input('M', ElectricMotor::class.instance())
-                .criterion(hasItem(ReBatteryItem::class.instance()), conditionsFromItem(ReBatteryItem::class.instance()))
-                .offerTo(exporter, SmallPowerUnitItem::class.recipeId("from_crafting"))
+            BatteryEnergyShapedRecipeDatagen.offer(
+                exporter = exporter,
+                recipeId = SmallPowerUnitItem::class.recipeId("from_crafting"),
+                result = SmallPowerUnitItem::class.instance(),
+                pattern = listOf(" CF", "BXM", " CF"),
+                keys = mapOf<Char, Item>(
+                    'B' to ReBatteryItem::class.instance(),
+                    'C' to InsulatedCopperCableBlock::class.item(),
+                    'F' to IronCasing::class.instance(),
+                    'X' to Circuit::class.instance(),
+                    'M' to ElectricMotor::class.instance()
+                )
+            )
         }
     }
 }
 
+/**
+ * 驱动把手：合成原料中的充电电池电量会写入成品（[BatteryEnergyShapedRecipeDatagen]）。
+ */
 @ModItem(name = "power_unit", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class PowerUnitItem : Item(FabricItemSettings()) {
+class PowerUnitItem : BatteryItemBase(
+    name = "power_unit",
+    tier = 1,
+    maxCapacity = 10_000,
+    transferSpeed = 32,
+    canChargeWireless = false
+) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            // b c f
-            // b x m
-            // b c f
-            // b=充电电池, c=铜线, f=铁质外壳, x=电路板, m=马达
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, PowerUnitItem::class.instance(), 1)
-                .pattern("BCF").pattern("BXM").pattern("BCF")
-                .input('B', ReBatteryItem::class.instance())
-                .input('C', InsulatedCopperCableBlock::class.instance())
-                .input('F', IronCasing::class.instance())
-                .input('X', Circuit::class.instance())
-                .input('M', ElectricMotor::class.instance())
-                .criterion(hasItem(ReBatteryItem::class.instance()), conditionsFromItem(ReBatteryItem::class.instance()))
-                .offerTo(exporter, PowerUnitItem::class.recipeId("from_crafting"))
+            // B C F
+            // B X M
+            // B C F
+            // B=充电电池, C=铜线, F=铁质外壳, X=电路板, M=马达
+            BatteryEnergyShapedRecipeDatagen.offer(
+                exporter = exporter,
+                recipeId = PowerUnitItem::class.recipeId("from_crafting"),
+                result = PowerUnitItem::class.instance(),
+                pattern = listOf("BCF", "BXM", "BCF"),
+                keys = mapOf<Char, Item>(
+                    'B' to ReBatteryItem::class.instance(),
+                    'C' to InsulatedCopperCableBlock::class.item(),
+                    'F' to IronCasing::class.instance(),
+                    'X' to Circuit::class.instance(),
+                    'M' to ElectricMotor::class.instance()
+                )
+            )
         }
     }
 }

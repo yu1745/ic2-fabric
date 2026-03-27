@@ -1,6 +1,8 @@
 package ic2_120.content.block
 
+import ic2_120.content.block.cables.GlassFibreCableBlock
 import ic2_120.content.block.machines.TeleporterBlockEntity
+import ic2_120.content.item.AdvancedCircuit
 import ic2_120.content.item.FrequencyTransmitter
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
@@ -87,17 +89,19 @@ class TeleporterBlock : MachineBlock() {
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val freq = FrequencyTransmitter::class.instance()
-            val advancedCircuit = ic2_120.content.item.AdvancedCircuit::class.instance()
+            val advancedCircuit = AdvancedCircuit::class.instance()
+            val glassFibre = GlassFibreCableBlock::class.item()
 
-            if (advancedMachine != Items.AIR && freq != Items.AIR && advancedCircuit != Items.AIR) {
+            if (advancedMachine != Items.AIR && freq != Items.AIR && advancedCircuit != Items.AIR && glassFibre != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, TeleporterBlock::class.item(), 1)
-                    .pattern("GCG")
-                    .pattern("TMT")
-                    .pattern("GCG")
-                    .input('G', Items.GLOWSTONE)
-                    .input('C', advancedCircuit)
-                    .input('T', freq)
-                    .input('M', advancedMachine)
+                    .pattern("afa")
+                    .pattern("gmg")
+                    .pattern("ada")
+                    .input('a', advancedCircuit)
+                    .input('f', freq)
+                    .input('g', glassFibre)
+                    .input('m', advancedMachine)
+                    .input('d', Items.DIAMOND)
                     .criterion(hasItem(advancedMachine), conditionsFromItem(advancedMachine))
                     .offerTo(exporter, TeleporterBlock::class.id())
             }

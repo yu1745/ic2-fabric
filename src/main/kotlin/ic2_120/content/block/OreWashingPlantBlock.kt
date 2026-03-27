@@ -1,17 +1,27 @@
 package ic2_120.content.block
 
 import ic2_120.content.block.machines.OreWashingPlantBlockEntity
+import ic2_120.content.item.Circuit
+import ic2_120.content.item.ElectricMotor
+import ic2_120.content.item.IronPlate
 import ic2_120.content.recipes.orewashing.OreWashingRecipeDatagen
 import ic2_120.registry.CreativeTab
-import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.id
+import ic2_120.registry.instance
+import ic2_120.registry.item
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
@@ -78,6 +88,23 @@ class OreWashingPlantBlock : MachineBlock() {
          */
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val machine = MachineCasingBlock::class.item()
+            val plate = IronPlate::class.instance()
+            val circuit = Circuit::class.instance()
+            val motor = ElectricMotor::class.instance()
+            if (machine != Items.AIR && plate != Items.AIR && circuit != Items.AIR && motor != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, OreWashingPlantBlock::class.item(), 1)
+                    .pattern("III")
+                    .pattern("BMB")
+                    .pattern("EcE")
+                    .input('I', plate)
+                    .input('B', Items.BUCKET)
+                    .input('M', machine)
+                    .input('E', motor)
+                    .input('c', circuit)
+                    .criterion(hasItem(machine), conditionsFromItem(machine))
+                    .offerTo(exporter, OreWashingPlantBlock::class.id())
+            }
             OreWashingRecipeDatagen.generateRecipes(exporter)
         }
     }

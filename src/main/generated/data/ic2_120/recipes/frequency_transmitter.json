@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "C": {
+      "item": "ic2_120:insulated_copper_cable"
+    },
+    "E": {
+      "item": "ic2_120:circuit"
+    }
+  },
+  "pattern": [
+    "   ",
+    " C ",
+    " E "
+  ],
+  "result": {
+    "item": "ic2_120:frequency_transmitter"
+  },
+  "show_notification": true
+}

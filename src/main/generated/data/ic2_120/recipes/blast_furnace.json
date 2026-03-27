@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:iron_casing"
+    },
+    "H": {
+      "item": "ic2_120:heat_conductor"
+    },
+    "M": {
+      "item": "ic2_120:machine"
+    }
+  },
+  "pattern": [
+    "CCC",
+    "CMC",
+    "CHC"
+  ],
+  "result": {
+    "item": "ic2_120:blast_furnace"
+  },
+  "show_notification": true
+}

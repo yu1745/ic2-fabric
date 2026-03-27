@@ -1,0 +1,24 @@
+{
+  "type": "ic2_120:battery_energy_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:component_heat_exchanger"
+    },
+    "E": {
+      "item": "ic2_120:energy_crystal"
+    },
+    "W": {
+      "item": "ic2_120:advanced_re_battery_wireless"
+    }
+  },
+  "pattern": [
+    "CEC",
+    "EWE",
+    "CEC"
+  ],
+  "result": {
+    "item": "ic2_120:energy_crystal_wireless"
+  },
+  "show_notification": true
+}

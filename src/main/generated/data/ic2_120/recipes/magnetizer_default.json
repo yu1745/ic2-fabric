@@ -2,14 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "C": {
-      "item": "ic2_120:circuit"
-    },
-    "F": {
-      "item": "ic2_120:iron_fence"
-    },
     "I": {
-      "item": "minecraft:iron_ingot"
+      "item": "ic2_120:iron_fence"
     },
     "M": {
       "item": "ic2_120:machine"
@@ -19,9 +13,9 @@
     }
   },
   "pattern": [
-    "IFI",
-    "CMC",
-    "IRI"
+    "RIR",
+    "RMR",
+    "RIR"
   ],
   "result": {
     "item": "ic2_120:magnetizer"

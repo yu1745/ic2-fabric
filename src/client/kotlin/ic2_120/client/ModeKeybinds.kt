@@ -1,7 +1,6 @@
 package ic2_120.client
 
 import ic2_120.content.item.FoamSprayerItem
-import ic2_120.content.item.IridiumDrill
 import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.network.NetworkManager
@@ -22,7 +21,7 @@ import org.lwjgl.glfw.GLFW
  *
  * 用于手持类设备的模式切换：
  * - 夜视仪：夜视开关
- * - 铱钻头：精准采集开关
+ * - 铱钻头：由专用逻辑处理（模式键 + 右键）
  * - 建筑泡沫喷枪：单格 / 多格喷涂切换
  * - 采矿镭射等：模式切换（预留）
  *
@@ -56,17 +55,8 @@ object ModeKeybinds {
                     return@register
                 }
 
-                // 优先级 2：主手铱钻头 → 精准采集
-                val mainHand = player.mainHandStack
-                if (mainHand.item is IridiumDrill) {
-                    ClientPlayNetworking.send(
-                        NetworkManager.TOGGLE_IRIDIUM_SILK_TOUCH_PACKET,
-                        PacketByteBuf(Unpooled.buffer())
-                    )
-                    return@register
-                }
-
                 val offHand = player.offHandStack
+                val mainHand = player.mainHandStack
                 if (mainHand.item is FoamSprayerItem || offHand.item is FoamSprayerItem) {
                     ClientPlayNetworking.send(
                         NetworkManager.TOGGLE_FOAM_SPRAYER_MODE_PACKET,
@@ -86,4 +76,6 @@ object ModeKeybinds {
 
     /** 供 tooltip 动态显示快捷键 */
     fun getModeKey(): KeyBinding = toggleModeKey
+
+    fun isModeKeyDown(): Boolean = toggleModeKey.isPressed
 }

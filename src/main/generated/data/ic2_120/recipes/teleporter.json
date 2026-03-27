@@ -2,23 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "C": {
+    "a": {
       "item": "ic2_120:advanced_circuit"
     },
-    "G": {
-      "item": "minecraft:glowstone"
+    "d": {
+      "item": "minecraft:diamond"
     },
-    "M": {
-      "item": "ic2_120:advanced_machine"
-    },
-    "T": {
+    "f": {
       "item": "ic2_120:frequency_transmitter"
+    },
+    "g": {
+      "item": "ic2_120:glass_fibre_cable"
+    },
+    "m": {
+      "item": "ic2_120:advanced_machine"
     }
   },
   "pattern": [
-    "GCG",
-    "TMT",
-    "GCG"
+    "afa",
+    "gmg",
+    "ada"
   ],
   "result": {
     "item": "ic2_120:teleporter"

@@ -98,7 +98,7 @@ class PumpBlock : MachineBlock() {
             val treetap = ic2_120.content.item.Treetap::class.instance()
             if (machine != Items.AIR && emptyCell != Items.AIR && miningPipe != Items.AIR && treetap != Items.AIR && circuit != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, PumpBlock::class.item(), 1)
-                    .pattern("ECE").pattern(" M ").pattern("PTP")
+                    .pattern("ECE").pattern("EME").pattern("PTP")
                     .input('E', emptyCell).input('C', circuit).input('M', machine).input('P', miningPipe).input('T', treetap)
                     .criterion(hasItem(machine), conditionsFromItem(machine))
                     .offerTo(exporter, PumpBlock::class.id())

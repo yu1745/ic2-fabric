@@ -1,9 +1,8 @@
 package ic2_120.content.block
 
-import ic2_120.Ic2_120
 import ic2_120.content.block.machines.FluidBottlerBlockEntity
 import ic2_120.content.item.Circuit
-import ic2_120.content.item.EmptyCell
+import ic2_120.content.item.TinCasing
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.instance
@@ -19,12 +18,10 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.registry.Registries
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
-import net.minecraft.util.Identifier
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -90,11 +87,15 @@ class FluidBottlerBlock : MachineBlock() {
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
-            val emptyCell = EmptyCell::class.instance()
-            if (machine != Items.AIR && circuit != Items.AIR && emptyCell != Items.AIR) {
+            val tin = TinCasing::class.instance()
+            if (machine != Items.AIR && circuit != Items.AIR && tin != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, FluidBottlerBlock::class.item(), 1)
-                    .pattern(" C ").pattern(" C ").pattern("TMT")
-                    .input('C', emptyCell).input('T', circuit).input('M', machine)
+                    .pattern("TCT")
+                    .pattern("TMT")
+                    .pattern("TTT")
+                    .input('T', tin)
+                    .input('C', circuit)
+                    .input('M', machine)
                     .criterion(hasItem(machine), conditionsFromItem(machine))
                     .offerTo(exporter, FluidBottlerBlock::class.id())
             }

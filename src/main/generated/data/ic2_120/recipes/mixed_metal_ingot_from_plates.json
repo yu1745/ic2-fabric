@@ -13,9 +13,12 @@
     }
   },
   "pattern": [
-    "IBT"
+    "III",
+    "BBB",
+    "TTT"
   ],
   "result": {
+    "count": 2,
     "item": "ic2_120:mixed_metal_ingot"
   },
   "show_notification": true

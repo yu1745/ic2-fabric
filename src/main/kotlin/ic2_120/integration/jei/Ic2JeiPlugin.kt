@@ -365,6 +365,11 @@ class Ic2JeiPlugin : IModPlugin {
         }
 
         override fun apply(itemStack: ItemStack, uidContext: mezz.jei.api.ingredients.subtypes.UidContext): String {
+            // 在配方匹配上下文中忽略电量细分，避免“部分电量”无法查到用途/配方。
+            if (uidContext == mezz.jei.api.ingredients.subtypes.UidContext.Recipe) {
+                return ""
+            }
+
             // 通过接口读取电量，避免依赖固定 NBT 键名
             val maxCapacity = when (val item = itemStack.item) {
                 is IBatteryItem -> item.maxCapacity

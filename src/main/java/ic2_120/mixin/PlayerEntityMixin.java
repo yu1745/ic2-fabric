@@ -1,6 +1,7 @@
 package ic2_120.mixin;
 
 import ic2_120.content.item.armor.ElectricArmorItem;
+import ic2_120.util.NanoSaberDamageHelper;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
@@ -8,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.HashMap;
@@ -24,11 +26,28 @@ public abstract class PlayerEntityMixin {
 
     private static final int DAMAGE_COST_PER_POINT = 5000;
 
+    /**
+     * 纳米剑对穿戴纳米套的玩家：替换为无视原版护甲的伤害类型；量子护甲时不替换（见 {@link NanoSaberDamageHelper}）。
+     */
+    @ModifyVariable(method = "damage", at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    private DamageSource ic2ReplaceDamageSourceForNanoSaber(DamageSource source) {
+        PlayerEntity player = (PlayerEntity) (Object) this;
+        if (NanoSaberDamageHelper.shouldReplaceWithPierce(player, source)) {
+            return NanoSaberDamageHelper.createPierceDamage(player, source);
+        }
+        return source;
+    }
+
     @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
     private void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         PlayerEntity player = (PlayerEntity) (Object) this;
 
         if (source.getName().equals("outOfWorld")) {
+            return;
+        }
+
+        // 纳米剑穿甲伤害：不走纳米/量子 EU 减伤（量子套不会收到此伤害类型）
+        if (NanoSaberDamageHelper.isNanoSaberArmorPierceDamage(source)) {
             return;
         }
 

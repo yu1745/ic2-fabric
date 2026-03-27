@@ -90,14 +90,14 @@ class CropmatronBlock : MachineBlock() {
             if (machine == Items.AIR || circuit == Items.AIR || emptyCell == Items.AIR || cropStick == Items.AIR) return
 
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CropmatronBlock::class.item(), 1)
-                .pattern("cBc")
-                .pattern("UMU")
-                .pattern("CCC")
-                .input('c', circuit)
-                .input('B', Items.CHEST)
-                .input('U', emptyCell)
+                .pattern("CHC")
+                .pattern("EME")
+                .pattern("SSS")
+                .input('C', circuit)
+                .input('H', Items.CHEST)
+                .input('E', emptyCell)
                 .input('M', machine)
-                .input('C', cropStick)
+                .input('S', cropStick)
                 .criterion(hasItem(machine), conditionsFromItem(machine))
                 .offerTo(exporter, CropmatronBlock::class.id())
         }

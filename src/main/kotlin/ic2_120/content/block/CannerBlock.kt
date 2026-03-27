@@ -1,8 +1,8 @@
 package ic2_120.content.block
 
-import ic2_120.Ic2_120
 import ic2_120.content.block.machines.CannerBlockEntity
 import ic2_120.content.item.Circuit
+import ic2_120.content.item.TinCasing
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.instance
@@ -24,7 +24,6 @@ import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
-import net.minecraft.util.Identifier
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -88,17 +87,17 @@ class CannerBlock : MachineBlock() {
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
-            if (machine != Items.AIR && circuit != Items.AIR) {
-                // 流体装罐机 + 固体装罐机 = 流体/固体装罐机
-                val fluidBottler = FluidBottlerBlock::class.item()
-                val solidCanner = SolidCannerBlock::class.item()
-                if (fluidBottler != Items.AIR && solidCanner != Items.AIR) {
-                    ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CannerBlock::class.item(), 1)
-                        .pattern("FS").pattern("CM")
-                        .input('F', fluidBottler).input('S', solidCanner).input('C', circuit).input('M', machine)
-                        .criterion(hasItem(machine), conditionsFromItem(machine))
-                        .offerTo(exporter, CannerBlock::class.id())
-                }
+            val tin = TinCasing::class.instance()
+            if (machine != Items.AIR && circuit != Items.AIR && tin != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CannerBlock::class.item(), 1)
+                    .pattern("TCT")
+                    .pattern("TMT")
+                    .pattern("TTT")
+                    .input('T', tin)
+                    .input('C', circuit)
+                    .input('M', machine)
+                    .criterion(hasItem(machine), conditionsFromItem(machine))
+                    .offerTo(exporter, CannerBlock::class.id())
             }
         }
     }

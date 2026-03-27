@@ -3,11 +3,22 @@ package ic2_120.content.item
 import ic2_120.content.crop.CropStats
 import ic2_120.content.crop.CropSystem
 import ic2_120.content.crop.CropType
+import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.screen.CropnalyzerScreenHandler
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
+import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.registry.id
 import ic2_120.registry.instance
+import ic2_120.registry.item
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
+import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
+import java.util.function.Consumer
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.entity.player.PlayerInventory
@@ -187,6 +198,23 @@ class CropnalyzerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
 
     companion object {
         const val ENERGY_PER_SCAN = 50L
+
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val cable = InsulatedCopperCableBlock::class.item()
+            val circuit = Circuit::class.instance()
+            if (cable == Items.AIR || circuit == Items.AIR) return
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CropnalyzerItem::class.instance(), 1)
+                .pattern("CC ")
+                .pattern("RGR")
+                .pattern("RXR")
+                .input('C', cable)
+                .input('R', Items.REDSTONE)
+                .input('G', Items.GLASS)
+                .input('X', circuit)
+                .criterion(hasItem(circuit), conditionsFromItem(circuit))
+                .offerTo(exporter, CropnalyzerItem::class.id())
+        }
 
         fun buildResultMessage(type: CropType, stats: CropStats, level: Int): Text {
             return when {

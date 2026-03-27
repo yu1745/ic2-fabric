@@ -89,7 +89,7 @@ class CompressorBlock : MachineBlock() {
             val circuit = ic2_120.content.item.Circuit::class.instance()
             if (machine != Items.AIR && circuit != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CompressorBlock::class.item(), 1)
-                    .pattern("S S").pattern("SMS").pattern("SCS")
+                    .pattern("SSS").pattern("SMS").pattern("SCS")
                     .input('S', Items.STONE).input('M', machine).input('C', circuit)
                     .criterion(hasItem(machine), conditionsFromItem(machine))
                     .offerTo(exporter, CompressorBlock::class.id())

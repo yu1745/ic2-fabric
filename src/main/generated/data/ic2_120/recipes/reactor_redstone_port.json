@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120:reactor_vessel"
+    },
+    "B": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "pattern": [
+    "AAA",
+    "ABA",
+    "AAA"
+  ],
+  "result": {
+    "item": "ic2_120:reactor_redstone_port"
+  },
+  "show_notification": true
+}

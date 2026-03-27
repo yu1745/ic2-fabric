@@ -97,8 +97,12 @@ class RtGeneratorBlock : MachineBlock() {
             val reactorChamber = ReactorChamberBlock::class.item()
             if (generator != Items.AIR && ironCasing != Items.AIR && reactorChamber != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RtGeneratorBlock::class.item(), 1)
-                    .pattern("III").pattern("IGI").pattern("IRI")
-                    .input('I', ironCasing).input('G', generator).input('R', reactorChamber)
+                    .pattern("CCC")
+                    .pattern("CRC")
+                    .pattern("CGC")
+                    .input('C', ironCasing)
+                    .input('R', reactorChamber)
+                    .input('G', generator)
                     .criterion(hasItem(generator), conditionsFromItem(generator))
                     .offerTo(exporter, RtGeneratorBlock::class.id())
             }

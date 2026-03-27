@@ -10,7 +10,17 @@ import ic2_120.registry.instance
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.registry.id
+import ic2_120.registry.item
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
+import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
+import java.util.function.Consumer
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -258,6 +268,17 @@ class CropStickBlock : BlockWithEntity(
         private val HORIZONTAL_DIRS = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
 
         fun defaultStickState(): BlockState = CropStickBlock::class.instance().defaultState.with(CROSSING_BASE, false)
+
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CropStickBlock::class.item(), 2)
+                .pattern("   ")
+                .pattern("S S")
+                .pattern("S S")
+                .input('S', Items.STICK)
+                .criterion(hasItem(Items.STICK), conditionsFromItem(Items.STICK))
+                .offerTo(exporter, CropStickBlock::class.id())
+        }
     }
 }
 

@@ -5,11 +5,20 @@ import ic2_120.content.reactor.AbstractReactorComponent
 import ic2_120.content.reactor.IReactor
 import ic2_120.content.reactor.IReactorComponent
 import ic2_120.registry.CreativeTab
-import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
+import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.registry.id
+import ic2_120.registry.instance
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
+import java.util.function.Consumer
 
 /**
  * 散热片基类：热容量 + 自身蒸发 + 吸堆温。
@@ -93,16 +102,75 @@ abstract class ReactorHeatVentBase(
 }
 
 @ModItem(name = "heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class HeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 6, 0)
+class HeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 6, 0) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val plate = IronPlate::class.instance()
+            val motor = ElectricMotor::class.instance()
+            if (plate != Items.AIR && motor != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, HeatVentItem::class.instance(), 1)
+                    .pattern("BIB").pattern("IMI").pattern("BIB")
+                    .input('B', Items.IRON_BARS).input('I', plate).input('M', motor)
+                    .criterion(hasItem(plate), conditionsFromItem(plate))
+                    .offerTo(exporter, HeatVentItem::class.id())
+            }
+        }
+    }
+}
 
 @ModItem(name = "reactor_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ReactorHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 5, 5)
+class ReactorHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 5, 5) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val plate = CopperPlate::class.instance()
+            val vent = HeatVentItem::class.instance()
+            if (plate != Items.AIR && vent != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorHeatVentItem::class.instance(), 1)
+                    .pattern("CCC").pattern("CVC").pattern("CCC")
+                    .input('C', plate).input('V', vent)
+                    .criterion(hasItem(vent), conditionsFromItem(vent))
+                    .offerTo(exporter, ReactorHeatVentItem::class.id())
+            }
+        }
+    }
+}
 
 @ModItem(name = "advanced_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class AdvancedHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 12, 0)
+class AdvancedHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 12, 0) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val vent = HeatVentItem::class.instance()
+            if (vent != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedHeatVentItem::class.instance(), 1)
+                    .pattern("IHI").pattern("IDI").pattern("IHI")
+                    .input('I', Items.IRON_BARS).input('H', vent).input('D', Items.DIAMOND)
+                    .criterion(hasItem(vent), conditionsFromItem(vent))
+                    .offerTo(exporter, AdvancedHeatVentItem::class.id())
+            }
+        }
+    }
+}
 
 @ModItem(name = "overclocked_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class OverclockedHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 20, 36)
+class OverclockedHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 20, 36) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val gold = GoldPlate::class.instance()
+            val reactorVent = ReactorHeatVentItem::class.instance()
+            if (gold != Items.AIR && reactorVent != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, OverclockedHeatVentItem::class.instance(), 1)
+                    .pattern(" G ").pattern("GRG").pattern(" G ")
+                    .input('G', gold).input('R', reactorVent)
+                    .criterion(hasItem(reactorVent), conditionsFromItem(reactorVent))
+                    .offerTo(exporter, OverclockedHeatVentItem::class.id())
+            }
+        }
+    }
+}
 
 /** 元件散热片：无热容量，向四方向邻接可储热组件蒸发 4 点热量 */
 @ModItem(name = "component_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
@@ -140,5 +208,20 @@ class ComponentHeatVentItem(settings: FabricItemSettings = FabricItemSettings())
         // 记录散热量到被散热的组件槽位
         reactor.addSlotHeatInfo(targetX * 9 + targetY, 0, sideVentAmount)
         return sideVentAmount
+    }
+
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val tin = TinPlate::class.instance()
+            val vent = HeatVentItem::class.instance()
+            if (tin != Items.AIR && vent != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ComponentHeatVentItem::class.instance(), 1)
+                    .pattern("TBT").pattern("BVB").pattern("TBT")
+                    .input('T', tin).input('B', Items.IRON_BARS).input('V', vent)
+                    .criterion(hasItem(vent), conditionsFromItem(vent))
+                    .offerTo(exporter, ComponentHeatVentItem::class.id())
+            }
+        }
     }
 }

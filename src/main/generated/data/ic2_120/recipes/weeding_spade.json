@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "M": {
+      "item": "ic2_120:bronze_ingot"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "pattern": [
+    "M",
+    "S"
+  ],
+  "result": {
+    "item": "ic2_120:weeding_spade"
+  },
+  "show_notification": true
+}

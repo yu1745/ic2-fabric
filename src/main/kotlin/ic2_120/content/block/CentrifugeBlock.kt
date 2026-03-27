@@ -1,16 +1,27 @@
 package ic2_120.content.block
 
 import ic2_120.content.block.machines.CentrifugeBlockEntity
+import ic2_120.content.item.Coil
+import ic2_120.content.item.ElectricMotor
+import ic2_120.content.item.MiningLaserItem
 import ic2_120.content.recipes.centrifuge.CentrifugeRecipeDatagen
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.id
+import ic2_120.registry.instance
+import ic2_120.registry.item
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.registry.Registries
 import net.minecraft.state.StateManager
@@ -84,6 +95,23 @@ class CentrifugeBlock : MachineBlock() {
          */
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val advCasing = AdvancedMachineCasingBlock::class.item()
+            val coil = Coil::class.instance()
+            val laser = MiningLaserItem::class.instance()
+            val motor = ElectricMotor::class.instance()
+            if (advCasing != Items.AIR && coil != Items.AIR && laser != Items.AIR && motor != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CentrifugeBlock::class.item(), 1)
+                    .pattern("KLK")
+                    .pattern("IAI")
+                    .pattern("IEI")
+                    .input('K', coil)
+                    .input('L', laser)
+                    .input('I', Items.IRON_INGOT)
+                    .input('A', advCasing)
+                    .input('E', motor)
+                    .criterion(hasItem(advCasing), conditionsFromItem(advCasing))
+                    .offerTo(exporter, CentrifugeBlock::class.id())
+            }
             CentrifugeRecipeDatagen.generateRecipes(exporter)
         }
     }

@@ -1,14 +1,27 @@
 package ic2_120.content.block
 
 import ic2_120.content.block.machines.RtHeatGeneratorBlockEntity
+import ic2_120.content.block.nuclear.ReactorChamberBlock
+import ic2_120.content.item.HeatConductor
+import ic2_120.content.item.IronCasing
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.registry.id
+import ic2_120.registry.instance
+import ic2_120.registry.item
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.state.StateManager
@@ -19,6 +32,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.function.Consumer
 
 @ModBlock(name = "rt_heat_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "heat")
 class RtHeatGeneratorBlock : MachineBlock() {
@@ -69,5 +83,23 @@ class RtHeatGeneratorBlock : MachineBlock() {
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val ironCasing = IronCasing::class.instance()
+            val reactorChamber = ReactorChamberBlock::class.item()
+            val heatConductor = HeatConductor::class.instance()
+            if (ironCasing != Items.AIR && reactorChamber != Items.AIR && heatConductor != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RtHeatGeneratorBlock::class.item(), 1)
+                    .pattern("CCC")
+                    .pattern("CRC")
+                    .pattern("CHC")
+                    .input('C', ironCasing)
+                    .input('R', reactorChamber)
+                    .input('H', heatConductor)
+                    .criterion(hasItem(reactorChamber), conditionsFromItem(reactorChamber))
+                    .offerTo(exporter, RtHeatGeneratorBlock::class.id())
+            }
+        }
     }
 }

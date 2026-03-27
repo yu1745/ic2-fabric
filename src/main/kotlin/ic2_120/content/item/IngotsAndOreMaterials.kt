@@ -58,8 +58,10 @@ class MixedMetalIngot : Item(FabricItemSettings()) {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             // 配方1：铁板 + 青铜板 + 锡板 = 合金锭
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MixedMetalIngot::class.instance(), 1)
-                .pattern("IBT")
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MixedMetalIngot::class.instance(), 2)
+                .pattern("III")
+                .pattern("BBB")
+                .pattern("TTT")
                 .input('I', IronPlate::class.instance())
                 .input('B', BronzePlate::class.instance())
                 .input('T', TinPlate::class.instance())
@@ -67,8 +69,10 @@ class MixedMetalIngot : Item(FabricItemSettings()) {
                 .offerTo(exporter, MixedMetalIngot::class.recipeId("from_plates"))
 
             // 配方2：钢锭 + 青铜锭 + 锡锭 = 合金锭
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MixedMetalIngot::class.instance(), 1)
-                .pattern("IBT")
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MixedMetalIngot::class.instance(), 2)
+                .pattern("III")
+                .pattern("BBB")
+                .pattern("TTT")
                 .input('I', SteelIngot::class.instance())
                 .input('B', BronzeIngot::class.instance())
                 .input('T', TinIngot::class.instance())

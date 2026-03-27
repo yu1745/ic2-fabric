@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_machine": {
+    "has_electric_furnace": {
       "conditions": {
         "items": [
           {
             "items": [
-              "ic2_120:machine"
+              "ic2_120:electric_furnace"
             ]
           }
         ]
@@ -22,7 +22,7 @@
   },
   "requirements": [
     [
-      "has_machine",
+      "has_electric_furnace",
       "has_the_recipe"
     ]
   ],

@@ -1,6 +1,8 @@
 package ic2_120.client
 
+import ic2_120.content.item.NanoSaber
 import ic2_120.content.item.energy.IBatteryItem
+import ic2_120.Ic2_120
 import net.minecraft.client.item.ModelPredicateProviderRegistry
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -15,6 +17,7 @@ import net.minecraft.util.Identifier
 object BatteryModelPredicates {
 
     private val CHARGE_ID = Identifier("ic2", "charge")
+    private val NANO_SABER_ACTIVE_ID = Identifier(Ic2_120.MOD_ID, "nano_saber_active")
 
     /**
      * 注册所有电池物品的模型 predicate
@@ -28,6 +31,17 @@ object BatteryModelPredicates {
                     registerChargePredicate(item, id)
                 }
             }
+        }
+        registerNanoSaberPredicate()
+    }
+
+    private fun registerNanoSaberPredicate() {
+        val saber = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "nano_saber"))
+        ModelPredicateProviderRegistry.register(
+            saber,
+            NANO_SABER_ACTIVE_ID
+        ) { stack, _, _, _ ->
+            if (NanoSaber.isActive(stack)) 1.0f else 0.0f
         }
     }
 

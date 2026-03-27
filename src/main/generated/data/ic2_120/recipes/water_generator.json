@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": {
+      "item": "ic2_120:generator"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "W": {
+      "item": "minecraft:oak_planks"
+    }
+  },
+  "pattern": [
+    "SWS",
+    "WGW",
+    "SWS"
+  ],
+  "result": {
+    "count": 2,
+    "item": "ic2_120:water_generator"
+  },
+  "show_notification": true
+}

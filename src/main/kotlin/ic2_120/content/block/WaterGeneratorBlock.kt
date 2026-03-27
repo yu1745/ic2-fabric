@@ -2,17 +2,25 @@ package ic2_120.content.block
 
 import ic2_120.content.block.machines.WaterGeneratorBlockEntity
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.registry.id
+import ic2_120.registry.item
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
-import ic2_120.registry.annotation.ModBlock
-import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
@@ -20,6 +28,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.function.Consumer
 
 /**
  * 水力发电机方块。
@@ -77,5 +86,21 @@ class WaterGeneratorBlock : MachineBlock() {
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val generator = GeneratorBlock::class.item()
+            if (generator != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WaterGeneratorBlock::class.item(), 2)
+                    .pattern("SWS")
+                    .pattern("WGW")
+                    .pattern("SWS")
+                    .input('S', Items.STICK)
+                    .input('W', Items.OAK_PLANKS)
+                    .input('G', generator)
+                    .criterion(hasItem(generator), conditionsFromItem(generator))
+                    .offerTo(exporter, WaterGeneratorBlock::class.id())
+            }
+        }
     }
 }

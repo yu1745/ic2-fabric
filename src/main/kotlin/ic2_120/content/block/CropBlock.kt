@@ -17,6 +17,7 @@ import ic2_120.content.item.Resin
 import ic2_120.content.item.TerraWart
 import ic2_120.content.item.Weed
 import ic2_120.content.item.WeedExCell
+import ic2_120.content.item.WeedingSpade
 import ic2_120.content.item.SmallCopperDust
 import ic2_120.content.item.SmallGoldDust
 import ic2_120.content.item.SmallIronDust
@@ -127,6 +128,8 @@ class CropBlock : BlockWithEntity(
         val stack = player.getStackInHand(hand)
         // 手持种子扫描仪时，优先走物品 useOnBlock（扫描）逻辑，不触发作物采摘。
         if (stack.item is CropnalyzerItem) return ActionResult.PASS
+        // 除草铲：由物品 useOnBlock 清除杂草，不走采摘逻辑
+        if (stack.item == WeedingSpade::class.instance()) return ActionResult.PASS
 
         if (world.isClient) return ActionResult.SUCCESS
         val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return ActionResult.PASS

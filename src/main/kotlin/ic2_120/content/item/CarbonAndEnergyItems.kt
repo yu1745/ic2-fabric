@@ -2,6 +2,7 @@ package ic2_120.content.item
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.CompressedCoalBall
+import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.id
 import ic2_120.registry.instance
@@ -37,9 +38,9 @@ class CarbonMesh : Item(FabricItemSettings()) {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonMesh::class.instance(), 1)
-                .pattern("CC").pattern("CC")
-                .input('C', CoalDust::class.instance())
-                .criterion(hasItem(CoalDust::class.instance()), conditionsFromItem(CoalDust::class.instance()))
+                .pattern("CC")
+                .input('C', CarbonFibre::class.instance())
+                .criterion(hasItem(CarbonFibre::class.instance()), conditionsFromItem(CarbonFibre::class.instance()))
                 .offerTo(exporter, CarbonMesh::class.id())
         }
     }
@@ -51,8 +52,7 @@ class CarbonPlate : Item(FabricItemSettings()) {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonPlate::class.instance(), 1)
-                .pattern("CM")
-                .input('C', CarbonMesh::class.instance())
+                .pattern("   ").pattern("   ").pattern(" MM")
                 .input('M', CarbonMesh::class.instance())
                 .criterion(hasItem(CarbonMesh::class.instance()), conditionsFromItem(CarbonMesh::class.instance()))
                 .offerTo(exporter, CarbonPlate::class.id())
@@ -89,6 +89,7 @@ class CarbonRotor : Item(FabricItemSettings())
 
 // ========== 电路与机械部件 ==========
 
+//电路板
 @ModItem(name = "circuit", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
 class Circuit : Item(FabricItemSettings()) {
     companion object {
@@ -104,7 +105,7 @@ class Circuit : Item(FabricItemSettings()) {
         }
     }
 }
-
+//高级电路板
 @ModItem(name = "advanced_circuit", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
 class AdvancedCircuit : Item(FabricItemSettings()) {
     companion object {
@@ -126,7 +127,17 @@ class AdvancedCircuit : Item(FabricItemSettings()) {
 class Alloy : Item(FabricItemSettings())
 
 @ModItem(name = "iridium_shard", tab = CreativeTab.IC2_MATERIALS, group = "materials")
-class IridiumShard : Item(FabricItemSettings())
+class IridiumShard : Item(FabricItemSettings()){
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, IridiumShard::class.instance(), 9)
+                .input(IridiumOreItem::class.instance())
+                .criterion(hasItem(IridiumOreItem::class.instance()), conditionsFromItem(IridiumOreItem::class.instance()))
+                .offerTo(exporter, IridiumShard::class.recipeId("from_ore_item"))
+        }
+    }
+}
 
 @ModItem(name = "iridium_ore_item", tab = CreativeTab.IC2_MATERIALS, group = "materials")
 class IridiumOreItem : Item(FabricItemSettings())
@@ -159,7 +170,24 @@ class IridiumPlate : Item(FabricItemSettings()) {
 }
 
 @ModItem(name = "coil", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
-class Coil : Item(FabricItemSettings())
+class Coil : Item(FabricItemSettings()) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val cable = InsulatedCopperCableBlock::class.instance()
+            if (cable != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Coil::class.instance(), 1)
+                    .pattern("CCC")
+                    .pattern("CIC")
+                    .pattern("CCC")
+                    .input('C', cable)
+                    .input('I', Items.IRON_INGOT)
+                    .criterion(hasItem(cable), conditionsFromItem(cable))
+                    .offerTo(exporter, Coil::class.id())
+            }
+        }
+    }
+}
 
 @ModItem(name = "electric_motor", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
 class ElectricMotor : Item(FabricItemSettings()) {
@@ -177,7 +205,25 @@ class ElectricMotor : Item(FabricItemSettings()) {
 }
 
 @ModItem(name = "heat_conductor", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
-class HeatConductor : Item(FabricItemSettings())
+class HeatConductor : Item(FabricItemSettings()) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val rubber = RubberItem::class.instance()
+            val plate = CopperPlate::class.instance()
+            if (rubber != Items.AIR && plate != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, HeatConductor::class.instance(), 1)
+                    .pattern("RPR")
+                    .pattern("RPR")
+                    .pattern("RPR")
+                    .input('R', rubber)
+                    .input('P', plate)
+                    .criterion(hasItem(plate), conditionsFromItem(plate))
+                    .offerTo(exporter, HeatConductor::class.id())
+            }
+        }
+    }
+}
 
 @ModItem(name = "copper_boiler", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
 class CopperBoiler : Item(FabricItemSettings()) {

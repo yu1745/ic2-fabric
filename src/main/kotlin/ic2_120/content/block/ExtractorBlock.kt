@@ -1,14 +1,14 @@
 package ic2_120.content.block
 
-import ic2_120.Ic2_120
 import ic2_120.content.block.machines.ExtractorBlockEntity
+import ic2_120.content.item.Circuit
+import ic2_120.content.item.Treetap
 import ic2_120.content.recipes.extractor.ExtractorRecipeDatagen
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.instance
 import ic2_120.registry.item
-import ic2_120.registry.annotation.RecipeProvider
-import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -25,7 +25,6 @@ import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
@@ -87,8 +86,8 @@ class ExtractorBlock : MachineBlock() {
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             // 机器本身合成配方
             val machine = MachineCasingBlock::class.item()
-            val circuit = ic2_120.content.item.Circuit::class.instance()
-            val treetap = ic2_120.content.item.Treetap::class.instance()
+            val circuit = Circuit::class.instance()
+            val treetap = Treetap::class.instance()
             if (machine != Items.AIR && circuit != Items.AIR && treetap != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ExtractorBlock::class.item(), 1)
                     .pattern("   ").pattern("TMT").pattern("TCT")

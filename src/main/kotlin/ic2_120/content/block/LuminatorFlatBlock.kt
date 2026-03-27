@@ -4,6 +4,7 @@ import ic2_120.Ic2_120
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.block.cables.TinCableBlock
 import ic2_120.content.block.machines.LuminatorFlatBlockEntity
+import ic2_120.content.item.IronCasing
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.instance
 import ic2_120.registry.item
@@ -128,10 +129,16 @@ class LuminatorFlatBlock : BlockWithEntity(
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val insulatedCopperCable = InsulatedCopperCableBlock::class.item()
             val tinCable = TinCableBlock::class.item()
-            if (insulatedCopperCable != Items.AIR && tinCable != Items.AIR) {
+            val ironCasing = IronCasing::class.instance()
+            if (insulatedCopperCable != Items.AIR && tinCable != Items.AIR && ironCasing != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LuminatorFlatBlock::class.item(), 8)
-                    .pattern(" C ").pattern("GTG").pattern("GGG")
-                    .input('C', insulatedCopperCable).input('G', Items.GLASS).input('T', tinCable)
+                    .pattern("ICI")
+                    .pattern("GTG")
+                    .pattern("GGG")
+                    .input('I', ironCasing)
+                    .input('C', insulatedCopperCable)
+                    .input('G', Items.GLASS)
+                    .input('T', tinCable)
                     .criterion(hasItem(insulatedCopperCable), conditionsFromItem(insulatedCopperCable))
                     .offerTo(exporter, LuminatorFlatBlock::class.id())
             }

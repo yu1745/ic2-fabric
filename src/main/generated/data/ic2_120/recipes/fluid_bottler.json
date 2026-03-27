@@ -3,19 +3,19 @@
   "category": "misc",
   "key": {
     "C": {
-      "item": "ic2_120:empty_cell"
+      "item": "ic2_120:circuit"
     },
     "M": {
       "item": "ic2_120:machine"
     },
     "T": {
-      "item": "ic2_120:circuit"
+      "item": "ic2_120:tin_casing"
     }
   },
   "pattern": [
-    " C ",
-    " C ",
-    "TMT"
+    "TCT",
+    "TMT",
+    "TTT"
   ],
   "result": {
     "item": "ic2_120:fluid_bottler"

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "minecraft:iron_bars"
+    },
+    "I": {
+      "item": "ic2_120:iron_plate"
+    },
+    "M": {
+      "item": "ic2_120:electric_motor"
+    }
+  },
+  "pattern": [
+    "BIB",
+    "IMI",
+    "BIB"
+  ],
+  "result": {
+    "item": "ic2_120:heat_vent"
+  },
+  "show_notification": true
+}

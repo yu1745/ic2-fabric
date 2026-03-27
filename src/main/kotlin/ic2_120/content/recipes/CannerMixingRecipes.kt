@@ -18,6 +18,7 @@ import net.minecraft.util.Identifier
  * - 蒸馏水 + 1×青金石粉 → 冷却液
  * - 水 + 1×糠 → 生物质
  * - 水 + 建筑泡沫粉 → 建筑泡沫
+ * - 水 + 1×蛤蛤粉 → 除草剂（weed_ex）
  */
 object CannerMixingRecipes {
 
@@ -32,6 +33,7 @@ object CannerMixingRecipes {
     private val lapisDust by lazy { Registries.ITEM.get(Identifier("ic2_120", "lapis_dust")) }
     private val bioChaff by lazy { Registries.ITEM.get(Identifier("ic2_120", "bio_chaff")) }
     private val cfPowder by lazy { Registries.ITEM.get(Identifier("ic2_120", "cf_powder")) }
+    private val grinPowder by lazy { Registries.ITEM.get(Identifier("ic2_120", "grin_powder")) }
 
     private val recipes: List<Recipe> by lazy {
         listOf(
@@ -42,7 +44,9 @@ object CannerMixingRecipes {
             Recipe(Fluids.WATER, bioChaff, 1, ModFluids.BIOMASS_STILL),
             Recipe(Fluids.FLOWING_WATER, bioChaff, 1, ModFluids.BIOMASS_STILL),
             Recipe(Fluids.WATER, cfPowder, 1, ModFluids.CONSTRUCTION_FOAM_STILL),
-            Recipe(Fluids.FLOWING_WATER, cfPowder, 1, ModFluids.CONSTRUCTION_FOAM_STILL)
+            Recipe(Fluids.FLOWING_WATER, cfPowder, 1, ModFluids.CONSTRUCTION_FOAM_STILL),
+            Recipe(Fluids.WATER, grinPowder, 1, ModFluids.WEED_EX_STILL),
+            Recipe(Fluids.FLOWING_WATER, grinPowder, 1, ModFluids.WEED_EX_STILL)
         )
     }
 

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "E": {
+      "item": "ic2_120:energy_crystal"
+    },
+    "G": {
+      "item": "ic2_120:double_insulated_gold_cable"
+    },
+    "M": {
+      "item": "ic2_120:machine"
+    }
+  },
+  "pattern": [
+    "GEG",
+    "EME",
+    "GEG"
+  ],
+  "result": {
+    "item": "ic2_120:mfe"
+  },
+  "show_notification": true
+}

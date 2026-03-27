@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "A": {
+      "item": "ic2_120:alloy"
+    },
+    "C": {
+      "item": "ic2_120:carbon_plate"
+    },
+    "E": {
+      "item": "ic2_120:energy_crystal"
+    },
+    "G": {
+      "item": "minecraft:glowstone_dust"
+    }
+  },
+  "pattern": [
+    "GA ",
+    "GA ",
+    "CEC"
+  ],
+  "result": {
+    "item": "ic2_120:nano_saber"
+  },
+  "show_notification": true
+}

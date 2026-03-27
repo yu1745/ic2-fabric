@@ -98,17 +98,14 @@ class MagnetizerBlock : MachineBlock() {
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val machine = MachineCasingBlock::class.item()
             val ironFence = IronFenceBlock::class.item()
-            val circuit = ic2_120.content.item.Circuit::class.instance()
-            if (machine != Items.AIR && ironFence != Items.AIR && circuit != Items.AIR) {
+            if (machine != Items.AIR && ironFence != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MagnetizerBlock::class.item(), 1)
-                    .pattern("IFI")
-                    .pattern("CMC")
-                    .pattern("IRI")
-                    .input('I', Items.IRON_INGOT)
-                    .input('F', ironFence)
-                    .input('M', machine)
-                    .input('C', circuit)
+                    .pattern("RIR")
+                    .pattern("RMR")
+                    .pattern("RIR")
                     .input('R', Items.REDSTONE)
+                    .input('I', ironFence)
+                    .input('M', machine)
                     .criterion(hasItem(machine), conditionsFromItem(machine))
                     .offerTo(exporter, MagnetizerBlock::class.recipeId("default"))
             }

@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_coal_dust": {
+    "has_carbon_fibre": {
       "conditions": {
         "items": [
           {
             "items": [
-              "ic2_120:coal_dust"
+              "ic2_120:carbon_fibre"
             ]
           }
         ]
@@ -22,7 +22,7 @@
   },
   "requirements": [
     [
-      "has_coal_dust",
+      "has_carbon_fibre",
       "has_the_recipe"
     ]
   ],

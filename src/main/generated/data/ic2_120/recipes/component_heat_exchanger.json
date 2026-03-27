@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": {
+      "item": "ic2_120:gold_plate"
+    },
+    "H": {
+      "item": "ic2_120:heat_exchanger"
+    }
+  },
+  "pattern": [
+    " G ",
+    "GHG",
+    " G "
+  ],
+  "result": {
+    "item": "ic2_120:component_heat_exchanger"
+  },
+  "show_notification": true
+}

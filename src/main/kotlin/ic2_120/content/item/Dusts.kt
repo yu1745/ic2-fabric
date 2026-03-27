@@ -114,7 +114,7 @@ class EnergiumDust : Item(FabricItemSettings()) {
             // R D R
             // D R D
             // D=钻石粉, R=红石粉
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnergiumDust::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnergiumDust::class.instance(), 9)
                 .pattern("DRD").pattern("RDR").pattern("DRD")
                 .input('D', DiamondDust::class.instance())
                 .input('R', Items.REDSTONE)

@@ -2,23 +2,23 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
+    "C": {
       "item": "ic2_120:circuit"
     },
-    "C": {
+    "D": {
       "item": "ic2_120:coal_dust"
     },
     "G": {
-      "item": "minecraft:glass"
-    },
-    "T": {
       "item": "ic2_120:generator"
+    },
+    "L": {
+      "item": "minecraft:glass"
     }
   },
   "pattern": [
-    "CGC",
-    "GTG",
-    "BB "
+    "DLD",
+    "LDL",
+    "CGC"
   ],
   "result": {
     "item": "ic2_120:solar_generator"

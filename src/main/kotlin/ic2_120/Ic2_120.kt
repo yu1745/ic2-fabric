@@ -16,6 +16,7 @@ import ic2_120.content.worldgen.OreGeneration
 import ic2_120.content.worldgen.RubberTreeGeneration
 import ic2_120.content.item.CellAndBucketFluidRegistration
 import ic2_120.content.item.CropSeedBagItem
+import ic2_120.content.recipes.ModCraftingRecipes
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.block.BatBoxBlock
 import ic2_120.content.block.BatBoxChargepadBlock
@@ -89,6 +90,7 @@ object Ic2_120 : ModInitializer {
     override fun onInitialize() {
         Ic2Config.loadOrThrow()
         ModMachineRecipes.register()
+        ModCraftingRecipes.register()
 
         ModStatusEffects.register()
 

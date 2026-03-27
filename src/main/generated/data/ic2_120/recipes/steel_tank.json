@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": {
+      "item": "ic2_120:empty_cell"
+    },
+    "P": {
+      "item": "ic2_120:steel_plate"
+    }
+  },
+  "pattern": [
+    "PFP",
+    "F F",
+    "PFP"
+  ],
+  "result": {
+    "item": "ic2_120:steel_tank"
+  },
+  "show_notification": true
+}

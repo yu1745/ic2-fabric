@@ -3,19 +3,19 @@
   "category": "misc",
   "key": {
     "C": {
-      "item": "ic2_120:heat_conductor"
+      "item": "ic2_120:iron_casing"
     },
     "G": {
       "item": "ic2_120:generator"
     },
-    "I": {
-      "item": "ic2_120:iron_casing"
+    "H": {
+      "item": "ic2_120:heat_conductor"
     }
   },
   "pattern": [
-    "ICI",
-    "IGI",
-    "III"
+    "CHC",
+    "CGC",
+    "CCC"
   ],
   "result": {
     "item": "ic2_120:stirling_generator"

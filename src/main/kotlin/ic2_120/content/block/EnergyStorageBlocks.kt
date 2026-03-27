@@ -1,25 +1,47 @@
 package ic2_120.content.block
 
 import ic2_120.Ic2_120
+import ic2_120.content.block.cables.DoubleInsulatedGoldCableBlock
+import ic2_120.content.block.cables.InsulatedCopperCableBlock
+import ic2_120.content.block.cables.InsulatedTinCableBlock
+import ic2_120.content.item.AdvancedCircuit
+import ic2_120.content.item.BronzePlate
+import ic2_120.content.item.Circuit
+import ic2_120.content.item.RubberItem
+import ic2_120.content.item.energy.AdvancedReBatteryItem
+import ic2_120.content.item.energy.EnergyCrystalItem
+import ic2_120.content.item.energy.LapotronCrystalItem
 import ic2_120.content.block.storage.EnergyStorageBlock
 import ic2_120.content.block.storage.EnergyStorageBlockEntity
 import ic2_120.content.block.storage.EnergyStorageBlock.EnergyStorageBlockItem
 import ic2_120.content.block.storage.EnergyStorageConfig
+import ic2_120.content.item.energy.ReBatteryItem
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.registry.id
+import ic2_120.registry.instance
+import ic2_120.registry.item
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Item
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.registry.Registries
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.function.Consumer
 
 // ============== Block Definitions ==============
 
@@ -30,6 +52,26 @@ class BatBoxBlock : EnergyStorageBlock(EnergyStorageConfig.BATBOX) {
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, EnergyStorageBlockEntity.BatBoxBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val tinCable = InsulatedTinCableBlock::class.item()
+            val battery = ReBatteryItem::class.instance()
+            val planks = Items.OAK_PLANKS
+            if (tinCable != Items.AIR && battery != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BatBoxBlock::class.item(), 1)
+                    .pattern("WTW")
+                    .pattern("BBB")
+                    .pattern("WWW")
+                    .input('W', planks)
+                    .input('T', tinCable)
+                    .input('B', battery)
+                    .criterion(hasItem(battery), conditionsFromItem(battery))
+                    .offerTo(exporter, BatBoxBlock::class.id())
+            }
+        }
+    }
 
     class BatBoxBlockItem(block: Block, settings: Item.Settings) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.BATBOX) {
@@ -44,6 +86,26 @@ class CesuBlock : EnergyStorageBlock(EnergyStorageConfig.CESU) {
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, EnergyStorageBlockEntity.CesuBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val copperCable = InsulatedCopperCableBlock::class.item()
+            val battery = AdvancedReBatteryItem::class.instance()
+            val plate = BronzePlate::class.instance()
+            if (copperCable != Items.AIR && battery != Items.AIR && plate != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CesuBlock::class.item(), 1)
+                    .pattern("WTW")
+                    .pattern("BBB")
+                    .pattern("WWW")
+                    .input('W', plate)
+                    .input('T', copperCable)
+                    .input('B', battery)
+                    .criterion(hasItem(battery), conditionsFromItem(battery))
+                    .offerTo(exporter, CesuBlock::class.id())
+            }
+        }
+    }
 
     class CesuBlockItem(block: Block, settings: Item.Settings) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.CESU) {
@@ -60,6 +122,26 @@ class MfeBlock : EnergyStorageBlock(EnergyStorageConfig.MFE) {
         if (world.isClient) null
         else checkType(type, EnergyStorageBlockEntity.MfeBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val goldCable = DoubleInsulatedGoldCableBlock::class.item()
+            val crystal = EnergyCrystalItem::class.instance()
+            val machine = MachineCasingBlock::class.item()
+            if (goldCable != Items.AIR && crystal != Items.AIR && machine != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MfeBlock::class.item(), 1)
+                    .pattern("GEG")
+                    .pattern("EME")
+                    .pattern("GEG")
+                    .input('G', goldCable)
+                    .input('E', crystal)
+                    .input('M', machine)
+                    .criterion(hasItem(crystal), conditionsFromItem(crystal))
+                    .offerTo(exporter, MfeBlock::class.id())
+            }
+        }
+    }
+
     class MfeBlockItem(block: Block, settings: Item.Settings) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.MFE) {
         override val translationKeyFull: String = "block.ic2_120.mfe_full"
@@ -74,6 +156,28 @@ class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, EnergyStorageBlockEntity.MfsuBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val lapotron = LapotronCrystalItem::class.instance()
+            val advCircuit = AdvancedCircuit::class.instance()
+            val mfe = MfeBlock::class.item()
+            val advCasing = AdvancedMachineCasingBlock::class.item()
+            if (lapotron != Items.AIR && advCircuit != Items.AIR && mfe != Items.AIR && advCasing != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MfsuBlock::class.item(), 1)
+                    .pattern("LAL")
+                    .pattern("LFL")
+                    .pattern("LCL")
+                    .input('L', lapotron)
+                    .input('A', advCircuit)
+                    .input('F', mfe)
+                    .input('C', advCasing)
+                    .criterion(hasItem(mfe), conditionsFromItem(mfe))
+                    .offerTo(exporter, MfsuBlock::class.id())
+            }
+        }
+    }
 
     class MfsuBlockItem(block: Block, settings: Item.Settings) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.MFSU) {
@@ -123,6 +227,26 @@ class BatBoxChargepadBlock : ChargepadBlock(EnergyStorageConfig.BATBOX_CHARGEPAD
         if (world.isClient) null
         else checkType(type, EnergyStorageBlockEntity.BatBoxChargepadBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val circuit = Circuit::class.instance()
+            val rubber = RubberItem::class.instance()
+            val base = BatBoxBlock::class.item()
+            if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BatBoxChargepadBlock::class.item(), 1)
+                    .pattern("CPC")
+                    .pattern("RBR")
+                    .input('C', circuit)
+                    .input('P', Items.STONE_PRESSURE_PLATE)
+                    .input('R', rubber)
+                    .input('B', base)
+                    .criterion(hasItem(base), conditionsFromItem(base))
+                    .offerTo(exporter, BatBoxChargepadBlock::class.id())
+            }
+        }
+    }
+
     class BatBoxChargepadBlockItem(block: Block, settings: Item.Settings) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.BATBOX_CHARGEPAD) {
         override val translationKeyFull: String = "block.ic2_120.batbox_chargepad_full"
@@ -136,6 +260,26 @@ class CesuChargepadBlock : ChargepadBlock(EnergyStorageConfig.CESU_CHARGEPAD) {
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, EnergyStorageBlockEntity.CesuChargepadBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val circuit = Circuit::class.instance()
+            val rubber = RubberItem::class.instance()
+            val base = CesuBlock::class.item()
+            if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CesuChargepadBlock::class.item(), 1)
+                    .pattern("CPC")
+                    .pattern("RBR")
+                    .input('C', circuit)
+                    .input('P', Items.STONE_PRESSURE_PLATE)
+                    .input('R', rubber)
+                    .input('B', base)
+                    .criterion(hasItem(base), conditionsFromItem(base))
+                    .offerTo(exporter, CesuChargepadBlock::class.id())
+            }
+        }
+    }
 
     class CesuChargepadBlockItem(block: Block, settings: Item.Settings) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.CESU_CHARGEPAD) {
@@ -152,6 +296,26 @@ class MfeChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFE_CHARGEPAD) {
         if (world.isClient) null
         else checkType(type, EnergyStorageBlockEntity.MfeChargepadBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val circuit = Circuit::class.instance()
+            val rubber = RubberItem::class.instance()
+            val base = MfeBlock::class.item()
+            if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MfeChargepadBlock::class.item(), 1)
+                    .pattern("CPC")
+                    .pattern("RBR")
+                    .input('C', circuit)
+                    .input('P', Items.STONE_PRESSURE_PLATE)
+                    .input('R', rubber)
+                    .input('B', base)
+                    .criterion(hasItem(base), conditionsFromItem(base))
+                    .offerTo(exporter, MfeChargepadBlock::class.id())
+            }
+        }
+    }
+
     class MfeChargepadBlockItem(block: Block, settings: Item.Settings) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.MFE_CHARGEPAD) {
         override val translationKeyFull: String = "block.ic2_120.mfe_chargepad_full"
@@ -166,6 +330,26 @@ class MfsuChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFSU_CHARGEPAD) {
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, EnergyStorageBlockEntity.MfsuChargepadBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val circuit = Circuit::class.instance()
+            val rubber = RubberItem::class.instance()
+            val base = MfsuBlock::class.item()
+            if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MfsuChargepadBlock::class.item(), 1)
+                    .pattern("CPC")
+                    .pattern("RBR")
+                    .input('C', circuit)
+                    .input('P', Items.STONE_PRESSURE_PLATE)
+                    .input('R', rubber)
+                    .input('B', base)
+                    .criterion(hasItem(base), conditionsFromItem(base))
+                    .offerTo(exporter, MfsuChargepadBlock::class.id())
+            }
+        }
+    }
 
     class MfsuChargepadBlockItem(block: Block, settings: Item.Settings) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.MFSU_CHARGEPAD) {

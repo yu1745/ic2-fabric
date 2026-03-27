@@ -5,19 +5,17 @@
     "C": {
       "item": "ic2_120:circuit"
     },
-    "F": {
-      "item": "ic2_120:fluid_bottler"
-    },
     "M": {
       "item": "ic2_120:machine"
     },
-    "S": {
-      "item": "ic2_120:solid_canner"
+    "T": {
+      "item": "ic2_120:tin_casing"
     }
   },
   "pattern": [
-    "FS",
-    "CM"
+    "TCT",
+    "TMT",
+    "TTT"
   ],
   "result": {
     "item": "ic2_120:canner"

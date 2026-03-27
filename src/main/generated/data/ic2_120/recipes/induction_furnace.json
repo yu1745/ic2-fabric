@@ -2,26 +2,20 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "item": "ic2_120:re_battery"
+    "A": {
+      "item": "ic2_120:advanced_machine"
     },
     "C": {
-      "item": "ic2_120:advanced_circuit"
+      "item": "minecraft:copper_ingot"
     },
-    "F": {
-      "item": "ic2_120:iron_furnace"
-    },
-    "G": {
-      "item": "ic2_120:gold_cable"
-    },
-    "M": {
-      "item": "ic2_120:machine"
+    "E": {
+      "item": "ic2_120:electric_furnace"
     }
   },
   "pattern": [
-    "CGC",
-    "MFM",
-    "BBB"
+    "CCC",
+    "CEC",
+    "CAC"
   ],
   "result": {
     "item": "ic2_120:induction_furnace"

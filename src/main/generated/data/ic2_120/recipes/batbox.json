@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "ic2_120:re_battery"
+    },
+    "T": {
+      "item": "ic2_120:insulated_tin_cable"
+    },
+    "W": {
+      "item": "minecraft:oak_planks"
+    }
+  },
+  "pattern": [
+    "WTW",
+    "BBB",
+    "WWW"
+  ],
+  "result": {
+    "item": "ic2_120:batbox"
+  },
+  "show_notification": true
+}

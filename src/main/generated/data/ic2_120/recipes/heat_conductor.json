@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": {
+      "item": "ic2_120:copper_plate"
+    },
+    "R": {
+      "item": "ic2_120:rubber"
+    }
+  },
+  "pattern": [
+    "RPR",
+    "RPR",
+    "RPR"
+  ],
+  "result": {
+    "item": "ic2_120:heat_conductor"
+  },
+  "show_notification": true
+}

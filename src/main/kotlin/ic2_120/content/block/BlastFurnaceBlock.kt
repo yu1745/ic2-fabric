@@ -1,10 +1,17 @@
 package ic2_120.content.block
 
 import ic2_120.content.block.machines.BlastFurnaceBlockEntity
+import ic2_120.content.item.HeatConductor
+import ic2_120.content.item.IronCasing
 import ic2_120.content.recipes.blastfurnace.BlastFurnaceRecipeDatagen
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.id
+import ic2_120.registry.instance
+import ic2_120.registry.item
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.block.BlockState
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
@@ -12,7 +19,10 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
@@ -77,6 +87,20 @@ class BlastFurnaceBlock : MachineBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             BlastFurnaceRecipeDatagen.generateRecipes(exporter)
+            val ironCasing = IronCasing::class.instance()
+            val machineCasing = MachineCasingBlock::class.item()
+            val heatConductor = HeatConductor::class.instance()
+            if (ironCasing != Items.AIR && machineCasing != Items.AIR && heatConductor != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BlastFurnaceBlock::class.item(), 1)
+                    .pattern("CCC")
+                    .pattern("CMC")
+                    .pattern("CHC")
+                    .input('C', ironCasing)
+                    .input('M', machineCasing)
+                    .input('H', heatConductor)
+                    .criterion(hasItem(machineCasing), conditionsFromItem(machineCasing))
+                    .offerTo(exporter, BlastFurnaceBlock::class.id())
+            }
         }
     }
 }

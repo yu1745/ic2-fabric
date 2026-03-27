@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": {
+      "item": "minecraft:flint"
+    },
+    "M": {
+      "item": "ic2_120:machine"
+    },
+    "X": {
+      "item": "minecraft:cobblestone"
+    },
+    "c": {
+      "item": "ic2_120:circuit"
+    }
+  },
+  "pattern": [
+    "FFF",
+    "XMX",
+    " c "
+  ],
+  "result": {
+    "item": "ic2_120:macerator"
+  },
+  "show_notification": true
+}

@@ -1,9 +1,16 @@
 package ic2_120.content.block.nuclear
 
 import ic2_120.content.block.MachineBlock
+import ic2_120.content.item.EmptyCell
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.registry.id
+import ic2_120.registry.instance
+import ic2_120.registry.item
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Blocks
 import net.minecraft.block.BlockState
@@ -16,6 +23,11 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.item.Items
+import net.minecraft.recipe.book.RecipeCategory
+import java.util.function.Consumer
 
 /**
  * 反应堆流体接口。
@@ -61,5 +73,21 @@ class ReactorFluidPortBlock(settings: AbstractBlock.Settings = AbstractBlock.Set
             }
         }
         return ActionResult.SUCCESS
+    }
+
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val vessel = ReactorVesselBlock::class.item()
+            val emptyCell = EmptyCell::class.instance()
+            if (vessel != Items.AIR && emptyCell != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorFluidPortBlock::class.item(), 1)
+                    .pattern("AAA").pattern("ABA").pattern("AAA")
+                    .input('A', vessel)
+                    .input('B', emptyCell)
+                    .criterion(hasItem(vessel), conditionsFromItem(vessel))
+                    .offerTo(exporter, ReactorFluidPortBlock::class.id())
+            }
+        }
     }
 }

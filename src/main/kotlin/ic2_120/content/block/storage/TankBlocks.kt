@@ -1,10 +1,21 @@
 package ic2_120.content.block.storage
 
+import ic2_120.content.item.BronzePlate
+import ic2_120.content.item.EmptyCell
+import ic2_120.content.item.IridiumPlate
+import ic2_120.content.item.IronPlate
 import ic2_120.content.item.ModFluidCell
+import ic2_120.content.item.SteelPlate
 import ic2_120.content.item.fluidToFilledCellStack
 import ic2_120.content.item.getFluidCellVariant
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.registry.id
+import ic2_120.registry.instance
+import ic2_120.registry.item
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -14,7 +25,10 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.entity.BlockEntity
+import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
@@ -27,6 +41,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.function.Consumer
 
 /**
  * 储罐基类
@@ -388,22 +403,94 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
  * 青铜储罐 - 32 桶容量 (32000 mB)
  */
 @ModBlock(name = "bronze_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank")
-class BronzeTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f))
+class BronzeTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val plate = BronzePlate::class.instance()
+            val cell = EmptyCell::class.instance()
+            if (plate != Items.AIR && cell != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzeTankBlock::class.item(), 1)
+                    .pattern("PFP")
+                    .pattern("F F")
+                    .pattern("PFP")
+                    .input('P', plate)
+                    .input('F', cell)
+                    .criterion(hasItem(plate), conditionsFromItem(plate))
+                    .offerTo(exporter, BronzeTankBlock::class.id())
+            }
+        }
+    }
+}
 
 /**
  * 铁储罐 - 32 桶容量 (32000 mB)
  */
 @ModBlock(name = "iron_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank")
-class IronTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f))
+class IronTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val plate = IronPlate::class.instance()
+            val cell = EmptyCell::class.instance()
+            if (plate != Items.AIR && cell != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronTankBlock::class.item(), 1)
+                    .pattern("PFP")
+                    .pattern("F F")
+                    .pattern("PFP")
+                    .input('P', plate)
+                    .input('F', cell)
+                    .criterion(hasItem(plate), conditionsFromItem(plate))
+                    .offerTo(exporter, IronTankBlock::class.id())
+            }
+        }
+    }
+}
 
 /**
  * 钢制储罐 - 128 桶容量 (128000 mB)
  */
 @ModBlock(name = "steel_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank")
-class SteelTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(6.0f, 7.0f))
+class SteelTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(6.0f, 7.0f)) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val plate = SteelPlate::class.instance()
+            val cell = EmptyCell::class.instance()
+            if (plate != Items.AIR && cell != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelTankBlock::class.item(), 1)
+                    .pattern("PFP")
+                    .pattern("F F")
+                    .pattern("PFP")
+                    .input('P', plate)
+                    .input('F', cell)
+                    .criterion(hasItem(plate), conditionsFromItem(plate))
+                    .offerTo(exporter, SteelTankBlock::class.id())
+            }
+        }
+    }
+}
 
 /**
  * 铱储罐 - 1024 桶容量 (1024000 mB)
  */
 @ModBlock(name = "iridium_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank")
-class IridiumTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(8.0f, 10.0f))
+class IridiumTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(8.0f, 10.0f)) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val plate = IridiumPlate::class.instance()
+            val cell = EmptyCell::class.instance()
+            if (plate != Items.AIR && cell != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IridiumTankBlock::class.item(), 1)
+                    .pattern("PFP")
+                    .pattern("F F")
+                    .pattern("PFP")
+                    .input('P', plate)
+                    .input('F', cell)
+                    .criterion(hasItem(plate), conditionsFromItem(plate))
+                    .offerTo(exporter, IridiumTankBlock::class.id())
+            }
+        }
+    }
+}

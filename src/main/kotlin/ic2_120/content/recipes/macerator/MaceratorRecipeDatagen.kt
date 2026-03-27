@@ -23,6 +23,7 @@ import ic2_120.content.item.Weed
 import ic2_120.content.item.CoalDust
 import ic2_120.content.item.ClayDust
 import ic2_120.content.item.DiamondDust
+import ic2_120.content.item.GrinPowder
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.minecraft.data.server.recipe.RecipeJsonProvider
@@ -63,6 +64,8 @@ object MaceratorRecipeDatagen {
         Entry("netherrack_to_netherrack_dust", Items.NETHERRACK, NetherrackDust::class.instance(), 1),
         Entry("obsidian_to_obsidian_dust", Items.OBSIDIAN, ObsidianDust::class.instance(), 1),
         Entry("obsidian_plate_to_small_obsidian_dust", ObsidianPlate::class.instance(), SmallObsidianDust::class.instance(), 8),
+        Entry("coal_ore_to_coal_dust", Items.COAL_ORE, CoalDust::class.instance(), 2),
+        Entry("deepslate_coal_ore_to_coal_dust", Items.DEEPSLATE_COAL_ORE, CoalDust::class.instance(), 2),
         Entry("coal_block_to_coal_dust", Items.COAL_BLOCK, CoalDust::class.instance(), 9),
         Entry("clay_block_to_clay_dust", Items.CLAY, ClayDust::class.instance(), 2),
         // 植物打粉配方
@@ -75,6 +78,7 @@ object MaceratorRecipeDatagen {
         Entry("wheat_to_bio_chaff", Items.WHEAT, BioChaff::class.instance(), 1, 8),
         Entry("carrot_to_bio_chaff", Items.CARROT, BioChaff::class.instance(), 1, 8),
         Entry("potato_to_bio_chaff", Items.POTATO, BioChaff::class.instance(), 1, 8),
+        Entry("poisonous_potato_to_grin_powder", Items.POISONOUS_POTATO, GrinPowder::class.instance(), 1),
         Entry("oak_sapling_to_bio_chaff", Items.OAK_SAPLING, BioChaff::class.instance(), 1, 4),
         Entry("cactus_to_bio_chaff", Items.CACTUS, BioChaff::class.instance(), 1, 8),
         Entry("sugar_cane_to_bio_chaff", Items.SUGAR_CANE, BioChaff::class.instance(), 1, 8),

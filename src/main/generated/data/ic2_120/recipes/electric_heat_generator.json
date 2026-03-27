@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "ic2_120:re_battery"
+    },
+    "C": {
+      "item": "ic2_120:iron_casing"
+    },
+    "H": {
+      "item": "ic2_120:heat_conductor"
+    },
+    "R": {
+      "item": "ic2_120:circuit"
+    }
+  },
+  "pattern": [
+    "CBC",
+    "CRC",
+    "CHC"
+  ],
+  "result": {
+    "item": "ic2_120:electric_heat_generator"
+  },
+  "show_notification": true
+}

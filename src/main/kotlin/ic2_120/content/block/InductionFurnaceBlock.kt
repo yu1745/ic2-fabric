@@ -1,10 +1,8 @@
 package ic2_120.content.block
 
-import ic2_120.Ic2_120
 import ic2_120.content.block.machines.InductionFurnaceBlockEntity
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
-import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
 import net.minecraft.block.BlockState
@@ -19,7 +17,7 @@ import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
-import net.minecraft.util.Identifier
+import net.minecraft.item.Items
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -82,23 +80,17 @@ class InductionFurnaceBlock : MachineBlock() {
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            val circuit = ic2_120.content.item.AdvancedCircuit::class.instance()
-            val machineCasing = MachineCasingBlock::class.item()
-            val ironFurnace = IronFurnaceBlock::class.item()
-            val goldCable = ic2_120.content.block.cables.GoldCableBlock::class.item()
-            val reBattery = ic2_120.content.item.energy.ReBatteryItem::class.instance()
-
-            if (circuit != net.minecraft.item.Items.AIR && machineCasing != net.minecraft.item.Items.AIR) {
+            val electricFurnace = ElectricFurnaceBlock::class.item()
+            val advCasing = AdvancedMachineCasingBlock::class.item()
+            if (electricFurnace != Items.AIR && advCasing != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, InductionFurnaceBlock::class.item(), 1)
-                    .pattern("CGC")
-                    .pattern("MFM")
-                    .pattern("BBB")
-                    .input('C', circuit)
-                    .input('G', goldCable)
-                    .input('M', machineCasing)
-                    .input('F', ironFurnace)
-                    .input('B', reBattery)
-                    .criterion(hasItem(machineCasing), conditionsFromItem(machineCasing))
+                    .pattern("CCC")
+                    .pattern("CEC")
+                    .pattern("CAC")
+                    .input('C', Items.COPPER_INGOT)
+                    .input('E', electricFurnace)
+                    .input('A', advCasing)
+                    .criterion(hasItem(electricFurnace), conditionsFromItem(electricFurnace))
                     .offerTo(exporter, InductionFurnaceBlock::class.id())
             }
         }

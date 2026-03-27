@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "M": {
+      "item": "ic2_120:machine"
+    },
+    "c": {
+      "item": "ic2_120:circuit"
+    },
+    "e": {
+      "item": "ic2_120:electric_motor"
+    }
+  },
+  "pattern": [
+    " c ",
+    " M ",
+    " e "
+  ],
+  "result": {
+    "item": "ic2_120:block_cutter"
+  },
+  "show_notification": true
+}

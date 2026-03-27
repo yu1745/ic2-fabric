@@ -61,8 +61,9 @@ object CompressorRecipeDatagen {
         Entry("steel_plate_to_dense", SteelPlate::class.instance(), 9, DenseSteelPlate::class.instance(), 1),
         Entry("tin_plate_to_dense", TinPlate::class.instance(), 9, DenseTinPlate::class.instance(), 1),
 
-        // 碳网 -> 碳板
-        Entry("carbon_mesh_to_plate", CarbonMesh::class.instance(), 1, CarbonPlate::class.instance(), 1),
+        // 碳网 -> 碳纤维 -> 碳板（与经典 IC2 链一致）
+        Entry("carbon_mesh_to_fibre", CarbonMesh::class.instance(), 1, CarbonFibre::class.instance(), 1),
+        Entry("carbon_fibre_to_plate", CarbonFibre::class.instance(), 1, CarbonPlate::class.instance(), 1),
 
         // 煤球 -> 压缩煤球
         Entry("coal_ball_to_chunk", CoalBall::class.instance(), 1, CompressedCoalBall::class.item(), 1),

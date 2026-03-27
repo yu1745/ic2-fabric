@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "ic2_120:mfsu"
+    },
+    "C": {
+      "item": "ic2_120:circuit"
+    },
+    "P": {
+      "item": "minecraft:stone_pressure_plate"
+    },
+    "R": {
+      "item": "ic2_120:rubber"
+    }
+  },
+  "pattern": [
+    "CPC",
+    "RBR"
+  ],
+  "result": {
+    "item": "ic2_120:mfsu_chargepad"
+  },
+  "show_notification": true
+}
