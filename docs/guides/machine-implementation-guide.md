@@ -44,26 +44,61 @@ package ic2_120.content.block
 
 import ic2_120.content.block.machines.XxxBlockEntity
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.CreativeTab
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.AbstractBlock.Settings
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.util.Identifier
+import net.minecraft.state.property.BooleanProperty
+import net.minecraft.util.math.BlockPos
 
 @ModBlock(name = "xxx", registerItem = true, tab = CreativeTab.IC2_MACHINES)
-class XxxBlock : MachineBlock(Settings.create()) {
+class XxxBlock : MachineBlock(Settings.copy(Blocks.IRON_BLOCK)) {
 
     companion object {
-        val ACTIVE = Properties.FACING_HOPPER // 或者使用 Properties.POWERED
+        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
     }
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         XxxBlockEntity(pos, state)
 
-    override fun getTicker(world: World?, state: BlockState?, type: BlockEntityType<XxxBlockEntity>?): BlockEntityTicker<XxxBlockEntity>? =
-        BlockEntityTicker { world, pos, state, blockEntity -> blockEntity.tick(world, pos, state) }
+    override fun <T : BlockEntity> getTicker(
+        world: net.minecraft.world.World?,
+        state: BlockState?,
+        type: BlockEntityType<T>
+    ): BlockEntityTicker<T>? {
+        return if (world?.isClient == true) null
+        else checkType(type, XxxBlockEntity::class.type()) { w, p, s, be ->
+            (be as XxxBlockEntity).tick(w, p, s)
+        }
+    }
+
+    override fun createScreenHandlerFactory(
+        state: BlockState,
+        world: net.minecraft.world.World,
+        pos: BlockPos
+    ): net.screen.ScreenHandlerFactory? {
+        return ExtendedScreenHandlerFactory { syncId, inventory, player ->
+            val be = world.getBlockEntity(pos, XxxBlockEntity::class.java)
+                ?: return@ExtendedScreenHandlerFactory null
+            be.createMenu(syncId, inventory, player)
+        }
+    }
+
+    override fun onUse(
+        state: BlockState,
+        world: net.minecraft.world.World,
+        pos: BlockPos,
+        player: net.minecraft.entity.player.PlayerEntity,
+        hand: net.minecraft.util.Hand,
+        hitResult: net.minecraft.util.hit.BlockHitResult
+    ): net.minecraft.util.ActionResult {
+        if (world.isClient) return net.minecraft.util.ActionResult.SUCCESS
+        player.openHandledScreen(state, world, pos)
+        return net.minecraft.util.ActionResult.CONSUME
+    }
 }
 ```
 
@@ -71,6 +106,8 @@ class XxxBlock : MachineBlock(Settings.create()) {
 - 继承 `MachineBlock`（提供了基础的方块行为）
 - 使用 `@ModBlock` 注解注册方块和物品
 - `ACTIVE` 属性用于显示激活状态（工作时有动画/模型变化）
+- `getTicker()` 使用 `checkType()` 确保类型安全
+- `createScreenHandlerFactory()` 和 `onUse()` 用于 GUI 交互
 
 ---
 
@@ -81,6 +118,10 @@ class XxxBlock : MachineBlock(Settings.create()) {
 ### 3.1 类声明与接口
 
 ```kotlin
+import ic2_120.registry.type
+import ic2_120.content.syncs.SyncedData
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+
 @ModBlockEntity(block = XxxBlock::class)
 class XxxBlockEntity(
     type: BlockEntityType<*>,
@@ -93,6 +134,13 @@ class XxxBlockEntity(
     IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport,
     ExtendedScreenHandlerFactory {
+
+    // 次构造函数：使用扩展方法获取类型
+    constructor(pos: BlockPos, state: BlockState) : this(
+        XxxBlockEntity::class.type(),
+        pos,
+        state
+    )
 
     // 升级属性
     override var speedMultiplier: Float = 1f
@@ -362,6 +410,7 @@ import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.registry.type
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import net.minecraft.entity.player.PlayerEntity
@@ -383,7 +432,7 @@ class XxxScreenHandler(
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(ModScreenHandlers.getType(XxxScreenHandler::class), syncId) {
+) : ScreenHandler(XxxScreenHandler::class.type(), syncId) {
 
     val sync = XxxSync(SyncedDataView(propertyDelegate))
 
@@ -540,7 +589,7 @@ class XxxScreenHandler(
 
 ## 6. 创建 Screen（客户端 UI）
 
-**文件**：`src/client/kotlin/ic2_120/client/XxxScreen.kt`
+**文件**：`src/client/kotlin/ic2_120/client/screen/XxxScreen.kt`
 
 ```kotlin
 package ic2_120.client

@@ -2,7 +2,7 @@
 
 基于 Minecraft `ScreenHandler` 的 `PropertyDelegate`，用 Kotlin 委派和共享“属性定义类”实现服务端→客户端的整型同步。**属性只定义一次，两端复用，index 从结构上保证一致。**
 
-**源码位置**：`src/main/kotlin/ic2_120/content/SyncedData.kt`、各机器的 `*Sync.kt`（如 `ElectricFurnaceSync.kt`）。
+**源码位置**：`src/main/kotlin/ic2_120/content/syncs/SyncedData.kt`、各机器的 `*Sync.kt`（位于 `src/main/kotlin/ic2_120/content/sync/` 目录，如 `ElectricFurnaceSync.kt`）。
 
 ---
 
@@ -33,11 +33,26 @@
 新建一个类，构造函数接收 `SyncSchema`，用 `by schema.int("NbtKey", default)` 声明属性。**属性顺序即 index 顺序，两端共用此类，故顺序自动一致。**
 
 ```kotlin
-// 例如 content/ElectricFurnaceSync.kt
-class ElectricFurnaceSync(schema: SyncSchema) {
-    var syncCounter by schema.int("SyncCounter")
-    var energy      by schema.int("Energy", default = 1000)
-    var progress    by schema.int("Progress")
+// 简单示例：content/sync/IronFurnaceSync.kt
+class IronFurnaceSync(schema: SyncSchema) {
+    var burnTime     by schema.int("BurnTime")
+    var totalBurnTime by schema.int("TotalBurnTime")
+    var cookTime     by schema.int("CookTime")
+}
+
+// 能量机器示例：通常继承 TickLimitedSidedEnergyContainer
+class ElectricFurnaceSync(
+    schema: SyncSchema,
+    currentTickProvider: () -> Long? = { null }
+) : TickLimitedSidedEnergyContainer(
+    ENERGY_CAPACITY,
+    { 0L },  // capacityBonusProvider
+    MAX_INSERT,
+    MAX_EXTRACT,
+    currentTickProvider
+) {
+    var energy by schema.int("Energy")
+    var progress by schema.int("Progress")
 }
 ```
 

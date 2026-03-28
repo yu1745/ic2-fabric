@@ -37,6 +37,8 @@
   - 机器当前可用能量
   - 物品剩余容量
 
+**充电速度**：电池充电速度设置为 **16倍** 于基础传输速度（`transferSpeed * 4 * 4`），电动工具充电速度为 `ELECTRIC_TOOL_CHARGE_SPEED_BASE * tool.tier * 16`。
+
 ### 2.3 放电组件
 
 - 文件：`src/main/kotlin/ic2_120/content/energy/charge/BatteryDischargerComponent.kt`
@@ -74,17 +76,43 @@
 
 ### 2.6 升级物品接口
 
-- 文件：`src/main/kotlin/ic2_120/content/item/Upgrades.kt`
-- 接口：`IUpgradeItem`，所有升级类（OverclockerUpgrade、TransformerUpgrade 等）实现此接口。
-- 用途：供 `UpgradeSlotLayout.SLOT_SPEC` 判断物品是否可放入升级槽。
+- **文件**：`src/main/kotlin/ic2_120/content/item/Upgrades.kt`
+- **接口**：`IUpgradeItem`，所有升级类实现此接口。
+- **升级注册**：`UpgradeItemRegistry` 维护升级物品到机器接口的映射。
+
+**当前已实现的升级类型**：
+- `OverclockerUpgrade` - 加速升级
+- `TransformerUpgrade` - 高压升级
+- `EnergyStorageUpgrade` - 储能升级
+- `RedstoneInverterUpgrade` - 红石反转升级
+- `EjectorUpgrade` - 物品弹出升级
+- `AdvancedEjectorUpgrade` - 高级物品弹出升级
+- `PullingUpgrade` - 流体抽取升级
+- `AdvancedPullingUpgrade` - 高级流体抽取升级
+- `FluidEjectorUpgrade` - 流体弹出升级
+- `FluidPullingUpgrade` - 流体抽取升级
+
+**升级接口映射**（`UpgradeItemRegistry`）：
+- 每个升级物品映射到其要求的机器接口
+- `UpgradeSlotLayout` 检查机器是否实现对应接口
+- 未实现接口的升级无法放入该机器的升级槽
 
 ### 2.7 升级支持接口与处理组件
 
 - **机器接口**（`src/main/kotlin/ic2_120/content/upgrade/`）：每个升级对应一个接口，机器选择性实现。
   - `IOverclockerUpgradeSupport`：暴露 `speedMultiplier`、`energyMultiplier`，供加速升级写入。
-  - `ITransformerUpgradeSupport`、`IEnergyStorageUpgradeSupport` 等：占位，效果待实现。
-- **升级处理组件**：识别升级槽中对应升级数量，累乘计算倍率，写入实现接口的机器。
-  - `OverclockerUpgradeComponent`：统计 OverclockerUpgrade 数量，按 2^n 计算速度与耗能倍率，调用 `apply(inventory, upgradeSlotIndices, machine)`。
+  - `IEnergyStorageUpgradeSupport`：暴露 `capacityBonus`，供储能升级写入。✅ **已实现**
+  - `ITransformerUpgradeSupport`：暴露 `voltageTierBonus`，供高压升级写入。✅ **已实现**
+  - `IRedstoneInverterUpgradeSupport`：红石控制反转。✅ **基础设施完整，机器可按需接入**
+  - `IEjectorUpgradeSupport`：物品/流体弹出槽支持。⚠️ **仅接口定义，机器需自行实现**
+  - `IFluidPipeUpgradeSupport`：继承自 `IEjectorUpgradeSupport`，流体管道升级支持。✅ **已实现**
+  - `IRedstoneControlSupport`：红石控制组件支持。
+- **升级处理组件**：
+  - `OverclockerUpgradeComponent`：统计 OverclockerUpgrade 数量，按 2^n 计算速度与耗能倍率。
+  - `EnergyStorageUpgradeComponent`：每个储能升级增加 10,000 EU 容量。✅ **已实现**
+  - `TransformerUpgradeComponent`：每个高压升级提升 1 个电压等级，提高 maxInsertPerTick。✅ **已实现**
+  - `RedstoneInverterUpgradeComponent`：处理红石反转升级。
+  - `FluidPipeUpgradeComponent`：处理流体管道弹出/抽取升级。✅ **已实现**
 
 ## 3. 当前接入点
 

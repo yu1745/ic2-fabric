@@ -47,6 +47,10 @@ jobs:
           for f in ic2_120-*.jar; do
             [[ "$f" != *-sources* && "$f" != *-remapped* ]] && cp "$f" mod-release/
           done
+          # 复制运行时依赖到 release
+          if [ -d "libs" ]; then
+            cp libs/*.jar mod-release/
+          fi
       - name: create release
         uses: softprops/action-gh-release@v2
         with:

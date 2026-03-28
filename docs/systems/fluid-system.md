@@ -25,11 +25,16 @@
 - 机器内部使用 `SingleVariantStorage<FluidVariant>` 作为储罐。
 - 通过 `FluidStorage.SIDED.registerForBlockEntity(...)` 注册分面流体能力。
 
-已接入“流体升级驱动管道参与”的机器：
+已接入”流体升级驱动管道参与”的机器：
 - `SolarDistillerBlockEntity`
 - `GeoGeneratorBlockEntity`
 - `PumpBlockEntity`
 - `OreWashingPlantBlockEntity`
+- `SemifluidGeneratorBlockEntity`
+- `FluidBottlerBlockEntity`
+- `BlastFurnaceBlockEntity`
+- `FluidHeatExchangerBlockEntity`
+- `ReactorFluidPortBlockEntity`
 
 说明：`WaterGenerator` 等其它流体机器可通过自身 `FluidStorage` 交互，但未接入升级驱动的 provider/receiver 参与规则。
 

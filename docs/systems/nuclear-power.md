@@ -91,15 +91,17 @@
 
 **Pass 1 分两步执行**，先处理非散热片组件，再处理散热片组件，避免"先抽旧堆温、后产热"造成的顺序锁温。
 
-- 燃料棒：`heat = triangularNumber(pulses) * 4 * cells`，优先传给邻接可储热组件，剩余 `addHeat`
+- 燃料棒：`heat = triangularNumber(pulses) * cells`（注：triangularNumber 函数已包含热量倍率），优先传给邻接可储热组件，剩余 `addHeat`
 - 散热片：`reactorVent` 吸堆温 → `alterHeat` 存自身 → `selfVent` 蒸发放热
 - 热交换器：与堆/邻接组件按温度差交换热量
 
 ### 发电与能量输出
 
 ```
-triangularNumber(n) = (n² + n) / 2
+triangularNumber(n) = (n² + n) × 2
 ```
+
+> **注意**：本实现使用自定义三角数函数，已包含热量倍率（`× 2` 而非标准三角数的 `/ 2`），因此实际发热量 = `triangularNumber(pulses) * cells`，无需额外乘以 4。
 
 - `output` 为 float 累加值（铀每脉冲 +1.0，MOX 每脉冲 1.0–5.0 取决于堆温）
 - 每 tick：`output × EU_PER_OUTPUT / 20` 转为 EU（`EU_PER_OUTPUT = 100`，即 5 EU/t × 20 tick/s）
@@ -163,7 +165,7 @@ EU/t = 总脉冲数 × 100
 
 - **单/双/四联铀燃料棒**：发电、发热，耗尽后变为枯竭燃料棒
 - **枯竭铀燃料棒**：占位符，不可发电
-- 发热量：`triangularNumber(pulses) * 4 * cells`
+- 发热量：`heat = triangularNumber(pulses) * cells`（triangularNumber 已包含倍率）
 - 耐久：20,000 次脉冲
 
 #### MOX 燃料棒
@@ -193,7 +195,7 @@ breederEffectiveness = cycleStartHeat / maxHeat
 **发热公式**（热模式，`isFluidCooled() == true`）：
 
 ```
-基础发热 = triangularNumber(pulses) * 4 * cells
+基础发热 = triangularNumber(pulses) * cells（triangularNumber 已包含倍率）
 breederEffectiveness = cycleStartHeat / maxHeat
 if (breederEffectiveness > 0.5) 发热量 × 2
 ```
@@ -244,10 +246,12 @@ if (breederEffectiveness > 0.5) 发热量 × 2
 | 双方平均温度% | 交换速率比例 |
 |-------------|-------------|
 | ≥ 100% | 100%（全速） |
-| ≥ 75% | 50%（1/2） |
-| ≥ 50% | 25%（1/4） |
-| ≥ 25% | 12.5%（1/8） |
+| 75% ~ 99% | 50%（1/2） |
+| 50% ~ 74% | 25%（1/4） |
+| 25% ~ 49% | 12.5%（1/8） |
 | < 25% | 最小值（1 HU） |
+
+> **实现说明**：代码使用 `<` 条件判断（如 `avgTemp < 0.75`），因此表格使用区间范围表示。
 
 热量始终从**高温**流向**低温**。
 
@@ -321,6 +325,9 @@ if (breederEffectiveness > 0.5) 发热量 × 2
 以下物品在代码中存在但**功能尚未实现**（占位/未来扩展）：
 
 - `containment_reactor_plating` — 高级反应堆装甲板
+- `depleted_isotope_fuel_rod` — 乏同位素燃料棒
+- `reactor_coolant_cell`、`triple_reactor_coolant_cell`、`sextuple_reactor_coolant_cell` — 反应堆冷却单元
+- `rsh_condensator`、`lzh_condensator` — 冷凝器
 - `lithium_fuel_rod` — 锂燃料棒
 - `heatpack` — 热包
 

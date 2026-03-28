@@ -2,39 +2,113 @@
 
 如果需要创建一个根据生物群系改变颜色的方块（类似草方块），需要完成以下步骤。
 
-## 1. 创建方块类
+## 1. 创建方块类（使用注解注册）
 
-使用 `AbstractBlock.Settings.create()` 创建方块：
+本项目使用**类级别注解自动注册系统**，创建方块非常简单：
 
 ```kotlin
-package ic2_120.block
+package ic2_120.content.block
 
-import net.minecraft.block.AbstractBlock
+import ic2_120.registry.CreativeTab
+import ic2_120.registry.annotation.ModBlock
 import net.minecraft.block.Block
+import net.minecraft.block.AbstractBlock.Settings
+import net.minecraft.block.Blocks
 
-class ExampleBlock : Block(AbstractBlock.Settings.create().strength(4.0f))
+@ModBlock(
+    name = "rubber_leaves",
+    registerItem = true,
+    tab = CreativeTab.IC2_MATERIALS,
+    group = "wood",
+    transparent = false
+)
+class RubberLeavesBlock : Block(
+    AbstractBlock.Settings.copy(Blocks.OAK_LEAVES)
+        .strength(0.2f)
+        .nonOpaque()
+        .allowsSpawning { _, _, _, _ -> true }
+)
 ```
 
-## 2. 注册方块和物品
+**说明**：
+- `@ModBlock` 注解会自动注册方块和物品
+- `Settings.copy(Blocks.OAK_LEAVES)` 复制原版方块的属性
+- 使用 `CreativeTab` 枚举而非字符串
+- 使用注册表获取方块和物品实例，而非类引用
+- 项目已有实现参考：`RubberLeavesBlock.kt` 和 `RubberLeavesColorProvider.kt`
 
-在主入口点注册方块并添加到创造标签：
+## 2. 注册颜色提供器（客户端）
+
+在客户端入口点注册 `BlockColorProvider`：
+
+**文件位置**：`src/client/kotlin/ic2_120/client/colorprovider/RubberLeavesColorProvider.kt`
 
 ```kotlin
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
-import net.minecraft.item.ItemGroups
+package ic2_120.client.colorprovider
 
-// 注册方块
-val EXAMPLE_BLOCK = ExampleBlock()
-Registry.register(Registries.BLOCK, Identifier(MODID, "example_block"), EXAMPLE_BLOCK)
+import ic2_120.Ic2_120
+import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry
+import net.minecraft.client.color.world.BiomeColors
+import net.minecraft.registry.Registries
+import net.minecraft.util.Identifier
 
-// 注册物品
-val blockItem = Registry.register(Registries.ITEM, Identifier(MODID, "example_block"),
-    BlockItem(EXAMPLE_BLOCK, FabricItemSettings()))
+object RubberLeavesColorProvider {
+    private const val DEFAULT_RUBBER_LEAVES_COLOR = 0xc4b848  // 金黄绿色
 
-// 添加到创造标签
-ItemGroupEvents.modifyEntriesEvent(ItemGroups.BUILDING_BLOCKS).register { content ->
-    content.add(blockItem)
+    fun register() {
+        val block = Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "rubber_leaves"))
+        val item = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "rubber_leaves"))
+
+        // 方块颜色提供器
+        ColorProviderRegistry.BLOCK.register({ _, world, pos, _ ->
+            if (world != null && pos != null) {
+                val baseBrightness = BiomeColors.getFoliageColor(world, pos)
+                applyBiomeBrightness(DEFAULT_RUBBER_LEAVES_COLOR, baseBrightness)
+            } else {
+                DEFAULT_RUBBER_LEAVES_COLOR
+            }
+        }, block)
+
+        // 物品颜色提供器
+        ColorProviderRegistry.ITEM.register({ _, _ ->
+            DEFAULT_RUBBER_LEAVES_COLOR
+        }, item)
+    }
+
+    private fun applyBiomeBrightness(baseColor: Int, targetBrightness: Int): Int {
+        val targetRGB = targetBrightness and 0xFFFFFF
+        val currentRGB = baseColor and 0xFFFFFF
+
+        val currentBrightness = getLuminance(currentRGB)
+        val targetLuminance = getLuminance(targetRGB)
+
+        return when {
+            currentBrightness == 0 -> baseColor
+            else -> {
+                val r = ((currentRGB ushr 16) * targetLuminance / currentBrightness).coerceAtMost(255)
+                val g = ((currentRGB ushr 8 and 0xFF) * targetLuminance / currentBrightness).coerceAtMost(255)
+                val b = ((currentRGB and 0xFF) * targetLuminance / currentBrightness).coerceAtMost(255)
+                (r shl 16) or (g shl 8) or b
+            }
+        }
+    }
+
+    private fun getLuminance(rgb: Int): Int {
+        val r = (rgb ushr 16) and 0xFF
+        val g = (rgb ushr 8) and 0xFF
+        val b = rgb and 0xFF
+        return (r * 299 + g * 587 + b * 114) / 1000
+    }
+}
+```
+
+**在客户端入口调用**：
+
+```kotlin
+// src/client/kotlin/ic2_120/Ic2_120Client.kt
+override fun onInitializeClient() {
+    RubberLeavesColorProvider.register()
+    // ... 其他客户端注册
 }
 ```
 
@@ -42,7 +116,7 @@ ItemGroupEvents.modifyEntriesEvent(ItemGroups.BUILDING_BLOCKS).register { conten
 
 **重要**：模型中必须指定 `tintindex`，否则颜色提供器不会生效：
 
-**models/block/example_block.json**:
+**models/block/rubber_leaves.json**:
 ```json
 {
   "parent": "minecraft:block/cube_bottom_top",
@@ -70,47 +144,20 @@ ItemGroupEvents.modifyEntriesEvent(ItemGroups.BUILDING_BLOCKS).register { conten
 
 **关键点**：`"tintindex": 0` 告诉渲染引擎这个面需要应用颜色着色。
 
-## 4. 注册颜色提供器（客户端）
+## 4. 创建方块状态和物品模型
 
-在客户端入口点注册 `BlockColorProvider`：
-
-**src/client/kotlin/ic2_120/Ic2_120Client.kt**:
-```kotlin
-package ic2_120
-
-import net.fabricmc.api.ClientModInitializer
-import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry
-import net.minecraft.client.color.world.BiomeColors
-
-object Ic2_120Client : ClientModInitializer {
-    override fun onInitializeClient() {
-        // 注册草方块颜色提供器
-        ColorProviderRegistry.BLOCK.register({ state, world, pos, tintIndex ->
-            if (world != null && pos != null) {
-                BiomeColors.getGrassColor(world, pos)
-            } else {
-                // 默认草颜色（用于物品渲染）
-                0x91bd59
-            }
-        }, Ic2_120.EXAMPLE_BLOCK)
-    }
-}
-```
-
-## 5. 创建方块状态和物品模型
-
-**blockstates/example_block.json**:
+**blockstates/rubber_leaves.json**:
 ```json
 {
   "variants": {
     "": {
-      "model": "ic2_120:block/example_block"
+      "model": "ic2_120:block/rubber_leaves"
     }
   }
 }
 ```
 
-**models/item/example_block.json**:
+**models/item/rubber_leaves.json**:
 ```json
 {
   "parent": "ic2_120:block/example_block"

@@ -1,5 +1,15 @@
 # IC2-120
 
+<big>[English](README_EN.md) | 简体中文</big>
+
+> **⚠️ 必读：安装说明** 使用本模组需要同时复制 release 中的**三个文件**到 Minecraft 的 mods 文件夹：
+> - `ic2_120-*.jar` - 模组本体
+> - `energy-*.jar` - Energy API 运行时依赖
+> - `fabric-language-kotlin-*.jar` - Fabric Kotlin 语言支持库
+> 三个文件缺一不可，否则模组无法正常运行。
+
+> **📢 Sinytra Connector 支持**：本模组已针对 [Sinytra Connector](https://github.com/Sinytra/connector) 进行适配，Forge 端也可通过 Connector 加运行。关于如何在 Forge 环境中使用 Connector 加载 Fabric Mod，请参阅 [Sinytra Connector 官方文档](https://github.com/Sinytra/connector)。
+
 IndustrialCraft 2 的 Minecraft 1.20.1 Fabric 移植版本，使用 Kotlin 编写。
 
 **玩家向说明**：游戏内容与玩法请查看 [mod特性.md](mod特性.md)。本文档面向开发者。
@@ -78,7 +88,11 @@ ic2-fabric/
 - [升级系统](docs/upgrade-system.md) - 机器升级与效果机制
 - [槽位规格系统](docs/slot-spec-system.md) - 机器 GUI 槽位定义与约束
 - [机器组合复用](docs/machine-composition-reuse.md) - 机器逻辑组合与可复用设计
+- [机器实现指南](docs/machine-implementation-guide.md) - 完整的 Block → BlockEntity → ScreenHandler → Screen 实现流程
 - [核电系统](docs/nuclear-power.md) - 核能相关机制与实现说明
+- [热能系统](docs/heat-system.md) - HU 加热与传热机制
+- [流体系统](docs/fluid-system.md) - 流体管道、泵附件与传输规则
+- [传动轴系统](docs/transmission_shaft.md) - 机械传动轴与锥齿轮
 - [已实现物品清单](docs/item-implemented.md) - 当前已落地的物品列表
 - [ComposeUI 声明式 GUI](docs/compose-ui.md) - GUI 布局与绘制系统
 - [DrawContext 绘制方法参考](docs/drawcontext-methods.md) - 绘制 API 说明
@@ -86,6 +100,53 @@ ic2-fabric/
 - [生物群系颜色方块](docs/biome-colored-blocks.md) - 实现随生物群系变色的方块
 - [方块变体系统](docs/block-variants.md) - 方块状态与模型变体
 - [唯一礼物物品防复制 TODO](docs/unique-gift-item-anti-dup-todo.md) - 防复制方案草案与待办
+
+## 相比原版未实现部分
+
+本移植版本相比原版 IC2，以下功能尚未实现或正在开发中：
+
+### 🔧 动能发电系统（开发中）
+- **状态**：基础框架已完成，机械传动逻辑待完善
+- **已完成**：
+  - 传动轴方块（木制、铁制、钢制、碳纤维）
+  - 伞齿轮方块（90度转向）
+  - 视觉渲染（BER）
+- **待实现**：
+  - 机械动能传播系统（速度/扭矩计算）
+  - 发电机动能转电能逻辑
+  - 相关合成配方
+
+### 🏔️ 地形改造系列机器
+- 地形转换机（Terraformer）
+- 各种地形改造模板（耕地、森林、沙漠、蘑菇等）
+- 建筑模板
+
+### 🧬 复制系列机器
+- 扫描机（Scanner）
+- 复制机（Replicator）
+- 物质生成机（Matter Fabricator）
+- UU 物质系统
+- 模式存储与模式存储机
+
+### 💨 蒸汽系列机器
+- 蒸汽发电机（Steam Generator）
+- 蒸汽动能发电机（Steam Kinetic Generator）
+- 蒸汽再压机（Steam Repressurizer）
+- 蒸汽相关流体与配方
+
+### 📦 物流系列机器
+- 物品缓冲器（Item Buffer）
+- 高级物品分配器（Weighted Item Distributor）
+- 电动分拣机（Sorting Machine）
+- 物流管道与过滤器
+
+### 🔥 焦炉多方块结构
+- 焦炉（Blast Furnace）多方块结构
+- 耐火砖方块
+- 高温冶炼逻辑
+- 钢铁生产系统
+
+> **注意**：以上功能会逐步实现，具体进度可查看项目 Issue 和 Pull Request。
 
 ## 贡献
 

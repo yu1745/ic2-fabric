@@ -1,61 +1,56 @@
-# 已有方块的创造模式变体
+# 方块变体系统（创造模式专用）
 
-在不新建方块类型的前提下，为已有方块增加“变体”：同一方块、同一 BlockEntity 类型，仅通过**物品 NBT** 区分，放置时根据 NBT 初始化不同状态，且变体**仅在创造模式物品栏**中提供。
+在不新建方块类型的前提下，为已有方块增加”变体”：同一方块、同一 BlockEntity 类型，仅通过**物品 NBT** 区分，放置时根据 NBT 初始化不同状态，且变体**仅在创造模式物品栏**中提供。
 
-参考实现：**MFSU (Full)**（满电 MFSU），见 `MfsuBlock`、`MfsuBlockEntity`、`Ic2_120.onInitialize()`。
+当前实现：**储能方块满电变体**（BatBox、CESU、MFE、MFSU）
 
 ---
 
 ## 思路
 
 - **不新建 Block / BlockEntity**：复用现有方块与方块实体。
-- **自定义 BlockItem**：替换该方块的默认 `BlockItem`，在 `place()` 中根据物品 NBT 在放置后设置 BlockEntity 状态；在 `getName()` 中为带 NBT 的物品返回变体名称。
-- **主类中覆盖注册**：在 `onInitialize()` 里用自定义 BlockItem 再次 `Registry.register(Registries.ITEM, id, customBlockItem)`，覆盖扫描阶段注册的默认 BlockItem。
-- **创造模式物品栏**：用 `ItemGroupEvents.modifyEntriesEvent(...)` 向对应物品组追加一个带 NBT 的 `ItemStack`，即“变体”入口。
+- **继承基类 BlockItem**：使用 `EnergyStorageBlockItem` 抽象基类，处理放置时的 NBT 初始化和名称显示。
+- **使用 restoreEnergy()**：安全地从 NBT 恢复能量到能量存储系统。
+- **创造模式物品栏**：用 `ItemGroupEvents.modifyEntriesEvent(...)` 向对应物品组追加带 NBT 的 ItemStack。
 
 ---
 
 ## 步骤
 
-### 1. 在方块类中定义 NBT 键与自定义 BlockItem
+### 1. 方块类使用基类模式
 
-在对应 Block 类中（例如 `MfsuBlock.kt`）：
+当前实现使用 `EnergyStorageBlock` 抽象基类，包含：
+- `NBT_FULL` 常量定义
+- 抽象内部类 `EnergyStorageBlockItem`
+- 配置对象 `EnergyStorageConfig`
 
-- 在 **companion object** 里定义变体用的 NBT 键常量（如 `NBT_FULL = "Full"`）。
-- 增加一个继承 `BlockItem` 的**内部类**（如 `MfsuBlockItem`）：
-  - **`place(context: ItemPlacementContext): ActionResult`**  
-    先 `super.place(context)`，若 `result.isAccepted` 且非客户端，再根据 `context.stack.nbt` 判断是否为变体；若是，则取 `context.world.getBlockEntity(context.blockPos)` 转为对应 BlockEntity，设置所需状态并 `markDirty()`。
-  - **`getName(stack: ItemStack): Text`**  
-    若 `stack.nbt` 包含变体键则返回变体翻译键（如 `block.modid.xxx_variant`），否则 `super.getName(stack)`。
+**实际文件位置**：
+- 基类：`src/main/kotlin/ic2_120/content/block/storage/EnergyStorageBlock.kt`
+- 方块定义：`src/main/kotlin/ic2_120/content/block/EnergyStorageBlocks.kt`（BatBox、CESU、MFE、MFSU）
 
-示例（节选）：
+### 2. BlockItem 放置逻辑
+
+`EnergyStorageBlockItem` 的 `place()` 方法实现：
 
 ```kotlin
-companion object {
-    const val NBT_FULL = "Full"
-}
-
-class MfsuBlockItem(block: Block, settings: Item.Settings) : BlockItem(block, settings) {
-    override fun place(context: ItemPlacementContext): ActionResult {
-        val result = super.place(context)
-        if (result.isAccepted && !context.world.isClient) {
-            val nbt = context.stack.nbt ?: return result
-            if (nbt.getBoolean(NBT_FULL)) {
-                val be = context.world.getBlockEntity(context.blockPos) as? MfsuBlockEntity ?: return result
-                be.sync.amount = MfsuSync.ENERGY_CAPACITY
-                be.markDirty()
-            }
+override fun place(context: ItemPlacementContext): ActionResult {
+    val result = super.place(context)
+    if (result.isAccepted && !context.world.isClient) {
+        val nbt = context.stack.nbt ?: return result
+        if (nbt.getBoolean(NBT_FULL)) {
+            val be = context.world.getBlockEntity(context.blockPos) as? EnergyStorageBlockEntity ?: return result
+            be.sync.restoreEnergy(config.capacity)  // 使用 restoreEnergy 安全恢复
+            be.markDirty()
         }
-        return result
     }
-
-    override fun getName(stack: ItemStack): Text =
-        if (stack.nbt?.getBoolean(NBT_FULL) == true)
-            Text.translatable("block.ic2_120.mfsu_full")
-        else
-            super.getName(stack)
+    return result
 }
 ```
+
+**关键改进**：
+- 使用 `restoreEnergy(config.capacity)` 而非直接设置 `amount`
+- 使用抽象 `config.capacity` 而非硬编码值
+- 统一基类处理，无需为每个方块重复代码
 
 ### 2. 在主类中覆盖物品注册并添加创造模式入口
 
@@ -72,7 +67,7 @@ class MfsuBlockItem(block: Block, settings: Item.Settings) : BlockItem(block, se
 2. **向创造模式物品栏追加变体物品堆**  
    - 取物品组 Key：`RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_MACHINES.id))`（按你用的物品组改）。  
    - `ItemGroupEvents.modifyEntriesEvent(ic2MachinesKey).register { entries -> ... }`。  
-   - 在回调里：`ItemStack(Registries.ITEM.get(mfsuId))`，`stack.orCreateNbt.putBoolean(YourBlock.NBT_FULL, true)`，`entries.add(fullStack)`。
+   - 在回调里：`ItemStack(Registries.ITEM.get(mfsuId))`，`stack.orCreateNbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)`，`entries.add(fullStack)`。
 
 示例（节选）：
 
@@ -86,7 +81,7 @@ val customMfsuItem = MfsuBlock.MfsuBlockItem(mfsuBlock, FabricItemSettings())
 val ic2MachinesKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_MACHINES.id))
 ItemGroupEvents.modifyEntriesEvent(ic2MachinesKey).register { entries ->
     val fullStack = ItemStack(Registries.ITEM.get(mfsuId))
-    fullStack.orCreateNbt.putBoolean(MfsuBlock.NBT_FULL, true)
+    fullStack.orCreateNbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
     entries.add(fullStack)
 }
 ```

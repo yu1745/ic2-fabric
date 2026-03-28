@@ -91,7 +91,7 @@
 
 对一条候选路径：
 - `pathCapacity = min(路径上各导线 remainingCableCapacity)`
-- `pathLossEu = pathLossMilliEu / 1000`（整数除法）
+- `pathLossEu = (pathLossMilliEu + 999) / 1000`（向上取整，确保"可以多扣不能少扣"）
 - `maxDeliverable = max(pathCapacity - pathLossEu, 0)`
 
 实际成功量还受消费者插入量、供电者提取量、网络池余量限制。
@@ -149,7 +149,7 @@
 - 存在“可烧毁”导线：导线实现 [ITiered](../../src/main/kotlin/ic2_120/content/item/energy/ITiered.kt)，且 `block.tier < outputLevel`（**只烧电压等级低于电网输出等级的导线**，同等级或更高不烧，例如玻璃纤维不烧）。
 
 烧毁规则：
-- **损坏比例**：常量 `underTierCableBurnRatio`（默认 0.1，即 10%）。每次检查时，在所有“可烧毁”导线中**随机**选出该比例的导线进行烧毁。
+- **损坏比例**：常量 `underTierCableBurnRatio`（默认 1，即 100%）。每次检查时，在所有”可烧毁”导线中**随机**选出该比例的导线进行烧毁。当前设置意味着所有可烧毁的导线都会被烧毁。
 - **示例**：10 根锡线接入一个全为玻璃纤维且存在 MFSU（4 级输出）的电网，电网 `outputLevel` 为 4，锡线 tier=1，属于可烧毁；每次检查随机烧毁约 10% 的锡线，玻璃纤维（tier=5）不会被烧。
 - **效果**：被选中的导线方块被破坏（`breakBlock(pos, false)`，不掉落），并在该位置生成烟雾与火焰粒子（`LARGE_SMOKE`、`FLAME`）表示烧毁。
 - 烧毁后电网会因导线消失而触发 `invalidateAt`，拓扑在下次 tick 重建。

@@ -105,12 +105,12 @@ class Ic2MaterialsTab
 
 ### 4. 注册方块实体类型（BlockEntityType）
 
-在 BlockEntity 子类上添加 `@ModBlockEntity` 注解，扫描器会自动创建并注册 `BlockEntityType`，并通过 `ModBlockEntities.getType(Class)` 提供访问：
+在 BlockEntity 子类上添加 `@ModBlockEntity` 注解，扫描器会自动创建并注册 `BlockEntityType`，通过扩展方法 `::class.type()` 提供访问：
 
 ```kotlin
 package ic2_120.content.block
 
-import ic2_120.content.ModBlockEntities
+import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlockEntity
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -125,7 +125,7 @@ class ElectricFurnaceBlockEntity(
 ) : BlockEntity(type, pos, state) {
 
     constructor(pos: BlockPos, state: BlockState) : this(
-        ModBlockEntities.getType(ElectricFurnaceBlockEntity::class),
+        ElectricFurnaceBlockEntity::class.type(),  // 使用扩展方法获取类型
         pos,
         state
     )
@@ -137,8 +137,9 @@ class ElectricFurnaceBlockEntity(
 - `block`: 可选。直接指定关联的方块类（`KClass<out Block>`），优先级高于 `name` 解析
 
 **约定**：
-- 方块实体需提供 `(BlockPos, BlockState)` 的副构造函数，内部通过 `ModBlockEntities.getType(当前类::class)` 调用主构造
+- 方块实体需提供 `(BlockPos, BlockState)` 的副构造函数，内部通过 `当前类::class.type()` 调用主构造
 - 对应方块在 `createBlockEntity` 中应使用该副构造创建实体（如 `ElectricFurnaceBlockEntity(pos, state)`）
+- **重要**：`type()` 是 `RegistryExtensions.kt` 中定义的扩展方法，需要导入 `ic2_120.registry.type`
 
 **能量存储注册**：
 - 方块实体可以在任何属性上添加 `@RegisterEnergy` 注解（Kotlin 属性）
@@ -148,6 +149,8 @@ class ElectricFurnaceBlockEntity(
 
 **继承示例**（变压器）：
 ```kotlin
+import ic2_120.registry.type
+
 // 父类：包含能量存储逻辑
 abstract class TransformerBlockEntity(
     type: BlockEntityType<*>,
@@ -166,7 +169,7 @@ abstract class TransformerBlockEntity(
 @ModBlockEntity(block = LvTransformerBlock::class)
 class LvTransformerBlockEntity(pos: BlockPos, state: BlockState) :
     TransformerBlockEntity(
-        ModBlockEntities.getType(LvTransformerBlockEntity::class),
+        LvTransformerBlockEntity::class.type(),  // 使用扩展方法
         pos, state, tier = 1
     )
 ```
@@ -244,7 +247,7 @@ class IronScaffoldBlock : PillarBlock(
 ```kotlin
 @ModScreenHandler(name = "electric_furnace")
 class ElectricFurnaceScreenHandler(...) : ScreenHandler(
-    ModScreenHandlers.getType(ElectricFurnaceScreenHandler::class), syncId
+    ElectricFurnaceScreenHandler::class.type(), syncId  // 使用扩展方法
 ) {
     companion object {
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ElectricFurnaceScreenHandler { ... }
@@ -252,11 +255,29 @@ class ElectricFurnaceScreenHandler(...) : ScreenHandler(
 }
 ```
 
-**客户端**：在 HandledScreen 子类上添加 `@ModScreen(handler = "注册名")`，与对应 ScreenHandler 的 name 一致：
+**多方块共享同一 UI**：如果多个方块使用相同的 ScreenHandler，可以使用 `names` 数组参数：
 
 ```kotlin
+@ModScreenHandler(names = ["macerator", "compressor", "cutter"])
+class ProcessingMachineScreenHandler(...) : ScreenHandler(
+    ProcessingMachineScreenHandler::class.type(), syncId
+) {
+    companion object {
+        fun fromBuffer(...): ProcessingMachineScreenHandler { ... }
+    }
+}
+```
+
+**客户端**：在 HandledScreen 子类上添加 `@ModScreen`，与对应 ScreenHandler 的 name 一致：
+
+```kotlin
+// 单一 UI
 @ModScreen(handler = "electric_furnace")
 class ElectricFurnaceScreen(handler: ElectricFurnaceScreenHandler, ...) : HandledScreen<...>(...)
+
+// 多方块共享同一 UI
+@ModScreen(handlers = ["macerator", "compressor", "cutter"])
+class ProcessingMachineScreen(handler: ProcessingMachineScreenHandler, ...) : HandledScreen<...>(...)
 ```
 
 主入口扫描包需包含 `ic2_120.content.screen`；客户端入口调用 `ClientScreenRegistrar.registerScreens(Ic2_120.MOD_ID, listOf("ic2_120.client"))`。
@@ -381,7 +402,11 @@ src/main/kotlin/ic2_120/
 │   │   └── ...
 │   ├── item/                # 物品类
 │   │   └── ...
-│   └── ModBlockEntities.kt  # 方块实体类型访问入口（getType）
+│   └── screen/              # ScreenHandler 类
+│       └── ...
+├── client/
+│   └── screen/              # 客户端 Screen 类
+│       └── ...
 ├── registry/
 │   ├── annotation/          # 注解定义
 │   │   ├── ModCreativeTab.kt
@@ -390,11 +415,44 @@ src/main/kotlin/ic2_120/
 │   │   ├── ModItem.kt
 │   │   ├── ModScreenHandler.kt
 │   │   └── ModScreen.kt
+│   ├── RegistryExtensions.kt # 扩展方法（type() 等）
 │   ├── ClassScanner.kt      # 类扫描器
-│   ├── BlockEntityTypeStore.kt  # 存储扫描得到的 BlockEntityType
-│   ├── ScreenHandlerTypeStore.kt  # 存储扫描得到的 ScreenHandlerType
+│   ├── BlockEntityTypeStore.kt  # 存储 BlockEntityType
+│   ├── ScreenHandlerTypeStore.kt  # 存储 ScreenHandlerType
 │   └── CreativeTab.kt       # 物品栏枚举
 └── Ic2_120.kt               # 主入口
+```
+
+### 扩展方法（RegistryExtensions.kt）
+
+`RegistryExtensions.kt` 提供了类型安全的扩展方法，用于访问已注册的类型：
+
+```kotlin
+// Block 相关
+fun KClass<out Block>.instance(): Block          // 获取 Block 单例
+fun KClass<out Block>.id(): Identifier          // 获取注册 ID
+fun KClass<out Block>.item(): Item               // 获取 Block 的物品
+
+// Item 相关
+fun KClass<out Item>.instance(): Item            // 获取 Item 单例
+fun KClass<out Item>.id(): Identifier            // 获取注册 ID
+
+// BlockEntity 相关（关键）
+fun KClass<BlockEntity>.type(): BlockEntityType<*>  // 获取 BlockEntityType
+
+// ScreenHandler 相关
+fun KClass<out ScreenHandler>.type(): ScreenHandlerType<*>  // 获取 ScreenHandlerType
+```
+
+**使用示例**：
+```kotlin
+import ic2_120.registry.type
+
+// 方块实体构造函数中使用
+constructor(pos: BlockPos, state: BlockState) : this(
+    MyBlockEntity::class.type(),  // 获取已注册的 BlockEntityType
+    pos, state
+)
 ```
 
 ## 常见问题
@@ -408,7 +466,31 @@ class HiddenBlock : Block(Settings.create())
 
 ### Q: 如何添加新的方块实体？
 
-在 BlockEntity 类上添加 `@ModBlockEntity(name = "与方块相同的注册名")`，并提供 `(BlockPos, BlockState)` 副构造，内部通过 `ModBlockEntities.getType(当前类::class)` 调用主构造。对应方块在 `createBlockEntity` 中调用该副构造即可。详见上文「4. 注册方块实体类型」。
+在 BlockEntity 类上添加 `@ModBlockEntity(name = "与方块相同的注册名")`，并提供 `(BlockPos, BlockState)` 副构造，内部通过 `当前类::class.type()` 调用主构造。对应方块在 `createBlockEntity` 中调用该副构造即可。详见上文「4. 注册方块实体类型」。
+
+**示例**：
+```kotlin
+import ic2_120.registry.type
+
+@ModBlockEntity(name = "my_machine")
+class MyMachineBlockEntity(
+    type: BlockEntityType<*>,
+    pos: BlockPos,
+    state: BlockState
+) : BlockEntity(type, pos, state) {
+    // 副构造函数
+    constructor(pos: BlockPos, state: BlockState) : this(
+        MyMachineBlockEntity::class.type(),  // 使用扩展方法
+        pos, state
+    )
+}
+
+// 对应的 Block 类
+class MyMachineBlock : MachineBlock(Settings.create()) {
+    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+        MyMachineBlockEntity(pos, state)  // 调用副构造
+}
+```
 
 ### Q: 方块实体继承父类时，@RegisterEnergy 字段会被识别吗？
 

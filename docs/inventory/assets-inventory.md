@@ -6,12 +6,49 @@
 
 **材质路径约定**：ic2_120 模组内所有模型 JSON 引用纹理时，命名空间路径**不带复数 s**——方块纹理用 `ic2:block/...`（不用 `blocks`），物品纹理用 `ic2:item/...`（不用 `items`）。例如：`ic2:block/resource/copper_block`、`ic2:item/resource/ingot/copper`。
 
+> **⚠️ 注意**：文档中可能存在使用 `ic2:items/...` 和 `ic2:blocks/...` 的历史引用，这些是错误的，应使用 `ic2:item/...` 和 `ic2:block/...`（不带s）。
+
 ## 统计信息
 
-- **方块总数**: 244 个（来自 blockstates 目录）
-- **物品模型总数**: 518 个（来自 models/item 目录）
-- **方块模型数**: 30 个（来自 models/block 目录，包含多开门等变体共 41 个文件）
-- **纹理文件总数**: 1537 个（来自 textures 目录）
+> **⚠️ 重要警告**：本文档包含大量机器实现状态标记，许多已标记为 `[ ]`（未实现）的机器实际上已实现。由于文档规模大（1000+行），手工同步极易出错。强烈建议使用以下命令重新统计，并对照代码检查实际实现状态。
+
+### 快速统计命令
+
+```bash
+# 统计方块数量
+find src/main/resources/assets/ic2_120/blockstates -name "*.json" | wc -l
+
+# 统计物品模型数量
+find src/main/resources/assets/ic2_120/models/item -name "*.json" | wc -l
+
+# 统计方块模型数量
+find src/main/resources/assets/ic2_120/models/block -name "*.json" | wc -l
+
+# 统计纹理文件
+find src/main/resources/assets/ic2/textures -type f | wc -l
+```
+
+### 检查机器实现状态
+
+要检查某个机器是否已实现，可以：
+
+1. **检查方块类**：查找 `src/main/kotlin/ic2_120/content/block/` 下的对应方块文件
+2. **检查方块实体**：查找 `src/main/kotlin/ic2_120/content/block/entity/` 下的对应 BlockEntity 文件
+3. **检查注解**：已实现的机器会使用 `@ModBlock` 和 `@ModBlockEntity` 注解
+
+**示例**：检查 `electric_kinetic_generator` 是否实现：
+```bash
+# 查找相关文件
+find src -name "*ElectricKineticGenerator*" -o -name "*electric_kinetic_generator*"
+```
+
+**历史统计**（仅供参考，可能已过时）：
+- 方块总数：244 个
+- 物品模型总数：518 个（实际约621个）
+- 方块模型数：30 个（实际约770个）
+- 纹理文件总数：1537 个
+
+> **建议**：如有需要，可以使用脚本自动生成最新的资产清单，而非手工维护本文档。
 
 ---
 

@@ -194,7 +194,7 @@ fun tick(world: World, pos: BlockPos, state: BlockState) {
 
 ### 3. 能量存储与高压升级
 
-若机器使用 `UpgradeableTickLimitedEnergyStorage`，需传入 `capacityBonusProvider` 和 `maxInsertPerTickProvider`：
+若机器使用 `UpgradeableTickLimitedSidedEnergyContainer`，需传入 `capacityBonusProvider` 和 `maxInsertPerTickProvider`：
 
 ```kotlin
 val sync = MetalFormerSync(
