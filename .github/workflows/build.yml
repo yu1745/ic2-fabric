@@ -41,10 +41,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: Artifacts
+      - name: checkout for libs
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            libs
+          sparse-checkout-cone-mode: false
       - name: filter mod jar
         run: |
           mkdir -p mod-release
-          for f in ic2_120-*.jar; do
+          for f in build/libs/ic2_120-*.jar; do
             [[ "$f" != *-sources* && "$f" != *-remapped* ]] && cp "$f" mod-release/
           done
           # 复制运行时依赖到 release
