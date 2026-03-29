@@ -584,17 +584,17 @@ class CfPowder : Item(FabricItemSettings()){
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            // 合成配方：6×粘土 + 2×沙子 + 1×铁矿石 → 1×建筑泡沫粉（cf_powder）
+            // 合成配方：6×石粉 + 2×沙子 + 1×黏土球 → 1×建筑泡沫粉（cf_powder），与 IC2 经典摆法一致
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CfPowder::class.instance(), 1)
-                .pattern("csc")
-                .pattern("cic")
-                .pattern("csc")
-                .input('c', Items.CLAY_BALL)
+                .pattern("dsd")
+                .pattern("dcd")
+                .pattern("dsd")
+                .input('d', StoneDust::class.instance())
                 .input('s', Items.SAND)
-                .input('i', Items.IRON_ORE)
-                .criterion(hasItem(Items.CLAY_BALL), conditionsFromItem(Items.CLAY_BALL))
+                .input('c', Items.CLAY_BALL)
+                .criterion(hasItem(StoneDust::class.instance()), conditionsFromItem(StoneDust::class.instance()))
                 .criterion(hasItem(Items.SAND), conditionsFromItem(Items.SAND))
-                .criterion(hasItem(Items.IRON_ORE), conditionsFromItem(Items.IRON_ORE))
+                .criterion(hasItem(Items.CLAY_BALL), conditionsFromItem(Items.CLAY_BALL))
                 .offerTo(exporter, CfPowder::class.id())
         }
     }

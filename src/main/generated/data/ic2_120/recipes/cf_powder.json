@@ -5,17 +5,17 @@
     "c": {
       "item": "minecraft:clay_ball"
     },
-    "i": {
-      "item": "minecraft:iron_ore"
+    "d": {
+      "item": "ic2_120:stone_dust"
     },
     "s": {
       "item": "minecraft:sand"
     }
   },
   "pattern": [
-    "csc",
-    "cic",
-    "csc"
+    "dsd",
+    "dcd",
+    "dsd"
   ],
   "result": {
     "item": "ic2_120:cf_powder"

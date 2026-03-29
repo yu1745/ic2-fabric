@@ -13,24 +13,24 @@
       },
       "trigger": "minecraft:inventory_changed"
     },
-    "has_iron_ore": {
-      "conditions": {
-        "items": [
-          {
-            "items": [
-              "minecraft:iron_ore"
-            ]
-          }
-        ]
-      },
-      "trigger": "minecraft:inventory_changed"
-    },
     "has_sand": {
       "conditions": {
         "items": [
           {
             "items": [
               "minecraft:sand"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_stone_dust": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:stone_dust"
             ]
           }
         ]
@@ -46,9 +46,9 @@
   },
   "requirements": [
     [
-      "has_clay_ball",
+      "has_stone_dust",
       "has_sand",
-      "has_iron_ore",
+      "has_clay_ball",
       "has_the_recipe"
     ]
   ],
