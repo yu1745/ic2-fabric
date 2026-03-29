@@ -27,7 +27,7 @@ import ic2_120.registry.annotation.RecipeProvider
 /**
  * 锡锭。
  */
-@ModItem(name = "tin_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots")
+@ModItem(name = "tin_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/tin"])
 class TinIngot : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -94,7 +94,7 @@ class TinIngot : Item(FabricItemSettings()) {
 /**
  * 青铜锭。
  */
-@ModItem(name = "bronze_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots")
+@ModItem(name = "bronze_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/bronze"])
 class BronzeIngot : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -118,6 +118,6 @@ class BronzeIngot : Item(FabricItemSettings()) {
 /**
  * 橡胶。
  */
-@ModItem(name = "rubber", tab = CreativeTab.IC2_MATERIALS, group = "materials")
+@ModItem(name = "rubber", tab = CreativeTab.IC2_MATERIALS, group = "materials", materialTags = ["rubber"])
 class RubberItem : Item(FabricItemSettings())
 

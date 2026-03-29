@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "f": {
-      "item": "minecraft:iron_ingot"
+      "tag": "ic2_120:compat/ingots/iron"
     },
     "r": {
       "item": "minecraft:redstone"

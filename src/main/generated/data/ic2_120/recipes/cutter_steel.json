@@ -3,10 +3,10 @@
   "category": "equipment",
   "key": {
     "I": {
-      "item": "minecraft:iron_ingot"
+      "tag": "ic2_120:compat/ingots/iron"
     },
     "P": {
-      "item": "ic2_120:steel_ingot"
+      "tag": "ic2_120:compat/ingots/steel"
     }
   },
   "pattern": [

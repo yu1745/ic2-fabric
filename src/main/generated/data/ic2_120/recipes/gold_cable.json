@@ -6,7 +6,7 @@
       "item": "ic2_120:cutter"
     },
     {
-      "item": "ic2_120:gold_plate"
+      "tag": "ic2_120:compat/plates/gold"
     }
   ],
   "result": {

@@ -3,10 +3,10 @@
   "category": "misc",
   "key": {
     "D": {
-      "item": "ic2_120:diamond_dust"
+      "tag": "ic2_120:compat/dusts/diamond"
     },
     "R": {
-      "item": "minecraft:redstone"
+      "tag": "ic2_120:compat/dusts/redstone"
     }
   },
   "pattern": [

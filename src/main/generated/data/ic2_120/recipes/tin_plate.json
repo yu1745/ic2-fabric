@@ -6,7 +6,7 @@
       "item": "ic2_120:forge_hammer"
     },
     {
-      "item": "ic2_120:tin_ingot"
+      "tag": "ic2_120:compat/ingots/tin"
     }
   ],
   "result": {

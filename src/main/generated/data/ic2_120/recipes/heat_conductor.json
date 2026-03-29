@@ -3,10 +3,10 @@
   "category": "misc",
   "key": {
     "P": {
-      "item": "ic2_120:copper_plate"
+      "tag": "ic2_120:compat/plates/copper"
     },
     "R": {
-      "item": "ic2_120:rubber"
+      "tag": "ic2_120:compat/rubber"
     }
   },
   "pattern": [

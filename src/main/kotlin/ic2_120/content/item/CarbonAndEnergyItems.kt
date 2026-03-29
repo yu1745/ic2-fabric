@@ -7,6 +7,7 @@ import ic2_120.registry.CreativeTab
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.recipeId
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
@@ -99,7 +100,7 @@ class Circuit : Item(FabricItemSettings()) {
                 .pattern("xxx").pattern("rfr").pattern("xxx")
                 .input('x', ic2_120.content.block.cables.InsulatedCopperCableBlock::class.instance())
                 .input('r', Items.REDSTONE)
-                .input('f', Items.IRON_INGOT)
+                .input('f', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON))
                 .criterion(hasItem(Items.REDSTONE), conditionsFromItem(Items.REDSTONE))
                 .offerTo(exporter, Circuit::class.id())
         }
@@ -139,7 +140,7 @@ class IridiumShard : Item(FabricItemSettings()){
     }
 }
 
-@ModItem(name = "iridium_ore_item", tab = CreativeTab.IC2_MATERIALS, group = "materials")
+@ModItem(name = "iridium_ore_item", tab = CreativeTab.IC2_MATERIALS, group = "materials", materialTags = ["ores/iridium"])
 class IridiumOreItem : Item(FabricItemSettings())
 
 @ModItem(name = "iridium", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
@@ -156,7 +157,7 @@ class IridiumPlate : Item(FabricItemSettings()) {
                 .pattern("IAI").pattern("ADA").pattern("IAI")
                 .input('I', IridiumOreItem::class.instance())
                 .input('A', Alloy::class.instance())
-                .input('D', Items.DIAMOND)
+                .input('D', Ingredient.fromTag(ModTags.Compat.Items.GEMS_DIAMOND))
                 .criterion(hasItem(IridiumOreItem::class.instance()), conditionsFromItem(IridiumOreItem::class.instance()))
                 .offerTo(exporter, IridiumPlate::class.id())
 
@@ -181,7 +182,7 @@ class Coil : Item(FabricItemSettings()) {
                     .pattern("CIC")
                     .pattern("CCC")
                     .input('C', cable)
-                    .input('I', Items.IRON_INGOT)
+                    .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON))
                     .criterion(hasItem(cable), conditionsFromItem(cable))
                     .offerTo(exporter, Coil::class.id())
             }
@@ -197,7 +198,7 @@ class ElectricMotor : Item(FabricItemSettings()) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ElectricMotor::class.instance(), 1)
                 .pattern(" Y ").pattern("YFY").pattern(" Y ")
                 .input('Y', Coil::class.instance())
-                .input('F', Items.IRON_INGOT)
+                .input('F', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON))
                 .criterion(hasItem(Coil::class.instance()), conditionsFromItem(Coil::class.instance()))
                 .offerTo(exporter, ElectricMotor::class.id())
         }
@@ -209,16 +210,16 @@ class HeatConductor : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            val rubber = RubberItem::class.instance()
-            val plate = CopperPlate::class.instance()
-            if (rubber != Items.AIR && plate != Items.AIR) {
+            val rubber = Ingredient.fromTag(ModTags.Compat.Items.RUBBER)
+            val plate = Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER)
+            if (RubberItem::class.instance() != Items.AIR && CopperPlate::class.instance() != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, HeatConductor::class.instance(), 1)
                     .pattern("RPR")
                     .pattern("RPR")
                     .pattern("RPR")
                     .input('R', rubber)
                     .input('P', plate)
-                    .criterion(hasItem(plate), conditionsFromItem(plate))
+                    .criterion(hasItem(CopperPlate::class.instance()), conditionsFromItem(CopperPlate::class.instance()))
                     .offerTo(exporter, HeatConductor::class.id())
             }
         }
@@ -404,7 +405,7 @@ class IodineTablet : Item(FabricItemSettings()) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IodineTablet::class.instance(), 1)
                 .pattern("IT")
                 .input('I', Iodine::class.instance())
-                .input('T', TinPlate::class.instance())
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
                 .criterion(hasItem(Iodine::class.instance()), conditionsFromItem(Iodine::class.instance()))
                 .offerTo(exporter, IodineTablet::class.id())
         }
@@ -425,8 +426,8 @@ class RawCrystalMemory : Item(FabricItemSettings()) {
             // O=黑曜石粉, S=二氧化硅粉
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RawCrystalMemory::class.instance(), 1)
                 .pattern("OSO").pattern("SOS").pattern("OSO")
-                .input('O', ObsidianDust::class.instance())
-                .input('S', SiliconDioxideDust::class.instance())
+                .input('O', Ingredient.fromTag(ModTags.Compat.Items.DUSTS_OBSIDIAN))
+                .input('S', Ingredient.fromTag(ModTags.Compat.Items.DUSTS_SILICON_DIOXIDE))
                 .criterion(hasItem(SiliconDioxideDust::class.instance()), conditionsFromItem(SiliconDioxideDust::class.instance()))
                 .offerTo(exporter, RawCrystalMemory::class.id())
         }

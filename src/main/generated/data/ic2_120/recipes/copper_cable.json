@@ -6,7 +6,7 @@
       "item": "ic2_120:cutter"
     },
     {
-      "item": "ic2_120:copper_plate"
+      "tag": "ic2_120:compat/plates/copper"
     }
   ],
   "result": {

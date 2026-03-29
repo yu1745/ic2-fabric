@@ -6,7 +6,7 @@
       "item": "ic2_120:forge_hammer"
     },
     {
-      "item": "minecraft:lapis_lazuli"
+      "tag": "ic2_120:compat/gems/lapis"
     }
   ],
   "result": {

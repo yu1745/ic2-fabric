@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "#c:ingots/lead",
+    "#forge:ingots/lead"
+  ]
+}

@@ -3,7 +3,7 @@
   "category": "equipment",
   "key": {
     "M": {
-      "item": "ic2_120:bronze_ingot"
+      "tag": "ic2_120:compat/ingots/bronze"
     },
     "S": {
       "item": "minecraft:stick"

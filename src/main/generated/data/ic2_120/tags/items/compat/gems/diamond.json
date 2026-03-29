@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "#c:gems/diamond",
+    "#forge:gems/diamond"
+  ]
+}

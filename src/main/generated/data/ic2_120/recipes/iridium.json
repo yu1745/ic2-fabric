@@ -6,7 +6,7 @@
       "item": "ic2_120:alloy"
     },
     "D": {
-      "item": "minecraft:diamond"
+      "tag": "ic2_120:compat/gems/diamond"
     },
     "I": {
       "item": "ic2_120:iridium_ore_item"

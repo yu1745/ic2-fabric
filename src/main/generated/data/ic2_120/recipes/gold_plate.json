@@ -3,7 +3,7 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "minecraft:gold_ingot"
+      "tag": "ic2_120:compat/ingots/gold"
     },
     {
       "item": "ic2_120:forge_hammer"

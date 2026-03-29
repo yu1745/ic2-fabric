@@ -6,7 +6,7 @@
       "item": "ic2_120:iodine"
     },
     "T": {
-      "item": "ic2_120:tin_plate"
+      "tag": "ic2_120:compat/plates/tin"
     }
   },
   "pattern": [

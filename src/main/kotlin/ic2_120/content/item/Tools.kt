@@ -4,8 +4,8 @@ import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.item.energy.EnergyCrystalItem
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.recipes.crafting.BatteryEnergyShapedRecipeDatagen
-import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.id
 import ic2_120.registry.instance
@@ -48,10 +48,8 @@ import net.minecraft.item.ShovelItem
 import net.minecraft.item.SwordItem
 import net.minecraft.item.ToolMaterial
 import net.minecraft.recipe.Ingredient
-import net.minecraft.registry.Registries
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.enchantment.Enchantments
-import net.minecraft.util.Identifier
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.recipe.book.RecipeCategory
@@ -72,7 +70,7 @@ object BronzeToolMaterial : ToolMaterial {
     override fun getMiningLevel() = 2
     override fun getEnchantability() = 10
     override fun getRepairIngredient(): Ingredient =
-        Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "bronze_ingot")))
+        Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
 }
 
 // ========== 工具类 ==========
@@ -83,12 +81,12 @@ class ForgeHammer : Item(FabricItemSettings().maxDamage(80)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            val iron = Items.IRON_INGOT
+            val iron = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ForgeHammer::class.instance(), 1)
                 .pattern("II").pattern("IS").pattern("II")
                 .input('I', iron).input('S', stick)
-                .criterion(hasItem(iron), conditionsFromItem(iron))
+                .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
                 .offerTo(exporter, ForgeHammer::class.id())
         }
     }
@@ -109,22 +107,22 @@ class Cutter : Item(FabricItemSettings().maxDamage(60)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            val ironIngot = Items.IRON_INGOT
-            val ironPlate = IronPlate::class.instance()
-            val steelIngot = SteelIngot::class.instance()
+            val ironIngot = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON)
+            val ironPlate = Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON)
+            val steelIngot = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_STEEL)
 
             // 配方 1：铁板制作切割机
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, Cutter::class.instance(), 1)
                 .pattern("P P").pattern(" P ").pattern("I I")
                 .input('P', ironPlate).input('I', ironIngot)
-                .criterion(hasItem(ironPlate), conditionsFromItem(ironPlate))
+                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, Cutter::class.recipeId("iron_plate"))
 
             // 配方 2：钢锭制作切割机
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, Cutter::class.instance(), 1)
                 .pattern("P P").pattern(" P ").pattern("I I")
                 .input('P', steelIngot).input('I', ironIngot)
-                .criterion(hasItem(steelIngot), conditionsFromItem(steelIngot))
+                .criterion(hasItem(SteelIngot::class.instance()), conditionsFromItem(SteelIngot::class.instance()))
                 .offerTo(exporter, Cutter::class.recipeId("steel"))
         }
     }
@@ -146,12 +144,12 @@ class BronzeAxe : AxeItem(BronzeToolMaterial, 5f, -3f, FabricItemSettings().maxC
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            val bronze = BronzeIngot::class.instance()
+            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzeAxe::class.instance(), 1)
                 .pattern("MM").pattern("MS").pattern(" S")
                 .input('M', bronze).input('S', stick)
-                .criterion(hasItem(bronze), conditionsFromItem(bronze))
+                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
                 .offerTo(exporter, BronzeAxe::class.id())
         }
     }
@@ -162,12 +160,12 @@ class BronzeHoe : HoeItem(BronzeToolMaterial, -1, 0f, FabricItemSettings().maxCo
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            val bronze = BronzeIngot::class.instance()
+            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzeHoe::class.instance(), 1)
                 .pattern("MM").pattern(" S").pattern(" S")
                 .input('M', bronze).input('S', stick)
-                .criterion(hasItem(bronze), conditionsFromItem(bronze))
+                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
                 .offerTo(exporter, BronzeHoe::class.id())
         }
     }
@@ -178,12 +176,12 @@ class BronzeSword : SwordItem(BronzeToolMaterial, 3, -2.4f, FabricItemSettings()
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            val bronze = BronzeIngot::class.instance()
+            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzeSword::class.instance(), 1)
                 .pattern("M").pattern("M").pattern("S")
                 .input('M', bronze).input('S', stick)
-                .criterion(hasItem(bronze), conditionsFromItem(bronze))
+                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
                 .offerTo(exporter, BronzeSword::class.id())
         }
     }
@@ -194,12 +192,12 @@ class BronzeShovel : ShovelItem(BronzeToolMaterial, 1.5f, -3f, FabricItemSetting
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            val bronze = BronzeIngot::class.instance()
+            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzeShovel::class.instance(), 1)
                 .pattern("M").pattern("S").pattern("S")
                 .input('M', bronze).input('S', stick)
-                .criterion(hasItem(bronze), conditionsFromItem(bronze))
+                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
                 .offerTo(exporter, BronzeShovel::class.id())
         }
     }
@@ -210,12 +208,12 @@ class BronzePickaxe : PickaxeItem(BronzeToolMaterial, 1, -2.8f, FabricItemSettin
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            val bronze = BronzeIngot::class.instance()
+            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzePickaxe::class.instance(), 1)
                 .pattern("MMM").pattern(" S ").pattern(" S ")
                 .input('M', bronze).input('S', stick)
-                .criterion(hasItem(bronze), conditionsFromItem(bronze))
+                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
                 .offerTo(exporter, BronzePickaxe::class.id())
         }
     }
@@ -250,12 +248,12 @@ class WeedingSpade : Item(FabricItemSettings().maxDamage(120)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            val bronze = BronzeIngot::class.instance()
+            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, WeedingSpade::class.instance(), 1)
                 .pattern("M").pattern("S")
                 .input('M', bronze).input('S', stick)
-                .criterion(hasItem(bronze), conditionsFromItem(bronze))
+                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
                 .offerTo(exporter, WeedingSpade::class.id())
         }
     }

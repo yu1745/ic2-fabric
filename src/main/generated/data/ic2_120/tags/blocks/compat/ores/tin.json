@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "#c:ores/tin",
+    "#forge:ores/tin",
+    "#c:ores/tin",
+    "#forge:ores/tin"
+  ]
+}

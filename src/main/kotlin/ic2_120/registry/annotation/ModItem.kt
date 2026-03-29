@@ -16,11 +16,13 @@ import ic2_120.registry.type
  * @param name 注册名（不含命名空间），如 "copper_ingot"。为空则使用类名转换（驼峰转下划线小写）
  * @param tab 创造模式物品栏位置，使用枚举常量
  * @param group 分组名；相同 group 的物品在创造模式物品栏中会排在一起（反射顺序不稳定时用此保证顺序）。空字符串表示不分组
+ * @param materialTags 语义路径（不含命名空间），如 `"ingots/tin"`、`"dusts/iron"`；用于 datagen 注册到 c:/forge:/ic2_120:compat/ 标签
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class ModItem(
     val name: String = "",
     val tab: CreativeTab = CreativeTab.MINECRAFT_MISC,
-    val group: String = ""
+    val group: String = "",
+    val materialTags: Array<String> = emptyArray(),
 )

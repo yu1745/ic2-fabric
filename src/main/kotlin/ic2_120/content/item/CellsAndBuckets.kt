@@ -46,6 +46,15 @@ import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.util.Formatting
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.recipe.book.RecipeCategory
+import java.util.function.Consumer
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.registry.instance
+import ic2_120.registry.id
 import org.slf4j.LoggerFactory
 
 /** 通用流体单元 NBT 键：存储 FluidVariant */
@@ -569,9 +578,27 @@ class BioCell : Item(FabricItemSettings())
 // biofuel_bucket, biomass_bucket 由 ModFluids 注册为 BucketItem，此处不再重复注册
 
 // ========== 建筑泡沫类 ==========
-
+/** 建筑泡沫粉 */
 @ModItem(name = "cf_powder", tab = CreativeTab.IC2_MATERIALS, group = "construction_foam")
-class CfPowder : Item(FabricItemSettings())
+class CfPowder : Item(FabricItemSettings()){
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // 合成配方：6×粘土 + 2×沙子 + 1×铁矿石 → 1×建筑泡沫粉（cf_powder）
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CfPowder::class.instance(), 1)
+                .pattern("csc")
+                .pattern("cic")
+                .pattern("csc")
+                .input('c', Items.CLAY_BALL)
+                .input('s', Items.SAND)
+                .input('i', Items.IRON_ORE)
+                .criterion(hasItem(Items.CLAY_BALL), conditionsFromItem(Items.CLAY_BALL))
+                .criterion(hasItem(Items.SAND), conditionsFromItem(Items.SAND))
+                .criterion(hasItem(Items.IRON_ORE), conditionsFromItem(Items.IRON_ORE))
+                .offerTo(exporter, CfPowder::class.id())
+        }
+    }
+}
 
 @ModItem(name = "pellet", tab = CreativeTab.IC2_MATERIALS, group = "construction_foam")
 class Pellet : Item(FabricItemSettings())

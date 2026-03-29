@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "#c:gems/lapis",
+    "#forge:gems/lapis"
+  ]
+}

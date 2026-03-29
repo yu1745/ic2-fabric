@@ -3,13 +3,13 @@
   "category": "misc",
   "key": {
     "B": {
-      "item": "ic2_120:bronze_plate"
+      "tag": "ic2_120:compat/plates/bronze"
     },
     "I": {
-      "item": "ic2_120:iron_plate"
+      "tag": "ic2_120:compat/plates/iron"
     },
     "T": {
-      "item": "ic2_120:tin_plate"
+      "tag": "ic2_120:compat/plates/tin"
     }
   },
   "pattern": [

@@ -18,6 +18,7 @@ import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
+import ic2_120.content.recipes.MaterialTagRegistry
 import net.minecraft.util.math.Direction
 import team.reborn.energy.api.EnergyStorage
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
@@ -141,6 +142,7 @@ object ClassScanner {
         blockToBlockEntityType.clear()
         recipeGenerators.clear()
         processedClassNames.clear()
+        MaterialTagRegistry.clear()
 
         // 按顺序注册：方块 → 方块实体类型 → ScreenHandler → 物品 → 物品栏
         registerBlocks(modId, blockClasses)
@@ -721,6 +723,9 @@ object ClassScanner {
                 Registry.register(Registries.BLOCK, id, instance)
                 blockClassToName[clazz] = name
                 blockInstances[clazz] = instance
+                if (annotation.materialTags.isNotEmpty()) {
+                    MaterialTagRegistry.blockEntries.add(clazz to annotation.materialTags.toList())
+                }
                 BlockRenderLayerRegistry.put(id, annotation.renderLayer)
                 logger.debug("已注册方块: {}", id)
 
@@ -788,6 +793,9 @@ object ClassScanner {
                 // 注册物品
                 Registry.register(Registries.ITEM, id, instance)
                 itemInstances[clazz] = instance
+                if (annotation.materialTags.isNotEmpty()) {
+                    MaterialTagRegistry.itemEntries.add(clazz to annotation.materialTags.toList())
+                }
                 logger.debug("已注册物品: {}", id)
 
                 // 记录物品应该添加到哪个物品栏（带 group 以便排序，包含类类型用于检查电池/电动工具）

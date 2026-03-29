@@ -1,5 +1,6 @@
 package ic2_120.content.item
 
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.instance
 import ic2_120.registry.recipeId
@@ -10,6 +11,7 @@ import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.Item
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.recipe.book.RecipeCategory
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
@@ -20,7 +22,7 @@ import ic2_120.registry.annotation.RecipeProvider
 // ========== 粉尘类 ==========
 
 /** 青铜粉 */
-@ModItem(name = "bronze_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "bronze_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/bronze"])
 class BronzeDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -39,11 +41,11 @@ class BronzeDust : Item(FabricItemSettings()) {
 }
 
 /** 粘土粉 */
-@ModItem(name = "clay_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "clay_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/clay"])
 class ClayDust : Item(FabricItemSettings())
 
 /** 煤粉 */
-@ModItem(name = "coal_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "coal_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/coal"])
 class CoalDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -81,7 +83,7 @@ class CoalFuelDust : Item(FabricItemSettings()) {
 }
 
 /** 铜粉 */
-@ModItem(name = "copper_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "copper_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/copper"])
 class CopperDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -100,7 +102,7 @@ class CopperDust : Item(FabricItemSettings()) {
 }
 
 /** 钻石粉 */
-@ModItem(name = "diamond_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "diamond_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/diamond"])
 class DiamondDust : Item(FabricItemSettings())
 
 /** 能量水晶粉 */
@@ -116,8 +118,8 @@ class EnergiumDust : Item(FabricItemSettings()) {
             // D=钻石粉, R=红石粉
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnergiumDust::class.instance(), 9)
                 .pattern("DRD").pattern("RDR").pattern("DRD")
-                .input('D', DiamondDust::class.instance())
-                .input('R', Items.REDSTONE)
+                .input('D', Ingredient.fromTag(ModTags.Compat.Items.DUSTS_DIAMOND))
+                .input('R', Ingredient.fromTag(ModTags.Compat.Items.DUSTS_REDSTONE))
                 .criterion(hasItem(DiamondDust::class.instance()), conditionsFromItem(DiamondDust::class.instance()))
                 .offerTo(exporter, EnergiumDust::class.recipeId("from_crafting"))
         }
@@ -125,7 +127,7 @@ class EnergiumDust : Item(FabricItemSettings()) {
 }
 
 /** 金粉 */
-@ModItem(name = "gold_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "gold_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/gold"])
 class GoldDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -144,7 +146,7 @@ class GoldDust : Item(FabricItemSettings()) {
 }
 
 /** 铁粉 */
-@ModItem(name = "iron_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "iron_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/iron"])
 class IronDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -163,7 +165,7 @@ class IronDust : Item(FabricItemSettings()) {
 }
 
 /** 青金石粉 */
-@ModItem(name = "lapis_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "lapis_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/lapis"])
 class LapisDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -182,7 +184,7 @@ class LapisDust : Item(FabricItemSettings()) {
 }
 
 /** 铅粉 */
-@ModItem(name = "lead_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "lead_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/lead"])
 class LeadDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -201,7 +203,7 @@ class LeadDust : Item(FabricItemSettings()) {
 }
 
 /** 锂粉 */
-@ModItem(name = "lithium_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "lithium_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/lithium"])
 class LithiumDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -220,7 +222,7 @@ class LithiumDust : Item(FabricItemSettings()) {
 }
 
 /** 黑曜石粉 */
-@ModItem(name = "obsidian_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "obsidian_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/obsidian"])
 class ObsidianDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -240,11 +242,11 @@ class ObsidianDust : Item(FabricItemSettings()) {
 }
 
 /** 二氧化硅粉 */
-@ModItem(name = "silicon_dioxide_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "silicon_dioxide_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/silicon_dioxide"])
 class SiliconDioxideDust : Item(FabricItemSettings())
 
 /** 银粉 */
-@ModItem(name = "silver_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "silver_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/silver"])
 class SilverDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -263,11 +265,11 @@ class SilverDust : Item(FabricItemSettings()) {
 }
 
 /** 石粉 */
-@ModItem(name = "stone_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "stone_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/stone"])
 class StoneDust : Item(FabricItemSettings())
 
 /** 硫粉 */
-@ModItem(name = "sulfur_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "sulfur_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/sulfur"])
 class SulfurDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -286,7 +288,7 @@ class SulfurDust : Item(FabricItemSettings()) {
 }
 
 /** 锡粉 */
-@ModItem(name = "tin_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "tin_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/tin"])
 class TinDust : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -326,11 +328,11 @@ class HydratedTinDust : Item(FabricItemSettings()) {
 }
 
 /** 地狱岩粉 */
-@ModItem(name = "netherrack_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "netherrack_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/netherrack"])
 class NetherrackDust : Item(FabricItemSettings())
 
 /** 末影珍珠粉 */
-@ModItem(name = "ender_pearl_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts")
+@ModItem(name = "ender_pearl_dust", tab = CreativeTab.IC2_MATERIALS, group = "dusts", materialTags = ["dusts/ender_pearl"])
 class EnderPearlDust : Item(FabricItemSettings())
 
 // ========== 小撮粉尘类 ==========

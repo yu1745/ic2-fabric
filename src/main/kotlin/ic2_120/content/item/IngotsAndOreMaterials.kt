@@ -7,6 +7,7 @@ import ic2_120.registry.CreativeTab
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.recipeId
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.annotation.ModItem
 import ic2_120.content.block.LeadBlock
 import ic2_120.content.block.LeadOreBlock
@@ -62,9 +63,9 @@ class MixedMetalIngot : Item(FabricItemSettings()) {
                 .pattern("III")
                 .pattern("BBB")
                 .pattern("TTT")
-                .input('I', IronPlate::class.instance())
-                .input('B', BronzePlate::class.instance())
-                .input('T', TinPlate::class.instance())
+                .input('I', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
+                .input('B', Ingredient.fromTag(ModTags.Compat.Items.PLATES_BRONZE))
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, MixedMetalIngot::class.recipeId("from_plates"))
 
@@ -73,9 +74,9 @@ class MixedMetalIngot : Item(FabricItemSettings()) {
                 .pattern("III")
                 .pattern("BBB")
                 .pattern("TTT")
-                .input('I', SteelIngot::class.instance())
-                .input('B', BronzeIngot::class.instance())
-                .input('T', TinIngot::class.instance())
+                .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_STEEL))
+                .input('B', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE))
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_TIN))
                 .criterion(hasItem(SteelIngot::class.instance()), conditionsFromItem(SteelIngot::class.instance()))
                 .offerTo(exporter, MixedMetalIngot::class.recipeId("from_ingots"))
         }
@@ -83,7 +84,7 @@ class MixedMetalIngot : Item(FabricItemSettings()) {
 }
 
 /** 铅锭 */
-@ModItem(name = "lead_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots")
+@ModItem(name = "lead_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/lead"])
 class LeadIngot : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -130,7 +131,7 @@ class LeadIngot : Item(FabricItemSettings()) {
 }
 
 /** 银锭 */
-@ModItem(name = "silver_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots")
+@ModItem(name = "silver_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/silver"])
 class SilverIngot : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -165,7 +166,7 @@ class SilverIngot : Item(FabricItemSettings()) {
 }
 
 /** 钢锭 */
-@ModItem(name = "steel_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots")
+@ModItem(name = "steel_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/steel"])
 class SteelIngot : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -187,11 +188,11 @@ class SteelIngot : Item(FabricItemSettings()) {
 }
 
 /** 精炼铁锭 */
-@ModItem(name = "refined_iron_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots")
+@ModItem(name = "refined_iron_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/refined_iron"])
 class RefinedIronIngot : Item(FabricItemSettings())
 
 /** 铀锭 */
-@ModItem(name = "uranium_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots")
+@ModItem(name = "uranium_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/uranium"])
 class UraniumIngot : Item(FabricItemSettings()) {
     companion object {
         @RecipeProvider
@@ -240,15 +241,15 @@ class UraniumIngot : Item(FabricItemSettings()) {
 // ========== 粗金属（raw，冶炼粗矿得） ==========
 
 /** 粗铅 */
-@ModItem(name = "raw_lead", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals")
+@ModItem(name = "raw_lead", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals", materialTags = ["raw_materials/lead"])
 class RawLead : Item(FabricItemSettings())
 
 /** 粗锡 */
-@ModItem(name = "raw_tin", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals")
+@ModItem(name = "raw_tin", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals", materialTags = ["raw_materials/tin"])
 class RawTin : Item(FabricItemSettings())
 
 /** 粗铀 */
-@ModItem(name = "raw_uranium", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals")
+@ModItem(name = "raw_uranium", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals", materialTags = ["raw_materials/uranium"])
 class RawUranium : Item(FabricItemSettings())
 
 // ========== 粉碎矿石（打粉机产物） ==========

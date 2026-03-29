@@ -3,10 +3,10 @@
   "category": "misc",
   "key": {
     "O": {
-      "item": "ic2_120:obsidian_dust"
+      "tag": "ic2_120:compat/dusts/obsidian"
     },
     "S": {
-      "item": "ic2_120:silicon_dioxide_dust"
+      "tag": "ic2_120:compat/dusts/silicon_dioxide"
     }
   },
   "pattern": [

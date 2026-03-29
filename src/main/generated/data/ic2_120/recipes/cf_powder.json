@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "c": {
+      "item": "minecraft:clay_ball"
+    },
+    "i": {
+      "item": "minecraft:iron_ore"
+    },
+    "s": {
+      "item": "minecraft:sand"
+    }
+  },
+  "pattern": [
+    "csc",
+    "cic",
+    "csc"
+  ],
+  "result": {
+    "item": "ic2_120:cf_powder"
+  },
+  "show_notification": true
+}

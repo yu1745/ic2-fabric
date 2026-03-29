@@ -14,7 +14,7 @@ import net.minecraft.util.math.Direction
 /**
  * 锡方块。
  */
-@ModBlock(name = "tin_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")
+@ModBlock(name = "tin_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks", materialTags = ["storage_blocks/tin"])
 class TinBlock : Block(
     AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(4.0f, 5.0f)
 )
@@ -22,7 +22,7 @@ class TinBlock : Block(
 /**
  * 青铜方块。
  */
-@ModBlock(name = "bronze_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")
+@ModBlock(name = "bronze_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks", materialTags = ["storage_blocks/bronze"])
 class BronzeBlock : Block(
     AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
 )
@@ -40,16 +40,16 @@ class RawUraniumBlock : Block(AbstractBlock.Settings.copy(Blocks.RAW_IRON_BLOCK)
 
 // ========== 金属块 ==========
 
-@ModBlock(name = "lead_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")
+@ModBlock(name = "lead_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks", materialTags = ["storage_blocks/lead"])
 class LeadBlock : Block(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f))
 
-@ModBlock(name = "steel_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")
+@ModBlock(name = "steel_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks", materialTags = ["storage_blocks/steel"])
 class SteelBlock : Block(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f))
 
-@ModBlock(name = "uranium_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")
+@ModBlock(name = "uranium_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks", materialTags = ["storage_blocks/uranium"])
 class UraniumBlock : Block(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f))
 
-@ModBlock(name = "silver_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")
+@ModBlock(name = "silver_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks", materialTags = ["storage_blocks/silver"])
 class SilverBlock : Block(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f))
 
 @ModBlock(name = "coal_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")

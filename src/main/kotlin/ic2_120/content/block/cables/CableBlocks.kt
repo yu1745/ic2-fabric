@@ -9,6 +9,7 @@ import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Blocks
 import net.minecraft.item.Item
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.recipe.book.RecipeCategory
@@ -16,6 +17,7 @@ import net.minecraft.util.Identifier
 import java.util.function.Consumer
 import ic2_120.Ic2_120
 import ic2_120.content.item.*
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.id
@@ -38,7 +40,7 @@ class TinCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Base
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, TinCableBlock::class.item(), 2)
                 .input(Cutter::class.instance())
-                .input(TinPlate::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
                 .criterion(hasItem(TinPlate::class.instance()), conditionsFromItem(TinPlate::class.instance()))
                 .offerTo(exporter, TinCableBlock::class.id())
         }
@@ -60,7 +62,7 @@ class CopperCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : B
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, CopperCableBlock::class.item(), 2)
                 .input(Cutter::class.instance())
-                .input(CopperPlate::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
                 .criterion(hasItem(CopperPlate::class.instance()), conditionsFromItem(CopperPlate::class.instance()))
                 .offerTo(exporter, CopperCableBlock::class.id())
         }
@@ -85,7 +87,7 @@ class GoldCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Bas
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, GoldCableBlock::class.item(), 2)
                 .input(Cutter::class.instance())
-                .input(GoldPlate::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.PLATES_GOLD))
                 .criterion(hasItem(GoldPlate::class.instance()), conditionsFromItem(GoldPlate::class.instance()))
                 .offerTo(exporter, GoldCableBlock::class.id())
         }
@@ -110,7 +112,7 @@ class IronCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Bas
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, IronCableBlock::class.item(), 2)
                 .input(Cutter::class.instance())
-                .input(IronPlate::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, IronCableBlock::class.id())
         }

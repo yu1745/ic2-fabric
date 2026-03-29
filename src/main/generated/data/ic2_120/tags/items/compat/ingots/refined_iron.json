@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "#c:ingots/refined_iron",
+    "#forge:ingots/refined_iron"
+  ]
+}

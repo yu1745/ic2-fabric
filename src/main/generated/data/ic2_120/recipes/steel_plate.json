@@ -6,7 +6,7 @@
       "item": "ic2_120:forge_hammer"
     },
     {
-      "item": "ic2_120:steel_ingot"
+      "tag": "ic2_120:compat/ingots/steel"
     }
   ],
   "result": {

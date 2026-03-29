@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "#c:ingots/tin",
+    "#forge:ingots/tin"
+  ]
+}

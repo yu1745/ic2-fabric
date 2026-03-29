@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "#c:dusts/silicon_dioxide",
+    "#forge:dusts/silicon_dioxide"
+  ]
+}

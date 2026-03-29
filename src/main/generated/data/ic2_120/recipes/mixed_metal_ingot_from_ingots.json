@@ -3,13 +3,13 @@
   "category": "misc",
   "key": {
     "B": {
-      "item": "ic2_120:bronze_ingot"
+      "tag": "ic2_120:compat/ingots/bronze"
     },
     "I": {
-      "item": "ic2_120:steel_ingot"
+      "tag": "ic2_120:compat/ingots/steel"
     },
     "T": {
-      "item": "ic2_120:tin_ingot"
+      "tag": "ic2_120:compat/ingots/tin"
     }
   },
   "pattern": [

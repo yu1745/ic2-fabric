@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "#c:plates/copper",
+    "#forge:plates/copper"
+  ]
+}
