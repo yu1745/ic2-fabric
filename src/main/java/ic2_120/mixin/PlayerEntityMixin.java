@@ -27,6 +27,12 @@ public abstract class PlayerEntityMixin {
     private static final int DAMAGE_COST_PER_POINT = 5000;
 
     /**
+     * 防止 {@link #onDamage} 在递归调用 {@link PlayerEntity#damage} 时再次套用电力护甲减伤。
+     */
+    private static final ThreadLocal<Boolean> IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE =
+            ThreadLocal.withInitial(() -> false);
+
+    /**
      * 纳米剑对穿戴纳米套的玩家：替换为无视原版护甲的伤害类型；量子护甲时不替换（见 {@link NanoSaberDamageHelper}）。
      */
     @ModifyVariable(method = "damage", at = @At("HEAD"), ordinal = 0, argsOnly = true)
@@ -41,6 +47,10 @@ public abstract class PlayerEntityMixin {
     @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
     private void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         PlayerEntity player = (PlayerEntity) (Object) this;
+
+        if (IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE.get()) {
+            return;
+        }
 
         if (source.getName().equals("outOfWorld")) {
             return;
@@ -71,7 +81,10 @@ public abstract class PlayerEntityMixin {
         float reducedDamage = amount * (1f - Math.min(totalReduction, 1f));
         if (reducedDamage >= amount) return;
 
-        long energyNeeded = (long) Math.ceil(amount) * DAMAGE_COST_PER_POINT;
+        double mitigated = (double) amount - (double) reducedDamage;
+        if (mitigated <= 0.0) return;
+
+        long energyNeeded = (long) Math.ceil(mitigated) * DAMAGE_COST_PER_POINT;
 
         long totalEnergy = 0;
         for (Map.Entry<ElectricArmorItem, ItemStack> entry : armorItems.entrySet()) {
@@ -117,10 +130,11 @@ public abstract class PlayerEntityMixin {
             }
         }
 
-        if (reducedDamage > 0) {
-            cir.setReturnValue(true);
-        } else {
-            cir.setReturnValue(false);
+        IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE.set(true);
+        try {
+            cir.setReturnValue(player.damage(source, reducedDamage));
+        } finally {
+            IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE.set(false);
         }
         cir.cancel();
     }
