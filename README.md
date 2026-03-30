@@ -12,7 +12,7 @@
 
 > **📢 Sinytra Connector(信雅互联) 支持**：本模组已针对 [Sinytra Connector](https://github.com/Sinytra/connector) 进行适配，Forge 端也可通过 Connector 运行。关于如何在 Forge 环境中使用 Connector 加载 Fabric Mod，请参阅 [Sinytra Connector 官方文档](https://github.com/Sinytra/connector)。
 
-IndustrialCraft 2 的 Minecraft 1.20.1 Fabric 移植版本，使用 Kotlin 编写。
+IndustrialCraft 2 Experimental 的 Minecraft 1.20.1 Fabric 移植版本，使用 Kotlin 编写。
 
 **玩家向说明**：游戏内容与玩法请查看 [mod特性.md](mod特性.md)。本文档面向开发者。
 
