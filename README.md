@@ -81,27 +81,27 @@ ic2-fabric/
 
 ## 文档
 
-详细的技术文档请查看 [docs/](docs/) 目录：
+完整目录与分类见 [docs/README.md](docs/README.md)。常用入口：
 
-- [类级别注解注册系统](docs/CLASS_BASED_REGISTRY.md) - 使用注解和枚举的自动注册系统
-- [同步系统](docs/sync-system.md) - 客户端/服务端属性同步
-- [能量流同步](docs/energy-flow-sync.md) - 机器间能量流动与同步逻辑
-- [能量网络系统](docs/energy-network.md) - EU 能量传输与存储
-- [升级系统](docs/upgrade-system.md) - 机器升级与效果机制
-- [槽位规格系统](docs/slot-spec-system.md) - 机器 GUI 槽位定义与约束
-- [机器组合复用](docs/machine-composition-reuse.md) - 机器逻辑组合与可复用设计
-- [机器实现指南](docs/machine-implementation-guide.md) - 完整的 Block → BlockEntity → ScreenHandler → Screen 实现流程
-- [核电系统](docs/nuclear-power.md) - 核能相关机制与实现说明
-- [热能系统](docs/heat-system.md) - HU 加热与传热机制
-- [流体系统](docs/fluid-system.md) - 流体管道、泵附件与传输规则
-- [传动轴系统](docs/transmission_shaft.md) - 机械传动轴与锥齿轮
-- [已实现物品清单](docs/item-implemented.md) - 当前已落地的物品列表
-- [ComposeUI 声明式 GUI](docs/compose-ui.md) - GUI 布局与绘制系统
-- [DrawContext 绘制方法参考](docs/drawcontext-methods.md) - 绘制 API 说明
-- [Assets 清单](docs/assets-inventory.md) - 模组方块/物品资源清单
-- [生物群系颜色方块](docs/biome-colored-blocks.md) - 实现随生物群系变色的方块
-- [方块变体系统](docs/block-variants.md) - 方块状态与模型变体
-- [唯一礼物物品防复制 TODO](docs/unique-gift-item-anti-dup-todo.md) - 防复制方案草案与待办
+- [类级别注解注册系统](docs/registry/CLASS_BASED_REGISTRY.md) - 使用注解和枚举的自动注册系统
+- [同步系统](docs/systems/sync-system.md) - 客户端/服务端属性同步
+- [能量流同步](docs/systems/energy-flow-sync.md) - 机器间能量流动与同步逻辑
+- [能量网络系统](docs/systems/energy-network.md) - EU 能量传输与存储
+- [升级系统](docs/systems/upgrade-system.md) - 机器升级与效果机制
+- [槽位规格系统](docs/ui/slot-spec-system.md) - 机器 GUI 槽位定义与约束
+- [机器组合复用](docs/guides/machine-composition-reuse.md) - 机器逻辑组合与可复用设计
+- [机器实现指南](docs/guides/machine-implementation-guide.md) - 完整的 Block → BlockEntity → ScreenHandler → Screen 实现流程
+- [核电系统](docs/systems/nuclear-power.md) - 核能相关机制与实现说明
+- [热能系统](docs/systems/heat-system.md) - HU 加热与传热机制
+- [流体系统](docs/systems/fluid-system.md) - 流体管道、泵附件与传输规则
+- [传动轴系统](docs/archive/transmission_shaft.md) - 机械传动轴与锥齿轮
+- [已实现物品清单](docs/guides/item-implemented.md) - 当前已落地的物品列表
+- [ComposeUI 声明式 GUI](docs/ui/compose-ui.md) - GUI 布局与绘制系统
+- [DrawContext 绘制方法参考](docs/ui/drawcontext-methods.md) - 绘制 API 说明
+- [Assets 清单](docs/inventory/assets-inventory.md) - 模组方块/物品资源清单
+- [生物群系颜色方块](docs/registry/biome-colored-blocks.md) - 实现随生物群系变色的方块
+- [方块变体系统](docs/registry/block-variants.md) - 方块状态与模型变体
+- [唯一礼物物品防复制 TODO](docs/archive/unique-gift-item-anti-dup-todo.md) - 防复制方案草案与待办
 
 ## 相比原版未实现部分
 

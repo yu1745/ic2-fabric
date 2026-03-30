@@ -81,27 +81,27 @@ ic2-fabric/
 
 ## Documentation
 
-Detailed technical documentation is available in the [docs/](docs/) directory:
+Full index and categories: [docs/README.md](docs/README.md). Common entries:
 
-- [Class-based Annotation Registration System](docs/CLASS_BASED_REGISTRY.md) - Automatic registration using annotations and enums
-- [Synchronization System](docs/sync-system.md) - Client/server property synchronization
-- [Energy Flow Synchronization](docs/energy-flow-sync.md) - Energy flow and sync logic between machines
-- [Energy Network System](docs/energy-network.md) - EU energy transmission and storage
-- [Upgrade System](docs/upgrade-system.md) - Machine upgrades and effect mechanics
-- [Slot Specification System](docs/slot-spec-system.md) - Machine GUI slot definitions and constraints
-- [Machine Composition Reuse](docs/machine-composition-reuse.md) - Machine logic composition and reusable design
-- [Machine Implementation Guide](docs/machine-implementation-guide.md) - Complete Block → BlockEntity → ScreenHandler → Screen workflow
-- [Nuclear Power System](docs/nuclear-power.md) - Nuclear-related mechanics and implementation
-- [Heat System](docs/heat-system.md) - HU heating and heat transfer mechanics (Chinese)
-- [Fluid System](docs/fluid-system.md) - Fluid pipes, pump attachments, and transmission rules (Chinese)
-- [Transmission Shaft System](docs/transmission_shaft.md) - Mechanical shafts and bevel gears (Chinese)
-- [Implemented Items List](docs/item-implemented.md) - List of currently implemented items
-- [ComposeUI Declarative GUI](docs/compose-ui.md) - GUI layout and rendering system
-- [DrawContext Rendering Methods Reference](docs/drawcontext-methods.md) - Rendering API documentation
-- [Assets Inventory](docs/assets-inventory.md) - Mod block/item resource inventory
-- [Biome Colored Blocks](docs/biome-colored-blocks.md) - Implementing biome-color-changing blocks
-- [Block Variants System](docs/block-variants.md) - Block states and model variants
-- [Unique Gift Item Anti-Duplication TODO](docs/unique-gift-item-anti-dup-todo.md) - Anti-duplication draft and todos
+- [Class-based Annotation Registration System](docs/registry/CLASS_BASED_REGISTRY.md) - Automatic registration using annotations and enums
+- [Synchronization System](docs/systems/sync-system.md) - Client/server property synchronization
+- [Energy Flow Synchronization](docs/systems/energy-flow-sync.md) - Energy flow and sync logic between machines
+- [Energy Network System](docs/systems/energy-network.md) - EU energy transmission and storage
+- [Upgrade System](docs/systems/upgrade-system.md) - Machine upgrades and effect mechanics
+- [Slot Specification System](docs/ui/slot-spec-system.md) - Machine GUI slot definitions and constraints
+- [Machine Composition Reuse](docs/guides/machine-composition-reuse.md) - Machine logic composition and reusable design
+- [Machine Implementation Guide](docs/guides/machine-implementation-guide.md) - Complete Block → BlockEntity → ScreenHandler → Screen workflow
+- [Nuclear Power System](docs/systems/nuclear-power.md) - Nuclear-related mechanics and implementation
+- [Heat System](docs/systems/heat-system.md) - HU heating and heat transfer mechanics (Chinese)
+- [Fluid System](docs/systems/fluid-system.md) - Fluid pipes, pump attachments, and transmission rules (Chinese)
+- [Transmission Shaft System](docs/archive/transmission_shaft.md) - Mechanical shafts and bevel gears (Chinese)
+- [Implemented Items List](docs/guides/item-implemented.md) - List of currently implemented items
+- [ComposeUI Declarative GUI](docs/ui/compose-ui.md) - GUI layout and rendering system
+- [DrawContext Rendering Methods Reference](docs/ui/drawcontext-methods.md) - Rendering API documentation
+- [Assets Inventory](docs/inventory/assets-inventory.md) - Mod block/item resource inventory
+- [Biome Colored Blocks](docs/registry/biome-colored-blocks.md) - Implementing biome-color-changing blocks
+- [Block Variants System](docs/registry/block-variants.md) - Block states and model variants
+- [Unique Gift Item Anti-Duplication TODO](docs/archive/unique-gift-item-anti-dup-todo.md) - Anti-duplication draft and todos
 
 ## Unimplemented Features (Compared to Original IC2)
 
