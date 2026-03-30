@@ -211,18 +211,51 @@ class NuclearReactorScreen(
         val left = x
         val top = y
         val content: UiScope.() -> Unit = {
-            val machineSlotEnd = if (isThermalLayout()) handler.reactorSlotCount + 4 else handler.reactorSlotCount
-            for (slotIndex in 0 until machineSlotEnd) {
-                val slot = handler.slots[slotIndex]
-                SlotAnchor(
-                    id = slotAnchorId(slotIndex),
-                    x = left + slot.x,
-                    y = top + slot.y,
-                    width = NuclearReactorScreenHandler.SLOT_SIZE,
-                    height = NuclearReactorScreenHandler.SLOT_SIZE,
-                    absolute = true,
-                    showBorder = false
-                )
+            val h = NuclearReactorScreenHandler
+            val sz = h.SLOT_SIZE
+            Column(
+                x = left + h.SLOT_GRID_X,
+                y = top + h.SLOT_GRID_Y,
+                spacing = 0,
+                absolute = true
+            ) {
+                for (row in 0 until h.GRID_ROWS) {
+                    Row(spacing = 0) {
+                        for (col in 0 until handler.reactorCols) {
+                            val slotIndex = col * h.GRID_ROWS + row
+                            if (slotIndex < handler.reactorSlotCount) {
+                                SlotAnchor(
+                                    id = slotAnchorId(slotIndex),
+                                    width = sz,
+                                    height = sz,
+                                    showBorder = false
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            if (isThermalLayout()) {
+                val base = handler.reactorSlotCount
+                val fluidVerticalGap = FLUID_SLOT_BOTTOM_Y - FLUID_SLOT_TOP_Y - sz
+                Column(
+                    x = left + FLUID_SLOT_LEFT_X,
+                    y = top + FLUID_SLOT_TOP_Y,
+                    spacing = fluidVerticalGap,
+                    absolute = true
+                ) {
+                    SlotAnchor(id = slotAnchorId(base), width = sz, height = sz, showBorder = false)
+                    SlotAnchor(id = slotAnchorId(base + 1), width = sz, height = sz, showBorder = false)
+                }
+                Column(
+                    x = left + FLUID_SLOT_RIGHT_X,
+                    y = top + FLUID_SLOT_TOP_Y,
+                    spacing = fluidVerticalGap,
+                    absolute = true
+                ) {
+                    SlotAnchor(id = slotAnchorId(base + 2), width = sz, height = sz, showBorder = false)
+                    SlotAnchor(id = slotAnchorId(base + 3), width = sz, height = sz, showBorder = false)
+                }
             }
 
             playerInventoryAndHotbarSlotAnchors(
@@ -371,5 +404,11 @@ class NuclearReactorScreen(
     companion object {
         /** 快捷栏以下与面板底边的留白（与 [NuclearReactorScreenHandler] 推导的背包 Y 配合） */
         private const val PANEL_BOTTOM_PADDING = 8
+
+        /** 与 [NuclearReactorScreenHandler] 内热模式流体槽坐标一致（用于锚点，避免依赖 slot.x/y 循环） */
+        private const val FLUID_SLOT_LEFT_X = -9
+        private const val FLUID_SLOT_RIGHT_X = 215
+        private const val FLUID_SLOT_TOP_Y = 18
+        private const val FLUID_SLOT_BOTTOM_Y = 162
     }
 }

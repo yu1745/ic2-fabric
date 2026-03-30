@@ -8,7 +8,7 @@ import net.minecraft.util.math.Direction
 /**
  * 储电盒的同步属性与能量存储。
  * 四个等级（BatBox/CESU/MFE/MFSU）共用此类，通过 tier 和 capacity 参数区分。
- * 整机输入仅正面可接、输出除正面外可接。
+ * 整机：除正面外五面可输入，仅正面可输出。
  */
 class EnergyStorageSync(
     schema: SyncSchema,
@@ -34,12 +34,12 @@ class EnergyStorageSync(
 
     override fun getSideMaxInsert(side: Direction?): Long {
         if (side == null) return maxRate
-        return if (side == getFacing()) maxRate else 0L
+        return if (side != getFacing()) maxRate else 0L
     }
 
     override fun getSideMaxExtract(side: Direction?): Long {
         if (side == null) return maxRate
-        return if (side != getFacing()) maxRate else 0L
+        return if (side == getFacing()) maxRate else 0L
     }
 
     override fun onEnergyCommitted() {

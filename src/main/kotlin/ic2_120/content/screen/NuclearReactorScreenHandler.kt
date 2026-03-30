@@ -36,6 +36,8 @@ import ic2_120.registry.annotation.ScreenFactory
  * 槽位数量根据打开时的容量动态确定（27–81），竖排：3 列→9 列，每列 9 行。
  * 若在打开界面时添加/移除反应仓，需关闭重开以刷新槽位数量。
  *
+ * 机器槽 GUI 坐标统一为 (0,0)，由客户端 [NuclearReactorScreen] Compose 锚点写回。
+ *
  * 玩家栏纵坐标由格网与 [GRID_ROWS] 推导（[playerInvY] / [hotbarY]），不套用 [GuiSize] 固定分档。
  */
 @ModScreenHandler(block = NuclearReactorBlock::class)
@@ -64,25 +66,17 @@ class NuclearReactorScreenHandler(
         checkSize(blockInventory, invSize)
         addProperties(propertyDelegate)
 
-        // 槽位竖排：3 列→9 列，每列 9 行。index: col = i/9, row = i%9
+        // 槽位竖排：3 列→9 列，每列 9 行。index: col = i/9, row = i%9（几何由客户端 Compose 布局）
         for (index in 0 until reactorSlotCount) {
-            val col = index / GRID_ROWS
-            val row = index % GRID_ROWS
-            val slotX = SLOT_GRID_X + col * SLOT_SIZE
-            val slotY = SLOT_GRID_Y + row * SLOT_SIZE
-            addSlot(PredicateSlot(blockInventory, index, slotX, slotY, REACTOR_SLOT_SPEC))
+            addSlot(PredicateSlot(blockInventory, index, 0, 0, REACTOR_SLOT_SPEC))
         }
 
-        // 热模式：4 个流体槽，分别放在左右流体条两端
+        // 热模式：4 个流体槽（GUI 位置由客户端 Compose 布局）
         if (isThermalMode) {
-            addSlot(PredicateSlot(blockInventory, NuclearReactorBlockEntity.SLOT_COOLANT_INPUT,
-                FLUID_LEFT_X, FLUID_TOP_Y, COOLANT_INPUT_SPEC))
-            addSlot(PredicateSlot(blockInventory, NuclearReactorBlockEntity.SLOT_COOLANT_OUTPUT,
-                FLUID_LEFT_X, FLUID_BOTTOM_Y, OUTPUT_ONLY_SPEC))
-            addSlot(PredicateSlot(blockInventory, NuclearReactorBlockEntity.SLOT_HOT_COOLANT_INPUT,
-                FLUID_RIGHT_X, FLUID_TOP_Y, HOT_COOLANT_INPUT_SPEC))
-            addSlot(PredicateSlot(blockInventory, NuclearReactorBlockEntity.SLOT_HOT_COOLANT_OUTPUT,
-                FLUID_RIGHT_X, FLUID_BOTTOM_Y, OUTPUT_ONLY_SPEC))
+            addSlot(PredicateSlot(blockInventory, NuclearReactorBlockEntity.SLOT_COOLANT_INPUT, 0, 0, COOLANT_INPUT_SPEC))
+            addSlot(PredicateSlot(blockInventory, NuclearReactorBlockEntity.SLOT_COOLANT_OUTPUT, 0, 0, OUTPUT_ONLY_SPEC))
+            addSlot(PredicateSlot(blockInventory, NuclearReactorBlockEntity.SLOT_HOT_COOLANT_INPUT, 0, 0, HOT_COOLANT_INPUT_SPEC))
+            addSlot(PredicateSlot(blockInventory, NuclearReactorBlockEntity.SLOT_HOT_COOLANT_OUTPUT, 0, 0, OUTPUT_ONLY_SPEC))
         }
 
         for (row in 0 until 3) {
@@ -169,15 +163,6 @@ class NuclearReactorScreenHandler(
             maxItemCount = 1,
             canInsert = { stack -> !stack.isEmpty && stack.item is IBaseReactorComponent }
         )
-
-        /** 流体槽位置：左流体条 x（冷却液投入/空容器弹出） */
-        private const val FLUID_LEFT_X = -9
-        /** 流体槽位置：右流体条 x（热冷却液提取/满容器返回） */
-        private const val FLUID_RIGHT_X = 215
-        /** 流体槽位置：条顶部 y（上槽，与能量条上端 y=18 对齐） */
-        private const val FLUID_TOP_Y = 18
-        /** 流体槽位置：条底部 y（下槽，与能量条下端 y=180 对齐） */
-        private const val FLUID_BOTTOM_Y = 162
 
         /** 冷却液输入：仅接受满冷却液容器（桶、冷却液单元、通用流体单元） */
         private val COOLANT_INPUT_SPEC = SlotSpec(

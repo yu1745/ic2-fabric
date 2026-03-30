@@ -12,6 +12,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.text.Text as McText
+import ic2_120.client.EnergyFormatUtils
 
 @ModScreen(handler = "cropnalyzer")
 class CropnalyzerScreen(
@@ -21,7 +22,7 @@ class CropnalyzerScreen(
 ) : HandledScreen<CropnalyzerScreenHandler>(handler, playerInventory, title) {
 
     private val ui = ComposeUI()
-    private val gui = GuiSize.STANDARD
+    private val gui = GuiSize.STANDARD_TALL
 
     init {
         backgroundWidth = gui.width
@@ -60,32 +61,27 @@ class CropnalyzerScreen(
         val canScan = energy >= 50L && !seed.isEmpty
 
         val content: UiScope.() -> Unit = {
-            val seedSlot = handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_SEED]
-            SlotAnchor(
-                id = "slot.${CropnalyzerScreenHandler.SLOT_INDEX_SEED}",
-                x = left + seedSlot.x,
-                y = top + seedSlot.y,
-                width = GuiSize.SLOT_SIZE,
-                height = GuiSize.SLOT_SIZE,
-                absolute = true
-            )
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = CropnalyzerScreenHandler.PLAYER_INV_START,
-                playerInvY = gui.playerInvY,
-                hotbarY = gui.hotbarY
-            )
             Column(
                 x = left + 8,
                 y = top + 6,
                 spacing = 5,
                 modifier = Modifier().width(gui.contentWidth)
             ) {
-                Text("种子扫描仪", color = 0xFFFFFF)
                 Flex(alignItems = AlignItems.CENTER, gap = 4) {
-                    Text("$energy / $cap EU", color = 0xCCCCCC, shadow = false)
+                    Text("种子扫描仪", color = 0xFFFFFF)
                     EnergyBar(fraction, barHeight = 8, modifier = Modifier().fractionWidth(1f))
+                    Text(
+                        "${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU",
+                        color = 0xCCCCCC,
+                        shadow = false
+                    )
+                }
+                Flex(justifyContent = JustifyContent.CENTER, alignItems = AlignItems.CENTER) {
+                    SlotAnchor(
+                        id = slotAnchorId(CropnalyzerScreenHandler.SLOT_INDEX_SEED),
+                        width = GuiSize.SLOT_SIZE,
+                        height = GuiSize.SLOT_SIZE
+                    )
                 }
                 Text("放入种子袋后点击扫描", color = 0xAAAAAA, shadow = false)
                 Text("作物: $type", color = 0xFFFFFF, shadow = false)
@@ -100,14 +96,17 @@ class CropnalyzerScreen(
                     }
                 )
             }
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = CropnalyzerScreenHandler.PLAYER_INV_START,
+                playerInvY = gui.playerInvY,
+                hotbarY = gui.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
+        applyAnchoredSlots(layout, left, top)
 
         super.render(context, mouseX, mouseY, delta)
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
@@ -122,4 +121,14 @@ class CropnalyzerScreen(
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+
+    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
+        }
+    }
+
+    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
 }

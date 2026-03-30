@@ -2,6 +2,7 @@ package ic2_120.client.screen
 
 import ic2_120.client.compose.*
 import ic2_120.content.screen.GuiSize
+import ic2_120.content.screen.StandardGuiLayout
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.item.ContainmentBoxInventory
 import ic2_120.content.screen.ContainmentBoxScreenHandler
@@ -56,16 +57,22 @@ class ContainmentBoxScreen(
         val left = x
         val top = y
         val content: UiScope.() -> Unit = {
-            for (i in 0 until ContainmentBoxInventory.SIZE) {
-                val slot = handler.slots[i]
-                SlotAnchor(
-                    id = "slot.$i",
-                    x = left + slot.x,
-                    y = top + slot.y,
-                    width = GuiSize.SLOT_SIZE,
-                    height = GuiSize.SLOT_SIZE,
-                    absolute = true
-                )
+            val gridW = 4 * GuiSize.SLOT_SIZE
+            val gridStartX = left + 8 + (gui.contentWidth - gridW) / 2
+            val gridStartY = top + StandardGuiLayout.FIRST_MACHINE_ROW_Y
+            Column(x = gridStartX, y = gridStartY, spacing = 0) {
+                for (row in 0 until 3) {
+                    Row(spacing = 0) {
+                        for (col in 0 until 4) {
+                            val i = row * 4 + col
+                            SlotAnchor(
+                                id = slotAnchorId(i),
+                                width = GuiSize.SLOT_SIZE,
+                                height = GuiSize.SLOT_SIZE
+                            )
+                        }
+                    }
+                }
             }
             playerInventoryAndHotbarSlotAnchors(
                 left = left,
@@ -77,11 +84,7 @@ class ContainmentBoxScreen(
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
+        applyAnchoredSlots(layout, left, top)
 
         super.render(context, mouseX, mouseY, delta)
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
@@ -90,4 +93,14 @@ class ContainmentBoxScreen(
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+
+    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
+        }
+    }
+
+    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
 }

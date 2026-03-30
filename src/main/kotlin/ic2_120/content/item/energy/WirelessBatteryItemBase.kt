@@ -1,6 +1,10 @@
 package ic2_120.content.item.energy
 
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.ItemStack
+import net.minecraft.world.World
 
 /**
  * 无线充电电池基类
@@ -25,6 +29,19 @@ abstract class WirelessBatteryItemBase(
     transferSpeed = transferSpeed,
     canChargeWireless = true // 支持无线充电
 ) {
+    override fun inventoryTick(
+        stack: ItemStack,
+        world: World,
+        entity: Entity,
+        slot: Int,
+        selected: Boolean
+    ) {
+        super.inventoryTick(stack, world, entity, slot, selected)
+        if (world.isClient) return
+        val player = entity as? PlayerEntity ?: return
+        autoChargeEquipment(stack, player)
+    }
+
     /**
      * 给玩家物品栏中的电动工具与能量护甲（[IElectricTool]）充电。
      *
