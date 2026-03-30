@@ -1,8 +1,10 @@
 package ic2_120.content.screen
 
 /**
- * 与客户端 [ic2_120.client.compose.GuiSize.STANDARD] 一致的面板与玩家栏槽位布局。
- * 供主模块 ScreenHandler 使用（不可依赖 client 源的 [ic2_120.client.compose.GuiSize]）。
+ * 标准 176×166 GUI 的面板与玩家栏槽位几何（与 [GuiSize.STANDARD] 一致）。
+ *
+ * 主模块 ScreenHandler 应优先从此处引用槽位常量；整体尺寸与按枚举分档的
+ * [GuiSize.playerInvY] / [GuiSize.hotbarY] 见 [GuiSize] 文档。
  */
 object StandardGuiLayout {
     const val WIDTH = 176
