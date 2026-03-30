@@ -1,6 +1,7 @@
 package ic2_120.content.recipes
 
 import ic2_120.Ic2_120
+import ic2_120.content.block.CreativeGeneratorBlock
 import ic2_120.content.block.MachineBlock
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootTableProvider
@@ -17,7 +18,7 @@ import net.minecraft.util.Identifier
 
 /**
  * 生成方块掉落表。
- * - [MachineBlock]：扳手/电扳手拆掉完整机器，否则掉外壳。
+ * - [MachineBlock]：扳手/电扳手拆掉完整机器，否则掉外壳（[CreativeGeneratorBlock] 除外：始终掉本体）。
  * - 其余 mod 方块：默认掉落方块物品（与注册物品一致）。
  * - [rubber_leaves]：跳过，使用 `resources` 中自定义掉落（时运/树苗等）。
  * - 储物箱 / 储罐：跳过；其在 [ic2_120.content.block.storage.StorageBoxBlock]、[TankBlock] 的
@@ -55,6 +56,7 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
             if (id.path in skipGeneratedLootTable) continue
 
             when {
+                block is CreativeGeneratorBlock -> addDrop(block)
                 block is MachineBlock -> addDrop(block, createMachineLootTable(block))
                 id == reinforcedDoorId -> addDrop(block, doorDrops(block))
                 else -> addDrop(block)

@@ -1,5 +1,6 @@
 package ic2_120
 
+import ic2_120.content.CreativeGeneratorItemEntityHandler
 import ic2_120.content.RubberTreetapHandler
 import ic2_120.content.WrenchHandler
 import ic2_120.content.block.nuclear.NuclearReactorBlockEntity
@@ -112,6 +113,9 @@ object Ic2_120 : ModInitializer {
 
         // 扳手与机器方块交互（旋转、拆卸、掉落逻辑）
         WrenchHandler.register()
+
+        // 创造模式发电机掉落物：永不清除、环境不伤实体
+        CreativeGeneratorItemEntityHandler.register()
 
         // 木龙头/电动树脂提取器与橡胶树原木交互（提取粘性树脂）
         RubberTreetapHandler.register()

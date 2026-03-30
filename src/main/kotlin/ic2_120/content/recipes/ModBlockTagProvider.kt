@@ -87,6 +87,10 @@ class ModBlockTagProvider(
                     stoneToolBuilder.add(block)
                 }
 
+                // 创造发电机：不加入 pickaxe / needs_iron，便于空手挖掘；掉落由 loot 表固定为本体
+                id.path == "creative_generator" -> {
+                }
+
                 id.path == "wooden_storage_box" -> {
                     axeBuilder.add(block)
                     pickaxeBuilder.add(block)
