@@ -31,7 +31,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import java.util.function.Consumer
 
-@ModBlock(name = "matter_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pattern_storage")
+@ModBlock(name = "matter_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "uu")
 class MatterGeneratorBlock : MachineBlock() {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
