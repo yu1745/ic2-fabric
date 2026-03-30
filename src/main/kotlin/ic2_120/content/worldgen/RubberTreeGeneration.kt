@@ -8,6 +8,7 @@ import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.tag.BiomeTags
 import net.minecraft.util.Identifier
+import net.minecraft.world.biome.BiomeKeys
 // import net.minecraft.util.math.BlockPos
 // import net.minecraft.util.math.Direction
 // import net.minecraft.world.World
@@ -31,7 +32,9 @@ object RubberTreeGeneration {
         ModWorldgen.RUBBER_TREE_FOLIAGE_PLACER_TYPE
         BiomeModifications.addFeature(
             BiomeSelectors.foundInOverworld().and { context ->
-                !context.hasTag(BiomeTags.IS_OCEAN) && !context.hasTag(BiomeTags.IS_RIVER)
+                !context.hasTag(BiomeTags.IS_OCEAN) &&
+                    !context.hasTag(BiomeTags.IS_RIVER) &&
+                    context.biomeKey != BiomeKeys.DESERT
             },
             GenerationStep.Feature.VEGETAL_DECORATION,
             RUBBER_TREE_PLACED_KEY
