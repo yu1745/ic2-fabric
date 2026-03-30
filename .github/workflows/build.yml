@@ -23,6 +23,9 @@ jobs:
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
       - name: build
+        env:
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: ./gradlew build
       - name: capture build artifacts
         uses: actions/upload-artifact@v4
@@ -33,7 +36,7 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-24.04
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: write
     steps:

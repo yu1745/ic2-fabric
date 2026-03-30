@@ -21,7 +21,8 @@ data class Ic2MainConfig(
 
 @Serializable
 data class GeneralConfig(
-    val logConfigOnLoad: Boolean = true
+    val logConfigOnLoad: Boolean = true,
+    val checkForUpdates: Boolean = true
 )
 
 @Serializable
@@ -47,7 +48,8 @@ data class UuReplicationConfig(
 
 private val DEFAULT_CONFIG_TEMPLATE = Ic2MainConfig(
     general = GeneralConfig(
-        logConfigOnLoad = true
+        logConfigOnLoad = true,
+        checkForUpdates = true
     ),
     recycler = RecyclerConfig(
         blacklist = listOf("minecraft:stick")

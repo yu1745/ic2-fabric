@@ -5,6 +5,11 @@ plugins {
 	id "org.jetbrains.kotlin.plugin.serialization" version "2.3.10"
 }
 
+def ciRunNumberProvider = providers.environmentVariable("GITHUB_RUN_NUMBER").orElse("0")
+def githubRepositoryProvider = providers.environmentVariable("GITHUB_REPOSITORY").orElse("yu1745/ic2-fabric")
+def generatedBuildInfoDir = layout.buildDirectory.dir("generated/resources")
+def generatedBuildInfoFile = generatedBuildInfoDir.map { it.file("assets/ic2_120/build_info.json") }
+
 version = project.mod_version
 group = project.maven_group
 
@@ -73,8 +78,34 @@ dependencies {
 	implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:${project.kotlinx_serialization_version}"
 }
 
+tasks.register("generateBuildInfo") {
+	inputs.property("ciRunNumber", ciRunNumberProvider)
+	inputs.property("githubRepository", githubRepositoryProvider)
+	outputs.file(generatedBuildInfoFile)
+
+	doLast {
+		def repo = githubRepositoryProvider.get()
+		def repoParts = repo.split("/", 2)
+		def payload = [
+			ciRunNumber    : Integer.parseInt(ciRunNumberProvider.get()),
+			repositoryOwner: repoParts.length > 0 ? repoParts[0] : "",
+			repositoryName : repoParts.length > 1 ? repoParts[1] : ""
+		]
+		def outputFile = generatedBuildInfoFile.get().asFile
+		outputFile.parentFile.mkdirs()
+		outputFile.setText(
+			groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(payload)),
+			"UTF-8"
+		)
+	}
+}
+
 processResources {
 	inputs.property "version", project.version
+	inputs.property "ciRunNumber", ciRunNumberProvider
+	inputs.property "githubRepository", githubRepositoryProvider
+	dependsOn(tasks.named("generateBuildInfo"))
+	from(generatedBuildInfoDir)
 
 	filesMatching("fabric.mod.json") {
 		expand "version": inputs.properties.version
