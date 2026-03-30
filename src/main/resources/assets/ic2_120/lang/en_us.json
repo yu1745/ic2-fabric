@@ -562,6 +562,7 @@
   "message.ic2_120.update_available.overlay": "New version available: %s",
   "message.ic2_120.update_available.chat": "A new version %s is available. Current build: %s.",
   "message.ic2_120.update_available.chat_with_url": "A new version %s is available. Current build: %s. Release page: %s",
+  "message.ic2_120.update_available.link_hover": "Click to open the release page",
   "tooltip.ic2_120.nano_saber.active": "State: ON (full damage when charged)",
   "tooltip.ic2_120.nano_saber.inactive": "State: OFF",
   "message.ic2_120.foam_sprayer.mode_single": "CF Sprayer: single-block mode",

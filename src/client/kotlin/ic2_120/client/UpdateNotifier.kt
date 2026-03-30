@@ -9,6 +9,7 @@ import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -16,7 +17,10 @@ import kotlinx.serialization.json.Json
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.MinecraftClient
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import org.slf4j.LoggerFactory
 
 @Serializable
@@ -56,6 +60,7 @@ object UpdateNotifier {
             .orElse("dev")
     }
     private val releaseTagRegex = Regex("^release-(\\d+)$")
+    private const val RETRY_DELAY_SECONDS = 30L
 
     fun register() {
         ClientPlayConnectionEvents.JOIN.register(ClientPlayConnectionEvents.Join { _, _, client ->
@@ -80,9 +85,20 @@ object UpdateNotifier {
                 }
             }
             .exceptionally { throwable ->
-                logger.debug("Failed to check updates from GitHub", throwable)
+                logger.warn(
+                    "Failed to check updates from GitHub, retrying in {} seconds",
+                    RETRY_DELAY_SECONDS,
+                    throwable
+                )
+                scheduleRetry(client, buildInfo)
                 null
             }
+    }
+
+    private fun scheduleRetry(client: MinecraftClient, buildInfo: BuildInfo) {
+        CompletableFuture.delayedExecutor(RETRY_DELAY_SECONDS, TimeUnit.SECONDS).execute {
+            checkForUpdatesAsync(client, buildInfo)
+        }
     }
 
     private fun fetchLatestRelease(buildInfo: BuildInfo): RemoteRelease? {
@@ -124,13 +140,22 @@ object UpdateNotifier {
 
         val player = client.player ?: return
         if (!remoteRelease.htmlUrl.isNullOrBlank()) {
+            val clickableUrl = Text.literal(remoteRelease.htmlUrl)
+                .styled {
+                    it.withColor(Formatting.AQUA)
+                        .withUnderline(true)
+                        .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, remoteRelease.htmlUrl))
+                        .withHoverEvent(
+                            HoverEvent(
+                                HoverEvent.Action.SHOW_TEXT,
+                                Text.translatable("message.ic2_120.update_available.link_hover")
+                            )
+                        )
+                }
             player.sendMessage(
-                Text.translatable(
-                    "message.ic2_120.update_available.chat_with_url",
-                    remoteRelease.tagName,
-                    localTag,
-                    remoteRelease.htmlUrl
-                ),
+                Text.translatable("message.ic2_120.update_available.chat", remoteRelease.tagName, localTag)
+                    .append(Text.literal(" "))
+                    .append(clickableUrl),
                 false
             )
             return
