@@ -2,6 +2,8 @@ package ic2_120.content.block
 
 import ic2_120.content.block.machines.CropHarvesterBlockEntity
 import ic2_120.content.item.Circuit
+import ic2_120.content.item.CropnalyzerItem
+import ic2_120.content.item.IronPlate
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.RecipeProvider
@@ -84,18 +86,20 @@ class CropHarvesterBlock : MachineBlock() {
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
-            val cropStick = CropStickBlock::class.item()
-            if (machine == Items.AIR || circuit == Items.AIR || cropStick == Items.AIR) return
+            val ironPlate = IronPlate::class.instance()
+            val cropnalyzer = CropnalyzerItem::class.instance()
+            if (machine == Items.AIR || circuit == Items.AIR || ironPlate == Items.AIR || cropnalyzer == Items.AIR) return
 
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CropHarvesterBlock::class.item(), 1)
-                .pattern("CHC")
+                .pattern("CBC")
                 .pattern("SMS")
-                .pattern("P P")
+                .pattern("PNP")
                 .input('C', circuit)
-                .input('H', Items.IRON_HOE)
-                .input('S', cropStick)
+                .input('B', Items.CHEST)
+                .input('S', Items.SHEARS)
                 .input('M', machine)
-                .input('P', Items.PISTON)
+                .input('P', ironPlate)
+                .input('N', cropnalyzer)
                 .criterion(hasItem(machine), conditionsFromItem(machine))
                 .offerTo(exporter, CropHarvesterBlock::class.id())
         }
