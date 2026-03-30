@@ -1,6 +1,5 @@
 package ic2_120.content.block
 
-import ic2_120.Ic2_120
 import ic2_120.content.block.cables.DoubleInsulatedGoldCableBlock
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.block.cables.InsulatedTinCableBlock
@@ -35,10 +34,8 @@ import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.registry.Registries
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.Properties
-import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import java.util.function.Consumer
@@ -115,7 +112,6 @@ class CesuBlock : EnergyStorageBlock(EnergyStorageConfig.CESU) {
 
 @ModBlock(name = "mfe", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
 class MfeBlock : EnergyStorageBlock(EnergyStorageConfig.MFE) {
-    override fun getCasingDrop(): Item = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "advanced_machine"))
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.MfeBlockEntity(pos, state)
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
@@ -150,7 +146,7 @@ class MfeBlock : EnergyStorageBlock(EnergyStorageConfig.MFE) {
 
 @ModBlock(name = "mfsu", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
 class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
-    override fun getCasingDrop(): Item = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "advanced_machine"))
+    override fun getCasingDrop() = AdvancedMachineCasingBlock::class.item()
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.MfsuBlockEntity(pos, state)
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
@@ -289,7 +285,6 @@ class CesuChargepadBlock : ChargepadBlock(EnergyStorageConfig.CESU_CHARGEPAD) {
 
 @ModBlock(name = "mfe_chargepad", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
 class MfeChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFE_CHARGEPAD) {
-    override fun getCasingDrop(): Item = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "advanced_machine"))
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.MfeChargepadBlockEntity(pos, state)
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
@@ -324,7 +319,7 @@ class MfeChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFE_CHARGEPAD) {
 
 @ModBlock(name = "mfsu_chargepad", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
 class MfsuChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFSU_CHARGEPAD) {
-    override fun getCasingDrop(): Item = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "advanced_machine"))
+    override fun getCasingDrop() = AdvancedMachineCasingBlock::class.item()
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.MfsuChargepadBlockEntity(pos, state)
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =

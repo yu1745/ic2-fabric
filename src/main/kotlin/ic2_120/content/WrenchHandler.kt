@@ -18,6 +18,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.Block
 import net.minecraft.item.ItemStack
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.server.network.ServerPlayerEntity
@@ -38,6 +39,9 @@ import net.minecraft.world.World
  * - 电动扳手左键拆机器：瞬间拆，掉完整机器，耗 1000 EU（电量不足则无法拆卸）
  * - 扳手/电扳手右键：旋转机器朝向，不耗耐久/不耗电
  * - 非扳手拆卸：只掉机器外壳（由 MachineBlock.getCasingDrop 决定）
+ *
+ * 注意：World.breakBlock(..., drop=true, player) 内部对掉落使用 ItemStack.EMPTY 作为 TOOL，
+ * match_tool（扳手）战利品条件不会生效。扳手拆机需先 breakBlock(false) 再 Block.dropStacks(..., 扳手)。
  *
  * 储罐：扳手拆卸保留 80% 流体
  */
@@ -164,7 +168,13 @@ object WrenchHandler {
                     }
                     didBreak
                 } else {
-                    world.breakBlock(pos, true, player)
+                    val stateBefore = state
+                    val be = if (stateBefore.hasBlockEntity()) world.getBlockEntity(pos) else null
+                    val didBreak = world.breakBlock(pos, false, player)
+                    if (didBreak && world is ServerWorld) {
+                        Block.dropStacks(stateBefore, world, pos, be, player, stack.copy())
+                    }
+                    didBreak
                 }
                 if (swapped) {
                     val main = player.mainHandStack

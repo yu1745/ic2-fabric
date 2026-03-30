@@ -23,16 +23,13 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.item.ItemPlacementContext
-import net.minecraft.registry.Registries
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
-import net.minecraft.util.Identifier
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import ic2_120.Ic2_120
 import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
@@ -44,8 +41,7 @@ import ic2_120.registry.annotation.RecipeProvider
 @ModBlock(name = "centrifuge", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
 class CentrifugeBlock : MachineBlock() {
 
-    override fun getCasingDrop(): net.minecraft.item.Item =
-        Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "advanced_machine"))
+    override fun getCasingDrop() = AdvancedMachineCasingBlock::class.item()
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         CentrifugeBlockEntity(pos, state)

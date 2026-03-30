@@ -14,11 +14,14 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
+import net.fabricmc.api.EnvType
+import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.BlockState
@@ -27,7 +30,9 @@ import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.client.item.TooltipContext
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.BlockItem
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -38,8 +43,11 @@ import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
+import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import java.util.function.Consumer
 
@@ -332,19 +340,27 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         return ActionResult.SUCCESS
     }
 
+    /**
+     * 仅在储罐内有有效流体数据时写入 [BlockEntityTag]。
+     * 空罐不写 `FluidAmount: 0`，否则与无 NBT 的合成品无法堆叠。
+     * [appendTooltip] 在无标签时按 0 / 空流体解读，行为一致。
+     */
+    private fun applyTankBlockEntityNbt(stack: ItemStack, be: TankBlockEntity) {
+        if (be.fluidAmount <= 0L && be.fluidVariant.isBlank) return
+        val nbt = NbtCompound()
+        nbt.putLong(NBT_FLUID_AMOUNT, be.fluidAmount)
+        if (!be.fluidVariant.isBlank) {
+            nbt.put(NBT_FLUID_VARIANT, be.fluidVariant.toNbt())
+        }
+        stack.orCreateNbt.put("BlockEntityTag", nbt)
+    }
+
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.isOf(newState.block)) {
             val blockEntity = world.getBlockEntity(pos)
             if (blockEntity is TankBlockEntity) {
                 val itemStack = ItemStack(this.asItem())
-                val nbt = NbtCompound()
-                nbt.putLong(NBT_FLUID_AMOUNT, blockEntity.fluidAmount)
-                if (!blockEntity.fluidVariant.isBlank) {
-                    nbt.put(NBT_FLUID_VARIANT, blockEntity.fluidVariant.toNbt())
-                }
-                if (!nbt.isEmpty) {
-                    itemStack.orCreateNbt.put("BlockEntityTag", nbt)
-                }
+                applyTankBlockEntityNbt(itemStack, blockEntity)
                 if (!itemStack.isEmpty) {
                     val itemEntity = net.minecraft.entity.ItemEntity(
                         world,
@@ -369,14 +385,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         val itemStack = super.getPickStack(world, pos, state)
         val blockEntity = world.getBlockEntity(pos)
         if (blockEntity is TankBlockEntity) {
-            val nbt = NbtCompound()
-            nbt.putLong(NBT_FLUID_AMOUNT, blockEntity.fluidAmount)
-            if (!blockEntity.fluidVariant.isBlank) {
-                nbt.put(NBT_FLUID_VARIANT, blockEntity.fluidVariant.toNbt())
-            }
-            if (!nbt.isEmpty) {
-                itemStack.orCreateNbt.put("BlockEntityTag", nbt)
-            }
+            applyTankBlockEntityNbt(itemStack, blockEntity)
         }
         return itemStack
     }
@@ -391,9 +400,55 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         return 0
     }
 
+    /**
+     * 手持物品提示：内部流体种类与储量（mB），与 [TankBlockEntity] 容量一致。
+     */
+    @Environment(EnvType.CLIENT)
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: BlockView?,
+        tooltip: MutableList<Text>,
+        context: TooltipContext
+    ) {
+        super.appendTooltip(stack, world, tooltip, context)
+        val blockItem = stack.item as? BlockItem ?: return
+        val block = blockItem.block
+        if (block !is TankBlock) return
+
+        val capMb = fluidCapacityMbForBlock(block)
+        val beTag = stack.getSubNbt("BlockEntityTag")
+        val amountRaw = beTag?.getLong(NBT_FLUID_AMOUNT) ?: 0L
+        val variantTag = beTag?.getCompound(NBT_FLUID_VARIANT)
+        val variant =
+            if (variantTag == null || variantTag.isEmpty) FluidVariant.blank()
+            else FluidVariant.fromNbt(variantTag)
+        val amountMb =
+            (amountRaw * 1000L / FluidConstants.BUCKET).toInt().coerceIn(0, capMb)
+
+        if (variant.isBlank || amountRaw <= 0L) {
+            tooltip.add(Text.literal("流体: 无").formatted(Formatting.GRAY))
+        } else {
+            tooltip.add(
+                Text.literal("流体: ").append(FluidVariantAttributes.getName(variant)).formatted(Formatting.GRAY)
+            )
+        }
+        tooltip.add(Text.literal("储量: $amountMb / $capMb mB").formatted(Formatting.GRAY))
+    }
+
     companion object {
         private const val NBT_FLUID_AMOUNT = "FluidAmount"
         private const val NBT_FLUID_VARIANT = "FluidVariant"
+
+        /** 与 [TankBlockEntity.getCapacity] 对应的容量（mB），用于 tooltip */
+        private fun fluidCapacityMbForBlock(block: net.minecraft.block.Block): Int {
+            val path = Registries.BLOCK.getId(block).path
+            val buckets = when (path) {
+                "steel_tank" -> 128
+                "iridium_tank" -> 1024
+                else -> 32
+            }
+            return buckets * 1000
+        }
     }
 }
 

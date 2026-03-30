@@ -104,6 +104,9 @@ class MinerBlock : BaseMinerBlock() {
 
 @ModBlock(name = "advanced_miner", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "resource")
 class AdvancedMinerBlock : BaseMinerBlock() {
+
+    override fun getCasingDrop() = AdvancedMachineCasingBlock::class.item()
+
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = AdvancedMinerBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =

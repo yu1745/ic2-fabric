@@ -17,17 +17,14 @@ import net.minecraft.util.Identifier
 
 /**
  * 生成方块掉落表。
- * 机器方块：扳手/电扳手拆掉完整机器，否则掉外壳。
+ * - [MachineBlock]：扳手/电扳手拆掉完整机器，否则掉外壳。
+ * - 其余 mod 方块：默认掉落方块物品（与注册物品一致）。
+ * - [rubber_leaves]：跳过，使用 `resources` 中自定义掉落（时运/树苗等）。
+ * - 储物箱 / 储罐：跳过；其在 [ic2_120.content.block.storage.StorageBoxBlock]、[TankBlock] 的
+ *   `onStateReplaced` 中掉落带 `BlockEntityTag` 的物品。若此处再生成标准 `addDrop` loot 表，
+ *   `Block.dropStacks` 会先按 loot 掉一个空方块，再与上述逻辑叠加，造成**重复掉落**。
  */
 class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTableProvider(output) {
-    private val oreBlockIds = setOf(
-        "lead_ore",
-        "tin_ore",
-        "uranium_ore",
-        "deepslate_lead_ore",
-        "deepslate_tin_ore",
-        "deepslate_uranium_ore",
-    )
 
     private val wrenchPredicateBuilder = ItemPredicate.Builder.create()
         .items(
@@ -35,54 +32,34 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
             Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "electric_wrench"))
         )
 
+    /** 不生成 loot JSON：资源里已有，或由方块代码在破坏时单独生成带 BE 数据的掉落物 */
+    private val skipGeneratedLootTable = setOf(
+        "rubber_leaves",
+        "wooden_storage_box",
+        "bronze_storage_box",
+        "iron_storage_box",
+        "steel_storage_box",
+        "iridium_storage_box",
+        "bronze_tank",
+        "iron_tank",
+        "steel_tank",
+        "iridium_tank",
+    )
+
     override fun generate() {
-        // 机器外壳：直接掉落自身
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "machine")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "advanced_machine")))
+        val reinforcedDoorId = Identifier(Ic2_120.MOD_ID, "reinforced_door")
 
-        // 变压器（仅合成材料，无 BlockEntity）：直接掉落自身
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "lv_transformer")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "mv_transformer")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "hv_transformer")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "ev_transformer")))
-
-        // 日光灯：直接掉落自身（无物品槽，无外壳）
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "luminator_flat")))
-        // 流体管道：直接掉落自身
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "bronze_pipe_tiny")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "bronze_pipe_small")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "bronze_pipe_medium")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "bronze_pipe_large")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pipe_tiny")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pipe_small")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pipe_medium")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pipe_large")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "bronze_pump_attachment")))
-        addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "carbon_pump_attachment")))
-
-        // 机器方块：条件掉落
         for (block in Registries.BLOCK) {
             val id = Registries.BLOCK.getId(block)
-            if (id.namespace == Ic2_120.MOD_ID && block is MachineBlock) {
-                addDrop(block, createMachineLootTable(block))
+            if (id.namespace != Ic2_120.MOD_ID) continue
+            if (id.path in skipGeneratedLootTable) continue
+
+            when {
+                block is MachineBlock -> addDrop(block, createMachineLootTable(block))
+                id == reinforcedDoorId -> addDrop(block, doorDrops(block))
+                else -> addDrop(block)
             }
         }
-
-        // 电缆方块（copy(Blocks.REDSTONE_WIRE/GLASS) 不会生成默认掉落）：直接掉落自身
-        for (block in Registries.BLOCK) {
-            val id = Registries.BLOCK.getId(block)
-            if (id.namespace == Ic2_120.MOD_ID && id.path.endsWith("_cable")) {
-                addDrop(block)
-            }
-        }
-
-        // 矿石方块：默认掉落自身（保留后续扩展为 raw ore/时运掉落的空间）
-        for (oreId in oreBlockIds) {
-            addDrop(Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, oreId)))
-        }
-
-        val reinforcedDoor = Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "reinforced_door"))
-        addDrop(reinforcedDoor, doorDrops(reinforcedDoor))
     }
 
     private fun createMachineLootTable(block: MachineBlock): LootTable.Builder {
@@ -107,4 +84,3 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
             )
     }
 }
-

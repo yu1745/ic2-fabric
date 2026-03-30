@@ -35,6 +35,8 @@ import ic2_120.registry.annotation.RecipeProvider
 @ModBlock(name = "teleporter", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
 class TeleporterBlock : MachineBlock() {
 
+    override fun getCasingDrop() = AdvancedMachineCasingBlock::class.item()
+
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         TeleporterBlockEntity(pos, state)
 
