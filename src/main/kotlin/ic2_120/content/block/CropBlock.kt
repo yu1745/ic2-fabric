@@ -158,7 +158,7 @@ class CropBlock : BlockWithEntity(
 
         if (!be.canBeHarvested(state)) return ActionResult.PASS
 
-        val result = be.performHarvest(state)
+        val result = be.performHarvest(state) ?: return ActionResult.PASS
         result.drops.forEach { ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), it) }
         if (result.ageAfterHarvest != null) {
             world.setBlockState(
@@ -318,10 +318,10 @@ class CropBlockEntity(
         return CropSystem.canBeHarvested(cropType, age)
     }
 
-    fun performHarvest(state: BlockState): HarvestResult {
+    fun performHarvest(state: BlockState): HarvestResult? {
         val cropType = state.get(CropBlock.CROP_TYPE)
         val age = state.get(CropBlock.AGE)
-        if (cropType == CropType.WEED) return HarvestResult(listOf(ItemStack(Weed::class.instance())), null)
+        if (!canBeHarvested(state)) return null
 
         val out = mutableListOf<ItemStack>()
         val w = world
@@ -336,11 +336,6 @@ class CropBlockEntity(
                     if (!stack.isEmpty) out += stack
                 }
             }
-        }
-
-        val seedChance = CropSystem.dropSeedChance(cropType, age)
-        if (world?.random?.nextFloat() ?: 1f <= seedChance) {
-            out += CropSeedBagItem.createStack(cropType, stats, scanLevel = scanLevel)
         }
 
         val nextAge = CropSystem.ageAfterHarvest(cropType, age, world?.random?.nextInt(2) ?: 0)
@@ -943,4 +938,3 @@ class CropBlockEntity(
         private val METAL_SILVER = MetalRootGroup.SILVER
     }
 }
-

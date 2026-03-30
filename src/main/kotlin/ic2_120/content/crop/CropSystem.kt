@@ -135,6 +135,16 @@ object CropSystem {
     fun definition(type: CropType): CropDefinition = defs.getValue(type)
     fun allTypes(): List<CropType> = CropType.entries
     fun maxAge(type: CropType): Int = definition(type).maxVisualAge
+    fun optimalHarvestAge(type: CropType): Int {
+        val max = maxAge(type)
+        return when (type) {
+            CropType.WEED -> 1
+            CropType.VENOMILIA -> 3
+            CropType.POTATO -> max - 1
+            CropType.EATING_PLANT -> max - 2
+            else -> max
+        }.coerceIn(0, 7)
+    }
     fun baseSeed(item: Item): CropType? = seedToCrop[item]
     fun behavior(type: CropType): CropBehavior = definition(type).behavior
     fun canBeHarvested(type: CropType, age: Int): Boolean {

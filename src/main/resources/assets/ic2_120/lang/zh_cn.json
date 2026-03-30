@@ -609,6 +609,8 @@
   "item.ic2_120.crop": "作物",
   "block.ic2_120.cropmatron": "作物监管机",
   "item.ic2_120.cropmatron": "作物监管机",
+  "block.ic2_120.crop_harvester": "作物收割机",
+  "item.ic2_120.crop_harvester": "作物收割机",
   "item.ic2_120.crop_seed_bag": "作物种子袋",
   "item.ic2_120.cropnalyzer": "种子扫描仪",
   "crop.ic2_120.weed": "杂草",

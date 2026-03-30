@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:circuit"
+    },
+    "H": {
+      "item": "minecraft:iron_hoe"
+    },
+    "M": {
+      "item": "ic2_120:machine"
+    },
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "S": {
+      "item": "ic2_120:crop_stick"
+    }
+  },
+  "pattern": [
+    "CHC",
+    "SMS",
+    "P P"
+  ],
+  "result": {
+    "item": "ic2_120:crop_harvester"
+  },
+  "show_notification": true
+}

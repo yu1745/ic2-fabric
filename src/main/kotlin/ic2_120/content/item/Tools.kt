@@ -234,10 +234,7 @@ class WeedingSpade : Item(FabricItemSettings().maxDamage(120)) {
         val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return ActionResult.PASS
         val isCreative = player.abilities.creativeMode
 
-        val result = be.performHarvest(state)
-        result.drops.forEach { drop ->
-            ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), drop)
-        }
+        ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), Weed::class.instance().defaultStack)
         world.setBlockState(pos, CropStickBlock.defaultStickState(), Block.NOTIFY_ALL)
         if (!isCreative) {
             stack.damage(1, player) { it.sendToolBreakStatus(context.hand) }

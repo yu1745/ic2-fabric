@@ -612,6 +612,8 @@
   "item.ic2_120.crop": "Crop",
   "block.ic2_120.cropmatron": "Crop-Matron",
   "item.ic2_120.cropmatron": "Crop-Matron",
+  "block.ic2_120.crop_harvester": "Crop Harvester",
+  "item.ic2_120.crop_harvester": "Crop Harvester",
   "item.ic2_120.crop_seed_bag": "Crop Seed Bag",
   "item.ic2_120.cropnalyzer": "Cropnalyzer",
   "crop.ic2_120.weed": "Weed",
