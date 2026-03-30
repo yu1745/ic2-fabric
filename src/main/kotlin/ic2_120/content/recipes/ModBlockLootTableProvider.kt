@@ -21,11 +21,8 @@ import net.minecraft.util.Identifier
  * 生成方块掉落表。
  * - [MachineBlock]：扳手/电扳手拆掉完整机器，否则掉外壳（[CreativeGeneratorBlock] 除外：始终掉本体）。
  * - 其余 mod 方块：默认掉落方块物品（与注册物品一致）。
- * - [rubber_leaves]：跳过，使用 `resources` 中自定义掉落（时运/树苗等）。
- * - 储物箱 / 储罐：跳过；其在 [ic2_120.content.block.storage.StorageBoxBlock]、[TankBlock] 的
- *   `onStateReplaced` 中掉落带 `BlockEntityTag` 的物品。若此处再生成标准 `addDrop` loot 表，
- *   `Block.dropStacks` 会先按 loot 掉一个空方块，再与上述逻辑叠加，造成**重复掉落**。
- * - `@ModBlock(generateBlockLootTable = false)`：由 [ClassScanner] 记录路径，此处跳过（如作物方块由代码掉落种子袋与作物架）。
+ * - `@ModBlock(generateBlockLootTable = false)`：由 [ClassScanner] 登记路径后此处跳过。例如：
+ *   橡胶叶（`resources` 自定义掉落）、储物箱/储罐（`onStateReplaced` 带 BE 标签）、作物（`onBreak`）等。
  */
 class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTableProvider(output) {
 
@@ -35,27 +32,13 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
             Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "electric_wrench"))
         )
 
-    /** 不生成 loot JSON：资源里已有，或由方块代码在破坏时单独生成带 BE 数据的掉落物 */
-    private val skipGeneratedLootTable = setOf(
-        "rubber_leaves",
-        "wooden_storage_box",
-        "bronze_storage_box",
-        "iron_storage_box",
-        "steel_storage_box",
-        "iridium_storage_box",
-        "bronze_tank",
-        "iron_tank",
-        "steel_tank",
-        "iridium_tank",
-    )
-
     override fun generate() {
         val reinforcedDoorId = Identifier(Ic2_120.MOD_ID, "reinforced_door")
 
         for (block in Registries.BLOCK) {
             val id = Registries.BLOCK.getId(block)
             if (id.namespace != Ic2_120.MOD_ID) continue
-            if (id.path in skipGeneratedLootTable || ClassScanner.shouldSkipGeneratedBlockLootTable(id.path)) continue
+            if (ClassScanner.shouldSkipGeneratedBlockLootTable(id.path)) continue
 
             when {
                 block is CreativeGeneratorBlock -> addDrop(block)

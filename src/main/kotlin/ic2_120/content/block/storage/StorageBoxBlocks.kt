@@ -209,7 +209,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
 /**
  * 木质储物箱 - 27 格容量
  */
-@ModBlock(name = "wooden_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage")
+@ModBlock(name = "wooden_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
 class WoodenStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.OAK_PLANKS).strength(2.5f)) {
     companion object {
         @RecipeProvider
@@ -231,7 +231,7 @@ class WoodenStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks
 /**
  * 青铜储物箱 - 45 格容量
  */
-@ModBlock(name = "bronze_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage")
+@ModBlock(name = "bronze_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
 class BronzeStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
@@ -255,7 +255,7 @@ class BronzeStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks
 /**
  * 铁质储物箱 - 45 格容量
  */
-@ModBlock(name = "iron_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage")
+@ModBlock(name = "iron_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
 class IronStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
@@ -279,7 +279,7 @@ class IronStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.I
 /**
  * 钢制储物箱 - 63 格容量
  */
-@ModBlock(name = "steel_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage")
+@ModBlock(name = "steel_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
 class SteelStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
@@ -303,7 +303,7 @@ class SteelStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.
 /**
  * 铱储物箱 - 126 格容量
  */
-@ModBlock(name = "iridium_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage")
+@ModBlock(name = "iridium_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
 class IridiumStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(6.0f, 8.0f)) {
     companion object {
         @RecipeProvider

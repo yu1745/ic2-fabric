@@ -457,7 +457,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
 /**
  * 青铜储罐 - 32 桶容量 (32000 mB)
  */
-@ModBlock(name = "bronze_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank")
+@ModBlock(name = "bronze_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
 class BronzeTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
@@ -481,7 +481,7 @@ class BronzeTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.bloc
 /**
  * 铁储罐 - 32 桶容量 (32000 mB)
  */
-@ModBlock(name = "iron_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank")
+@ModBlock(name = "iron_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
 class IronTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
@@ -505,7 +505,7 @@ class IronTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.
 /**
  * 钢制储罐 - 128 桶容量 (128000 mB)
  */
-@ModBlock(name = "steel_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank")
+@ModBlock(name = "steel_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
 class SteelTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(6.0f, 7.0f)) {
     companion object {
         @RecipeProvider
@@ -529,7 +529,7 @@ class SteelTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block
 /**
  * 铱储罐 - 1024 桶容量 (1024000 mB)
  */
-@ModBlock(name = "iridium_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank")
+@ModBlock(name = "iridium_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
 class IridiumTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(8.0f, 10.0f)) {
     companion object {
         @RecipeProvider

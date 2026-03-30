@@ -20,7 +20,7 @@ import ic2_120.registry.type
  * @param renderLayer 渲染层类型："cutout"、"cutout_mipped"、"translucent"；空字符串表示使用默认 solid 层。
  *                    translucency 渲染层与光影模组水下效果不兼容，如有水下渲染问题请使用 cutout/cutout_mipped
  * @param materialTags 语义路径（不含命名空间），如 `"ores/tin"`、`"storage_blocks/lead"`；用于 datagen 注册到 c:/forge:/ic2_120:compat/ 方块标签
- * @param generateBlockLootTable 为 false 时不生成 `loot_tables/blocks/<name>.json`（掉落由方块逻辑自行处理，见 [ic2_120.content.recipes.ModBlockLootTableProvider]）
+ * @param generateBlockLootTable 为 false 时不生成 `loot_tables/blocks/<name>.json`（掉落由方块或 `assets` 内自定义战利品表处理；典型如储物箱/储罐、橡胶叶、作物）
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)

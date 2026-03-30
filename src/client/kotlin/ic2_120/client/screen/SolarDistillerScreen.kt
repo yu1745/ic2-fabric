@@ -106,7 +106,7 @@ class SolarDistillerScreen(
                                 Text("蒸馏进度", color = 0xAAAAAA, shadow = false)
                                 Text(
                                     "${handler.sync.progress}/${SolarDistillerSync.PRODUCE_INTERVAL_TICKS} tick",
-                                    color = 0xCCCCCC,
+                                    color = 0xFFFFFF,
                                     shadow = false
                                 )
                             }
