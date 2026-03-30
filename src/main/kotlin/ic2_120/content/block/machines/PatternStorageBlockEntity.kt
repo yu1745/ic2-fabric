@@ -52,6 +52,7 @@ class PatternStorageBlockEntity(
     private val crystalMemoryId = Identifier(Ic2_120.MOD_ID, "crystal_memory")
 
     private val templates = mutableListOf<UuTemplateEntry>()
+
     var selectedTemplateIndex: Int = -1
         private set
 
@@ -149,8 +150,9 @@ class PatternStorageBlockEntity(
         templates.clear()
         templates += decodeUuTemplateList(nbt.getList(UU_TEMPLATE_LIST_NBT_KEY, 10))
         selectedTemplateIndex = nbt.getInt(NBT_SELECTED_INDEX)
-        if (templates.isEmpty()) selectedTemplateIndex = -1
-        else selectedTemplateIndex = selectedTemplateIndex.coerceIn(0, templates.lastIndex)
+        if (templates.isEmpty()) selectedTemplateIndex = -1 else {
+            selectedTemplateIndex = selectedTemplateIndex.coerceIn(0, templates.lastIndex)
+        }
     }
 
     override fun writeNbt(nbt: NbtCompound) {
