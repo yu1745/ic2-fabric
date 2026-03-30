@@ -109,7 +109,6 @@ class SmallPowerUnitItem : BatteryItemBase(
     name = "small_power_unit",
     tier = 1,
     maxCapacity = 30_000,
-    transferSpeed = 32,
     canChargeWireless = false
 ) {
     companion object {
@@ -144,7 +143,6 @@ class PowerUnitItem : BatteryItemBase(
     name = "power_unit",
     tier = 1,
     maxCapacity = 10_000,
-    transferSpeed = 32,
     canChargeWireless = false
 ) {
     companion object {

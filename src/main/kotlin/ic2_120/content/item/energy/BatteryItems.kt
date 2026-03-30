@@ -42,7 +42,7 @@ import java.util.function.Consumer
  */
 @ModItem(name = "re_battery", tab = CreativeTab.IC2_MATERIALS, group = "battery")
 class ReBatteryItem : BatteryItemBase(
-    name = "re_battery", tier = 1, maxCapacity = 10_000, transferSpeed = 32, canChargeWireless = false
+    name = "re_battery", tier = 1, maxCapacity = 10_000, canChargeWireless = false
 ) {
     companion object {
         @RecipeProvider
@@ -83,7 +83,7 @@ class ReBatteryItem : BatteryItemBase(
  */
 @ModItem(name = "advanced_re_battery", tab = CreativeTab.IC2_MATERIALS, group = "battery")
 class AdvancedReBatteryItem : BatteryItemBase(
-    name = "advanced_re_battery", tier = 2, maxCapacity = 100_000, transferSpeed = 128, canChargeWireless = false
+    name = "advanced_re_battery", tier = 2, maxCapacity = 100_000, canChargeWireless = false
 ) {
     companion object {
         @RecipeProvider
@@ -110,7 +110,7 @@ class AdvancedReBatteryItem : BatteryItemBase(
  */
 @ModItem(name = "energy_crystal", tab = CreativeTab.IC2_MATERIALS, group = "battery")
 class EnergyCrystalItem : BatteryItemBase(
-    name = "energy_crystal", tier = 3, maxCapacity = 1_000_000, transferSpeed = 512, canChargeWireless = false
+    name = "energy_crystal", tier = 3, maxCapacity = 1_000_000, canChargeWireless = false
 )
 
 /**
@@ -120,7 +120,7 @@ class EnergyCrystalItem : BatteryItemBase(
  */
 @ModItem(name = "lapotron_crystal", tab = CreativeTab.IC2_MATERIALS, group = "battery")
 class LapotronCrystalItem : BatteryItemBase(
-    name = "lapotron_crystal", tier = 4, maxCapacity = 10_000_000, transferSpeed = 2_048, canChargeWireless = false
+    name = "lapotron_crystal", tier = 4, maxCapacity = 10_000_000, canChargeWireless = false
 ) {
     companion object {
         @RecipeProvider
@@ -150,7 +150,7 @@ class LapotronCrystalItem : BatteryItemBase(
  */
 @ModItem(name = "re_battery_wireless", tab = CreativeTab.IC2_MATERIALS, group = "battery_wireless")
 class ReBatteryWirelessItem : WirelessBatteryItemBase(
-    name = "re_battery_wireless", tier = 1, baseMaxCapacity = 10_000, transferSpeed = 32
+    name = "re_battery_wireless", tier = 1, baseMaxCapacity = 10_000
 ) {
     companion object {
         @RecipeProvider
@@ -177,7 +177,7 @@ class ReBatteryWirelessItem : WirelessBatteryItemBase(
  */
 @ModItem(name = "advanced_re_battery_wireless", tab = CreativeTab.IC2_MATERIALS, group = "battery_wireless")
 class AdvancedReBatteryWirelessItem : WirelessBatteryItemBase(
-    name = "advanced_re_battery_wireless", tier = 2, baseMaxCapacity = 100_000, transferSpeed = 128
+    name = "advanced_re_battery_wireless", tier = 2, baseMaxCapacity = 100_000
 ) {
     companion object {
         @RecipeProvider
@@ -205,7 +205,7 @@ class AdvancedReBatteryWirelessItem : WirelessBatteryItemBase(
  */
 @ModItem(name = "energy_crystal_wireless", tab = CreativeTab.IC2_MATERIALS, group = "battery_wireless")
 class EnergyCrystalWirelessItem : WirelessBatteryItemBase(
-    name = "energy_crystal_wireless", tier = 3, baseMaxCapacity = 1_000_000, transferSpeed = 512
+    name = "energy_crystal_wireless", tier = 3, baseMaxCapacity = 1_000_000
 ) {
     companion object {
         @RecipeProvider
@@ -233,7 +233,7 @@ class EnergyCrystalWirelessItem : WirelessBatteryItemBase(
  */
 @ModItem(name = "lapotron_crystal_wireless", tab = CreativeTab.IC2_MATERIALS, group = "battery_wireless")
 class LapotronCrystalWirelessItem : WirelessBatteryItemBase(
-    name = "lapotron_crystal_wireless", tier = 4, baseMaxCapacity = 10_000_000, transferSpeed = 2_048
+    name = "lapotron_crystal_wireless", tier = 4, baseMaxCapacity = 10_000_000
 ) {
     companion object {
         @RecipeProvider
@@ -265,7 +265,7 @@ class LapotronCrystalWirelessItem : WirelessBatteryItemBase(
  */
 @ModItem(name = "single_use_battery", tab = CreativeTab.IC2_MATERIALS, group = "battery")
 class SingleUseBatteryItem : BatteryItemBase(
-    name = "single_use_battery", tier = 1, maxCapacity = 10_000, transferSpeed = 32, canChargeWireless = false
+    name = "single_use_battery", tier = 1, maxCapacity = 10_000, canChargeWireless = false
 ) {
     companion object {
         @RecipeProvider

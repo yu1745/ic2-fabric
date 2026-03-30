@@ -1,7 +1,7 @@
 package ic2_120.content.sync
 
 import ic2_120.content.TickLimitedSidedEnergyContainer
-import ic2_120.content.block.ITieredMachine
+import ic2_120.content.energy.EnergyTier
 import ic2_120.content.syncs.SyncSchema
 import net.minecraft.util.math.Direction
 
@@ -28,7 +28,7 @@ class NuclearReactorSync(
         /** 电力缓存容量 1M EU */
         const val ENERGY_CAPACITY = 1_000_000L
         /** 整机每 tick 最大输出（8192 EU/t，tier 5） */
-        val MAX_EXTRACT = ITieredMachine.euPerTickFromTier(REACTOR_TIER)
+        val MAX_EXTRACT = EnergyTier.euPerTickFromTier(REACTOR_TIER)
         const val NBT_ENERGY_STORED = "EnergyStored"
         const val NBT_HEAT_STORED = "HeatStored"
         /** 基础槽位（无反应仓时） */

@@ -1,6 +1,6 @@
 package ic2_120.content.upgrade
 
-import ic2_120.content.block.ITieredMachine
+import ic2_120.content.energy.EnergyTier
 import ic2_120.content.item.TransformerUpgrade
 import net.minecraft.inventory.Inventory
 
@@ -12,8 +12,8 @@ import net.minecraft.inventory.Inventory
  */
 object TransformerUpgradeComponent {
 
-    /** 每个电压等级对应的 maxInsertPerTick，委托 [ITieredMachine.euPerTickFromTier] */
-    fun maxInsertForTier(tier: Int): Long = ITieredMachine.euPerTickFromTier(tier)
+    /** 每个电压等级对应的 maxInsertPerTick，委托 [EnergyTier.euPerTickFromTier] */
+    fun maxInsertForTier(tier: Int): Long = EnergyTier.euPerTickFromTier(tier)
 
     /**
      * 从升级槽统计高压升级数量，并应用到机器。

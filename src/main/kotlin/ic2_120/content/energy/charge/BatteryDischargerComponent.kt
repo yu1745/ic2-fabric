@@ -30,7 +30,7 @@ class BatteryDischargerComponent(
         if (battery.tier < machineTierProvider()) return 0L
         if (battery.isEmpty(batteryStack)) return 0L
 
-        val transferLimit = battery.transferSpeed.toLong().coerceAtLeast(0L)
+        val transferLimit = battery.nominalEuPerTick()
         val available = battery.getCurrentCharge(batteryStack).coerceAtLeast(0L)
         val requested = minOf(demand, transferLimit, available)
         if (requested <= 0L) return 0L

@@ -1,5 +1,7 @@
 package ic2_120.content.item.energy
 
+import ic2_120.content.energy.EnergyTier
+
 /**
  * 能量等级接口
  *
@@ -41,4 +43,9 @@ interface ITiered {
      * 等级越高，线缆可承载的 EU/t 越大，或发电机/电池的容量与输出能力越大。
      */
     val tier: Int
+
+    /**
+     * 该等级对应的标称传输速率（EU/t），与 [EnergyTier.euPerTickFromTier] 一致。
+     */
+    fun nominalEuPerTick(): Long = EnergyTier.euPerTickFromTier(tier)
 }

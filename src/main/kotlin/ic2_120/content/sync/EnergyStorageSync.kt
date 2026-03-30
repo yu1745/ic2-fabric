@@ -1,7 +1,7 @@
 package ic2_120.content.sync
 
 import ic2_120.content.TickLimitedSidedEnergyContainer
-import ic2_120.content.block.ITieredMachine
+import ic2_120.content.energy.EnergyTier
 import ic2_120.content.syncs.SyncSchema
 import net.minecraft.util.math.Direction
 
@@ -18,8 +18,8 @@ class EnergyStorageSync(
     capacity: Long
 ) : TickLimitedSidedEnergyContainer(
     baseCapacity = capacity,
-    maxInsertPerTick = ITieredMachine.euPerTickFromTier(tier),
-    maxExtractPerTick = ITieredMachine.euPerTickFromTier(tier),
+    maxInsertPerTick = EnergyTier.euPerTickFromTier(tier),
+    maxExtractPerTick = EnergyTier.euPerTickFromTier(tier),
     currentTickProvider = currentTickProvider
 ) {
 
@@ -27,7 +27,7 @@ class EnergyStorageSync(
         const val NBT_ENERGY_STORED = "EnergyStored"
     }
 
-    private val maxRate = ITieredMachine.euPerTickFromTier(tier)
+    private val maxRate = EnergyTier.euPerTickFromTier(tier)
 
     var energy by schema.int("Energy")
     private val flow = EnergyFlowSync(schema, this)

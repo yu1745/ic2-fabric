@@ -1,6 +1,6 @@
 package ic2_120.content.item.energy
 
-import ic2_120.content.block.ITieredMachine
+import ic2_120.content.energy.EnergyTier
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 
@@ -66,7 +66,7 @@ fun chargePlayerInventory(player: PlayerEntity, eu: Long): Long {
  * 规则：
  * - 仅充电实现了 [IBatteryItem] / [IElectricTool] 的物品
  * - 仅当物品 tier <= machineTier
- * - 每件物品每 tick 上限：euPerTickFromTier(min(machineTier, item.tier))
+ * - 每件物品每 tick 上限：EnergyTier.euPerTickFromTier(min(machineTier, item.tier))
  * - 每件物品独立计算上限，不共享单一总限额
  */
 fun chargePlayerInventoryPerItemLimit(
@@ -87,7 +87,7 @@ fun chargePlayerInventoryPerItemLimit(
         when (item) {
             is IBatteryItem -> {
                 if (!item.canCharge || item.tier > machineTier || item.isFullyCharged(target)) return
-                val perItemLimit = ITieredMachine.euPerTickFromTier(minOf(machineTier, item.tier))
+                val perItemLimit = EnergyTier.euPerTickFromTier(minOf(machineTier, item.tier))
                 val remaining = (item.maxCapacity - item.getCurrentCharge(target)).coerceAtLeast(0L)
                 val machineAvailable = machineEnergyProvider().coerceAtLeast(0L)
                 val requested = minOf(perItemLimit, remaining, machineAvailable)
@@ -105,7 +105,7 @@ fun chargePlayerInventoryPerItemLimit(
 
             is IElectricTool -> {
                 if (item.tier > machineTier || item.isFullyCharged(target)) return
-                val perItemLimit = ITieredMachine.euPerTickFromTier(minOf(machineTier, item.tier))
+                val perItemLimit = EnergyTier.euPerTickFromTier(minOf(machineTier, item.tier))
                 val current = item.getEnergy(target)
                 val remaining = (item.maxCapacity - current).coerceAtLeast(0L)
                 val machineAvailable = machineEnergyProvider().coerceAtLeast(0L)

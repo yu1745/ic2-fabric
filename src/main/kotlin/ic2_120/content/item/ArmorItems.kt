@@ -707,7 +707,6 @@ class ElectricJetpack : ElectricArmorItem(
 class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1)), IBatteryItem {
     override val tier: Int = 2
     override val maxCapacity: Long = 100_000L
-    override val transferSpeed: Int = 128
     override val canChargeWireless: Boolean = false
 
     companion object {

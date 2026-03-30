@@ -21,7 +21,6 @@ import net.minecraft.text.Text
  * @param name 物品 ID（不含命名空间）
  * @param tier 能量等级（1-4）
  * @param maxCapacity 最大容量（EU）
- * @param transferSpeed 充放电速度（EU/t）
  * @param canChargeWireless 是否可以无线充电
  * @param settings 物品设置（可选）
  */
@@ -29,7 +28,6 @@ abstract class BatteryItemBase(
     private val name: String,
     override val tier: Int,
     override val maxCapacity: Long,
-    override val transferSpeed: Int,
     override val canChargeWireless: Boolean,
     settings: FabricItemSettings = FabricItemSettings()
 ) : Item(settings), IBatteryItem {
@@ -82,7 +80,6 @@ abstract class BatteryItemBase(
         // 验证参数
         require(tier in 1..4) { "电池等级必须在 1-4 之间，当前值: $tier" }
         require(maxCapacity > 0) { "最大容量必须大于 0，当前值: $maxCapacity" }
-        require(transferSpeed > 0) { "传输速度必须大于 0，当前值: $transferSpeed" }
     }
 
     override fun getCurrentCharge(stack: ItemStack): Long {
@@ -115,7 +112,7 @@ abstract class BatteryItemBase(
 
         // 等级和速度信息
         tooltip.add(
-            Text.literal("等级: $tier | 速度: $transferSpeed EU/t")
+            Text.literal("等级: $tier | 速度: ${nominalEuPerTick()} EU/t")
                 .formatted(net.minecraft.util.Formatting.GRAY)
         )
 

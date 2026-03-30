@@ -1,5 +1,7 @@
 package ic2_120.content.item.energy
 
+import ic2_120.content.energy.EnergyTier
+
 /**
  * 电池物品接口
  *
@@ -12,10 +14,10 @@ interface IBatteryItem : ITiered {
     val maxCapacity: Long
 
     /**
-     * 充放电速度（EU/t）
-     * 这是每 tick 最大可以充电或放电的能量量
+     * 充放电速度（EU/t），默认由 [tier] 经 [EnergyTier.euPerTickFromTier] 得出。
      */
     val transferSpeed: Int
+        get() = EnergyTier.euPerTickFromTier(tier).toInt().coerceAtLeast(1)
 
     /**
      * 是否可以无线充电

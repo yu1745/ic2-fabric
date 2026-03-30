@@ -1,5 +1,6 @@
 package ic2_120.content.block
 
+import ic2_120.content.energy.EnergyTier
 import ic2_120.content.item.energy.ITiered
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import net.minecraft.util.math.Direction
@@ -17,13 +18,8 @@ import net.minecraft.util.math.Direction
 interface ITieredMachine : ITiered {
 
     companion object {
-        /** 每个电压等级对应的 EU/t（32 * 4^(tier-1)） */
-        fun euPerTickFromTier(tier: Int): Long {
-            if (tier <= 1) return 32L
-            var m = 32L
-            repeat((tier - 1).coerceAtMost(8)) { m *= 4 }
-            return m
-        }
+        /** 每个电压等级对应的 EU/t，与 [EnergyTier.euPerTickFromTier] 一致。 */
+        fun euPerTickFromTier(tier: Int): Long = EnergyTier.euPerTickFromTier(tier)
     }
 
     /**

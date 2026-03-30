@@ -32,7 +32,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class TinCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), ITiered {
 
     override val tier: Int = 1
-    override fun getTransferRate(): Long = 32L
+    override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 200L
 
     companion object {
@@ -54,7 +54,7 @@ class TinCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Base
 class CopperCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), ITiered {
 
     override val tier: Int = 2
-    override fun getTransferRate(): Long = 128L
+    override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 200L
 
     companion object {
@@ -76,7 +76,7 @@ class CopperCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : B
 class GoldCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), ITiered {
 
     override val tier: Int = 3
-    override fun getTransferRate(): Long = 512L
+    override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 400L
 
     override fun getCableMin(): Double = 6.5 / 16.0
@@ -101,7 +101,7 @@ class GoldCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Bas
 class IronCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), ITiered {
 
     override val tier: Int = 4
-    override fun getTransferRate(): Long = 2048L
+    override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 800L
 
     override fun getCableMin(): Double = 5.0 / 16.0
@@ -128,7 +128,7 @@ class GlassFibreCableBlock(
 ) : BaseCableBlock(settings), IInsulatedCable, ITiered {
 
     override val tier: Int = 5
-    override fun getTransferRate(): Long = 8192L
+    override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 25L
     override val insulationLevel: Int = 5
 }
@@ -142,7 +142,7 @@ class GlassFibreCableBlock(
 class InsulatedCopperCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), IInsulatedCable, ITiered {
 
     override val tier: Int = 2
-    override fun getTransferRate(): Long = 128L
+    override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 200L
     override val insulationLevel: Int = 2
 
@@ -165,7 +165,7 @@ class InsulatedCopperCableBlock(settings: AbstractBlock.Settings = defaultSettin
 class InsulatedTinCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), IInsulatedCable, ITiered {
 
     override val tier: Int = 1
-    override fun getTransferRate(): Long = 32L
+    override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 200L
     override val insulationLevel: Int = 2
 
@@ -188,7 +188,7 @@ class InsulatedTinCableBlock(settings: AbstractBlock.Settings = defaultSettings(
 class InsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), IInsulatedCable, ITiered {
 
     override val tier: Int = 3
-    override fun getTransferRate(): Long = 512L
+    override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 400L
     override val insulationLevel: Int = 2
 
@@ -214,7 +214,7 @@ class InsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSettings
 class DoubleInsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), IInsulatedCable, ITiered {
 
     override val tier: Int = 3
-    override fun getTransferRate(): Long = 512L
+    override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 400L
     override val insulationLevel: Int = 3
 
@@ -241,7 +241,7 @@ class DoubleInsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSe
 class InsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), IInsulatedCable, ITiered {
 
     override val tier: Int = 4
-    override fun getTransferRate(): Long = 2048L
+    override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 800L
     override val insulationLevel: Int = 2
 
@@ -267,7 +267,7 @@ class InsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSettings
 class DoubleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), IInsulatedCable, ITiered {
 
     override val tier: Int = 4
-    override fun getTransferRate(): Long = 2048L
+    override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 800L
     override val insulationLevel: Int = 3
 
@@ -294,7 +294,7 @@ class DoubleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
 class TripleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), IInsulatedCable, ITiered {
 
     override val tier: Int = 4
-    override fun getTransferRate(): Long = 2048L
+    override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 800L
     override val insulationLevel: Int = 4
 

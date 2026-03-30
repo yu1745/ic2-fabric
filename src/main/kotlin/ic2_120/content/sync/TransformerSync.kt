@@ -1,6 +1,7 @@
 package ic2_120.content.sync
 
 import ic2_120.content.TickLimitedSidedEnergyContainer
+import ic2_120.content.energy.EnergyTier
 import ic2_120.content.syncs.SyncSchema
 import net.minecraft.util.math.Direction
 
@@ -60,27 +61,10 @@ class TransformerSync(
             }
         }
 
-        // 获取最大输入速率（基于高级能量等级，因为无论哪种模式都可能接收高级能量）
-        fun getMaxInsertForTier(tier: Int): Long {
-            return when (tier) {
-                1 -> 128L    // LV: 最大接收 128 EU/t (2级)
-                2 -> 512L    // MV: 最大接收 512 EU/t (3级)
-                3 -> 2048L   // HV: 最大接收 2048 EU/t (4级)
-                4 -> 8192L   // EV: 最大接收 8192 EU/t (5级)
-                else -> 128L
-            }
-        }
+        /** 高级侧电压等级 = tier+1，对应 EU/t 见 [EnergyTier.euPerTickFromTier]. */
+        fun getMaxInsertForTier(tier: Int): Long = EnergyTier.euPerTickFromTier(tier + 1)
 
-        // 获取最大输出速率（基于高级能量等级，因为无论哪种模式都可能输出高级能量）
-        fun getMaxExtractForTier(tier: Int): Long {
-            return when (tier) {
-                1 -> 128L    // LV: 最大输出 128 EU/t (2级)
-                2 -> 512L    // MV: 最大输出 512 EU/t (3级)
-                3 -> 2048L   // HV: 最大输出 2048 EU/t (4级)
-                4 -> 8192L   // EV: 最大输出 8192 EU/t (5级)
-                else -> 128L
-            }
-        }
+        fun getMaxExtractForTier(tier: Int): Long = EnergyTier.euPerTickFromTier(tier + 1)
 
         const val NBT_ENERGY_STORED = "EnergyStored"
         const val NBT_MODE = "Mode"
@@ -108,10 +92,10 @@ class TransformerSync(
     fun getOutputTierValue(): Int = highTier
 
     /** 获取低级能量的每 tick 速率 */
-    fun getLowEuPerTick(): Long = ITieredMachine.euPerTickFromTier(lowTier)
+    fun getLowEuPerTick(): Long = EnergyTier.euPerTickFromTier(lowTier)
 
     /** 获取高级能量的每 tick 速率 */
-    fun getHighEuPerTick(): Long = ITieredMachine.euPerTickFromTier(highTier)
+    fun getHighEuPerTick(): Long = EnergyTier.euPerTickFromTier(highTier)
 
     fun getMode(): Mode = Mode.fromId(mode)
 
@@ -190,18 +174,5 @@ class TransformerSync(
 
     /** 获取同步的滤波后输出量（EU/t） */
     fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
-}
-
-/**
- * ITieredMachine 伴生对象的引用
- * 为了避免循环依赖，在这里复制必要的函数
- */
-private object ITieredMachine {
-    fun euPerTickFromTier(tier: Int): Long {
-        if (tier <= 1) return 32L
-        var m = 32L
-        repeat((tier - 1).coerceAtMost(8)) { m *= 4 }
-        return m
-    }
 }
 

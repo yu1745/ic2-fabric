@@ -4,14 +4,12 @@ import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
 import net.minecraft.inventory.Inventory
 
-/** 电动工具默认充电速度（EU/t），按等级缩放 */
-private const val ELECTRIC_TOOL_CHARGE_SPEED_BASE = 32
-
 /**
  * 通用充电组件。
  *
  * 支持电池（[IBatteryItem]）与电动工具（[IElectricTool]）充电。
  * 通过组合方式复用“机器给可充电物品充电”逻辑，避免各类机器重复实现。
+ * 每 tick 上限为 [ic2_120.content.item.energy.ITiered.nominalEuPerTick]（与标称线速一致）。
  */
 class BatteryChargerComponent(
     private val inventory: Inventory,
@@ -46,7 +44,7 @@ class BatteryChargerComponent(
 
         val machineEnergy = machineEnergyProvider().coerceAtLeast(0L)
         val remaining = (battery.maxCapacity - battery.getCurrentCharge(stack)).coerceAtLeast(0L)
-        val transferLimit = battery.transferSpeed.toLong().coerceAtLeast(0L) * 4 //充电速度设置为4倍
+        val transferLimit = battery.nominalEuPerTick()
         val requested = minOf(transferLimit, machineEnergy, remaining)
         if (requested <= 0L) return 0L
 
@@ -68,7 +66,7 @@ class BatteryChargerComponent(
 
         val machineEnergy = machineEnergyProvider().coerceAtLeast(0L)
         val remaining = (tool.maxCapacity - tool.getEnergy(stack)).coerceAtLeast(0L)
-        val transferLimit = (ELECTRIC_TOOL_CHARGE_SPEED_BASE * tool.tier * 4).toLong().coerceAtLeast(1L) * 4 //充电速度设置为放电4倍
+        val transferLimit = tool.nominalEuPerTick()
         val requested = minOf(transferLimit, machineEnergy, remaining)
         if (requested <= 0L) return 0L
         val extracted = extractEnergy(requested).coerceIn(0L, requested)

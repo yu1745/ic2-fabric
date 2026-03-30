@@ -15,18 +15,15 @@ import net.minecraft.world.World
  * @param name 物品 ID
  * @param tier 能量等级
  * @param baseMaxCapacity 同等级普通电池的最大容量
- * @param transferSpeed 充放电速度
  */
 abstract class WirelessBatteryItemBase(
     name: String,
     tier: Int,
-    baseMaxCapacity: Long,
-    transferSpeed: Int
+    baseMaxCapacity: Long
 ) : BatteryItemBase(
     name = name,
     tier = tier,
     maxCapacity = baseMaxCapacity * 4, // 容量是普通版本的4倍
-    transferSpeed = transferSpeed,
     canChargeWireless = true // 支持无线充电
 ) {
     override fun inventoryTick(
@@ -87,7 +84,7 @@ abstract class WirelessBatteryItemBase(
     }
 
     /**
-     * 自动给背包内符合条件的 [IElectricTool] 充电（每 tick 由调用方触发时使用 [transferSpeed] 作为本帧上限）。
+     * 自动给背包内符合条件的 [IElectricTool] 充电（每 tick 使用 [nominalEuPerTick] 作为本帧上限）。
      */
     fun autoChargeEquipment(stack: net.minecraft.item.ItemStack, player: net.minecraft.entity.player.PlayerEntity) {
         if (!canChargeWireless) return
@@ -95,8 +92,7 @@ abstract class WirelessBatteryItemBase(
         val energy = getCurrentCharge(stack)
         if (energy <= 0) return
 
-        // 每次尝试充电 transferSpeed 的电量
-        val charged = chargeEquipment(player, transferSpeed.toLong())
+        val charged = chargeEquipment(player, nominalEuPerTick())
         if (charged > 0) {
             discharge(stack, charged)
         }

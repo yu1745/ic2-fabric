@@ -2,7 +2,7 @@ package ic2_120.content.sync
 
 import ic2_120.content.TickLimitedSidedEnergyContainer
 import ic2_120.content.sync.EnergyFlowSync
-import ic2_120.content.block.ITieredMachine
+import ic2_120.content.energy.EnergyTier
 import ic2_120.content.syncs.SyncSchema
 
 /**
@@ -19,7 +19,7 @@ class LuminatorSync(
         /** 最小缓冲，无储能，断电即关 */
         const val ENERGY_CAPACITY = 1L
         /** 电压等级 5：8192 EU/t 输入上限 */
-        val MAX_INSERT: Long = ITieredMachine.euPerTickFromTier(5)
+        val MAX_INSERT: Long = EnergyTier.euPerTickFromTier(5)
         const val MAX_EXTRACT = 0L
         const val NBT_ENERGY_STORED = "EnergyStored"
         /** 每 4 tick 消耗 1 EU，即 5 EU/s */
