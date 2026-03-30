@@ -4,6 +4,7 @@ import ic2_120.client.compose.*
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.ComposeDebugBlock
 import ic2_120.content.screen.ComposeDebugScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen

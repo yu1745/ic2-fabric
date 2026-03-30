@@ -19,6 +19,30 @@ class RenderContext {
     var drawEnabled: Boolean = true
     var interactionEnabled: Boolean = true
 
+    /**
+     * 裁剪边界。当不为 null 时，所有子节点添加的 TooltipHit 会被 clamp 到此矩形内。
+     * 由 ScrollViewNode.render() 设置，防止超出视口的元素触发 tooltip。
+     */
+    var clipRect: ClipRect? = null
+
+    data class ClipRect(
+        val minX: Int, val minY: Int,
+        val maxX: Int, val maxY: Int
+    ) {
+        fun clamp(x: Int, y: Int, w: Int, h: Int): TooltipHit {
+            val cx0 = maxOf(x, minX)
+            val cy0 = maxOf(y, minY)
+            val cx1 = minOf(x + w, maxX)
+            val cy1 = minOf(y + h, maxY)
+            return if (cx1 > cx0 && cy1 > cy0) {
+                TooltipHit(cx0, cy0, cx1 - cx0, cy1 - cy0, emptyList())
+            } else {
+                // 完全在视口外，返回无效矩形（不会命中鼠标）
+                TooltipHit(x, y, 0, 0, emptyList())
+            }
+        }
+    }
+
     val buttonHits = mutableListOf<ButtonHit>()
     val tooltipHits = mutableListOf<TooltipHit>()
     val scrollHits = mutableListOf<ScrollHit>()
@@ -171,7 +195,11 @@ class TextNode(
             ctx.drawContext.drawText(ctx.textRenderer, text, tx, ty, color, false)
         }
         if (tooltip != null && ctx.interactionEnabled) {
-            ctx.tooltipHits += RenderContext.TooltipHit(originX, originY, measuredWidth, measuredHeight, tooltip)
+            val hit = ctx.clipRect?.clamp(originX, originY, measuredWidth, measuredHeight)
+                ?: RenderContext.TooltipHit(originX, originY, measuredWidth, measuredHeight, tooltip)
+            if (hit.w > 0 && hit.h > 0) {
+                ctx.tooltipHits += hit.copy(lines = tooltip)
+            }
         }
     }
 }
@@ -249,7 +277,11 @@ class ItemStackNode(
         if (!stack.isEmpty) {
             ctx.drawContext.drawItemWithoutEntity(stack, px, py)
             if (ctx.interactionEnabled) {
-                ctx.tooltipHits += RenderContext.TooltipHit(px, py, size, size, listOf(stack.getName()))
+                val hit = ctx.clipRect?.clamp(px, py, size, size)
+                    ?: RenderContext.TooltipHit(px, py, size, size, emptyList())
+                if (hit.w > 0 && hit.h > 0) {
+                    ctx.tooltipHits += hit.copy(lines = listOf(stack.getName()))
+                }
             }
         }
     }
@@ -259,7 +291,8 @@ class ItemStackNode(
 
 class ButtonNode(
     val text: String,
-    val onClick: () -> Unit = {}
+    val onClick: () -> Unit = {},
+    val tooltip: List<net.minecraft.text.Text>? = null
 ) : UiNode() {
     private val vanillaFace = 0xFF8B8B8B.toInt()
     private val vanillaFaceHover = 0xFF9D9D9D.toInt()
@@ -324,6 +357,13 @@ class ButtonNode(
 
         if (ctx.interactionEnabled) {
             ctx.buttonHits += RenderContext.ButtonHit(originX, originY, measuredWidth, measuredHeight, onClick)
+            if (tooltip != null) {
+                val hit = ctx.clipRect?.clamp(originX, originY, measuredWidth, measuredHeight)
+                    ?: RenderContext.TooltipHit(originX, originY, measuredWidth, measuredHeight, tooltip)
+                if (hit.w > 0 && hit.h > 0) {
+                    ctx.tooltipHits += hit.copy(lines = tooltip)
+                }
+            }
         }
     }
 }
@@ -847,6 +887,10 @@ class ScrollViewNode(
         val scrollY = ctx.getScrollOffset(nodeId).coerceIn(0, maxScroll)
 
         // 1. Clip → draw children with vertical offset
+        // Tooltip hits from children are clamped to the viewport so elements
+        // scrolled out of view don't trigger tooltips.
+        val prevClipRect = ctx.clipRect
+        ctx.clipRect = RenderContext.ClipRect(vpX, vpY, vpX + vpW, vpY + vpH)
         if (ctx.drawEnabled) {
             ctx.drawContext.enableScissor(vpX, vpY, vpX + vpW, vpY + vpH)
         }
@@ -858,6 +902,7 @@ class ScrollViewNode(
         if (ctx.drawEnabled) {
             ctx.drawContext.disableScissor()
         }
+        ctx.clipRect = prevClipRect
 
         // 2. Scrollbar
         if (maxScroll > 0) {

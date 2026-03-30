@@ -7,6 +7,7 @@ import ic2_120.content.item.OdScannerItem
 import ic2_120.content.network.OreScanEntry
 import ic2_120.content.network.ScannerResultPacket
 import ic2_120.content.screen.ScannerScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen

@@ -8,6 +8,7 @@ import ic2_120.content.block.TransformerBlock
 import ic2_120.client.ui.FilteredValue
 import ic2_120.content.sync.TransformerSync
 import ic2_120.content.screen.TransformerScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen

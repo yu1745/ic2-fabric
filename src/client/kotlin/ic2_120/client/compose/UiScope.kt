@@ -156,9 +156,10 @@ class UiScope {
         y: Int = 0,
         absolute: Boolean = false,
         modifier: Modifier = Modifier.EMPTY,
+        tooltip: List<net.minecraft.text.Text>? = null,
         onClick: () -> Unit = {}
     ) {
-        val node = ButtonNode(text, onClick).apply {
+        val node = ButtonNode(text, onClick, tooltip).apply {
             this.position = if (absolute) Position.Absolute(x, y) else Position.Flow(x, y)
             this.modifier = modifier
         }
