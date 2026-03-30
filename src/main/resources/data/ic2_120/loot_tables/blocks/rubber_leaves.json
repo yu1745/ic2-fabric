@@ -72,7 +72,7 @@
               "type": "minecraft:item",
               "name": "ic2_120:rubber_sapling",
               "functions": [{"function": "minecraft:explosion_decay"}],
-              "conditions": [{"condition": "minecraft:random_chance", "chance": 0.025}]
+              "conditions": [{"condition": "minecraft:random_chance", "chance": 0.015}]
             },
             {
               "type": "minecraft:item",

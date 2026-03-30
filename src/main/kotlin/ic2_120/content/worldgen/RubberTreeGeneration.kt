@@ -34,7 +34,10 @@ object RubberTreeGeneration {
             BiomeSelectors.foundInOverworld().and { context ->
                 !context.hasTag(BiomeTags.IS_OCEAN) &&
                     !context.hasTag(BiomeTags.IS_RIVER) &&
-                    context.biomeKey != BiomeKeys.DESERT
+                    context.biomeKey != BiomeKeys.DESERT &&
+                    context.biomeKey != BiomeKeys.BEACH &&
+                    context.biomeKey != BiomeKeys.SNOWY_BEACH &&
+                    context.biomeKey != BiomeKeys.STONY_SHORE
             },
             GenerationStep.Feature.VEGETAL_DECORATION,
             RUBBER_TREE_PLACED_KEY

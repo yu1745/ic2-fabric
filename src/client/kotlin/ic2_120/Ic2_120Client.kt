@@ -21,6 +21,7 @@ import ic2_120.client.ClientBlockEntityRenderers
 import ic2_120.client.JetpackSoundController
 import ic2_120.client.MachineLoopSoundController
 import ic2_120.client.IridiumDrillModeHandler
+import ic2_120.client.SodiumCompatibilityWarning
 import ic2_120.client.UpdateNotifier
 import ic2_120.client.network.NetworkManager
 import net.fabricmc.api.ClientModInitializer
@@ -45,6 +46,7 @@ object Ic2_120Client : ClientModInitializer {
 		IridiumDrillModeHandler.register()
 		FoamSprayerTooltipHandler.register()
 		UpdateNotifier.register()
+		SodiumCompatibilityWarning.register()
 		JetpackSoundController.register()
 		MachineLoopSoundController.register()
 
