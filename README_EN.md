@@ -123,13 +123,6 @@ Compared to the original IC2, the following features are not yet implemented or 
 - Various terraforming templates (cultivation, forestation, desertification, mushroom, etc.)
 - Construction templates
 
-### 🧬 Replication Series Machines
-- Scanner
-- Replicator
-- Matter Fabricator
-- UU-Matter system
-- Pattern storage and Pattern Storage machine
-
 ### 💨 Steam Series Machines
 - Steam Generator
 - Steam Kinetic Generator

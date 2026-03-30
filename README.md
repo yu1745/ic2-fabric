@@ -123,13 +123,6 @@ ic2-fabric/
 - 各种地形改造模板（耕地、森林、沙漠、蘑菇等）
 - 建筑模板
 
-### 🧬 复制系列机器
-- 扫描机（Scanner）
-- 复制机（Replicator）
-- 物质生成机（Matter Fabricator）
-- UU 物质系统
-- 模式存储与模式存储机
-
 ### 💨 蒸汽系列机器
 - 蒸汽发电机（Steam Generator）
 - 蒸汽动能发电机（Steam Kinetic Generator）
