@@ -6,6 +6,7 @@ import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.ExtractorBlock
 import ic2_120.content.screen.ExtractorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.ExtractorSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -32,9 +33,9 @@ class ExtractorScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            ExtractorScreenHandler.PLAYER_INV_Y,
-            ExtractorScreenHandler.HOTBAR_Y,
-            ExtractorScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -101,6 +102,14 @@ class ExtractorScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = ExtractorScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

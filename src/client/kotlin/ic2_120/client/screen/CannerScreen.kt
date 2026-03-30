@@ -7,6 +7,7 @@ import ic2_120.client.ui.EnergyBarOrientation
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.CannerBlock
 import ic2_120.content.screen.CannerScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.CannerSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -30,7 +31,7 @@ class CannerScreen(
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y, CannerScreenHandler.PLAYER_INV_Y, CannerScreenHandler.HOTBAR_Y, CannerScreenHandler.SLOT_SIZE
+            context, x, y, GUI_SIZE.playerInvY, GUI_SIZE.hotbarY, GuiSize.SLOT_SIZE
         )
     }
 
@@ -176,6 +177,14 @@ class CannerScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = CannerScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

@@ -7,6 +7,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.SolarGeneratorBlock
 import ic2_120.content.block.machines.SolarGeneratorBlockEntity
 import ic2_120.content.screen.SolarGeneratorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.SolarGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -34,9 +35,9 @@ class SolarGeneratorScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            SolarGeneratorScreenHandler.PLAYER_INV_Y,
-            SolarGeneratorScreenHandler.HOTBAR_Y,
-            SolarGeneratorScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -94,6 +95,14 @@ class SolarGeneratorScreen(
                     )
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = SolarGeneratorScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

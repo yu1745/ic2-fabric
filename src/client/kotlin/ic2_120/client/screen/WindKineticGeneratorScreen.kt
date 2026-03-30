@@ -4,6 +4,7 @@ import ic2_120.client.compose.*
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.screen.WindKineticGeneratorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -29,9 +30,9 @@ class WindKineticGeneratorScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            WindKineticGeneratorScreenHandler.PLAYER_INV_Y,
-            WindKineticGeneratorScreenHandler.HOTBAR_Y,
-            WindKineticGeneratorScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -52,6 +53,14 @@ class WindKineticGeneratorScreen(
                 }
                 Text("放入木/铁/钢/碳转子后显示叶片", color = 0xAAAAAA, shadow = false)
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = WindKineticGeneratorScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)

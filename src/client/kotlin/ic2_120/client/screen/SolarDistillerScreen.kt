@@ -6,6 +6,7 @@ import ic2_120.client.ui.FluidBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.SolarDistillerBlock
 import ic2_120.content.screen.SolarDistillerScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.sync.SolarDistillerSync
 import ic2_120.registry.annotation.ModScreen
@@ -37,9 +38,9 @@ class SolarDistillerScreen(
             context,
             x,
             y,
-            SolarDistillerScreenHandler.PLAYER_INV_Y,
-            SolarDistillerScreenHandler.HOTBAR_Y,
-            SolarDistillerScreenHandler.SLOT_SIZE
+            GuiSize.STANDARD_UPGRADE.playerInvY,
+            GuiSize.STANDARD_UPGRADE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -110,6 +111,14 @@ class SolarDistillerScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = SolarDistillerScreenHandler.PLAYER_INV_START,
+                playerInvY = GuiSize.STANDARD_UPGRADE.playerInvY,
+                hotbarY = GuiSize.STANDARD_UPGRADE.hotbarY
+            )
         }
 
         // 1) 预布局，不绘制

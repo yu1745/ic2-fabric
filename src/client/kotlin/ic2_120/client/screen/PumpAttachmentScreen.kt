@@ -3,6 +3,7 @@ package ic2_120.client.screen
 import ic2_120.client.compose.*
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.screen.PumpAttachmentScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -25,7 +26,9 @@ class PumpAttachmentScreen(
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(context, x, y, 58, 116, 18)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context, x, y, GUI_SIZE.playerInvY, GUI_SIZE.hotbarY, GuiSize.SLOT_SIZE
+        )
         val slot = handler.slots[0]
         context.drawBorder(x + slot.x - 1, y + slot.y - 1, 18, 18, GuiBackground.BORDER_COLOR)
     }
@@ -41,6 +44,14 @@ class PumpAttachmentScreen(
                     Text("过滤样本", color = 0xCFCFCF, shadow = false)
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = PumpAttachmentScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)

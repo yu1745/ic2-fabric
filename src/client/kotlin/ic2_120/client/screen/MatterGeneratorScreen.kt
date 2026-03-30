@@ -7,6 +7,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.client.ui.HeatProgressBar
 import ic2_120.content.block.MatterGeneratorBlock
 import ic2_120.content.screen.MatterGeneratorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.MatterGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -35,9 +36,9 @@ class MatterGeneratorScreen(
             context,
             x,
             y,
-            MatterGeneratorScreenHandler.PLAYER_INV_Y,
-            MatterGeneratorScreenHandler.HOTBAR_Y,
-            MatterGeneratorScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -61,46 +62,49 @@ class MatterGeneratorScreen(
                 spacing = 8,
                 modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
             ) {
-                Column(
-                    spacing = 6,
+                Flex(
+                    gap = 8,
+                    direction = FlexDirection.ROW,
+                    justifyContent = JustifyContent.SPACE_BETWEEN,
+                    alignItems = AlignItems.START,
                     modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
                 ) {
-                    Text(title.string, color = 0xFFFFFF)
-                    Text(modeText, color = 0xAAAAAA, shadow = false)
-
-                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                        Text("能量", color = 0xAAAAAA)
-                        EnergyBar(energyFraction, modifier = Modifier.EMPTY.fractionWidth(1.0f))
-                        Text("${formatEu(energy)} / ${formatEu(energyCap)}", color = 0xFFFFFF, shadow = false)
-                    }
-
-                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                        Text("进度", color = 0xAAAAAA)
-                        HeatProgressBar(
-                            progressFraction,
-                            barWidth = 0,
-                            barHeight = 8,
-                            startColor = 0xFF335577.toInt(),
-                            endColor = 0xFF66BBFF.toInt(),
-                            gradient = true,
-                            modifier = Modifier.EMPTY.fractionWidth(1.0f)
-                        )
-                        Text("${handler.sync.progress}/${MatterGeneratorSync.PROGRESS_MAX}", color = 0xFFFFFF, shadow = false)
-                    }
-
-                    Flex(direction = FlexDirection.ROW, justifyContent = JustifyContent.SPACE_BETWEEN) {
-                        Column(spacing = 2) {
-                            Text("UU储罐", color = 0xAAAAAA)
-                            FluidBar(
-                                fluidFraction,
-                                barWidth = 8,
-                                barHeight = 52,
-                                vertical = true,
-                                modifier = Modifier.EMPTY.width(8).height(52)
-                            )
-                            Text("${handler.sync.fluidAmountMb} mB", color = 0xFFFFFF, shadow = false)
+                    Column(
+                        spacing = 6,
+                        modifier = Modifier.EMPTY.fractionWidth(1.0f)
+                    ) {
+                        Flex(
+                            direction = FlexDirection.ROW,
+                            justifyContent = JustifyContent.SPACE_BETWEEN,
+                            alignItems = AlignItems.CENTER, gap = 8
+                        ) {
+                            Text(title.string, color = 0xFFFFFF)
+                            Text(modeText, color = 0xAAAAAA, shadow = false)
                         }
 
+                        Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
+                            Text("能量", color = 0xAAAAAA)
+                            EnergyBar(energyFraction, modifier = Modifier.EMPTY.fractionWidth(1.0f))
+                            Text("${formatEu(energy)} / ${formatEu(energyCap)}", color = 0xFFFFFF, shadow = false)
+                        }
+
+                        Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
+                            Text("进度", color = 0xAAAAAA)
+                            HeatProgressBar(
+                                progressFraction,
+                                barWidth = 0,
+                                barHeight = 8,
+                                startColor = 0xFF335577.toInt(),
+                                endColor = 0xFF66BBFF.toInt(),
+                                gradient = true,
+                                modifier = Modifier.EMPTY.fractionWidth(1.0f)
+                            )
+                            Text(
+                                "${handler.sync.progress}/${MatterGeneratorSync.PROGRESS_MAX}",
+                                color = 0xFFFFFF,
+                                shadow = false
+                            )
+                        }
                         Column(spacing = 4) {
                             Row(spacing = 4) {
                                 SlotAnchor(id = slotAnchorId(MatterGeneratorScreenHandler.SLOT_SCRAP_INDEX))
@@ -109,8 +113,26 @@ class MatterGeneratorScreen(
                             }
                             SlotAnchor(id = slotAnchorId(MatterGeneratorScreenHandler.SLOT_DISCHARGING_INDEX))
                         }
+
+                    }
+                    Flex(
+                        direction = FlexDirection.COLUMN,
+                        justifyContent = JustifyContent.START,
+                        alignItems = AlignItems.END,
+                        gap = 4
+                    ) {
+                        Text("UU储罐", color = 0xAAAAAA)
+                        FluidBar(
+                            fluidFraction,
+                            barWidth = 8,
+                            barHeight = 52,
+                            vertical = true,
+                            modifier = Modifier.EMPTY.width(8).height(52)
+                        )
+                        Text("${handler.sync.fluidAmountMb} mB", color = 0xFFFFFF, shadow = false)
                     }
                 }
+
 
                 Column(
                     spacing = 4,
@@ -127,14 +149,18 @@ class MatterGeneratorScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = MatterGeneratorScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
+        applyAnchoredSlots(layout, left, top)
 
         super.render(context, mouseX, mouseY, delta)
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
@@ -153,6 +179,14 @@ class MatterGeneratorScreen(
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
 
     private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
+
+    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
+        }
+    }
 
     private fun formatEu(value: Long): String {
         return when {

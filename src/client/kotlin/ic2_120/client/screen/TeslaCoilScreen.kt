@@ -7,6 +7,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.sync.TeslaCoilSync
 import ic2_120.content.block.TeslaCoilBlock
 import ic2_120.content.screen.TeslaCoilScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -33,9 +34,9 @@ class TeslaCoilScreen(
             context,
             x,
             y,
-            84,
-            142,
-            18
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -59,7 +60,7 @@ class TeslaCoilScreen(
         )
         val sideTextX = left - sideTextWidth - 4
 
-        ui.render(context, textRenderer, mouseX, mouseY) {
+        val content: UiScope.() -> Unit = {
             Column(
                 x = left + 8,
                 y = top + 8,
@@ -72,7 +73,25 @@ class TeslaCoilScreen(
                 }
                 EnergyBar(fraction, modifier = Modifier().width(contentW - 36))
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = TeslaCoilScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
+
+        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
+        }
+
+        super.render(context, mouseX, mouseY, delta)
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
 
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)

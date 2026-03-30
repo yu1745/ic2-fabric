@@ -6,6 +6,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.client.ui.HeatProgressBar
 import ic2_120.content.block.FermenterBlock
 import ic2_120.content.screen.FermenterScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.FermenterSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -34,9 +35,9 @@ class FermenterScreen(
             context,
             x,
             y,
-            FermenterScreenHandler.PLAYER_INV_Y,
-            FermenterScreenHandler.HOTBAR_Y,
-            FermenterScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -131,6 +132,14 @@ class FermenterScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = FermenterScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

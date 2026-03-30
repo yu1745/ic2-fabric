@@ -6,6 +6,7 @@ import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.TeleporterBlock
 import ic2_120.content.screen.TeleporterScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -33,9 +34,9 @@ class TeleporterScreen(
             context,
             x,
             y,
-            84,
-            142,
-            18
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -54,15 +55,12 @@ class TeleporterScreen(
         val range = handler.sync.teleportRange.coerceIn(1, 3)
         val rangeText = "激活范围: ${range}x${range}x${range}"
 
-        super.render(context, mouseX, mouseY, delta)
-
-        ui.render(context, textRenderer, mouseX, mouseY) {
+        val content: UiScope.() -> Unit = {
             Column(
                 x = left + 8,
                 y = top + 8,
                 spacing = 6,
                 modifier = Modifier().width(GUI_SIZE.contentWidth)
-//                    .height(backgroundHeight - 16)
             ) {
                 Flex(
                     alignItems = AlignItems.CENTER,
@@ -100,7 +98,25 @@ class TeleporterScreen(
                     })
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = TeleporterScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
+
+        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
+        }
+
+        super.render(context, mouseX, mouseY, delta)
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 

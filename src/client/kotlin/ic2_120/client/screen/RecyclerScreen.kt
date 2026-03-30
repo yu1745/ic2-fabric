@@ -7,6 +7,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.sync.RecyclerSync
 import ic2_120.content.block.RecyclerBlock
 import ic2_120.content.screen.RecyclerScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -32,9 +33,9 @@ class RecyclerScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            RecyclerScreenHandler.PLAYER_INV_Y,
-            RecyclerScreenHandler.HOTBAR_Y,
-            RecyclerScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -101,6 +102,14 @@ class RecyclerScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = RecyclerScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

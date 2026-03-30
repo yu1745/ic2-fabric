@@ -5,13 +5,11 @@ import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.PumpBlock
 import ic2_120.content.screen.PumpScreenHandler
-import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
-import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
 
 @ModScreen(block = PumpBlock::class)
@@ -24,8 +22,8 @@ class PumpScreen(
     private val ui = ComposeUI()
 
     init {
-        backgroundWidth = PANEL_WIDTH
-        backgroundHeight = PANEL_HEIGHT
+        backgroundWidth = GUI_SIZE.width
+        backgroundHeight = GUI_SIZE.height
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
@@ -34,9 +32,9 @@ class PumpScreen(
             context,
             x,
             y,
-            PumpScreenHandler.PLAYER_INV_Y,
-            PumpScreenHandler.HOTBAR_Y,
-            PumpScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -46,78 +44,95 @@ class PumpScreen(
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1L)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
-        val contentW = (backgroundWidth - 16).coerceAtLeast(0)
-        val barW = (contentW - 36).coerceAtLeast(0)
         val fluidAmount = handler.sync.fluidAmountMb.coerceAtLeast(0)
 
         val energyText = "$energy / $cap EU"
-        val fluidText = "液体 $fluidAmount mB"
-        val statusText = if (fluidAmount > 0) "状态: 已填充" else "状态: 空"
+        val fluidLine = "液体 ${fluidAmount} mB · " + if (fluidAmount > 0) "状态: 已填充" else "状态: 空"
 
         val content: UiScope.() -> Unit = {
-            Column(
+            Row(
                 x = left + 8,
                 y = top + 8,
-                spacing = 6,
-                modifier = Modifier().width(contentW).height(backgroundHeight - 16),
+                spacing = 8,
+                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
             ) {
-                Row(spacing = 8) {
-                    Text(title.string, color = 0xFFFFFF)
-                    Text(energyText, color = 0xFFFFFF)
-                }
-                EnergyBar(energyFraction, modifier = Modifier().width(barW))
-
-                // 机器槽位
-                Flex(
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.SPACE_BETWEEN,
+                Column(
+                    spacing = 6,
+                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
                 ) {
-                    SlotAnchor(id = "slot.${PumpScreenHandler.SLOT_INPUT_INDEX}")
-                    SlotAnchor(id = "slot.${PumpScreenHandler.SLOT_OUTPUT_INDEX}")
+                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
+                        Text(title.string, color = 0xFFFFFF)
+                        Text(energyText, color = 0xFFFFFF, shadow = false)
+                    }
+                    EnergyBar(energyFraction, barHeight = 12)
+
+                    Flex(
+                        direction = FlexDirection.ROW,
+                        alignItems = AlignItems.CENTER,
+                        gap = 8
+                    ) {
+                        SlotHost(PumpScreenHandler.SLOT_INPUT_INDEX)
+                        SlotHost(PumpScreenHandler.SLOT_OUTPUT_INDEX)
+                    }
+
+                    SlotHost(PumpScreenHandler.SLOT_DISCHARGING_INDEX)
+                    Text(fluidLine, color = 0xAAAAAA, shadow = false)
                 }
 
-                // 放电槽
-                SlotAnchor(id = "slot.${PumpScreenHandler.SLOT_DISCHARGING_INDEX}")
-
-                Text(fluidText, color = 0xFFFFFF, shadow = false)
-                Text(statusText, color = 0xAAAAAA, shadow = false)
-
-                // 升级槽
-                Flex(
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.SPACE_BETWEEN,
+                Column(
+                    spacing = 4,
+                    modifier = Modifier.EMPTY
+                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
+                        .padding(0, 8, 0, 0)
                 ) {
-                    repeat(4) { index ->
-                        SlotAnchor(id = "slot.${PumpScreenHandler.SLOT_UPGRADE_INDEX_START + index}")
+                    for (slotIndex in PumpScreenHandler.SLOT_UPGRADE_INDEX_START..PumpScreenHandler.SLOT_UPGRADE_INDEX_END) {
+                        SlotHost(slotIndex)
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = PumpScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
-        // 1) 预布局，不绘制
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
+        applyAnchoredSlots(layout, left, top)
 
-        // 2) 锚点写回 slot 相对坐标
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
-
-        // 3) 原生 slot 渲染 + 交互
         super.render(context, mouseX, mouseY, delta)
-
-        // 4) Compose overlay
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+    private fun UiScope.SlotHost(slotIndex: Int) {
+        SlotAnchor(
+            id = slotAnchorId(slotIndex),
+            width = PumpScreenHandler.SLOT_SIZE,
+            height = PumpScreenHandler.SLOT_SIZE
+        )
+    }
+
+    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
+        }
+    }
+
+    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
+
+    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (ui.mouseClicked(mouseX, mouseY, button)) return true
+        return super.mouseClicked(mouseX, mouseY, button)
+    }
 
     companion object {
-        private val PANEL_WIDTH = GuiSize.STANDARD_UPGRADE.width
-        private val PANEL_HEIGHT = GuiSize.STANDARD_UPGRADE.height
+        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
     }
 }

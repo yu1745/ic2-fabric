@@ -7,6 +7,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.FluidHeatExchangerBlock
 import ic2_120.content.block.machines.FluidHeatExchangerBlockEntity
 import ic2_120.content.screen.FluidHeatExchangerScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.FluidHeatExchangerSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -36,9 +37,9 @@ class FluidHeatExchangerScreen(
             context,
             x,
             y,
-            FluidHeatExchangerScreenHandler.PLAYER_INV_Y,
-            FluidHeatExchangerScreenHandler.HOTBAR_Y,
-            FluidHeatExchangerScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -132,6 +133,14 @@ class FluidHeatExchangerScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = FluidHeatExchangerScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         // 1) 预布局，不绘制

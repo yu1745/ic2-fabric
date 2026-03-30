@@ -3,6 +3,7 @@ package ic2_120.client.screen
 import ic2_120.client.compose.*
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.screen.StorageBoxScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -82,6 +83,14 @@ class StorageBoxScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = handler.playerInventorySlotStart,
+                playerInvY = PLAYER_INV_Y,
+                hotbarY = HOTBAR_Y
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
@@ -124,7 +133,10 @@ class StorageBoxScreen(
         private const val SLOT_SIZE = 18
         // 储物槽区域滚动高度（每行 18px + gap 4px）
         const val SCROLL_HEIGHT = 120
-        // GUI 总高度 = 标题区 + 滚动区 + 玩家背包 + 底部
+        /**
+         * GUI 总高度；与 [GuiSize.computeHeight] 一致（主内容区高度 + 8 顶边距 + 玩家栏块 76）。
+         * [PLAYER_INV_Y] / [HOTBAR_Y] 与滚动区高度绑定，非固定枚举档位。
+         */
         val GUI_HEIGHT = GuiSize.computeHeight(6 + 34 + 4 + SCROLL_HEIGHT)
         // 9列 × 18px - 2px inset = 160
         const val CONTENT_WIDTH = 160

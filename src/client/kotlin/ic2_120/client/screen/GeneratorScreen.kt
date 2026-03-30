@@ -8,6 +8,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.GeneratorBlock
 import ic2_120.content.block.machines.MachineBlockEntity
 import ic2_120.content.screen.GeneratorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.GeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -36,9 +37,9 @@ class GeneratorScreen(
             context = context,
             screenX = x,
             screenY = y,
-            playerInvY = GeneratorScreenHandler.PLAYER_INV_Y,
-            hotbarY = GeneratorScreenHandler.HOTBAR_Y,
-            slotSize = GeneratorScreenHandler.SLOT_SIZE
+            playerInvY = GuiSize.STANDARD.playerInvY,
+            hotbarY = GuiSize.STANDARD.hotbarY,
+            slotSize = GuiSize.SLOT_SIZE
         )
     }
 
@@ -99,6 +100,14 @@ class GeneratorScreen(
                 }
 
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = GeneratorScreenHandler.PLAYER_INV_START,
+                playerInvY = GuiSize.STANDARD.playerInvY,
+                hotbarY = GuiSize.STANDARD.hotbarY
+            )
         }
 
         // 1) 预布局，不绘制

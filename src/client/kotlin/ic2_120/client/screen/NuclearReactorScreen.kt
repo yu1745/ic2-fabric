@@ -4,7 +4,6 @@ import ic2_120.client.compose.*
 import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.nuclear.NuclearReactorBlock
-import ic2_120.content.network.SlotHeatEnergyInfo
 import ic2_120.content.screen.NuclearReactorScreenHandler
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.registry.annotation.ModScreen
@@ -22,9 +21,6 @@ class NuclearReactorScreen(
 
     private val ui = ComposeUI()
 
-    /** 整体 UI 下移偏移，避免顶部文字溢出 */
-    private val guiOffsetY = 8
-
     /** 能量条/温度条宽度 */
     private val barWidth = 14
 
@@ -39,8 +35,8 @@ class NuclearReactorScreen(
         9 * NuclearReactorScreenHandler.SLOT_SIZE - 2 * NuclearReactorScreenHandler.SLOT_SIZE  // 126 = 7*18
 
     init {
-        backgroundWidth = GuiSize.REACTOR.width
-        backgroundHeight = handler.hotbarY + 18 + 8
+        backgroundWidth = NuclearReactorScreenHandler.FRAME_WIDTH
+        backgroundHeight = handler.hotbarY + NuclearReactorScreenHandler.SLOT_SIZE + PANEL_BOTTOM_PADDING
         titleY = -1000
         playerInventoryTitleY = -1000  // 隐藏 "Inv" 文本
     }
@@ -50,17 +46,16 @@ class NuclearReactorScreen(
         val effectiveWidth =
             if (isThermal) NuclearReactorScreenHandler.FRAME_WIDTH + thermalExtraWidth * 2 else NuclearReactorScreenHandler.FRAME_WIDTH
         val bgX = if (isThermal) x - thermalExtraWidth else x
-        GuiBackground.draw(context, bgX, y, effectiveWidth, backgroundHeight)
+        GuiBackground.drawVanillaLikePanel(context, bgX, y, effectiveWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            handler.playerInvY - 4,
-            handler.hotbarY - 4,
+            handler.playerInvY,
+            handler.hotbarY,
             NuclearReactorScreenHandler.SLOT_SIZE,
             playerInvX = NuclearReactorScreenHandler.PLAYER_INV_X
         )
-        val borderColor = GuiBackground.BORDER_COLOR
         val slotSize = NuclearReactorScreenHandler.SLOT_SIZE
-        val borderOffset = 1
+        val borderOffset = GuiBackground.SLOT_ANCHOR_INSET
 
         // 反应堆槽位整体 9x9 区域外边框
         val gridX = x + NuclearReactorScreenHandler.SLOT_GRID_X - borderOffset
@@ -72,19 +67,25 @@ class NuclearReactorScreen(
         // 为每个反应堆槽位绘制外边框（参考 GeneratorScreen），让用户清楚实际有多少 slot
         for (i in 0 until handler.reactorSlotCount) {
             val slot = handler.slots[i]
-            context.drawBorder(x + slot.x - borderOffset, y + slot.y - borderOffset, slotSize, slotSize, borderColor)
+            GuiBackground.drawVanillaLikeSlot(
+                context,
+                x + slot.x - borderOffset,
+                y + slot.y - borderOffset,
+                slotSize,
+                slotSize
+            )
         }
 
         // 热模式：为 4 个流体槽绘制边框
         if (isThermal) {
             for (i in handler.reactorSlotCount until handler.reactorSlotCount + 4) {
                 val slot = handler.slots[i]
-                context.drawBorder(
+                GuiBackground.drawVanillaLikeSlot(
+                    context,
                     x + slot.x - borderOffset,
                     y + slot.y - borderOffset,
                     slotSize,
-                    slotSize,
-                    borderColor
+                    slotSize
                 )
             }
         }
@@ -207,26 +208,38 @@ class NuclearReactorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        val left = x
+        val top = y
         val content: UiScope.() -> Unit = {
             val machineSlotEnd = if (isThermalLayout()) handler.reactorSlotCount + 4 else handler.reactorSlotCount
             for (slotIndex in 0 until machineSlotEnd) {
                 val slot = handler.slots[slotIndex]
                 SlotAnchor(
                     id = slotAnchorId(slotIndex),
-                    x = x + slot.x,
-                    y = y + slot.y,
+                    x = left + slot.x,
+                    y = top + slot.y,
                     width = NuclearReactorScreenHandler.SLOT_SIZE,
                     height = NuclearReactorScreenHandler.SLOT_SIZE,
-                    absolute = true
+                    absolute = true,
+                    showBorder = false
                 )
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = handler.playerInventorySlotStart,
+                playerInvY = handler.playerInvY,
+                hotbarY = handler.hotbarY,
+                slotColumnLeftOffset = NuclearReactorScreenHandler.PLAYER_INV_X
+            )
         }
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, x, y)
+        applyAnchoredSlots(layout, left, top)
 
         super.render(context, mouseX, mouseY, delta)
-        val left = x
-        val top = y + guiOffsetY  // 内容下移避免顶部溢出
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = NuclearReactorSync.ENERGY_CAPACITY
         val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
@@ -283,7 +296,7 @@ class NuclearReactorScreen(
         }
 
         // 绘制所有文本在 GUI 左侧外部；热模式时多两个流体条，需额外左移避免重叠
-        var textY = y + 42
+        var textY = top + 42
         val maxWidth = lines.maxOf { textRenderer.getWidth(it) }
         val thermalTextOffset = if (isThermalLayout()) thermalExtraWidth else 0
         val textX = left - maxWidth - leftTextMargin - thermalTextOffset
@@ -302,11 +315,6 @@ class NuclearReactorScreen(
 
         // 手动调用 tooltip 绘制，确保物品 tooltip 显示在最上层
         drawMouseoverTooltip(context, mouseX, mouseY)
-    }
-
-    override fun drawMouseoverTooltip(context: DrawContext, mouseX: Int, mouseY: Int) {
-        // 绘制默认的 tooltip（物品信息）
-        super.drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
     /** 查找鼠标悬停的反应堆槽位索引，如果没有悬停则返回 null */
@@ -359,4 +367,9 @@ class NuclearReactorScreen(
     }
 
     private fun isThermalLayout(): Boolean = handler.isThermalMode || handler.sync.isThermalMode == 1
+
+    companion object {
+        /** 快捷栏以下与面板底边的留白（与 [NuclearReactorScreenHandler] 推导的背包 Y 配合） */
+        private const val PANEL_BOTTOM_PADDING = 8
+    }
 }

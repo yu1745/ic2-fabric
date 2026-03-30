@@ -6,6 +6,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.ElectricHeatGeneratorBlock
 import ic2_120.content.block.machines.ElectricHeatGeneratorBlockEntity
 import ic2_120.content.screen.ElectricHeatGeneratorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.ElectricHeatGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import ic2_120.registry.type
@@ -34,9 +35,9 @@ class ElectricHeatGeneratorScreen(
             context = context,
             screenX = x,
             screenY = y,
-            playerInvY = ElectricHeatGeneratorScreenHandler.PLAYER_INV_Y,
-            hotbarY = ElectricHeatGeneratorScreenHandler.HOTBAR_Y,
-            slotSize = ElectricHeatGeneratorScreenHandler.SLOT_SIZE
+            playerInvY = GuiSize.STANDARD.playerInvY,
+            hotbarY = GuiSize.STANDARD.hotbarY,
+            slotSize = GuiSize.SLOT_SIZE
         )
     }
 
@@ -89,6 +90,14 @@ class ElectricHeatGeneratorScreen(
                 }
 //                Text("线圈 $coils/10", color = 0xFFFFFF, shadow = false)
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = ElectricHeatGeneratorScreenHandler.PLAYER_INV_START,
+                playerInvY = GuiSize.STANDARD.playerInvY,
+                hotbarY = GuiSize.STANDARD.hotbarY
+            )
         }
 
         // 1) 预布局，不绘制

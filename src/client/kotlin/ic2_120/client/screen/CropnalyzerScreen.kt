@@ -5,6 +5,7 @@ import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.item.CropSeedData
 import ic2_120.content.screen.CropnalyzerScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -41,13 +42,15 @@ class CropnalyzerScreen(
             context,
             x,
             y,
-            GuiSize.PLAYER_INVENTORY_Y,
-            GuiSize.HOTBAR_Y,
+            gui.playerInvY,
+            gui.hotbarY,
             GuiSize.SLOT_SIZE
         )
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        val left = x
+        val top = y
         val energy = handler.energy.toLong().coerceAtLeast(0)
         val cap = handler.energyCapacity.toLong().coerceAtLeast(1)
         val fraction = (energy.toFloat() / cap.toFloat()).coerceIn(0f, 1f)
@@ -56,12 +59,26 @@ class CropnalyzerScreen(
         val type = CropSeedData.readType(seed)?.let { CropSeedData.displayName(it).string } ?: "未知"
         val canScan = energy >= 50L && !seed.isEmpty
 
-        super.render(context, mouseX, mouseY, delta)
-
-        ui.render(context, textRenderer, mouseX, mouseY) {
+        val content: UiScope.() -> Unit = {
+            val seedSlot = handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_SEED]
+            SlotAnchor(
+                id = "slot.${CropnalyzerScreenHandler.SLOT_INDEX_SEED}",
+                x = left + seedSlot.x,
+                y = top + seedSlot.y,
+                width = GuiSize.SLOT_SIZE,
+                height = GuiSize.SLOT_SIZE,
+                absolute = true
+            )
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = CropnalyzerScreenHandler.PLAYER_INV_START,
+                playerInvY = gui.playerInvY,
+                hotbarY = gui.hotbarY
+            )
             Column(
-                x = x + 8,
-                y = y + 6,
+                x = left + 8,
+                y = top + 6,
                 spacing = 5,
                 modifier = Modifier().width(gui.contentWidth)
             ) {
@@ -84,6 +101,16 @@ class CropnalyzerScreen(
                 )
             }
         }
+
+        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
+        }
+
+        super.render(context, mouseX, mouseY, delta)
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
 
         val tooltip = ui.getTooltipAt(mouseX, mouseY)
         if (tooltip != null) {

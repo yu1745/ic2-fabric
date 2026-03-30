@@ -7,6 +7,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.client.ui.HeatProgressBar
 import ic2_120.content.block.CentrifugeBlock
 import ic2_120.content.screen.CentrifugeScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.CentrifugeSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -33,9 +34,9 @@ class CentrifugeScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            CentrifugeScreenHandler.PLAYER_INV_Y,
-            CentrifugeScreenHandler.HOTBAR_Y,
-            CentrifugeScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -146,6 +147,14 @@ class CentrifugeScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = CentrifugeScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

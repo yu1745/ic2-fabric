@@ -6,6 +6,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.IronFurnaceBlock
 import ic2_120.content.block.machines.IronFurnaceBlockEntity
 import ic2_120.content.screen.IronFurnaceScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.IronFurnaceSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -31,9 +32,9 @@ class IronFurnaceScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            IronFurnaceScreenHandler.PLAYER_INV_Y,
-            IronFurnaceScreenHandler.HOTBAR_Y,
-            IronFurnaceScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -75,6 +76,14 @@ class IronFurnaceScreen(
                     Text("燃料槽", color = 0xAAAAAA, shadow = false)
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = IronFurnaceScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

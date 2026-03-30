@@ -9,6 +9,7 @@ import ic2_120.content.sync.GeoGeneratorSync
 import ic2_120.content.block.GeoGeneratorBlock
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
 import ic2_120.content.screen.GeoGeneratorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -34,9 +35,9 @@ class GeoGeneratorScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            GeoGeneratorScreenHandler.PLAYER_INV_Y,
-            GeoGeneratorScreenHandler.HOTBAR_Y,
-            GeoGeneratorScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -135,6 +136,14 @@ class GeoGeneratorScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = GeoGeneratorScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

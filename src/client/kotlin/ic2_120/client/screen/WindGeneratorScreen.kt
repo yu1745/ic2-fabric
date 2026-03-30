@@ -7,6 +7,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.WindGeneratorBlock
 import ic2_120.content.block.machines.WindGeneratorBlockEntity
 import ic2_120.content.screen.WindGeneratorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.WindGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -34,9 +35,9 @@ class WindGeneratorScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            WindGeneratorScreenHandler.PLAYER_INV_Y,
-            WindGeneratorScreenHandler.HOTBAR_Y,
-            WindGeneratorScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -94,6 +95,14 @@ class WindGeneratorScreen(
                     )
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = WindGeneratorScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

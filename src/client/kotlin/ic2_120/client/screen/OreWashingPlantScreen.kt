@@ -4,17 +4,14 @@ import ic2_120.client.compose.*
 import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
-import ic2_120.client.ui.FluidBar
 import ic2_120.content.sync.OreWashingPlantSync
 import ic2_120.content.block.OreWashingPlantBlock
 import ic2_120.content.screen.OreWashingPlantScreenHandler
-import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
-import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
 
 @ModScreen(block = OreWashingPlantBlock::class)
@@ -27,8 +24,8 @@ class OreWashingPlantScreen(
     private val ui = ComposeUI()
 
     init {
-        backgroundWidth = PANEL_WIDTH
-        backgroundHeight = PANEL_HEIGHT
+        backgroundWidth = GUI_SIZE.width
+        backgroundHeight = GUI_SIZE.height
         titleY = 4
     }
 
@@ -38,9 +35,9 @@ class OreWashingPlantScreen(
             context,
             x,
             y,
-            OreWashingPlantScreenHandler.PLAYER_INV_Y,
-            OreWashingPlantScreenHandler.HOTBAR_Y,
-            OreWashingPlantScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -52,10 +49,8 @@ class OreWashingPlantScreen(
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
         val waterAmount = handler.sync.waterAmountMb.toLong()
         val waterCapacity = 8000L
-        val waterFraction = if (waterCapacity > 0) (waterAmount.toFloat() / waterCapacity).coerceIn(0f, 1f) else 0f
         val progress = handler.sync.progress.coerceIn(0, OreWashingPlantSync.PROGRESS_MAX)
         val progressFrac = if (OreWashingPlantSync.PROGRESS_MAX > 0) (progress.toFloat() / OreWashingPlantSync.PROGRESS_MAX).coerceIn(0f, 1f) else 0f
-        val contentW = (backgroundWidth - 16).coerceAtLeast(0)
 
         val energyText = "$energy / $cap EU"
         val waterText = "$waterAmount/$waterCapacity mB"
@@ -72,70 +67,68 @@ class OreWashingPlantScreen(
         val sideTextX = left - sideTextWidth - 4
 
         val content: UiScope.() -> Unit = {
-            Column(
+            Row(
                 x = left + 8,
                 y = top + 8,
-                spacing = 6,
-                modifier = Modifier().width(contentW).height(backgroundHeight - 16),
+                spacing = 8,
+                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
             ) {
-                Row(spacing = 8) {
-                    Text(title.string, color = 0xFFFFFF)
-                    Text(energyText, color = 0xFFFFFF)
-                    Text(waterText, color = 0xFFFFFF)
-                }
-                EnergyBar(energyFraction, modifier = Modifier().width(contentW - 36))
-
-                // 机器槽位 + 进度条
-                Flex(
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.SPACE_BETWEEN,
-                    alignItems = AlignItems.CENTER,
+                Column(
+                    spacing = 6,
+                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
                 ) {
-                    SlotAnchor(id = "slot.${OreWashingPlantScreenHandler.SLOT_INPUT_ORE_INDEX}")
-                    EnergyBar(progressFrac, modifier = Modifier().width(60))
-                    SlotAnchor(id = "slot.${OreWashingPlantScreenHandler.SLOT_INPUT_WATER_INDEX}")
+                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
+                        Text(title.string, color = 0xFFFFFF)
+                        Text(energyText, color = 0xFFFFFF, shadow = false)
+                        Text(waterText, color = 0xFFFFFF, shadow = false)
+                    }
+                    EnergyBar(energyFraction, barHeight = 12)
+
+                    Flex(
+                        direction = FlexDirection.ROW,
+                        alignItems = AlignItems.CENTER,
+                        gap = 4
+                    ) {
+                        SlotHost(OreWashingPlantScreenHandler.SLOT_INPUT_ORE_INDEX)
+                        EnergyBar(progressFrac, modifier = Modifier.EMPTY.fractionWidth(1.0f))
+                        SlotHost(OreWashingPlantScreenHandler.SLOT_INPUT_WATER_INDEX)
+                    }
+
+                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 4) {
+                        SlotHost(OreWashingPlantScreenHandler.SLOT_OUTPUT_1_INDEX)
+                        SlotHost(OreWashingPlantScreenHandler.SLOT_OUTPUT_2_INDEX)
+                        SlotHost(OreWashingPlantScreenHandler.SLOT_OUTPUT_3_INDEX)
+                        SlotHost(OreWashingPlantScreenHandler.SLOT_OUTPUT_EMPTY_INDEX)
+                    }
+
+                    SlotHost(OreWashingPlantScreenHandler.SLOT_DISCHARGING_INDEX)
                 }
 
-                // 输出槽位
-                Flex(
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.SPACE_BETWEEN,
+                Column(
+                    spacing = 4,
+                    modifier = Modifier.EMPTY
+                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
+                        .padding(0, 8, 0, 0)
                 ) {
-                    SlotAnchor(id = "slot.${OreWashingPlantScreenHandler.SLOT_OUTPUT_1_INDEX}")
-                    SlotAnchor(id = "slot.${OreWashingPlantScreenHandler.SLOT_OUTPUT_2_INDEX}")
-                    SlotAnchor(id = "slot.${OreWashingPlantScreenHandler.SLOT_OUTPUT_3_INDEX}")
-                    SlotAnchor(id = "slot.${OreWashingPlantScreenHandler.SLOT_OUTPUT_EMPTY_INDEX}")
-                }
-
-                // 放电槽
-                SlotAnchor(id = "slot.${OreWashingPlantScreenHandler.SLOT_DISCHARGING_INDEX}")
-
-                // 升级槽
-                Flex(
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.SPACE_BETWEEN,
-                ) {
-                    repeat(4) { index ->
-                        SlotAnchor(id = "slot.${OreWashingPlantScreenHandler.SLOT_UPGRADE_INDEX_START + index}")
+                    for (slotIndex in OreWashingPlantScreenHandler.SLOT_UPGRADE_INDEX_START..OreWashingPlantScreenHandler.SLOT_UPGRADE_INDEX_END) {
+                        SlotHost(slotIndex)
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = OreWashingPlantScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
-        // 1) 预布局，不绘制
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
+        applyAnchoredSlots(layout, left, top)
 
-        // 2) 锚点写回 slot 相对坐标
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
-
-        // 3) 原生 slot 渲染 + 交互
         super.render(context, mouseX, mouseY, delta)
-
-        // 4) Compose overlay
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
@@ -143,11 +136,30 @@ class OreWashingPlantScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+    private fun UiScope.SlotHost(slotIndex: Int) {
+        SlotAnchor(
+            id = slotAnchorId(slotIndex),
+            width = OreWashingPlantScreenHandler.SLOT_SIZE,
+            height = OreWashingPlantScreenHandler.SLOT_SIZE
+        )
+    }
+
+    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
+        }
+    }
+
+    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
+
+    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (ui.mouseClicked(mouseX, mouseY, button)) return true
+        return super.mouseClicked(mouseX, mouseY, button)
+    }
 
     companion object {
-        private val PANEL_WIDTH = GuiSize.STANDARD_UPGRADE.width
-        private val PANEL_HEIGHT = GuiSize.STANDARD_UPGRADE.height
+        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
     }
 }

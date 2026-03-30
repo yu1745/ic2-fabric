@@ -5,6 +5,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.FluidHeatGeneratorBlock
 import ic2_120.content.block.machines.FluidHeatGeneratorBlockEntity
 import ic2_120.content.screen.FluidHeatGeneratorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
@@ -32,9 +33,9 @@ class FluidHeatGeneratorScreen(
             context = context,
             screenX = x,
             screenY = y,
-            playerInvY = FluidHeatGeneratorScreenHandler.PLAYER_INV_Y,
-            hotbarY = FluidHeatGeneratorScreenHandler.HOTBAR_Y,
-            slotSize = FluidHeatGeneratorScreenHandler.SLOT_SIZE
+            playerInvY = GuiSize.STANDARD.playerInvY,
+            hotbarY = GuiSize.STANDARD.hotbarY,
+            slotSize = GuiSize.SLOT_SIZE
         )
     }
 
@@ -77,6 +78,14 @@ class FluidHeatGeneratorScreen(
                     SlotAnchor(id = "slot.${FluidHeatGeneratorBlockEntity.EMPTY_CONTAINER_SLOT}")
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = FluidHeatGeneratorScreenHandler.PLAYER_INV_START,
+                playerInvY = GuiSize.STANDARD.playerInvY,
+                hotbarY = GuiSize.STANDARD.hotbarY
+            )
         }
 
         // 1) 预布局，不绘制

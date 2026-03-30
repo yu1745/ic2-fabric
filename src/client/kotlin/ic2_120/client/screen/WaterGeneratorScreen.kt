@@ -8,6 +8,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.WaterGeneratorBlock
 import ic2_120.content.block.machines.WaterGeneratorBlockEntity
 import ic2_120.content.screen.WaterGeneratorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.WaterGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -34,9 +35,9 @@ class WaterGeneratorScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            WaterGeneratorScreenHandler.PLAYER_INV_Y,
-            WaterGeneratorScreenHandler.HOTBAR_Y,
-            WaterGeneratorScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -132,7 +133,15 @@ class WaterGeneratorScreen(
                     )
                 }
             }
-        }
+            }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = WaterGeneratorScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

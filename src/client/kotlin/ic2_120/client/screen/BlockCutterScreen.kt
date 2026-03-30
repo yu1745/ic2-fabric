@@ -7,11 +7,11 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.sync.BlockCutterSync
 import ic2_120.content.block.BlockCutterBlock
 import ic2_120.content.screen.BlockCutterScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
 
 @ModScreen(block = BlockCutterBlock::class)
@@ -32,9 +32,9 @@ class BlockCutterScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            BlockCutterScreenHandler.PLAYER_INV_Y,
-            BlockCutterScreenHandler.HOTBAR_Y,
-            BlockCutterScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -76,7 +76,6 @@ class BlockCutterScreen(
 
                     Flex(
                         direction = FlexDirection.ROW,
-                        justifyContent = JustifyContent.SPACE_AROUND,
                         alignItems = AlignItems.CENTER,
                         gap = 4
                     ) {
@@ -84,16 +83,14 @@ class BlockCutterScreen(
                             SlotHost(BlockCutterScreenHandler.SLOT_INPUT_INDEX)
                             SlotHost(BlockCutterScreenHandler.SLOT_DISCHARGING_INDEX)
                         }
-                        Flex(
-                            direction = FlexDirection.COLUMN, justifyContent = JustifyContent.CENTER,
-                            alignItems = AlignItems.CENTER, gap = 8
+                        Column(
+                            spacing = 8,
+                            modifier = Modifier.EMPTY.fractionWidth(1.0f)
                         ) {
                             EnergyBar(progressFrac, modifier = Modifier.EMPTY.fractionWidth(1.0f))
                             SlotHost(BlockCutterScreenHandler.SLOT_BLADE_INDEX)
                         }
-
-
-                        Column(spacing = 4) {
+                        Column {
                             SlotHost(BlockCutterScreenHandler.SLOT_OUTPUT_INDEX)
                         }
                     }
@@ -118,6 +115,14 @@ class BlockCutterScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = BlockCutterScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

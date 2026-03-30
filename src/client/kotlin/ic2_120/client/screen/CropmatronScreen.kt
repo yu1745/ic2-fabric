@@ -7,6 +7,7 @@ import ic2_120.client.ui.FluidBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.CropmatronBlock
 import ic2_120.content.screen.CropmatronScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.CropmatronSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -34,9 +35,9 @@ class CropmatronScreen(
             context,
             x,
             y,
-            CropmatronScreenHandler.PLAYER_INV_Y,
-            CropmatronScreenHandler.HOTBAR_Y,
-            CropmatronScreenHandler.SLOT_SIZE
+            GuiSize.STANDARD_UPGRADE.playerInvY,
+            GuiSize.STANDARD_UPGRADE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -118,6 +119,14 @@ class CropmatronScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = CropmatronScreenHandler.PLAYER_INV_START,
+                playerInvY = GuiSize.STANDARD_UPGRADE.playerInvY,
+                hotbarY = GuiSize.STANDARD_UPGRADE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

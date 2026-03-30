@@ -6,6 +6,7 @@ import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.MagnetizerBlock
 import ic2_120.content.screen.MagnetizerScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -32,9 +33,9 @@ class MagnetizerScreen(
             context,
             x,
             y,
-            MagnetizerScreenHandler.PLAYER_INV_Y,
-            MagnetizerScreenHandler.HOTBAR_Y,
-            MagnetizerScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -69,6 +70,21 @@ class MagnetizerScreen(
                 Text(fenceText, color = 0xFFFFFF, shadow = false)
                 Text(heightText, color = 0xFFFFFF, shadow = false)
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = MagnetizerScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
+        }
+
+        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
+        handler.slots.forEachIndexed { index, slot ->
+            val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
+            slot.x = anchor.x - left
+            slot.y = anchor.y - top
         }
 
         super.render(context, mouseX, mouseY, delta)

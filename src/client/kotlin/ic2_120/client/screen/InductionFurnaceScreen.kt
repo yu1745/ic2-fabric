@@ -8,6 +8,7 @@ import ic2_120.client.ui.ProgressBar
 import ic2_120.content.sync.InductionFurnaceSync
 import ic2_120.content.block.InductionFurnaceBlock
 import ic2_120.content.screen.InductionFurnaceScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -39,9 +40,9 @@ class InductionFurnaceScreen(
             context,
             x,
             y,
-            InductionFurnaceScreenHandler.PLAYER_INV_Y,
-            InductionFurnaceScreenHandler.HOTBAR_Y,
-            InductionFurnaceScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
 
         // 双槽进度条（与 BlockEntity 一致：progressNeeded = baseTicks * HEAT_MAX / heat）
@@ -213,6 +214,14 @@ class InductionFurnaceScreen(
                     )
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = InductionFurnaceScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

@@ -4,6 +4,7 @@ import ic2_120.client.compose.*
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.RtHeatGeneratorBlock
 import ic2_120.content.screen.RtHeatGeneratorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -32,7 +33,9 @@ class RtHeatGeneratorScreen(
             context.drawBorder(x + slot.x - 1, y + slot.y - 1, SLOT_SIZE, SLOT_SIZE, GuiBackground.BORDER_COLOR)
         }
 
-        GuiBackground.drawPlayerInventorySlotBorders(context, x, y, 84, 142, 18)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context, x, y, GUI_SIZE.playerInvY, GUI_SIZE.hotbarY, GuiSize.SLOT_SIZE
+        )
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -55,6 +58,14 @@ class RtHeatGeneratorScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = RtHeatGeneratorScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)

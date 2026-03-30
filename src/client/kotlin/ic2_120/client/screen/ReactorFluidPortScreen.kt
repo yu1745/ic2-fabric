@@ -4,6 +4,7 @@ import ic2_120.client.compose.*
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.nuclear.ReactorFluidPortBlock
 import ic2_120.content.screen.ReactorFluidPortScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -35,9 +36,9 @@ class ReactorFluidPortScreen(
             context,
             x,
             y,
-            ReactorFluidPortScreenHandler.PLAYER_INV_Y,
-            ReactorFluidPortScreenHandler.HOTBAR_Y,
-            ReactorFluidPortScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
 
         val slot = handler.slots[ReactorFluidPortScreenHandler.UPGRADE_SLOT_INDEX]
@@ -53,9 +54,17 @@ class ReactorFluidPortScreen(
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         val left = x
         val top = y
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY) {
+        val content: UiScope.() -> Unit = {
             SlotHost(ReactorFluidPortScreenHandler.UPGRADE_SLOT_INDEX)
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = ReactorFluidPortScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
+        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)
 
         super.render(context, mouseX, mouseY, delta)

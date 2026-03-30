@@ -9,6 +9,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.SemifluidGeneratorBlock
 import ic2_120.content.block.machines.SemifluidGeneratorBlockEntity
 import ic2_120.content.screen.SemifluidGeneratorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.SemifluidGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -36,9 +37,9 @@ class SemifluidGeneratorScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            SemifluidGeneratorScreenHandler.PLAYER_INV_Y,
-            SemifluidGeneratorScreenHandler.HOTBAR_Y,
-            SemifluidGeneratorScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -144,6 +145,14 @@ class SemifluidGeneratorScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = SemifluidGeneratorScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)

@@ -7,11 +7,11 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.sync.ChunkLoaderSync
 import ic2_120.content.block.ChunkLoaderBlock
 import ic2_120.content.screen.ChunkLoaderScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
 
 @ModScreen(block = ChunkLoaderBlock::class)
@@ -30,14 +30,13 @@ class ChunkLoaderScreen(
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        val playerInvY = handler.slots[ChunkLoaderScreenHandler.PLAYER_INV_START].y
         GuiBackground.drawPlayerInventorySlotBorders(
             context,
             x,
             y,
-            playerInvY,
-            142,
-            18
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -83,6 +82,14 @@ class ChunkLoaderScreen(
 
                 Text("加载范围: $chunkCount 区块", color = 0xFFFFFF, shadow = false)
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = ChunkLoaderScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         // 1) 预布局，不绘制

@@ -7,6 +7,7 @@ import ic2_120.client.ui.FluidBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.FluidBottlerBlock
 import ic2_120.content.screen.FluidBottlerScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.sync.FluidBottlerSync
 import ic2_120.registry.annotation.ModScreen
@@ -37,9 +38,9 @@ class FluidBottlerScreen(
             context,
             x,
             y,
-            FluidBottlerScreenHandler.PLAYER_INV_Y,
-            FluidBottlerScreenHandler.HOTBAR_Y,
-            FluidBottlerScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -113,6 +114,14 @@ class FluidBottlerScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = FluidBottlerScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         // 1) 预布局，不绘制

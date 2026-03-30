@@ -5,6 +5,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.client.ui.ProgressBar
 import ic2_120.content.block.SolidHeatGeneratorBlock
 import ic2_120.content.screen.SolidHeatGeneratorScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -30,9 +31,9 @@ class SolidHeatGeneratorScreen(
             context,
             x,
             y,
-            84,
-            142,
-            SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
         val fuelSlot = handler.slots[0]
         context.drawBorder(
@@ -62,6 +63,14 @@ class SolidHeatGeneratorScreen(
                 Text(title.string, color = 0xFFFFFF)
                 SlotHost(0)
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = SolidHeatGeneratorScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)

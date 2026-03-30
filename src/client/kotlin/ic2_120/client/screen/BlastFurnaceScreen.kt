@@ -5,6 +5,7 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.client.ui.HeatProgressBar
 import ic2_120.content.block.BlastFurnaceBlock
 import ic2_120.content.screen.BlastFurnaceScreenHandler
+import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.BlastFurnaceSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
@@ -31,9 +32,9 @@ class BlastFurnaceScreen(
         GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
             context, x, y,
-            BlastFurnaceScreenHandler.PLAYER_INV_Y,
-            BlastFurnaceScreenHandler.HOTBAR_Y,
-            BlastFurnaceScreenHandler.SLOT_SIZE
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
         )
     }
 
@@ -131,6 +132,14 @@ class BlastFurnaceScreen(
                     }
                 }
             }
+
+            playerInventoryAndHotbarSlotAnchors(
+                left = left,
+                top = top,
+                playerInvStart = BlastFurnaceScreenHandler.PLAYER_INV_START,
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
+            )
         }
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
