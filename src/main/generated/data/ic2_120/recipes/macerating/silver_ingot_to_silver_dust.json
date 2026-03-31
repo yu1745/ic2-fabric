@@ -1,0 +1,10 @@
+{
+  "type": "ic2_120:macerating",
+  "ingredient": {
+    "item": "ic2_120:silver_ingot"
+  },
+  "result": {
+    "count": 1,
+    "item": "ic2_120:silver_dust"
+  }
+}

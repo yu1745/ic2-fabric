@@ -1,0 +1,21 @@
+{
+  "type": "ic2_120:battery_energy_shaped",
+  "category": "equipment",
+  "key": {
+    "P": {
+      "item": "ic2_120:small_power_unit"
+    },
+    "W": {
+      "item": "ic2_120:wrench"
+    }
+  },
+  "pattern": [
+    " W ",
+    " P ",
+    "   "
+  ],
+  "result": {
+    "item": "ic2_120:electric_wrench"
+  },
+  "show_notification": true
+}

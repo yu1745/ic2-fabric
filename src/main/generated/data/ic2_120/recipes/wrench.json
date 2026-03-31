@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "B": {
+      "tag": "ic2_120:compat/ingots/bronze"
+    }
+  },
+  "pattern": [
+    "B B",
+    "BBB",
+    " B "
+  ],
+  "result": {
+    "item": "ic2_120:wrench"
+  },
+  "show_notification": true
+}

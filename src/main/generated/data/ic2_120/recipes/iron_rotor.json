@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "ic2_120:iron_rotor_blade"
+    },
+    "I": {
+      "item": "ic2_120:iron_plate"
+    }
+  },
+  "pattern": [
+    " B ",
+    "BIB",
+    " B "
+  ],
+  "result": {
+    "item": "ic2_120:iron_rotor"
+  },
+  "show_notification": true
+}

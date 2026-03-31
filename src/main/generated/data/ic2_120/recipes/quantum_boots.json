@@ -1,0 +1,27 @@
+{
+  "type": "ic2_120:battery_energy_shaped",
+  "category": "equipment",
+  "key": {
+    "I": {
+      "item": "ic2_120:iridium"
+    },
+    "L": {
+      "item": "ic2_120:lapotron_crystal"
+    },
+    "N": {
+      "item": "ic2_120:nano_boots"
+    },
+    "R": {
+      "item": "ic2_120:rubber_boots"
+    }
+  },
+  "pattern": [
+    "   ",
+    "INI",
+    "RLR"
+  ],
+  "result": {
+    "item": "ic2_120:quantum_boots"
+  },
+  "show_notification": true
+}

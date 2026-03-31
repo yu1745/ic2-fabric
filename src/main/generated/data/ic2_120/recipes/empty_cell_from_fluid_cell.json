@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ic2_120:fluid_cell"
+    }
+  ],
+  "result": {
+    "item": "ic2_120:empty_cell"
+  }
+}

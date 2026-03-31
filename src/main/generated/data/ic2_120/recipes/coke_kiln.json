@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "R": {
+      "item": "ic2_120:refractory_bricks"
+    }
+  },
+  "pattern": [
+    "RRR",
+    "R R",
+    "RRR"
+  ],
+  "result": {
+    "item": "ic2_120:coke_kiln"
+  },
+  "show_notification": true
+}

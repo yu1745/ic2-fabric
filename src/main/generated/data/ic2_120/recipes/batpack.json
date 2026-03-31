@@ -1,0 +1,24 @@
+{
+  "type": "ic2_120:battery_energy_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:circuit"
+    },
+    "P": {
+      "item": "minecraft:oak_planks"
+    },
+    "R": {
+      "item": "ic2_120:re_battery"
+    }
+  },
+  "pattern": [
+    "RCR",
+    "RPR",
+    "R R"
+  ],
+  "result": {
+    "item": "ic2_120:batpack"
+  },
+  "show_notification": true
+}

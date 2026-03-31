@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "x": {
+      "item": "ic2_120:rubber"
+    }
+  },
+  "pattern": [
+    "xxx",
+    "xxx"
+  ],
+  "result": {
+    "count": 3,
+    "item": "ic2_120:rubber_sheet"
+  },
+  "show_notification": true
+}

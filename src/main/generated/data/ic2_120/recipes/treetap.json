@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": {
+      "tag": "minecraft:planks"
+    }
+  },
+  "pattern": [
+    " P ",
+    "PPP",
+    "P  "
+  ],
+  "result": {
+    "item": "ic2_120:treetap"
+  },
+  "show_notification": true
+}

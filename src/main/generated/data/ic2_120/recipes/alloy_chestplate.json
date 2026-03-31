@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120:alloy"
+    },
+    "I": {
+      "item": "minecraft:iron_chestplate"
+    },
+    "L": {
+      "item": "minecraft:leather_chestplate"
+    }
+  },
+  "pattern": [
+    "A A",
+    "AIA",
+    "ALA"
+  ],
+  "result": {
+    "item": "ic2_120:alloy_chestplate"
+  },
+  "show_notification": true
+}

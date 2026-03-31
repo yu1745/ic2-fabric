@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "x": {
+      "item": "ic2_120:steel_plate"
+    },
+    "y": {
+      "tag": "ic2_120:compat/ingots/steel"
+    }
+  },
+  "pattern": [
+    "xxx",
+    "yyy",
+    "xxx"
+  ],
+  "result": {
+    "item": "ic2_120:steel_rotor_blade"
+  },
+  "show_notification": true
+}
