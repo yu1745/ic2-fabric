@@ -15,7 +15,7 @@ object ModEntities {
         EntityType.Builder.create<BrokenRubberBoatEntity>({ type, world -> BrokenRubberBoatEntity(type, world) }, SpawnGroup.MISC)
             .setDimensions(1.375f, 0.5625f)
             .maxTrackingRange(10)
-            .build(Ic2_120.MOD_ID + ":broken_rubber_boat")
+            .build("minecraft:boat")
     )
 
     val CARBON_BOAT: EntityType<CarbonBoatEntity> = Registry.register(
@@ -24,7 +24,7 @@ object ModEntities {
         EntityType.Builder.create<CarbonBoatEntity>({ type, world -> CarbonBoatEntity(type, world) }, SpawnGroup.MISC)
             .setDimensions(1.375f, 0.5625f)
             .maxTrackingRange(10)
-            .build(Ic2_120.MOD_ID + ":carbon_boat")
+            .build("minecraft:boat")
     )
 
     val RUBBER_BOAT: EntityType<RubberBoatEntity> = Registry.register(
@@ -33,7 +33,7 @@ object ModEntities {
         EntityType.Builder.create<RubberBoatEntity>({ type, world -> RubberBoatEntity(type, world) }, SpawnGroup.MISC)
             .setDimensions(1.375f, 0.5625f)
             .maxTrackingRange(10)
-            .build(Ic2_120.MOD_ID + ":rubber_boat")
+            .build("minecraft:boat")
     )
 
     val ELECTRIC_BOAT: EntityType<ElectricBoatEntity> = Registry.register(
@@ -42,7 +42,7 @@ object ModEntities {
         EntityType.Builder.create<ElectricBoatEntity>({ type, world -> ElectricBoatEntity(type, world) }, SpawnGroup.MISC)
             .setDimensions(1.375f, 0.5625f)
             .maxTrackingRange(10)
-            .build(Ic2_120.MOD_ID + ":electric_boat")
+            .build("minecraft:boat")
     )
 
     /** 在注解驱动扫描物品前调用，确保所有船实体类型已注册（供 @ModItem 船物品类引用） */
