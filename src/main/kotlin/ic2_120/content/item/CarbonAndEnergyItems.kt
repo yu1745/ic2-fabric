@@ -27,6 +27,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.ItemTags
 import net.minecraft.registry.tag.TagKey
 import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
 import java.util.function.Consumer
@@ -66,31 +67,162 @@ class CarbonPlate : Item(FabricItemSettings()) {
 }
 
 @ModItem(name = "wooden_rotor_blade", tab = CreativeTab.IC2_MATERIALS, group = "rotor_blades")
-class WoodenRotorBlade : Item(FabricItemSettings())
+class WoodenRotorBlade : Item(FabricItemSettings()) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodenRotorBlade::class.instance(), 1)
+                .pattern("xxx").pattern("yyy").pattern("xxx")
+                .input('x', ItemTags.PLANKS)
+                .input('y', ItemTags.LOGS)
+                .criterion(hasItem(Items.OAK_PLANKS), conditionsFromItem(Items.OAK_PLANKS))
+                .offerTo(exporter, WoodenRotorBlade::class.id())
+        }
+    }
+}
 
 @ModItem(name = "bronze_rotor_blade", tab = CreativeTab.IC2_MATERIALS, group = "rotor_blades")
 class BronzeRotorBlade : Item(FabricItemSettings())
 
 @ModItem(name = "iron_rotor_blade", tab = CreativeTab.IC2_MATERIALS, group = "rotor_blades")
-class IronRotorBlade : Item(FabricItemSettings())
+class IronRotorBlade : Item(FabricItemSettings()) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val plate = IronPlate::class.instance()
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronRotorBlade::class.instance(), 1)
+                .pattern("xxx").pattern("yyy").pattern("xxx")
+                .input('x', plate)
+                .input('y', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON))
+                .criterion(hasItem(plate), conditionsFromItem(plate))
+                .offerTo(exporter, IronRotorBlade::class.id())
+        }
+    }
+}
 
 @ModItem(name = "steel_rotor_blade", tab = CreativeTab.IC2_MATERIALS, group = "rotor_blades")
-class SteelRotorBlade : Item(FabricItemSettings())
+class SteelRotorBlade : Item(FabricItemSettings()) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val plate = SteelPlate::class.instance()
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelRotorBlade::class.instance(), 1)
+                .pattern("xxx").pattern("yyy").pattern("xxx")
+                .input('x', plate)
+                .input('y', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_STEEL))
+                .criterion(hasItem(plate), conditionsFromItem(plate))
+                .offerTo(exporter, SteelRotorBlade::class.id())
+        }
+    }
+}
 
 @ModItem(name = "carbon_rotor_blade", tab = CreativeTab.IC2_MATERIALS, group = "rotor_blades")
-class CarbonRotorBlade : Item(FabricItemSettings())
+class CarbonRotorBlade : Item(FabricItemSettings()) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val mesh = CarbonMesh::class.instance()
+            val plate = CarbonPlate::class.instance()
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonRotorBlade::class.instance(), 1)
+                .pattern("xxx").pattern("yyy").pattern("xxx")
+                .input('x', plate)
+                .input('y', mesh)
+                .criterion(hasItem(plate), conditionsFromItem(plate))
+                .offerTo(exporter, CarbonRotorBlade::class.id())
+        }
+    }
+}
+
+abstract class RotorItem(private val lifetimeHours: Int) : Item(
+    FabricItemSettings()
+        .maxCount(1)
+        .maxDamage(lifetimeHours * 60 * 60 * 20)
+) {
+    companion object {
+        private const val ROTOR_WEAR_REMAINDER_KEY = "RotorWearRemainder"
+        private const val TICKS_PER_HOUR = 72_000.0
+    }
+
+    override fun appendTooltip(stack: net.minecraft.item.ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
+        super.appendTooltip(stack, world, tooltip, context)
+        val remainder = stack.nbt?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0
+        val remainingHours = ((stack.maxDamage - stack.damage).toDouble() - remainder).coerceAtLeast(0.0) / TICKS_PER_HOUR
+        tooltip.add(
+            Text.translatable(
+                "tooltip.ic2_120.rotor_lifetime",
+                String.format("%.1f", remainingHours),
+                lifetimeHours
+            ).formatted(Formatting.GRAY)
+        )
+    }
+}
 
 @ModItem(name = "wooden_rotor", tab = CreativeTab.IC2_MATERIALS, group = "rotors")
-class WoodenRotor : Item(FabricItemSettings())
+class WoodenRotor : RotorItem(3) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val blade = WoodenRotorBlade::class.instance()
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodenRotor::class.instance(), 1)
+                .pattern(" B ").pattern("BIB").pattern(" B ")
+                .input('B', blade)
+                .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON))
+                .criterion(hasItem(blade), conditionsFromItem(blade))
+                .offerTo(exporter, WoodenRotor::class.id())
+        }
+    }
+}
 
 @ModItem(name = "iron_rotor", tab = CreativeTab.IC2_MATERIALS, group = "rotors")
-class IronRotor : Item(FabricItemSettings())
+class IronRotor : RotorItem(24) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val blade = IronRotorBlade::class.instance()
+            val plate = IronPlate::class.instance()
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronRotor::class.instance(), 1)
+                .pattern(" B ").pattern("BIB").pattern(" B ")
+                .input('B', blade)
+                .input('I', plate)
+                .criterion(hasItem(blade), conditionsFromItem(blade))
+                .offerTo(exporter, IronRotor::class.id())
+        }
+    }
+}
 
 @ModItem(name = "steel_rotor", tab = CreativeTab.IC2_MATERIALS, group = "rotors")
-class SteelRotor : Item(FabricItemSettings())
+class SteelRotor : RotorItem(48) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val blade = SteelRotorBlade::class.instance()
+            val plate = SteelPlate::class.instance()
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelRotor::class.instance(), 1)
+                .pattern(" B ").pattern("BIB").pattern(" B ")
+                .input('B', blade)
+                .input('I', plate)
+                .criterion(hasItem(blade), conditionsFromItem(blade))
+                .offerTo(exporter, SteelRotor::class.id())
+        }
+    }
+}
 
 @ModItem(name = "carbon_rotor", tab = CreativeTab.IC2_MATERIALS, group = "rotors")
-class CarbonRotor : Item(FabricItemSettings())
+class CarbonRotor : RotorItem(168) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val blade = CarbonRotorBlade::class.instance()
+            val plate = SteelPlate::class.instance()
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonRotor::class.instance(), 1)
+                .pattern(" B ").pattern("BIB").pattern(" B ")
+                .input('B', blade)
+                .input('I', plate)
+                .criterion(hasItem(blade), conditionsFromItem(blade))
+                .offerTo(exporter, CarbonRotor::class.id())
+        }
+    }
+}
 
 // ========== 电路与机械部件 ==========
 

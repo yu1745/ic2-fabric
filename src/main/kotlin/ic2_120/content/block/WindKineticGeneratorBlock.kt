@@ -14,6 +14,7 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
+import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.state.property.Properties
 import net.minecraft.world.World
@@ -24,6 +25,14 @@ class WindKineticGeneratorBlock : MachineBlock() {
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
     }
+
+    override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
+        super.appendProperties(builder)
+        builder.add(ACTIVE)
+    }
+
+    override fun getPlacementState(ctx: net.minecraft.item.ItemPlacementContext): BlockState? =
+        super.getPlacementState(ctx)?.with(ACTIVE, false)
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         WindKineticGeneratorBlockEntity(pos, state)

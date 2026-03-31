@@ -1,22 +1,25 @@
 package ic2_120.client.screen
 
 import ic2_120.client.compose.*
+import ic2_120.client.EnergyFormatUtils
+import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
-import ic2_120.content.block.WindKineticGeneratorBlock
-import ic2_120.content.screen.WindKineticGeneratorScreenHandler
+import ic2_120.content.block.KineticGeneratorBlock
 import ic2_120.content.screen.GuiSize
+import ic2_120.content.screen.KineticGeneratorScreenHandler
+import ic2_120.content.sync.KineticGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.Text as McText
 
-@ModScreen(block = WindKineticGeneratorBlock::class)
-class WindKineticGeneratorScreen(
-    handler: WindKineticGeneratorScreenHandler,
+@ModScreen(block = KineticGeneratorBlock::class)
+class KineticGeneratorScreen(
+    handler: KineticGeneratorScreenHandler,
     playerInventory: PlayerInventory,
     title: McText
-) : HandledScreen<WindKineticGeneratorScreenHandler>(handler, playerInventory, title) {
+) : HandledScreen<KineticGeneratorScreenHandler>(handler, playerInventory, title) {
 
     private val ui = ComposeUI()
 
@@ -39,25 +42,15 @@ class WindKineticGeneratorScreen(
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         val left = x
         val top = y
-        val generatedKu = handler.sync.generatedKu.coerceAtLeast(0)
-        val outputKu = handler.sync.outputKu.coerceAtLeast(0)
-        val blocked = handler.sync.isStuck != 0
-        val rotorLifetimeTenthsHours = handler.sync.rotorLifetimeTenthsHours.coerceAtLeast(0)
-        val generatedText = McText.translatable("ic2_120.jade.wind_ku_generated", generatedKu).string
-        val outputText = McText.translatable("ic2_120.jade.wind_ku_output", outputKu).string
-        val blockedText = McText.translatable(
-            if (blocked) "gui.ic2_120.wind_kinetic.blocked" else "gui.ic2_120.wind_kinetic.clear"
-        ).string
-        val lifetimeText = McText.translatable(
-            "gui.ic2_120.wind_kinetic.lifetime",
-            String.format("%.1f", rotorLifetimeTenthsHours / 10.0)
-        ).string
-        val sideTextWidth = maxOf(
-            textRenderer.getWidth(generatedText),
-            textRenderer.getWidth(outputText),
-            textRenderer.getWidth(blockedText),
-            textRenderer.getWidth(lifetimeText)
-        )
+        val energy = handler.sync.energy.toLong().coerceAtLeast(0L)
+        val cap = KineticGeneratorSync.ENERGY_CAPACITY
+        val energyFraction = if (cap > 0) (energy.toFloat() / cap.toFloat()).coerceIn(0f, 1f) else 0f
+        val kuIn = handler.sync.currentKu.coerceAtLeast(0)
+        val euOut = handler.sync.outputEu.coerceAtLeast(0)
+
+        val inputText = "输入 ${kuIn} KU/t"
+        val outputText = "输出 ${EnergyFormatUtils.formatEu(euOut.toLong())} EU/t"
+        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(outputText))
         val sideTextX = left - sideTextWidth - 4
 
         val content: UiScope.() -> Unit = {
@@ -67,18 +60,19 @@ class WindKineticGeneratorScreen(
                 spacing = 6,
                 modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
             ) {
-                Text(title.string, color = 0xFFFFFF)
-                Row(spacing = 8) {
-                    SlotHost(0)
-                    Text("转子槽", color = 0xAAAAAA, shadow = false)
+                Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
+                    Text(title.string, color = 0xFFFFFF)
+                    Text("${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU", color = 0xFFFFFF, shadow = false)
                 }
-                Text("放入木/铁/钢/碳转子后显示叶片", color = 0xAAAAAA, shadow = false)
+                EnergyBar(energyFraction, barHeight = 12)
+                Text("4 KU = 1 EU", color = 0xAAAAAA, shadow = false)
+                Text("从正面相邻传动节点取能", color = 0xAAAAAA, shadow = false)
             }
 
             playerInventoryAndHotbarSlotAnchors(
                 left = left,
                 top = top,
-                playerInvStart = WindKineticGeneratorScreenHandler.PLAYER_INV_START,
+                playerInvStart = KineticGeneratorScreenHandler.PLAYER_INV_START,
                 playerInvY = GUI_SIZE.playerInvY,
                 hotbarY = GUI_SIZE.hotbarY
             )
@@ -88,26 +82,9 @@ class WindKineticGeneratorScreen(
 
         super.render(context, mouseX, mouseY, delta)
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
-        context.drawText(textRenderer, generatedText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
-        context.drawText(
-            textRenderer,
-            blockedText,
-            sideTextX,
-            top + 32,
-            if (blocked) 0xD65A5A else 0x6FA85E,
-            false
-        )
-        context.drawText(textRenderer, lifetimeText, sideTextX, top + 44, 0xAAAAAA, false)
         drawMouseoverTooltip(context, mouseX, mouseY)
-    }
-
-    private fun UiScope.SlotHost(slotIndex: Int) {
-        SlotAnchor(
-            id = slotAnchorId(slotIndex),
-            width = WindKineticGeneratorScreenHandler.SLOT_SIZE,
-            height = WindKineticGeneratorScreenHandler.SLOT_SIZE
-        )
     }
 
     private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {

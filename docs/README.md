@@ -20,6 +20,7 @@
 ### systems（子系统设计）
 
 - `docs/systems/energy-network.md`
+- `docs/systems/kinetic-transmission.md`
 - `docs/systems/energy-flow-sync.md`
 - `docs/systems/fluid-system.md`
 - `docs/systems/heat-system.md`

@@ -15,4 +15,13 @@ class WindKineticGeneratorSync(schema: SyncSchema) {
 
     /** 卡住时转子的角度（0-359），正常旋转时为 0 */
     var stuckAngle by schema.int("StuckAngle")
+
+    /** 当前理论产生的 KU/t。 */
+    var generatedKu by schema.int("GeneratedKu")
+
+    /** 当前实际输出到网络的 KU/t。 */
+    var outputKu by schema.int("OutputKu")
+
+    /** 转子按晴天标准换算的剩余寿命，单位 0.1 小时。 */
+    var rotorLifetimeTenthsHours by schema.int("RotorLifetimeTenthsHours")
 }

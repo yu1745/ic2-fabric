@@ -37,6 +37,7 @@ import ic2_120.content.block.machines.SolarDistillerBlockEntity
 import ic2_120.content.block.machines.WaterGeneratorBlockEntity
 import ic2_120.content.block.storage.TankBlockEntity
 import ic2_120.content.block.transmission.TransmissionBlockEntity
+import ic2_120.content.block.transmission.KineticNetworkManager
 import ic2_120.content.block.pipes.PipeNetworkManager
 import ic2_120.content.player.FlightManager
 import ic2_120.content.entity.ModEntities
@@ -146,6 +147,7 @@ object Ic2_120 : ModInitializer {
         ServerWorldEvents.UNLOAD.register { _, world ->
             EnergyNetworkManager.onWorldUnload(world)
             PipeNetworkManager.onWorldUnload(world)
+            KineticNetworkManager.onWorldUnload(world)
         }
 
         // 统一处理喷气背包/电力喷气背包/量子胸甲飞行（服务端 tick）

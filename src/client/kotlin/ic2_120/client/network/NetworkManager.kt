@@ -10,10 +10,8 @@ import ic2_120.client.screen.ScannerScreen
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.MinecraftClient
 import net.minecraft.util.Identifier
-import org.slf4j.LoggerFactory
 
 object NetworkManager {
-    private val LOGGER = LoggerFactory.getLogger("ic2_120/ClientNetwork")
     private val REACTOR_HEAT_INFO_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_heat_info")
     private val BANDWIDTH_HUD_PACKET = BandwidthHudPacket.ID
     private val WIND_ROTOR_STATE_PACKET = WindRotorStatePacket.ID
@@ -43,14 +41,10 @@ object NetworkManager {
         // 注册风力发电机转子状态接收处理器
         ClientPlayNetworking.registerGlobalReceiver(WIND_ROTOR_STATE_PACKET) { client, handler, buf, responseSender ->
             val packet = WindRotorStatePacket.read(buf)
-            LOGGER.info("[WindKineticGenerator Client] Network packet received: pos={} isStuck={} angle={}",
-                packet.pos, packet.isStuck, packet.stuckAngle.toInt())
             client.execute {
                 val blockEntity = client.world?.getBlockEntity(packet.pos)
                 if (blockEntity is ic2_120.content.block.machines.WindKineticGeneratorBlockEntity) {
                     blockEntity.receiveRotorState(packet.isStuck, packet.stuckAngle)
-                } else {
-                    LOGGER.warn("[WindKineticGenerator Client] BlockEntity not found at {}", packet.pos)
                 }
             }
         }

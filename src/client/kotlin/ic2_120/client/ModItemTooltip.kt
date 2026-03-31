@@ -2,7 +2,14 @@ package ic2_120.client
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.ITieredMachine
+import ic2_120.content.block.KineticGeneratorBlock
+import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.block.cables.BaseCableBlock
+import ic2_120.content.block.transmission.BevelGearBlock
+import ic2_120.content.block.transmission.CarbonTransmissionShaftBlock
+import ic2_120.content.block.transmission.IronTransmissionShaftBlock
+import ic2_120.content.block.transmission.SteelTransmissionShaftBlock
+import ic2_120.content.block.transmission.WoodTransmissionShaftBlock
 import ic2_120.content.item.energy.ITiered
 import ic2_120.content.item.getFluidCellVariant
 import ic2_120.registry.ClassScanner
@@ -35,6 +42,20 @@ object ModItemTooltip {
                     lines.add(Text.translatable("tooltip.ic2_120.cable_loss", lossStr).formatted(Formatting.GRAY))
                     addVoltageTierTooltip(lines, block.tier)
                     return@register
+                }
+                when (block) {
+                    is WoodTransmissionShaftBlock -> addKineticTransmissionTooltip(lines, 128, 0)
+                    is IronTransmissionShaftBlock -> addKineticTransmissionTooltip(lines, 512, 2)
+                    is SteelTransmissionShaftBlock -> addKineticTransmissionTooltip(lines, 2048, 1)
+                    is CarbonTransmissionShaftBlock -> addKineticTransmissionTooltip(lines, 8192, 0)
+                    is BevelGearBlock -> addKineticTransmissionTooltip(lines, 2048, 3)
+                    is WindKineticGeneratorBlock -> {
+                        lines.add(Text.translatable("tooltip.ic2_120.kinetic_source").formatted(Formatting.GRAY))
+                    }
+                    is KineticGeneratorBlock -> {
+                        lines.add(Text.translatable("tooltip.ic2_120.kinetic_convert_rate").formatted(Formatting.GRAY))
+                        lines.add(Text.translatable("tooltip.ic2_120.kinetic_max_input").formatted(Formatting.GRAY))
+                    }
                 }
 
                 // 变压器 tooltip：显示能量等级转换
@@ -134,5 +155,10 @@ object ModItemTooltip {
 
         lines.add(Text.literal("能量转换: $tierName ↔ $nextTierName").formatted(Formatting.GRAY))
         lines.add(Text.literal("低级: $lowEu EU/t | 高级: $highEu EU/t").formatted(Formatting.DARK_GRAY))
+    }
+
+    private fun addKineticTransmissionTooltip(lines: MutableList<Text>, capacityKu: Int, lossKu: Int) {
+        lines.add(Text.translatable("tooltip.ic2_120.kinetic_capacity", capacityKu).formatted(Formatting.GRAY))
+        lines.add(Text.translatable("tooltip.ic2_120.kinetic_loss", lossKu).formatted(Formatting.GRAY))
     }
 }

@@ -815,4 +815,78 @@ class Obscurator : Item(FabricItemSettings().maxCount(1))
 
 /** 风力计 - 测量风力 */
 @ModItem(name = "wind_meter", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class WindMeter : Item(FabricItemSettings().maxCount(1))
+class WindMeter : Item(FabricItemSettings().maxCount(1)) {
+    override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
+        val stack = user.getStackInHand(hand)
+        if (world.isClient) return TypedActionResult.success(stack)
+
+        val mean = ic2_120.content.block.machines.WindKineticGeneratorBlockEntity.meanWindFromY(user.blockY)
+        val weather = ic2_120.content.block.machines.WindKineticGeneratorBlockEntity.weatherMultiplier(world)
+        val gust = ic2_120.content.block.machines.WindKineticGeneratorBlockEntity.worldGustFactor(world, user.blockPos)
+        val effective = mean * weather * gust
+
+        fun ku(multiplier: Int): Int =
+            kotlin.math.floor(
+                ic2_120.content.block.machines.WindKineticGeneratorBlockEntity.BASE_KU_AT_PEAK * multiplier * effective
+            ).toInt().coerceAtLeast(0)
+
+        fun requiredStartY(multiplier: Int): Int {
+            val threshold = ic2_120.content.block.machines.WindKineticGeneratorBlockEntity.startThresholdForMultiplier(multiplier)
+            val nowCanStart = effective >= threshold
+            if (nowCanStart) return -2
+
+            // 返回当前天气与随机倍率下可启动的最小 Y；找不到则返回 -1。
+            val top = world.topY
+            for (y in 0..top) {
+                val windAtY = ic2_120.content.block.machines.WindKineticGeneratorBlockEntity.meanWindFromY(y) * weather * gust
+                if (windAtY >= threshold) return y
+            }
+            return -1
+        }
+
+        user.openHandledScreen(object : net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+            override fun getDisplayName(): Text = Text.translatable("item.ic2_120.wind_meter")
+
+            override fun writeScreenOpeningData(
+                serverPlayer: net.minecraft.server.network.ServerPlayerEntity,
+                buf: net.minecraft.network.PacketByteBuf
+            ) {
+                buf.writeVarInt((mean * 1000.0).toInt().coerceAtLeast(0))
+                buf.writeVarInt((weather * 1000.0).toInt().coerceAtLeast(0))
+                buf.writeVarInt((gust * 1000.0).toInt().coerceAtLeast(0))
+                buf.writeVarInt((effective * 1000.0).toInt().coerceAtLeast(0))
+                buf.writeVarInt(ku(1))
+                buf.writeVarInt(ku(2))
+                buf.writeVarInt(ku(3))
+                buf.writeVarInt(ku(4))
+                buf.writeVarInt(requiredStartY(1))
+                buf.writeVarInt(requiredStartY(2))
+                buf.writeVarInt(requiredStartY(3))
+                buf.writeVarInt(requiredStartY(4))
+            }
+
+            override fun createMenu(
+                syncId: Int,
+                playerInventory: net.minecraft.entity.player.PlayerInventory,
+                player: PlayerEntity
+            ): net.minecraft.screen.ScreenHandler {
+                val delegate = net.minecraft.screen.ArrayPropertyDelegate(ic2_120.content.screen.WindMeterScreenHandler.PROP_COUNT)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_MEAN_PERMILLE] = (mean * 1000.0).toInt().coerceAtLeast(0)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_WEATHER_PERMILLE] = (weather * 1000.0).toInt().coerceAtLeast(0)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_GUST_PERMILLE] = (gust * 1000.0).toInt().coerceAtLeast(0)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_EFFECTIVE_PERMILLE] = (effective * 1000.0).toInt().coerceAtLeast(0)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_WOOD_KU] = ku(1)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_IRON_KU] = ku(2)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_STEEL_KU] = ku(3)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_CARBON_KU] = ku(4)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_WOOD_START_Y] = requiredStartY(1)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_IRON_START_Y] = requiredStartY(2)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_STEEL_START_Y] = requiredStartY(3)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_CARBON_START_Y] = requiredStartY(4)
+                return ic2_120.content.screen.WindMeterScreenHandler(syncId, playerInventory, delegate)
+            }
+        })
+
+        return TypedActionResult.success(stack)
+    }
+}

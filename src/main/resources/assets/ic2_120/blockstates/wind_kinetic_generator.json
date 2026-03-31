@@ -1,17 +1,32 @@
 {
   "variants": {
-    "facing=east": {
+    "facing=east,active=false": {
       "model": "ic2:block/generator/kinetic/wind_kinetic_generator",
       "y": 90
     },
-    "facing=north": {
+    "facing=east,active=true": {
+      "model": "ic2:block/generator/kinetic/wind_kinetic_generator",
+      "y": 90
+    },
+    "facing=north,active=false": {
       "model": "ic2:block/generator/kinetic/wind_kinetic_generator"
     },
-    "facing=south": {
+    "facing=north,active=true": {
+      "model": "ic2:block/generator/kinetic/wind_kinetic_generator"
+    },
+    "facing=south,active=false": {
       "model": "ic2:block/generator/kinetic/wind_kinetic_generator",
       "y": 180
     },
-    "facing=west": {
+    "facing=south,active=true": {
+      "model": "ic2:block/generator/kinetic/wind_kinetic_generator",
+      "y": 180
+    },
+    "facing=west,active=false": {
+      "model": "ic2:block/generator/kinetic/wind_kinetic_generator",
+      "y": 270
+    },
+    "facing=west,active=true": {
       "model": "ic2:block/generator/kinetic/wind_kinetic_generator",
       "y": 270
     }

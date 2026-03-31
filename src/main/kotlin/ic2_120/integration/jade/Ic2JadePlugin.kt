@@ -6,8 +6,19 @@ import ic2_120.content.block.CropBlock
 import ic2_120.content.block.CropBlockEntity
 import ic2_120.content.block.CropStickBlock
 import ic2_120.content.block.CropStickBlockEntity
+import ic2_120.content.block.KineticGeneratorBlock
+import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.block.pipes.BasePipeBlock
 import ic2_120.content.block.pipes.PipeBlockEntity
+import ic2_120.content.block.machines.KineticGeneratorBlockEntity
+import ic2_120.content.block.machines.WindKineticGeneratorBlockEntity
+import ic2_120.content.block.transmission.BevelGearBlock
+import ic2_120.content.block.transmission.CarbonTransmissionShaftBlock
+import ic2_120.content.block.transmission.IronTransmissionShaftBlock
+import ic2_120.content.block.transmission.SteelTransmissionShaftBlock
+import ic2_120.content.block.transmission.TransmissionBlockEntity
+import ic2_120.content.block.transmission.TransmissionShaftBlock
+import ic2_120.content.block.transmission.WoodTransmissionShaftBlock
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.registry.Registries
@@ -50,6 +61,9 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockDataProvider(CableJadeProvider, CableBlockEntity::class.java)
         registration.registerBlockDataProvider(CropJadeProvider, CropBlockEntity::class.java)
         registration.registerBlockDataProvider(CropJadeProvider, CropStickBlockEntity::class.java)
+        registration.registerBlockDataProvider(KineticJadeProvider, TransmissionBlockEntity::class.java)
+        registration.registerBlockDataProvider(KineticJadeProvider, WindKineticGeneratorBlockEntity::class.java)
+        registration.registerBlockDataProvider(KineticJadeProvider, KineticGeneratorBlockEntity::class.java)
     }
 
     override fun registerClient(registration: snownee.jade.api.IWailaClientRegistration) {
@@ -57,6 +71,10 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockComponent(CableJadeProvider, BaseCableBlock::class.java)
         registration.registerBlockComponent(CropJadeProvider, CropBlock::class.java)
         registration.registerBlockComponent(CropJadeProvider, CropStickBlock::class.java)
+        registration.registerBlockComponent(KineticJadeProvider, TransmissionShaftBlock::class.java)
+        registration.registerBlockComponent(KineticJadeProvider, BevelGearBlock::class.java)
+        registration.registerBlockComponent(KineticJadeProvider, WindKineticGeneratorBlock::class.java)
+        registration.registerBlockComponent(KineticJadeProvider, KineticGeneratorBlock::class.java)
     }
 }
 
@@ -351,4 +369,87 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
     }
 
     override fun getUid(): Identifier = CROP_GROWTH
+}
+
+object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
+    private val KINETIC_INFO = Identifier("ic2_120", "kinetic_info")
+
+    override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
+        val world = accessor.level
+        val pos = accessor.position
+        val state = accessor.blockState
+
+        when (val be = accessor.blockEntity) {
+            is TransmissionBlockEntity -> {
+                val (capacity, loss) = transmissionLimits(state.block)
+                data.putString("kind", "transmission")
+                data.putInt("ku", be.currentKu.coerceAtLeast(0))
+                data.putInt("capacity", capacity)
+                data.putInt("loss", loss)
+            }
+
+            is WindKineticGeneratorBlockEntity -> {
+                data.putString("kind", "wind_kinetic")
+                data.putInt("generatedKu", be.getGeneratedKu())
+                data.putInt("outputKu", be.getOutputKu())
+                data.putBoolean("blocked", be.isStuck)
+                data.putDouble("rotorHours", be.getRotorRemainingClearHours())
+            }
+
+            is KineticGeneratorBlockEntity -> {
+                val inputKu = be.sync.currentKu.coerceAtLeast(0)
+                val outputEu = be.sync.outputEu.coerceAtLeast(0)
+                data.putString("kind", "kinetic_generator")
+                data.putInt("inputKu", inputKu)
+                data.putInt("outputEu", outputEu)
+                data.putLong("eu", be.sync.amount.coerceAtLeast(0L))
+                data.putLong("euCap", ic2_120.content.sync.KineticGeneratorSync.ENERGY_CAPACITY)
+            }
+        }
+    }
+
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+        val kind = accessor.serverData.getString("kind")
+        when (kind) {
+            "transmission" -> {
+                val ku = accessor.serverData.getInt("ku")
+                val cap = accessor.serverData.getInt("capacity")
+                val loss = accessor.serverData.getInt("loss")
+                tooltip.add(Text.translatable("ic2_120.jade.ku_line", ku, cap))
+                tooltip.add(Text.translatable("ic2_120.jade.ku_loss_line", loss))
+            }
+
+            "wind_kinetic" -> {
+                val generatedKu = accessor.serverData.getInt("generatedKu")
+                val outputKu = accessor.serverData.getInt("outputKu")
+                val blocked = accessor.serverData.getBoolean("blocked")
+                val rotorHours = accessor.serverData.getDouble("rotorHours")
+                tooltip.add(Text.translatable("ic2_120.jade.wind_ku_generated", generatedKu))
+                tooltip.add(Text.translatable("ic2_120.jade.wind_ku_output", outputKu))
+                tooltip.add(Text.translatable(if (blocked) "ic2_120.jade.wind_blocked" else "ic2_120.jade.wind_clear"))
+                tooltip.add(Text.translatable("ic2_120.jade.wind_rotor_lifetime", String.format("%.1f", rotorHours)))
+            }
+
+            "kinetic_generator" -> {
+                val inputKu = accessor.serverData.getInt("inputKu")
+                val outputEu = accessor.serverData.getInt("outputEu")
+                val eu = accessor.serverData.getLong("eu")
+                val euCap = accessor.serverData.getLong("euCap")
+                tooltip.add(Text.translatable("ic2_120.jade.kinetic_input", inputKu))
+                tooltip.add(Text.translatable("ic2_120.jade.kinetic_output", outputEu))
+                tooltip.add(Text.translatable("ic2_120.jade.kinetic_buffer", eu, euCap))
+            }
+        }
+    }
+
+    override fun getUid(): Identifier = KINETIC_INFO
+
+    private fun transmissionLimits(block: net.minecraft.block.Block): Pair<Int, Int> = when (block) {
+        is WoodTransmissionShaftBlock -> 128 to 0
+        is IronTransmissionShaftBlock -> 512 to 2
+        is SteelTransmissionShaftBlock -> 2048 to 1
+        is CarbonTransmissionShaftBlock -> 8192 to 0
+        is BevelGearBlock -> 2048 to 3
+        else -> 0 to 0
+    }
 }

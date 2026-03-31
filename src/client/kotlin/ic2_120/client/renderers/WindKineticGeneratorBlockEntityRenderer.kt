@@ -17,13 +17,11 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.RotationAxis
 import org.joml.Matrix3f
 import org.joml.Matrix4f
-import org.slf4j.LoggerFactory
 
 class WindKineticGeneratorBlockEntityRenderer(
     context: BlockEntityRendererFactory.Context
 ) : BlockEntityRenderer<WindKineticGeneratorBlockEntity> {
     companion object {
-        private val LOGGER = LoggerFactory.getLogger("ic2_120/WindKineticGenerator-Render")
         private val WOOD_ROTOR_TEXTURE = Identifier("ic2", "textures/item/rotor/wood_rotor_model.png")
         private val IRON_ROTOR_TEXTURE = Identifier("ic2", "textures/item/rotor/iron_rotor_model.png")
         private val STEEL_ROTOR_TEXTURE = Identifier("ic2", "textures/item/rotor/steel_rotor_model.png")
@@ -37,6 +35,8 @@ class WindKineticGeneratorBlockEntityRenderer(
         private const val BLADE_INNER_OFFSET = 1.0f * PIXEL    // 叶片从中心外 1px 开始
         private const val FRONT_OFFSET_FROM_CENTER = 1.0        // 相对方块中心前移 0.5 格（方块前表面在 0.5）
         private const val BLADE_PITCH_DEGREES = 22.0f          // 叶片螺距角（攻角），符合物理的风机桨叶倾角
+        private const val SHAFT_HALF_WIDTH = 1.0f * PIXEL      // 轴宽 2px（圆柱截面近似）
+        private const val SHAFT_LENGTH_INTO_BLOCK = 0.51f       // 轴深入机器内部的长度（格）
     }
 
     init {
@@ -77,12 +77,6 @@ class WindKineticGeneratorBlockEntityRenderer(
             ((world.time + tickDelta) * 1.8f) % 360.0f
         }
 
-        // 每 20 帧输出一次日志（约每秒一次）
-        if ((world.time + tickDelta).toLong() % 20L < 1L) {
-            LOGGER.info("[WindKineticGenerator Render] pos={} isStuck={} stuckAngle={} renderAngle={} time={}",
-                entity.pos, entity.isStuck, entity.stuckAngle.toInt(), angle.toInt(), world.time)
-        }
-
         matrices.push()
         matrices.translate(0.5, 0.5, 0.5)
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(yawFromFacing(facing)))
@@ -109,6 +103,17 @@ class WindKineticGeneratorBlockEntityRenderer(
             )
             matrices.pop()
         }
+
+        // 旋转轴：从螺旋桨中心延伸入机器内部
+        drawCuboid(
+            matrices,
+            vc,
+            rotorLight,
+            overlay,
+            minX = -SHAFT_HALF_WIDTH, maxX = SHAFT_HALF_WIDTH,
+            minY = -SHAFT_HALF_WIDTH, maxY = SHAFT_HALF_WIDTH,
+            minZ = 0f, maxZ = SHAFT_LENGTH_INTO_BLOCK
+        )
 
         // 中心轴帽
         drawCuboid(
