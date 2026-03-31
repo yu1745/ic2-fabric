@@ -104,19 +104,6 @@ fun ItemStack.isWaterFuel(): Boolean {
     }
 }
 
-/** 判断物品是否为半流质发电机燃料（当前仅生物燃料）。 */
-fun ItemStack.isSemifluidFuel(): Boolean {
-    return when (item) {
-        ModFluids.BIOFUEL_BUCKET -> true
-        Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "biofuel_cell")) -> true
-        Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) -> {
-            val fluid = getFluidCellVariant()?.fluid ?: return false
-            fluid == ModFluids.BIOFUEL_STILL || fluid == ModFluids.BIOFUEL_FLOWING
-        }
-        else -> false
-    }
-}
-
 /**
  * 根据流体返回满流体单元 ItemStack。
  * 若存在注册的专用单元（如 water_cell、coolant_cell），则返回该物品；否则使用 fluid_cell + NBT。

@@ -2,7 +2,7 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.SemifluidGeneratorBlock
 import ic2_120.content.block.machines.SemifluidGeneratorBlockEntity
-import ic2_120.content.item.isSemifluidFuel
+import ic2_120.content.block.machines.isSemifluidFuel
 import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
