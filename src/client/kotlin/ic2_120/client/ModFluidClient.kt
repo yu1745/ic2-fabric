@@ -85,6 +85,14 @@ object ModFluidClient {
             "block/fluid/fluid_flow",
             rgb(180, 180, 175)
         )
+        // Creosote（深棕）
+        registerFluid(
+            ModFluids.CREOSOTE_STILL,
+            ModFluids.CREOSOTE_FLOWING,
+            "block/fluid/fluid_still",
+            "block/fluid/fluid_flow",
+            rgb(78, 45, 20)
+        )
 
         // 流体方块使用半透明渲染层
         BlockRenderLayerMap.INSTANCE.putFluids(
@@ -106,7 +114,9 @@ object ModFluidClient {
             ModFluids.BIOMASS_STILL,
             ModFluids.BIOMASS_FLOWING,
             ModFluids.CONSTRUCTION_FOAM_STILL,
-            ModFluids.CONSTRUCTION_FOAM_FLOWING
+            ModFluids.CONSTRUCTION_FOAM_FLOWING,
+            ModFluids.CREOSOTE_STILL,
+            ModFluids.CREOSOTE_FLOWING
         )
     }
 

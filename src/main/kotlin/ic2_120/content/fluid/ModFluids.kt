@@ -117,6 +117,12 @@ object ModFluids {
     lateinit var CONSTRUCTION_FOAM_BLOCK: Block
     lateinit var CONSTRUCTION_FOAM_BUCKET: Item
 
+    // Creosote - 杂酚油
+    val CREOSOTE_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "creosote")) as FlowableFluid }
+    val CREOSOTE_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_creosote")) as FlowableFluid }
+    lateinit var CREOSOTE_BLOCK: Block
+    lateinit var CREOSOTE_BUCKET: Item
+
     fun register() {
         registerFluid("coolant", "coolant", "coolant")
         registerFluid("hot_coolant", "hot_coolant", "hot_coolant")
@@ -129,6 +135,7 @@ object ModFluids {
         registerFluid("distilled_water", "water_still", "water_flow")
         // 建筑泡沫：客户端渲染复用通用流体贴图 + 着色（见 ModFluidClient）
         registerFluid("construction_foam", "fluid_still", "fluid_flow")
+        registerFluid("creosote", "fluid_still", "fluid_flow")
 
         // 注册流体桶的玩家存储查找器，让 AE2 等模组能正确交互
         registerBucketPlayerStorage()
@@ -144,7 +151,7 @@ object ModFluids {
         val bucketItems = listOf(
             COOLANT_BUCKET, HOT_COOLANT_BUCKET, UU_MATTER_BUCKET, WEED_EX_BUCKET,
             PAHOEHOE_LAVA_BUCKET, BIOFUEL_BUCKET, BIOMASS_BUCKET, DISTILLED_WATER_BUCKET,
-            CONSTRUCTION_FOAM_BUCKET
+            CONSTRUCTION_FOAM_BUCKET, CREOSOTE_BUCKET
         )
 
         for (bucket in bucketItems) {
@@ -230,6 +237,10 @@ object ModFluids {
                 CONSTRUCTION_FOAM_BLOCK = block
                 CONSTRUCTION_FOAM_BUCKET = bucket
             }
+            "creosote" -> {
+                CREOSOTE_BLOCK = block
+                CREOSOTE_BUCKET = bucket
+            }
         }
 
         // 5. 添加到创造模式物品栏
@@ -291,6 +302,7 @@ object ModFluids {
                 "biomass" -> BIOMASS_STILL
                 "distilled_water" -> DISTILLED_WATER_STILL
                 "construction_foam" -> CONSTRUCTION_FOAM_STILL
+                "creosote" -> CREOSOTE_STILL
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getFlowingFluid(): Fluid = when (name) {
@@ -303,6 +315,7 @@ object ModFluids {
                 "biomass" -> BIOMASS_FLOWING
                 "distilled_water" -> DISTILLED_WATER_FLOWING
                 "construction_foam" -> CONSTRUCTION_FOAM_FLOWING
+                "creosote" -> CREOSOTE_FLOWING
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getBlock(): Block = when (name) {
@@ -315,6 +328,7 @@ object ModFluids {
                 "biomass" -> BIOMASS_BLOCK
                 "distilled_water" -> DISTILLED_WATER_BLOCK
                 "construction_foam" -> CONSTRUCTION_FOAM_BLOCK
+                "creosote" -> CREOSOTE_BLOCK
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getBucket(): Item = when (name) {
@@ -327,6 +341,7 @@ object ModFluids {
                 "biomass" -> BIOMASS_BUCKET
                 "distilled_water" -> DISTILLED_WATER_BUCKET
                 "construction_foam" -> CONSTRUCTION_FOAM_BUCKET
+                "creosote" -> CREOSOTE_BUCKET
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
         }
@@ -348,6 +363,7 @@ object ModFluids {
                 "biomass" -> BIOMASS_STILL
                 "distilled_water" -> DISTILLED_WATER_STILL
                 "construction_foam" -> CONSTRUCTION_FOAM_STILL
+                "creosote" -> CREOSOTE_STILL
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getFlowingFluid(): Fluid = when (name) {
@@ -360,6 +376,7 @@ object ModFluids {
                 "biomass" -> BIOMASS_FLOWING
                 "distilled_water" -> DISTILLED_WATER_FLOWING
                 "construction_foam" -> CONSTRUCTION_FOAM_FLOWING
+                "creosote" -> CREOSOTE_FLOWING
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getBlock(): Block = when (name) {
@@ -372,6 +389,7 @@ object ModFluids {
                 "biomass" -> BIOMASS_BLOCK
                 "distilled_water" -> DISTILLED_WATER_BLOCK
                 "construction_foam" -> CONSTRUCTION_FOAM_BLOCK
+                "creosote" -> CREOSOTE_BLOCK
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getBucket(): Item = when (name) {
@@ -384,6 +402,7 @@ object ModFluids {
                 "biomass" -> BIOMASS_BUCKET
                 "distilled_water" -> DISTILLED_WATER_BUCKET
                 "construction_foam" -> CONSTRUCTION_FOAM_BUCKET
+                "creosote" -> CREOSOTE_BUCKET
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
         }

@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "ic2:block/machine/steam/coke_kiln" },
+    "facing=east": { "model": "ic2:block/machine/steam/coke_kiln", "y": 90 },
+    "facing=south": { "model": "ic2:block/machine/steam/coke_kiln", "y": 180 },
+    "facing=west": { "model": "ic2:block/machine/steam/coke_kiln", "y": 270 }
+  }
+}

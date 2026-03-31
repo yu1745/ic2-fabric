@@ -649,5 +649,19 @@
   "crop.ic2_120.terra_wart": "大地疣",
   "crop.ic2_120.tulip": "郁金香",
   "crop.ic2_120.venomilia": "毒花",
-  "crop.ic2_120.wheat": "小麦"
+  "crop.ic2_120.wheat": "小麦",
+  "block.ic2_120.refractory_bricks": "耐火砖",
+  "block.ic2_120.coke_kiln": "焦炭窑",
+  "block.ic2_120.coke_kiln_hatch": "焦炉窑口",
+  "block.ic2_120.coke_kiln_grate": "焦炉炉篦",
+  "item.ic2_120.refractory_bricks": "耐火砖",
+  "item.ic2_120.coke_kiln": "焦炭窑",
+  "item.ic2_120.coke_kiln_hatch": "焦炉窑口",
+  "item.ic2_120.coke_kiln_grate": "焦炉炉篦",
+  "item.ic2_120.coke": "焦煤碳",
+  "block.ic2_120.creosote": "杂酚油",
+  "item.ic2_120.creosote_bucket": "杂酚油桶",
+  "message.ic2_120.coke_kiln.structure_ok": "焦炭窑结构正确",
+  "message.ic2_120.coke_kiln.structure_invalid": "焦炭窑结构错误：需 3x3x3 中空，顶中窑口，中层四侧中间仅 1 个焦炭窑，底中炉篦朝下",
+  "container.ic2_120.coke_kiln": "焦炭窑"
 }

@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "ic2:block/machine/steam/coke_kiln_hatch" }
+  }
+}

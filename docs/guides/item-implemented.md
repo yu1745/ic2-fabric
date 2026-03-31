@@ -54,6 +54,26 @@
 
 UI 部分需要计算各组件宽高，给出精确的互不遮挡的 x、y 坐标。
 
+## 6.1) 焦炉四方块材质说明（更正）
+
+以下是 `ic2_120` 当前实现中四个焦炉相关方块的材质/贴图来源：
+
+- `refractory_bricks`（耐火砖）  
+  - 方块模型：`assets/ic2_120/models/block/refractory_bricks.json`  
+  - 贴图：`ic2:block/refractory_brick`
+
+- `coke_kiln`（焦炭窑主体）  
+  - 方块模型：`assets/ic2_120/models/block/coke_kiln.json`  
+  - 父模型：`ic2:block/machine/steam/coke_kiln`
+
+- `coke_kiln_hatch`（焦炉窑口）  
+  - 方块模型：`assets/ic2_120/models/block/coke_kiln_hatch.json`  
+  - 父模型：`ic2:block/machine/steam/coke_kiln_hatch`
+
+- `coke_kiln_grate`（焦炉炉篦）  
+  - 方块模型：`assets/ic2_120/models/block/coke_kiln_grate.json`  
+  - 父模型：`ic2:block/machine/steam/coke_kiln_grate`
+
 ## 7) 验证
 
 最少执行：

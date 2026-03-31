@@ -51,6 +51,7 @@ import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
+import net.fabricmc.fabric.api.registry.FuelRegistry
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.armor.JetpackItem
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
@@ -106,6 +107,12 @@ object Ic2_120 : ModInitializer {
                 "ic2_120.content.item"     // 扫描物品类（含 @ModItem 船物品）
             )
         )
+
+        // 焦炭作为固体燃料：燃烧时间为煤炭 2 倍（影响原版熔炉、铁炉、发电机等读取 FuelRegistry 的设备）
+        val coalBurnTicks = FuelRegistry.INSTANCE.get(Items.COAL) ?: 1600
+        Registries.ITEM.getOrEmpty(Identifier(MOD_ID, "coke")).ifPresent { cokeItem ->
+            FuelRegistry.INSTANCE.add(cokeItem, coalBurnTicks * 2)
+        }
 
         // 机器 RecipeType/Serializer：扫描 recipes 包时先 Class.forName(initialize=false)，仅带 @ModMachineRecipe 的序列化器会完成初始化；须在物品/方块注册之后
         ModMachineRecipes.register()

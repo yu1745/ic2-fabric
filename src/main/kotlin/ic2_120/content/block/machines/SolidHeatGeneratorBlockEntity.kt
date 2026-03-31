@@ -50,8 +50,7 @@ class SolidHeatGeneratorBlockEntity(
         private const val SLOT_FUEL = 0
         private const val INVENTORY_SIZE = 1
         private const val HU_PER_TICK = 20L
-        private const val HEAT_PER_ITEM = 8_000L
-        private const val BURN_TICKS_PER_ITEM = (HEAT_PER_ITEM / HU_PER_TICK).toInt()
+        private const val SOLID_HEAT_BURN_DIVISOR = 4 // 1600(煤炭熔炉tick) -> 400(本机tick)
     }
 
     override val tier: Int = 1
@@ -108,7 +107,7 @@ class SolidHeatGeneratorBlockEntity(
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean =
-        slot == SLOT_FUEL && !stack.isEmpty && (FuelRegistry.INSTANCE.get(stack.item) ?: 0) > 0
+        slot == SLOT_FUEL && !stack.isEmpty && getFuelTimeForSolidHeat(stack) > 0
 
     override fun insert(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
         itemStorage.insert(resource, maxAmount, transaction)
@@ -139,9 +138,10 @@ class SolidHeatGeneratorBlockEntity(
     override fun generateHeat(world: World, pos: BlockPos, state: BlockState): Long {
         if (burnTime <= 0) {
             val fuel = getStack(SLOT_FUEL)
-            if (!fuel.isEmpty && isSupportedFuel(fuel)) {
-                burnTime = BURN_TICKS_PER_ITEM
-                burnTotal = BURN_TICKS_PER_ITEM
+            val fuelTicks = getFuelTimeForSolidHeat(fuel)
+            if (!fuel.isEmpty && fuelTicks > 0) {
+                burnTime = fuelTicks
+                burnTotal = fuelTicks
                 fuel.decrement(1)
                 if (fuel.isEmpty) setStack(SLOT_FUEL, ItemStack.EMPTY)
                 markDirty()
@@ -171,6 +171,14 @@ class SolidHeatGeneratorBlockEntity(
         tickHeatMachine(world, pos, state)
     }
 
-    private fun isSupportedFuel(stack: ItemStack): Boolean =
-        stack.item == Items.COAL || stack.item == Items.CHARCOAL
+    private fun getFuelTimeForSolidHeat(stack: ItemStack): Int {
+        if (stack.isEmpty) return 0
+        val item = stack.item
+        val isSupported = item == Items.COAL ||
+            item == Items.CHARCOAL ||
+            item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier("ic2_120", "coke"))
+        if (!isSupported) return 0
+        val furnaceTicks = FuelRegistry.INSTANCE.get(item) ?: return 0
+        return (furnaceTicks / SOLID_HEAT_BURN_DIVISOR).coerceAtLeast(1)
+    }
 }

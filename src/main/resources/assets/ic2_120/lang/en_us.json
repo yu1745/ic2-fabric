@@ -652,5 +652,19 @@
   "crop.ic2_120.terra_wart": "Terra Wart",
   "crop.ic2_120.tulip": "Tulip",
   "crop.ic2_120.venomilia": "Venomilia",
-  "crop.ic2_120.wheat": "Wheat"
+  "crop.ic2_120.wheat": "Wheat",
+  "block.ic2_120.refractory_bricks": "Refractory Bricks",
+  "block.ic2_120.coke_kiln": "Coke Kiln",
+  "block.ic2_120.coke_kiln_hatch": "Coke Kiln Hatch",
+  "block.ic2_120.coke_kiln_grate": "Coke Kiln Grate",
+  "item.ic2_120.refractory_bricks": "Refractory Bricks",
+  "item.ic2_120.coke_kiln": "Coke Kiln",
+  "item.ic2_120.coke_kiln_hatch": "Coke Kiln Hatch",
+  "item.ic2_120.coke_kiln_grate": "Coke Kiln Grate",
+  "item.ic2_120.coke": "Coke",
+  "block.ic2_120.creosote": "Creosote",
+  "item.ic2_120.creosote_bucket": "Creosote Bucket",
+  "message.ic2_120.coke_kiln.structure_ok": "Coke Kiln structure is valid",
+  "message.ic2_120.coke_kiln.structure_invalid": "Invalid Coke Kiln: 3x3x3 hollow, hatch at top center, exactly one kiln at middle side center, grate facing down at bottom center",
+  "container.ic2_120.coke_kiln": "Coke Kiln"
 }
