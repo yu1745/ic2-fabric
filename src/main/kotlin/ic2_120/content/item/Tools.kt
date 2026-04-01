@@ -47,8 +47,15 @@ import net.minecraft.item.PickaxeItem
 import net.minecraft.item.ShovelItem
 import net.minecraft.item.SwordItem
 import net.minecraft.item.ToolMaterial
+import net.minecraft.inventory.Inventories
+import net.minecraft.nbt.NbtCompound
 import net.minecraft.recipe.Ingredient
 import net.minecraft.registry.tag.ItemTags
+import net.minecraft.client.item.TooltipContext
+import net.minecraft.sound.SoundCategory
+import net.minecraft.sound.SoundEvents
+import net.minecraft.util.Formatting
+import net.minecraft.util.collection.DefaultedList
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
@@ -235,7 +242,13 @@ class WeedingSpade : Item(FabricItemSettings().maxDamage(120)) {
         val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return ActionResult.PASS
         val isCreative = player.abilities.creativeMode
 
-        ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), Weed::class.instance().defaultStack)
+        ItemScatterer.spawn(
+            world,
+            pos.x.toDouble(),
+            pos.y.toDouble(),
+            pos.z.toDouble(),
+            Weed::class.instance().defaultStack
+        )
         world.setBlockState(pos, CropStickBlock.defaultStickState(), Block.NOTIFY_ALL)
         if (!isCreative) {
             stack.damage(1, player) { it.sendToolBreakStatus(context.hand) }
@@ -263,10 +276,151 @@ class WeedingSpade : Item(FabricItemSettings().maxDamage(120)) {
 @ModItem(name = "debug_item", tab = CreativeTab.IC2_TOOLS, group = "tools")
 class DebugItem : Item(FabricItemSettings().maxCount(1))
 
-//已删除
-/** 工具箱 - 存储工具 */
-// @ModItem(name = "tool_box", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class ToolBox : Item(FabricItemSettings().maxCount(1))
+/** 工具箱：右键收纳快捷栏工具（最多 8 格）；潜行右键向背包释放，能放多少放多少，放不下的留在箱内。无 GUI。 */
+@ModItem(name = "tool_box", tab = CreativeTab.IC2_TOOLS, group = "tools")
+class ToolBox : Item(FabricItemSettings().maxCount(1)) {
+
+    override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
+        val stack = user.getStackInHand(hand)
+        if (world.isClient) return TypedActionResult.success(stack)
+
+        val internal = loadInternal(stack)
+        if (user.isSneaking) {
+            var transferredAny = false
+            for (i in internal.indices) {
+                val s = internal[i]
+                if (s.isEmpty) continue
+                val beforeAmount = s.count
+                val leftover = s.copy()
+                user.inventory.insertStack(leftover)
+                internal[i] = leftover
+                if (leftover.count < beforeAmount || leftover.isEmpty) {
+                    transferredAny = true
+                }
+            }
+            if (transferredAny) {
+                user.playSound(SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2f, 1.1f)
+            }
+            if (internal.any { !it.isEmpty }) {
+                user.sendMessage(Text.translatable("message.ic2_120.tool_box.inventory_partial"), true)
+            }
+            saveInternal(stack, internal)
+            return TypedActionResult.success(stack, true)
+        }
+
+        val inv = user.inventory
+        val skipHotbarIndex = if (hand == Hand.MAIN_HAND) inv.selectedSlot else -1
+        var deposited = false
+        for (idx in 0..8) {
+            if (idx == skipHotbarIndex) continue
+            val slotStack = inv.main[idx]
+            if (!slotStack.isStorableForToolBox()) continue
+            val dest = internal.indexOfFirst { it.isEmpty }
+            if (dest == -1) break
+            internal[dest] = slotStack.copy()
+            inv.main[idx] = ItemStack.EMPTY
+            deposited = true
+        }
+        if (deposited) {
+            user.playSound(SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.PLAYERS, 0.35f, 1.25f)
+        }
+        saveInternal(stack, internal)
+        return TypedActionResult.success(stack, true)
+    }
+
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: net.minecraft.world.World?,
+        tooltip: MutableList<Text>,
+        context: TooltipContext
+    ) {
+        super.appendTooltip(stack, world, tooltip, context)
+        tooltip.add(Text.translatable("tooltip.ic2_120.tool_box.hint").formatted(Formatting.DARK_GRAY))
+        tooltip.add(Text.translatable("tooltip.ic2_120.tool_box.hint_detail").formatted(Formatting.DARK_GRAY))
+        val internal = loadInternal(stack)
+        val filled = internal.count { !it.isEmpty }
+        if (filled == 0) {
+            tooltip.add(Text.translatable("tooltip.ic2_120.tool_box.empty").formatted(Formatting.GRAY))
+            return
+        }
+        tooltip.add(
+            Text.translatable("tooltip.ic2_120.tool_box.summary", filled, CAPACITY).formatted(Formatting.GRAY)
+        )
+        for (s in internal) {
+            if (s.isEmpty) continue
+            val line = Text.literal("· ").formatted(Formatting.DARK_GRAY).append(s.name)
+            if (s.count > 1) {
+                line.append(Text.literal(" ×${s.count}").formatted(Formatting.DARK_GRAY))
+            }
+            tooltip.add(line)
+        }
+    }
+
+    companion object {
+        const val CAPACITY = 8
+        const val NBT_KEY = "ToolBoxItems"
+
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val casing = BronzeCasing::class.instance()
+            val chest = Items.CHEST
+            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ToolBox::class.instance(), 1)
+                .pattern("BBB")
+                .pattern("BCB")
+                .pattern("BBB")
+                .input('B', casing)
+                .input('C', chest)
+                .criterion(hasItem(chest), conditionsFromItem(chest))
+                .criterion(hasItem(casing), conditionsFromItem(casing))
+                .offerTo(exporter, ToolBox::class.id())
+        }
+
+        internal fun loadInternal(stack: ItemStack): DefaultedList<ItemStack> {
+            val list = DefaultedList.ofSize(CAPACITY, ItemStack.EMPTY)
+            val root = stack.nbt ?: return list
+            if (!root.contains(NBT_KEY)) return list
+            val tag = root.getCompound(NBT_KEY)
+            Inventories.readNbt(tag, list)
+            return list
+        }
+
+        internal fun saveInternal(stack: ItemStack, list: DefaultedList<ItemStack>) {
+            val nbt = stack.orCreateNbt
+            val tag = NbtCompound()
+            Inventories.writeNbt(tag, list)
+            nbt.put(NBT_KEY, tag)
+        }
+
+        /** 可收入工具箱的物品：原版工具标签、常见工具物品、电动工具、IC2 手持工具等。 */
+        internal fun ItemStack.isStorableForToolBox(): Boolean {
+            if (isEmpty) return false
+            val i = item
+            if (i is ToolBox) return false
+            if (i is DebugItem || i is EnergyDebugStickItem) return false
+            if (i is IElectricTool) return true
+            if (isIn(ItemTags.PICKAXES) || isIn(ItemTags.AXES) || isIn(ItemTags.SHOVELS) ||
+                isIn(ItemTags.HOES) || isIn(ItemTags.SWORDS)
+            ) {
+                return true
+            }
+            if (i === Items.SHEARS || i === Items.FISHING_ROD || i === Items.FLINT_AND_STEEL ||
+                i === Items.BRUSH || i === Items.TRIDENT ||
+                i === Items.CARROT_ON_A_STICK || i === Items.WARPED_FUNGUS_ON_A_STICK
+            ) {
+                return true
+            }
+            if (i is AxeItem || i is PickaxeItem || i is ShovelItem || i is HoeItem || i is SwordItem) return true
+            if (i is MiningLaserItem) return true
+            if (i is FoamSprayerItem) return true
+            if (i is ForgeHammer || i is Cutter || i is WeedingSpade || i is Treetap || i is Wrench ||
+                i is FrequencyTransmitter || i is Obscurator || i is WindMeter
+            ) {
+                return true
+            }
+            return false
+        }
+    }
+}
 
 //已删除
 /** EU 电表 - 测量导线/机器 EU 流量 */
@@ -399,7 +553,10 @@ class FrequencyTransmitter : Item(FabricItemSettings().maxCount(1)) {
         if (!world.isClient) {
             be.setTarget(bindPos, bindDim)
             targetBe.setTarget(pos, dim)
-            player.sendMessage(Text.literal("双向链接成功: (${pos.x},${pos.y},${pos.z}) <-> (${bindPos.x},${bindPos.y},${bindPos.z})"), true)
+            player.sendMessage(
+                Text.literal("双向链接成功: (${pos.x},${pos.y},${pos.z}) <-> (${bindPos.x},${bindPos.y},${bindPos.z})"),
+                true
+            )
             nbt.putBoolean(NBT_HAS_BIND, false)
         }
         return net.minecraft.util.ActionResult.SUCCESS
@@ -416,7 +573,10 @@ class FrequencyTransmitter : Item(FabricItemSettings().maxCount(1)) {
         val hasBind = nbt?.getBoolean(NBT_HAS_BIND) == true
         if (!hasBind) {
             tooltip.add(Text.literal("未绑定传送机"))
-            tooltip.add(Text.literal("右击传送机记录第一台，再右击另一台完成双向绑定").formatted(net.minecraft.util.Formatting.DARK_GRAY))
+            tooltip.add(
+                Text.literal("右击传送机记录第一台，再右击另一台完成双向绑定")
+                    .formatted(net.minecraft.util.Formatting.DARK_GRAY)
+            )
             return
         }
 
@@ -460,10 +620,16 @@ class Chainsaw : ElectricMiningDrillItem(
     override val maxCapacity = 30_000L
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<net.minecraft.text.Text>, context: net.minecraft.client.item.TooltipContext) {
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: net.minecraft.world.World?,
+        tooltip: MutableList<net.minecraft.text.Text>,
+        context: net.minecraft.client.item.TooltipContext
+    ) {
         super.appendTooltip(stack, world, tooltip, context)
         appendEnergyTooltip(stack, tooltip)
     }
+
     override fun isItemBarVisible(stack: ItemStack) = true
     override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
     override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
@@ -528,14 +694,21 @@ class DiamondDrill : ElectricMiningDrillItem(
                 .offerTo(exporter, DiamondDrill::class.id())
         }
     }
+
     override val tier = 1
     override val maxCapacity = 10_000L
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<net.minecraft.text.Text>, context: net.minecraft.client.item.TooltipContext) {
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: net.minecraft.world.World?,
+        tooltip: MutableList<net.minecraft.text.Text>,
+        context: net.minecraft.client.item.TooltipContext
+    ) {
         super.appendTooltip(stack, world, tooltip, context)
         appendEnergyTooltip(stack, tooltip)
     }
+
     override fun isItemBarVisible(stack: ItemStack) = true
     override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
     override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
@@ -566,14 +739,21 @@ class Drill : ElectricMiningDrillItem(
             )
         }
     }
+
     override val tier = 1
     override val maxCapacity = 10_000L
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<net.minecraft.text.Text>, context: net.minecraft.client.item.TooltipContext) {
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: net.minecraft.world.World?,
+        tooltip: MutableList<net.minecraft.text.Text>,
+        context: net.minecraft.client.item.TooltipContext
+    ) {
         super.appendTooltip(stack, world, tooltip, context)
         appendEnergyTooltip(stack, tooltip)
     }
+
     override fun isItemBarVisible(stack: ItemStack) = true
     override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
     override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
@@ -605,10 +785,16 @@ class ElectricTreetap : Item(FabricItemSettings().maxCount(1)), IElectricTool {
     override val maxCapacity = 10_000L
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<net.minecraft.text.Text>, context: net.minecraft.client.item.TooltipContext) {
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: net.minecraft.world.World?,
+        tooltip: MutableList<net.minecraft.text.Text>,
+        context: net.minecraft.client.item.TooltipContext
+    ) {
         super.appendTooltip(stack, world, tooltip, context)
         appendEnergyTooltip(stack, tooltip)
     }
+
     override fun isItemBarVisible(stack: ItemStack) = true
     override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
     override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
@@ -640,10 +826,16 @@ class ElectricWrench : Item(FabricItemSettings().maxCount(1)), IElectricTool {
     override val maxCapacity = 10_000L
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<net.minecraft.text.Text>, context: net.minecraft.client.item.TooltipContext) {
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: net.minecraft.world.World?,
+        tooltip: MutableList<net.minecraft.text.Text>,
+        context: net.minecraft.client.item.TooltipContext
+    ) {
         super.appendTooltip(stack, world, tooltip, context)
         appendEnergyTooltip(stack, tooltip)
     }
+
     override fun isItemBarVisible(stack: ItemStack) = true
     override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
     override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
@@ -662,6 +854,7 @@ class IridiumDrill : ElectricMiningDrillItem(
     companion object {
         private const val ENERGY_PER_BLOCK = 800L
         private const val SILK_TOUCH_MULTIPLIER = 10L
+
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val reinforcedIridium = IridiumPlate::class.instance()
@@ -673,6 +866,7 @@ class IridiumDrill : ElectricMiningDrillItem(
                 .criterion(hasItem(diamondDrill), conditionsFromItem(diamondDrill))
                 .offerTo(exporter, IridiumDrill::class.id())
         }
+
         private const val SILK_TOUCH_KEY = "SilkTouchEnabled"
 
         fun isSilkTouchEnabled(stack: ItemStack): Boolean =
@@ -716,15 +910,28 @@ class IridiumDrill : ElectricMiningDrillItem(
 
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
-    override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(
+        stack: ItemStack,
+        world: World,
+        entity: net.minecraft.entity.Entity,
+        slot: Int,
+        selected: Boolean
+    ) {
         super.inventoryTick(stack, world, entity, slot, selected)
         val enoughEnergy = getEnergy(stack) >= getEnergyCostPerBlock(stack)
         syncVirtualEnchantments(stack, enoughEnergy)
     }
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<net.minecraft.text.Text>, context: net.minecraft.client.item.TooltipContext) {
+
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: net.minecraft.world.World?,
+        tooltip: MutableList<net.minecraft.text.Text>,
+        context: net.minecraft.client.item.TooltipContext
+    ) {
         super.appendTooltip(stack, world, tooltip, context)
         appendEnergyTooltip(stack, tooltip)
     }
+
     override fun isItemBarVisible(stack: ItemStack) = true
     override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
     override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
@@ -804,7 +1011,10 @@ class NanoSaber : SwordItem(
         return total - 1.0
     }
 
-    override fun getAttributeModifiers(stack: ItemStack, slot: EquipmentSlot): Multimap<EntityAttribute, EntityAttributeModifier> {
+    override fun getAttributeModifiers(
+        stack: ItemStack,
+        slot: EquipmentSlot
+    ): Multimap<EntityAttribute, EntityAttributeModifier> {
         if (slot != EquipmentSlot.MAINHAND) {
             return super.getAttributeModifiers(stack, slot)
         }
@@ -899,14 +1109,16 @@ class WindMeter : Item(FabricItemSettings().maxCount(1)) {
             ).toInt().coerceAtLeast(0)
 
         fun requiredStartY(multiplier: Int): Int {
-            val threshold = ic2_120.content.block.machines.WindKineticGeneratorBlockEntity.startThresholdForMultiplier(multiplier)
+            val threshold =
+                ic2_120.content.block.machines.WindKineticGeneratorBlockEntity.startThresholdForMultiplier(multiplier)
             val nowCanStart = effective >= threshold
             if (nowCanStart) return -2
 
             // 返回当前天气与随机倍率下可启动的最小 Y；找不到则返回 -1。
             val top = world.topY
             for (y in 0..top) {
-                val windAtY = ic2_120.content.block.machines.WindKineticGeneratorBlockEntity.meanWindFromY(y) * weather * gust
+                val windAtY =
+                    ic2_120.content.block.machines.WindKineticGeneratorBlockEntity.meanWindFromY(y) * weather * gust
                 if (windAtY >= threshold) return y
             }
             return -1
@@ -938,11 +1150,16 @@ class WindMeter : Item(FabricItemSettings().maxCount(1)) {
                 playerInventory: net.minecraft.entity.player.PlayerInventory,
                 player: PlayerEntity
             ): net.minecraft.screen.ScreenHandler {
-                val delegate = net.minecraft.screen.ArrayPropertyDelegate(ic2_120.content.screen.WindMeterScreenHandler.PROP_COUNT)
-                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_MEAN_PERMILLE] = (mean * 1000.0).toInt().coerceAtLeast(0)
-                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_WEATHER_PERMILLE] = (weather * 1000.0).toInt().coerceAtLeast(0)
-                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_GUST_PERMILLE] = (gust * 1000.0).toInt().coerceAtLeast(0)
-                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_EFFECTIVE_PERMILLE] = (effective * 1000.0).toInt().coerceAtLeast(0)
+                val delegate =
+                    net.minecraft.screen.ArrayPropertyDelegate(ic2_120.content.screen.WindMeterScreenHandler.PROP_COUNT)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_MEAN_PERMILLE] =
+                    (mean * 1000.0).toInt().coerceAtLeast(0)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_WEATHER_PERMILLE] =
+                    (weather * 1000.0).toInt().coerceAtLeast(0)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_GUST_PERMILLE] =
+                    (gust * 1000.0).toInt().coerceAtLeast(0)
+                delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_EFFECTIVE_PERMILLE] =
+                    (effective * 1000.0).toInt().coerceAtLeast(0)
                 delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_WOOD_KU] = ku(1)
                 delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_IRON_KU] = ku(2)
                 delegate[ic2_120.content.screen.WindMeterScreenHandler.IDX_STEEL_KU] = ku(3)
