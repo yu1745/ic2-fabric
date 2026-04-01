@@ -51,7 +51,11 @@ class RubberTreeFoliagePlacer(
         super.generate(world, collectingPlacer, random, config, trunkHeight, treeNode, foliageHeight, radius, offset)
 
         val ys = collected.keys.asSequence().map { it.y }.distinct().sortedDescending().toList()
-        val topYs = ys.take(2).toSet()
+        if (ys.isEmpty()) return
+        val highestY = ys.first()
+        // 顶部两层单叶显式取“最高层”和“最高层下一层”，
+        // 不再依赖 blob 结果里恰好出现哪两个 y，避免偶发把第二层判断成树干层。
+        val topYs = setOf(highestY, highestY - 1)
 
         var filtered = 0
         var placed = 0

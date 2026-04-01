@@ -1,6 +1,7 @@
 package ic2_120.content.block
 
 import ic2_120.Ic2_120
+import ic2_120.config.Ic2Config
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
@@ -109,13 +110,7 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
 
         fun initializeNaturalState(state: BlockState, random: Random): BlockState {
             val faces = listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
-            // 0孔 11/14、1孔 2/14、2孔 1/14，每根平均 2/7 孔，整树（约 7 根）平均 2 个
-            val r = random.nextInt(14)
-            val count = when {
-                r < 11 -> 0
-                r < 13 -> 1
-                else -> 2
-            }
+            val count = pickWetHoleCount(random)
             val indices = (0..3).toMutableList()
             for (i in 0 until count) {
                 val j = i + random.nextInt(4 - i)
@@ -127,6 +122,31 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
                 newState = newState.with(propFor(faces[indices[i]]), RubberFaceState.WET)
             }
             return newState
+        }
+
+        private fun pickWetHoleCount(random: Random): Int {
+            val config = Ic2Config.current.worldgen.rubberTree.normalized()
+            val zeroWeight = config.zeroHoleWeight
+            val singleWeight = config.singleHoleWeight
+            val doubleWeight = config.doubleHoleWeight
+            val totalWeight = zeroWeight + singleWeight + doubleWeight
+
+            if (totalWeight <= 0) {
+                // 回退到旧默认值：0孔 11、1孔 2、2孔 1。
+                val fallback = random.nextInt(14)
+                return when {
+                    fallback < 11 -> 0
+                    fallback < 13 -> 1
+                    else -> 2
+                }
+            }
+
+            val roll = random.nextInt(totalWeight)
+            return when {
+                roll < zeroWeight -> 0
+                roll < zeroWeight + singleWeight -> 1
+                else -> 2
+            }
         }
     }
 }

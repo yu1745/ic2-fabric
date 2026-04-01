@@ -27,6 +27,7 @@
 - `docs/systems/nuclear-power.md`
 - `docs/systems/upgrade-system.md`
 - `docs/systems/config-system.md`
+- `docs/systems/rubber-tree-worldgen.md`
 - `docs/systems/sync-system.md`
 - `docs/systems/sound-system.md`
 - `docs/systems/jei-integration.md`

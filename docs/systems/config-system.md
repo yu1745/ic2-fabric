@@ -19,6 +19,7 @@
 - `recycler`
 - `nuclear`
 - `uuReplication`
+- `worldgen`
 
 示例：
 
@@ -39,6 +40,28 @@
   "uuReplication": {
     "replicationWhitelist": {
       "minecraft:diamond": 8192
+    }
+  },
+  "worldgen": {
+    "rubberTree": {
+      "enabled": true,
+      "biomes": [
+        "minecraft:forest"
+      ],
+      "countPerChunk": 1,
+      "rarityChance": 64,
+      "maxWaterDepth": 0,
+      "baseHeight": 6,
+      "heightRandA": 2,
+      "heightRandB": 0,
+      "foliageRadius": 2,
+      "foliageOffset": 0,
+      "foliageHeight": 4,
+      "zeroHoleWeight": 11,
+      "singleHoleWeight": 2,
+      "doubleHoleWeight": 1,
+      "ignoreVines": true,
+      "forceDirt": false
     }
   }
 }
@@ -64,6 +87,12 @@
 
 - `replicationWhitelist`：UU 复制白名单。
 - key = 物品 id，value = 所需 UU 物质（uB，正整数）。
+
+### `worldgen`
+
+- `rubberTree`：橡胶树世界生成相关配置。
+- 包括启用开关、生物群系列表、每区块尝试次数、稀有度、水深限制、树高、树冠参数，以及每根自然原木生成 `0/1/2` 个湿橡胶孔的权重。
+- 详细链路见 `docs/systems/rubber-tree-worldgen.md`。
 
 ## 加载与重载
 
@@ -92,3 +121,4 @@
 - `Ic2Config` 使用 `ignoreUnknownKeys = true`，多余字段会被忽略。
 - 旧配置里若含历史 `creative` 字段，读取后会自动写回为新结构。
 - `uuReplication.replicationWhitelist` 的值应为正整数；非正值会被逻辑视为无效。
+- `worldgen.rubberTree.enabled` 与 `worldgen.rubberTree.biomes` 只在启动注册世界生成时生效；仅执行 `/ic2config reload` 不会重新注册 biome modification。
