@@ -58,6 +58,10 @@
 - `docs/inventory/assets-inventory.md`
 - `docs/inventory/sounds-inventory.md`
 
+### reports（统计报告）
+
+- `docs/fabric-api-usage-report.md` - Fabric API 使用统计
+
 ### pitfalls（踩坑记录）
 
 - `docs/pitfalls/common-pitfalls.md`

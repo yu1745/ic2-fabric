@@ -526,7 +526,22 @@ class JetpackAttachmentPlate : Item(FabricItemSettings())
 // ========== 货币与特殊物品 ==========
 
 @ModItem(name = "resin", tab = CreativeTab.IC2_MATERIALS, group = "misc")
-class Resin : Item(FabricItemSettings())
+class Resin : Item(FabricItemSettings()) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // 熔炉烧炼：粘性树脂 -> 橡胶
+            CookingRecipeJsonBuilder.createSmelting(
+                Ingredient.ofItems(Resin::class.instance()),
+                RecipeCategory.MISC,
+                RubberItem::class.instance(),
+                0.1f,
+                200
+            ).criterion(hasItem(Resin::class.instance()), conditionsFromItem(Resin::class.instance()))
+                .offerTo(exporter, Resin::class.recipeId("to_rubber_smelting"))
+        }
+    }
+}
 
 @ModItem(name = "slag", tab = CreativeTab.IC2_MATERIALS, group = "misc")
 class Slag : Item(FabricItemSettings())

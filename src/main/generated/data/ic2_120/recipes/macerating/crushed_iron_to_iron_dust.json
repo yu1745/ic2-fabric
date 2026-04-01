@@ -1,0 +1,10 @@
+{
+  "type": "ic2_120:macerating",
+  "ingredient": {
+    "item": "ic2_120:crushed_iron"
+  },
+  "result": {
+    "count": 2,
+    "item": "ic2_120:iron_dust"
+  }
+}
