@@ -31,7 +31,10 @@ object SeedCommand {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.register(
                 CommandManager.literal("ic2seed")
-                    .requires { it.hasPermissionLevel(PERMISSION_LEVEL) }
+                    .requires { source ->
+                        source.hasPermissionLevel(PERMISSION_LEVEL) ||
+                        source.player?.isCreative() == true
+                    }
                     .then(
                         CommandManager.literal("list")
                             .executes { ctx -> listExecute(ctx) }

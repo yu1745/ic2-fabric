@@ -14,7 +14,16 @@
 
 IndustrialCraft 2 Experimental 的 Minecraft 1.20.1 Fabric 移植版本，使用 Kotlin 编写。
 
-**玩家向说明**：游戏内容与玩法请查看 [mod特性.md](mod特性.md)。本文档面向开发者。
+## 文档分区
+
+### 玩家文档
+
+- [模组特性（玩家向）](player-docs/README.md)
+- [作物系统玩家指南](player-docs/crop-player-guide.md)
+
+### 开发者文档（docs/）
+
+本文档其余内容与 `docs/` 目录面向开发者协作与实现细节。
 
 ## 项目特性
 
@@ -75,11 +84,12 @@ ic2-fabric/
 │   ├── client/kotlin/   # 客户端专用代码
 │   ├── main/java/       # 通用/服务端 Mixin 类
 │   └── client/java/     # 客户端 Mixin 类
+├── player-docs/         # 玩家向文档
 ├── docs/                # 技术文档
 └── assets/              # 模组资源（模型、纹理、语言文件等）
 ```
 
-## 文档
+## 开发者文档入口
 
 完整目录与分类见 [docs/README.md](docs/README.md)。常用入口：
 
@@ -88,18 +98,23 @@ ic2-fabric/
 - [能量流同步](docs/systems/energy-flow-sync.md) - 机器间能量流动与同步逻辑
 - [能量网络系统](docs/systems/energy-network.md) - EU 能量传输与存储
 - [升级系统](docs/systems/upgrade-system.md) - 机器升级与效果机制
+- [配置系统](docs/systems/config-system.md) - 配置文件结构、加载与热重载
 - [槽位规格系统](docs/ui/slot-spec-system.md) - 机器 GUI 槽位定义与约束
 - [机器组合复用](docs/guides/machine-composition-reuse.md) - 机器逻辑组合与可复用设计
 - [机器实现指南](docs/guides/machine-implementation-guide.md) - 完整的 Block → BlockEntity → ScreenHandler → Screen 实现流程
 - [核电系统](docs/systems/nuclear-power.md) - 核能相关机制与实现说明
 - [热能系统](docs/systems/heat-system.md) - HU 加热与传热机制
 - [流体系统](docs/systems/fluid-system.md) - 流体管道、泵附件与传输规则
-- [传动轴系统](docs/archive/transmission_shaft.md) - 机械传动轴与锥齿轮
+- [动能传动系统](docs/systems/kinetic-transmission.md) - 机械传动轴、锥齿轮与 KU 传输
+- [作物杂交系统](docs/systems/crop-hybrid-system.md) - 作物育种、属性遗传与杂交规则
 - [已实现物品清单](docs/guides/item-implemented.md) - 当前已落地的物品列表
+- [物品与方块清单](docs/item-block-list.md) - 基于注解扫描生成的全量注册项列表
+- [配方实现状态](docs/recipe-status.md) - 已实现合成配方覆盖情况
 - [ComposeUI 声明式 GUI](docs/ui/compose-ui.md) - GUI 布局与绘制系统
 - [DrawContext 绘制方法参考](docs/ui/drawcontext-methods.md) - 绘制 API 说明
 - [Assets 清单](docs/inventory/assets-inventory.md) - 模组方块/物品资源清单
-- [生物群系颜色方块](docs/registry/biome-colored-blocks.md) - 实现随生物群系变色的方块
+- [JEI 集成](docs/systems/jei-integration.md) - JEI 类别、催化剂与配方展示集成
+- [声音系统](docs/systems/sound-system.md) - 机器音效播放与同步机制
 - [方块变体系统](docs/registry/block-variants.md) - 方块状态与模型变体
 - [唯一礼物物品防复制 TODO](docs/archive/unique-gift-item-anti-dup-todo.md) - 防复制方案草案与待办
 
@@ -107,8 +122,8 @@ ic2-fabric/
 
 本移植版本相比原版 IC2，以下功能尚未实现或正在开发中：
 
-### 🔧 动能发电系统（开发中）
-- **状态**：基础框架已完成，机械传动逻辑待完善
+### 🔧 动能发电系统（已初步实现）
+- **状态**：动能传动与发电主链路已打通，后续持续补全机型与配方
 - **已完成**：
   - 传动轴方块（木制、铁制、钢制、碳纤维）
   - 伞齿轮方块（90度转向）
@@ -159,3 +174,10 @@ ic2-fabric/
 - [Fabric 官方文档](https://fabricmc.net/wiki/)
 - [Fabric API GitHub](https://github.com/FabricMC/fabric)
 - [Minecraft 1.20.1 版本](https://www.minecraft.net/)
+
+## 版本与依赖
+
+- 游戏版本：Minecraft `1.20.1`
+- 加载器：Fabric
+- 依赖：Fabric API、Fabric Language Kotlin、Energy API
+- 兼容：Sinytra Connector（可在 Forge + Connector 环境运行）

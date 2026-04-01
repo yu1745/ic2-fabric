@@ -92,5 +92,5 @@
 所有使用 `@ModBlock` / `@ModItem` 注解注册的类及其中文翻译：
 
 - 自动生成文档：`docs/item-block-list.md`（149 方块 + 286 物品）
-- 生成脚本：`docs/generate_item_block_list.py`
-- 重新生成：运行 `python docs/generate_item_block_list.py`
+- 生成脚本：`scripts/generate_item_block_list.py`
+- 重新生成：运行 `python scripts/generate_item_block_list.py`

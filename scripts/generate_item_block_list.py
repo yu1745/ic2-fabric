@@ -5,10 +5,9 @@
 """
 
 import json
-import os
 import re
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent
 ZH_CN_PATH = PROJECT_ROOT / "src/main/resources/assets/ic2_120/lang/zh_cn.json"
@@ -113,7 +112,7 @@ def main():
 
     lines = [
         "# IC2-120 物品与方块列表\n",
-        f"> 由脚本自动生成（扫描 @ModBlock / @ModItem 注解 + zh_cn.json）\n",
+        "> 由脚本自动生成（扫描 @ModBlock / @ModItem 注解 + zh_cn.json）\n",
         f"- **方块总数**: {total_blocks}  |  **物品总数**: {total_items}",
         f"- **方块分组数**: {len(block_groups)}  |  **物品分组数**: {len(item_groups)}",
         "",

@@ -14,7 +14,7 @@
 
 IndustrialCraft 2 Minecraft 1.20.1 Fabric port, written in Kotlin.
 
-**Player Guide**: For gameplay and features, see [mod-features.md](mod特性.md) (Chinese). This document is for developers.
+**Player Guide**: For gameplay and features, see [mod-features.md](player-docs/README.md) (Chinese). This document is for developers.
 
 ## Project Features
 

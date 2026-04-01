@@ -138,7 +138,7 @@ find src -name "*ElectricKineticGenerator*" -o -name "*electric_kinetic_generato
 |--|----|------|
 | - [x] | block.ic2.generator | 火力发电机 |
 | - [x] | block.ic2.geo_generator | 地热发电机 |
-| - [ ] | block.ic2.kinetic_generator | 动能发电机 |
+| - [x] | block.ic2.kinetic_generator | 动能发电机 |
 | - [x] | block.ic2.rt_generator | 放射性同位素温差发电机 |
 | - [x] | block.ic2.semifluid_generator | 半流质发电机 |
 | - [x] | block.ic2.solar_generator | 太阳能发电机 |
@@ -149,7 +149,7 @@ find src -name "*ElectricKineticGenerator*" -o -name "*electric_kinetic_generato
 | - [x] | block.ic2.fluid_heat_generator | 流体加热机 |
 | - [x] | block.ic2.rt_heat_generator | 放射性同位素温差加热机 |
 | - [x] | block.ic2.solid_heat_generator | 固体加热机 |
-| - [ ] | block.ic2.electric_kinetic_generator | 电力动能发生机 |
+| - [x] | block.ic2.electric_kinetic_generator | 电力动能发生机 |
 | - [ ] | block.ic2.manual_kinetic_generator | 手摇动能发生机 |
 | - [ ] | block.ic2.steam_kinetic_generator | 蒸汽动能发生机 |
 | - [ ] | block.ic2.stirling_kinetic_generator | 斯特林动能发生器 |
@@ -174,11 +174,11 @@ find src -name "*ElectricKineticGenerator*" -o -name "*electric_kinetic_generato
 | - [x] | block.ic2.extractor | 提取机 |
 | - [x] | block.ic2.iron_furnace | 铁炉 |
 | - [x] | block.ic2.macerator | 打粉机 |
-| - [ ] | block.ic2.recycler | 回收机 |
+| - [x] | block.ic2.recycler | 回收机 |
 | - [x] | block.ic2.blast_furnace | 高炉 |
 | - [x] | block.ic2.block_cutter | 方块切割机 |
 | - [x] | block.ic2.centrifuge | 热能离心机 |
-| - [ ] | block.ic2.fermenter | 发酵机 |
+| - [x] | block.ic2.fermenter | 发酵机 |
 | - [x] | block.ic2.induction_furnace | 感应炉 |
 | - [x] | block.ic2.metal_former | 金属成型机 |
 | - [x] | block.ic2.ore_washing_plant | 洗矿机 |
@@ -186,15 +186,15 @@ find src -name "*ElectricKineticGenerator*" -o -name "*electric_kinetic_generato
 ### 机器 - 高级类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | block.ic2.advanced_miner | 高级采矿机 |
-| - [ ] | block.ic2.crop_harvester | 作物收割机 |
-| - [ ] | block.ic2.miner | 采矿机 |
-| - [ ] | block.ic2.mass_fabricator | 物质生成机 |
+| - [x] | block.ic2.advanced_miner | 高级采矿机 |
+| - [x] | block.ic2.crop_harvester | 作物收割机 |
+| - [x] | block.ic2.miner | 采矿机 |
+| - [x] | block.ic2.mass_fabricator | 物质生成机 |
 | - [ ] | block.ic2.uu_assembly_bench | UU 组装台 |
-| - [ ] | block.ic2.matter_generator | 物质生成机 |
-| - [ ] | block.ic2.pattern_storage | 模式存储机 |
-| - [ ] | block.ic2.replicator | 复制机 |
-| - [ ] | block.ic2.uu_scanner | 模式扫描机 |
+| - [x] | block.ic2.matter_generator | 物质生成机 |
+| - [x] | block.ic2.pattern_storage | 模式存储机 |
+| - [x] | block.ic2.replicator | 复制机 |
+| - [x] | block.ic2.uu_scanner | 模式扫描机 |
 
 ### 机器 - 流体处理类
 |  | ID | 名称 |
@@ -203,9 +203,9 @@ find src -name "*ElectricKineticGenerator*" -o -name "*electric_kinetic_generato
 | - [x] | block.ic2.fluid_bottler | 流体装罐机 |
 | - [ ] | block.ic2.fluid_distributor | 流体分配机 |
 | - [ ] | block.ic2.fluid_regulator | 流体流量调节机 |
-| - [ ] | block.ic2.liquid_heat_exchanger | 流体热交换机 |
-| - [ ] | block.ic2.pump | 泵 |
-| - [ ] | block.ic2.solar_distiller | 太阳能蒸馏机 |
+| - [x] | block.ic2.liquid_heat_exchanger | 流体热交换机 |
+| - [x] | block.ic2.pump | 泵 |
+| - [x] | block.ic2.solar_distiller | 太阳能蒸馏机 |
 | - [ ] | block.ic2.steam_generator | 蒸汽机 |
 | - [ ] | block.ic2.steam_repressurizer | 蒸汽 Re-Pressurizer |
 
@@ -213,9 +213,9 @@ find src -name "*ElectricKineticGenerator*" -o -name "*electric_kinetic_generato
 |  | ID | 名称 |
 |--|----|------|
 | - [ ] | block.ic2.item_buffer | 物品缓冲机 |
-| - [ ] | block.ic2.magnetizer | 磁化机 |
+| - [x] | block.ic2.magnetizer | 磁化机 |
 | - [ ] | block.ic2.sorting_machine | 电动分拣机 |
-| - [ ] | block.ic2.teleporter | 传送机 |
+| - [x] | block.ic2.teleporter | 传送机 |
 | - [ ] | block.ic2.terraformer | 地形转换机 |
 | - [x] | block.ic2.tesla_coil | 特斯拉线圈 |
 | - [x] | block.ic2.canner | 流体/固体装罐机 |
@@ -241,10 +241,10 @@ find src -name "*ElectricKineticGenerator*" -o -name "*electric_kinetic_generato
 | - [x] | block.ic2.cesu | CESU 储电箱 |
 | - [x] | block.ic2.mfe | MFE 储电箱 |
 | - [x] | block.ic2.mfsu | MFSU 储电箱 |
-| - [ ] | block.ic2.batbox_chargepad | 充电座 (BatBox) |
-| - [ ] | block.ic2.cesu_chargepad | 充电座 (CESU) |
-| - [ ] | block.ic2.mfe_chargepad | 充电座 (MFE) |
-| - [ ] | block.ic2.mfsu_chargepad | 充电座 (MFSU) |
+| - [x] | block.ic2.batbox_chargepad | 充电座 (BatBox) |
+| - [x] | block.ic2.cesu_chargepad | 充电座 (CESU) |
+| - [x] | block.ic2.mfe_chargepad | 充电座 (MFE) |
+| - [x] | block.ic2.mfsu_chargepad | 充电座 (MFSU) |
 
 ### 机器 - 电缆与变压器类
 |  | ID | 名称 |
@@ -303,7 +303,7 @@ find src -name "*ElectricKineticGenerator*" -o -name "*electric_kinetic_generato
 ### 作物类
 |  | ID | 名称 |
 |--|----|------|
-| - [ ] | block.ic2.crop | 作物 |
+| - [x] | block.ic2.crop | 作物 |
 | - [ ] | block.ic2.acacia_sapling_crop | 金合欢树苗作物 |
 | - [ ] | block.ic2.aurelia_crop | Aurelia 作物 |
 | - [ ] | block.ic2.beetroots_crop | 甜菜作物 |
@@ -321,7 +321,7 @@ find src -name "*ElectricKineticGenerator*" -o -name "*electric_kinetic_generato
 | - [ ] | block.ic2.ferru_crop | Ferru 作物 |
 | - [ ] | block.ic2.flax_crop | 亚麻作物 |
 | - [ ] | block.ic2.hops_crop | 啤酒花作物 |
-| - [ ] | block.ic2.crop_stick | 作物棍 |
+| - [x] | block.ic2.crop_stick | 作物棍 |
 
 ### 线缆泡沫类
 |  | ID | 名称 |
@@ -949,25 +949,33 @@ find src -name "*ElectricKineticGenerator*" -o -name "*electric_kinetic_generato
 |--|----|------|
 | - [x] | item.ic2.advanced_machine | 高级机械外壳 |
 | - [ ] | item.ic2.advanced_miner | 高级采矿机 |
-| - [ ] | item.ic2.batbox | 储电箱 |
-| - [ ] | item.ic2.batbox_chargepad | 充电座 (BatBox) |
+| - [x] | item.ic2.batbox | 储电箱 |
+| - [x] | item.ic2.batbox_chargepad | 充电座 (BatBox) |
 | - [ ] | item.ic2.batch_crafter | 批量工作台 |
-| - [ ] | item.ic2.blast_furnace | 高炉 |
+| - [x] | item.ic2.blast_furnace | 高炉 |
 | - [x] | item.ic2.block_cutter | 方块切割机 |
 | - [x] | item.ic2.bronze_block | 青铜块 |
-| - [ ] | item.ic2.bronze_storage_box | 青铜储物箱 |
+| - [x] | item.ic2.bronze_storage_box | 青铜储物箱 |
 | - [x] | item.ic2.bronze_tank | 青铜储罐 |
-| - [ ] | item.ic2.iron_tank | 铁储罐 |
-| - [ ] | item.ic2.steel_tank | 钢制储罐 |
-| - [ ] | item.ic2.iridium_tank | 铱储罐 |
-| - [ ] | item.ic2.canner | 流体/固体装罐机 |
-| - [ ] | item.ic2.cesu | CESU 储电箱 |
-| - [ ] | item.ic2.cesu_chargepad | 充电座 (CESU) |
-| - [ ] | item.ic2.centrifuge | 热能离心机 |
-| - [ ] | item.ic2.cesu | CESU 储电箱 |
+| - [x] | item.ic2.iron_tank | 铁储罐 |
+| - [x] | item.ic2.steel_tank | 钢制储罐 |
+| - [x] | item.ic2.iridium_tank | 铱储罐 |
+| - [x] | item.ic2.canner | 流体/固体装罐机 |
+| - [x] | item.ic2.cesu | CESU 储电箱 |
+| - [x] | item.ic2.cesu_chargepad | 充电座 (CESU) |
+| - [x] | item.ic2.centrifuge | 热能离心机 |
 | - [x] | item.ic2.chunk_loader | 区块加载器 |
 | - [x] | item.ic2.compressor | 压缩机 |
 | - [ ] | item.ic2.condenser | 冷凝机 |
+| - [x] | item.ic2.copper_block | 铜块 |
+| - [x] | item.ic2.copper_cable | 铜质导线 |
+| - [x] | item.ic2.crop_harvester | 作物收割机 |
+| - [x] | item.ic2.crop_stick | 作物棍 |
+| - [ ] | item.ic2.ces u | CESU 储电箱 |
+| - [x] | item.ic2.copper_block | 铜块 |
+| - [x] | item.ic2.copper_cable | 铜质导线 |
+| - [x] | item.ic2.crop_harvester | 作物收割机 |
+| - [x] | item.ic2.crop_stick | 作物棍 |
 | - [x] | item.ic2.copper_block | 铜块 |
 | - [ ] | item.ic2.copper_cable | 铜质导线 |
 | - [ ] | item.ic2.crop_harvester | 作物收割机 |
@@ -975,20 +983,20 @@ find src -name "*ElectricKineticGenerator*" -o -name "*electric_kinetic_generato
 | - [ ] | item.ic2.ces u | CESU 储电箱 |
 | - [x] | item.ic2.electric_furnace | 电炉 |
 | - [ ] | item.ic2.electrolyzer | 电解机 |
-| - [ ] | item.ic2.ev_transformer | 超高压变压器 |
-| - [ ] | item.ic2.extractor | 提取机 |
-| - [ ] | item.ic2.hv_transformer | 高压变压器 |
-| - [ ] | item.ic2.iron_cable | 高压导线 |
+| - [x] | item.ic2.ev_transformer | 超高压变压器 |
+| - [x] | item.ic2.extractor | 提取机 |
+| - [x] | item.ic2.hv_transformer | 高压变压器 |
+| - [x] | item.ic2.iron_cable | 高压导线 |
 | - [x] | item.ic2.iron_fence | 铁栅栏 |
-| - [ ] | item.ic2.lv_transformer | 低压变压器 |
-| - [ ] | item.ic2.mfe | MFE 储电箱 |
-| - [ ] | item.ic2.mfe_chargepad | 充电座 (MFE) |
-| - [ ] | item.ic2.macerator | 打粉机 |
-| - [ ] | item.ic2.metal_former | 金属成型机 |
-| - [ ] | item.ic2.mfsu | MFSU 储电箱 |
-| - [ ] | item.ic2.mfsu_chargepad | 充电座 (MFSU) |
-| - [ ] | item.ic2.miner | 采矿机 |
-| - [ ] | item.ic2.mv_transformer | 中压变压器 |
+| - [x] | item.ic2.lv_transformer | 低压变压器 |
+| - [x] | item.ic2.mfe | MFE 储电箱 |
+| - [x] | item.ic2.mfe_chargepad | 充电座 (MFE) |
+| - [x] | item.ic2.macerator | 打粉机 |
+| - [x] | item.ic2.metal_former | 金属成型机 |
+| - [x] | item.ic2.mfsu | MFSU 储电箱 |
+| - [x] | item.ic2.mfsu_chargepad | 充电座 (MFSU) |
+| - [x] | item.ic2.miner | 采矿机 |
+| - [x] | item.ic2.mv_transformer | 中压变压器 |
 | - [x] | item.ic2.induction_furnace | 感应炉 |
 
 
