@@ -527,7 +527,7 @@ class CannerBlockEntity(
         material.decrement(recipe.foodInputCount)
         if (container.isEmpty) setStack(SLOT_CONTAINER, ItemStack.EMPTY)
         if (material.isEmpty) setStack(SLOT_MATERIAL, ItemStack.EMPTY)
-        if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, result)
+        if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, result.copy())
         else outputSlot.increment(result.count)
     }
 

@@ -204,7 +204,7 @@ class ElectricFurnaceBlockEntity(
 
         if (sync.progress >= ElectricFurnaceSync.PROGRESS_MAX) {
             input.decrement(1)
-            if (outputSlot.isEmpty()) setStack(1, result)
+            if (outputSlot.isEmpty()) setStack(1, result.copy())
             else outputSlot.increment(result.count)
             sync.progress = 0
             markDirty()

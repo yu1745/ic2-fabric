@@ -223,7 +223,7 @@ class MaceratorBlockEntity(
 
         if (sync.progress >= MaceratorSync.PROGRESS_MAX) {
             input.decrement(1)
-            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result)
+            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result.copy())
             else outputSlot.increment(result.count)
             sync.progress = 0
             setActiveState(world, pos, state, false)

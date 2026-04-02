@@ -259,7 +259,7 @@ class MetalFormerBlockEntity(
             input.decrement(1)
 
             // 输出结果
-            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result)
+            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result.copy())
             else outputSlot.increment(result.count)
 
             sync.progress = 0

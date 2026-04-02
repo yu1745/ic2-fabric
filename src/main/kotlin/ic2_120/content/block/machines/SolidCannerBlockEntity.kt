@@ -239,7 +239,7 @@ class SolidCannerBlockEntity(
         if (sync.progress >= SolidCannerSync.PROGRESS_MAX) {
             tinCan.decrement(slot0InputCount)
             food.decrement(slot1InputCount)
-            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result)
+            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result.copy())
             else outputSlot.increment(result.count)
             sync.progress = 0
             markDirty()

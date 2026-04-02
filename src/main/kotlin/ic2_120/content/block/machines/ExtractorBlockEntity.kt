@@ -219,7 +219,7 @@ class ExtractorBlockEntity(
         val progressIncrement = speedMultiplier.toInt().coerceAtLeast(1)
         if (sync.progress >= ExtractorSync.PROGRESS_MAX) {
             input.decrement(1)
-            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result)
+            if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result.copy())
             else outputSlot.increment(result.count)
             sync.progress = 0
             markDirty()
