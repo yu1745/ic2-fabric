@@ -45,8 +45,18 @@ object ModEntities {
             .build("minecraft:boat")
     )
 
-    /** 在注解驱动扫描物品前调用，确保所有船实体类型已注册（供 @ModItem 船物品类引用） */
+    val LASER_PROJECTILE: EntityType<LaserProjectileEntity> = Registry.register(
+        Registries.ENTITY_TYPE,
+        Identifier(Ic2_120.MOD_ID, "laser_projectile"),
+        EntityType.Builder.create<LaserProjectileEntity>({ type, world -> LaserProjectileEntity(type, world) }, SpawnGroup.MISC)
+            .setDimensions(0.1f, 0.1f)
+            .maxTrackingRange(16)
+            .trackingTickInterval(1)
+            .build("laser_projectile")
+    )
+
+    /** 在注解驱动扫描物品前调用，确保所有实体类型已注册（供 @ModItem 物品类引用） */
     fun register() {
-        listOf(BROKEN_RUBBER_BOAT, CARBON_BOAT, RUBBER_BOAT, ELECTRIC_BOAT)
+        listOf(BROKEN_RUBBER_BOAT, CARBON_BOAT, RUBBER_BOAT, ELECTRIC_BOAT, LASER_PROJECTILE)
     }
 }

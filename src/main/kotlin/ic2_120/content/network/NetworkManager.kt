@@ -3,6 +3,7 @@ package ic2_120.content.network
 import ic2_120.Ic2_120
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.IridiumDrill
+import ic2_120.content.item.MiningLaserItem
 import ic2_120.content.item.NightVisionGoggles
 import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
@@ -29,6 +30,7 @@ object NetworkManager {
     val TOGGLE_IRIDIUM_SILK_TOUCH_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_iridium_silk_touch")
     val TOGGLE_JETPACK_FLIGHT_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_jetpack_flight")
     val TOGGLE_FOAM_SPRAYER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
+    val TOGGLE_MINING_LASER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
 
     fun register() {
         // 注册服务端接收处理器（如果需要）
@@ -131,6 +133,22 @@ object NetworkManager {
                             Text.translatable(
                                 if (multi) "message.ic2_120.foam_sprayer.mode_multi" else "message.ic2_120.foam_sprayer.mode_single"
                             ),
+                            true
+                        )
+                        return@execute
+                    }
+                }
+            }
+        }
+
+        ServerPlayNetworking.registerGlobalReceiver(TOGGLE_MINING_LASER_MODE_PACKET) { server, player, _, _, _ ->
+            server.execute {
+                for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
+                    val stack = player.getStackInHand(hand)
+                    if (stack.item is MiningLaserItem) {
+                        val newMode = MiningLaserItem.cycleMode(stack)
+                        player.sendMessage(
+                            Text.translatable(newMode.translationKey),
                             true
                         )
                         return@execute

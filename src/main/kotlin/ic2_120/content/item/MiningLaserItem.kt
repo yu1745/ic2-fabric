@@ -1,6 +1,10 @@
 package ic2_120.content.item
 
+import ic2_120.content.entity.LaserMode
+import ic2_120.content.entity.LaserProjectileEntity
+import ic2_120.content.entity.ModEntities
 import ic2_120.content.item.energy.EnergyCrystalItem
+import ic2_120.content.item.energy.IElectricTool
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -14,34 +18,51 @@ import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
-import net.minecraft.block.BlockState
+import net.minecraft.client.item.TooltipContext
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.registry.tag.BlockTags
+import net.minecraft.nbt.NbtCompound
+import net.minecraft.text.Text
 import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvent
-import net.minecraft.util.Identifier
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
+import net.minecraft.util.Formatting
 import net.minecraft.world.World
 
 /**
- * 采矿镭射枪：电动采矿工具，使用镭射束远程破坏方块。
- * 消耗耐久（后续可接 EU 能源系统）。
+ * 采矿镭射枪：电动远程采矿工具，发射弹射体破坏方块。
+ *
+ * Alt + 模式键 + 右键切换模式，右键发射。
+ * 实现了 [IElectricTool]，使用 EU 电量系统。
  */
 @ModItem(name = "mining_laser", tab = CreativeTab.IC2_TOOLS)
 class MiningLaserItem : Item(
-    FabricItemSettings()
-        .maxDamage(1000)
-) {
-    private val laserShootSound: SoundEvent = SoundEvent.of(Identifier("ic2", "item.laser.shoot"))
-
+    FabricItemSettings().maxCount(1)
+), IElectricTool {
 
     companion object {
+        private const val MODE_KEY = "LaserMode"
+
+        /** 从 ItemStack NBT 读取当前模式 */
+        fun getMode(stack: ItemStack): LaserMode {
+            val nbt = stack.nbt ?: return LaserMode.DEFAULT
+            return try { LaserMode.valueOf(nbt.getString(MODE_KEY)) } catch (_: Exception) { LaserMode.DEFAULT }
+        }
+
+        /** 向 ItemStack NBT 写入模式 */
+        fun setMode(stack: ItemStack, mode: LaserMode) {
+            stack.getOrCreateNbt().putString(MODE_KEY, mode.name)
+        }
+
+        /** 循环切换到下一个模式 */
+        fun cycleMode(stack: ItemStack): LaserMode {
+            val current = getMode(stack)
+            val next = LaserMode.cycle(current)
+            setMode(stack, next)
+            return next
+        }
+
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val alloy = Alloy::class.instance()
@@ -61,32 +82,93 @@ class MiningLaserItem : Item(
         }
     }
 
+    // ========== IElectricTool 实现 ==========
+
+    override val tier = 3
+    override val maxCapacity = 200_000L
+
+    override fun getEnergy(stack: ItemStack): Long = IElectricTool.getEnergy(stack)
+    override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
+
+    override fun isDamageable() = false
+
+    // ========== 使用逻辑 ==========
+
     override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
         val stack = user.getStackInHand(hand)
-        if (stack.damage >= stack.maxDamage) return TypedActionResult.pass(stack)
+        val mode = getMode(stack)
 
-        val hit = user.raycast(8.0, 0f, false)
-        if (hit is BlockHitResult) {
-            val pos = hit.blockPos
-            val state = world.getBlockState(pos)
-            if (!world.isClient && state.block.hardness >= 0 && canBreak(state)) {
-                val broken = world.breakBlock(pos, true, user)
-                if (broken) {
-                    stack.damage(1, user as LivingEntity) { it.sendToolBreakStatus(hand) }
-                    world.playSound(null, user.blockPos, laserShootSound, SoundCategory.PLAYERS, 1.0f, 1.0f)
-                    return TypedActionResult.success(stack, true)
+        // 电量不足
+        if (getEnergy(stack) < mode.energyCost) return TypedActionResult.pass(stack)
+
+        if (!world.isClient) {
+            val pitch = user.pitch
+            val yaw = user.yaw
+
+            if (mode.scatterCount > 1) {
+                // 散射/3x3 模式：发射多个弹体
+                val basePitch = pitch.toDouble()
+                val baseYaw = yaw.toDouble()
+                val spread = mode.scatterSpread
+                val count = mode.scatterCount
+                val cols = kotlin.math.sqrt(count.toDouble()).toInt()
+                val rows = (count + cols - 1) / cols
+
+                var idx = 0
+                for (row in 0 until rows) {
+                    for (col in 0 until cols) {
+                        if (idx >= count) break
+                        val dPitch = (row - (rows - 1) / 2.0) * spread / rows
+                        val dYaw = (col - (cols - 1) / 2.0) * spread / cols
+                        spawnProjectile(world, user, (basePitch + dPitch).toFloat(), (baseYaw + dYaw).toFloat(), mode)
+                        idx++
+                    }
                 }
+            } else {
+                // 单发模式
+                spawnProjectile(world, user, pitch, yaw, mode)
             }
+
+            // 扣除电量
+            setEnergy(stack, getEnergy(stack) - mode.energyCost)
         }
-        return TypedActionResult.pass(stack)
+
+        return TypedActionResult.success(stack, true)
     }
 
-    private fun canBreak(state: BlockState): Boolean {
-        if (state.isIn(BlockTags.WITHER_IMMUNE) || state.isIn(BlockTags.DRAGON_IMMUNE)) return false
-        return state.block.hardness >= 0
+    private fun spawnProjectile(
+        world: World,
+        owner: PlayerEntity,
+        pitch: Float,
+        yaw: Float,
+        laserMode: LaserMode
+    ) {
+        val projectile = LaserProjectileEntity(ModEntities.LASER_PROJECTILE, world)
+        projectile.init(owner, pitch, yaw, laserMode)
+        world.spawnEntity(projectile)
     }
 
-    override fun isDamageable() = true
+    // ========== Tooltip ==========
 
-    override fun getItemBarColor(stack: ItemStack) = 0x00BFFF // 电量/耐久条颜色（青蓝）
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: World?,
+        tooltip: MutableList<Text>,
+        context: TooltipContext
+    ) {
+        super.appendTooltip(stack, world, tooltip, context)
+        appendEnergyTooltip(stack, tooltip)
+    }
+
+    override fun isItemBarVisible(stack: ItemStack) = true
+    override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
+    override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
+
+    override fun postMine(
+        stack: ItemStack,
+        world: World,
+        state: net.minecraft.block.BlockState,
+        pos: net.minecraft.util.math.BlockPos,
+        miner: LivingEntity
+    ): Boolean = true
 }
