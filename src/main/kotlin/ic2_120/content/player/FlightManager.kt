@@ -12,7 +12,6 @@ import net.minecraft.server.MinecraftServer
 
 object FlightManager {
     private const val JETPACK_HOVER_KEY = "IsHover"
-    private const val QUANTUM_FLIGHT_ACTIVE_KEY = "QuantumFlightActive"
     private const val QUANTUM_FLIGHT_COST = 417L
     private val jetpackGrantedPlayers = mutableSetOf<java.util.UUID>()
 
@@ -120,7 +119,7 @@ object FlightManager {
     private fun handleQuantumFlight(player: PlayerEntity, chestStack: ItemStack) {
         if (!hasFullQuantumArmor(player)) {
             if (isQuantumFlightActive(player)) {
-                disableQuantumFlight(player, chestStack)
+                disableQuantumFlight(player)
             }
             return
         }
@@ -128,7 +127,7 @@ object FlightManager {
         val chestplate = chestStack.item as? QuantumChestplate ?: return
         val nbt = chestStack.orCreateNbt
         val flightEnabled = QuantumChestplate.isFlightEnabled(chestStack)
-        val isActive = nbt.getBoolean(QUANTUM_FLIGHT_ACTIVE_KEY)
+        val isActive = player.abilities.allowFlying
 
         if (player.isCreative || player.isSpectator || (player.abilities.flying && !isActive)) {
             return
@@ -136,7 +135,7 @@ object FlightManager {
 
         if (!flightEnabled) {
             if (isActive) {
-                disableQuantumFlight(player, chestStack)
+                disableQuantumFlight(player)
             }
             return
         }
@@ -144,13 +143,13 @@ object FlightManager {
         val currentEnergy = chestplate.getEnergy(chestStack)
         if (currentEnergy < QUANTUM_FLIGHT_COST) {
             nbt.putBoolean("QuantumFlightEnabled", false)
-            disableQuantumFlight(player, chestStack)
+            disableQuantumFlight(player)
             return
         }
 
         if (player.isOnGround || player.isTouchingWater || player.isClimbing) {
             if (isActive) {
-                disableQuantumFlight(player, chestStack)
+                disableQuantumFlight(player)
             }
             return
         }
@@ -160,11 +159,10 @@ object FlightManager {
             player.abilities.allowFlying = true
             player.abilities.flying = true
             player.sendAbilitiesUpdate()
-            nbt.putBoolean(QUANTUM_FLIGHT_ACTIVE_KEY, true)
         }
     }
 
-    private fun disableQuantumFlight(player: PlayerEntity, chestStack: ItemStack) {
+    private fun disableQuantumFlight(player: PlayerEntity) {
         if (!player.isCreative && !player.isSpectator) {
             var changed = false
             if (player.abilities.flying) {
@@ -178,9 +176,6 @@ object FlightManager {
             if (changed) {
                 player.sendAbilitiesUpdate()
             }
-        }
-        if (chestStack.item is QuantumChestplate) {
-            chestStack.orCreateNbt.putBoolean(QUANTUM_FLIGHT_ACTIVE_KEY, false)
         }
     }
 
@@ -200,7 +195,6 @@ object FlightManager {
     }
 
     private fun isQuantumFlightActive(player: PlayerEntity): Boolean {
-        val chest = player.getEquippedStack(EquipmentSlot.CHEST)
-        return chest.item is QuantumChestplate && chest.orCreateNbt.getBoolean(QUANTUM_FLIGHT_ACTIVE_KEY)
+        return player.abilities.allowFlying && player.getEquippedStack(EquipmentSlot.CHEST).item is QuantumChestplate
     }
 }
