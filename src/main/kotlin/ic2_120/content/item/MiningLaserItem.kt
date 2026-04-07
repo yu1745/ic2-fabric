@@ -32,6 +32,8 @@ import net.minecraft.text.Text
 import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
+import net.minecraft.item.ItemUsageContext
+import net.minecraft.util.ActionResult
 
 /**
  * 采矿镭射枪：电动远程采矿工具，发射弹射体破坏方块。
@@ -118,6 +120,14 @@ class MiningLaserItem : Item(
     }
 
     // ========== 使用逻辑 ==========
+
+    /**
+     * 禁止与方块/实体交互，始终返回 PASS。
+     * 这样游戏会跳过方块的 onUse 逻辑，直接调用 [use] 方法发射激光。
+     */
+    override fun useOnBlock(context: ItemUsageContext): ActionResult {
+        return ActionResult.PASS
+    }
 
     override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
         val stack = user.getStackInHand(hand)
