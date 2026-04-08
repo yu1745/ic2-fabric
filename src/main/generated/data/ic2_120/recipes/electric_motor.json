@@ -2,17 +2,20 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
+    "C": {
+      "item": "ic2_120:coil"
+    },
     "F": {
       "tag": "ic2_120:compat/ingots/iron"
     },
-    "Y": {
-      "item": "ic2_120:coil"
+    "T": {
+      "item": "ic2_120:tin_casing"
     }
   },
   "pattern": [
-    " Y ",
-    "YFY",
-    " Y "
+    " C ",
+    "TFT",
+    " C "
   ],
   "result": {
     "item": "ic2_120:electric_motor"

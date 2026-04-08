@@ -332,8 +332,9 @@ class ElectricMotor : Item(FabricItemSettings()) {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ElectricMotor::class.instance(), 1)
-                .pattern(" Y ").pattern("YFY").pattern(" Y ")
-                .input('Y', Coil::class.instance())
+                .pattern(" C ").pattern("TFT").pattern(" C ")
+                .input('T', TinCasing::class.instance())
+                .input('C', Coil::class.instance())
                 .input('F', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON))
                 .criterion(hasItem(Coil::class.instance()), conditionsFromItem(Coil::class.instance()))
                 .offerTo(exporter, ElectricMotor::class.id())
