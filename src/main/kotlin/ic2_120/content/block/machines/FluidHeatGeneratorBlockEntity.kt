@@ -2,11 +2,14 @@ package ic2_120.content.block.machines
 
 import ic2_120.content.block.FluidHeatGeneratorBlock
 import ic2_120.content.fluid.ModFluids
+import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.getFluidCellVariant
 import ic2_120.content.screen.FluidHeatGeneratorScreenHandler
 import ic2_120.content.sync.FluidHeatGeneratorSync
 import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.syncs.SyncedData
+import ic2_120.content.upgrade.FluidPipeUpgradeComponent
+import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
@@ -21,6 +24,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -52,9 +56,17 @@ class FluidHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, Storage<ItemVariant>, ExtendedScreenHandlerFactory {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IFluidPipeUpgradeSupport, Storage<ItemVariant>, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = FluidHeatGeneratorBlock.ACTIVE
+
+    // 流体管道升级支持属性
+    override var fluidPipeProviderEnabled: Boolean = false
+    override var fluidPipeReceiverEnabled: Boolean = false
+    override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
+    override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
+    override var fluidPipeProviderSide: Direction? = null
+    override var fluidPipeReceiverSide: Direction? = null
 
     enum class FuelType(
         val fluid: net.minecraft.fluid.Fluid,
@@ -86,7 +98,12 @@ class FluidHeatGeneratorBlockEntity(
 
         const val FUEL_SLOT = 0
         const val EMPTY_CONTAINER_SLOT = 1
-        const val INVENTORY_SIZE = 2
+        const val SLOT_UPGRADE_0 = 2
+        const val SLOT_UPGRADE_1 = 3
+        const val SLOT_UPGRADE_2 = 4
+        const val SLOT_UPGRADE_3 = 5
+        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        const val INVENTORY_SIZE = 6
 
         @Volatile
         private var fluidLookupRegistered = false
@@ -107,6 +124,7 @@ class FluidHeatGeneratorBlockEntity(
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
+            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(FUEL_SLOT), matcher = { isValid(FUEL_SLOT, it) })
         ),
         extractSlots = intArrayOf(FUEL_SLOT, EMPTY_CONTAINER_SLOT),
@@ -183,7 +201,15 @@ class FluidHeatGeneratorBlockEntity(
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
     override fun setStack(slot: Int, stack: ItemStack) {
-        inventory[slot] = stack
+        val isUpgradeSlot = slot in SLOT_UPGRADE_0..SLOT_UPGRADE_3
+        if (isUpgradeSlot && !stack.isEmpty && stack.count > 1) {
+            val single = stack.copy()
+            single.count = 1
+            inventory[slot] = single
+        } else {
+            inventory[slot] = stack
+            if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
+        }
         markDirty()
     }
 
@@ -192,6 +218,7 @@ class FluidHeatGeneratorBlockEntity(
         return when (slot) {
             FUEL_SLOT -> isSupportedFuelContainer(stack)
             EMPTY_CONTAINER_SLOT -> false // 禁止手动放入空容器槽
+            in SLOT_UPGRADE_0..SLOT_UPGRADE_3 -> stack.item is IUpgradeItem
             else -> false
         }
     }
@@ -316,7 +343,11 @@ class FluidHeatGeneratorBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+        FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
         processFuelContainers()
+        if (fluidPipeProviderEnabled) {
+            ejectFluidToNeighbors(world, pos, state)
+        }
         tickHeatMachine(world, pos, state)
     }
 
@@ -359,6 +390,30 @@ class FluidHeatGeneratorBlockEntity(
                     }
                 }
             }
+        }
+    }
+
+    private fun ejectFluidToNeighbors(world: World, pos: BlockPos, state: BlockState) {
+        if (fuelTankInternal.amount <= 0L || fuelTankInternal.variant.isBlank) return
+        val front = state.get(Properties.HORIZONTAL_FACING)
+        val ejectSide = fluidPipeProviderSide
+        for (dir in Direction.values()) {
+            if (dir == front) continue
+            if (ejectSide != null && dir != ejectSide) continue
+            val neighbor = FluidStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
+            val resource = fuelTankInternal.variant
+            val maxPerTick = minOf(FluidConstants.BUCKET / 4, fuelTankInternal.amount)
+            Transaction.openOuter().use { tx ->
+                val extracted = fuelTankInternal.extract(resource, maxPerTick, tx)
+                if (extracted <= 0L) return@use
+                val accepted = neighbor.insert(resource, extracted, tx)
+                if (accepted <= 0L) return@use
+                if (accepted < extracted) {
+                    fuelTankInternal.insert(resource, extracted - accepted, tx)
+                }
+                tx.commit()
+            }
+            if (fuelTankInternal.amount <= 0L) break
         }
     }
 

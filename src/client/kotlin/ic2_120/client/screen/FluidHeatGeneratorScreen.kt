@@ -11,7 +11,6 @@ import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text as McText
 
 @ModScreen(block = FluidHeatGeneratorBlock::class)
@@ -23,8 +22,9 @@ class FluidHeatGeneratorScreen(
     private val ui = ComposeUI()
 
     init {
-        backgroundWidth = PANEL_WIDTH
-        backgroundHeight = PANEL_HEIGHT
+        backgroundWidth = GUI_SIZE.width
+        backgroundHeight = GUI_SIZE.height
+        titleY = 4
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
@@ -33,8 +33,8 @@ class FluidHeatGeneratorScreen(
             context = context,
             screenX = x,
             screenY = y,
-            playerInvY = GuiSize.STANDARD.playerInvY,
-            hotbarY = GuiSize.STANDARD.hotbarY,
+            playerInvY = GUI_SIZE.playerInvY,
+            hotbarY = GUI_SIZE.hotbarY,
             slotSize = GuiSize.SLOT_SIZE
         )
     }
@@ -58,24 +58,44 @@ class FluidHeatGeneratorScreen(
         val sideTextX = left - sideTextWidth - 4
 
         val content: UiScope.() -> Unit = {
-            Column(
+            Row(
                 x = left + 8,
                 y = top + 8,
-                spacing = 6,
-                modifier = Modifier().width(backgroundWidth - 16).height(backgroundHeight - 16),
+                spacing = 8,
+                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
             ) {
-                Row(spacing = 8) {
-                    Text(title.string, color = 0xFFFFFF)
-                    Text(fuelText, color = 0xFFFFFF)
+                Column(
+                    spacing = 6,
+                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
+                ) {
+                    Row(spacing = 8) {
+                        Text(title.string, color = 0xFFFFFF)
+                        Text(fuelText, color = 0xFFFFFF)
+                    }
+
+                    // 机器槽位（燃料容器和空容器）
+                    Flex(
+                        direction = FlexDirection.ROW,
+                        justifyContent = JustifyContent.SPACE_BETWEEN,
+                    ) {
+                        SlotAnchor(id = "slot.${FluidHeatGeneratorBlockEntity.FUEL_SLOT}")
+                        SlotAnchor(id = "slot.${FluidHeatGeneratorBlockEntity.EMPTY_CONTAINER_SLOT}")
+                    }
                 }
 
-                // 机器槽位（燃料容器和空容器）
-                Flex(
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.SPACE_BETWEEN,
+                Column(
+                    spacing = 4,
+                    modifier = Modifier.EMPTY
+                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
+                        .padding(0, 8, 0, 0)
                 ) {
-                    SlotAnchor(id = "slot.${FluidHeatGeneratorBlockEntity.FUEL_SLOT}")
-                    SlotAnchor(id = "slot.${FluidHeatGeneratorBlockEntity.EMPTY_CONTAINER_SLOT}")
+                    for (slotIndex in FluidHeatGeneratorScreenHandler.SLOT_UPGRADE_START..FluidHeatGeneratorScreenHandler.SLOT_UPGRADE_END) {
+                        SlotAnchor(
+                            id = "slot.$slotIndex",
+                            width = FluidHeatGeneratorScreenHandler.SLOT_SIZE,
+                            height = FluidHeatGeneratorScreenHandler.SLOT_SIZE
+                        )
+                    }
                 }
             }
 
@@ -83,8 +103,8 @@ class FluidHeatGeneratorScreen(
                 left = left,
                 top = top,
                 playerInvStart = FluidHeatGeneratorScreenHandler.PLAYER_INV_START,
-                playerInvY = GuiSize.STANDARD.playerInvY,
-                hotbarY = GuiSize.STANDARD.hotbarY
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
             )
         }
 
@@ -113,8 +133,7 @@ class FluidHeatGeneratorScreen(
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
 
     companion object {
-        private val PANEL_WIDTH = GuiSize.STANDARD.width
-        private val PANEL_HEIGHT = GuiSize.STANDARD.height
+        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
     }
 }
 
