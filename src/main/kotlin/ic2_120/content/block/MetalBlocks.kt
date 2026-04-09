@@ -68,15 +68,57 @@ class BronzeBlock : Block(
 }
 
 // ========== 粗金属块（raw） ==========
-//todo 暂时不注册
-// @ModBlock(name = "raw_lead_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "raw_blocks")
-class RawLeadBlock : Block(AbstractBlock.Settings.copy(Blocks.RAW_IRON_BLOCK).strength(5.0f, 6.0f))
 
-// @ModBlock(name = "raw_tin_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "raw_blocks")
-class RawTinBlock : Block(AbstractBlock.Settings.copy(Blocks.RAW_IRON_BLOCK).strength(5.0f, 6.0f))
+@ModBlock(name = "raw_lead_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "raw_blocks")
+class RawLeadBlock : Block(AbstractBlock.Settings.copy(Blocks.RAW_IRON_BLOCK).strength(5.0f, 6.0f)) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val raw = RawLead::class.instance()
+            if (raw != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RawLeadBlock::class.item(), 1)
+                    .pattern("III").pattern("III").pattern("III")
+                    .input('I', raw)
+                    .criterion(hasItem(raw), conditionsFromItem(raw))
+                    .offerTo(exporter, RawLeadBlock::class.id())
+            }
+        }
+    }
+}
 
-// @ModBlock(name = "raw_uranium_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "raw_blocks")
-class RawUraniumBlock : Block(AbstractBlock.Settings.copy(Blocks.RAW_IRON_BLOCK).strength(5.0f, 6.0f))
+@ModBlock(name = "raw_tin_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "raw_blocks")
+class RawTinBlock : Block(AbstractBlock.Settings.copy(Blocks.RAW_IRON_BLOCK).strength(5.0f, 6.0f)) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val raw = RawTin::class.instance()
+            if (raw != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RawTinBlock::class.item(), 1)
+                    .pattern("III").pattern("III").pattern("III")
+                    .input('I', raw)
+                    .criterion(hasItem(raw), conditionsFromItem(raw))
+                    .offerTo(exporter, RawTinBlock::class.id())
+            }
+        }
+    }
+}
+
+@ModBlock(name = "raw_uranium_block", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "raw_blocks")
+class RawUraniumBlock : Block(AbstractBlock.Settings.copy(Blocks.RAW_IRON_BLOCK).strength(5.0f, 6.0f)) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val raw = RawUranium::class.instance()
+            if (raw != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RawUraniumBlock::class.item(), 1)
+                    .pattern("III").pattern("III").pattern("III")
+                    .input('I', raw)
+                    .criterion(hasItem(raw), conditionsFromItem(raw))
+                    .offerTo(exporter, RawUraniumBlock::class.id())
+            }
+        }
+    }
+}
 
 // ========== 金属块 ==========
 

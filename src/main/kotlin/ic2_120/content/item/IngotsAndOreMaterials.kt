@@ -116,6 +116,12 @@ class LeadIngot : Item(FabricItemSettings()) {
             )
             offerIngotSmelting(
                 exporter,
+                RawLead::class.instance(),
+                LeadIngot::class.instance(),
+                LeadIngot::class.recipeId("from_raw_lead_smelting")
+            )
+            offerIngotSmelting(
+                exporter,
                 CrushedLead::class.instance(),
                 LeadIngot::class.instance(),
                 LeadIngot::class.recipeId("from_crushed_lead_smelting")
@@ -225,6 +231,12 @@ class UraniumIngot : Item(FabricItemSettings()) {
             )
             offerIngotSmelting(
                 exporter,
+                RawUranium::class.instance(),
+                UraniumIngot::class.instance(),
+                UraniumIngot::class.recipeId("from_raw_uranium_smelting")
+            )
+            offerIngotSmelting(
+                exporter,
                 CrushedUranium::class.instance(),
                 UraniumIngot::class.instance(),
                 UraniumIngot::class.recipeId("from_crushed_uranium_smelting")
@@ -241,17 +253,16 @@ class UraniumIngot : Item(FabricItemSettings()) {
 
 // ========== 粗金属（raw，冶炼粗矿得） ==========
 
-//todo 暂时不注册
 /** 粗铅 */
-// @ModItem(name = "raw_lead", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals", materialTags = ["raw_materials/lead"])
+@ModItem(name = "raw_lead", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals", materialTags = ["raw_materials/lead"])
 class RawLead : Item(FabricItemSettings())
 
 /** 粗锡 */
-// @ModItem(name = "raw_tin", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals", materialTags = ["raw_materials/tin"])
+@ModItem(name = "raw_tin", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals", materialTags = ["raw_materials/tin"])
 class RawTin : Item(FabricItemSettings())
 
 /** 粗铀 */
-// @ModItem(name = "raw_uranium", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals", materialTags = ["raw_materials/uranium"])
+@ModItem(name = "raw_uranium", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals", materialTags = ["raw_materials/uranium"])
 class RawUranium : Item(FabricItemSettings())
 
 // ========== 粉碎矿石（打粉机产物） ==========
