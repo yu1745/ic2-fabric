@@ -288,6 +288,10 @@ class PumpBlockEntity(
         val euNeed = (PumpSync.ENERGY_PER_BUCKET * energyMultiplier).toLong().coerceAtLeast(1L)
         if (sync.amount < euNeed) return false
 
+        // 提前检查：储罐空间不足 1 桶时不抽取，避免浪费流体和能量
+        val spaceLeft = tankInternal.capacity - tankInternal.amount
+        if (spaceLeft < FluidConstants.BUCKET) return false
+
         val front = state.get(Properties.HORIZONTAL_FACING)
         val positions = (1..3).map { pos.offset(front, it) }
         for (target in positions) {
@@ -311,8 +315,6 @@ class PumpBlockEntity(
 
     private fun tryDrainFromStorage(world: World, targetPos: BlockPos, fromSide: Direction): Long {
         val external = FluidStorage.SIDED.find(world, targetPos, fromSide) ?: return 0L
-        if (tankInternal.amount >= tankInternal.capacity) return 0L
-        val maxDrain = minOf(FluidConstants.BUCKET, tankInternal.capacity - tankInternal.amount)
 
         for (view in external) {
             if (view.isResourceBlank) continue
@@ -321,7 +323,7 @@ class PumpBlockEntity(
             if (view.amount <= 0L) continue
 
             Transaction.openOuter().use { tx ->
-                val extracted = view.extract(resource, maxDrain, tx)
+                val extracted = view.extract(resource, FluidConstants.BUCKET, tx)
                 if (extracted <= 0L) return@use
                 val inserted = tankInternal.insert(resource, extracted, tx)
                 if (inserted <= 0L) return@use
@@ -386,16 +388,21 @@ class PumpBlockEntity(
     private fun ejectFluidToNeighbors(world: World, pos: BlockPos, state: BlockState) {
         if (tankInternal.amount <= 0L || tankInternal.variant.isBlank) return
         val front = state.get(Properties.HORIZONTAL_FACING)
+        val ejectSide = fluidPipeProviderSide
         for (dir in Direction.values()) {
             if (dir == front) continue
+            if (ejectSide != null && dir != ejectSide) continue
             val neighbor = FluidStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
             val resource = tankInternal.variant
-            val maxPerTick = FluidConstants.BUCKET / 4
+            val maxPerTick = minOf(FluidConstants.BUCKET / 4, tankInternal.amount)
             Transaction.openOuter().use { tx ->
                 val extracted = tankInternal.extract(resource, maxPerTick, tx)
                 if (extracted <= 0L) return@use
                 val accepted = neighbor.insert(resource, extracted, tx)
                 if (accepted <= 0L) return@use
+                if (accepted < extracted) {
+                    tankInternal.insert(resource, extracted - accepted, tx)
+                }
                 tx.commit()
             }
             if (tankInternal.amount <= 0L) break
