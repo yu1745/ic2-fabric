@@ -25,6 +25,21 @@ class PipeNetwork {
     var primaryFluidId: String? = null
         private set
 
+    /** Cross-tick path cache: (start, end) -> path. Invalidated on topology change. */
+    private val pathCache = mutableMapOf<PathCacheKey, List<Long>>()
+
+    /** Reusable buffer for remaining capacities, avoids per-tick allocation. */
+    private val reusableRemaining = mutableMapOf<Long, Long>()
+
+    /** Pipes that had fluid flow this tick. */
+    private val currentTouchedPipes = HashSet<Long>()
+
+    /** Pipes that had fluid flow last tick (for clearing stale load display). */
+    private val lastTouchedPipes = HashSet<Long>()
+
+    /** Last synced fluid ID, used to detect fluid type changes that require full resync. */
+    private var lastSyncedFluidId: String? = null
+
     fun addPipe(pos: BlockPos, block: BasePipeBlock) {
         val key = pos.asLong()
         pipes.add(key)
@@ -33,10 +48,14 @@ class PipeNetwork {
         ).toLong().coerceAtLeast(1L)
         capacityByPipe[key] = amountPerTick
         topologyCache = null
+        pathCache.clear()
     }
 
     fun invalidateConnectionCaches() {
         topologyCache = null
+        pathCache.clear()
+        lastSyncedFluidId = null
+        lastTouchedPipes.clear()
     }
 
     fun tickIfNeeded(world: World) {
@@ -49,7 +68,13 @@ class PipeNetwork {
         if (pipes.isEmpty()) return
 
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
-        val remaining = topology.pipeRates.toMutableMap()
+
+        reusableRemaining.clear()
+        for ((k, v) in topology.pipeRates) reusableRemaining[k] = v
+        val remaining = reusableRemaining
+
+        currentTouchedPipes.clear()
+
         val providers = mutableListOf<ProviderEndpoint>()
         val receivers = mutableListOf<ReceiverEndpoint>()
 
@@ -103,23 +128,10 @@ class PipeNetwork {
             val failedProviderEntries = mutableSetOf<Long>()
 
             while (true) {
-                val best = providers
-                    .mapNotNull { provider ->
-                        if (provider.entryPipe in failedProviderEntries) return@mapNotNull null
-                        if (receiverTarget != null && provider.variant.fluid != receiverTarget) return@mapNotNull null
-                        if (!canReceiverAccept(receiver.storage, provider.variant)) return@mapNotNull null
-                        val path = shortestPath(provider.entryPipe, receiver.entryPipe, topology.neighbors, remaining) ?: return@mapNotNull null
-                        Triple(provider, path, path.minOf { remaining[it] ?: 0L })
-                    }
-                    .filter { it.third > 0L }
-                    .minByOrNull { it.second.size }
-
+                val best = findBestPath(receiver, providers, failedProviderEntries, receiverTarget, topology.neighbors, remaining)
                 if (best == null) break
 
-                val provider = best.first
-                val path = best.second
-                val pathCap = best.third
-
+                val (provider, path, pathCap) = best
                 val moved = transferOnce(provider.storage, receiver.storage, provider.variant, pathCap)
                 if (moved <= 0L) {
                     failedProviderEntries.add(provider.entryPipe)
@@ -128,11 +140,117 @@ class PipeNetwork {
                 }
                 for (pipe in path) {
                     remaining[pipe] = (remaining[pipe] ?: 0L) - moved
+                    currentTouchedPipes.add(pipe)
                 }
             }
         }
 
         syncPipeLoad(world, topology.pipeRates, remaining)
+    }
+
+    /**
+     * Find the best (shortest path) provider for a receiver.
+     * Uses cached paths when available; for cache misses, runs a single multi-source BFS
+     * from all uncached providers to the receiver — O(V+E) instead of O(P*(V+E)).
+     */
+    private fun findBestPath(
+        receiver: ReceiverEndpoint,
+        providers: List<ProviderEndpoint>,
+        failedProviders: Set<Long>,
+        receiverTarget: net.minecraft.fluid.Fluid?,
+        neighbors: Map<Long, List<Long>>,
+        remaining: Map<Long, Long>
+    ): Triple<ProviderEndpoint, List<Long>, Long>? {
+        val uncachedProviders = mutableListOf<ProviderEndpoint>()
+        var best: Triple<ProviderEndpoint, List<Long>, Long>? = null
+
+        for (provider in providers) {
+            if (provider.entryPipe in failedProviders) continue
+            if (receiverTarget != null && provider.variant.fluid != receiverTarget) continue
+            if (!canReceiverAccept(receiver.storage, provider.variant)) continue
+
+            val cachedPath = pathCache[PathCacheKey(provider.entryPipe, receiver.entryPipe)]
+            if (cachedPath != null && cachedPath.all { (remaining[it] ?: 0L) > 0L }) {
+                val cap = cachedPath.minOf { remaining[it] ?: 0L }
+                if (cap > 0L && (best == null || cachedPath.size < best.second.size)) {
+                    best = Triple(provider, cachedPath, cap)
+                }
+            } else {
+                uncachedProviders.add(provider)
+            }
+        }
+
+        if (uncachedProviders.isEmpty()) return best
+
+        // Single multi-source BFS from all uncached providers to receiver — O(V+E)
+        val prev = multiSourceBfs(uncachedProviders.map { it.entryPipe }, receiver.entryPipe, neighbors, remaining)
+        if (prev == null) return best
+
+        for (provider in uncachedProviders) {
+            val path = tracePath(provider.entryPipe, receiver.entryPipe, prev) ?: continue
+            pathCache[PathCacheKey(provider.entryPipe, receiver.entryPipe)] = path
+            pathCache[PathCacheKey(receiver.entryPipe, provider.entryPipe)] = path.reversed()
+
+            val cap = path.minOf { remaining[it] ?: 0L }
+            if (cap > 0L && (best == null || path.size < best.second.size)) {
+                best = Triple(provider, path, cap)
+            }
+        }
+
+        return best
+    }
+
+    /**
+     * Multi-source BFS from all [starts] targeting [target].
+     * Returns prev map where prev[node] = predecessor (sentinel: prev[start] = start), or null if unreachable.
+     * Runs in O(V+E) regardless of how many start nodes there are.
+     */
+    private fun multiSourceBfs(
+        starts: List<Long>,
+        target: Long,
+        neighbors: Map<Long, List<Long>>,
+        remaining: Map<Long, Long>
+    ): Map<Long, Long>? {
+        if ((remaining[target] ?: 0L) > 0L && starts.any { it == target }) {
+            return mapOf(target to target)
+        }
+
+        val prev = HashMap<Long, Long>(pipes.size.coerceAtLeast(16))
+        val queue = ArrayDeque<Long>()
+
+        for (s in starts) {
+            if ((remaining[s] ?: 0L) <= 0L) continue
+            prev[s] = s
+            queue.add(s)
+        }
+
+        while (queue.isNotEmpty()) {
+            val cur = queue.removeFirst()
+            for (next in neighbors[cur].orEmpty()) {
+                if ((remaining[next] ?: 0L) <= 0L) continue
+                if (next in prev) continue
+                prev[next] = cur
+                if (next == target) return prev
+                queue.add(next)
+            }
+        }
+
+        return if (target in prev) prev else null
+    }
+
+    /** Reconstruct path from [start] to [end] using prev map from multi-source BFS. */
+    private fun tracePath(start: Long, end: Long, prev: Map<Long, Long>): List<Long>? {
+        if (start !in prev || end !in prev) return null
+        val path = mutableListOf<Long>()
+        var p = end
+        while (p != prev[p]) {
+            path.add(p)
+            val pp = prev[p] ?: return null
+            p = pp
+        }
+        path.add(start)
+        path.reverse()
+        return path
     }
 
     private fun transferOnce(provider: Storage<FluidVariant>, receiver: Storage<FluidVariant>, variant: FluidVariant, cap: Long): Long {
@@ -189,34 +307,6 @@ class PipeNetwork {
         }
     }
 
-    private fun shortestPath(start: Long, end: Long, neighbors: Map<Long, List<Long>>, remaining: Map<Long, Long>): List<Long>? {
-        if (start == end && (remaining[start] ?: 0L) > 0L) return listOf(start)
-        val queue = ArrayDeque<Long>()
-        val prev = mutableMapOf<Long, Long?>()
-        queue.add(start)
-        prev[start] = null
-        while (queue.isNotEmpty()) {
-            val cur = queue.removeFirst()
-            for (next in neighbors[cur].orEmpty()) {
-                if ((remaining[next] ?: 0L) <= 0L) continue
-                if (next in prev) continue
-                prev[next] = cur
-                if (next == end) {
-                    val path = mutableListOf<Long>()
-                    var p: Long? = end
-                    while (p != null) {
-                        path.add(p)
-                        p = prev[p]
-                    }
-                    path.reverse()
-                    return path
-                }
-                queue.add(next)
-            }
-        }
-        return null
-    }
-
     private fun buildTopology(world: World): TopologyCache {
         val neighbors = mutableMapOf<Long, MutableList<Long>>()
         val boundaries = mutableListOf<BoundaryEdge>()
@@ -245,18 +335,40 @@ class PipeNetwork {
     }
 
     private fun syncPipeLoad(world: World, rates: Map<Long, Long>, remaining: Map<Long, Long>) {
-        for (pipePos in pipes) {
-            val rate = rates[pipePos] ?: continue
-            val used = rate - (remaining[pipePos] ?: rate)
-            val pos = BlockPos.fromLong(pipePos)
-            val be = world.getBlockEntity(pos) as? PipeBlockEntity ?: continue
-            val fluidChanged = be.currentFluidId != primaryFluidId
-            be.pipeLoad = used
-            be.currentFluidId = primaryFluidId
-            if (fluidChanged) {
-                world.updateListeners(pos, be.cachedState, be.cachedState, net.minecraft.block.Block.NOTIFY_LISTENERS)
+        val fluidTypeChanged = primaryFluidId != lastSyncedFluidId
+
+        if (fluidTypeChanged || currentTouchedPipes.isNotEmpty()) {
+            val pipesToUpdate = if (fluidTypeChanged) pipes else currentTouchedPipes
+            for (pipePos in pipesToUpdate) {
+                val rate = rates[pipePos] ?: continue
+                val used = rate - (remaining[pipePos] ?: rate)
+                val pos = BlockPos.fromLong(pipePos)
+                val be = world.getBlockEntity(pos) as? PipeBlockEntity ?: continue
+                val beFluidChanged = be.currentFluidId != primaryFluidId
+                if (be.pipeLoad == used && !beFluidChanged) continue
+                be.pipeLoad = used
+                be.currentFluidId = primaryFluidId
+                if (beFluidChanged) {
+                    world.updateListeners(pos, be.cachedState, be.cachedState, net.minecraft.block.Block.NOTIFY_LISTENERS)
+                }
             }
         }
+
+        // Clear load on pipes that had flow last tick but not this tick
+        if (!fluidTypeChanged) {
+            for (pipePos in lastTouchedPipes) {
+                if (pipePos in currentTouchedPipes) continue
+                val pos = BlockPos.fromLong(pipePos)
+                val be = world.getBlockEntity(pos) as? PipeBlockEntity ?: continue
+                if (be.pipeLoad == 0L) continue
+                be.pipeLoad = 0L
+            }
+        }
+
+        // Rotate touched pipe buffers for next tick
+        lastTouchedPipes.clear()
+        lastTouchedPipes.addAll(currentTouchedPipes)
+        lastSyncedFluidId = primaryFluidId
     }
 
     private data class ProviderEndpoint(
@@ -281,5 +393,10 @@ class PipeNetwork {
         val pipeRates: Map<Long, Long>,
         val neighbors: Map<Long, List<Long>>,
         val boundaries: List<BoundaryEdge>
+    )
+
+    private data class PathCacheKey(
+        val start: Long,
+        val end: Long
     )
 }

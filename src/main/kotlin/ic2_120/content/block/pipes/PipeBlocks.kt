@@ -184,12 +184,14 @@ abstract class BasePipeBlock(
         if (world.isClient) null
         else checkType(type, PipeBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
-    /** Pre-computed shape cache for all block states. Populated in init after stateManager is ready. */
+    /** Pre-computed shape cache for all block states. Uses IdentityHashMap since BlockState is a flyweight. */
     protected var shapeCache: Map<BlockState, VoxelShape> = emptyMap()
 
     /** Call after setDefaultState to populate the shape cache. */
     protected fun buildShapeCache() {
-        shapeCache = stateManager.states.associateWith { pipeShape(it) }
+        val map = java.util.IdentityHashMap<BlockState, VoxelShape>()
+        for (state in stateManager.states) map[state] = pipeShape(state)
+        shapeCache = map
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
