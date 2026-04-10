@@ -82,6 +82,14 @@ class ElectricFurnaceScreen(
                     EnergyBar(progressFrac, modifier = Modifier.EMPTY.fractionWidth(1.0f))
                     SlotHost(ElectricFurnaceScreenHandler.SLOT_OUTPUT_INDEX)
                 }
+                Flex(
+                    direction = FlexDirection.ROW,
+                    alignItems = AlignItems.CENTER,
+                    gap = 4
+                ) {
+                    SlotHost(ElectricFurnaceScreenHandler.SLOT_DISCHARGING_INDEX)
+                    // Text("放电槽", color = 0xAAAAAA, shadow = false)
+                }
             }
 
             playerInventoryAndHotbarSlotAnchors(
