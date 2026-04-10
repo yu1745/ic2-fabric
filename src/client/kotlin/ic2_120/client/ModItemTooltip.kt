@@ -4,6 +4,8 @@ import ic2_120.Ic2_120
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.KineticGeneratorBlock
 import ic2_120.content.block.WindKineticGeneratorBlock
+import ic2_120.content.block.WaterKineticGeneratorBlock
+import ic2_120.content.block.ManualKineticGeneratorBlock
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.block.transmission.BevelGearBlock
 import ic2_120.content.block.transmission.CarbonTransmissionShaftBlock
@@ -50,6 +52,12 @@ object ModItemTooltip {
                     is CarbonTransmissionShaftBlock -> addKineticTransmissionTooltip(lines, 8192, 0)
                     is BevelGearBlock -> addKineticTransmissionTooltip(lines, 2048, 3)
                     is WindKineticGeneratorBlock -> {
+                        lines.add(Text.translatable("tooltip.ic2_120.kinetic_source").formatted(Formatting.GRAY))
+                    }
+                    is WaterKineticGeneratorBlock -> {
+                        lines.add(Text.translatable("tooltip.ic2_120.kinetic_source").formatted(Formatting.GRAY))
+                    }
+                    is ManualKineticGeneratorBlock -> {
                         lines.add(Text.translatable("tooltip.ic2_120.kinetic_source").formatted(Formatting.GRAY))
                     }
                     is KineticGeneratorBlock -> {
