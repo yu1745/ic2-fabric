@@ -36,7 +36,19 @@ import ic2_120.registry.annotation.RecipeProvider
 // ========== 碳材料类 ==========
 
 @ModItem(name = "carbon_fibre", tab = CreativeTab.IC2_MATERIALS, group = "carbon_materials")
-class CarbonFibre : Item(FabricItemSettings())
+class CarbonFibre : Item(FabricItemSettings()) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonFibre::class.instance(), 1)
+                .pattern("CC")
+                .pattern("CC")
+                .input('C', CoalDust::class.instance())
+                .criterion(hasItem(CoalDust::class.instance()), conditionsFromItem(CoalDust::class.instance()))
+                .offerTo(exporter, CarbonFibre::class.id())
+        }
+    }
+}
 
 @ModItem(name = "carbon_mesh", tab = CreativeTab.IC2_MATERIALS, group = "carbon_materials")
 class CarbonMesh : Item(FabricItemSettings()) {
