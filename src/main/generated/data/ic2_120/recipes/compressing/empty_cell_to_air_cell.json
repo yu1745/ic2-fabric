@@ -1,0 +1,11 @@
+{
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "item": "ic2_120:empty_cell"
+  },
+  "input_count": 1,
+  "result": {
+    "count": 1,
+    "item": "ic2_120:air_cell"
+  }
+}

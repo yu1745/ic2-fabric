@@ -108,7 +108,10 @@ object CompressorRecipeDatagen {
         Entry("coal_block_to_diamond", CoalChunk::class.instance(), 1, Items.DIAMOND, 1),
 
         // 青铜块 -> 铁柄(青铜)
-        Entry("bronze_block_to_bronze_shaft", BronzeBlock::class.item(), 1, ToolHandleBronzeItem::class.instance(), 1)
+        Entry("bronze_block_to_bronze_shaft", BronzeBlock::class.item(), 1, ToolHandleBronzeItem::class.instance(), 1),
+
+        // 空单元 -> 压缩空气单元
+        Entry("empty_cell_to_air_cell", EmptyCell::class.instance(), 1, AirCell::class.instance(), 1)
     )
 
     fun allEntries(): List<Entry> = entries
