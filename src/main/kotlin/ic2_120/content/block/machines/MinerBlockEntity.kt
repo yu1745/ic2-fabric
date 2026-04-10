@@ -131,6 +131,7 @@ abstract class BaseMinerBlockEntity(
         private const val NBT_ENERGY_STORED = "EnergyStored"
         private const val NBT_TANK_AMOUNT = "TankAmount"
         private const val NBT_TANK_FLUID = "TankFluid"
+        private const val NBT_PENDING_BREAK_ENERGY = "PendingBreakEnergy"
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -150,6 +151,7 @@ abstract class BaseMinerBlockEntity(
     )
     private val workOffset = Random.nextInt(20)
     private var cursorInitialized = false
+    private var pendingBreakEnergy: Long = 0L
 
     val syncedData = SyncedData(this)
 
@@ -260,6 +262,7 @@ abstract class BaseMinerBlockEntity(
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         cursorInitialized = nbt.getBoolean(NBT_CURSOR_INITIALIZED)
         tankInternal.setStored(nbt.getString(NBT_TANK_FLUID), nbt.getLong(NBT_TANK_AMOUNT))
+        pendingBreakEnergy = nbt.getLong(NBT_PENDING_BREAK_ENERGY)
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -271,6 +274,7 @@ abstract class BaseMinerBlockEntity(
         nbt.putBoolean(NBT_CURSOR_INITIALIZED, cursorInitialized)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.amount)
         nbt.putString(NBT_TANK_FLUID, if (tankInternal.variant.isBlank) "" else Registries.FLUID.getId(tankInternal.variant.fluid).toString())
+        nbt.putLong(NBT_PENDING_BREAK_ENERGY, pendingBreakEnergy)
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -326,40 +330,87 @@ abstract class BaseMinerBlockEntity(
         var minedThisCycle = false
         var pumpedThisCycle = false
 
+        // 有待挖掘的矿石：每 tick 将充入的能量转入待挖掘池，攒够了再挖
+        if (pendingBreakEnergy > 0L) {
+            val drillBreakCost = getDrillBreakCost()
+            if (drillBreakCost == null) {
+                pendingBreakEnergy = 0L
+            } else {
+                val silkMultiplier = if (sync.silkTouch != 0) MinerSync.SILK_TOUCH_MULTIPLIER else 1L
+                val breakEnergy = (drillBreakCost * silkMultiplier * energyMultiplier).toLong().coerceAtLeast(1L)
+
+                val toReserve = minOf(sync.amount, breakEnergy - pendingBreakEnergy)
+                if (toReserve > 0L) {
+                    sync.consumeEnergy(toReserve)
+                    pendingBreakEnergy += toReserve
+                }
+
+                if (pendingBreakEnergy >= breakEnergy) {
+                    val targetPos = pos.add(sync.cursorX, sync.cursorY - pos.y, sync.cursorZ)
+                    val blockState = world.getBlockState(targetPos)
+                    if (!blockState.isAir && shouldMine(world, targetPos, blockState) && canMineWithCurrentDrill(blockState)) {
+                        pendingBreakEnergy = 0L
+                        advanceCursor(scannerType.scanRadius)
+                        mineBlock(world as ServerWorld, targetPos, blockState)
+                        active = true
+                        minedThisCycle = true
+                    } else {
+                        pendingBreakEnergy = 0L
+                    }
+                } else {
+                    active = true
+                }
+            }
+            sync.energy = sync.amount.toInt().coerceAtLeast(0)
+            setActiveState(world, pos, state, active)
+            sync.syncCurrentTickFlow()
+            return
+        }
+
         // 每个工作周期可连续扫描多个格子，但最多只执行一次有效挖掘。
         while (sync.running != 0) {
-            if (sync.consumeEnergy(scanCost) <= 0L) break
-
             val targetPos = ensureAndGetCursorTarget(scannerType.scanRadius)
-            advanceCursor(scannerType.scanRadius)
-            scannedThisCycle++
 
             if (sync.running == 0 || targetPos.y < world.bottomY || targetPos.y < -64) {
                 sync.running = 0
                 break
             }
 
+            val blockState = world.getBlockState(targetPos)
+
+            // 先检查是否可挖掘（不消耗扫描能量）
+            if (shouldMine(world, targetPos, blockState) && canMineWithCurrentDrill(blockState)) {
+                val breakCost = getDrillBreakCost() ?: 0L
+                if (breakCost <= 0L) break
+
+                val silkMultiplier = if (sync.silkTouch != 0) MinerSync.SILK_TOUCH_MULTIPLIER else 1L
+                val breakEnergy = (breakCost * silkMultiplier * energyMultiplier).toLong().coerceAtLeast(1L)
+
+                if (sync.consumeEnergy(breakEnergy) > 0L) {
+                    advanceCursor(scannerType.scanRadius)
+                    mineBlock(world as ServerWorld, targetPos, blockState)
+                    active = true
+                    minedThisCycle = true
+                } else {
+                    // 能量不足，将现有能量转入待挖掘池，下一 tick 继续攒
+                    pendingBreakEnergy = sync.amount
+                    if (pendingBreakEnergy > 0L) sync.consumeEnergy(pendingBreakEnergy)
+                }
+                break
+            }
+
+            // 非矿石方块，消耗扫描能量并前进
+            if (sync.consumeEnergy(scanCost) <= 0L) break
+
             if (tryAutoPumpFluid(world, pos, state, targetPos)) {
+                advanceCursor(scannerType.scanRadius)
                 active = true
                 pumpedThisCycle = true
                 break
             }
 
-            val blockState = world.getBlockState(targetPos)
-            if (!shouldMine(world, targetPos, blockState)) continue
-            if (!canMineWithCurrentDrill(blockState)) continue
-
-            val breakCost = getDrillBreakCost() ?: 0L
-            if (breakCost <= 0L) break
-
-            val silkMultiplier = if (sync.silkTouch != 0) MinerSync.SILK_TOUCH_MULTIPLIER else 1L
-            val breakEnergy = (breakCost * silkMultiplier * energyMultiplier).toLong().coerceAtLeast(1L)
-            if (sync.consumeEnergy(breakEnergy) > 0L) {
-                mineBlock(world as ServerWorld, targetPos, blockState)
-                active = true
-                minedThisCycle = true
-            }
-            break
+            advanceCursor(scannerType.scanRadius)
+            scannedThisCycle++
         }
 
         sync.energy = sync.amount.toInt().coerceAtLeast(0)

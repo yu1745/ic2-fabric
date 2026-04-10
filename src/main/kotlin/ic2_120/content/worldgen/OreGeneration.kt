@@ -20,6 +20,10 @@ object OreGeneration {
 
     val ORE_TIN_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
         RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_tin"))
+    val ORE_TIN_DEEP_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
+        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_tin_deep"))
+    val ORE_TIN_UPPER_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
+        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_tin_upper"))
     val ORE_LEAD_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
         RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_lead"))
     val ORE_URANIUM_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
@@ -34,6 +38,16 @@ object OreGeneration {
         BiomeModifications.addFeature(
             BiomeSelectors.all(),
             GenerationStep.Feature.UNDERGROUND_ORES,
+            ORE_TIN_DEEP_PLACED_KEY
+        )
+        BiomeModifications.addFeature(
+            BiomeSelectors.all(),
+            GenerationStep.Feature.UNDERGROUND_ORES,
+            ORE_TIN_UPPER_PLACED_KEY
+        )
+        BiomeModifications.addFeature(
+            BiomeSelectors.all(),
+            GenerationStep.Feature.UNDERGROUND_ORES,
             ORE_LEAD_PLACED_KEY
         )
         BiomeModifications.addFeature(
@@ -41,15 +55,6 @@ object OreGeneration {
             GenerationStep.Feature.UNDERGROUND_ORES,
             ORE_URANIUM_PLACED_KEY
         )
-
-        // 出生点 3x3 区块矿石数量打日志（已注释）
-        // ServerWorldEvents.LOAD.register { _, world ->
-        //     if (world.registryKey != World.OVERWORLD) return@register
-        //     world.server.execute {
-        //         logSpawnOreCounts(world)
-        //     }
-        // }
     }
 
-    // private fun logSpawnOreCounts(world: World) { ... }
 }
