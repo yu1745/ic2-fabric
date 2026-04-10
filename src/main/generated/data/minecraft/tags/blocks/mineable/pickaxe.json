@@ -73,6 +73,7 @@
     "ic2_120:geo_generator",
     "ic2_120:induction_furnace",
     "ic2_120:iron_furnace",
+    "ic2_120:kinetic_generator",
     "ic2_120:luminator_flat",
     "ic2_120:macerator",
     "ic2_120:machine",
@@ -181,7 +182,6 @@
     "ic2_120:iron_transmission_shaft",
     "ic2_120:steel_transmission_shaft",
     "ic2_120:carbon_transmission_shaft",
-    "ic2_120:bevel_gear",
-    "ic2_120:kinetic_generator"
+    "ic2_120:bevel_gear"
   ]
 }

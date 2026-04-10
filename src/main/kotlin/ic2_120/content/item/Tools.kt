@@ -17,6 +17,7 @@ import ic2_120.content.block.TeleporterBlock
 import ic2_120.content.block.machines.TeleporterBlockEntity
 import ic2_120.content.crop.CropType
 import ic2_120.content.recipes.crafting.ConsumeTreetapShapedRecipeDatagen
+import ic2_120.content.recipes.crafting.ConsumeWrenchShapedRecipeDatagen
 import com.google.common.collect.ImmutableMultimap
 import com.google.common.collect.Multimap
 import net.minecraft.block.Block
@@ -808,7 +809,7 @@ class ElectricWrench : Item(FabricItemSettings().maxCount(1)), IElectricTool {
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val wrench = Wrench::class.instance()
             val smallPower = SmallPowerUnitItem::class.instance()
-            BatteryEnergyShapedRecipeDatagen.offer(
+            ConsumeWrenchShapedRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = ElectricWrench::class.id(),
                 result = ElectricWrench::class.instance(),

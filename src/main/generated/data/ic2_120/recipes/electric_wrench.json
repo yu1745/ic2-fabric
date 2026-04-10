@@ -1,5 +1,5 @@
 {
-  "type": "ic2_120:battery_energy_shaped",
+  "type": "ic2_120:consume_wrench_shaped",
   "category": "equipment",
   "key": {
     "P": {
