@@ -29,6 +29,8 @@ class ElectricFurnaceSync(
 
     var energy by schema.int("Energy")
     var progress by schema.int("Progress")
+    /** 累积经验值 × 10（用于 GUI 显示，整数部分+一位小数） */
+    var experienceDisplay by schema.int("Experience")
 
     private val flow = EnergyFlowSync(schema, this)
 

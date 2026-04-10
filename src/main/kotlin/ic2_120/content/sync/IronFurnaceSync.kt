@@ -30,4 +30,7 @@ class IronFurnaceSync(
 
     /** 当前烧制进度（tick） */
     var cookTime by schema.int(NBT_COOK_TIME)
+
+    /** 累积经验值 × 10（用于 GUI 显示，整数部分+一位小数） */
+    var experienceDisplay by schema.int("Experience")
 }

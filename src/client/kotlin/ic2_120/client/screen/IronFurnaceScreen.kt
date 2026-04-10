@@ -91,6 +91,15 @@ class IronFurnaceScreen(
 
         super.render(context, mouseX, mouseY, delta)
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+
+        // 左侧显示累积经验值
+        val xpRaw = handler.sync.experienceDisplay
+        val xpWhole = xpRaw / 10
+        val xpFrac = xpRaw % 10
+        val xpText = if (xpWhole > 0) "XP $xpWhole.$xpFrac" else "XP 0.0"
+        val xpX = left - textRenderer.getWidth(xpText) - 4
+        context.drawText(textRenderer, xpText, xpX, top + 8, 0xA5FE74, false)
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 

@@ -168,6 +168,7 @@ class ElectricFurnaceBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        sync.experienceDisplay = (storedExperience * 10).toInt()
         pullEnergyFromNeighbors(world, pos, sync)
 
         // 从放电槽提取能量

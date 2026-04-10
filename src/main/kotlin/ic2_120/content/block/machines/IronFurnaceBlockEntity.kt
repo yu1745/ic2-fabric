@@ -225,6 +225,9 @@ class IronFurnaceBlockEntity(
             markDirty()
         }
 
+        // 同步经验显示值（×10 保留一位小数）
+        sync.experienceDisplay = (storedExperience * 10).toInt()
+
         // 更新方块状态（active）
         val active = sync.burnTime > 0
         setActiveState(world, pos, state, active)

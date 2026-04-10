@@ -100,6 +100,14 @@ class ElectricFurnaceScreen(
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
+
+        // 显示累积经验值
+        val xpRaw = handler.sync.experienceDisplay
+        val xpWhole = xpRaw / 10
+        val xpFrac = xpRaw % 10
+        val xpText = "XP $xpWhole.$xpFrac"
+        context.drawText(textRenderer, xpText, sideTextX, top + 32, 0xA5FE74, false)
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
