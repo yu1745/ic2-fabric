@@ -258,10 +258,12 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState {
         val world = ctx.world
         val pos = ctx.blockPos
+        val fluidState = world.getFluidState(pos)
         val facing = ctx.side.opposite
         val back = facing.opposite
         val be = world.getBlockEntity(pos) as? PipeBlockEntity
         return defaultState
+            .with(Properties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
             .with(Properties.FACING, facing)
             .with(propertyFor(back), canConnect(world, pos, back, be, facing))
             .with(propertyFor(facing), canConnect(world, pos, facing, be, facing))

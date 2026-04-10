@@ -16,12 +16,17 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.Blocks
 import net.minecraft.block.ShapeContext
+import net.minecraft.block.Waterloggable
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.fluid.Fluid
+import net.minecraft.fluid.FluidState
+import net.minecraft.fluid.Fluids
 import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.registry.tag.ItemTags
 import net.minecraft.state.StateManager
@@ -79,7 +84,57 @@ enum class BevelPlane(private val key: String) : StringIdentifiable {
 
 abstract class BaseTransmissionBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(2.0f, 3.0f)
-) : BlockWithEntity(settings) {
+) : BlockWithEntity(settings), Waterloggable {
+
+    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+        builder.add(Properties.WATERLOGGED)
+    }
+
+    override fun getPlacementState(ctx: ItemPlacementContext): BlockState {
+        val fluidState = ctx.world.getFluidState(ctx.blockPos)
+        return defaultState.with(Properties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
+    }
+
+    override fun getStateForNeighborUpdate(
+        state: BlockState,
+        direction: Direction,
+        neighborState: BlockState,
+        world: WorldAccess,
+        pos: BlockPos,
+        neighborPos: BlockPos
+    ): BlockState {
+        if (state.get(Properties.WATERLOGGED)) {
+            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+        }
+        if (world is net.minecraft.world.World && !world.isClient) {
+            KineticNetworkManager.invalidateConnectionCachesAt(world, pos)
+        }
+        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
+    }
+
+    override fun getFluidState(state: BlockState): FluidState =
+        if (state.get(Properties.WATERLOGGED)) Fluids.WATER.getStill(false) else Fluids.EMPTY.getDefaultState()
+
+    override fun canFillWithFluid(world: BlockView, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
+        !state.get(Properties.WATERLOGGED) && fluid == Fluids.WATER
+
+    override fun tryFillWithFluid(
+        world: WorldAccess,
+        pos: BlockPos,
+        state: BlockState,
+        fluidState: FluidState
+    ): Boolean {
+        if (!canFillWithFluid(world, pos, state, fluidState.fluid)) return false
+        if (!state.get(Properties.WATERLOGGED)) {
+            world.setBlockState(pos, state.with(Properties.WATERLOGGED, true), Block.NOTIFY_ALL)
+            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+        }
+        return true
+    }
+
+    override fun tryDrainFluid(world: WorldAccess, pos: BlockPos, state: BlockState): ItemStack =
+        ItemStack.EMPTY
+
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         TransmissionBlockEntity(pos, state)
 
@@ -97,21 +152,6 @@ abstract class BaseTransmissionBlock(
             KineticNetworkManager.invalidateAt(world, pos)
         }
         super.onStateReplaced(state, world, pos, newState, moved)
-    }
-
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getStateForNeighborUpdate(
-        state: BlockState,
-        direction: Direction,
-        neighborState: BlockState,
-        world: WorldAccess,
-        pos: BlockPos,
-        neighborPos: BlockPos
-    ): BlockState {
-        if (world is net.minecraft.world.World && !world.isClient) {
-            KineticNetworkManager.invalidateConnectionCachesAt(world, pos)
-        }
-        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
     }
 
     override fun <T : BlockEntity> getTicker(
@@ -133,12 +173,16 @@ abstract class TransmissionShaftBlock(
     }
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+        super.appendProperties(builder)
         builder.add(Properties.AXIS)
     }
 
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState {
+        val fluidState = ctx.world.getFluidState(ctx.blockPos)
         val axis = preferredNeighborAxis(ctx.world, ctx.blockPos, ctx.side.axis) ?: ctx.side.axis
-        return defaultState.with(Properties.AXIS, axis)
+        return defaultState
+            .with(Properties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
+            .with(Properties.AXIS, axis)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -265,13 +309,17 @@ class BevelGearBlock(
     }
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+        super.appendProperties(builder)
         builder.add(PLANE)
     }
 
-    override fun getPlacementState(ctx: ItemPlacementContext): BlockState? {
+    override fun getPlacementState(ctx: ItemPlacementContext): BlockState {
+        val fluidState = ctx.world.getFluidState(ctx.blockPos)
         val axes = connectedAxes(ctx.world, ctx.blockPos)
         val plane = selectPlane(axes, defaultPlaneForSide(ctx.side.axis), ctx.side.axis)
-        return defaultState.with(PLANE, plane)
+        return defaultState
+            .with(Properties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
+            .with(PLANE, plane)
     }
 
     override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos): Boolean = true
@@ -285,6 +333,9 @@ class BevelGearBlock(
         pos: BlockPos,
         neighborPos: BlockPos
     ): BlockState {
+        if (state.get(Properties.WATERLOGGED)) {
+            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+        }
         val axes = connectedAxes(world, pos)
         val plane = selectPlane(axes, state.get(PLANE), direction.axis)
         if (world is net.minecraft.world.World && !world.isClient) {
