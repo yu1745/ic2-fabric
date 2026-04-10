@@ -8,10 +8,14 @@ import ic2_120.content.block.CropStickBlock
 import ic2_120.content.block.CropStickBlockEntity
 import ic2_120.content.block.KineticGeneratorBlock
 import ic2_120.content.block.WindKineticGeneratorBlock
+import ic2_120.content.block.WaterKineticGeneratorBlock
+import ic2_120.content.block.ManualKineticGeneratorBlock
 import ic2_120.content.block.pipes.BasePipeBlock
 import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.machines.KineticGeneratorBlockEntity
 import ic2_120.content.block.machines.WindKineticGeneratorBlockEntity
+import ic2_120.content.block.machines.WaterKineticGeneratorBlockEntity
+import ic2_120.content.block.machines.ManualKineticGeneratorBlockEntity
 import ic2_120.content.block.transmission.BevelGearBlock
 import ic2_120.content.block.transmission.CarbonTransmissionShaftBlock
 import ic2_120.content.block.transmission.IronTransmissionShaftBlock
@@ -63,6 +67,8 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockDataProvider(CropJadeProvider, CropStickBlockEntity::class.java)
         registration.registerBlockDataProvider(KineticJadeProvider, TransmissionBlockEntity::class.java)
         registration.registerBlockDataProvider(KineticJadeProvider, WindKineticGeneratorBlockEntity::class.java)
+        registration.registerBlockDataProvider(KineticJadeProvider, WaterKineticGeneratorBlockEntity::class.java)
+        registration.registerBlockDataProvider(KineticJadeProvider, ManualKineticGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(KineticJadeProvider, KineticGeneratorBlockEntity::class.java)
     }
 
@@ -74,6 +80,8 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockComponent(KineticJadeProvider, TransmissionShaftBlock::class.java)
         registration.registerBlockComponent(KineticJadeProvider, BevelGearBlock::class.java)
         registration.registerBlockComponent(KineticJadeProvider, WindKineticGeneratorBlock::class.java)
+        registration.registerBlockComponent(KineticJadeProvider, WaterKineticGeneratorBlock::class.java)
+        registration.registerBlockComponent(KineticJadeProvider, ManualKineticGeneratorBlock::class.java)
         registration.registerBlockComponent(KineticJadeProvider, KineticGeneratorBlock::class.java)
     }
 }
@@ -396,6 +404,22 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
                 data.putDouble("rotorHours", be.getRotorRemainingClearHours())
             }
 
+            is WaterKineticGeneratorBlockEntity -> {
+                data.putString("kind", "water_kinetic")
+                data.putInt("generatedKu", be.getGeneratedKu())
+                data.putInt("outputKu", be.getOutputKu())
+                data.putBoolean("blocked", be.isStuck)
+                data.putBoolean("submerged", be.isSubmerged)
+                data.putBoolean("flowBonus", be.waterFlowBonus)
+                data.putDouble("rotorHours", be.getRotorRemainingClearHours())
+            }
+
+            is ManualKineticGeneratorBlockEntity -> {
+                data.putString("kind", "manual_kinetic")
+                data.putInt("storedKu", be.sync.storedKu.coerceAtLeast(0))
+                data.putInt("extractedKu", be.sync.extractedKu.coerceAtLeast(0))
+            }
+
             is KineticGeneratorBlockEntity -> {
                 val inputKu = be.sync.currentKu.coerceAtLeast(0)
                 val outputEu = be.sync.outputEu.coerceAtLeast(0)
@@ -428,6 +452,29 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
                 tooltip.add(Text.translatable("ic2_120.jade.wind_ku_output", outputKu))
                 tooltip.add(Text.translatable(if (blocked) "ic2_120.jade.wind_blocked" else "ic2_120.jade.wind_clear"))
                 tooltip.add(Text.translatable("ic2_120.jade.wind_rotor_lifetime", String.format("%.1f", rotorHours)))
+            }
+
+            "water_kinetic" -> {
+                val generatedKu = accessor.serverData.getInt("generatedKu")
+                val outputKu = accessor.serverData.getInt("outputKu")
+                val blocked = accessor.serverData.getBoolean("blocked")
+                val submerged = accessor.serverData.getBoolean("submerged")
+                val flowBonus = accessor.serverData.getBoolean("flowBonus")
+                val rotorHours = accessor.serverData.getDouble("rotorHours")
+                tooltip.add(Text.translatable("ic2_120.jade.water_ku_generated", generatedKu))
+                tooltip.add(Text.translatable("ic2_120.jade.water_ku_output", outputKu))
+                tooltip.add(Text.translatable(if (blocked) "ic2_120.jade.water_blocked" else if (submerged) "ic2_120.jade.water_submerged" else "ic2_120.jade.water_not_submerged"))
+                if (flowBonus) {
+                    tooltip.add(Text.translatable("ic2_120.jade.water_flow_bonus"))
+                }
+                tooltip.add(Text.translatable("ic2_120.jade.water_rotor_lifetime", String.format("%.1f", rotorHours)))
+            }
+
+            "manual_kinetic" -> {
+                val storedKu = accessor.serverData.getInt("storedKu")
+                val extractedKu = accessor.serverData.getInt("extractedKu")
+                tooltip.add(Text.translatable("ic2_120.jade.manual_stored_ku", storedKu))
+                tooltip.add(Text.translatable("ic2_120.jade.manual_extracted_ku", extractedKu))
             }
 
             "kinetic_generator" -> {
