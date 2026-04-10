@@ -2,20 +2,17 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "C": {
-      "item": "ic2_120:machine"
-    },
     "S": {
-      "item": "ic2_120:iron_shaft"
+      "item": "minecraft:stick"
     }
   },
   "pattern": [
+    " S ",
     "S S",
-    " C ",
-    "S S"
+    " S "
   ],
   "result": {
-    "item": "ic2_120:water_kinetic_generator"
+    "item": "ic2_120:wooden_crank_handle"
   },
   "show_notification": true
 }

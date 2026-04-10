@@ -29,7 +29,6 @@
     "ic2_120:geo_generator",
     "ic2_120:induction_furnace",
     "ic2_120:iron_furnace",
-    "ic2_120:kinetic_generator",
     "ic2_120:macerator",
     "ic2_120:magnetizer",
     "ic2_120:manual_kinetic_generator",
@@ -80,6 +79,7 @@
     "ic2_120:bronze_tank",
     "ic2_120:iron_tank",
     "ic2_120:steel_tank",
-    "ic2_120:iridium_tank"
+    "ic2_120:iridium_tank",
+    "ic2_120:kinetic_generator"
   ]
 }

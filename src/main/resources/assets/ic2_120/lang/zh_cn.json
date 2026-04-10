@@ -176,7 +176,7 @@
   "block.ic2_120.iron_transmission_shaft": "铁制传动轴",
   "block.ic2_120.steel_transmission_shaft": "钢制传动轴",
   "block.ic2_120.carbon_transmission_shaft": "碳纤维传动轴",
-  "block.ic2_120.bevel_gear": "伞齿轮",
+  "block.ic2_120.bevel_gear": "斜齿轮",
   "death.attack.tesla_coil": "%1$s被电得骨头酥脆。",
   "death.attack.cable_shock": "%1$s触碰了未绝缘导线被电击。",
   "death.attack.nano_saber_armor_pierce": "%1$s 被 %2$s 的纳米剑贯穿了纳米护甲",

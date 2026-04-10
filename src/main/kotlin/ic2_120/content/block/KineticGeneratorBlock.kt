@@ -1,10 +1,13 @@
 package ic2_120.content.block
 
 import ic2_120.content.block.machines.KineticGeneratorBlockEntity
+import ic2_120.content.item.ElectricMotor
+import ic2_120.content.item.IronCrankHandle
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
+import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
@@ -78,14 +81,18 @@ class KineticGeneratorBlock : MachineBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val generator = GeneratorBlock::class.item()
-            if (generator != Items.AIR) {
+            val casing = MachineCasingBlock::class.instance()
+            val motor = ElectricMotor::class.instance()
+            val crank = IronCrankHandle::class.instance()
+            if (generator != Items.AIR && casing != Items.AIR && motor != Items.AIR && crank != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, KineticGeneratorBlock::class.item(), 1)
-                    .pattern(" I ")
-                    .pattern("GCG")
-                    .pattern(" I ")
-                    .input('I', Items.IRON_INGOT)
-                    .input('C', Items.COPPER_INGOT)
+                    .pattern("XXX")
+                    .pattern("GMF")
+                    .pattern("XXX")
+                    .input('X', casing)
                     .input('G', generator)
+                    .input('M', motor)
+                    .input('F', crank)
                     .criterion(hasItem(generator), conditionsFromItem(generator))
                     .offerTo(exporter, KineticGeneratorBlock::class.id())
             }

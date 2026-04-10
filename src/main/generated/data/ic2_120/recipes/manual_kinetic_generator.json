@@ -5,14 +5,13 @@
     "C": {
       "item": "ic2_120:machine"
     },
-    "I": {
-      "item": "minecraft:iron_ingot"
+    "L": {
+      "item": "minecraft:lever"
     }
   },
   "pattern": [
-    " I ",
-    "ICI",
-    " I "
+    "L",
+    "C"
   ],
   "result": {
     "item": "ic2_120:manual_kinetic_generator"

@@ -38,9 +38,9 @@ class WaterKineticGeneratorBlock : MachineBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WaterKineticGeneratorBlock::class.item(), 1)
-                .pattern("   ")
-                .pattern("SCS")
-                .pattern("   ")
+                .pattern("S S")
+                .pattern(" C ")
+                .pattern("S S")
                 .input('S', ToolHandleIronItem::class.instance())
                 .input('C', MachineCasingBlock::class.instance())
                 .criterion(

@@ -1,8 +1,13 @@
 package ic2_120.content.block.transmission
 
+import ic2_120.content.item.CarbonPlate
+import ic2_120.content.item.IronPlate
+import ic2_120.content.item.SteelPlate
 import ic2_120.registry.CreativeTab
-import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
+import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.registry.instance
+import ic2_120.registry.recipeId
 import ic2_120.registry.type
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
@@ -14,7 +19,11 @@ import net.minecraft.block.ShapeContext
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.ItemPlacementContext
+import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.registry.tag.ItemTags
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.state.property.Properties
@@ -26,6 +35,9 @@ import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
 import net.minecraft.world.WorldAccess
 import net.minecraft.world.WorldView
+import java.util.function.Consumer
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 
 enum class ShaftMaterial(
     val texturePath: String
@@ -181,16 +193,68 @@ abstract class TransmissionShaftBlock(
 }
 
 @ModBlock(name = "wood_transmission_shaft", registerItem = true, tab = CreativeTab.IC2_MACHINES)
-class WoodTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.WOOD)
+class WoodTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.WOOD) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodTransmissionShaftBlock::class.instance(), 16)
+                .pattern("xxx")
+                .pattern("   ")
+                .pattern("xxx")
+                .input('x', ItemTags.PLANKS)
+                .criterion(hasItem(net.minecraft.item.Items.OAK_PLANKS), conditionsFromItem(net.minecraft.item.Items.OAK_PLANKS))
+                .offerTo(exporter, WoodTransmissionShaftBlock::class.recipeId("from_planks"))
+        }
+    }
+}
 
 @ModBlock(name = "iron_transmission_shaft", registerItem = true, tab = CreativeTab.IC2_MACHINES)
-class IronTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.IRON)
+class IronTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.IRON) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronTransmissionShaftBlock::class.instance(), 16)
+                .pattern("xxx")
+                .pattern("   ")
+                .pattern("xxx")
+                .input('x', IronPlate::class.instance())
+                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
+                .offerTo(exporter, IronTransmissionShaftBlock::class.recipeId("from_plates"))
+        }
+    }
+}
 
 @ModBlock(name = "steel_transmission_shaft", registerItem = true, tab = CreativeTab.IC2_MACHINES)
-class SteelTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.STEEL)
+class SteelTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.STEEL) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelTransmissionShaftBlock::class.instance(), 16)
+                .pattern("xxx")
+                .pattern("   ")
+                .pattern("xxx")
+                .input('x', SteelPlate::class.instance())
+                .criterion(hasItem(SteelPlate::class.instance()), conditionsFromItem(SteelPlate::class.instance()))
+                .offerTo(exporter, SteelTransmissionShaftBlock::class.recipeId("from_plates"))
+        }
+    }
+}
 
 @ModBlock(name = "carbon_transmission_shaft", registerItem = true, tab = CreativeTab.IC2_MACHINES)
-class CarbonTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.CARBON)
+class CarbonTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.CARBON) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonTransmissionShaftBlock::class.instance(), 16)
+                .pattern("xxx")
+                .pattern("   ")
+                .pattern("xxx")
+                .input('x', CarbonPlate::class.instance())
+                .criterion(hasItem(CarbonPlate::class.instance()), conditionsFromItem(CarbonPlate::class.instance()))
+                .offerTo(exporter, CarbonTransmissionShaftBlock::class.recipeId("from_plates"))
+        }
+    }
+}
 
 @ModBlock(name = "bevel_gear", registerItem = true, tab = CreativeTab.IC2_MACHINES)
 class BevelGearBlock(
@@ -342,6 +406,17 @@ class BevelGearBlock(
             BevelPlane.XY -> SHAPE_XY
             BevelPlane.XZ -> SHAPE_XZ
             BevelPlane.YZ -> SHAPE_YZ
+        }
+
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BevelGearBlock::class.instance(), 1)
+                .pattern("s s")
+                .pattern("s s")
+                .pattern("sss")
+                .input('s', SteelPlate::class.instance())
+                .criterion(hasItem(SteelPlate::class.instance()), conditionsFromItem(SteelPlate::class.instance()))
+                .offerTo(exporter, BevelGearBlock::class.recipeId("from_plates"))
         }
     }
 }

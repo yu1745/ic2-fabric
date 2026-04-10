@@ -101,7 +101,16 @@ open class TransformerBlockEntity(
         buf.writeVarInt(transformerTier)  // 传递变压器等级到客户端
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.transformer")
+    override fun getDisplayName(): Text {
+        val key = when (transformerTier) {
+            1 -> "block.ic2_120.lv_transformer"
+            2 -> "block.ic2_120.mv_transformer"
+            3 -> "block.ic2_120.hv_transformer"
+            4 -> "block.ic2_120.ev_transformer"
+            else -> "block.ic2_120.lv_transformer"
+        }
+        return Text.translatable(key)
+    }
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
         // 变压器使用通用的 TransformerScreenHandler

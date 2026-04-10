@@ -40,10 +40,9 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val casing = MachineCasingBlock::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ManualKineticGeneratorBlock::class.item(), 1)
-                .pattern(" I ")
-                .pattern("ICI")
-                .pattern(" I ")
-                .input('I', net.minecraft.item.Items.IRON_INGOT)
+                .pattern("L")
+                .pattern("C")
+                .input('L', net.minecraft.item.Items.LEVER)
                 .input('C', casing)
                 .criterion(
                     hasItem(casing),

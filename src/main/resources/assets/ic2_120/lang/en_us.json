@@ -177,7 +177,7 @@
   "block.ic2_120.iron_transmission_shaft": "Iron Transmission Shaft",
   "block.ic2_120.steel_transmission_shaft": "Steel Transmission Shaft",
   "block.ic2_120.carbon_transmission_shaft": "Carbon Fiber Transmission Shaft",
-  "block.ic2_120.bevel_gear": "Bevel Gear",
+  "block.ic2_120.bevel_gear": "Helical Gear",
   "death.attack.tesla_coil": "%1$s was electrocuted until their bones were crispy.",
   "death.attack.cable_shock": "%1$s was electrocuted by an uninsulated cable.",
   "death.attack.nano_saber_armor_pierce": "%1$s was pierced through nano armor by %2$s",
