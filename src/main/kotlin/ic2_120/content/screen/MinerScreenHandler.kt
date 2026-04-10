@@ -37,7 +37,8 @@ class MinerScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    val isAdvanced: Boolean = false
 ) : ScreenHandler(MinerScreenHandler::class.type(), syncId) {
 
     val sync = MinerSync(
@@ -104,8 +105,8 @@ class MinerScreenHandler(
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? BaseMinerBlockEntity ?: return@get false
             when (id) {
-                BUTTON_TOGGLE_MODE -> be.toggleMode()
-                BUTTON_TOGGLE_SILK -> be.toggleSilkTouch()
+                BUTTON_TOGGLE_MODE -> if (isAdvanced) be.toggleMode()
+                BUTTON_TOGGLE_SILK -> if (isAdvanced) be.toggleSilkTouch()
                 BUTTON_RESTART -> be.restartScan()
                 else -> return@get false
             }
@@ -181,9 +182,10 @@ class MinerScreenHandler(
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): MinerScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
+            val isAdvanced = buf.readBoolean()
             val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
             val blockInv = SimpleInventory(BaseMinerBlockEntity.INVENTORY_SIZE)
-            return MinerScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
+            return MinerScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount), isAdvanced)
         }
     }
 }

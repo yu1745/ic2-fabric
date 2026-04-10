@@ -30,6 +30,8 @@ data class Ic2MainConfig(
     val nuclear: NuclearConfig = NuclearConfig(),
     @field:ConfigComment("UU 复制白名单配置。")
     val uuReplication: UuReplicationConfig = UuReplicationConfig(),
+    @field:ConfigComment("采矿机配置。")
+    val miner: MinerConfig = MinerConfig(),
     @field:ConfigComment("世界生成配置。")
     val worldgen: WorldgenConfig = WorldgenConfig()
 )
@@ -64,6 +66,15 @@ data class UuReplicationConfig(
      */
     @field:ConfigComment("UU 复制白名单。key=物品 id，value=所需 UU 物质（uB）。")
     val replicationWhitelist: Map<String, Int> = UuReplicationDefaults.defaultWhitelist
+)
+
+@Serializable
+data class MinerConfig(
+    @field:ConfigComment(
+        "采矿机额外可挖方块 id 列表。默认矿石通过名称自动匹配（含 ore），此列表用于添加特殊方块或者别的mod的方块。",
+        "[]"
+    )
+    val additionalMineableBlocks: List<String> = emptyList()
 )
 
 private val DEFAULT_RUBBER_TREE_BIOMES = listOf(
@@ -174,6 +185,7 @@ private val DEFAULT_CONFIG_TEMPLATE = Ic2MainConfig(
     uuReplication = UuReplicationConfig(
         replicationWhitelist = UuReplicationDefaults.defaultWhitelist
     ),
+    miner = MinerConfig(),
     worldgen = WorldgenConfig(
         rubberTree = RubberTreeWorldgenConfig()
     )

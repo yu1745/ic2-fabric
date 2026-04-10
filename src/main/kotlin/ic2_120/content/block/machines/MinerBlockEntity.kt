@@ -32,6 +32,7 @@ import ic2_120.content.upgrade.IOverclockerUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
+import ic2_120.config.Ic2Config
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.annotation.RegisterEnergy
@@ -246,6 +247,7 @@ abstract class BaseMinerBlockEntity(
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        buf.writeBoolean(acceptsAdvancedScanner)
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.$blockKey")
@@ -336,7 +338,7 @@ abstract class BaseMinerBlockEntity(
             if (drillBreakCost == null) {
                 pendingBreakEnergy = 0L
             } else {
-                val silkMultiplier = if (sync.silkTouch != 0) MinerSync.SILK_TOUCH_MULTIPLIER else 1L
+                val silkMultiplier = if (sync.silkTouch != 0 && acceptsAdvancedScanner) MinerSync.SILK_TOUCH_MULTIPLIER else 1L
                 val breakEnergy = (drillBreakCost * silkMultiplier * energyMultiplier).toLong().coerceAtLeast(1L)
 
                 val toReserve = minOf(sync.amount, breakEnergy - pendingBreakEnergy)
@@ -383,7 +385,7 @@ abstract class BaseMinerBlockEntity(
                 val breakCost = getDrillBreakCost() ?: 0L
                 if (breakCost <= 0L) break
 
-                val silkMultiplier = if (sync.silkTouch != 0) MinerSync.SILK_TOUCH_MULTIPLIER else 1L
+                val silkMultiplier = if (sync.silkTouch != 0 && acceptsAdvancedScanner) MinerSync.SILK_TOUCH_MULTIPLIER else 1L
                 val breakEnergy = (breakCost * silkMultiplier * energyMultiplier).toLong().coerceAtLeast(1L)
 
                 if (sync.consumeEnergy(breakEnergy) > 0L) {
@@ -491,8 +493,12 @@ abstract class BaseMinerBlockEntity(
         if (state.getHardness(world, targetPos) < 0f) return false
 
         val id = Registries.BLOCK.getId(state.block)
+        val idString = id.toString()
         val oreLike = id.path.contains("ore") || id.path == "ancient_debris"
+            || idString in Ic2Config.current.miner.additionalMineableBlocks
         if (!oreLike) return false
+
+        if (!acceptsAdvancedScanner) return true  // 普通采矿机无过滤，挖所有矿石
 
         val filters = (SLOT_FILTER_START..SLOT_FILTER_END)
             .map { getStack(it) }
@@ -552,7 +558,7 @@ abstract class BaseMinerBlockEntity(
             is DiamondDrill, is IridiumDrill -> ItemStack(Items.DIAMOND_PICKAXE)
             else -> ItemStack(Items.IRON_PICKAXE)
         }
-        if (sync.silkTouch != 0) {
+        if (sync.silkTouch != 0 && acceptsAdvancedScanner) {
             baseTool.addEnchantment(Enchantments.SILK_TOUCH, 1)
         }
         return baseTool

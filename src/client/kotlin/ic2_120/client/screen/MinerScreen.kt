@@ -93,12 +93,14 @@ class MinerScreen(
                             SlotHost(MinerScreenHandler.SLOT_DRILL_INDEX)
                             SlotHost(MinerScreenHandler.SLOT_BATTERY_INDEX)
                         }
-                        Column(spacing = 0) {
-                            for (row in 0 until 3) {
-                                Row(spacing = 0) {
-                                    for (col in 0 until 5) {
-                                        val idx = MinerScreenHandler.SLOT_FILTER_INDEX_START + row * 5 + col
-                                        SlotHost(idx)
+                        if (handler.isAdvanced) {
+                            Column(spacing = 0) {
+                                for (row in 0 until 3) {
+                                    Row(spacing = 0) {
+                                        for (col in 0 until 5) {
+                                            val idx = MinerScreenHandler.SLOT_FILTER_INDEX_START + row * 5 + col
+                                            SlotHost(idx)
+                                        }
                                     }
                                 }
                             }
@@ -106,19 +108,21 @@ class MinerScreen(
                     }
 
                     Flex(direction = FlexDirection.ROW, gap = 3) {
-                        Button("模式: $modeText") {
-                            client?.player?.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(
-                                    handler.syncId, MinerScreenHandler.BUTTON_TOGGLE_MODE
+                        if (handler.isAdvanced) {
+                            Button("模式: $modeText") {
+                                client?.player?.networkHandler?.sendPacket(
+                                    ButtonClickC2SPacket(
+                                        handler.syncId, MinerScreenHandler.BUTTON_TOGGLE_MODE
+                                    )
                                 )
-                            )
-                        }
-                        Button("精准采集: $silkText") {
-                            client?.player?.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(
-                                    handler.syncId, MinerScreenHandler.BUTTON_TOGGLE_SILK
+                            }
+                            Button("精准采集: $silkText") {
+                                client?.player?.networkHandler?.sendPacket(
+                                    ButtonClickC2SPacket(
+                                        handler.syncId, MinerScreenHandler.BUTTON_TOGGLE_SILK
+                                    )
                                 )
-                            )
+                            }
                         }
                         Button("重启") {
                             client?.player?.networkHandler?.sendPacket(
