@@ -2,10 +2,11 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.CannerBlock
 import ic2_120.content.block.machines.CannerBlockEntity
+import ic2_120.content.item.EmptyFuelRodItem
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.recipes.CannerMixingRecipes
-import ic2_120.content.recipes.SolidCannerRecipes
+import ic2_120.content.recipes.solidcanner.SolidCannerRecipe
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
@@ -56,14 +57,17 @@ class CannerScreenHandler(
         canInsert = { stack ->
             stack.item !is IBatteryItem && stack.item !is FoamSprayerItem && (
                 isFilledFluidContainer(stack) ||
-                stack.item == tinCanItem
+                stack.item == tinCanItem ||
+                stack.item is EmptyFuelRodItem
             )
         }
     )
     private val materialSlotSpec = SlotSpec(
         canInsert = { stack ->
-            stack.item !is IBatteryItem && (
-                SolidCannerRecipes.isCanningFood(stack.item) ||
+            !stack.isEmpty && stack.item !is IBatteryItem && (
+                context.get({ world, _ ->
+                    world.recipeManager.values().any { it is SolidCannerRecipe && it.slot1Ingredient.test(stack) }
+                }, false) ||
                 CannerMixingRecipes.isMixingMaterial(stack.item) ||
                 (sync.getMode() == CannerSync.Mode.BOTTLE_LIQUID && stack.item is FoamSprayerItem &&
                     FoamSprayerItem.getFluidAmount(stack) < FoamSprayerItem.CAPACITY_DROPLETS)
@@ -80,12 +84,12 @@ class CannerScreenHandler(
     )
     private val rightInputSlotSpec = SlotSpec(
         canInsert = { stack ->
-            stack.item !is IBatteryItem && stack.item !is FoamSprayerItem && isEmptyFluidContainer(stack)
+            !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is FoamSprayerItem && isEmptyFluidContainer(stack)
         }
     )
     private val dischargingSlotSpec = SlotSpec(
         maxItemCount = 1,
-        canInsert = { stack -> stack.item is IBatteryItem }
+        canInsert = { stack -> !stack.isEmpty && stack.item is IBatteryItem }
     )
 
     init {

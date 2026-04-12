@@ -16,9 +16,9 @@ import ic2_120.content.upgrade.IOverclockerUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
+import ic2_120.content.item.EmptyFuelRodItem
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
-import ic2_120.content.recipes.SolidCannerRecipes
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModBlockEntity
@@ -95,7 +95,7 @@ class SolidCannerBlockEntity(
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(SLOT_TIN_CAN), matcher = { isTinCan(it) }),
+            ItemInsertRoute(intArrayOf(SLOT_TIN_CAN), matcher = { isContainerInput(it) }),
             ItemInsertRoute(intArrayOf(SLOT_FOOD), matcher = { isFoodInput(it) })
         ),
         extractSlots = intArrayOf(SLOT_OUTPUT),
@@ -140,7 +140,7 @@ class SolidCannerBlockEntity(
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
-        SLOT_TIN_CAN -> isTinCan(stack)
+        SLOT_TIN_CAN -> isContainerInput(stack)
         SLOT_FOOD -> isFoodInput(stack)
         SLOT_OUTPUT -> false
         SLOT_DISCHARGING -> isBatteryItem(stack)
@@ -274,10 +274,13 @@ class SolidCannerBlockEntity(
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem
 
-    private fun isTinCan(stack: ItemStack): Boolean =
-        !stack.isEmpty && stack.item == Registries.ITEM.get(Identifier("ic2_120", "tin_can"))
+    private fun isContainerInput(stack: ItemStack): Boolean =
+        !stack.isEmpty && (
+            stack.item == Registries.ITEM.get(Identifier("ic2_120", "tin_can")) ||
+            stack.item is EmptyFuelRodItem
+        )
 
     private fun isFoodInput(stack: ItemStack): Boolean =
         !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is IUpgradeItem &&
-            SolidCannerRecipes.isCanningFood(stack.item)
+            world?.recipeManager?.values()?.any { it is SolidCannerRecipe && it.slot1Ingredient.test(stack) } == true
 }

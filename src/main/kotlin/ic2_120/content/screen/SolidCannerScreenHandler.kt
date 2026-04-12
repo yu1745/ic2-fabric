@@ -2,6 +2,7 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.SolidCannerBlock
 import ic2_120.content.block.machines.SolidCannerBlockEntity
+import ic2_120.content.item.EmptyFuelRodItem
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
@@ -9,7 +10,7 @@ import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
-import ic2_120.content.recipes.SolidCannerRecipes
+import ic2_120.content.recipes.solidcanner.SolidCannerRecipe
 import ic2_120.content.sync.SolidCannerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -44,13 +45,19 @@ class SolidCannerScreenHandler(
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
-    private val tinCanSlotSpec = SlotSpec(
-        canInsert = { stack -> !stack.isEmpty && stack.item == Registries.ITEM.get(Identifier("ic2_120", "tin_can")) }
+    private val tinCanItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "tin_can")) }
+
+    private val containerSlotSpec = SlotSpec(
+        canInsert = { stack ->
+            !stack.isEmpty && (stack.item == tinCanItem || stack.item is EmptyFuelRodItem)
+        }
     )
     private val foodSlotSpec = SlotSpec(
         canInsert = { stack ->
-            stack.item !is IBatteryItem && stack.item !is IUpgradeItem &&
-                SolidCannerRecipes.isCanningFood(stack.item)
+            !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is IUpgradeItem &&
+                context.get({ world, _ ->
+                    world.recipeManager.values().any { it is SolidCannerRecipe && it.slot1Ingredient.test(stack) }
+                }, false)
         }
     )
     private val outputSlotSpec = SlotSpec(canInsert = { false }, canTake = { true })
@@ -62,7 +69,7 @@ class SolidCannerScreenHandler(
     init {
         checkSize(blockInventory, SolidCannerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
-        addSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_TIN_CAN, 0, 0, tinCanSlotSpec))
+        addSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_TIN_CAN, 0, 0, containerSlotSpec))
         addSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_FOOD, 0, 0, foodSlotSpec))
         addSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_OUTPUT, 0, 0, outputSlotSpec))
         addSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_DISCHARGING, 0, 0, dischargingSlotSpec))
@@ -111,11 +118,11 @@ class SolidCannerScreenHandler(
                         SlotTarget(slots[it], upgradeSlotSpec)
                     }
                     val dischargingTarget = SlotTarget(slots[SLOT_DISCHARGING_INDEX], dischargingSlotSpec)
-                    val tinCanTarget = SlotTarget(slots[SLOT_TIN_CAN_INDEX], tinCanSlotSpec)
+                    val containerTarget = SlotTarget(slots[SLOT_TIN_CAN_INDEX], containerSlotSpec)
                     val foodTarget = SlotTarget(slots[SLOT_FOOD_INDEX], foodSlotSpec)
                     val moved = SlotMoveHelper.insertIntoTargets(
                         stackInSlot,
-                        listOf(tinCanTarget, foodTarget, dischargingTarget) + upgradeTargets
+                        listOf(containerTarget, foodTarget, dischargingTarget) + upgradeTargets
                     )
                     if (!moved) return ItemStack.EMPTY
                 }

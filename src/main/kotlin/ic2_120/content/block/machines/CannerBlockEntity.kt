@@ -3,6 +3,7 @@ package ic2_120.content.block.machines
 import ic2_120.Ic2_120
 import ic2_120.content.block.CannerBlock
 import ic2_120.content.fluid.ModFluids
+import ic2_120.content.item.EmptyFuelRodItem
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.ITieredMachine
@@ -10,10 +11,11 @@ import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.ModFluidCell
 import ic2_120.content.item.fluidToFilledCellStack
 import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.recipes.solidcanner.SolidCannerRecipe
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.recipes.CannerMixingRecipes
-import ic2_120.content.recipes.SolidCannerRecipes
+import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.screen.CannerScreenHandler
@@ -48,6 +50,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluids
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.BucketItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -233,10 +236,10 @@ class CannerBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_CONTAINER -> !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is FoamSprayerItem && (
-            cannerIsFilledFluidContainer(stack) || stack.item == tinCanItem
+            cannerIsFilledFluidContainer(stack) || stack.item == tinCanItem || stack.item is EmptyFuelRodItem
             )
         SLOT_MATERIAL -> !stack.isEmpty && stack.item !is IBatteryItem && (
-            SolidCannerRecipes.isCanningFood(stack.item) ||
+            (world?.recipeManager?.values()?.any { it is SolidCannerRecipe && it.slot1Ingredient.test(stack) } == true) ||
                 CannerMixingRecipes.isMixingMaterial(stack.item) ||
                 (sync.getMode() == CannerSync.Mode.BOTTLE_LIQUID && stack.item is FoamSprayerItem &&
                     FoamSprayerItem.getFluidAmount(stack) < FoamSprayerItem.CAPACITY_DROPLETS)
@@ -390,9 +393,14 @@ class CannerBlockEntity(
 
     private fun trySolidCanning(container: ItemStack, material: ItemStack, outputSlot: ItemStack): Boolean {
         if (container.isEmpty || material.isEmpty) return false
-        if (container.item != tinCanItem) return false
-        val (recipe, result) = SolidCannerRecipes.getOutput(container, material) ?: return false
-        if (!canAcceptOutput(outputSlot, result)) return false
+        if (container.item != tinCanItem && container.item !is EmptyFuelRodItem) return false
+        val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class) ?: return false
+        val recipeInventory = SimpleInventory(container.copyWithCount(1), material.copyWithCount(1))
+        val match = world?.recipeManager?.getFirstMatch(recipeType, recipeInventory, world) ?: return false
+        if (match.isEmpty) return false
+        val recipe = match.get()
+        if (container.count < recipe.slot0Count || material.count < recipe.slot1Count) return false
+        if (!canAcceptOutput(outputSlot, recipe.output.copy())) return false
         return true
     }
 
@@ -538,12 +546,17 @@ class CannerBlockEntity(
         val container = getStack(SLOT_CONTAINER)
         val material = getStack(SLOT_MATERIAL)
         val outputSlot = getStack(SLOT_OUTPUT)
-        val (recipe, result) = SolidCannerRecipes.getOutput(container, material) ?: return
-        container.decrement(recipe.tinCanInputCount)
-        material.decrement(recipe.foodInputCount)
+        val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class) ?: return
+        val recipeInventory = SimpleInventory(container.copyWithCount(1), material.copyWithCount(1))
+        val match = world?.recipeManager?.getFirstMatch(recipeType, recipeInventory, world) ?: return
+        if (match.isEmpty) return
+        val recipe = match.get()
+        container.decrement(recipe.slot0Count)
+        material.decrement(recipe.slot1Count)
         if (container.isEmpty) setStack(SLOT_CONTAINER, ItemStack.EMPTY)
         if (material.isEmpty) setStack(SLOT_MATERIAL, ItemStack.EMPTY)
-        if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, result.copy())
+        val result = recipe.output.copy()
+        if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, result)
         else outputSlot.increment(result.count)
     }
 
