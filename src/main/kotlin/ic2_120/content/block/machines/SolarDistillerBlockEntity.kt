@@ -558,7 +558,7 @@ class SolarDistillerBlockEntity(
      */
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
         // 正面（水平朝向面）禁用流体口，保留为机器交互面；其余面均开放管道/容器访问。
-        if (side == (world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH)) return null
+        // if (side == (world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH)) return null
         return ioStorage
     }
 
