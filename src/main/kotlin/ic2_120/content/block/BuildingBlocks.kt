@@ -3,6 +3,7 @@ package ic2_120.content.block
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.content.item.IronPlate
+import ic2_120.content.item.Alloy
 import ic2_120.content.item.Resin
 import ic2_120.content.item.RubberItem
 import ic2_120.content.item.Treetap
@@ -48,9 +49,27 @@ import ic2_120.registry.annotation.RecipeProvider
     registerItem = true,
     tab = CreativeTab.IC2_MATERIALS,
     group = "building",
-    renderLayer = "cutout_mipped"
+    renderLayer = "cutout_mipped",
+    generateBlockLootTable = false
 )
-class ReinforcedGlassBlock : Block(AbstractBlock.Settings.copy(Blocks.GLASS).strength(10.0f, 1200.0f).nonOpaque())
+class ReinforcedGlassBlock : Block(AbstractBlock.Settings.copy(Blocks.GLASS).strength(10.0f, 1200.0f).nonOpaque().dropsNothing()){
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val glass = Items.GLASS
+            val alloy = Alloy::class.instance()
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReinforcedGlassBlock::class.item(), 7)
+                .pattern("XGX")
+                .pattern("XXX")
+                .pattern("XGX")
+                .input('X', glass)
+                .input('G', alloy)
+                .criterion(hasItem(glass), conditionsFromItem(glass))
+                .criterion(hasItem(alloy), conditionsFromItem(alloy))
+                .offerTo(exporter, ReinforcedGlassBlock::class.id())
+        }
+    }
+}
 
 /** 防爆门：与铁门相同需红石开关，爆炸抗性同防爆石/玻璃。 */
 @ModBlock(
