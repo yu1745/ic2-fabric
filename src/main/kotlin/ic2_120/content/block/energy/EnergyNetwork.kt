@@ -598,23 +598,21 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         providers: Map<Long, Endpoint>,
         neighbors: Map<Long, List<Long>>
     ): List<ProviderPath> {
-        val dijkstra = shortestLossFromSourcesCached(consumer.entryCables, neighbors)
         val candidates = mutableListOf<ProviderPath>()
 
-        for ((providerPosLong, provider) in providers) {
-            var bestEnd: Long? = null
-            var bestLoss = Long.MAX_VALUE
-            for (entry in provider.entryCables) {
-                val loss = dijkstra.dist[entry] ?: continue
-                if (loss < bestLoss) {
-                    bestLoss = loss
-                    bestEnd = entry
+        // 按每根消费者入口导线分别做 Dijkstra，
+        // 确保每个供电者都有经过不同入口的候选路径。
+        // 当某条路径容量耗尽时，可以 fallback 到通过其他入口的路径。
+        for (source in consumer.entryCables) {
+            val dijkstra = shortestLossFromSourcesCached(setOf(source), neighbors)
+            for ((providerPosLong, provider) in providers) {
+                for (entry in provider.entryCables) {
+                    val loss = dijkstra.dist[entry] ?: continue
+                    val path = buildPath(entry, dijkstra.prev)
+                    if (path.isNotEmpty()) {
+                        candidates.add(ProviderPath(provider.storage, path, loss, providerPosLong))
+                    }
                 }
-            }
-            val end = bestEnd ?: continue
-            val path = buildPath(end, dijkstra.prev)
-            if (path.isNotEmpty()) {
-                candidates.add(ProviderPath(provider.storage, path, bestLoss, providerPosLong))
             }
         }
         candidates.sortBy { it.pathLossMilliEu }
@@ -627,13 +625,16 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
     ): List<PathCandidate> {
         val cacheKey = entriesKey(consumer.entryCables)
         bufferedCandidatesCacheByEntries[cacheKey]?.let { return it }
-        val dijkstra = shortestLossFromSourcesCached(consumer.entryCables, neighbors)
         val candidates = mutableListOf<PathCandidate>()
-        for (cablePosLong in cables) {
-            val loss = dijkstra.dist[cablePosLong] ?: continue
-            val path = buildPath(cablePosLong, dijkstra.prev)
-            if (path.isNotEmpty()) {
-                candidates.add(PathCandidate(path, loss))
+        // 按每根消费者入口导线分别做 Dijkstra，生成多路候选
+        for (source in consumer.entryCables) {
+            val dijkstra = shortestLossFromSourcesCached(setOf(source), neighbors)
+            for (cablePosLong in cables) {
+                val loss = dijkstra.dist[cablePosLong] ?: continue
+                val path = buildPath(cablePosLong, dijkstra.prev)
+                if (path.isNotEmpty()) {
+                    candidates.add(PathCandidate(path, loss))
+                }
             }
         }
         candidates.sortBy { it.pathLossMilliEu }
