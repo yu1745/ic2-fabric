@@ -16,18 +16,28 @@
 - `bamboo_jungle`：竹林
 - `swamp`：沼泽
 
-玩家文档按系统拆分，以下是目录入口。
+## 文档目录
 
-## 系统目录
+### 玩家指南 (guides/)
+
+- [发电与储电](guides/power-generation.md)
+- [作物系统玩家指南](guides/crop-player-guide.md)
+- [机器升级系统](guides/upgrades.md)
+- [采矿镭射枪](guides/mining-laser.md)
+
+### 核心系统 (systems/)
 
 - [EU 能量系统](systems/eu-energy.md)
-- [发电与储电](systems/power-generation-storage.md)
-- [作物系统玩家指南](crop-player-guide.md)
-- [机器升级系统](upgrades.md)
-- [机器系统](systems/machines.md)
-- [材料与矿石](systems/materials-ores.md)
-- [建筑与装饰](systems/building-decoration.md)
-- [工具与物品](systems/tools-items.md)
 - [动能系统（KU）](systems/kinetic-transmission.md)
-- [创意栏](systems/creative-tabs.md)
-- [版本与依赖](systems/version-deps.md)
+- [核反应堆系统](systems/nuclear-reactor.md)
+- [热能系统（HU）](systems/heat-system.md)
+- [流体管道系统](systems/fluid-pipes.md)
+- [机器系统](systems/machines.md)
+
+### 快速参考 (reference/)
+
+- [材料与矿石](reference/materials-ores.md)
+- [建筑与装饰](reference/building-decoration.md)
+- [工具与防护装备](reference/tools-armor.md)
+- [创意栏](reference/creative-tabs.md)
+- [版本与依赖](reference/version-deps.md)
