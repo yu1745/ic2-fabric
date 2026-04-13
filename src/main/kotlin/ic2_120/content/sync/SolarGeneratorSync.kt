@@ -30,6 +30,8 @@ class SolarGeneratorSync(
         const val NBT_ENERGY_STORED = "EnergyStored"
         /** 每 tick 产生 EU */
         const val EU_PER_TICK = 1L
+        /** 最小输出能量（EU），积累到此值后才输出，减少线损 */
+        const val MIN_OUTPUT_ENERGY = 32L  // LV 等级单次输出量
     }
 
     var energy by schema.int("Energy")
@@ -40,7 +42,10 @@ class SolarGeneratorSync(
     override fun getSideMaxInsert(side: Direction?): Long = 0L
 
     override fun getSideMaxExtract(side: Direction?): Long =
-        if (side != getFacing()) MAX_EXTRACT else 0L
+        if (side != getFacing()) {
+            // 只有积累到最小输出能量后才输出，减少线损
+            if (amount >= MIN_OUTPUT_ENERGY) MAX_EXTRACT else 0L
+        } else 0L
 
     override fun onEnergyCommitted() {
         energy = amount.toInt().coerceIn(0, Int.MAX_VALUE)

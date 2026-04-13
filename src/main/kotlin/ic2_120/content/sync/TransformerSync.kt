@@ -135,7 +135,7 @@ class TransformerSync(
 
     /**
      * 根据当前模式和方向决定该面是否可输出
-     * - 升压模式：除正面外的其他面可以输出（高级能量）
+     * - 升压模式：除正面外的其他面可以输出（高级能量），但需积累足够量后才输出
      * - 降压模式：只有正面可以输出（低级能量）
      */
     override fun getSideMaxExtract(side: Direction?): Long {
@@ -146,11 +146,17 @@ class TransformerSync(
 
         return when (currentMode) {
             Mode.STEP_UP -> {
-                // 升压：其他面输出高级能量
-                if (!isFront) getHighEuPerTick() else 0L
+                // 升压：其他面输出高级能量，但需积累到高级电压单次输出量后才输出
+                if (!isFront) {
+                    val highEuPerTick = getHighEuPerTick()
+                    // 只有积累到高级电压单次输出量后才输出，减少线损
+                    return if (amount >= highEuPerTick) highEuPerTick else 0L
+                } else {
+                    0L
+                }
             }
             Mode.STEP_DOWN -> {
-                // 降压：只有正面输出低级能量
+                // 降压：只有正面输出低级能量，保持原行为（立即输出）
                 if (isFront) getLowEuPerTick() else 0L
             }
         }
