@@ -275,10 +275,26 @@ class ItemStackNode(
         val py = originY + pad.top
         if (!ctx.drawEnabled) return
         if (!stack.isEmpty) {
-            ctx.drawContext.drawItemWithoutEntity(stack, px, py)
+            // 检查是否在裁剪区域内，完全不可见则不渲染
+            val clippedHit = ctx.clipRect?.clamp(px, py, size, size)
+            val isVisible = clippedHit == null || (clippedHit.w > 0 && clippedHit.h > 0)
+            if (isVisible) {
+                // TODO: ScrollView 中部分可见的物品裁剪问题
+                // 当 slot 在 ScrollView 中只露出一半时，物品应该只渲染可见部分，
+                // 但当前的 scissor 方案没有生效。可能需要：
+                // 1. 使用 RenderSystem 直接操作 OpenGL scissor
+                // 2. 或者修改物品渲染坐标并使用纹理偏移
+                // 3. 或者使用 stencil buffer 而不是 scissor test
+                if (clippedHit != null && ctx.drawEnabled) {
+                    ctx.drawContext.enableScissor(clippedHit.x, clippedHit.y, clippedHit.x + clippedHit.w, clippedHit.y + clippedHit.h)
+                    ctx.drawContext.drawItemWithoutEntity(stack, px, py)
+                    ctx.drawContext.disableScissor()
+                } else {
+                    ctx.drawContext.drawItemWithoutEntity(stack, px, py)
+                }
+            }
             if (ctx.interactionEnabled) {
-                val hit = ctx.clipRect?.clamp(px, py, size, size)
-                    ?: RenderContext.TooltipHit(px, py, size, size, emptyList())
+                val hit = clippedHit ?: RenderContext.TooltipHit(px, py, size, size, emptyList())
                 if (hit.w > 0 && hit.h > 0) {
                     ctx.tooltipHits += hit.copy(lines = listOf(stack.getName()))
                 }
@@ -314,8 +330,14 @@ class ButtonNode(
             if (it == Padding.ZERO) Padding(6, 4, 6, 4) else it
         }
 
-        val hovered = ctx.mouseX in originX until originX + measuredWidth
+        // 检查鼠标是否在按钮区域内，且在裁剪区域（ScrollView 视口）内
+        val mouseInButton = ctx.mouseX in originX until originX + measuredWidth
                 && ctx.mouseY in originY until originY + measuredHeight
+        val mouseInClip = ctx.clipRect?.let {
+            ctx.mouseX in it.minX until it.maxX && ctx.mouseY in it.minY until it.maxY
+        } ?: true
+        val hovered = mouseInButton && mouseInClip
+
         val mousePressed = GLFW.glfwGetMouseButton(
             MinecraftClient.getInstance().window.handle,
             GLFW.GLFW_MOUSE_BUTTON_LEFT
@@ -356,10 +378,13 @@ class ButtonNode(
         }
 
         if (ctx.interactionEnabled) {
-            ctx.buttonHits += RenderContext.ButtonHit(originX, originY, measuredWidth, measuredHeight, onClick)
+            // 检查按钮是否在裁剪区域内（ScrollView 视口等），超出视口的按钮不应响应点击
+            val clippedHit = ctx.clipRect?.clamp(originX, originY, measuredWidth, measuredHeight)
+            if (clippedHit == null || clippedHit.w > 0 && clippedHit.h > 0) {
+                ctx.buttonHits += RenderContext.ButtonHit(originX, originY, measuredWidth, measuredHeight, onClick)
+            }
             if (tooltip != null) {
-                val hit = ctx.clipRect?.clamp(originX, originY, measuredWidth, measuredHeight)
-                    ?: RenderContext.TooltipHit(originX, originY, measuredWidth, measuredHeight, tooltip)
+                val hit = clippedHit ?: RenderContext.TooltipHit(originX, originY, measuredWidth, measuredHeight, tooltip)
                 if (hit.w > 0 && hit.h > 0) {
                     ctx.tooltipHits += hit.copy(lines = tooltip)
                 }
@@ -390,30 +415,46 @@ class SlotAnchorNode(
         val anchorW = (measuredWidth - pad.horizontal).coerceAtLeast(0)
         val anchorH = (measuredHeight - pad.vertical).coerceAtLeast(0)
 
-        if (ctx.drawEnabled && showBorder) {
+        // 检查锚点是否在裁剪区域内（ScrollView 视口等）
+        val clippedHit = ctx.clipRect?.clamp(anchorX, anchorY, anchorW, anchorH)
+        val isVisible = clippedHit == null || (clippedHit.w > 0 && clippedHit.h > 0)
+
+        if (ctx.drawEnabled && showBorder && isVisible) {
+            // 使用裁剪后的坐标渲染，只显示可见部分
+            val renderX = clippedHit?.x ?: anchorX
+            val renderY = clippedHit?.y ?: anchorY
+            val renderW = clippedHit?.w ?: anchorW
+            val renderH = clippedHit?.h ?: anchorH
+
             // Render a vanilla-like slot frame so anchored slots look close to native containers.
             GuiBackground.drawVanillaLikeSlot(ctx.drawContext, anchorX, anchorY, anchorW, anchorH)
             if (borderColor != GuiBackground.BORDER_COLOR) {
                 ctx.drawContext.drawBorder(anchorX, anchorY, anchorW, anchorH, borderColor)
             }
             // ui.render happens after super.render, so we need to redraw slot hover highlight here.
-            val hovered = ctx.mouseX in anchorX until (anchorX + anchorW) &&
+            val mouseInClip = ctx.clipRect?.let {
+                ctx.mouseX in it.minX until it.maxX && ctx.mouseY in it.minY until it.maxY
+            } ?: true
+            val hovered = mouseInClip &&
+                ctx.mouseX in anchorX until (anchorX + anchorW) &&
                 ctx.mouseY in anchorY until (anchorY + anchorH)
             if (hovered) {
+                // hover 高亮也只渲染可见部分
                 ctx.drawContext.fillGradient(
-                    anchorX,
-                    anchorY,
-                    anchorX + anchorW,
-                    anchorY + anchorH,
+                    renderX,
+                    renderY,
+                    renderX + renderW,
+                    renderY + renderH,
                     hoverOverlayColor,
                     hoverOverlayColor
                 )
             }
         }
 
+        // 当锚点超出视口时，将其坐标移到屏幕外，避免原生 slot 绑定到错误位置
         ctx.anchors[id] = RenderContext.AnchorRect(
-            x = anchorX,
-            y = anchorY,
+            x = if (isVisible) anchorX else -10000,
+            y = if (isVisible) anchorY else -10000,
             w = anchorW,
             h = anchorH
         )
