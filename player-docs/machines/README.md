@@ -49,6 +49,7 @@
 | [采矿机](miner.md) | miner.md | Tier 3 (HV) | 自动采矿 |
 | [作物收获机](crop-harvester.md) | crop-harvester.md | Tier 1 (LV) | 自动收获 |
 | [作物监管机](cropmatron.md) | cropmatron.md | Tier 1 (LV) | 作物管理 |
+| [牲畜监管机](animalmatron.md) | animalmatron.md | Tier 1 (LV) | 动物养殖 |
 | [磁化机](magnetizer.md) | magnetizer.md | Tier 1 (LV) | 磁化铁块 |
 
 ## 储电与变压器

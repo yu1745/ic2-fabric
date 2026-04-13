@@ -2,6 +2,7 @@ package ic2_120
 
 import ic2_120.client.ArmorKeybinds
 import ic2_120.client.ArmorTooltipHandler
+import ic2_120.client.AnimalmatronTooltipHandler
 import ic2_120.client.BandwidthHudKeybinds
 import ic2_120.client.DrillTooltipHandler
 import ic2_120.client.FoamSprayerTooltipHandler
@@ -44,6 +45,7 @@ object Ic2_120Client : ClientModInitializer {
 		BandwidthHudKeybinds.register()
 		ArmorKeybinds.register()
 		ArmorTooltipHandler.register()
+		AnimalmatronTooltipHandler.register()
 		DrillTooltipHandler.register()
 		IridiumDrillModeHandler.register()
 		MiningLaserModeHandler.register()

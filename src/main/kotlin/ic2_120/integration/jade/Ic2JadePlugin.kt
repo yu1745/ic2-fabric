@@ -6,6 +6,8 @@ import ic2_120.content.block.CropBlock
 import ic2_120.content.block.CropBlockEntity
 import ic2_120.content.block.CropStickBlock
 import ic2_120.content.block.CropStickBlockEntity
+import ic2_120.content.block.AnimalmatronBlock
+import ic2_120.content.block.machines.AnimalmatronBlockEntity
 import ic2_120.content.block.KineticGeneratorBlock
 import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.block.WaterKineticGeneratorBlock
@@ -23,7 +25,9 @@ import ic2_120.content.block.transmission.SteelTransmissionShaftBlock
 import ic2_120.content.block.transmission.TransmissionBlockEntity
 import ic2_120.content.block.transmission.TransmissionShaftBlock
 import ic2_120.content.block.transmission.WoodTransmissionShaftBlock
+import ic2_120.content.entity.AnimalFoodMapping
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
+import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.registry.Registries
 import net.minecraft.text.Style
@@ -31,6 +35,8 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import snownee.jade.api.BlockAccessor
+import snownee.jade.api.EntityAccessor
+import snownee.jade.api.IEntityComponentProvider
 import snownee.jade.api.IBlockComponentProvider
 import snownee.jade.api.IServerDataProvider
 import snownee.jade.api.ITooltip
@@ -70,6 +76,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockDataProvider(KineticJadeProvider, WaterKineticGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(KineticJadeProvider, ManualKineticGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(KineticJadeProvider, KineticGeneratorBlockEntity::class.java)
+        registration.registerEntityDataProvider(AnimalJadeProvider, PassiveEntity::class.java)
     }
 
     override fun registerClient(registration: snownee.jade.api.IWailaClientRegistration) {
@@ -83,6 +90,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockComponent(KineticJadeProvider, WaterKineticGeneratorBlock::class.java)
         registration.registerBlockComponent(KineticJadeProvider, ManualKineticGeneratorBlock::class.java)
         registration.registerBlockComponent(KineticJadeProvider, KineticGeneratorBlock::class.java)
+        registration.registerEntityComponent(AnimalJadeProvider, PassiveEntity::class.java)
     }
 }
 
@@ -499,4 +507,120 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
         is BevelGearBlock -> 2048 to 3
         else -> 0 to 0
     }
+}
+
+/**
+ * Jade provider for animals managed by Animalmatron.
+ */
+object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<EntityAccessor> {
+
+    private val ANIMAL_MONITOR = Identifier("ic2_120", "animal_monitor")
+
+    override fun appendServerData(data: NbtCompound, accessor: EntityAccessor) {
+        val entity = accessor.entity
+        if (entity !is PassiveEntity) return
+
+        val world = accessor.level
+        val pos = entity.blockPos
+
+        // 只显示被管理的动物
+        if (!AnimalFoodMapping.isManagedAnimal(entity)) {
+            data.putBoolean("isManaged", false)
+            return
+        }
+
+        // 检查附近4格内是否有牲畜监管机
+        val box = net.minecraft.util.math.Box(pos).expand(4.0)
+        var foundMachine: AnimalmatronBlockEntity? = null
+        var hasWater = false
+        var hasWeedEx = false
+        var totalFed = 0
+        var todayFed = 0
+
+        val minX = box.minX.toInt()
+        val minY = box.minY.toInt()
+        val minZ = box.minZ.toInt()
+        val maxX = box.maxX.toInt()
+        val maxY = box.maxY.toInt()
+        val maxZ = box.maxZ.toInt()
+
+        for (x in minX..maxX) {
+            for (y in minY..maxY) {
+                for (z in minZ..maxZ) {
+                    val checkPos = net.minecraft.util.math.BlockPos(x, y, z)
+                    val be = world.getBlockEntity(checkPos)
+                    if (be is AnimalmatronBlockEntity) {
+                        foundMachine = be
+                        hasWater = be.sync.waterAmountMb > 0
+                        hasWeedEx = be.sync.weedExAmountMb > 0
+                        // 获取喂食进度
+                        val progress = be.getAnimalFeedProgress(entity.uuid)
+                        if (progress != null) {
+                            totalFed = progress.first
+                            todayFed = progress.second
+                        }
+                        // 获取繁殖状态
+                        data.putBoolean("canBreed", be.isAnimalCanBreed(entity.uuid))
+                        break
+                    }
+                }
+                if (foundMachine != null) break
+            }
+            if (foundMachine != null) break
+        }
+
+        data.putBoolean("isManaged", foundMachine != null)
+        data.putBoolean("hasWater", hasWater)
+        data.putBoolean("hasWeedEx", hasWeedEx)
+        data.putInt("totalFed", totalFed)
+        data.putInt("todayFed", todayFed)
+        data.putInt("requiredToFed", AnimalmatronBlockEntity.FOOD_TO_GROW) // 10
+    }
+
+    override fun appendTooltip(tooltip: ITooltip, accessor: EntityAccessor, config: IPluginConfig) {
+        if (!accessor.serverData.contains("isManaged")) return
+        if (!accessor.serverData.getBoolean("isManaged")) return
+
+        // 显示被监管标识
+        tooltip.add(Text.translatable("ic2_120.jade.animal_monitored").formatted(Formatting.GREEN))
+
+        val hasWater = accessor.serverData.getBoolean("hasWater")
+        val hasWeedEx = accessor.serverData.getBoolean("hasWeedEx")
+
+        // 显示水状态
+        tooltip.add(
+            if (hasWater) {
+                Text.translatable("ic2_120.jade.animal_water_ok").formatted(Formatting.AQUA)
+            } else {
+                Text.translatable("ic2_120.jade.animal_water_low").formatted(Formatting.RED)
+            }
+        )
+
+        // 显示除草剂状态
+        tooltip.add(
+            if (hasWeedEx) {
+                Text.translatable("ic2_120.jade.animal_weedex_ok").formatted(Formatting.GREEN)
+            } else {
+                Text.translatable("ic2_120.jade.animal_weedex_low").formatted(Formatting.RED)
+            }
+        )
+
+        // 显示喂食进度
+        if (accessor.serverData.contains("canBreed")) {
+            val canBreed = accessor.serverData.getBoolean("canBreed")
+            if (canBreed) {
+                // 可以繁殖
+                tooltip.add(Text.translatable("ic2_120.jade.animal_ready_to_breed").formatted(Formatting.GREEN))
+            } else {
+                // 还没长成，显示进度
+                val totalFed = accessor.serverData.getInt("totalFed")
+                val requiredToFed = accessor.serverData.getInt("requiredToFed")
+                tooltip.add(Text.literal("喂食: $totalFed/$requiredToFed").formatted(Formatting.YELLOW))
+                val remaining = requiredToFed - totalFed
+                tooltip.add(Text.translatable("ic2_120.jade.animal_remaining_feed", remaining).formatted(Formatting.GRAY))
+            }
+        }
+    }
+
+    override fun getUid(): Identifier = ANIMAL_MONITOR
 }

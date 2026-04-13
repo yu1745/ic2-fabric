@@ -324,7 +324,7 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
                 if (ENABLE_OVERVOLTAGE_LOG) {
                     log.debug("[超压检测]   → 跳过：不是 ITieredMachine")
                 }
-                skippedNotMachineCount++
+                skippedNotMachineCount++    
                 continue
             }
 

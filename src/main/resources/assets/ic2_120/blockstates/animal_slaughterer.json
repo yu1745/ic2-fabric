@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=east,active=false": {
+      "model": "ic2:block/machine/resource/crop_harvester",
+      "y": 90
+    },
+    "facing=east,active=true": {
+      "model": "ic2:block/machine/resource/crop_harvester",
+      "y": 90
+    },
+    "facing=north,active=false": {
+      "model": "ic2:block/machine/resource/crop_harvester"
+    },
+    "facing=north,active=true": {
+      "model": "ic2:block/machine/resource/crop_harvester"
+    },
+    "facing=south,active=false": {
+      "model": "ic2:block/machine/resource/crop_harvester",
+      "y": 180
+    },
+    "facing=south,active=true": {
+      "model": "ic2:block/machine/resource/crop_harvester",
+      "y": 180
+    },
+    "facing=west,active=false": {
+      "model": "ic2:block/machine/resource/crop_harvester",
+      "y": 270
+    },
+    "facing=west,active=true": {
+      "model": "ic2:block/machine/resource/crop_harvester",
+      "y": 270
+    }
+  }
+}
