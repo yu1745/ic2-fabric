@@ -1,6 +1,8 @@
 {
   "replace": false,
   "values": [
+    "ic2_120:animal_slaughterer",
+    "ic2_120:animalmatron",
     "ic2_120:blast_furnace",
     "ic2_120:block_cutter",
     "ic2_120:canner",
