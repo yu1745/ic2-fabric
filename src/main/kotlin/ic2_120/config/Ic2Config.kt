@@ -343,6 +343,76 @@ object Ic2Config {
         return UuTemplateEntry(itemId, cost)
     }
 
+    /**
+     * 添加或更新物品的UU复制成本到白名单，并保存配置文件。
+     * @param itemId 物品ID，如 "minecraft:diamond"
+     * @param uuCostUb UU成本，单位uB (micro-buckets)
+     * @return 如果保存成功返回true
+     */
+    fun addOrUpdateReplicationCost(itemId: String, uuCostUb: Int): Boolean {
+        return try {
+            val normalizedId = itemId.trim()
+            if (normalizedId.isEmpty() || uuCostUb <= 0) return false
+
+            // 更新内存中的配置
+            val currentWhitelist = current.uuReplication.replicationWhitelist.toMutableMap()
+            currentWhitelist[normalizedId] = uuCostUb
+            current = current.copy(
+                uuReplication = current.uuReplication.copy(
+                    replicationWhitelist = currentWhitelist
+                )
+            )
+
+            // 保存到文件
+            saveCurrentConfig()
+            true
+        } catch (e: Exception) {
+            logger.error("Failed to save replication cost for $itemId", e)
+            false
+        }
+    }
+
+    /**
+     * 从UU复制白名单中移除物品，并保存配置文件。
+     * @param itemId 物品ID
+     * @return 如果移除成功返回true
+     */
+    fun removeReplicationCost(itemId: String): Boolean {
+        return try {
+            val normalizedId = itemId.trim()
+            if (normalizedId.isEmpty()) return false
+
+            // 更新内存中的配置
+            val currentWhitelist = current.uuReplication.replicationWhitelist.toMutableMap()
+            if (!currentWhitelist.containsKey(normalizedId)) return false
+
+            currentWhitelist.remove(normalizedId)
+            current = current.copy(
+                uuReplication = current.uuReplication.copy(
+                    replicationWhitelist = currentWhitelist
+                )
+            )
+
+            // 保存到文件
+            saveCurrentConfig()
+            true
+        } catch (e: Exception) {
+            logger.error("Failed to remove replication cost for $itemId", e)
+            false
+        }
+    }
+
+    /**
+     * 获取所有已配置的UU复制白名单（物品ID -> UU成本）
+     */
+    fun getAllReplicationCosts(): Map<String, Int> {
+        return current.uuReplication.replicationWhitelist
+    }
+
+    private fun saveCurrentConfig() {
+        Files.writeString(configPath, encodeConfigWithComments(current), StandardCharsets.UTF_8)
+    }
+
     private fun readOrCreateDefault(): Ic2MainConfig {
         if (!Files.exists(configPath)) {
             writeDefaultConfig(configPath)
