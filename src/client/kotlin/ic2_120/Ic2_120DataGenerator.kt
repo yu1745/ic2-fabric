@@ -15,6 +15,10 @@ import net.minecraft.util.Identifier
 
 object Ic2_120DataGenerator : DataGeneratorEntrypoint {
 	override fun onInitializeDataGenerator(fabricDataGenerator: FabricDataGenerator) {
+		// 附属 mod 可通过 JVM 参数 -Dskip.ic2_120.datagen=true 跳过本体 datagen
+		if (System.getProperty("skip.ic2_120.datagen")?.toBoolean() == true) {
+			return
+		}
 		// datagen 可能在 ModInitializer 之前执行；若注解矿辞表为空且物品未注册，则先完成扫描注册
 		if (MaterialTagRegistry.itemEntries.isEmpty()) {
 			val tinId = Identifier(Ic2_120.MOD_ID, "tin_ingot")

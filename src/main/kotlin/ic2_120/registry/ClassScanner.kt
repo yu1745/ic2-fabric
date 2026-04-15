@@ -113,8 +113,9 @@ object ClassScanner {
     /** 存储 ScreenHandlerType（供扩展方法访问） */
     private val screenHandlerTypes = mutableMapOf<kotlin.reflect.KClass<*>, ScreenHandlerType<*>>()
 
-    /** 配方生成器列表 */
-    private val recipeGenerators = mutableListOf<(Consumer<RecipeJsonProvider>) -> Unit>()
+    /** 配方生成器列表（带 modId 标记，支持附属 mod 按需过滤） */
+    private data class RecipeGeneratorEntry(val modId: String, val generator: (Consumer<RecipeJsonProvider>) -> Unit)
+    private val recipeGenerators = mutableListOf<RecipeGeneratorEntry>()
 
     /**
      * `@ModBlock(generateBlockLootTable = false)` 的方块注册名（path），供 [ic2_120.content.recipes.ModBlockLootTableProvider] 跳过自动生成。
@@ -150,18 +151,6 @@ object ClassScanner {
 
         logger.info("扫描完成: {} 个物品栏类, {} 个方块类, {} 个方块实体类, {} 个 ScreenHandler 类, {} 个物品类",
             tabClasses.size, blockClasses.size, blockEntityClasses.size, screenHandlerClasses.size, itemClasses.size)
-
-        // 清空之前的映射
-        tabItems.clear()
-        blockClassToName.clear()
-        BlockRenderLayerRegistry.clear()
-        blockInstances.clear()
-        itemInstances.clear()
-        blockToBlockEntityType.clear()
-        recipeGenerators.clear()
-        blockPathsSkippingGeneratedLootTable.clear()
-        processedClassNames.clear()
-        MaterialTagRegistry.clear()
 
         // 按顺序注册：方块 → 方块实体类型 → ScreenHandler → 物品 → 物品栏
         registerBlocks(modId, blockClasses)
@@ -1025,7 +1014,7 @@ object ClassScanner {
                     generateRecipesMethod.call(companion, exporter as Any?)
                 }
 
-                recipeGenerators.add(generator)
+                recipeGenerators.add(RecipeGeneratorEntry(currentModId, generator))
                 logger.debug("已收集配方生成器: {}.{}", clazz.simpleName, generateRecipesMethod.name)
             } catch (e: Exception) {
                 logger.debug("收集配方生成器失败 {}: {}", clazz.simpleName, e.message)
@@ -1044,9 +1033,9 @@ object ClassScanner {
         var successCount = 0
         var failCount = 0
 
-        recipeGenerators.forEach { generator ->
+        recipeGenerators.forEach { entry ->
             try {
-                generator(recipeExporter)
+                entry.generator(recipeExporter)
                 successCount++
             } catch (e: Exception) {
                 logger.error("配方生成失败: {}", e.message, e)
@@ -1057,11 +1046,45 @@ object ClassScanner {
     }
 
     /**
+     * 执行指定 modId 的配方生成（供附属 mod 使用）。
+     */
+    fun generateRecipesForMod(modId: String, recipeExporter: Consumer<RecipeJsonProvider>) {
+        logger.info("开始生成 {} 配方...", modId)
+        var successCount = 0
+        var failCount = 0
+        val filtered = recipeGenerators.filter { it.modId == modId }
+
+        filtered.forEach { entry ->
+            try {
+                entry.generator(recipeExporter)
+                successCount++
+            } catch (e: Exception) {
+                logger.error("配方生成失败: {}", e.message, e)
+                failCount++
+            }
+        }
+        logger.info("{} 配方生成完成 - 成功: {}, 失败: {}, 总计: {}", modId, successCount, failCount, filtered.size)
+    }
+
+    /**
+     * 获取 Block 实例
+     * 供扩展方法调用
+     */
+    @JvmStatic fun getBlockInstancePublic(clazz: kotlin.reflect.KClass<out Block>): Block? =
+        blockInstances[clazz]
+
+    /**
      * 获取 Block 实例
      * 供扩展方法调用
      */
     internal fun getBlockInstance(clazz: kotlin.reflect.KClass<out Block>): Block =
         blockInstances[clazz] ?: error("Block instance not found: ${clazz.simpleName}")
+
+    /**
+     * 获取 Item 实例（可空，供附属 mod 查询）
+     */
+    @JvmStatic fun getItemInstancePublic(clazz: kotlin.reflect.KClass<out Item>): Item? =
+        itemInstances[clazz]
 
     /**
      * 获取 Item 实例
