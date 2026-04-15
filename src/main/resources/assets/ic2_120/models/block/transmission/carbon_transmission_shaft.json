@@ -1,7 +1,6 @@
 {
-  "parent": "block/cube_all",
+  "parent": "builtin/entity",
   "textures": {
-    "all": "minecraft:block/black_concrete"
+    "particle": "minecraft:block/black_concrete"
   }
 }
-

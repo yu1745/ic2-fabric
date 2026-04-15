@@ -60,14 +60,16 @@ class TransmissionBlockEntityRenderer(
         light: Int,
         overlay: Int
     ) {
-        val world = entity.world ?: return
+        val world = entity.world
         val state = entity.cachedState
-        val angle = ((world.time + tickDelta) * degreesPerTickFromKu(entity.currentKu)) % 360.0f
+        val isItem = world == null
+        val angle = if (isItem) 0.0f
+            else ((world!!.time + tickDelta) * degreesPerTickFromKu(entity.currentKu)) % 360.0f
         val fullLight = LightmapTextureManager.MAX_LIGHT_COORDINATE
 
         when (val block = state.block) {
             is TransmissionShaftBlock -> {
-                val axis = state.get(Properties.AXIS)
+                val axis = if (isItem) Direction.Axis.Y else state.get(Properties.AXIS)
                 val vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(WHITE_TEXTURE))
                 val materialColor = baseColorForMaterial(block.material)
                 matrices.push()
@@ -80,49 +82,63 @@ class TransmissionBlockEntityRenderer(
             is BevelGearBlock -> {
                 val gearThickness = block.gearThickness
                 val gearFaceWidthHalf = (gearThickness * 0.5f).coerceAtLeast(0.02f)
-                // 前提：齿轮外侧面贴住方块外边界。
-                // 以方块中心为锥顶、45° 等比伞齿轮近似时，厚度中线就是分度圆所在面：
-                // pitchRadius = 0.5 - gearThickness / 2
                 val pitchRadius = (0.5f - gearFaceWidthHalf).coerceAtLeast(0.05f)
-                // 局部几何以齿轮中心为原点，因此中心位置就是厚度中线。
                 val gearOffset = pitchRadius
                 val vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(WHITE_TEXTURE))
                 val materialColor = intArrayOf(122, 126, 132)
-                val renderDirs = bevelRenderDirections(world, entity.pos)
 
                 matrices.push()
                 matrices.translate(0.5, 0.5, 0.5)
 
-                if (renderDirs.isEmpty()) {
-                    // 无有效连接时，退回旧的平面渲染，避免方块“消失”。
-                    val plane = state.get(BevelGearBlock.PLANE)
-                    val (firstAxis, secondAxis) = plane.axes()
-                    val firstSideSign = gearSideSign(world, entity.pos, firstAxis, preferPositive = true)
-                    val secondSideSign = gearSideSign(world, entity.pos, secondAxis, preferPositive = false)
+                if (isItem) {
+                    // 物品渲染：以默认 XZ 平面展示两个方向的齿轮
+                    val firstAxis = Direction.Axis.X
+                    val secondAxis = Direction.Axis.Z
 
                     matrices.push()
-                    translateAlongAxis(matrices, firstAxis, gearOffset * firstSideSign)
+                    translateAlongAxis(matrices, firstAxis, gearOffset)
                     rotateByAxis(matrices, firstAxis, angle)
                     drawGear8Teeth(matrices, vc, fullLight, overlay, firstAxis, pitchRadius, gearFaceWidthHalf, materialColor)
                     matrices.pop()
 
                     matrices.push()
-                    translateAlongAxis(matrices, secondAxis, gearOffset * secondSideSign)
+                    translateAlongAxis(matrices, secondAxis, -gearOffset)
                     rotateByAxis(matrices, secondAxis, angle + MESH_PHASE_OFFSET_DEGREES)
                     drawGear8Teeth(matrices, vc, fullLight, overlay, secondAxis, pitchRadius, gearFaceWidthHalf, materialColor)
                     matrices.pop()
                 } else {
-                    for (i in renderDirs.indices) {
-                        val direction = renderDirs[i]
-                        val axis = direction.axis
-                        val sideSign = directionSign(direction)
-                        val phase = angle + MESH_PHASE_OFFSET_DEGREES * i
+                    val renderDirs = bevelRenderDirections(world!!, entity.pos)
+
+                    if (renderDirs.isEmpty()) {
+                        val plane = state.get(BevelGearBlock.PLANE)
+                        val (firstAxis, secondAxis) = plane.axes()
+                        val firstSideSign = gearSideSign(world, entity.pos, firstAxis, preferPositive = true)
+                        val secondSideSign = gearSideSign(world, entity.pos, secondAxis, preferPositive = false)
 
                         matrices.push()
-                        translateAlongAxis(matrices, axis, gearOffset * sideSign)
-                        rotateByAxis(matrices, axis, phase)
-                        drawGear8Teeth(matrices, vc, fullLight, overlay, axis, pitchRadius, gearFaceWidthHalf, materialColor)
+                        translateAlongAxis(matrices, firstAxis, gearOffset * firstSideSign)
+                        rotateByAxis(matrices, firstAxis, angle)
+                        drawGear8Teeth(matrices, vc, fullLight, overlay, firstAxis, pitchRadius, gearFaceWidthHalf, materialColor)
                         matrices.pop()
+
+                        matrices.push()
+                        translateAlongAxis(matrices, secondAxis, gearOffset * secondSideSign)
+                        rotateByAxis(matrices, secondAxis, angle + MESH_PHASE_OFFSET_DEGREES)
+                        drawGear8Teeth(matrices, vc, fullLight, overlay, secondAxis, pitchRadius, gearFaceWidthHalf, materialColor)
+                        matrices.pop()
+                    } else {
+                        for (i in renderDirs.indices) {
+                            val direction = renderDirs[i]
+                            val axis = direction.axis
+                            val sideSign = directionSign(direction)
+                            val phase = angle + MESH_PHASE_OFFSET_DEGREES * i
+
+                            matrices.push()
+                            translateAlongAxis(matrices, axis, gearOffset * sideSign)
+                            rotateByAxis(matrices, axis, phase)
+                            drawGear8Teeth(matrices, vc, fullLight, overlay, axis, pitchRadius, gearFaceWidthHalf, materialColor)
+                            matrices.pop()
+                        }
                     }
                 }
 

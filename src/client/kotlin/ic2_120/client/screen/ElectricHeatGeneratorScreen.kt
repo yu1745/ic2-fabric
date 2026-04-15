@@ -76,14 +76,19 @@ class ElectricHeatGeneratorScreen(
                 EnergyBar(fraction)
                 // 10个线圈槽位（2行5列）
                 Column {
-                    repeat(2) {
+                    repeat(2) { row ->
                         Flex(
                             direction = FlexDirection.ROW,
                             justifyContent = JustifyContent.CENTER,
                             alignItems = AlignItems.CENTER,
                         ) {
-                            repeat(5) { index ->
-                                SlotAnchor(id = "slot.$index")
+                            repeat(5) { col ->
+                                val slotIndex = row * 5 + col
+                                SlotAnchor(
+                                    id = "slot.$slotIndex",
+                                    width = ElectricHeatGeneratorScreenHandler.SLOT_SIZE,
+                                    height = ElectricHeatGeneratorScreenHandler.SLOT_SIZE
+                                )
                             }
                         }
                     }
