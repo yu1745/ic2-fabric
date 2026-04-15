@@ -34,6 +34,8 @@ class ReactorChamberBlockEntity(
         state
     )
 
+    fun findAdjacentReactorPublic(): NuclearReactorBlockEntity? = findAdjacentReactor()
+
     private fun findAdjacentReactor(): NuclearReactorBlockEntity? {
         val world = world ?: return null
         for (dir in Direction.values()) {

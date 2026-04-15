@@ -13,6 +13,7 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
@@ -69,7 +70,8 @@ class SolarGeneratorBlockEntity(
     override val tier: Int = GENERATOR_TIER
 
     private val inventory = DefaultedList.ofSize(1, ItemStack.EMPTY)  // 仅电池槽
-    private val itemStorage = RoutedItemStorage(
+    @RegisterItemStorage
+    val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },

@@ -8,6 +8,8 @@ import ic2_120.content.block.nuclear.ReactorChamberBlock
 import ic2_120.content.block.nuclear.ReactorChamberBlockEntity
 import ic2_120.content.block.nuclear.ReactorChamberEnergyProvider
 import ic2_120.content.block.nuclear.ReactorFluidPortBlockEntity
+import ic2_120.content.block.nuclear.ReactorAccessHatchBlockEntity
+import ic2_120.content.block.nuclear.ReactorItemStorageProvider
 import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.network.NetworkManager
@@ -144,6 +146,20 @@ object Ic2_120 : ModInitializer {
         team.reborn.energy.api.EnergyStorage.SIDED.registerForBlockEntity(
             { be, side -> ReactorChamberEnergyProvider.getEnergyStorage(be as ReactorChamberBlockEntity, side) },
             reactorChamberType
+        )
+
+        // 核反应堆/反应仓/访问接口 物品存储注册（Fabric Transfer API）
+        ItemStorage.SIDED.registerForBlockEntity(
+            { be, _ -> ReactorItemStorageProvider.getStorage(be as NuclearReactorBlockEntity) },
+            NuclearReactorBlockEntity::class.type()
+        )
+        ItemStorage.SIDED.registerForBlockEntity(
+            { be, _ -> ReactorItemStorageProvider.getStorageForChamber(be as ReactorChamberBlockEntity) },
+            reactorChamberType
+        )
+        ItemStorage.SIDED.registerForBlockEntity(
+            { be, _ -> ReactorItemStorageProvider.getStorageForAccessHatch(be as ReactorAccessHatchBlockEntity) },
+            ReactorAccessHatchBlockEntity::class.type()
         )
 
         // 单元与桶的流体交互（右键放置/收集液体，等效桶）

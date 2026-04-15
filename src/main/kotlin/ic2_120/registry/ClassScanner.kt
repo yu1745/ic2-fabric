@@ -17,6 +17,7 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterFluidStorage
+import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModMachineRecipe
 import ic2_120.registry.annotation.ModMachineRecipeBinding
@@ -53,6 +54,9 @@ import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import org.slf4j.LoggerFactory
 import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.declaredMemberProperties
@@ -750,6 +754,23 @@ object ClassScanner {
                         }
                     }, type)
                     logger.debug("已为方块实体 {} 注册 EnergyStorage（属性 {}）", clazz.simpleName, prop.name)
+                }
+
+                // 若存在 @RegisterItemStorage 字段，则向 Fabric Transfer API 注册 SIDED 查找
+                val itemProperty = findAllMemberProperties(clazz).firstOrNull { it.hasAnnotation<RegisterItemStorage>() }
+                if (itemProperty != null) {
+                    val iProp = itemProperty
+                    @Suppress("UNCHECKED_CAST")
+                    ItemStorage.SIDED.registerForBlockEntity({ be, _ ->
+                        val storage = (iProp as KProperty1<Any, Any?>).get(be)
+                        @Suppress("UNCHECKED_CAST")
+                        if (storage is Storage<*>) storage as Storage<ItemVariant>
+                        else {
+                            logger.error("方块实体 {} 的物品存储 {} 不是 Storage<ItemVariant>", clazz.simpleName, iProp.name)
+                            null
+                        }
+                    }, type)
+                    logger.debug("已为方块实体 {} 注册 ItemStorage（属性 {}）", clazz.simpleName, iProp.name)
                 }
 
                 registerFluidStorageLookup(clazz)

@@ -266,6 +266,16 @@ class NuclearReactorBlockEntity(
 
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
+    override fun isValid(slot: Int, stack: ItemStack): Boolean {
+        if (stack.isEmpty) return true
+        if (slot < MAX_SLOTS) {
+            if (stack.item !is IBaseReactorComponent) return false
+            if (!(stack.item as IBaseReactorComponent).canBePlacedIn(stack, this)) return false
+            if (slot >= currentCapacity()) return false
+        }
+        return true
+    }
+
     override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())

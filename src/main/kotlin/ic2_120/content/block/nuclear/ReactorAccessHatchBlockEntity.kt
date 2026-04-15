@@ -27,6 +27,8 @@ class ReactorAccessHatchBlockEntity(
         state
     )
 
+    fun getCentralReactorPublic(): NuclearReactorBlockEntity? = getCentralReactor()
+
     private fun getCentralReactor(): NuclearReactorBlockEntity? {
         val w = world ?: return null
         for (dx in -2..2) {
