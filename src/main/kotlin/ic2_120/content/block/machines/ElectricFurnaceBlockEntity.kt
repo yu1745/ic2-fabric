@@ -8,19 +8,24 @@ import ic2_120.content.block.ITieredMachine
 import ic2_120.content.screen.ElectricFurnaceScreenHandler
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.energy.charge.BatteryDischargerComponent
+import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.upgrade.EjectorUpgradeComponent
+import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
+import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
+import ic2_120.content.upgrade.IOverclockerUpgradeSupport
+import ic2_120.content.upgrade.ITransformerUpgradeSupport
+import ic2_120.content.upgrade.OverclockerUpgradeComponent
+import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.BlockState
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -47,7 +52,9 @@ class ElectricFurnaceBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, Storage<ItemVariant>, ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
+    IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = ElectricFurnaceBlock.ACTIVE
 
@@ -64,11 +71,22 @@ class ElectricFurnaceBlockEntity(
 
     override val tier: Int = 1
 
+    override var speedMultiplier: Float = 1f
+    override var energyMultiplier: Float = 1f
+    override var capacityBonus: Long = 0L
+    override var voltageTierBonus: Int = 0
+
     companion object {
         const val SLOT_INPUT = 0
         const val SLOT_OUTPUT = 1
         const val SLOT_DISCHARGING = 2
-        const val INVENTORY_SIZE = 3
+        const val SLOT_UPGRADE_0 = 3
+        const val SLOT_UPGRADE_1 = 4
+        const val SLOT_UPGRADE_2 = 5
+        const val SLOT_UPGRADE_3 = 6
+        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT)
+        const val INVENTORY_SIZE = 7
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)  // 0: 输入, 1: 输出, 2: 放电
@@ -79,6 +97,7 @@ class ElectricFurnaceBlockEntity(
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
+            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isSmeltingInput(it) })
         ),
@@ -88,7 +107,12 @@ class ElectricFurnaceBlockEntity(
 
     val syncedData = SyncedData(this)
     @RegisterEnergy
-    val sync = ElectricFurnaceSync(syncedData) { world?.time }
+    val sync = ElectricFurnaceSync(
+        syncedData,
+        { world?.time },
+        { capacityBonus },
+        { TransformerUpgradeComponent.maxInsertForTier(tier + voltageTierBonus) }
+    )
 
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
@@ -127,16 +151,9 @@ class ElectricFurnaceBlockEntity(
         SLOT_INPUT -> isSmeltingInput(stack)
         SLOT_OUTPUT -> false
         SLOT_DISCHARGING -> isBatteryItem(stack)
+        in SLOT_UPGRADE_0..SLOT_UPGRADE_3 -> stack.item is IUpgradeItem
         else -> false
     }
-
-    override fun insert(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.insert(resource, maxAmount, transaction)
-
-    override fun extract(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.extract(resource, maxAmount, transaction)
-
-    override fun iterator(): MutableIterator<StorageView<ItemVariant>> = itemStorage.iterator()
 
     override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
@@ -170,6 +187,14 @@ class ElectricFurnaceBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+
+        // 应用升级效果（加速、储能、高压等）
+        OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
+        sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
+
         sync.experienceDisplay = (storedExperience * 10).toInt()
         pullEnergyFromNeighbors(world, pos, sync)
 
@@ -209,6 +234,7 @@ class ElectricFurnaceBlockEntity(
             return
         }
 
+        val progressIncrement = speedMultiplier.toInt().coerceAtLeast(1)
         if (sync.progress >= ElectricFurnaceSync.PROGRESS_MAX) {
             input.decrement(1)
             if (outputSlot.isEmpty()) setStack(1, result.copy())
@@ -222,10 +248,10 @@ class ElectricFurnaceBlockEntity(
         }
 
         // 内部消耗：直接扣减 amount（不经过 extract，故对外 MAX_EXTRACT=0 仍生效，电缆无法拉电）
-        val need = ElectricFurnaceSync.ENERGY_PER_TICK
+        val need = (ElectricFurnaceSync.ENERGY_PER_TICK * energyMultiplier).toLong().coerceAtLeast(1L)
         if (sync.consumeEnergy(need) > 0L) {
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            sync.progress += 1
+            sync.progress += progressIncrement
             markDirty()
             setActiveState(world, pos, state, true)
         } else {
@@ -245,10 +271,10 @@ class ElectricFurnaceBlockEntity(
      * 从放电槽提取能量（如果需要）
      */
     private fun extractFromDischargingSlot() {
-        val space = (ElectricFurnaceSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0L)
+        val space = (sync.getEffectiveCapacity() - sync.amount).coerceAtLeast(0L)
         if (space <= 0L) return
 
-        val request = minOf(space, ElectricFurnaceSync.MAX_INSERT)
+        val request = minOf(space, sync.getEffectiveMaxInsertPerTick())
         val extracted = batteryDischarger.tick(request)
         if (extracted <= 0L) return
 
@@ -266,14 +292,5 @@ class ElectricFurnaceBlockEntity(
         return w.recipeManager.getFirstMatch(RecipeType.SMELTING, inv, w).isPresent
     }
 }
-
-
-
-
-
-
-
-
-
 
 

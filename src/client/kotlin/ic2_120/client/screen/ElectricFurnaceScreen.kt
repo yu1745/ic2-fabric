@@ -46,7 +46,7 @@ class ElectricFurnaceScreen(
         val left = x
         val top = y
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = ElectricFurnaceSync.ENERGY_CAPACITY
+        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
         val energyFraction = (energy.toFloat() / cap).coerceIn(0f, 1f)
         val progressFrac = (handler.sync.progress.coerceIn(0, ElectricFurnaceSync.PROGRESS_MAX)
             .toFloat() / ElectricFurnaceSync.PROGRESS_MAX).coerceIn(0f, 1f)
@@ -59,37 +59,52 @@ class ElectricFurnaceScreen(
         val sideTextX = left - sideTextWidth - 4
 
         val content: UiScope.() -> Unit = {
-            Column(
+            Row(
                 x = left + 8,
                 y = top + 8,
-                spacing = 6,
+                spacing = 8,
                 modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
             ) {
-                Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                    Text(title.string, color = 0xFFFFFF)
-                    Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
-                }
-                EnergyBar(
-                    energyFraction,
-                    barHeight = 12,
-                )
+                Column(
+                    spacing = 6,
+                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
+                ) {
+                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
+                        Text(title.string, color = 0xFFFFFF)
+                        Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
+                    }
+                    EnergyBar(
+                        energyFraction,
+                        barHeight = 12,
+                    )
 
-                Flex(
-                    direction = FlexDirection.ROW,
-                    alignItems = AlignItems.CENTER,
-                    gap = 4
-                ) {
-                    SlotHost(ElectricFurnaceScreenHandler.SLOT_INPUT_INDEX)
-                    EnergyBar(progressFrac, modifier = Modifier.EMPTY.fractionWidth(1.0f))
-                    SlotHost(ElectricFurnaceScreenHandler.SLOT_OUTPUT_INDEX)
+                    Flex(
+                        direction = FlexDirection.ROW,
+                        alignItems = AlignItems.CENTER,
+                        gap = 4
+                    ) {
+                        SlotHost(ElectricFurnaceScreenHandler.SLOT_INPUT_INDEX)
+                        EnergyBar(progressFrac, modifier = Modifier.EMPTY.fractionWidth(1.0f))
+                        SlotHost(ElectricFurnaceScreenHandler.SLOT_OUTPUT_INDEX)
+                    }
+                    Flex(
+                        direction = FlexDirection.ROW,
+                        alignItems = AlignItems.CENTER,
+                        gap = 4
+                    ) {
+                        SlotHost(ElectricFurnaceScreenHandler.SLOT_DISCHARGING_INDEX)
+                    }
                 }
-                Flex(
-                    direction = FlexDirection.ROW,
-                    alignItems = AlignItems.CENTER,
-                    gap = 4
+
+                Column(
+                    spacing = 4,
+                    modifier = Modifier.EMPTY
+                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
+                        .padding(0, 8, 0, 0)
                 ) {
-                    SlotHost(ElectricFurnaceScreenHandler.SLOT_DISCHARGING_INDEX)
-                    // Text("放电槽", color = 0xAAAAAA, shadow = false)
+                    for (slotIndex in ElectricFurnaceScreenHandler.SLOT_UPGRADE_INDEX_START..ElectricFurnaceScreenHandler.SLOT_UPGRADE_INDEX_END) {
+                        SlotHost(slotIndex)
+                    }
                 }
             }
 
@@ -144,6 +159,6 @@ class ElectricFurnaceScreen(
     }
 
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD
+        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
     }
 }

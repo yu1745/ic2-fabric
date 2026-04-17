@@ -7,7 +7,9 @@ import ic2_120.content.block.machines.ElectricFurnaceBlockEntity
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.FurnaceOutputSlot
+import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
+import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
@@ -27,7 +29,7 @@ import ic2_120.registry.annotation.ScreenFactory
  * 电炉 GUI 的 ScreenHandler。
  * 通过 SyncedDataView 按声明顺序自动对齐 index，无需手动指定。
  */
-@ModScreenHandler(block = ElectricFurnaceBlock::class)
+@ModScreenHandler(block = ElectricFurnaceBlock::class, clientInventorySize = ElectricFurnaceBlockEntity.INVENTORY_SIZE)
 class ElectricFurnaceScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -45,6 +47,18 @@ class ElectricFurnaceScreenHandler(
         maxItemCount = 1
     )
 
+    private val upgradeSlotSpec: SlotSpec by lazy {
+        SlotSpec(
+            canInsert = { stack ->
+                if (stack.isEmpty || stack.item !is ic2_120.content.item.IUpgradeItem) return@SlotSpec false
+                ic2_120.content.upgrade.UpgradeItemRegistry.canAccept(
+                    context.get({ world, pos -> world.getBlockEntity(pos) }, null),
+                    stack.item
+                )
+            }
+        )
+    }
+
     init {
         checkSize(blockInventory, ElectricFurnaceBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
@@ -57,6 +71,20 @@ class ElectricFurnaceScreenHandler(
             })
         })
         addSlot(PredicateSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_DISCHARGING, 0, 0, dischargingSlotSpec))
+
+        // 升级槽
+        for (i in 0 until UPGRADE_SLOT_COUNT) {
+            addSlot(
+                PredicateSlot(
+                    blockInventory,
+                    ElectricFurnaceBlockEntity.SLOT_UPGRADE_INDICES[i],
+                    0,
+                    0,
+                    upgradeSlotSpec
+                )
+            )
+        }
+
         // 玩家背包
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -83,22 +111,23 @@ class ElectricFurnaceScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
+                index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    slot.onQuickTransfer(stackInSlot, stack)
+                }
                 index in PLAYER_INV_START until HOTBAR_END -> {
-                    // 优先移动到输入槽，其次移动到放电槽
-                    if (!insertItem(stackInSlot, SLOT_INPUT_INDEX, SLOT_INPUT_INDEX + 1, false)) {
-                        if (stackInSlot.item is IBatteryItem) {
-                            // 手动处理电池槽以避免insertItem修改堆叠引用导致计数错误
-                            val dischargingSlot = slots[SLOT_DISCHARGING_INDEX]
-                            if (!dischargingSlot.hasStack()) {
-                                val singleBattery = stackInSlot.copy()
-                                singleBattery.count = 1
-                                dischargingSlot.stack = singleBattery
-                                stackInSlot.decrement(1)
-                                slot.markDirty()
-                                dischargingSlot.markDirty()
-                            }
-                            // 如果放电槽已有电池，不做任何操作
-                        }
+                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
+                        SlotTarget(slots[it], upgradeSlotSpec)
+                    }
+                    val moved = SlotMoveHelper.insertIntoTargets(
+                        stackInSlot,
+                        listOf(
+                            SlotTarget(slots[SLOT_DISCHARGING_INDEX], dischargingSlotSpec),
+                            SlotTarget(slots[SLOT_INPUT_INDEX], inputSlotSpec)
+                        ) + upgradeTargets
+                    )
+                    if (!moved) {
+                        return ItemStack.EMPTY
                     }
                 }
                 else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
@@ -121,13 +150,16 @@ class ElectricFurnaceScreenHandler(
         }, true)
 
     companion object {
+        private const val UPGRADE_SLOT_COUNT = 4
         const val SLOT_SIZE = 18
 
         const val SLOT_INPUT_INDEX = 0
         const val SLOT_OUTPUT_INDEX = 1
         const val SLOT_DISCHARGING_INDEX = 2
-        const val PLAYER_INV_START = 3
-        const val HOTBAR_END = 39
+        const val SLOT_UPGRADE_INDEX_START = 3
+        const val SLOT_UPGRADE_INDEX_END = 6
+        const val PLAYER_INV_START = 7
+        const val HOTBAR_END = 43
 
         /** 客户端从 ExtendedScreenHandlerType 创建：从 buf 读取 pos，用临时 Inventory。 */
         @ScreenFactory
