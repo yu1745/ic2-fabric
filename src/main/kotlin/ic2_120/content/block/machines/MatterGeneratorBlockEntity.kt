@@ -15,8 +15,10 @@ import ic2_120.content.pullEnergyFromNeighbors
 import ic2_120.content.screen.MatterGeneratorScreenHandler
 import ic2_120.content.sync.MatterGeneratorSync
 import ic2_120.content.syncs.SyncedData
+import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
@@ -29,7 +31,6 @@ import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -66,8 +67,7 @@ class MatterGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
-    Storage<ItemVariant>, ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty = MatterGeneratorBlock.ACTIVE
     override val tier: Int = MatterGeneratorSync.MATTER_GENERATOR_TIER
@@ -96,6 +96,7 @@ class MatterGeneratorBlockEntity(
         const val SLOT_UPGRADE_2 = 6
         const val SLOT_UPGRADE_3 = 7
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_CONTAINER_OUTPUT)
         const val INVENTORY_SIZE = 8
 
         private const val NBT_TANK_AMOUNT = "TankAmount"
@@ -270,14 +271,6 @@ class MatterGeneratorBlockEntity(
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
     }
 
-    override fun insert(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.insert(resource, maxAmount, transaction)
-
-    override fun extract(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.extract(resource, maxAmount, transaction)
-
-    override fun iterator(): MutableIterator<StorageView<ItemVariant>> = itemStorage.iterator()
-
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
@@ -325,6 +318,8 @@ class MatterGeneratorBlockEntity(
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
         sync.fluidCapacityMb = MatterGeneratorSync.TANK_CAPACITY_MB
+
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
 
         pullEnergyFromNeighbors(world, pos, sync)
         extractFromDischargingSlot()

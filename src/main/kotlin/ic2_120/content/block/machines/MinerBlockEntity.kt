@@ -39,9 +39,6 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -82,7 +79,7 @@ abstract class BaseMinerBlockEntity(
     private val acceptsAdvancedScanner: Boolean
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
     IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
-    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, Storage<ItemVariant>, ExtendedScreenHandlerFactory {
+    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty = BaseMinerBlock.ACTIVE
 
@@ -107,9 +104,6 @@ abstract class BaseMinerBlockEntity(
     override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
     override var fluidPipeProviderSide: Direction? = null
     override var fluidPipeReceiverSide: Direction? = null
-    override var itemEjectorEnabled: Boolean = false
-    override var itemEjectorFilter: net.minecraft.item.Item? = null
-    override var itemEjectorSide: Direction? = null
 
     companion object {
         const val SLOT_SCANNER = 0
@@ -238,14 +232,6 @@ abstract class BaseMinerBlockEntity(
         }
     }
 
-    override fun insert(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.insert(resource, maxAmount, transaction)
-
-    override fun extract(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.extract(resource, maxAmount, transaction)
-
-    override fun iterator(): MutableIterator<StorageView<ItemVariant>> = itemStorage.iterator()
-
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
@@ -289,7 +275,6 @@ abstract class BaseMinerBlockEntity(
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
-        EjectorUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
 
         pullEnergyFromNeighbors(world, pos, sync)
         extractFromDischargingSlot()
@@ -530,16 +515,7 @@ abstract class BaseMinerBlockEntity(
             insertIntoOutputBuffer(drop)
         }
 
-        if (itemEjectorEnabled) {
-            EjectorUpgradeComponent.ejectFromOutputSlots(
-                world,
-                pos,
-                this,
-                SLOT_OUTPUT_INDICES,
-                itemEjectorSide,
-                itemEjectorFilter
-            )
-        }
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
 
         // 本轮无法弹出的输出槽产物在机器位置掉落
         for (slot in SLOT_OUTPUT_INDICES) {

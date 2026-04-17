@@ -10,7 +10,9 @@ import ic2_120.content.recipes.solidcanner.SolidCannerRecipeSerializer
 import ic2_120.content.screen.SolidCannerScreenHandler
 import ic2_120.content.sync.SolidCannerSync
 import ic2_120.content.syncs.SyncedData
+import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
@@ -27,10 +29,6 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -61,7 +59,7 @@ class SolidCannerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, Storage<ItemVariant>, ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SolidCannerBlock.ACTIVE
 
@@ -85,6 +83,7 @@ class SolidCannerBlockEntity(
         const val SLOT_UPGRADE_2 = 6
         const val SLOT_UPGRADE_3 = 7
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT)
         const val INVENTORY_SIZE = 8
     }
 
@@ -150,14 +149,6 @@ class SolidCannerBlockEntity(
         else -> false
     }
 
-    override fun insert(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.insert(resource, maxAmount, transaction)
-
-    override fun extract(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.extract(resource, maxAmount, transaction)
-
-    override fun iterator(): MutableIterator<StorageView<ItemVariant>> = itemStorage.iterator()
-
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
@@ -191,6 +182,7 @@ class SolidCannerBlockEntity(
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         pullEnergyFromNeighbors(world, pos, sync)

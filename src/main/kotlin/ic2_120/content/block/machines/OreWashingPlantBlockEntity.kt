@@ -15,8 +15,10 @@ import ic2_120.content.recipes.orewashing.OreWashingRecipeSerializer
 import ic2_120.content.screen.OreWashingPlantScreenHandler
 import ic2_120.content.sync.OreWashingPlantSync
 import ic2_120.content.syncs.SyncedData
+import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
@@ -30,14 +32,11 @@ import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -85,8 +84,7 @@ class OreWashingPlantBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
-    Storage<ItemVariant>, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = OreWashingPlantBlock.ACTIVE
 
@@ -121,6 +119,7 @@ class OreWashingPlantBlockEntity(
         const val SLOT_UPGRADE_2 = 9
         const val SLOT_UPGRADE_3 = 10
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_1, SLOT_OUTPUT_2, SLOT_OUTPUT_3, SLOT_OUTPUT_EMPTY)
         const val INVENTORY_SIZE = 11
         private const val NBT_WATER_AMOUNT = "WaterAmount"
 
@@ -248,14 +247,6 @@ class OreWashingPlantBlockEntity(
         else -> false
     }
 
-    override fun insert(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.insert(resource, maxAmount, transaction)
-
-    override fun extract(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.extract(resource, maxAmount, transaction)
-
-    override fun iterator(): MutableIterator<StorageView<ItemVariant>> = itemStorage.iterator()
-
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
@@ -318,6 +309,7 @@ class OreWashingPlantBlockEntity(
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         // 从相邻方块或导线提取能量

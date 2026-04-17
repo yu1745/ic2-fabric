@@ -2,7 +2,9 @@ package ic2_120.content.block.machines
 
 import ic2_120.content.sync.MaceratorSync
 import ic2_120.content.energy.charge.BatteryDischargerComponent
+import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
@@ -28,10 +30,6 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.BlockState
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -54,7 +52,7 @@ class MaceratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, Storage<ItemVariant>, ExtendedScreenHandlerFactory {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = MaceratorBlock.ACTIVE
 
@@ -84,6 +82,7 @@ class MaceratorBlockEntity(
         const val SLOT_UPGRADE_2 = 5
         const val SLOT_UPGRADE_3 = 6
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT)
         const val INVENTORY_SIZE = 7
     }
 
@@ -147,14 +146,6 @@ class MaceratorBlockEntity(
         else -> false
     }
 
-    override fun insert(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.insert(resource, maxAmount, transaction)
-
-    override fun extract(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.extract(resource, maxAmount, transaction)
-
-    override fun iterator(): MutableIterator<StorageView<ItemVariant>> = itemStorage.iterator()
-
     override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
@@ -189,6 +180,7 @@ class MaceratorBlockEntity(
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         // 从相邻方块或导线提取能量（maxPull 随高压升级提高）
@@ -271,13 +263,5 @@ class MaceratorBlockEntity(
         return currentWorld.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), recipeInventory, currentWorld).isPresent
     }
 }
-
-
-
-
-
-
-
-
 
 

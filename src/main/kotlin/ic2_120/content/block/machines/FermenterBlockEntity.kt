@@ -11,7 +11,9 @@ import ic2_120.content.item.setFluidCellVariant
 import ic2_120.content.screen.FermenterScreenHandler
 import ic2_120.content.sync.FermenterSync
 import ic2_120.content.syncs.SyncedData
+import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.storage.ItemInsertRoute
@@ -21,7 +23,6 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -64,8 +65,7 @@ class FermenterBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IFluidPipeUpgradeSupport,
-    net.fabricmc.fabric.api.transfer.v1.storage.Storage<ItemVariant>, ExtendedScreenHandlerFactory {
+) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = FermenterBlock.ACTIVE
     override val tier: Int = 1
@@ -87,6 +87,7 @@ class FermenterBlockEntity(
         const val SLOT_UPGRADE_2 = 6
         const val SLOT_UPGRADE_3 = 7
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_FILLED_CONTAINER)
         const val INVENTORY_SIZE = 8
 
         private const val NBT_INPUT_TANK = "InputTank"
@@ -297,14 +298,6 @@ class FermenterBlockEntity(
         else -> false
     }
 
-    override fun insert(resource: ItemVariant, maxAmount: Long, transaction: net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext): Long =
-        itemStorage.insert(resource, maxAmount, transaction)
-
-    override fun extract(resource: ItemVariant, maxAmount: Long, transaction: net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext): Long =
-        itemStorage.extract(resource, maxAmount, transaction)
-
-    override fun iterator(): MutableIterator<StorageView<ItemVariant>> = itemStorage.iterator()
-
     override fun markDirty() {
         super.markDirty()
     }
@@ -366,6 +359,8 @@ class FermenterBlockEntity(
         if (world.isClient) return
 
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
+
         handleInputBiomassContainers()
         fillOutputBiogasContainers()
 

@@ -21,8 +21,10 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.screen.CannerScreenHandler
 import ic2_120.content.sync.CannerSync
 import ic2_120.content.syncs.SyncedData
+import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
@@ -35,7 +37,6 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -85,8 +86,7 @@ class CannerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
-    net.fabricmc.fabric.api.transfer.v1.storage.Storage<ItemVariant>, ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CannerBlock.ACTIVE
 
@@ -120,6 +120,7 @@ class CannerBlockEntity(
         const val SLOT_LEFT_EMPTY = 8    // 左液槽底部（空容器输出）
         const val SLOT_RIGHT_INPUT = 9   // 右液槽顶部（空容器输入）
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT)
         const val INVENTORY_SIZE = 10
         private const val NBT_LEFT_FLUID_AMOUNT = "LeftFluidAmount"
         private const val NBT_LEFT_FLUID_VARIANT = "LeftFluidVariant"
@@ -254,15 +255,6 @@ class CannerBlockEntity(
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
     }
 
-    override fun insert(resource: ItemVariant, maxAmount: Long, transaction: net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext): Long =
-        itemStorage.insert(resource, maxAmount, transaction)
-
-    override fun extract(resource: ItemVariant, maxAmount: Long, transaction: net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext): Long =
-        itemStorage.extract(resource, maxAmount, transaction)
-
-    override fun iterator(): MutableIterator<net.fabricmc.fabric.api.transfer.v1.storage.StorageView<ItemVariant>> =
-        itemStorage.iterator()
-
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
@@ -317,6 +309,7 @@ class CannerBlockEntity(
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         pullEnergyFromNeighbors(world, pos, sync)

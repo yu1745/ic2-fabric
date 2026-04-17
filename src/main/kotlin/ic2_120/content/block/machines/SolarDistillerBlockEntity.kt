@@ -15,6 +15,8 @@ import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.RegisterItemStorage
+import ic2_120.content.upgrade.EjectorUpgradeComponent
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
@@ -52,7 +54,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 
 /**
  * 太阳能蒸馏机方块实体
@@ -76,8 +77,7 @@ class SolarDistillerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, IFluidPipeUpgradeSupport,
-    net.fabricmc.fabric.api.transfer.v1.storage.Storage<ItemVariant>, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Inventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
     // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
     override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
     override var fluidPipeReceiverEnabled: Boolean = false  // 是否作为 receiver 从管道接收流体
@@ -97,6 +97,7 @@ class SolarDistillerBlockEntity(
         const val SLOT_UPGRADE_2 = 6         // 升级槽 2
         const val SLOT_UPGRADE_3 = 7         // 升级槽 3
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_EMPTY, SLOT_OUTPUT_CELL)
         const val INVENTORY_SIZE = 8
 
         // NBT 存储键
@@ -349,15 +350,6 @@ class SolarDistillerBlockEntity(
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
     }
 
-    override fun insert(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.insert(resource, maxAmount, transaction)
-
-    override fun extract(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.extract(resource, maxAmount, transaction)
-
-    override fun iterator(): MutableIterator<net.fabricmc.fabric.api.transfer.v1.storage.StorageView<ItemVariant>> =
-        itemStorage.iterator()
-
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
@@ -435,6 +427,7 @@ class SolarDistillerBlockEntity(
 
         // 每 tick 重新从升级槽同步”是否参与流体管网 + 过滤条件”
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
 
         // 机器物品槽处理放在产线逻辑前，确保本 tick 新放入的容器可立即参与计算
         handleWaterInputSlot()

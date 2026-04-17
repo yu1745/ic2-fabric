@@ -25,17 +25,12 @@ import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
@@ -58,7 +53,6 @@ class CropHarvesterBlockEntity(
     IEnergyStorageUpgradeSupport,
     IEjectorUpgradeSupport,
     ITransformerUpgradeSupport,
-    Storage<ItemVariant>,
     ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CropHarvesterBlock.ACTIVE
@@ -66,9 +60,6 @@ class CropHarvesterBlockEntity(
 
     override var capacityBonus: Long = 0L
     override var voltageTierBonus: Int = 0
-    override var itemEjectorEnabled: Boolean = false
-    override var itemEjectorFilter: Item? = null
-    override var itemEjectorSide: Direction? = null
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
@@ -130,14 +121,6 @@ class CropHarvesterBlockEntity(
         else -> false
     }
 
-    override fun insert(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.insert(resource, maxAmount, transaction)
-
-    override fun extract(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.extract(resource, maxAmount, transaction)
-
-    override fun iterator(): MutableIterator<StorageView<ItemVariant>> = itemStorage.iterator()
-
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
@@ -187,7 +170,7 @@ class CropHarvesterBlockEntity(
 
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
-        EjectorUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, SLOT_CONTENT_INDICES)
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_CONTENT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         pullEnergyFromNeighbors(world, pos, sync)
@@ -203,17 +186,6 @@ class CropHarvesterBlockEntity(
                 sync.harvestedThisRun = report.harvested
                 active = report.harvested > 0
             }
-        }
-
-        if (itemEjectorEnabled) {
-            EjectorUpgradeComponent.ejectFromOutputSlots(
-                world,
-                pos,
-                this,
-                SLOT_CONTENT_INDICES,
-                itemEjectorSide,
-                itemEjectorFilter
-            )
         }
 
         sync.scanX = scanX

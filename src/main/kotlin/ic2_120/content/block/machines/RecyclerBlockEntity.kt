@@ -7,7 +7,9 @@ import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.RecyclerSync
 import ic2_120.content.energy.charge.BatteryDischargerComponent
+import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
@@ -24,10 +26,6 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
-import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.BlockState
 import net.minecraft.sound.SoundCategory
 import net.minecraft.block.entity.BlockEntityType
@@ -71,7 +69,7 @@ class RecyclerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, Storage<ItemVariant>, ExtendedScreenHandlerFactory {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = RecyclerBlock.ACTIVE
 
@@ -98,6 +96,7 @@ class RecyclerBlockEntity(
         const val SLOT_UPGRADE_2 = 5
         const val SLOT_UPGRADE_3 = 6
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT)
         const val INVENTORY_SIZE = 7
         private val SCRAP_ID = Identifier("ic2_120", "scrap")
     }
@@ -169,14 +168,6 @@ class RecyclerBlockEntity(
         else -> false
     }
 
-    override fun insert(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.insert(resource, maxAmount, transaction)
-
-    override fun extract(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
-        itemStorage.extract(resource, maxAmount, transaction)
-
-    override fun iterator(): MutableIterator<StorageView<ItemVariant>> = itemStorage.iterator()
-
     override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
@@ -217,6 +208,7 @@ class RecyclerBlockEntity(
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         // 从相邻导线提取能量
