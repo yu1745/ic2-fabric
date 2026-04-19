@@ -48,6 +48,17 @@ abstract class ElectricArmorItem(
         stack.orCreateNbt.putLong(IElectricTool.ENERGY_KEY, energy.coerceIn(0L, maxCapacity))
     }
 
+    // ========== 防止原版耐久消耗 ==========
+
+    /**
+     * 电力护甲不走原版耐久系统，完全由 EU 能量驱动。
+     *
+     * 若不禁用，原版 [net.minecraft.entity.LivingEntity.damageArmor]
+     * 会在每次受击时同时消耗原版耐久度，导致护甲在耐久耗尽时消失，
+     * 即使 EU 能量充足。详见 [ic2_120.mixin.PlayerEntityMixin]。
+     */
+    override fun isDamageable(): Boolean = false
+
     // ========== 抽象方法 ==========
 
     /**
