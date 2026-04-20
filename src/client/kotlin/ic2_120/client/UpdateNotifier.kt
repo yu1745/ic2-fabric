@@ -1,5 +1,9 @@
 package ic2_120.client
 
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
 import java.net.URI
@@ -11,9 +15,6 @@ import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.MinecraftClient
@@ -23,18 +24,16 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import org.slf4j.LoggerFactory
 
-@Serializable
 private data class BuildInfo(
     val ciRunNumber: Int = 0,
     val repositoryOwner: String = "",
     val repositoryName: String = ""
 )
 
-@Serializable
 private data class LatestReleaseResponse(
-    @SerialName("tag_name")
+    @param:JsonProperty("tag_name")
     val tagName: String,
-    @SerialName("html_url")
+    @param:JsonProperty("html_url")
     val htmlUrl: String? = null
 )
 
@@ -47,7 +46,8 @@ private data class RemoteRelease(
 object UpdateNotifier {
     private val logger = LoggerFactory.getLogger("${Ic2_120.MOD_ID}/update")
     private val hasScheduledCheck = AtomicBoolean(false)
-    private val json = Json { ignoreUnknownKeys = true }
+    private val mapper = jacksonObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     private val httpClient: HttpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(5))
         .followRedirects(HttpClient.Redirect.NORMAL)
@@ -117,7 +117,7 @@ object UpdateNotifier {
             return null
         }
 
-        val payload = json.decodeFromString<LatestReleaseResponse>(response.body())
+        val payload = mapper.readValue<LatestReleaseResponse>(response.body())
         val match = releaseTagRegex.matchEntire(payload.tagName)
         if (match == null) {
             logger.debug("Skipping update prompt, unsupported release tag: {}", payload.tagName)
@@ -176,7 +176,7 @@ object UpdateNotifier {
         val stream = UpdateNotifier::class.java.getResourceAsStream(resourcePath) ?: return BuildInfo()
         return try {
             stream.bufferedReader(StandardCharsets.UTF_8).use { reader ->
-                json.decodeFromString<BuildInfo>(reader.readText())
+                mapper.readValue<BuildInfo>(reader.readText())
             }
         } catch (e: Exception) {
             logger.warn("Failed to read {}", resourcePath, e)

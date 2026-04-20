@@ -2,7 +2,6 @@ plugins {
 	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'maven-publish'
 	id "org.jetbrains.kotlin.jvm" version "2.3.10"
-	id "org.jetbrains.kotlin.plugin.serialization" version "2.3.10"
 }
 
 def ciRunNumberProvider = providers.environmentVariable("GITHUB_RUN_NUMBER").orElse("0")
@@ -84,9 +83,10 @@ dependencies {
 	modCompileOnly("dev.ftb.mods:ftb-teams-fabric:${project.ftb_teams_version}") { transitive = false }
 	modCompileOnly("dev.architectury:architectury-fabric:${project.architectury_version}")
 
-	// YAML config via kotlinx.serialization
-	implementation "org.jetbrains.kotlinx:kotlinx-serialization-core:${project.kotlinx_serialization_version}"
-	implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:${project.kotlinx_serialization_version}"
+	// JSON config and payload parsing via Jackson
+	implementation platform("com.fasterxml.jackson:jackson-bom:${project.jackson_version}")
+	implementation "com.fasterxml.jackson.core:jackson-databind"
+	implementation "com.fasterxml.jackson.module:jackson-module-kotlin"
 }
 
 tasks.register("generateBuildInfo") {

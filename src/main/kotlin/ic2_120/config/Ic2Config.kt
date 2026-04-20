@@ -1,14 +1,13 @@
 package ic2_120.config
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import ic2_120.Ic2_120
 import ic2_120.content.uu.UuTemplateEntry
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -20,7 +19,6 @@ import org.slf4j.LoggerFactory
 @Retention(AnnotationRetention.RUNTIME)
 annotation class ConfigComment(val value: String, val defaultValue: String = "")
 
-@Serializable
 data class Ic2MainConfig(
     @field:ConfigComment("通用配置。")
     val general: GeneralConfig = GeneralConfig(),
@@ -38,7 +36,6 @@ data class Ic2MainConfig(
     val worldgen: WorldgenConfig = WorldgenConfig()
 )
 
-@Serializable
 data class GeneralConfig(
     @field:ConfigComment("启动/重载时是否把当前配置打印到日志。", "true")
     val logConfigOnLoad: Boolean = true,
@@ -46,21 +43,18 @@ data class GeneralConfig(
     val checkForUpdates: Boolean = true
 )
 
-@Serializable
 data class RecyclerConfig(
     // Item id list, e.g. ["minecraft:stick", "ic2_120:scrap"]
     @field:ConfigComment("回收机黑名单。填写物品 id 列表，例如 minecraft:stick。", "[\"minecraft:stick\"]")
     val blacklist: List<String> = listOf("minecraft:stick")
 )
 
-@Serializable
 data class NuclearConfig(
     /** 是否允许核反应堆在过热时爆炸 */
     @field:ConfigComment("是否允许核反应堆在过热时爆炸。", "true")
     val enableReactorExplosion: Boolean = true
 )
 
-@Serializable
 data class UuReplicationConfig(
     /**
      * 可复制物品白名单：key 为物品 id，value 为所需 UU 物质，单位 uB。
@@ -70,7 +64,6 @@ data class UuReplicationConfig(
     val replicationWhitelist: Map<String, Int> = UuReplicationDefaults.defaultWhitelist
 )
 
-@Serializable
 data class MinerConfig(
     @field:ConfigComment(
         "采矿机额外可挖方块 id 列表。默认矿石通过名称自动匹配（含 ore），此列表用于添加特殊方块或者别的mod的方块。",
@@ -83,7 +76,6 @@ data class MinerConfig(
  * 采矿镭射枪各模式配置。
  * 设计原则：一次发射越多弹体，射程越短；单发模式射程最远。
  */
-@Serializable
 data class MiningLaserConfig(
     @field:ConfigComment("采矿模式配置。基础远程挖矿，击穿一段距离，距离与被挖掘方块硬度有关。")
     val mining: LaserModeConfig = LaserModeConfig(
@@ -167,7 +159,6 @@ data class MiningLaserConfig(
 /**
  * 单个镭射枪模式的数值配置。
  */
-@Serializable
 data class LaserModeConfig(
     @field:ConfigComment("每发消耗能量（EU）。", "2000")
     val energyCost: Long,
@@ -201,13 +192,11 @@ private val DEFAULT_RUBBER_TREE_BIOMES = listOf(
     "minecraft:swamp"
 )
 
-@Serializable
 data class WorldgenConfig(
     @field:ConfigComment("橡胶树世界生成配置。enabled/biomes 变更后需要重启；其余多数参数 /ic2config reload 后影响未来生成。")
     val rubberTree: RubberTreeWorldgenConfig = RubberTreeWorldgenConfig()
 )
 
-@Serializable
 data class RubberTreeWorldgenConfig(
     /** 是否允许自然生成橡胶树。 */
     @field:ConfigComment("是否允许自然生成橡胶树。", "true")
@@ -304,11 +293,9 @@ private val DEFAULT_CONFIG_TEMPLATE = Ic2MainConfig(
 
 object Ic2Config {
     private val logger = LoggerFactory.getLogger("${Ic2_120.MOD_ID}/config")
-    private val json = Json {
-        prettyPrint = true
-        encodeDefaults = true
-        ignoreUnknownKeys = true
-    }
+    private val mapper = jacksonObjectMapper()
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .configure(SerializationFeature.INDENT_OUTPUT, true)
     private val configPath: Path by lazy {
         FabricLoader.getInstance().configDir.resolve("${Ic2_120.MOD_ID}.json")
     }
@@ -328,7 +315,7 @@ object Ic2Config {
     }
 
     fun prettyCurrentConfig(): String {
-        return json.encodeToString(current)
+        return mapper.writeValueAsString(current)
     }
 
     fun getReplicationCostUb(itemId: String): Int? {
@@ -421,8 +408,8 @@ object Ic2Config {
 
         return try {
             val raw = Files.readString(configPath, StandardCharsets.UTF_8)
-            val config = json.decodeFromString<Ic2MainConfig>(raw)
-            val parsedRoot = json.parseToJsonElement(raw).jsonObject
+            val config = mapper.readValue<Ic2MainConfig>(raw)
+            val parsedRoot = mapper.readTree(raw) as? ObjectNode
             if (shouldRewriteConfig(parsedRoot, config)) {
                 Files.writeString(configPath, encodeConfigWithComments(config), StandardCharsets.UTF_8)
             }
@@ -441,61 +428,66 @@ object Ic2Config {
         return encodeConfigWithComments(DEFAULT_CONFIG_TEMPLATE)
     }
 
-    private fun shouldRewriteConfig(root: JsonObject, config: Ic2MainConfig): Boolean {
-        if (root.containsKey("creative")) return true
+    private fun shouldRewriteConfig(root: ObjectNode?, config: Ic2MainConfig): Boolean {
+        if (root == null) return true
+        if (root.has("creative")) return true
         return !containsAllExpectedKeys(root, buildCommentedConfigJson(config))
     }
 
     private fun encodeConfigWithComments(config: Ic2MainConfig): String =
-        json.encodeToString(JsonObject.serializer(), buildCommentedConfigJson(config))
+        mapper.writeValueAsString(buildCommentedConfigJson(config))
 
-    private fun buildCommentedConfigJson(config: Ic2MainConfig): JsonObject =
+    private fun buildCommentedConfigJson(config: Ic2MainConfig): ObjectNode =
         buildCommentedObject(
             instance = config,
-            jsonObject = json.encodeToJsonElement(Ic2MainConfig.serializer(), config).jsonObject,
+            jsonObject = mapper.valueToTree<ObjectNode>(config),
             rootComment = "配置文件允许保留这些 _comment_* 说明字段；程序读取时会自动忽略它们。"
         )
 
     private fun buildCommentedObject(
         instance: Any,
-        jsonObject: JsonObject,
+        jsonObject: ObjectNode,
         rootComment: String? = null
-    ): JsonObject = buildJsonObject {
+    ): ObjectNode {
+        val result = mapper.createObjectNode()
         if (rootComment != null) {
-            put("_comment", JsonPrimitive(rootComment))
+            result.put("_comment", rootComment)
         }
 
         declaredConfigFields(instance.javaClass).forEach { field ->
             field.isAccessible = true
             val fieldName = field.name
-            val valueElement = jsonObject[fieldName] ?: return@forEach
+            val valueElement = jsonObject.get(fieldName) ?: return@forEach
             field.getAnnotation(ConfigComment::class.java)?.let { annotation ->
-                put("_comment_$fieldName", JsonPrimitive(formatComment(annotation)))
+                result.put("_comment_$fieldName", formatComment(annotation))
             }
 
             val fieldValue = field.get(instance)
             val isNestedConfigObject =
                 fieldValue != null &&
-                    valueElement is JsonObject &&
+                    valueElement is ObjectNode &&
                     !Map::class.java.isAssignableFrom(field.type)
 
             if (isNestedConfigObject) {
-                put(fieldName, buildCommentedObject(fieldValue!!, valueElement.jsonObject))
+                result.set<JsonNode>(fieldName, buildCommentedObject(fieldValue, valueElement))
             } else {
-                put(fieldName, valueElement)
+                result.set<JsonNode>(fieldName, valueElement)
             }
         }
+        return result
     }
 
-    private fun containsAllExpectedKeys(actual: JsonObject, expected: JsonObject): Boolean =
-        expected.all { (key, expectedValue) ->
-            val actualValue = actual[key] ?: return@all false
-            if (expectedValue is JsonObject && actualValue is JsonObject) {
-                containsAllExpectedKeys(actualValue, expectedValue)
-            } else {
-                true
+    private fun containsAllExpectedKeys(actual: JsonNode, expected: JsonNode): Boolean {
+        val fields = expected.fields()
+        while (fields.hasNext()) {
+            val (key, expectedValue) = fields.next()
+            val actualValue = actual.get(key) ?: return false
+            if (expectedValue.isObject && actualValue.isObject && !containsAllExpectedKeys(actualValue, expectedValue)) {
+                return false
             }
         }
+        return true
+    }
 
     private fun declaredConfigFields(type: Class<*>): List<java.lang.reflect.Field> =
         type.declaredFields.filterNot { field ->
