@@ -83,10 +83,12 @@ dependencies {
 	modCompileOnly("dev.ftb.mods:ftb-teams-fabric:${project.ftb_teams_version}") { transitive = false }
 	modCompileOnly("dev.architectury:architectury-fabric:${project.architectury_version}")
 
-	// JSON config and payload parsing via Jackson
-	implementation platform("com.fasterxml.jackson:jackson-bom:${project.jackson_version}")
-	implementation "com.fasterxml.jackson.core:jackson-databind"
-	implementation "com.fasterxml.jackson.module:jackson-module-kotlin"
+	// JSON config and payload parsing via Jackson.
+	// Bundle Jackson into the mod jar so Connector/Forge runtime always has these classes.
+	include implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}")
+	include implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}")
+	include implementation("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}")
+	include implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.jackson_version}")
 }
 
 tasks.register("generateBuildInfo") {
