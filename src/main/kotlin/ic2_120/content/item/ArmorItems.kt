@@ -782,7 +782,13 @@ class AlloyChestplate : ArmorItem(ALLOY_ARMOR, ArmorItem.Type.CHESTPLATE, Fabric
  * 作为胸甲装备。
  */
 @ModItem(name = "cf_pack", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1))
+class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)) {
+    /**
+     * CF 背包使用建筑泡沫系统，不走原版耐久系统。
+     * 若不禁用，受伤时会累积 Damage NBT 导致耐久条混乱。
+     */
+    override fun isDamageable(): Boolean = false
+}
 
 /**
  * 喷气背包 (Jetpack)
@@ -983,6 +989,12 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
 
     private fun isEnabled(stack: ItemStack): Boolean = stack.orCreateNbt.getBoolean(ENABLED_KEY)
 
+    /**
+     * 夜视镜使用电量系统，不走原版耐久系统。
+     * 若不禁用，受伤时会累积 Damage NBT 导致耐久条混乱。
+     */
+    override fun isDamageable(): Boolean = false
+
     override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
@@ -1060,6 +1072,14 @@ abstract class BatteryPackArmorItem(
      * 实际逻辑见 [autoFillElectricToolsInInventory]。
      */
     override val canChargeWireless: Boolean = true
+
+    /**
+     * 电池背包不走原版耐久系统，完全由 EU 能量驱动。
+     *
+     * 若不禁用，原版 [net.minecraft.entity.LivingEntity.damageArmor]
+     * 会在每次受击时消耗原版耐久度，导致背包耐久条下降。
+     */
+    override fun isDamageable(): Boolean = false
 
     override fun getCurrentCharge(stack: ItemStack): Long =
         BatteryItemBase.getEnergy(stack).coerceIn(0L, maxCapacity)

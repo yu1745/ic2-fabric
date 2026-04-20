@@ -68,10 +68,14 @@ public abstract class PlayerEntityMixin {
             ItemStack stack = player.getEquippedStack(slot);
             if (stack.getItem() instanceof ElectricArmorItem) {
                 ElectricArmorItem armor = (ElectricArmorItem) stack.getItem();
-                long energy = armor.getEnergy(stack);
-                if (energy > 0) {
-                    armorItems.put(armor, stack);
-                    totalReduction += armor.getDamageReduction();
+                float reduction = armor.getDamageReduction();
+                // 只加入实际提供减伤的护甲，避免电力喷气背包等 0 减伤装备被错误扣除电量
+                if (reduction > 0f) {
+                    long energy = armor.getEnergy(stack);
+                    if (energy > 0) {
+                        armorItems.put(armor, stack);
+                        totalReduction += reduction;
+                    }
                 }
             }
         }

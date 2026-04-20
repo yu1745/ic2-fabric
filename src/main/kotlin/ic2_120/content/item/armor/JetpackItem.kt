@@ -100,6 +100,12 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
         tooltip.add(Text.literal("  创造式飞行：空格上升，Shift下降").formatted(Formatting.DARK_GRAY))
     }
 
+    /**
+     * 喷气背包使用燃料系统，不走原版耐久系统。
+     * 若不禁用，受伤时会累积 Damage NBT 导致耐久条混乱。
+     */
+    override fun isDamageable(): Boolean = false
+
     override fun isItemBarVisible(stack: ItemStack): Boolean = true
 
     override fun getItemBarStep(stack: ItemStack): Int =
