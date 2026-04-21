@@ -386,7 +386,38 @@ class BlackWallBlock : Block(AbstractBlock.Settings.copy(Blocks.BLACK_CONCRETE).
 )
 class WoodenScaffoldBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_PLANKS).strength(1.0f).nonOpaque()
-) : PillarBlock(settings)
+) : PillarBlock(settings) {
+    override fun onUse(
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ActionResult {
+        if (world.isClient) return ActionResult.SUCCESS
+        val stack = player.getStackInHand(hand)
+        if (!stack.isOf(Items.STICK) || stack.count <= 2) return ActionResult.PASS
+        world.setBlockState(pos, ReinforcedWoodenScaffoldBlock::class.instance().defaultState.with(AXIS, state.get(AXIS)), Block.NOTIFY_ALL)
+        world.playSound(null, pos, SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.BLOCKS, 1.0f, 1.0f)
+        if (!player.abilities.creativeMode) stack.decrement(2)
+        return ActionResult.CONSUME
+    }
+
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodenScaffoldBlock::class.item(), 4)
+                .pattern("PPP")
+                .pattern(" S ")
+                .pattern("S S")
+                .input('P', ItemTags.PLANKS)
+                .input('S', Items.STICK)
+                .criterion(hasItem(Items.OAK_PLANKS), conditionsFromItem(Items.OAK_PLANKS))
+                .offerTo(exporter, WoodenScaffoldBlock::class.id())
+        }
+    }
+}
 
 @ModBlock(
     name = "reinforced_wooden_scaffold",
@@ -408,7 +439,41 @@ class ReinforcedWoodenScaffoldBlock(
 )
 class IronScaffoldBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(3.0f).nonOpaque()
-) : PillarBlock(settings)
+) : PillarBlock(settings) {
+    override fun onUse(
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ActionResult {
+        if (world.isClient) return ActionResult.SUCCESS
+        val stack = player.getStackInHand(hand)
+        if (!stack.isOf(IronFenceBlock::class.item())) return ActionResult.PASS
+        world.setBlockState(pos, ReinforcedIronScaffoldBlock::class.instance().defaultState.with(AXIS, state.get(AXIS)), Block.NOTIFY_ALL)
+        world.playSound(null, pos, SoundEvents.BLOCK_METAL_PLACE, SoundCategory.BLOCKS, 1.0f, 1.0f)
+        if (!player.abilities.creativeMode) stack.decrement(1)
+        return ActionResult.CONSUME
+    }
+
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val ironPlate = IronPlate::class.instance()
+            val ironFence = IronFenceBlock::class.item()
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronScaffoldBlock::class.item(), 16)
+                .pattern("PPP")
+                .pattern("FFF")
+                .pattern("PPP")
+                .input('P', ironPlate)
+                .input('F', ironFence)
+                .criterion(hasItem(ironPlate), conditionsFromItem(ironPlate))
+                .criterion(hasItem(ironFence), conditionsFromItem(ironFence))
+                .offerTo(exporter, IronScaffoldBlock::class.id())
+        }
+    }
+}
 
 @ModBlock(
     name = "reinforced_iron_scaffold",
