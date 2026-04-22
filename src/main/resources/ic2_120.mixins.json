@@ -6,7 +6,6 @@
 		"PlayerEntityMixin",
 		"ServerPlayNetworkHandlerMixin",
 		"PassiveEntityMixin",
-		"ScreenHandlerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
