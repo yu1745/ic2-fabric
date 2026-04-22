@@ -98,7 +98,7 @@ class RtHeatGeneratorScreenHandler(
 
     companion object {
         const val PLAYER_INV_START = 6
-        const val HOTBAR_END = 38
+        const val HOTBAR_END = 41
 
         private val FUEL_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,

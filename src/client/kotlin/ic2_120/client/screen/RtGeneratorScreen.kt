@@ -84,7 +84,7 @@ class RtGeneratorScreen(
                             Row {
                                 repeat(3) { j ->
                                     SlotAnchor(
-                                        id = slotAnchorId(i * 2 + j),
+                                        id = slotAnchorId(i * 3 + j),
                                         width = RtGeneratorScreenHandler.SLOT_SIZE,
                                         height = RtGeneratorScreenHandler.SLOT_SIZE
                                     )
