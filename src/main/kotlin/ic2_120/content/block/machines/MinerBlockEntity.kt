@@ -481,8 +481,9 @@ abstract class BaseMinerBlockEntity(
 
         val id = Registries.BLOCK.getId(state.block)
         val idString = id.toString()
-        val oreLike = id.path.contains("ore") || id.path == "ancient_debris"
-            || idString in Ic2Config.current.miner.additionalMineableBlocks
+        val oreLike = (id.path.contains("ore") || id.path == "ancient_debris"
+            || idString in Ic2Config.current.miner.additionalMineableBlocks)
+            && state.block !is ic2_120.content.block.MachineBlock
         if (!oreLike) return false
 
         if (!acceptsAdvancedScanner) return true  // 普通采矿机无过滤，挖所有矿石
