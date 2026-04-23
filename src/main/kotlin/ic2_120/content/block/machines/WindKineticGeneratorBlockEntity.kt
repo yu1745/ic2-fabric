@@ -60,8 +60,8 @@ class WindKineticGeneratorBlockEntity(
         const val ROTOR_SLOT = 0
         private val ALLOWED_ROTORS = setOf("wooden_rotor", "iron_rotor", "steel_rotor", "carbon_rotor")
         private const val PIXEL = 1.0f / 16.0f
-        private const val BASE_SCAN_INTERVAL_TICKS = 5L
-        private const val STUCK_SCAN_INTERVAL_TICKS = 2L
+        private const val BASE_SCAN_INTERVAL_TICKS = 20L
+        private const val STUCK_SCAN_INTERVAL_TICKS = 10L
         private const val SAMPLE_COUNT = 5
         private const val ROTOR_RPM_DEGREES_PER_TICK = 1.8f
         private const val STUCK_DISPLAY_ANGLE = 45f

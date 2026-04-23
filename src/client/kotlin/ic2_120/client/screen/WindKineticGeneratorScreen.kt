@@ -44,6 +44,16 @@ class WindKineticGeneratorScreen(
         val outputKu = handler.sync.outputKu.coerceAtLeast(0)
         val blocked = handler.sync.isStuck != 0
         val rotorLifetimeTenthsHours = handler.sync.rotorLifetimeTenthsHours.coerceAtLeast(0)
+        // 有转子但不工作时显示提示
+        val showWeakWindHint = rotorLifetimeTenthsHours > 0 && generatedKu == 0 && !blocked
+        // 工作正常时显示转子剩余耐久百分比（用实际耐久值计算）
+        val rotorPercentText = if (generatedKu > 0 && rotorLifetimeTenthsHours > 0) {
+            val rotorStack = handler.slots.getOrNull(0)?.stack
+            if (rotorStack != null && rotorStack.isDamageable && rotorStack.maxDamage > 0) {
+                val percent = ((rotorStack.maxDamage - rotorStack.damage).toDouble() / rotorStack.maxDamage * 100.0).coerceIn(0.0, 100.0)
+                McText.translatable("gui.ic2_120.wind_kinetic.rotor_percent", percent.toInt()).string
+            } else null
+        } else null
         val generatedText = McText.translatable("ic2_120.jade.wind_ku_generated", generatedKu).string
         val outputText = McText.translatable("ic2_120.jade.wind_ku_output", outputKu).string
         val blockedText = McText.translatable(
@@ -74,6 +84,11 @@ class WindKineticGeneratorScreen(
                     Text(t("gui.ic2_120.water_kinetic.rotor_slot"), color = 0xAAAAAA, shadow = false)
                 }
                 Text(t("gui.ic2_120.wind_kinetic.rotor_hint"), color = 0xAAAAAA, shadow = false)
+                if (showWeakWindHint) {
+                    Text(t("gui.ic2_120.wind_kinetic.weak_wind"), color = 0x6FA85E, shadow = false)
+                } else if (rotorPercentText != null) {
+                    Text(rotorPercentText, color = 0x6FA85E, shadow = false)
+                }
             }
 
             playerInventoryAndHotbarSlotAnchors(

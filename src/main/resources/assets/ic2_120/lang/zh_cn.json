@@ -883,6 +883,8 @@
   "gui.ic2_120.water_kinetic.rotor_slot": "转子槽",
   "gui.ic2_120.water_kinetic.rotor_hint": "放入木/铁/钢/碳转子后浸入水中",
   "gui.ic2_120.wind_kinetic.rotor_hint": "放入木/铁/钢/碳转子后显示叶片",
+  "gui.ic2_120.wind_kinetic.weak_wind": "风太弱了，或转子工作区域重叠",
+  "gui.ic2_120.wind_kinetic.rotor_percent": "转子剩余: %d%%",
   "gui.ic2_120.creative_generator.total": "累计 %s EU",
   "gui.ic2_120.replicator.progress": "进度: %1$s / %2$s uB",
   "gui.ic2_120.replicator.product_slot": "产物",
@@ -932,5 +934,11 @@
   "gui.ic2_120.nuclear_reactor.hot_coolant": "热液 %1$s/%2$s",
   "gui.ic2_120.solar_distiller.distill_progress": "蒸馏进度",
   "gui.ic2_120.solar_distiller.input_water": "输入 %s mB",
-  "gui.ic2_120.solar_distiller.output_distilled": "输出 %s mB"
+  "gui.ic2_120.solar_distiller.output_distilled": "输出 %s mB",
+  "gui.ic2_120.wind_kinetic.rotor_hint": "放入转子后工作",
+  "gui.ic2_120.wind_kinetic.weak_wind": "风太弱了，或转子工作区域重叠",
+  "gui.ic2_120.wind_kinetic.rotor_percent": "转子剩余: %d%%",
+  "gui.ic2_120.wind_kinetic.blocked": "转子被阻挡！",
+  "gui.ic2_120.wind_kinetic.clear": "转子状态正常",
+  "gui.ic2_120.wind_kinetic.lifetime": "剩余: %s 小时"
 }
