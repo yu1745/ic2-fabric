@@ -577,7 +577,7 @@ abstract class BaseMinerBlockEntity(
         if (!fluidPipeProviderEnabled) return false
         if (tankInternal.amount > 0L) return false
         if (world.time % 20L != 0L) return false
-        if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, targetPos, ownerUuid, dev.ftb.mods.ftbchunks.api.Protection.EDIT_FLUID)) return false
+        if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, targetPos, ownerUuid, ic2_120.integration.ftbchunks.ClaimProtection.EDIT_FLUID)) return false
 
         val fs = world.getFluidState(targetPos)
         if (fs.isEmpty || !fs.isStill) return false
