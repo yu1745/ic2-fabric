@@ -188,7 +188,7 @@ class RtGeneratorBlockEntity(
 
         batteryCharger.tick()
 
-        val active = pelletCount > 0 && sync.amount < RtGeneratorSync.ENERGY_CAPACITY
+        val active = pelletCount > 0
         setActiveState(world, pos, state, active)
         // 同步当前 tick 的实际输出/输入
         sync.syncCurrentTickFlow()

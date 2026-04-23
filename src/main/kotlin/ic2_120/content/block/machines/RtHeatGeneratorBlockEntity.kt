@@ -151,7 +151,7 @@ class RtHeatGeneratorBlockEntity(
     }
 
     override fun shouldActivate(generatedHeat: Long, hasValidConsumer: Boolean): Boolean =
-        generatedHeat > 0 && hasValidConsumer
+        countPelletSlots() > 0
 
     override fun getActiveState(state: BlockState): Boolean =
         state.get(RtHeatGeneratorBlock.ACTIVE)
