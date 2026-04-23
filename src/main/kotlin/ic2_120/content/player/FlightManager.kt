@@ -12,7 +12,6 @@ import net.minecraft.server.MinecraftServer
 
 object FlightManager {
     private const val JETPACK_HOVER_KEY = "IsHover"
-    private const val QUANTUM_FLIGHT_COST = 417L
     private val jetpackGrantedPlayers = mutableSetOf<java.util.UUID>()
 
     fun tick(server: MinecraftServer) {
@@ -51,7 +50,7 @@ object FlightManager {
             return
         }
 
-        JetpackItem.setFuel(jetpackStack, fuel - JetpackItem.FUEL_CONSUMPTION)
+        JetpackItem.setFuel(jetpackStack, fuel - JetpackItem.fuelPerTick)
         enableJetpackFlight(player, nbt)
     }
 
@@ -141,7 +140,7 @@ object FlightManager {
         }
 
         val currentEnergy = chestplate.getEnergy(chestStack)
-        if (currentEnergy < QUANTUM_FLIGHT_COST) {
+        if (currentEnergy < QuantumChestplate.flightCostPerTick) {
             nbt.putBoolean("QuantumFlightEnabled", false)
             disableQuantumFlight(player)
             return
@@ -154,7 +153,7 @@ object FlightManager {
             return
         }
 
-        chestplate.setEnergy(chestStack, currentEnergy - QUANTUM_FLIGHT_COST)
+        chestplate.setEnergy(chestStack, currentEnergy - QuantumChestplate.flightCostPerTick)
         if (!player.abilities.allowFlying || !player.abilities.flying) {
             player.abilities.allowFlying = true
             player.abilities.flying = true

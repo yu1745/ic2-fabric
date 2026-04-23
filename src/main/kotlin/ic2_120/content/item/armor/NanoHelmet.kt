@@ -1,6 +1,7 @@
 package ic2_120.content.item.armor
 
 import ic2_120.Ic2_120
+import ic2_120.config.Ic2Config
 import ic2_120.content.item.CarbonPlate
 import ic2_120.content.item.ModArmorMaterials
 import ic2_120.content.item.NightVisionGoggles
@@ -53,10 +54,12 @@ import java.util.function.Consumer
 class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1)) {
 
     companion object {
-        private const val NIGHT_VISION_COST = 14L  // 1M EU / 1h = 72000 ticks ≈ 14 EU/t
         private const val NIGHT_VISION_DURATION = 220
         private const val BLINDNESS_DURATION = 80
         private const val NIGHT_VISION_KEY = "NightVisionEnabled"
+
+        val nightVisionCostPerTick: Long
+            get() = Ic2Config.getNanoHelmetNightVisionEuPerTick()
 
         fun toggleNightVision(stack: ItemStack): Boolean {
             val nbt = stack.orCreateNbt
@@ -97,7 +100,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         if (!nbt.getBoolean(NIGHT_VISION_KEY)) return
 
         val energy = getEnergy(stack)
-        if (energy < NIGHT_VISION_COST) {
+        if (energy < nightVisionCostPerTick) {
             setEnergy(stack, 0)
             nbt.putBoolean(NIGHT_VISION_KEY, false)
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)
@@ -105,7 +108,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         }
 
         // 消耗能量
-        setEnergy(stack, energy - NIGHT_VISION_COST)
+        setEnergy(stack, energy - nightVisionCostPerTick)
 
         // 光线检测（复用 NightVisionGoggles 逻辑）
         val brightness = world.getLightLevel(player.blockPos)
@@ -131,7 +134,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
 
         // 计算夜视剩余时间（分钟）
         val remainingMinutes = if (energy > 0 && nvEnabled) {
-            val ticks = energy / NIGHT_VISION_COST
+            val ticks = energy / nightVisionCostPerTick
             val seconds = ticks / 20.0
             val minutes = seconds / 60.0
             "%.1f".format(minutes)

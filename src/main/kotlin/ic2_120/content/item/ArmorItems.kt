@@ -50,9 +50,10 @@ import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
-import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.ElectricArmorItem
+import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.recipes.crafting.BatteryEnergyShapedRecipeDatagen
+import ic2_120.config.Ic2Config
 
 
 //todo 全套防化服，防化三件套加橡胶靴 可免疫特斯拉线圈伤害 可免疫触电伤害，只要有单个防化头盔，物品栏有压缩空气单元，就可以在气泡值用尽时消耗压缩空气单元回满
@@ -834,9 +835,12 @@ class ElectricJetpack : ElectricArmorItem(
     companion object {
         private const val FLIGHT_ENABLED_KEY = "FlightEnabled"
         private const val FLIGHT_REMAINDER_KEY = "ElectricJetpackFlightRemainder"
-        private const val FLIGHT_COST_BASE = 8L
-        private const val FLIGHT_COST_REM_NUM = 1
-        private const val FLIGHT_COST_REM_DEN = 3
+
+        val maxCapacity: Long
+            get() = Ic2Config.current.armor.electricJetpack.maxEnergy
+
+        val euPerTick: Long
+            get() = Ic2Config.getElectricJetpackEuPerTick()
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
@@ -859,7 +863,8 @@ class ElectricJetpack : ElectricArmorItem(
     }
 
     override val tier: Int = 1
-    override val maxCapacity: Long = 30_000L
+    override val maxCapacity: Long
+        get() = Ic2Config.current.armor.electricJetpack.maxEnergy
 
     override fun getDamageReduction(): Float = 0f
 
@@ -877,23 +882,12 @@ class ElectricJetpack : ElectricArmorItem(
     }
 
     fun consumeFlightEnergyPerTick(stack: ItemStack): Boolean {
-        val nbt = stack.orCreateNbt
-        var rem = nbt.getInt(FLIGHT_REMAINDER_KEY).coerceIn(0, FLIGHT_COST_REM_DEN - 1)
-        var cost = FLIGHT_COST_BASE
-
-        rem += FLIGHT_COST_REM_NUM
-        if (rem >= FLIGHT_COST_REM_DEN) {
-            cost += 1L
-            rem -= FLIGHT_COST_REM_DEN
-        }
-
+        val cost = euPerTick
         val energy = getEnergy(stack)
         if (energy < cost) {
             return false
         }
-
         setEnergy(stack, energy - cost)
-        nbt.putInt(FLIGHT_REMAINDER_KEY, rem)
         return true
     }
 
@@ -911,8 +905,7 @@ class ElectricJetpack : ElectricArmorItem(
         // 计算剩余飞行时间（秒），基于平均能量消耗 8 + 1/3 EU/tick
         val energy = getEnergy(stack)
         val remainingSeconds = if (energy > 0) {
-            val avgCostPerTick = FLIGHT_COST_BASE + FLIGHT_COST_REM_NUM.toDouble() / FLIGHT_COST_REM_DEN
-            (energy / avgCostPerTick) / 20.0
+            (energy / euPerTick.toDouble()) / 20.0
         } else 0.0
 
         // 格式化时间
@@ -936,15 +929,21 @@ class ElectricJetpack : ElectricArmorItem(
 @ModItem(name = "night_vision_goggles", tab = CreativeTab.IC2_MATERIALS, group = "armor")
 class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1)), IBatteryItem {
     override val tier: Int = 2
-    override val maxCapacity: Long = 100_000L
+    override val maxCapacity: Long
+        get() = Ic2Config.current.armor.nightVision.nightVisionGogglesMaxEnergy
     override val canChargeWireless: Boolean = false
 
     companion object {
         private const val ENERGY_KEY = "Energy"
         private const val ENABLED_KEY = "NightVisionEnabled"
-        private const val ENERGY_PER_TICK = 1L
         private const val BLINDNESS_DURATION_TICKS = 80
         private const val NIGHT_VISION_DURATION_TICKS = 220
+
+        val maxCapacity: Long
+            get() = Ic2Config.current.armor.nightVision.nightVisionGogglesMaxEnergy
+
+        val euPerTick: Long
+            get() = Ic2Config.getNightVisionGogglesEuPerTick()
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
@@ -1003,13 +1002,13 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
         if (!isEnabled(stack)) return
 
         val energy = getCurrentCharge(stack)
-        if (energy < ENERGY_PER_TICK) {
+        if (energy < euPerTick) {
             setCurrentCharge(stack, 0)
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)
             return
         }
 
-        setCurrentCharge(stack, energy - ENERGY_PER_TICK)
+        setCurrentCharge(stack, energy - euPerTick)
         val brightness = world.getLightLevel(player.blockPos)
         if (brightness >= 8) {
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)

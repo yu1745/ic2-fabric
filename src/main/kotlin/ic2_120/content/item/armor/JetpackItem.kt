@@ -1,5 +1,6 @@
 package ic2_120.content.item.armor
 
+import ic2_120.config.Ic2Config
 import ic2_120.content.item.ModArmorMaterials
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.ArmorItem
@@ -28,16 +29,26 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
         private const val FUEL_KEY = "Fuel"
         private const val IS_HOVER_KEY = "IsHover"
         private const val FLIGHT_ENABLED_KEY = "FlightEnabled"
-        const val MAX_FUEL = 30_000L  // 30桶 = 30,000 mB
-        const val FUEL_CONSUMPTION = 2L  // 2 mB/tick
+
+        @JvmStatic
+        val maxFuel: Long
+            get() = Ic2Config.current.armor.jetpack.maxFuel
+
+        @JvmStatic
+        val MAX_FUEL: Long
+            get() = Ic2Config.current.armor.jetpack.maxFuel
+
+        @JvmStatic
+        val fuelPerTick: Long
+            get() = Ic2Config.getJetpackFuelPerTick()
 
         @JvmStatic
         fun getFuel(stack: ItemStack): Long =
-            stack.orCreateNbt.getLong(FUEL_KEY).coerceIn(0L, MAX_FUEL)
+            stack.orCreateNbt.getLong(FUEL_KEY).coerceIn(0L, maxFuel)
 
         @JvmStatic
         fun setFuel(stack: ItemStack, fuel: Long) {
-            stack.orCreateNbt.putLong(FUEL_KEY, fuel.coerceIn(0L, MAX_FUEL))
+            stack.orCreateNbt.putLong(FUEL_KEY, fuel.coerceIn(0L, maxFuel))
         }
 
         @JvmStatic
@@ -75,13 +86,13 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
         super.appendTooltip(stack, world, tooltip, context)
 
         val fuel = getFuel(stack)
-        val ratio = if (MAX_FUEL > 0) fuel.toDouble() / MAX_FUEL else 0.0
+        val ratio = if (maxFuel > 0) fuel.toDouble() / maxFuel else 0.0
         val flightEnabled = isFlightEnabled(stack)
         val flightStatusText = if (flightEnabled) "开启" else "关闭"
 
         // 计算剩余飞行时间（秒）
         val remainingSeconds = if (fuel > 0) {
-            val ticks = fuel / FUEL_CONSUMPTION
+            val ticks = fuel / fuelPerTick
             ticks / 20.0
         } else 0.0
 
@@ -94,7 +105,7 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
             "${remainingSeconds.toInt()}秒"
         }
 
-        tooltip.add(Text.literal("燃料: %,d / %,d mB (%.1f%%)".format(fuel, MAX_FUEL, ratio * 100)))
+        tooltip.add(Text.literal("燃料: %,d / %,d mB (%.1f%%)".format(fuel, maxFuel, ratio * 100)))
         tooltip.add(Text.literal("飞行: $flightStatusText | 剩余飞行: $timeText").formatted(Formatting.GRAY))
         tooltip.add(Text.literal("  Alt+M：切换飞行开关").formatted(Formatting.DARK_GRAY))
         tooltip.add(Text.literal("  创造式飞行：空格上升，Shift下降").formatted(Formatting.DARK_GRAY))
@@ -109,10 +120,10 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
     override fun isItemBarVisible(stack: ItemStack): Boolean = true
 
     override fun getItemBarStep(stack: ItemStack): Int =
-        ((getFuel(stack).toDouble() / MAX_FUEL) * 13).toInt().coerceIn(0, 13)
+        ((getFuel(stack).toDouble() / maxFuel) * 13).toInt().coerceIn(0, 13)
 
     override fun getItemBarColor(stack: ItemStack): Int {
-        val ratio = getFuel(stack).toDouble() / MAX_FUEL
+        val ratio = getFuel(stack).toDouble() / maxFuel
         return when {
             ratio > 0.5 -> 0x4AFF4A
             ratio > 0.2 -> 0xFFFF4A

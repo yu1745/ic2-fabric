@@ -1,5 +1,6 @@
 package ic2_120.content.item.armor
 
+import ic2_120.config.Ic2Config
 import ic2_120.content.item.Alloy
 import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.IridiumPlate
@@ -49,7 +50,9 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
 
     companion object {
         private const val FLIGHT_KEY = "QuantumFlightEnabled"
-        private const val FLIGHT_COST = 417L  // 10M EU / 20min = 24000 ticks ≈ 417 EU/tick
+
+        val flightCostPerTick: Long
+            get() = Ic2Config.getQuantumChestplateEuPerTick()
 
         fun toggleFlight(stack: ItemStack): Boolean {
             val nbt = stack.orCreateNbt
@@ -93,7 +96,7 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
 
         // 计算飞行剩余时间（分钟）
         val remainingMinutes = if (energy > 0 && flightEnabled) {
-            val ticks = energy / FLIGHT_COST
+            val ticks = energy / flightCostPerTick
             val seconds = ticks / 20.0
             val minutes = seconds / 60.0
             "%.1f".format(minutes)

@@ -32,6 +32,8 @@ data class Ic2MainConfig(
     val miner: MinerConfig = MinerConfig(),
     @field:ConfigComment("采矿镭射枪配置。")
     val miningLaser: MiningLaserConfig = MiningLaserConfig(),
+    @field:ConfigComment("护甲功能配置（飞行时长、夜视时长等）。")
+    val armor: ArmorConfig = ArmorConfig(),
     @field:ConfigComment("世界生成配置。")
     val worldgen: WorldgenConfig = WorldgenConfig()
 )
@@ -70,6 +72,63 @@ data class MinerConfig(
         "[]"
     )
     val additionalMineableBlocks: List<String> = emptyList()
+)
+
+/**
+ * 护甲功能配置（飞行时长、夜视时长等）。
+ * 耗电量自动通过 满电容量 / 时长(秒) 计算得出。
+ */
+data class ArmorConfig(
+    @field:ConfigComment("喷气背包配置。")
+    val jetpack: JetpackConfig = JetpackConfig(),
+    @field:ConfigComment("电力喷气背包配置。")
+    val electricJetpack: ElectricJetpackConfig = ElectricJetpackConfig(),
+    @field:ConfigComment("量子胸甲配置。")
+    val quantumChestplate: QuantumChestplateConfig = QuantumChestplateConfig(),
+    @field:ConfigComment("夜视配置。")
+    val nightVision: NightVisionConfig = NightVisionConfig()
+)
+
+data class JetpackConfig(
+    /** 燃料容量 (mB)。 */
+    @field:ConfigComment("喷气背包燃料容量（mB）。", "30000")
+    val maxFuel: Long = 30_000L,
+    /** 飞行时长（秒）。耗电量自动通过 满燃料容量 / 时长 计算。 */
+    @field:ConfigComment("喷气背包飞行时长（秒），耗电量自动计算。", "750")
+    val flightDurationSeconds: Int = 750
+)
+
+data class ElectricJetpackConfig(
+    /** 最大能量 (EU)。 */
+    @field:ConfigComment("电力喷气背包最大能量（EU）。", "30000")
+    val maxEnergy: Long = 30_000L,
+    /** 飞行时长（秒）。耗电量自动通过 满电容量 / 时长 计算。 */
+    @field:ConfigComment("电力喷气背包飞行时长（秒），耗电量自动计算。", "750")
+    val flightDurationSeconds: Int = 750
+)
+
+data class QuantumChestplateConfig(
+    /** 最大能量 (EU)。 */
+    @field:ConfigComment("量子胸甲最大能量（EU）。", "10000000")
+    val maxEnergy: Long = 10_000_000L,
+    /** 飞行时长（秒）。耗电量自动通过 满电容量 / 时长 计算。 */
+    @field:ConfigComment("量子胸甲飞行时长（秒），耗电量自动计算。", "1200")
+    val flightDurationSeconds: Int = 1200
+)
+
+data class NightVisionConfig(
+    /** 夜视镜最大能量 (EU)。 */
+    @field:ConfigComment("夜视镜最大能量（EU）。", "100000")
+    val nightVisionGogglesMaxEnergy: Long = 100_000L,
+    /** 夜视镜夜视时长（秒）。耗电量自动通过 满电容量 / 时长 计算。 */
+    @field:ConfigComment("夜视镜夜视时长（秒），耗电量自动计算。", "5000")
+    val nightVisionGogglesDurationSeconds: Int = 5000,
+    /** 纳米头盔最大能量 (EU)。 */
+    @field:ConfigComment("纳米头盔最大能量（EU）。", "1000000")
+    val nanoHelmetMaxEnergy: Long = 1_000_000L,
+    /** 纳米头盔夜视时长（秒）。耗电量自动通过 满电容量 / 时长 计算。 */
+    @field:ConfigComment("纳米头盔夜视时长（秒），耗电量自动计算。", "3571")
+    val nanoHelmetDurationSeconds: Int = 3571
 )
 
 /**
@@ -286,6 +345,7 @@ private val DEFAULT_CONFIG_TEMPLATE = Ic2MainConfig(
     ),
     miner = MinerConfig(),
     miningLaser = MiningLaserConfig(),
+    armor = ArmorConfig(),
     worldgen = WorldgenConfig(
         rubberTree = RubberTreeWorldgenConfig()
     )
@@ -394,6 +454,46 @@ object Ic2Config {
      */
     fun getAllReplicationCosts(): Map<String, Int> {
         return current.uuReplication.replicationWhitelist
+    }
+
+    /**
+     * 喷气背包每tick燃料消耗 = 燃料容量 / (飞行时长 × 20 ticks/秒)
+     */
+    fun getJetpackFuelPerTick(): Long {
+        val cfg = current.armor.jetpack
+        return cfg.maxFuel / (cfg.flightDurationSeconds * 20L)
+    }
+
+    /**
+     * 电力喷气背包每tick能量消耗 = 最大能量 / (飞行时长 × 20 ticks/秒)
+     */
+    fun getElectricJetpackEuPerTick(): Long {
+        val cfg = current.armor.electricJetpack
+        return cfg.maxEnergy / (cfg.flightDurationSeconds * 20L)
+    }
+
+    /**
+     * 量子胸甲每tick能量消耗 = 最大能量 / (飞行时长 × 20 ticks/秒)
+     */
+    fun getQuantumChestplateEuPerTick(): Long {
+        val cfg = current.armor.quantumChestplate
+        return cfg.maxEnergy / (cfg.flightDurationSeconds * 20L)
+    }
+
+    /**
+     * 夜视镜每tick能量消耗 = 最大能量 / (夜视时长 × 20 ticks/秒)
+     */
+    fun getNightVisionGogglesEuPerTick(): Long {
+        val cfg = current.armor.nightVision
+        return cfg.nightVisionGogglesMaxEnergy / (cfg.nightVisionGogglesDurationSeconds * 20L)
+    }
+
+    /**
+     * 纳米头盔每tick能量消耗 = 最大能量 / (夜视时长 × 20 ticks/秒)
+     */
+    fun getNanoHelmetNightVisionEuPerTick(): Long {
+        val cfg = current.armor.nightVision
+        return cfg.nanoHelmetMaxEnergy / (cfg.nanoHelmetDurationSeconds * 20L)
     }
 
     private fun saveCurrentConfig() {
