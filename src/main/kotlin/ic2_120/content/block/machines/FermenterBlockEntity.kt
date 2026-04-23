@@ -361,6 +361,10 @@ class FermenterBlockEntity(
         if (world.isClient) return
 
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+        if (fluidPipeProviderEnabled) {
+            val front = state.get(Properties.HORIZONTAL_FACING)
+            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, outputTankInternal, fluidPipeProviderFilter, fluidPipeProviderSide, front)
+        }
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
 

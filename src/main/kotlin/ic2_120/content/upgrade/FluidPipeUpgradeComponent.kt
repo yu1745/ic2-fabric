@@ -2,12 +2,19 @@ package ic2_120.content.upgrade
 
 import ic2_120.content.item.FluidEjectorUpgrade
 import ic2_120.content.item.FluidPullingUpgrade
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.fluid.Fluid
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
+import net.minecraft.world.World
 
 object FluidPipeUpgradeComponent {
     private const val NBT_FILTER = "PipeFluidFilter"
@@ -91,6 +98,43 @@ object FluidPipeUpgradeComponent {
             return
         }
         nbt.putString(NBT_DIRECTION, side.name.lowercase())
+    }
+
+    /**
+     * 将储罐中的流体弹出到相邻方块。
+     * @param tank 流体储罐
+     * @param filter 流体过滤器，null 表示不过滤
+     * @param configuredSide 弹出方向，null 表示所有方向
+     * @param blockedFace 禁止弹出的面（通常是机器正面），null 表示不禁止任何面
+     */
+    fun ejectFluidToNeighbors(
+        world: World,
+        pos: BlockPos,
+        tank: SingleVariantStorage<FluidVariant>,
+        filter: Fluid?,
+        configuredSide: Direction?,
+        blockedFace: Direction? = null
+    ) {
+        if (tank.amount <= 0L || tank.variant.isBlank) return
+        for (dir in Direction.values()) {
+            if (blockedFace != null && dir == blockedFace) continue
+            if (configuredSide != null && dir != configuredSide) continue
+            val neighbor = FluidStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
+            val resource = tank.variant
+            if (filter != null && resource.fluid != filter) continue
+            val maxPerTick = minOf(FluidConstants.BUCKET / 4, tank.amount)
+            Transaction.openOuter().use { tx ->
+                val extracted = tank.extract(resource, maxPerTick, tx)
+                if (extracted <= 0L) return@use
+                val accepted = neighbor.insert(resource, extracted, tx)
+                if (accepted <= 0L) return@use
+                if (accepted < extracted) {
+                    tank.insert(resource, extracted - accepted, tx)
+                }
+                tx.commit()
+            }
+            if (tank.amount <= 0L) break
+        }
     }
 
     fun nextDirection(current: Direction?): Direction? {

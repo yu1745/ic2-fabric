@@ -464,6 +464,10 @@ class FluidHeatExchangerBlockEntity(
         if (world.isClient) return
 
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+        if (fluidPipeProviderEnabled) {
+            val front = state.get(Properties.HORIZONTAL_FACING)
+            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, outputTankInternal, fluidPipeProviderFilter, fluidPipeProviderSide, front)
+        }
         handleInputFluidContainers()
         fillOutputFluidContainers()
         tickHeatMachine(world, pos, state)

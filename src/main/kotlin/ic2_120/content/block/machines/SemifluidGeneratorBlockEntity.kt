@@ -300,6 +300,9 @@ class SemifluidGeneratorBlockEntity(
         if (world.isClient) return
 
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+        if (fluidPipeProviderEnabled) {
+            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, fuelTankInternal, fluidPipeProviderFilter, fluidPipeProviderSide, state.get(Properties.HORIZONTAL_FACING))
+        }
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
 
         val fuelStack = getStack(FUEL_SLOT)

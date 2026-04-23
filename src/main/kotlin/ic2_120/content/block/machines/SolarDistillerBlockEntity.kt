@@ -429,6 +429,9 @@ class SolarDistillerBlockEntity(
 
         // 每 tick 重新从升级槽同步”是否参与流体管网 + 过滤条件”
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+        if (fluidPipeProviderEnabled) {
+            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, outputTankInternal, fluidPipeProviderFilter, fluidPipeProviderSide)
+        }
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
 

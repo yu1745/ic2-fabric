@@ -324,6 +324,9 @@ class WaterGeneratorBlockEntity(
 
         // 应用流体管道升级
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+        if (fluidPipeProviderEnabled) {
+            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, waterTankInternal, fluidPipeProviderFilter, fluidPipeProviderSide, state.get(Properties.HORIZONTAL_FACING))
+        }
 
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
 
