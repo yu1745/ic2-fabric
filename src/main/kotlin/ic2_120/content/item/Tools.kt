@@ -88,6 +88,11 @@ object BronzeToolMaterial : ToolMaterial {
 /** 锻造锤 - 将锭锻造成板，将板锻造成外壳 */
 @ModItem(name = "forge_hammer", tab = CreativeTab.IC2_TOOLS)
 class ForgeHammer : Item(FabricItemSettings().maxDamage(80)) {
+    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
+        val remaining = stack.maxDamage - stack.damage
+        tooltip.add(Text.literal("剩余使用次数: $remaining").formatted(Formatting.GRAY))
+    }
+
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
@@ -105,6 +110,11 @@ class ForgeHammer : Item(FabricItemSettings().maxDamage(80)) {
 /** 板材切割剪刀 - 将板材切割成导线 */
 @ModItem(name = "cutter", tab = CreativeTab.IC2_TOOLS)
 class Cutter : Item(FabricItemSettings().maxDamage(60)) {
+    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
+        val remaining = stack.maxDamage - stack.damage
+        tooltip.add(Text.literal("剩余使用次数: $remaining").formatted(Formatting.GRAY))
+    }
+
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
