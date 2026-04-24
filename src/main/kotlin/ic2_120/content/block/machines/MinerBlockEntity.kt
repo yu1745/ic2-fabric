@@ -4,6 +4,7 @@ import ic2_120.content.block.AdvancedMinerBlock
 import ic2_120.content.block.BaseMinerBlock
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.MinerBlock
+import ic2_120.content.block.MiningPipeBlock
 import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.AdvancedScannerItem
@@ -33,11 +34,14 @@ import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.config.Ic2Config
+import net.minecraft.block.Block
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
+import ic2_120.registry.item
+import ic2_120.registry.instance
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -120,7 +124,8 @@ abstract class BaseMinerBlockEntity(
         const val SLOT_OUTPUT_0 = SLOT_UPGRADE_3 + 1
         const val SLOT_OUTPUT_1 = SLOT_UPGRADE_3 + 2
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_0, SLOT_OUTPUT_1)
-        const val INVENTORY_SIZE = SLOT_OUTPUT_1 + 1
+        const val SLOT_PIPE = SLOT_OUTPUT_1 + 1
+        const val INVENTORY_SIZE = SLOT_PIPE + 1
 
         private const val NBT_WORK_OFFSET = "WorkOffset"
         private const val NBT_CURSOR_INITIALIZED = "CursorInitialized"
@@ -128,6 +133,7 @@ abstract class BaseMinerBlockEntity(
         private const val NBT_TANK_AMOUNT = "TankAmount"
         private const val NBT_TANK_FLUID = "TankFluid"
         private const val NBT_PENDING_BREAK_ENERGY = "PendingBreakEnergy"
+        private const val NBT_PIPE_DEPTH = "PipeDepth"
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -141,7 +147,8 @@ abstract class BaseMinerBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_SCANNER), matcher = { isValid(SLOT_SCANNER, it) }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_DRILL), matcher = { isValid(SLOT_DRILL, it) }, maxPerSlot = 1),
-            ItemInsertRoute((SLOT_FILTER_START..SLOT_FILTER_END).toList().toIntArray(), matcher = { !it.isEmpty })
+            ItemInsertRoute((SLOT_FILTER_START..SLOT_FILTER_END).toList().toIntArray(), matcher = { !it.isEmpty }),
+            ItemInsertRoute(intArrayOf(SLOT_PIPE), matcher = { isValid(SLOT_PIPE, it) })
         ),
         extractSlots = IntArray(INVENTORY_SIZE) { it },
         markDirty = { markDirty() }
@@ -149,7 +156,7 @@ abstract class BaseMinerBlockEntity(
     private val workOffset = Random.nextInt(20)
     private var cursorInitialized = false
     private var pendingBreakEnergy: Long = 0L
-
+    private var lastPlacedPipeY: Int = pos.y
     val syncedData = SyncedData(this)
 
     @RegisterEnergy
@@ -228,6 +235,7 @@ abstract class BaseMinerBlockEntity(
             in SLOT_FILTER_START..SLOT_FILTER_END -> true
             in SLOT_UPGRADE_INDICES -> stack.item is IUpgradeItem
             in SLOT_OUTPUT_INDICES -> false
+            SLOT_PIPE -> stack.item === MiningPipeBlock::class.item()
             else -> false
         }
     }
@@ -253,6 +261,7 @@ abstract class BaseMinerBlockEntity(
         cursorInitialized = nbt.getBoolean(NBT_CURSOR_INITIALIZED)
         tankInternal.setStored(nbt.getString(NBT_TANK_FLUID), nbt.getLong(NBT_TANK_AMOUNT))
         pendingBreakEnergy = nbt.getLong(NBT_PENDING_BREAK_ENERGY)
+        lastPlacedPipeY = if (nbt.contains(NBT_PIPE_DEPTH)) nbt.getInt(NBT_PIPE_DEPTH) else pos.y
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -262,6 +271,7 @@ abstract class BaseMinerBlockEntity(
         nbt.putLong(NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_WORK_OFFSET, workOffset)
         nbt.putBoolean(NBT_CURSOR_INITIALIZED, cursorInitialized)
+        nbt.putInt(NBT_PIPE_DEPTH, lastPlacedPipeY)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.amount)
         nbt.putString(NBT_TANK_FLUID, if (tankInternal.variant.isBlank) "" else Registries.FLUID.getId(tankInternal.variant.fluid).toString())
         nbt.putLong(NBT_PENDING_BREAK_ENERGY, pendingBreakEnergy)
@@ -469,10 +479,38 @@ abstract class BaseMinerBlockEntity(
             return
         }
         sync.cursorX = -range
+        val completedY = sync.cursorY
         sync.cursorY -= 1
+        tryPlacePipeBelow(completedY)
         if (sync.cursorY < -64) {
             sync.running = 0
         }
+    }
+
+    private fun tryPlacePipeBelow(completedY: Int) {
+        if (completedY >= pos.y) return
+        val targetPos = BlockPos(pos.x, completedY, pos.z)
+        val serverWorld = world as? ServerWorld ?: return
+        val existingState = serverWorld.getBlockState(targetPos)
+        if (existingState.block is MiningPipeBlock) return
+
+        val pipeSlot = findPipeInInventory() ?: run {
+            sync.running = 0
+            return
+        }
+
+        val stack = getStack(pipeSlot)
+        stack.decrement(1)
+        if (stack.isEmpty) setStack(pipeSlot, ItemStack.EMPTY)
+        markDirty()
+
+        serverWorld.setBlockState(targetPos, MiningPipeBlock::class.instance().defaultState, Block.NOTIFY_ALL)
+        lastPlacedPipeY = completedY
+    }
+
+    private fun findPipeInInventory(): Int? {
+        val stack = getStack(SLOT_PIPE)
+        return if (!stack.isEmpty && stack.item === MiningPipeBlock::class.item()) SLOT_PIPE else null
     }
 
     private fun shouldMine(world: World, targetPos: BlockPos, state: BlockState): Boolean {

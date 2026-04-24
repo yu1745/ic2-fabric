@@ -81,18 +81,20 @@ class MinerScreen(
                     ) {
                         Flex(
                             direction = FlexDirection.COLUMN,
-                            modifier = Modifier().height(18 * 3),
+                            modifier = Modifier().height(18 * 4),
                             justifyContent = JustifyContent.SPACE_BETWEEN,
 //                            alignItems = AlignItems.CENTER,
                         ) {
                             Text(t("gui.ic2_120.miner.scanner"), center = true, modifier = Modifier.EMPTY.height(18))
                             Text(t("gui.ic2_120.miner.drill"), center = true, modifier = Modifier.EMPTY.height(18))
                             Text(t("gui.ic2_120.battery_slot"), center = true, modifier = Modifier.EMPTY.height(18))
+                            Text(t("gui.ic2_120.miner.pipe"), center = true, modifier = Modifier.EMPTY.height(18))
                         }
                         Column {
                             SlotHost(MinerScreenHandler.SLOT_SCANNER_INDEX)
                             SlotHost(MinerScreenHandler.SLOT_DRILL_INDEX)
                             SlotHost(MinerScreenHandler.SLOT_BATTERY_INDEX)
+                            SlotHost(MinerScreenHandler.SLOT_PIPE_INDEX)
                         }
                         if (handler.isAdvanced) {
                             Column(spacing = 0) {
@@ -182,6 +184,6 @@ class MinerScreen(
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
 
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
+        private val GUI_SIZE = GuiSize.UPGRADE_TALL
     }
 }

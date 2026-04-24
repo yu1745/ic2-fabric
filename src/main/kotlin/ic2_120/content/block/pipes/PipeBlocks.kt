@@ -200,6 +200,10 @@ abstract class BasePipeBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getOutlineShape(state: BlockState, world: BlockView, pos: BlockPos, context: ShapeContext): VoxelShape = shapeCache[state] ?: pipeShape(state)
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun getCullingShape(state: BlockState, world: BlockView, pos: BlockPos): VoxelShape =
+        VoxelShapes.empty()
+
     protected open fun pipeShape(state: BlockState): VoxelShape {
         val r = size.radius
         val min = 0.5 - r

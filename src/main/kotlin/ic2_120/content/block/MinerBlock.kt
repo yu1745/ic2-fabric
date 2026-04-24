@@ -31,6 +31,10 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.block.Block
+import net.minecraft.block.Blocks
+import net.minecraft.item.ItemStack
+import net.minecraft.util.ItemScatterer
 
 abstract class BaseMinerBlock : MachineBlock() {
     override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
@@ -62,6 +66,28 @@ abstract class BaseMinerBlock : MachineBlock() {
             createScreenHandlerFactory(state, world, pos)?.let(player::openHandledScreen)
         }
         return ActionResult.SUCCESS
+    }
+
+    override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
+        if (!world.isClient && !state.isOf(newState.block) && !moved) {
+            retrieveMiningPipes(world, pos)
+        }
+        super.onStateReplaced(state, world, pos, newState, moved)
+    }
+
+    private fun retrieveMiningPipes(world: World, pos: BlockPos) {
+        for (y in (pos.y - 1) downTo world.bottomY) {
+            val pipePos = BlockPos(pos.x, y, pos.z)
+            val blockState = world.getBlockState(pipePos)
+            val block = blockState.block
+            if (block is MiningPipeBlock) {
+                val itemStack = ItemStack(block.asItem())
+                ItemScatterer.spawn(world, pipePos.x.toDouble(), pipePos.y.toDouble(), pipePos.z.toDouble(), itemStack)
+                world.setBlockState(pipePos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+            } else {
+                break
+            }
+        }
     }
 
     companion object {

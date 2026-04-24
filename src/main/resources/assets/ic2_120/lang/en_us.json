@@ -815,6 +815,7 @@
   "gui.ic2_120.miner.scan_cursor": "Scan Cursor: (%1$s, %2$s, %3$s)",
   "gui.ic2_120.miner.scanner": "Scanner",
   "gui.ic2_120.miner.drill": "Drill",
+  "gui.ic2_120.miner.pipe": "Pipe",
   "gui.ic2_120.miner.mode": "Mode: %s",
   "gui.ic2_120.miner.silk_touch": "Silk Touch: %s",
   "gui.ic2_120.miner.restart": "Restart",

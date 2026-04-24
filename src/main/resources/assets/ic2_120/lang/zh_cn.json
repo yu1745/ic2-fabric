@@ -809,6 +809,7 @@
   "gui.ic2_120.miner.scan_cursor": "扫描游标: (%1$s, %2$s, %3$s)",
   "gui.ic2_120.miner.scanner": "扫描器",
   "gui.ic2_120.miner.drill": "钻头",
+  "gui.ic2_120.miner.pipe": "管道",
   "gui.ic2_120.miner.mode": "模式: %s",
   "gui.ic2_120.miner.silk_touch": "精准采集: %s",
   "gui.ic2_120.miner.restart": "重启",

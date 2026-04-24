@@ -16,6 +16,9 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.DoorBlock
 import net.minecraft.block.PillarBlock
+import net.minecraft.util.shape.VoxelShape
+import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.BlockView
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
@@ -304,6 +307,9 @@ class WoolSheetBlock : Block(
 
 @ModBlock(name = "mining_pipe", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "building")
 class MiningPipeBlock : PillarBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(3.0f)) {
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun getCullingShape(state: BlockState, world: BlockView, pos: BlockPos): VoxelShape =
+        VoxelShapes.empty()
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {

@@ -29,7 +29,9 @@ import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
+import ic2_120.content.block.MiningPipeBlock
 import ic2_120.registry.annotation.ScreenFactory
+import ic2_120.registry.item
 
 @ModScreenHandler(names = ["miner", "advanced_miner"])
 class MinerScreenHandler(
@@ -64,6 +66,7 @@ class MinerScreenHandler(
     }, maxItemCount = 1)
 
     private val batterySlotSpec = SlotSpec(canInsert = { stack -> stack.item is IBatteryItem }, maxItemCount = 1)
+    private val pipeSlotSpec = SlotSpec(canInsert = { stack -> stack.item === MiningPipeBlock::class.item() }, maxItemCount = 1024)
     private val filterSlotSpec = SlotSpec(canInsert = { true })
 
     init {
@@ -73,6 +76,7 @@ class MinerScreenHandler(
         addSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_SCANNER, 0, 0, scannerSlotSpec))
         addSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_DRILL, 0, 0, drillSlotSpec))
         addSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_DISCHARGING, 0, 0, batterySlotSpec))
+        addSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_PIPE, 0, 0, pipeSlotSpec))
 
         var idx = BaseMinerBlockEntity.SLOT_FILTER_START
         repeat(BaseMinerBlockEntity.FILTER_SLOT_COUNT) {
@@ -138,7 +142,8 @@ class MinerScreenHandler(
                         listOf(
                             SlotTarget(slots[SLOT_SCANNER_INDEX], scannerSlotSpec),
                             SlotTarget(slots[SLOT_DRILL_INDEX], drillSlotSpec),
-                            SlotTarget(slots[SLOT_BATTERY_INDEX], batterySlotSpec)
+                            SlotTarget(slots[SLOT_BATTERY_INDEX], batterySlotSpec),
+                            SlotTarget(slots[SLOT_PIPE_INDEX], pipeSlotSpec)
                         ) + upgradeTargets + filterTargets
                     )
                     if (!moved) return ItemStack.EMPTY
@@ -165,7 +170,8 @@ class MinerScreenHandler(
         const val SLOT_SCANNER_INDEX = 0
         const val SLOT_DRILL_INDEX = 1
         const val SLOT_BATTERY_INDEX = 2
-        const val SLOT_FILTER_INDEX_START = 3
+        const val SLOT_PIPE_INDEX = 3
+        const val SLOT_FILTER_INDEX_START = 4
         const val SLOT_FILTER_INDEX_END = SLOT_FILTER_INDEX_START + BaseMinerBlockEntity.FILTER_SLOT_COUNT - 1
         const val SLOT_UPGRADE_INDEX_START = SLOT_FILTER_INDEX_END + 1
         const val SLOT_UPGRADE_INDEX_END = SLOT_UPGRADE_INDEX_START + 3
