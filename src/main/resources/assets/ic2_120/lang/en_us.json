@@ -326,6 +326,7 @@
   "item.ic2_120.bronze_shovel": "Bronze Shovel",
   "item.ic2_120.bronze_pickaxe": "Bronze Pickaxe",
   "item.ic2_120.weeding_spade": "Weeding Spade",
+  "item.ic2_120.weed_ex": "Weed-Ex",
   "item.ic2_120.broken_rubber_boat": "Damaged Rubber Dinghy",
   "item.ic2_120.carbon_boat": "Carbon Fiber Canoe",
   "item.ic2_120.rubber_boat": "Rubber Dinghy",
@@ -409,7 +410,7 @@
   "item.ic2_120.air_cell": "Compressed Air Cell",
   "item.ic2_120.biofuel_cell": "Biofuel Cell",
   "item.ic2_120.bio_cell": "Compressed Plant Ball Cell",
-  "item.ic2_120.weed_ex_cell": "Weed-Ex",
+  "item.ic2_120.weed_ex_cell": "Weed-Ex Cell",
   "item.ic2_120.water_cell": "Water Cell",
   "item.ic2_120.distilled_water_cell": "Distilled Water Cell",
   "item.ic2_120.lava_cell": "Lava Cell",
@@ -938,5 +939,7 @@
   "gui.ic2_120.nuclear_reactor.hot_coolant": "Hot Coolant %1$s/%2$s",
   "gui.ic2_120.solar_distiller.distill_progress": "Distillation Progress",
   "gui.ic2_120.solar_distiller.input_water": "Input %s mB",
-  "gui.ic2_120.solar_distiller.output_distilled": "Output %s mB"
+  "gui.ic2_120.solar_distiller.output_distilled": "Output %s mB",
+  "tooltip.ic2_120.weed_ex.amount": "Remaining: %s/%s mB",
+  "tooltip.ic2_120.weed_ex.low": "Weed-Ex low!"
 }

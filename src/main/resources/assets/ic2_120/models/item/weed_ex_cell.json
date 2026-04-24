@@ -1,6 +1,7 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crop/weed_ex"
-	}
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "ic2:item/cell/fluid_cell",
+    "layer1": "ic2:item/cell/fluid_cell_window"
+  }
 }

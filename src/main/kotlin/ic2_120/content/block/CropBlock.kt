@@ -9,14 +9,13 @@ import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.CropSeedData
 import ic2_120.content.item.CropnalyzerItem
 import ic2_120.content.item.CoffeeBeans
-import ic2_120.content.item.EmptyCell
 import ic2_120.content.item.Fertilizer
 import ic2_120.content.item.GrinPowder
 import ic2_120.content.item.Hops
 import ic2_120.content.item.Resin
 import ic2_120.content.item.TerraWart
 import ic2_120.content.item.Weed
-import ic2_120.content.item.WeedExCell
+import ic2_120.content.item.WeedEx
 import ic2_120.content.item.WeedingSpade
 import ic2_120.content.item.SmallCopperDust
 import ic2_120.content.item.SmallGoldDust
@@ -131,6 +130,8 @@ class CropBlock : BlockWithEntity(
         if (stack.item is CropnalyzerItem) return ActionResult.PASS
         // 除草铲：由物品 useOnBlock 清除杂草，不走采摘逻辑
         if (stack.item == WeedingSpade::class.instance()) return ActionResult.PASS
+        // 除草剂：由物品 useOnBlock 直接喷洒，不走采摘逻辑
+        if (stack.item == WeedEx::class.instance()) return ActionResult.PASS
 
         if (world.isClient) return ActionResult.SUCCESS
         val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return ActionResult.PASS
@@ -139,20 +140,6 @@ class CropBlock : BlockWithEntity(
         if (stack.item == Fertilizer::class.instance()) {
             if (be.applyFertilizerDirect(simulate = false)) {
                 if (!isCreative) stack.decrement(1)
-                return ActionResult.SUCCESS
-            }
-        }
-
-        if (stack.item == WeedExCell::class.instance()) {
-            val used = be.applyWeedExDirect(50, simulate = false)
-            if (used > 0) {
-                if (!isCreative) {
-                    stack.decrement(1)
-                    val empty = EmptyCell::class.instance().defaultStack
-                    if (!player.giveItemStack(empty)) {
-                        ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), empty)
-                    }
-                }
                 return ActionResult.SUCCESS
             }
         }

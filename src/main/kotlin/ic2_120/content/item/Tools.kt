@@ -61,6 +61,7 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
@@ -217,6 +218,107 @@ class BronzePickaxe : PickaxeItem(BronzeToolMaterial, 1, -2.8f, FabricItemSettin
                 .input('M', bronze).input('S', stick)
                 .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
                 .offerTo(exporter, BronzePickaxe::class.id())
+        }
+    }
+}
+
+/** 除草剂：右键作物直接喷洒除草剂，内部储存除草剂容量（mB） */
+@ModItem(name = "weed_ex", tab = CreativeTab.IC2_TOOLS, group = "tools")
+class WeedEx : Item(FabricItemSettings().maxCount(1)) {
+    override fun useOnBlock(context: ItemUsageContext): ActionResult {
+        val world = context.world
+        val pos = context.blockPos
+        val state = world.getBlockState(pos)
+        if (state.block !is CropBlock) return ActionResult.PASS
+        if (world.isClient) return ActionResult.SUCCESS
+        val player = context.player ?: return ActionResult.PASS
+        val stack = context.stack
+        val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return ActionResult.PASS
+
+        val amount = getAmount(stack)
+        if (amount <= 0) return ActionResult.PASS
+
+        val request = amount.coerceAtMost(WEEDEX_PER_USE)
+        val used = be.applyWeedEx(request, simulate = true)
+        if (used <= 0) return ActionResult.PASS
+
+        if (!player.abilities.creativeMode) {
+            be.applyWeedEx(request, simulate = false)
+            val remaining = amount - used
+            if (remaining <= 0) {
+                stack.decrement(1)
+            } else {
+                setAmount(stack, remaining)
+            }
+        } else {
+            be.applyWeedEx(request, simulate = false)
+        }
+        return ActionResult.SUCCESS
+    }
+
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: World?,
+        tooltip: MutableList<Text>,
+        context: TooltipContext
+    ) {
+        val amount = getAmount(stack)
+        val pct = (amount * 100 / CAPACITY).coerceIn(0, 100)
+        tooltip.add(Text.translatable("tooltip.ic2_120.weed_ex.amount", amount, CAPACITY).formatted(Formatting.GRAY))
+        if (pct < 25) {
+            tooltip.add(Text.translatable("tooltip.ic2_120.weed_ex.low").formatted(Formatting.RED))
+        }
+    }
+
+    override fun isItemBarVisible(stack: ItemStack): Boolean {
+        return getAmount(stack) < CAPACITY
+    }
+
+    override fun getItemBarStep(stack: ItemStack): Int {
+        return (getAmount(stack) * 13 / CAPACITY).coerceIn(0, 13)
+    }
+
+    override fun getItemBarColor(stack: ItemStack): Int {
+        val pct = getAmount(stack) * 100 / CAPACITY
+        return when {
+            pct < 25 -> 0xFF4444
+            pct < 50 -> 0xFFAA44
+            else -> 0x44FF44
+        }
+    }
+
+    override fun isEnchantable(stack: ItemStack): Boolean = false
+
+    companion object {
+        const val CAPACITY = 1000
+        private const val WEEDEX_PER_USE = 150
+        private const val NBT_KEY = "WeedExAmount"
+
+        fun getAmount(stack: ItemStack): Int {
+            val nbt = stack.nbt ?: return CAPACITY
+            if (!nbt.contains(NBT_KEY)) return CAPACITY
+            return nbt.getInt(NBT_KEY).coerceIn(0, CAPACITY)
+        }
+
+        fun setAmount(stack: ItemStack, amount: Int) {
+            if (amount >= CAPACITY) {
+                stack.nbt?.remove(NBT_KEY)
+                if (stack.nbt?.isEmpty == true) stack.nbt = null
+            } else if (amount > 0) {
+                stack.orCreateNbt.putInt(NBT_KEY, amount.coerceAtMost(CAPACITY))
+            } else {
+                stack.orCreateNbt.putInt(NBT_KEY, 0)
+            }
+        }
+
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val cell = WeedExCell::class.instance()
+            if (cell == Items.AIR) return
+            ShapelessRecipeJsonBuilder.create(RecipeCategory.TOOLS, WeedEx::class.instance(), 1)
+                .input(cell, 1)
+                .criterion(hasItem(cell), conditionsFromItem(cell))
+                .offerTo(exporter, WeedEx::class.id())
         }
     }
 }
@@ -406,7 +508,7 @@ class ToolBox : Item(FabricItemSettings().maxCount(1)) {
             if (i is AxeItem || i is PickaxeItem || i is ShovelItem || i is HoeItem || i is SwordItem) return true
             if (i is MiningLaserItem) return true
             if (i is FoamSprayerItem) return true
-            if (i is ForgeHammer || i is Cutter || i is WeedingSpade || i is Treetap || i is Wrench ||
+            if (i is ForgeHammer || i is Cutter || i is WeedingSpade || i is WeedEx || i is Treetap || i is Wrench ||
                 i is FrequencyTransmitter || i is Obscurator || i is WindMeter
             ) {
                 return true

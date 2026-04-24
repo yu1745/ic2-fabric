@@ -325,6 +325,7 @@
   "item.ic2_120.bronze_shovel": "青铜铲",
   "item.ic2_120.bronze_pickaxe": "青铜镐",
   "item.ic2_120.weeding_spade": "除草铲",
+  "item.ic2_120.weed_ex": "除草剂",
   "item.ic2_120.broken_rubber_boat": "破损的橡皮艇",
   "item.ic2_120.carbon_boat": "碳纤维轻艇",
   "item.ic2_120.rubber_boat": "橡皮艇",
@@ -408,7 +409,7 @@
   "item.ic2_120.air_cell": "压缩空气单元",
   "item.ic2_120.biofuel_cell": "生物燃油单元",
   "item.ic2_120.bio_cell": "压缩植物球单元",
-  "item.ic2_120.weed_ex_cell": "除草剂",
+  "item.ic2_120.weed_ex_cell": "除草剂单元",
   "item.ic2_120.water_cell": "水单元",
   "item.ic2_120.distilled_water_cell": "蒸馏水单元",
   "item.ic2_120.lava_cell": "岩浆单元",
@@ -932,5 +933,7 @@
   "gui.ic2_120.nuclear_reactor.hot_coolant": "热液 %1$s/%2$s",
   "gui.ic2_120.solar_distiller.distill_progress": "蒸馏进度",
   "gui.ic2_120.solar_distiller.input_water": "输入 %s mB",
-  "gui.ic2_120.solar_distiller.output_distilled": "输出 %s mB"
+  "gui.ic2_120.solar_distiller.output_distilled": "输出 %s mB",
+  "tooltip.ic2_120.weed_ex.amount": "剩余容量: %s/%s mB",
+  "tooltip.ic2_120.weed_ex.low": "除草剂不足！"
 }
