@@ -67,7 +67,9 @@ class MinerScreenHandler(
 
     private val batterySlotSpec = SlotSpec(canInsert = { stack -> stack.item is IBatteryItem }, maxItemCount = 1)
     private val pipeSlotSpec = SlotSpec(canInsert = { stack -> stack.item === MiningPipeBlock::class.item() }, maxItemCount = 1024)
-    private val filterSlotSpec = SlotSpec(canInsert = { true })
+    private val filterSlotSpec = SlotSpec(canInsert = { stack ->
+        stack.item !== MiningPipeBlock::class.item()
+    })
 
     init {
         checkSize(blockInventory, BaseMinerBlockEntity.INVENTORY_SIZE)

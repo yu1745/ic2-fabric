@@ -135,7 +135,11 @@ class RoutedItemStorage(
 
                 override fun getCapacity(): Long {
                     val current = inventory[slot]
-                    return if (current.isEmpty) 0L else minOf(maxCountPerStackProvider(), current.maxCount).toLong()
+                    return if (current.isEmpty) {
+                        0L
+                    } else {
+                        slotLimitForView(slot, current).toLong()
+                    }
                 }
 
                 override fun extract(resource: ItemVariant, maxAmount: Long, transaction: TransactionContext): Long =
@@ -153,7 +157,18 @@ class RoutedItemStorage(
     }
 
     private fun slotLimit(route: ItemInsertRoute, stack: ItemStack): Int {
-        val routeLimit = route.maxPerSlot ?: Int.MAX_VALUE
-        return minOf(maxCountPerStackProvider(), stack.maxCount, routeLimit)
+        route.maxPerSlot?.let { return it }
+        return minOf(maxCountPerStackProvider(), stack.maxCount)
+    }
+
+    private fun slotLimitForView(slot: Int, stack: ItemStack): Int {
+        var maxRouteLimit: Int? = null
+        for (route in insertRoutes) {
+            if (slot !in route.slotIndices) continue
+            if (!route.matcher(stack)) continue
+            val limit = route.maxPerSlot ?: continue
+            maxRouteLimit = if (maxRouteLimit == null) limit else maxOf(maxRouteLimit, limit)
+        }
+        return maxRouteLimit ?: minOf(maxCountPerStackProvider(), stack.maxCount)
     }
 }

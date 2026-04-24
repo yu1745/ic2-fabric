@@ -8,8 +8,11 @@ import ic2_120.client.renderers.WindGeneratorBlockEntityRenderer
 import ic2_120.client.renderers.WindKineticGeneratorBlockEntityRenderer
 import ic2_120.client.renderers.WaterKineticGeneratorBlockEntityRenderer
 import ic2_120.client.renderers.ManualKineticGeneratorBlockEntityRenderer
+import ic2_120.client.renderers.MinerBlockEntityRenderer
 import ic2_120.content.block.ComposeDebugBlockEntity
+import ic2_120.content.block.machines.AdvancedMinerBlockEntity
 import ic2_120.content.block.machines.ManualKineticGeneratorBlockEntity
+import ic2_120.content.block.machines.MinerBlockEntity
 import ic2_120.content.block.machines.TeleporterBlockEntity
 import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.transmission.BevelGearBlock
@@ -61,6 +64,14 @@ object ClientBlockEntityRenderers {
         BlockEntityRendererFactories.register(
             PipeBlockEntity::class.type(),
             ::PipeBlockEntityRenderer
+        )
+        BlockEntityRendererFactories.register(
+            MinerBlockEntity::class.type(),
+            ::MinerBlockEntityRenderer
+        )
+        BlockEntityRendererFactories.register(
+            AdvancedMinerBlockEntity::class.type(),
+            ::MinerBlockEntityRenderer
         )
 
         // 为传动轴和伞齿轮注册物品渲染器（使用方块实体渲染器在物品栏中渲染 3D 模型）

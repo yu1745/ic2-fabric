@@ -31,6 +31,10 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import ic2_120.content.block.machines.BaseMinerBlockEntity
+import ic2_120.content.item.AdvancedScannerItem
+import ic2_120.content.item.OdScannerItem
+import ic2_120.content.item.ScannerType
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.item.ItemStack
@@ -76,17 +80,48 @@ abstract class BaseMinerBlock : MachineBlock() {
     }
 
     private fun retrieveMiningPipes(world: World, pos: BlockPos) {
-        for (y in (pos.y - 1) downTo world.bottomY) {
-            val pipePos = BlockPos(pos.x, y, pos.z)
-            val blockState = world.getBlockState(pipePos)
-            val block = blockState.block
-            if (block is MiningPipeBlock) {
-                val itemStack = ItemStack(block.asItem())
-                ItemScatterer.spawn(world, pipePos.x.toDouble(), pipePos.y.toDouble(), pipePos.z.toDouble(), itemStack)
-                world.setBlockState(pipePos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
-            } else {
-                break
+        // 读取采矿机的扫描范围，用于回收水平方向铺设的管道
+        val be = world.getBlockEntity(pos)
+        val radius = if (be is BaseMinerBlockEntity) {
+            val scanner = be.getStack(BaseMinerBlockEntity.SLOT_SCANNER)
+            when (scanner.item) {
+                is OdScannerItem -> ScannerType.OD.scanRadius
+                is AdvancedScannerItem -> ScannerType.OV.scanRadius
+                else -> 0
             }
+        } else 0
+
+        for (y in (pos.y - 1) downTo world.bottomY) {
+            var foundAny = false
+
+            // 垂直管柱（直上直下的管道）
+            val shaftPos = BlockPos(pos.x, y, pos.z)
+            val shaftState = world.getBlockState(shaftPos)
+            if (shaftState.block is MiningPipeBlock) {
+                ItemScatterer.spawn(world, shaftPos.x.toDouble(), shaftPos.y.toDouble(), shaftPos.z.toDouble(), ItemStack(shaftState.block.asItem()))
+                world.setBlockState(shaftPos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+                foundAny = true
+            } else if (radius <= 0) {
+                break  // 无扫描仪，仅回收垂直管柱后停止
+            }
+
+            // 水平方向管道（在扫描范围内回收）
+            if (radius > 0) {
+                for (x in -radius..radius) {
+                    for (z in -radius..radius) {
+                        if (x == 0 && z == 0) continue  // 垂直管柱已处理
+                        val pipePos = BlockPos(pos.x + x, y, pos.z + z)
+                        val state = world.getBlockState(pipePos)
+                        if (state.block is MiningPipeBlock) {
+                            ItemScatterer.spawn(world, pipePos.x.toDouble(), pipePos.y.toDouble(), pipePos.z.toDouble(), ItemStack(state.block.asItem()))
+                            world.setBlockState(pipePos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+                            foundAny = true
+                        }
+                    }
+                }
+            }
+
+            if (!foundAny) break  // 此层及以下无管道，停止回收
         }
     }
 

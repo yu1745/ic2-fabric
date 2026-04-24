@@ -1,0 +1,21 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "all": "ic2:block/machine/resource/mining_pipe",
+    "particle": "ic2:block/machine/resource/mining_pipe"
+  },
+  "elements": [
+    {
+      "from": [6, 0, 6],
+      "to": [10, 16, 10],
+      "faces": {
+        "down":  { "texture": "#all" },
+        "up":    { "texture": "#all" },
+        "north": { "texture": "#all" },
+        "south": { "texture": "#all" },
+        "west":  { "texture": "#all" },
+        "east":  { "texture": "#all" }
+      }
+    }
+  ]
+}

@@ -19,6 +19,11 @@ import net.minecraft.block.PillarBlock
 import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
+import net.minecraft.state.property.Properties
+import net.minecraft.util.math.Direction
+import net.minecraft.item.ItemPlacementContext
+import net.minecraft.world.WorldAccess
+import net.minecraft.block.ShapeContext
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
@@ -306,11 +311,105 @@ class WoolSheetBlock : Block(
 }
 
 @ModBlock(name = "mining_pipe", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "building")
-class MiningPipeBlock : PillarBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(3.0f)) {
+class MiningPipeBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(3.0f)) :
+    Block(settings) {
+
+    init {
+        defaultState = defaultState
+            .with(NORTH, false).with(SOUTH, false)
+            .with(EAST, false).with(WEST, false)
+            .with(UP, false).with(DOWN, false)
+    }
+
+    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+        super.appendProperties(builder)
+        builder.add(NORTH, SOUTH, EAST, WEST, UP, DOWN)
+    }
+
+    override fun getPlacementState(ctx: ItemPlacementContext): BlockState {
+        val world = ctx.world
+        val pos = ctx.blockPos
+        return defaultState
+            .with(NORTH, canConnect(world, pos, Direction.NORTH))
+            .with(SOUTH, canConnect(world, pos, Direction.SOUTH))
+            .with(EAST, canConnect(world, pos, Direction.EAST))
+            .with(WEST, canConnect(world, pos, Direction.WEST))
+            .with(UP, canConnect(world, pos, Direction.UP))
+            .with(DOWN, canConnect(world, pos, Direction.DOWN))
+    }
+
+    override fun getStateForNeighborUpdate(
+        state: BlockState,
+        direction: Direction,
+        neighborState: BlockState,
+        world: WorldAccess,
+        pos: BlockPos,
+        neighborPos: BlockPos
+    ): BlockState {
+        return state.with(propertyFor(direction), canConnect(world, pos, direction))
+    }
+
+    private fun canConnect(world: WorldAccess, pos: BlockPos, direction: Direction): Boolean {
+        val neighborPos = pos.offset(direction)
+        val neighborBlock = world.getBlockState(neighborPos).block
+        return neighborBlock is MiningPipeBlock || neighborBlock is BaseMinerBlock
+    }
+
+    // ── Shapes ──
+
+    private val shapeCache: Map<BlockState, VoxelShape> by lazy { buildShapeCache() }
+
+    private fun buildShapeCache(): Map<BlockState, VoxelShape> {
+        val min = 6.0 / 16.0
+        val max = 10.0 / 16.0
+        val center = VoxelShapes.cuboid(min, min, min, max, max, max)
+        val north = VoxelShapes.cuboid(min, min, 0.0, max, max, min)
+        val south = VoxelShapes.cuboid(min, min, max, max, max, 1.0)
+        val west = VoxelShapes.cuboid(0.0, min, min, min, max, max)
+        val east = VoxelShapes.cuboid(max, min, min, 1.0, max, max)
+        val down = VoxelShapes.cuboid(min, 0.0, min, max, min, max)
+        val up = VoxelShapes.cuboid(min, max, min, max, 1.0, max)
+        return stateManager.states.associateWith { state ->
+            var shape = center
+            if (state.get(NORTH)) shape = VoxelShapes.union(shape, north)
+            if (state.get(SOUTH)) shape = VoxelShapes.union(shape, south)
+            if (state.get(WEST)) shape = VoxelShapes.union(shape, west)
+            if (state.get(EAST)) shape = VoxelShapes.union(shape, east)
+            if (state.get(DOWN)) shape = VoxelShapes.union(shape, down)
+            if (state.get(UP)) shape = VoxelShapes.union(shape, up)
+            shape
+        }
+    }
+
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun getCollisionShape(state: BlockState, world: BlockView, pos: BlockPos, context: ShapeContext): VoxelShape =
+        shapeCache[state]!!
+
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun getOutlineShape(state: BlockState, world: BlockView, pos: BlockPos, context: ShapeContext): VoxelShape =
+        shapeCache[state]!!
+
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getCullingShape(state: BlockState, world: BlockView, pos: BlockPos): VoxelShape =
         VoxelShapes.empty()
+
     companion object {
+        val NORTH: BooleanProperty = Properties.NORTH
+        val SOUTH: BooleanProperty = Properties.SOUTH
+        val EAST: BooleanProperty = Properties.EAST
+        val WEST: BooleanProperty = Properties.WEST
+        val UP: BooleanProperty = Properties.UP
+        val DOWN: BooleanProperty = Properties.DOWN
+
+        fun propertyFor(direction: Direction): BooleanProperty = when (direction) {
+            Direction.NORTH -> NORTH
+            Direction.SOUTH -> SOUTH
+            Direction.EAST -> EAST
+            Direction.WEST -> WEST
+            Direction.UP -> UP
+            Direction.DOWN -> DOWN
+        }
+
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val ironPlate = IronPlate::class.instance()
