@@ -6,6 +6,7 @@
 
 - 文档总入口：`docs/README.md`
 - 新机器实现：`docs/guides/machine-implementation-guide.md`
+- 机器组合复用：`docs/guides/machine-composition-reuse.md`（减少 container/slot/sync 重复代码）
 - 新物品实现：`docs/guides/item-implemented.md`
 - 注解注册系统：`docs/registry/CLASS_BASED_REGISTRY.md`
 
@@ -53,10 +54,14 @@
 - 电网与能量流速：`docs/systems/energy-network.md`、`docs/systems/energy-flow-sync.md`
 - 流体：`docs/systems/fluid-system.md`
 - 热能：`docs/systems/heat-system.md`
+- 动能传输：`docs/systems/kinetic-transmission.md`
 - 核电：`docs/systems/nuclear-power.md`
 - 升级：`docs/systems/upgrade-system.md`
 - 同步：`docs/systems/sync-system.md`
 - 声音：`docs/systems/sound-system.md`
+- 配置系统：`docs/systems/config-system.md`
+- 作物系统：`docs/systems/crop-growth-requirements.md`、`docs/systems/crop-hybrid-system.md`
+- 橡胶树世界生成：`docs/systems/rubber-tree-worldgen.md`
 - JEI 集成：`docs/systems/jei-integration.md`
 
 ## 6. UI 文档位置
@@ -66,6 +71,7 @@
 - DrawContext 参考：`docs/ui/drawcontext-methods.md`
 - 坐标换算：`docs/ui/canner-ui-coordinates.md`
 - Compose 子文档：`docs/compose-ui/*.md`
+- 踩坑记录：`docs/pitfalls/common-pitfalls.md`
 
 ## 7. 提交前验证
 
@@ -79,11 +85,14 @@
 
 若只改文档，可跳过编译；若改 Kotlin/资源/注册链路，不可跳过。
 
-- 若遇到 Gradle lock（如 `gradle-*.zip.lck`）导致构建或 datagen 失败，直接删除对应 `.lck` 文件后重试（示例：`Remove-Item -Force "C:\Users\wangyu\.gradle\wrapper\dists\...\gradle-*.zip.lck" -ErrorAction SilentlyContinue`）。
+- 若遇到 Gradle lock（如 `gradle-*.zip.lck`）导致构建或 datagen 失败，直接删除对应 `.lck` 文件后重试：
+  - Linux: `rm -f ~/.gradle/wrapper/dists/gradle-*.zip.lck`
+  - Windows: `Remove-Item -Force "$env:USERPROFILE\.gradle\wrapper\dists\...\gradle-*.zip.lck" -ErrorAction SilentlyContinue`
 
 ## 8. 变更策略
 
 - 优先复用已有组件与模式，避免引入第二套实现。
+- 优先使用机器组合模式复用（见 `docs/guides/machine-composition-reuse.md`）以避免重复的 container/slot/sync 代码。
 - 发现规则冲突时：以 `docs/README.md` 导航到对应主文档修正，而不是在 AGENTS.md 堆细节。
 - 新增规范时，优先写入对应 `docs/{guides|systems|ui|registry}`，AGENTS.md 只保留摘要与入口。
 
@@ -91,6 +100,6 @@
 
 所有使用 `@ModBlock` / `@ModItem` 注解注册的类及其中文翻译：
 
-- 自动生成文档：`docs/item-block-list.md`（149 方块 + 286 物品）
+- 自动生成文档：`docs/item-block-list.md`（154 方块 + 293 物品）
 - 生成脚本：`scripts/generate_item_block_list.py`
 - 重新生成：运行 `python scripts/generate_item_block_list.py`
