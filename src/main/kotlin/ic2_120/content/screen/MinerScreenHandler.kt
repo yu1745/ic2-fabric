@@ -114,6 +114,7 @@ class MinerScreenHandler(
                 BUTTON_TOGGLE_MODE -> if (isAdvanced) be.toggleMode()
                 BUTTON_TOGGLE_SILK -> if (isAdvanced) be.toggleSilkTouch()
                 BUTTON_RESTART -> be.restartScan()
+                BUTTON_RECOVER_PIPES -> be.startPipeRecovery()
                 else -> return@get false
             }
             true
@@ -185,6 +186,7 @@ class MinerScreenHandler(
         const val BUTTON_TOGGLE_MODE = 0
         const val BUTTON_TOGGLE_SILK = 1
         const val BUTTON_RESTART = 2
+        const val BUTTON_RECOVER_PIPES = 3
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): MinerScreenHandler {

@@ -813,6 +813,7 @@
   "gui.ic2_120.miner.mode": "模式: %s",
   "gui.ic2_120.miner.silk_touch": "精准采集: %s",
   "gui.ic2_120.miner.restart": "重启",
+  "gui.ic2_120.miner.recover_pipes": "回收管道",
   "gui.ic2_120.canner.mode_bottle_solid": "固体装罐",
   "gui.ic2_120.canner.mode_empty_liquid": "排出",
   "gui.ic2_120.canner.mode_bottle_liquid": "灌入",

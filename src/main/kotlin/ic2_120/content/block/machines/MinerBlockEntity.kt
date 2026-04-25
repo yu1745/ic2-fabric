@@ -139,7 +139,6 @@ abstract class BaseMinerBlockEntity(
         const val PIPE_PLACE_INTERVAL = 20 / MAX_PIPES_PER_SECOND  // = 5 ticks
         const val DEFAULT_PIPE_ENERGY = 64L
 
-        private const val NBT_WORK_OFFSET = "WorkOffset"
         private const val NBT_CURSOR_INITIALIZED = "CursorInitialized"
         private const val NBT_ENERGY_STORED = "EnergyStored"
         private const val NBT_TANK_AMOUNT = "TankAmount"
@@ -150,11 +149,13 @@ abstract class BaseMinerBlockEntity(
         private const val NBT_RENDER_TARGET_Y = "RenderTargetY"
         private const val NBT_RENDER_TARGET_Z = "RenderTargetZ"
         private const val NBT_RENDER_TARGET_TIME = "RenderTargetTime"
+        private const val NBT_MANUAL_STOPPED_FOR_RECOVERY = "ManualStoppedForRecovery"
         private const val RENDER_TARGET_TTL_TICKS = 8L
         private const val MAX_PATH_SEARCH_NODES = 8192
         private const val STALL_TICKS_LOG_THRESHOLD = 40
         private const val STALL_LOG_INTERVAL_TICKS = 20L
         private const val MAX_SAME_TARGET_PATH_FAILS = 40
+        private const val MAX_RECOVERY_SEARCH_NODES = 16384
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -194,6 +195,9 @@ abstract class BaseMinerBlockEntity(
     private var lastPathFailTargetY: Int = Int.MIN_VALUE
     private var lastPathFailTargetZ: Int = Int.MIN_VALUE
     private var sameTargetPathFailCount: Int = 0
+    private var recoveringPipes: Boolean = false
+    private var manualStoppedForRecovery: Boolean = false
+    private val pendingPipeRecovery = ArrayDeque<BlockPos>()
     val syncedData = SyncedData(this)
 
     @RegisterEnergy
@@ -303,6 +307,7 @@ abstract class BaseMinerBlockEntity(
         cursorInitialized = nbt.getBoolean(NBT_CURSOR_INITIALIZED)
         tankInternal.setStored(nbt.getString(NBT_TANK_FLUID), nbt.getLong(NBT_TANK_AMOUNT))
         pendingBreakEnergy = nbt.getLong(NBT_PENDING_BREAK_ENERGY)
+        manualStoppedForRecovery = nbt.getBoolean(NBT_MANUAL_STOPPED_FOR_RECOVERY)
         lastPlacedPipeY = if (nbt.contains(NBT_PIPE_DEPTH)) nbt.getInt(NBT_PIPE_DEPTH) else pos.y
         if (nbt.contains(NBT_RENDER_TARGET_TIME)) {
             renderTargetX = nbt.getInt(NBT_RENDER_TARGET_X)
@@ -319,12 +324,12 @@ abstract class BaseMinerBlockEntity(
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_ENERGY_STORED, sync.amount)
-        nbt.putInt(NBT_WORK_OFFSET, workOffset)
         nbt.putBoolean(NBT_CURSOR_INITIALIZED, cursorInitialized)
         nbt.putInt(NBT_PIPE_DEPTH, lastPlacedPipeY)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.amount)
         nbt.putString(NBT_TANK_FLUID, if (tankInternal.variant.isBlank) "" else Registries.FLUID.getId(tankInternal.variant.fluid).toString())
         nbt.putLong(NBT_PENDING_BREAK_ENERGY, pendingBreakEnergy)
+        nbt.putBoolean(NBT_MANUAL_STOPPED_FOR_RECOVERY, manualStoppedForRecovery)
         if (renderTargetTime >= 0L) {
             nbt.putInt(NBT_RENDER_TARGET_X, renderTargetX)
             nbt.putInt(NBT_RENDER_TARGET_Y, renderTargetY)
@@ -355,6 +360,14 @@ abstract class BaseMinerBlockEntity(
         }
 
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
+
+        val serverWorld = world as? ServerWorld ?: return
+        if (recoveringPipes) {
+            val recovered = processPipeRecoveryTick(serverWorld)
+            setActiveState(world, pos, state, recovered)
+            sync.syncCurrentTickFlow()
+            return
+        }
 
         tryAutoResumeAfterPipeRefill()
         if (sync.running == 0) {
@@ -464,13 +477,22 @@ abstract class BaseMinerBlockEntity(
             // 先检查是否可挖掘（不消耗扫描能量）
             if (shouldMine(world, targetPos, blockState) && canMineWithCurrentDrill(blockState)) {
                 // 确保管道延伸到目标方块位置（每 tick 最多铺 MAX_PIPES_PER_TICK 格）
-                if (!ensurePipeReachesPosition(targetPos)) {
-                    logDecision(world, "pipe_path_not_ready", targetPos)
-                    if (recordPathFailAndShouldSkip(targetPos)) {
-                        advanceCursor(scannerType.scanRadius)
+                when (ensurePipeReachesPosition(targetPos)) {
+                    PipeReachResult.REACHED -> {
                     }
-                    if (sync.running == 0) break
-                    break  // 管道铺设已达本 tick 上限或能量不足，下一 tick 继续
+                    PipeReachResult.RETRY_LATER -> {
+                        logDecision(world, "pipe_path_not_ready", targetPos)
+                        if (sync.running == 0) break
+                        break  // 管道铺设已达本 tick 上限或能量不足，下一 tick 继续
+                    }
+                    PipeReachResult.UNREACHABLE -> {
+                        logDecision(world, "pipe_path_unreachable", targetPos)
+                        if (recordPathFailAndShouldSkip(targetPos)) {
+                            advanceCursor(scannerType.scanRadius)
+                        }
+                        if (sync.running == 0) break
+                        break
+                    }
                 }
 
                 if (!isPipeAdjacentTo(targetPos)) {
@@ -519,7 +541,6 @@ abstract class BaseMinerBlockEntity(
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
         // 只要本周期执行了扫描，即视为工作中（不仅限于挖掘/抽液瞬间）。
         setActiveState(world, pos, state, active || scannedThisCycle > 0)
-        observeCursorStall(world, "post_tick")
         sync.syncCurrentTickFlow()
     }
 
@@ -535,6 +556,9 @@ abstract class BaseMinerBlockEntity(
 
     fun restartScan() {
         sync.running = 1
+        manualStoppedForRecovery = false
+        recoveringPipes = false
+        pendingPipeRecovery.clear()
         // 强制重置到扫描起点，避免沿用异常/污染的游标坐标导致“重启无效”。
         sync.cursorX = 0
         sync.cursorZ = 0
@@ -545,17 +569,31 @@ abstract class BaseMinerBlockEntity(
         markDirty()
     }
 
+    fun startPipeRecovery() {
+        val serverWorld = world as? ServerWorld ?: return
+        // 手动回收属于停机维护动作，避免边回收边重新铺管。
+        sync.running = 0
+        manualStoppedForRecovery = true
+        pendingBreakEnergy = 0L
+        buildPipeRecoveryQueue(serverWorld)
+        recoveringPipes = pendingPipeRecovery.isNotEmpty()
+        markDirty()
+    }
+
     /**
      * 缺管停机后，若输入条件恢复（扫描器/钻头/采矿管齐全）则自动继续。
      * 仅在游标仍处于有效扫描区间时恢复，避免越界完成态被误拉起。
      */
     private fun tryAutoResumeAfterPipeRefill() {
         if (sync.running != 0) return
+        if (manualStoppedForRecovery) return
         if (!cursorInitialized) return
         if (sync.cursorY < -64) return
         if (getScannerType(getStack(SLOT_SCANNER)) == null) return
         if (getDrillBreakCost() == null) return
         if (findPipeInInventory() == null) return
+        // 自动恢复按“新一轮”开始，避免沿用缺料前的待挖能量残留。
+        pendingBreakEnergy = 0L
         sync.running = 1
         markDirty()
     }
@@ -677,6 +715,87 @@ abstract class BaseMinerBlockEntity(
         return getDrillBreakCost() ?: DEFAULT_PIPE_ENERGY
     }
 
+    private enum class PipeReachResult {
+        REACHED,
+        RETRY_LATER,
+        UNREACHABLE
+    }
+
+    private fun processPipeRecoveryTick(world: ServerWorld): Boolean {
+        // 管道槽满时暂停回收，等待槽位空出来后继续。
+        if (!canAcceptRecoveredPipe()) return false
+
+        while (pendingPipeRecovery.isNotEmpty()) {
+            val pipePos = pendingPipeRecovery.removeFirst()
+            val state = world.getBlockState(pipePos)
+            if (state.block !is MiningPipeBlock) continue
+
+            world.setBlockState(pipePos, net.minecraft.block.Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+            insertRecoveredPipeIntoSlot()
+            markDirty()
+            return true
+        }
+
+        recoveringPipes = false
+        markDirty()
+        return false
+    }
+
+    private fun canAcceptRecoveredPipe(): Boolean {
+        val stack = getStack(SLOT_PIPE)
+        if (stack.isEmpty) return true
+        if (stack.item !== MiningPipeBlock::class.item()) return false
+        return stack.count < PIPE_SLOT_MAX_COUNT
+    }
+
+    private fun insertRecoveredPipeIntoSlot() {
+        val stack = getStack(SLOT_PIPE)
+        if (stack.isEmpty) {
+            setStack(SLOT_PIPE, ItemStack(MiningPipeBlock::class.item(), 1))
+            return
+        }
+        stack.increment(1)
+        if (stack.count > PIPE_SLOT_MAX_COUNT) stack.count = PIPE_SLOT_MAX_COUNT
+        markDirty()
+    }
+
+    private fun buildPipeRecoveryQueue(world: ServerWorld) {
+        pendingPipeRecovery.clear()
+        val queued = HashSet<BlockPos>()
+        val queue = ArrayDeque<BlockPos>()
+
+        for (direction in Direction.entries) {
+            val neighbor = pos.offset(direction)
+            if (world.getBlockState(neighbor).block !is MiningPipeBlock) continue
+            queue.add(neighbor)
+            queued.add(neighbor)
+        }
+        if (queue.isEmpty()) return
+
+        var explored = 0
+        val dirs = arrayOf(
+            BlockPos(1, 0, 0),
+            BlockPos(-1, 0, 0),
+            BlockPos(0, 1, 0),
+            BlockPos(0, -1, 0),
+            BlockPos(0, 0, 1),
+            BlockPos(0, 0, -1)
+        )
+        while (queue.isNotEmpty()) {
+            val current = queue.removeFirst()
+            pendingPipeRecovery.add(current)
+            explored++
+            if (explored >= MAX_RECOVERY_SEARCH_NODES) break
+
+            for (dir in dirs) {
+                val next = BlockPos(current.x + dir.x, current.y + dir.y, current.z + dir.z)
+                if (!queued.add(next)) continue
+                if (world.getBlockState(next).block !is MiningPipeBlock) continue
+                queue.add(next)
+            }
+        }
+    }
+
     private fun refreshPipeBudget() {
         val currentTick = world?.time ?: return
         val elapsed = currentTick - lastBudgetRefreshTick
@@ -697,7 +816,7 @@ abstract class BaseMinerBlockEntity(
         if (currentState.block is MiningPipeBlock) return true
         if (!currentState.isAir) {
             // 可破坏方块先清掉，再放置采矿管道；不可破坏方块则视为阻塞。
-            if (currentState.getHardness(world, pipePos) < 0f) return true
+            if (currentState.getHardness(world, pipePos) < 0f) return false
             world.breakBlock(pipePos, false)
         }
 
@@ -729,7 +848,15 @@ abstract class BaseMinerBlockEntity(
         if (targetY >= pos.y) return true
         val serverWorld = world as? ServerWorld ?: return true
 
-        for (y in (pos.y - 1) downTo targetY) {
+        var startY = pos.y - 1
+        if (lastPlacedPipeY in targetY..startY) {
+            val remembered = BlockPos(pos.x, lastPlacedPipeY, pos.z)
+            if (serverWorld.getBlockState(remembered).block is MiningPipeBlock) {
+                startY = lastPlacedPipeY
+            }
+        }
+
+        for (y in startY downTo targetY) {
             val checkPos = BlockPos(pos.x, y, pos.z)
             if (serverWorld.getBlockState(checkPos).block is MiningPipeBlock) continue
 
@@ -744,10 +871,10 @@ abstract class BaseMinerBlockEntity(
      * 确保水平管道从垂直管柱延伸到目标方块位置。
      * @return true = 已铺设完成，false = 还需继续
      */
-    private fun ensurePipeReachesPosition(targetPos: BlockPos): Boolean {
-        if (isPipeAdjacentTo(targetPos)) return true
+    private fun ensurePipeReachesPosition(targetPos: BlockPos): PipeReachResult {
+        if (isPipeAdjacentTo(targetPos)) return PipeReachResult.REACHED
 
-        val serverWorld = world as? ServerWorld ?: return true
+        val serverWorld = world as? ServerWorld ?: return PipeReachResult.RETRY_LATER
         val y = targetPos.y
 
         // 连接到目标的任一相邻格（矿石格本身不放管道）
@@ -760,16 +887,16 @@ abstract class BaseMinerBlockEntity(
         )
 
         // 已有管道直接相邻时，无需新增
-        if (goalCandidates.any { serverWorld.getBlockState(it).block is MiningPipeBlock }) return true
+        if (goalCandidates.any { serverWorld.getBlockState(it).block is MiningPipeBlock }) return PipeReachResult.REACHED
 
         val starts = collectExistingPipeStarts3D(serverWorld, targetPos)
-        if (starts.isEmpty()) return false
+        if (starts.isEmpty()) return PipeReachResult.UNREACHABLE
 
-        val pathToPlace = findBestPath3D(serverWorld, starts, goalCandidates, targetPos) ?: return false
+        val pathToPlace = findBestPath3D(serverWorld, starts, goalCandidates, targetPos) ?: return PipeReachResult.UNREACHABLE
         for (pipePos in pathToPlace) {
-            if (!tryPlacePipeAt(serverWorld, pipePos)) return false
+            if (!tryPlacePipeAt(serverWorld, pipePos)) return PipeReachResult.RETRY_LATER
         }
-        return true
+        return PipeReachResult.REACHED
     }
 
     private fun collectExistingPipeStarts3D(world: ServerWorld, targetPos: BlockPos): List<BlockPos> {

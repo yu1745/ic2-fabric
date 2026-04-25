@@ -134,6 +134,13 @@ class MinerScreen(
                                 )
                             )
                         }
+                        Button(t("gui.ic2_120.miner.recover_pipes")) {
+                            client?.player?.networkHandler?.sendPacket(
+                                ButtonClickC2SPacket(
+                                    handler.syncId, MinerScreenHandler.BUTTON_RECOVER_PIPES
+                                )
+                            )
+                        }
                     }
                 }
                 Column(

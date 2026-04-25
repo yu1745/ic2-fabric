@@ -819,6 +819,7 @@
   "gui.ic2_120.miner.mode": "Mode: %s",
   "gui.ic2_120.miner.silk_touch": "Silk Touch: %s",
   "gui.ic2_120.miner.restart": "Restart",
+  "gui.ic2_120.miner.recover_pipes": "Recover Pipes",
   "gui.ic2_120.canner.mode_bottle_solid": "Solid Canning",
   "gui.ic2_120.canner.mode_empty_liquid": "Drain",
   "gui.ic2_120.canner.mode_bottle_liquid": "Fill",
