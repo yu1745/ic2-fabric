@@ -160,6 +160,10 @@ class WindKineticGeneratorBlockEntity(
 
     /** 卡住时的 world.time（用于解除后连续旋转，无瞬移） */
     private var stuckWorldTime: Long = 0L
+
+    /** 客户端渲染：冻结角度（非激活时保持） */
+    @Transient
+    var clientFrozenAngle: Float = 0f
     private val scanOffset: Int = (pos.asLong().toInt() and Int.MAX_VALUE) % BASE_SCAN_INTERVAL_TICKS.toInt()
     private var lastCollisionResult: Boolean = false
     private var lastCollisionCheckTick: Long = Long.MIN_VALUE

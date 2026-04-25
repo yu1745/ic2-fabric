@@ -43,11 +43,16 @@ class WindKineticGeneratorScreen(
         val generatedKu = handler.sync.generatedKu.coerceAtLeast(0)
         val outputKu = handler.sync.outputKu.coerceAtLeast(0)
         val blocked = handler.sync.isStuck != 0
+        val windInsufficient = generatedKu == 0 && !blocked
         val rotorLifetimeTenthsHours = handler.sync.rotorLifetimeTenthsHours.coerceAtLeast(0)
         val generatedText = McText.translatable("ic2_120.jade.wind_ku_generated", generatedKu).string
         val outputText = McText.translatable("ic2_120.jade.wind_ku_output", outputKu).string
         val blockedText = McText.translatable(
-            if (blocked) "gui.ic2_120.wind_kinetic.blocked" else "gui.ic2_120.wind_kinetic.clear"
+            when {
+                blocked -> "gui.ic2_120.wind_kinetic.blocked"
+                windInsufficient -> "gui.ic2_120.wind_kinetic.wind_insufficient"
+                else -> "gui.ic2_120.wind_kinetic.clear"
+            }
         ).string
         val lifetimeText = McText.translatable(
             "gui.ic2_120.wind_kinetic.lifetime",

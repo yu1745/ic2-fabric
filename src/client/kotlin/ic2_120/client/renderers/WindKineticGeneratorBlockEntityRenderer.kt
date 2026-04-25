@@ -1,5 +1,6 @@
 package ic2_120.client.renderers
 
+import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.block.machines.WindKineticGeneratorBlockEntity
 import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.RenderLayer
@@ -37,6 +38,8 @@ class WindKineticGeneratorBlockEntityRenderer(
         private const val BLADE_PITCH_DEGREES = 22.0f          // 叶片螺距角（攻角），符合物理的风机桨叶倾角
         private const val SHAFT_HALF_WIDTH = 1.0f * PIXEL      // 轴宽 2px（圆柱截面近似）
         private const val SHAFT_LENGTH_INTO_BLOCK = 0.51f       // 轴深入机器内部的长度（格）
+        private const val DEGREES_PER_TICK = 1.8f
+        private const val CYCLE_TICKS = (360.0f / DEGREES_PER_TICK).toLong()  // 200 ticks 一圈
     }
 
     init {
@@ -71,10 +74,17 @@ class WindKineticGeneratorBlockEntityRenderer(
         val state = entity.cachedState
         val facing = state.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH)
 
-        val angle = if (entity.isStuck) {
-            entity.stuckAngle
-        } else {
-            ((world.time + tickDelta) * 1.8f) % 360.0f
+        val active = state.getOrEmpty(WindKineticGeneratorBlock.ACTIVE).orElse(false)
+        val angle = when {
+            entity.isStuck -> {
+                entity.stuckAngle.also { entity.clientFrozenAngle = it }
+            }
+            active -> {
+                val a = ((world.time % CYCLE_TICKS) + tickDelta) * DEGREES_PER_TICK
+                entity.clientFrozenAngle = a
+                a
+            }
+            else -> entity.clientFrozenAngle
         }
 
         matrices.push()

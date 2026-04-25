@@ -480,7 +480,14 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
                 val rotorHours = accessor.serverData.getDouble("rotorHours")
                 tooltip.add(Text.translatable("ic2_120.jade.wind_ku_generated", generatedKu))
                 tooltip.add(Text.translatable("ic2_120.jade.wind_ku_output", outputKu))
-                tooltip.add(Text.translatable(if (blocked) "ic2_120.jade.wind_blocked" else "ic2_120.jade.wind_clear"))
+                val windInsufficient = generatedKu == 0 && !blocked
+                tooltip.add(Text.translatable(
+                    when {
+                        blocked -> "ic2_120.jade.wind_blocked"
+                        windInsufficient -> "ic2_120.jade.wind_insufficient"
+                        else -> "ic2_120.jade.wind_clear"
+                    }
+                ))
                 tooltip.add(Text.translatable("ic2_120.jade.wind_rotor_lifetime", String.format("%.1f", rotorHours)))
             }
 
