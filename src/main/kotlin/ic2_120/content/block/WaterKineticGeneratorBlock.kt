@@ -27,7 +27,6 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 @ModBlock(name = "water_kinetic_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
 class WaterKineticGeneratorBlock : MachineBlock() {
@@ -36,7 +35,7 @@ class WaterKineticGeneratorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WaterKineticGeneratorBlock::class.item(), 1)
                 .pattern("S S")
                 .pattern(" C ")
@@ -76,7 +75,7 @@ class WaterKineticGeneratorBlock : MachineBlock() {
         val be = world.getBlockEntity(pos) as? WaterKineticGeneratorBlockEntity ?: return ActionResult.PASS
         if (world.isClient) return ActionResult.SUCCESS
 
-        val interaction = be.onUse(player, hand)
+        val interaction = be.onUse(player, net.minecraft.util.Hand.MAIN_HAND)
         if (interaction != ActionResult.PASS) return interaction
 
         player.openHandledScreen(be)

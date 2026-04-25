@@ -155,9 +155,9 @@ class Ic2JeiPlugin : IModPlugin {
                         }))
                     }
                     extraStacks += ItemStack(item as Item).also { stack ->
-                        stack.getCustomData() = net.minecraft.nbt.NbtCompound().also { nbt ->
+                        stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(NbtCompound().also { nbt ->
                             nbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
-                        }
+                        }))
                     }
                 }
             }
@@ -518,9 +518,9 @@ class Ic2JeiPlugin : IModPlugin {
             }
             // 满电
             extraStacks += ItemStack(item).also { stack ->
-                stack.getCustomData() = net.minecraft.nbt.NbtCompound().also { nbt ->
+                stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(NbtCompound().also { nbt ->
                     nbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
-                }
+                }))
             }
         }
     }

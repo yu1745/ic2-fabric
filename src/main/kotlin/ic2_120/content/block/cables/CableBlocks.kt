@@ -15,7 +15,6 @@ import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
-import java.util.function.Consumer
 import ic2_120.Ic2_120
 import ic2_120.content.item.*
 import ic2_120.content.recipes.ModTags
@@ -38,7 +37,7 @@ class TinCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Base
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = TinCableBlock::class.id(),
@@ -65,7 +64,7 @@ class CopperCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : B
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = CopperCableBlock::class.id(),
@@ -95,7 +94,7 @@ class GoldCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Bas
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = GoldCableBlock::class.id(),
@@ -125,7 +124,7 @@ class IronCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Bas
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = IronCableBlock::class.id(),
@@ -156,7 +155,7 @@ class GlassFibreCableBlock(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, GlassFibreCableBlock::class.item(), 6)
                 .pattern("GGG")
                 .pattern("ESE")
@@ -194,7 +193,7 @@ class InsulatedCopperCableBlock(settings: AbstractBlock.Settings = defaultSettin
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedCopperCableBlock::class.item(), 1)
                 .input(CopperCableBlock::class.item())
                 .input(RubberItem::class.instance())
@@ -218,7 +217,7 @@ class InsulatedTinCableBlock(settings: AbstractBlock.Settings = defaultSettings(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedTinCableBlock::class.item(), 1)
                 .input(TinCableBlock::class.item())
                 .input(RubberItem::class.instance())
@@ -245,7 +244,7 @@ class InsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSettings
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedGoldCableBlock::class.item(), 1)
                 .input(GoldCableBlock::class.item())
                 .input(RubberItem::class.instance())
@@ -272,7 +271,7 @@ class DoubleInsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSe
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
                 .input(GoldCableBlock::class.item())
                 .input(RubberItem::class.instance())
@@ -300,7 +299,7 @@ class InsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSettings
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
                 .input(RubberItem::class.instance())
@@ -327,7 +326,7 @@ class DoubleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
                 .input(RubberItem::class.instance())
@@ -355,7 +354,7 @@ class TripleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
                 .input(RubberItem::class.instance())

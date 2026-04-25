@@ -36,8 +36,8 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.nbt.NbtCompound
 
 import net.minecraft.screen.ScreenHandler
@@ -49,6 +49,8 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 固体装罐机方块实体。
@@ -61,7 +63,7 @@ class SolidCannerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SolidCannerBlock.ACTIVE
 
@@ -152,9 +154,11 @@ class SolidCannerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.solid_canner")
@@ -164,7 +168,8 @@ class SolidCannerBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
+
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(SolidCannerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -173,7 +178,7 @@ class SolidCannerBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(SolidCannerSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -201,8 +206,7 @@ class SolidCannerBlockEntity(
             return
         }
 
-        val recipeInventory = SimpleInventory(tinCan.copyWithCount(1), food.copyWithCount(1))
-        val match = world.recipeManager.getFirstMatch(getRecipeType<SolidCannerRecipe>(), recipeInventory, world)
+        val match = world.recipeManager.getFirstMatch(getRecipeType<SolidCannerRecipe>(), SingleStackRecipeInput(tinCan.copyWithCount(1)), world)
         if (match.isEmpty) {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
@@ -210,7 +214,7 @@ class SolidCannerBlockEntity(
             return
         }
 
-        val recipe = match.get()
+        val recipe = match.get().value()
         val result = recipe.output.copy()
         val slot0InputCount = recipe.slot0Count
         val slot1InputCount = recipe.slot1Count

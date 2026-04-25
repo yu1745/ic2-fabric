@@ -1,14 +1,14 @@
 package ic2_120.content.recipes.blastfurnace
 
-import com.google.gson.JsonObject
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import java.util.function.Consumer
 
 /**
  * 高炉配方数据生成
@@ -48,54 +48,16 @@ object BlastFurnaceRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+    fun generateRecipes(exporter: RecipeExporter) {
         entries.forEach { entry ->
-            BlastFurnaceRecipeExporter(
-                recipeId = Identifier.of("ic2_120", "blast_furnacing/${entry.name}"),
-                inputItem = entry.input,
-                steelOutputItem = entry.steelOutput,
-                steelOutputCount = entry.steelCount,
-                slagOutputItem = entry.slagOutput,
-                slagOutputCount = entry.slagCount
-            ).also(exporter::accept)
+            val id = Identifier.of("ic2_120", "blast_furnacing/${entry.name}")
+            val recipe = BlastFurnaceRecipe(
+                id = id,
+                ingredient = Ingredient.ofItems(entry.input),
+                steelOutput = ItemStack(entry.steelOutput, entry.steelCount),
+                slagOutput = ItemStack(entry.slagOutput, entry.slagCount)
+            )
+            exporter.accept(id, recipe, null)
         }
-    }
-
-    private class BlastFurnaceRecipeExporter(
-        private val recipeId: Identifier,
-        private val inputItem: Item,
-        private val steelOutputItem: Item,
-        private val steelOutputCount: Int,
-        private val slagOutputItem: Item,
-        private val slagOutputCount: Int
-    ) : RecipeExporter {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(BlastFurnaceRecipe::class)}")
-
-            // 输入成分
-            val ingredient = JsonObject()
-            ingredient.addProperty("item", Registries.ITEM.getId(inputItem).toString())
-            json.add("ingredient", ingredient)
-
-            // 钢锭输出
-            val steelResult = JsonObject()
-            steelResult.addProperty("item", Registries.ITEM.getId(steelOutputItem).toString())
-            steelResult.addProperty("count", steelOutputCount)
-            json.add("steel_output", steelResult)
-
-            // 炉渣输出
-            val slagResult = JsonObject()
-            slagResult.addProperty("item", Registries.ITEM.getId(slagOutputItem).toString())
-            slagResult.addProperty("count", slagOutputCount)
-            json.add("slag_output", slagResult)
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(BlastFurnaceRecipe::class)
-
-        override fun getRecipeId(): Identifier = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): Identifier? = null
     }
 }

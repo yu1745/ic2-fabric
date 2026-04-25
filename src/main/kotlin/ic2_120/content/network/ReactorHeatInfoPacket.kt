@@ -1,13 +1,13 @@
 package ic2_120.content.network
 
-
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.network.codec.PacketCodec
+import net.minecraft.network.packet.CustomPayload
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 
 /**
  * 槽位热能与发电信息
- * @param heatProduced 产热
- * @param heatDissipated 散热
- * @param energyOutput 发电输出（脉冲单位）
  */
 data class SlotHeatEnergyInfo(
     val heatProduced: Int,
@@ -15,8 +15,16 @@ data class SlotHeatEnergyInfo(
     val energyOutput: Float
 )
 
-class ReactorHeatInfoPacket(val pos: BlockPos, val slotHeatInfo: Map<Int, SlotHeatEnergyInfo>) {
+class ReactorHeatInfoPacket(val pos: BlockPos, val slotHeatInfo: Map<Int, SlotHeatEnergyInfo>) : CustomPayload {
+    override fun getId(): CustomPayload.Id<*> = ID
+
     companion object {
+        val ID = CustomPayload.Id<ReactorHeatInfoPacket>(Identifier.of("ic2_120", "reactor_heat_info"))
+        val CODEC: PacketCodec<PacketByteBuf, ReactorHeatInfoPacket> = PacketCodec.of(
+            { value, buf -> write(value, buf) },
+            { read(it) }
+        )
+
         fun read(buf: PacketByteBuf): ReactorHeatInfoPacket {
             val pos = buf.readBlockPos()
             val size = buf.readVarInt()

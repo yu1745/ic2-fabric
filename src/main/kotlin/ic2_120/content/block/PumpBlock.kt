@@ -33,7 +33,6 @@ import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 @ModBlock(name = "pump", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
@@ -72,7 +71,7 @@ class PumpBlock : MachineBlock() {
         if (!world.isClient) {
             val storage = FluidStorage.SIDED.find(world, pos, hit.side)
                 ?: FluidStorage.SIDED.find(world, pos, null)
-            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
+            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, net.minecraft.util.Hand.MAIN_HAND)) {
                 return ActionResult.SUCCESS
             }
             createScreenHandlerFactory(state, world, pos)?.let(player::openHandledScreen)
@@ -84,7 +83,7 @@ class PumpBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val machine = MachineCasingBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             val emptyCell = ic2_120.content.item.EmptyCell::class.instance()

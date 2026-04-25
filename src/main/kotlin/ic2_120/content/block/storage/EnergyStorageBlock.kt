@@ -7,12 +7,12 @@ import net.fabricmc.api.Environment
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
-import net.minecraft.client.item.TooltipContext
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.state.StateManager
@@ -95,11 +95,11 @@ abstract class EnergyStorageBlock(
         @Environment(EnvType.CLIENT)
         override fun appendTooltip(
             stack: ItemStack,
-            world: World?,
+            context: Item.TooltipContext,
             tooltip: MutableList<Text>,
-            context: TooltipContext
+            type: TooltipType
         ) {
-            super.appendTooltip(stack, world, tooltip, context)
+            super.appendTooltip(stack, context, tooltip, type)
             val stored = getStoredEnergy(stack)
             tooltip.add(Text.literal("能量: %,d / %,d EU".format(stored, config.capacity)).formatted(Formatting.GRAY))
         }

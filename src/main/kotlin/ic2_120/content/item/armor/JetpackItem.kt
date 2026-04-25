@@ -7,6 +7,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import ic2_120.getOrCreateCustomData
+import net.minecraft.item.Item
+import net.minecraft.item.tooltip.TooltipType
 
 /**
  * 喷气背包 (Jetpack)
@@ -23,7 +25,11 @@ import ic2_120.getOrCreateCustomData
  *
  * - **垂直模式**：类似创造飞行，按空格上升、Shift下降
  */
-open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
+open class JetpackItem : ArmorItem(
+    ModArmorMaterials.JETPACK_ARMOR,
+    ArmorItem.Type.CHESTPLATE,
+    Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.CHESTPLATE.getMaxDamage(ModArmorMaterials.JETPACK_DURABILITY_MULTIPLIER))
+) {
 
     companion object {
         private const val FUEL_KEY = "Fuel"
@@ -48,7 +54,7 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
 
         @JvmStatic
         fun setFuel(stack: ItemStack, fuel: Long) {
-            stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putLong(FUEL_KEY, fuel.coerceIn(0L, maxFuel) })))
+            stack.getOrCreateCustomData().putLong(FUEL_KEY, fuel.coerceIn(0L, maxFuel))
         }
 
         @JvmStatic
@@ -57,7 +63,7 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
 
         @JvmStatic
         fun setHovering(stack: ItemStack, hovering: Boolean) {
-            stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putBoolean(IS_HOVER_KEY, hovering) }))
+            stack.getOrCreateCustomData().putBoolean(IS_HOVER_KEY, hovering)
         }
 
         @JvmStatic
@@ -66,7 +72,7 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
 
         @JvmStatic
         fun setFlightEnabled(stack: ItemStack, enabled: Boolean) {
-            stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putBoolean(FLIGHT_ENABLED_KEY, enabled) }))
+            stack.getOrCreateCustomData().putBoolean(FLIGHT_ENABLED_KEY, enabled)
         }
 
         @JvmStatic
@@ -79,11 +85,11 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
 
         val fuel = getFuel(stack)
         val ratio = if (maxFuel > 0) fuel.toDouble() / maxFuel else 0.0
@@ -110,12 +116,6 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
         tooltip.add(Text.literal("  Alt+M：切换飞行开关").formatted(Formatting.DARK_GRAY))
         tooltip.add(Text.literal("  创造式飞行：空格上升，Shift下降").formatted(Formatting.DARK_GRAY))
     }
-
-    /**
-     * 喷气背包使用燃料系统，不走原版耐久系统。
-     * 若不禁用，受伤时会累积 Damage NBT 导致耐久条混乱。
-     */
-    override fun isDamageable(): Boolean = false
 
     override fun isItemBarVisible(stack: ItemStack): Boolean = true
 

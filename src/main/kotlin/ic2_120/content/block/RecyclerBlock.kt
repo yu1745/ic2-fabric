@@ -25,7 +25,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 /**
  * 回收机方块。消耗电力将任意物品回收为废料。
@@ -71,7 +70,7 @@ class RecyclerBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val compressor = CompressorBlock::class.item()
             if (compressor != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RecyclerBlock::class.item(), 1)

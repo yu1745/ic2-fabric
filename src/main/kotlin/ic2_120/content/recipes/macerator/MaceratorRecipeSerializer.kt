@@ -1,47 +1,35 @@
 package ic2_120.content.recipes.macerator
 
+import com.mojang.serialization.MapCodec
+import com.mojang.serialization.codecs.RecordCodecBuilder
 import ic2_120.registry.annotation.ModMachineRecipe
-import com.google.gson.JsonObject
 import net.minecraft.item.ItemStack
-
+import net.minecraft.network.RegistryByteBuf
+import net.minecraft.network.codec.PacketCodec
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.RecipeSerializer
-import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import net.minecraft.util.JsonHelper
 
 @ModMachineRecipe(id = "macerating", recipeClass = MaceratorRecipe::class)
 object MaceratorRecipeSerializer : RecipeSerializer<MaceratorRecipe> {
-    override fun read(id: Identifier, json: JsonObject): MaceratorRecipe {
-        val ingredientJson = JsonHelper.getObject(json, "ingredient")
-        val item = Identifier(JsonHelper.getString(ingredientJson, "item"))
-        val count = JsonHelper.getInt(ingredientJson, "count", 1)
-
-        // 创建支持堆叠数量的Ingredient
-        val ingredient = if (count == 1) {
-            Ingredient.fromJson(ingredientJson)
-        } else {
-            // 对于多个物品，我们使用Ingredient.of()并传入多个ItemStack
-            val itemEntry = Registries.ITEM.get(item)
-            val stacks = (1..count).map { net.minecraft.item.ItemStack(itemEntry) }
-            Ingredient.ofStacks(*stacks.toTypedArray())
+    override fun codec(): MapCodec<MaceratorRecipe> = RecordCodecBuilder.mapCodec { instance ->
+        instance.group(
+            Ingredient.ALLOW_EMPTY_CODEC.fieldOf("ingredient").forGetter { it.ingredient },
+            ItemStack.VALIDATED_CODEC.fieldOf("result").forGetter { it.output }
+        ).apply(instance) { ingredient, output ->
+            MaceratorRecipe(Identifier.of("ic2_120", "_"), ingredient, output)
         }
-
-        val result = JsonHelper.getObject(json, "result")
-        val resultItemId = Identifier(JsonHelper.getString(result, "item"))
-        val resultItem = Registries.ITEM.get(resultItemId)
-        val resultCount = JsonHelper.getInt(result, "count", 1)
-        return MaceratorRecipe(id, ingredient, ItemStack(resultItem, resultCount))
     }
 
-    override fun read(id: Identifier, buf: PacketByteBuf): MaceratorRecipe {
-        val ingredient = Ingredient.PACKET_CODEC.decode(buf)
-        val output = ItemStack.PACKET_CODEC.decode(buf)
-        return MaceratorRecipe(id, ingredient, output)
-    }
-
-    override fun write(buf: PacketByteBuf, recipe: MaceratorRecipe) {
-        Ingredient.PACKET_CODEC.encode(buf, recipe.ingredient)
-        ItemStack.PACKET_CODEC.encode(buf, recipe.output.copy())
-    }
+    override fun packetCodec(): PacketCodec<RegistryByteBuf, MaceratorRecipe> = PacketCodec.ofStatic(
+        { buf, recipe ->
+            Ingredient.PACKET_CODEC.encode(buf, recipe.ingredient)
+            ItemStack.PACKET_CODEC.encode(buf, recipe.output.copy())
+        },
+        { buf ->
+            val ingredient = Ingredient.PACKET_CODEC.decode(buf)
+            val output = ItemStack.PACKET_CODEC.decode(buf)
+            MaceratorRecipe(Identifier.of("ic2_120", "_"), ingredient, output)
+        }
+    )
 }

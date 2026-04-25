@@ -15,7 +15,6 @@ import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 // ========== 粉尘类 ==========
@@ -25,7 +24,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class BronzeDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzeDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', SmallBronzeDust::class.instance()).criterion(
                     hasItem(SmallBronzeDust::class.instance()), conditionsFromItem(SmallBronzeDust::class.instance())
@@ -67,7 +66,7 @@ class ClayDust : Item(Item.Settings())
 class CoalDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 熔炉配方：湿煤粉加热成煤粉 (200 tick = 10秒)
             CookingRecipeJsonBuilder.createSmelting(
                 net.minecraft.recipe.Ingredient.ofItems(CoalFuelDust::class.instance()),
@@ -86,7 +85,7 @@ class CoalDust : Item(Item.Settings()) {
 class CoalFuelDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, CoalFuelDust::class.instance(), 1)
                 .input(CoalDust::class.instance()).input(Items.WATER_BUCKET)
                 .criterion(hasItem(CoalDust::class.instance()), conditionsFromItem(CoalDust::class.instance()))
@@ -105,7 +104,7 @@ class CoalFuelDust : Item(Item.Settings()) {
 class CopperDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CopperDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', SmallCopperDust::class.instance()).criterion(
                     hasItem(SmallCopperDust::class.instance()), conditionsFromItem(SmallCopperDust::class.instance())
@@ -138,7 +137,7 @@ class DiamondDust : Item(Item.Settings())
 class EnergiumDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 交叉摆法：4个钻石粉 + 5个红石粉
             // D R D
             // R D R
@@ -159,7 +158,7 @@ class EnergiumDust : Item(Item.Settings()) {
 class GoldDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, GoldDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', SmallGoldDust::class.instance()).criterion(
                     hasItem(SmallGoldDust::class.instance()), conditionsFromItem(SmallGoldDust::class.instance())
@@ -188,7 +187,7 @@ class GoldDust : Item(Item.Settings()) {
 class IronDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', SmallIronDust::class.instance()).criterion(
                     hasItem(SmallIronDust::class.instance()), conditionsFromItem(SmallIronDust::class.instance())
@@ -217,7 +216,7 @@ class IronDust : Item(Item.Settings()) {
 class LapisDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LapisDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', SmallLapisDust::class.instance()).criterion(
                     hasItem(SmallLapisDust::class.instance()), conditionsFromItem(SmallLapisDust::class.instance())
@@ -236,7 +235,7 @@ class LapisDust : Item(Item.Settings()) {
 class LeadDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LeadDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', SmallLeadDust::class.instance()).criterion(
                     hasItem(SmallLeadDust::class.instance()), conditionsFromItem(SmallLeadDust::class.instance())
@@ -265,7 +264,7 @@ class LeadDust : Item(Item.Settings()) {
 class LithiumDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LithiumDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', SmallLithiumDust::class.instance()).criterion(
                     hasItem(SmallLithiumDust::class.instance()), conditionsFromItem(SmallLithiumDust::class.instance())
@@ -284,7 +283,7 @@ class LithiumDust : Item(Item.Settings()) {
 class ObsidianDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ObsidianDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', SmallObsidianDust::class.instance()).criterion(
                     hasItem(SmallObsidianDust::class.instance()),
@@ -308,7 +307,7 @@ class SiliconDioxideDust : Item(Item.Settings())
 class SilverDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SilverDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', SmallSilverDust::class.instance()).criterion(
                     hasItem(SmallSilverDust::class.instance()), conditionsFromItem(SmallSilverDust::class.instance())
@@ -341,7 +340,7 @@ class StoneDust : Item(Item.Settings())
 class SulfurDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SulfurDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', SmallSulfurDust::class.instance()).criterion(
                     hasItem(SmallSulfurDust::class.instance()), conditionsFromItem(SmallSulfurDust::class.instance())
@@ -360,7 +359,7 @@ class SulfurDust : Item(Item.Settings()) {
 class TinDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, TinDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").input('S', SmallTinDust::class.instance())
                 .criterion(hasItem(SmallTinDust::class.instance()), conditionsFromItem(SmallTinDust::class.instance()))
@@ -389,7 +388,7 @@ class TinDust : Item(Item.Settings()) {
 class HydratedTinDust : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 锡粉 + 水桶 -> 氢氧化锡粉 (返回空桶)
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, HydratedTinDust::class.instance(), 1)
                 .input(TinDust::class.instance()).input(Items.WATER_BUCKET)

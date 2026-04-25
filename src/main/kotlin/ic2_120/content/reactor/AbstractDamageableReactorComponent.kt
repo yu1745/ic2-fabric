@@ -1,11 +1,10 @@
 package ic2_120.content.reactor
 
-import net.minecraft.client.item.TooltipContext
 import net.minecraft.item.Item
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import net.minecraft.world.World
 import ic2_120.getCustomData
 import ic2_120.getOrCreateCustomData
 
@@ -14,7 +13,7 @@ import ic2_120.getOrCreateCustomData
  * 覆盖 Item 的方法显示耐久度条。
  */
 abstract class AbstractDamageableReactorComponent(
-    settings: FabricItemSettings,
+    settings: Item.Settings,
     protected val maxUse: Int
 ) : AbstractReactorComponent(settings) {
 
@@ -57,8 +56,8 @@ abstract class AbstractDamageableReactorComponent(
         return (13.0 * remaining).toInt().coerceIn(0, 13)
     }
 
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+        super.appendTooltip(stack, context, tooltip, type)
         val remaining = maxUse - getUse(stack)
         tooltip.add(Text.translatable("tooltip.ic2_120.reactor_durability", remaining, maxUse).formatted(Formatting.GRAY))
     }

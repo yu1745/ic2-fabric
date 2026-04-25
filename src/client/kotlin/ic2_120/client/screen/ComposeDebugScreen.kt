@@ -73,10 +73,11 @@ class ComposeDebugScreen(
     override fun mouseScrolled(
         mouseX: Double,
         mouseY: Double,
+        horizontalAmount: Double,
         amount: Double
     ): Boolean =
         ui.mouseScrolled(mouseX, mouseY, 0.0, amount)
-            || super.mouseScrolled(mouseX, mouseY, amount)
+            || super.mouseScrolled(mouseX, mouseY, horizontalAmount, amount)
 
     override fun mouseDragged(
         mouseX: Double,

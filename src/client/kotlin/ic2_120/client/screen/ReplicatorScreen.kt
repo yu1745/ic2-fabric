@@ -303,8 +303,8 @@ class ReplicatorScreen(
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean =
-        ui.mouseScrolled(mouseX, mouseY, 0.0, amount) || super.mouseScrolled(mouseX, mouseY, amount)
+    override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, amount: Double): Boolean =
+        ui.mouseScrolled(mouseX, mouseY, 0.0, amount) || super.mouseScrolled(mouseX, mouseY, horizontalAmount, amount)
 
     override fun mouseDragged(
         mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double

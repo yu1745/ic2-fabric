@@ -50,6 +50,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.random.Random
 import net.minecraft.world.World
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 水力发电机方块实体。
@@ -66,7 +68,7 @@ class WaterGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Inventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
     override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
@@ -270,7 +272,7 @@ class WaterGeneratorBlockEntity(
         return if (current.isEmpty) {
             setStack(EMPTY_CONTAINER_SLOT, emptyStack.copy())
             true
-        } else if (ItemStack.canCombine(current, emptyStack)) {
+        } else if (ItemStack.areItemsAndComponentsEqual(current, emptyStack)) {
             val toAdd = minOf(emptyStack.count, current.maxCount - current.count)
             if (toAdd > 0) {
                 current.increment(toAdd)
@@ -280,9 +282,11 @@ class WaterGeneratorBlockEntity(
         } else false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.water_generator")
@@ -298,7 +302,7 @@ class WaterGeneratorBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(WaterGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, WaterGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -311,7 +315,7 @@ class WaterGeneratorBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(WaterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_WATER_AMOUNT, waterTankInternal.amount)

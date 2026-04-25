@@ -42,7 +42,6 @@ import net.minecraft.world.World
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
@@ -63,7 +62,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class ReinforcedGlassBlock : Block(AbstractBlock.Settings.copy(Blocks.GLASS).strength(10.0f, 1200.0f).nonOpaque().dropsNothing()){
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val glass = Items.GLASS
             val alloy = Alloy::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReinforcedGlassBlock::class.item(), 7)
@@ -89,10 +88,10 @@ class ReinforcedGlassBlock : Block(AbstractBlock.Settings.copy(Blocks.GLASS).str
 )
 class ReinforcedDoorBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_DOOR).strength(25.0f, 1200.0f),
-) : DoorBlock(settings, BlockSetType.IRON) {
+) : DoorBlock(BlockSetType.IRON, settings) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val stone = ReinforcedStoneBlock::class.item()
             val ironDoor = Items.IRON_DOOR
             ShapedRecipeJsonBuilder.create(RecipeCategory.REDSTONE, ReinforcedDoorBlock::class.item(), 1)
@@ -149,7 +148,7 @@ class FoamBlock : Block(
 
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.getStackInHand(hand)
+        val stack = player.mainHandStack
         if (!stack.isOf(Items.SAND)) return ActionResult.PASS
         val wall = LightGrayWallBlock::class.instance().defaultState
         world.setBlockState(pos, wall, Block.NOTIFY_ALL)
@@ -206,7 +205,7 @@ class ReinforcedFoamBlock : Block(
 
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.getStackInHand(hand)
+        val stack = player.mainHandStack
         if (!stack.isOf(Items.SAND)) return ActionResult.PASS
         val stone = ReinforcedStoneBlock::class.instance().defaultState
         world.setBlockState(pos, stone, Block.NOTIFY_ALL)
@@ -235,7 +234,7 @@ class ResinSheetBlock : Block(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val resin = Resin::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ResinSheetBlock::class.item(), 3)
                 .pattern("xxx")
@@ -260,7 +259,7 @@ class RubberSheetBlock : Block(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val rubber = RubberItem::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RubberSheetBlock::class.item(), 3)
                 .pattern("xxx")
@@ -285,7 +284,7 @@ class WoolSheetBlock : Block(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoolSheetBlock::class.item(), 3)
                 .pattern("xxx")
                 .pattern("xxx")
@@ -397,7 +396,7 @@ class MiningPipeBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val ironPlate = IronPlate::class.instance()
             val treetap = Treetap::class.instance()
             ConsumeTreetapShapedRecipeDatagen.offer(
@@ -480,7 +479,7 @@ class WoodenScaffoldBlock(
 ) : PillarBlock(settings) {
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.getStackInHand(hand)
+        val stack = player.mainHandStack
         if (!stack.isOf(Items.STICK) || stack.count <= 2) return ActionResult.PASS
         world.setBlockState(pos, ReinforcedWoodenScaffoldBlock::class.instance().defaultState.with(AXIS, state.get(AXIS)), Block.NOTIFY_ALL)
         world.playSound(null, pos, SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.BLOCKS, 1.0f, 1.0f)
@@ -490,7 +489,7 @@ class WoodenScaffoldBlock(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodenScaffoldBlock::class.item(), 4)
                 .pattern("PPP")
                 .pattern(" S ")
@@ -526,7 +525,7 @@ class IronScaffoldBlock(
 ) : PillarBlock(settings) {
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.getStackInHand(hand)
+        val stack = player.mainHandStack
         if (!stack.isOf(IronFenceBlock::class.item())) return ActionResult.PASS
         world.setBlockState(pos, ReinforcedIronScaffoldBlock::class.instance().defaultState.with(AXIS, state.get(AXIS)), Block.NOTIFY_ALL)
         world.playSound(null, pos, SoundEvents.BLOCK_METAL_PLACE, SoundCategory.BLOCKS, 1.0f, 1.0f)
@@ -536,7 +535,7 @@ class IronScaffoldBlock(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val ironPlate = IronPlate::class.instance()
             val ironFence = IronFenceBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronScaffoldBlock::class.item(), 16)

@@ -13,7 +13,6 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 @ModItem(name = "iron_block_cutting_blade", tab = CreativeTab.IC2_MATERIALS)
 class IronBlockCuttingBladeItem : Item(Item.Settings()), IBlockCuttingBlade {
@@ -21,7 +20,7 @@ class IronBlockCuttingBladeItem : Item(Item.Settings()), IBlockCuttingBlade {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val dense = DenseIronPlate::class.instance()
             if (dense != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronBlockCuttingBladeItem::class.instance(), 1)
@@ -40,7 +39,7 @@ class SteelBlockCuttingBladeItem : Item(Item.Settings()), IBlockCuttingBlade {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = SteelPlate::class.instance()
             if (plate != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelBlockCuttingBladeItem::class.instance(), 1)
@@ -59,7 +58,7 @@ class DiamondBlockCuttingBladeItem : Item(Item.Settings()), IBlockCuttingBlade {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val steel = SteelIngot::class.instance()
             if (steel != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, DiamondBlockCuttingBladeItem::class.instance(), 1)

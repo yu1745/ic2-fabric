@@ -24,7 +24,6 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 /**
  * 反应堆访问接口。在反应堆结构内时，右键可打开反应堆 UI；Inventory 委托到对应的中心核反应堆。
@@ -68,7 +67,7 @@ class ReactorAccessHatchBlock(settings: AbstractBlock.Settings = AbstractBlock.S
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val vessel = ReactorVesselBlock::class.item()
             if (vessel != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorAccessHatchBlock::class.item(), 1)

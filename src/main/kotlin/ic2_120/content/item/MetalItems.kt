@@ -19,7 +19,6 @@ import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 // 铜锭：使用原版 minecraft:copper_ingot，此处不再注册
@@ -31,7 +30,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class TinIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, TinIngot::class.instance(), 9)
                 .input(TinBlock::class.instance())
                 .criterion(hasItem(TinBlock::class.instance()), conditionsFromItem(TinBlock::class.instance()))
@@ -108,7 +107,7 @@ class TinIngot : Item(Item.Settings()) {
 class BronzeIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, BronzeIngot::class.instance(), 9)
                 .input(BronzeBlock::class.instance())
                 .criterion(hasItem(BronzeBlock::class.instance()), conditionsFromItem(BronzeBlock::class.instance()))

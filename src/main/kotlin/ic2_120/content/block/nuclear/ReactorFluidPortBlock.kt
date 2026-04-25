@@ -27,7 +27,6 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 /**
  * 反应堆流体接口。
@@ -70,7 +69,7 @@ class ReactorFluidPortBlock(settings: AbstractBlock.Settings = AbstractBlock.Set
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val vessel = ReactorVesselBlock::class.item()
             val emptyCell = EmptyCell::class.instance()
             if (vessel != Items.AIR && emptyCell != Items.AIR) {

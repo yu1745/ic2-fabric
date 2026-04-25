@@ -30,7 +30,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -80,7 +79,7 @@ class OreWashingPlantBlock : MachineBlock() {
          * 为 ClassScanner 生成配方
          */
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val machine = MachineCasingBlock::class.item()
             val plate = IronPlate::class.instance()
             val circuit = Circuit::class.instance()

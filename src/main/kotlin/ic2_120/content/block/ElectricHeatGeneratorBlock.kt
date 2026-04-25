@@ -32,7 +32,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 @ModBlock(name = "electric_heat_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "heat")
 class ElectricHeatGeneratorBlock : MachineBlock() {
@@ -77,7 +76,7 @@ class ElectricHeatGeneratorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val casing = IronCasing::class.instance()
             val battery = ReBatteryItem::class.instance()
             val circuit = Circuit::class.instance()

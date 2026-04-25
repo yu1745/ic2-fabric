@@ -55,6 +55,7 @@ import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtOps
 
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryWrapper
@@ -69,6 +70,8 @@ import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 核反应堆方块实体。
@@ -84,7 +87,7 @@ class NuclearReactorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : BlockEntity(type, pos, state), Inventory, IGenerator, ITieredMachine, IReactor,
-    ExtendedScreenHandlerFactory, IRedstoneControlSupport, IOwned {
+    ExtendedScreenHandlerFactory<PacketByteBuf>, IRedstoneControlSupport, IOwned {
 
     override val tier: Int = NuclearReactorSync.REACTOR_TIER
 
@@ -243,7 +246,7 @@ class NuclearReactorBlockEntity(
         }
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        if (slot < MAX_SLOTS && !ItemStack.canCombine(oldStack, stack)) {
+        if (slot < MAX_SLOTS && !ItemStack.areItemsAndComponentsEqual(oldStack, stack)) {
             inventoryChangedSinceLastCycle = true
             val oldId = Registries.ITEM.getId(oldStack.item)
             val newId = Registries.ITEM.getId(stack.item)
@@ -280,11 +283,13 @@ class NuclearReactorBlockEntity(
         return true
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
         buf.writeVarInt(currentCapacity())
         buf.writeBoolean(isThermalMode())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.nuclear_reactor")
@@ -303,7 +308,7 @@ class NuclearReactorBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(NuclearReactorSync.NBT_ENERGY_STORED).coerceIn(0L, NuclearReactorSync.ENERGY_CAPACITY)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
@@ -318,12 +323,12 @@ class NuclearReactorBlockEntity(
 
         // 读取流体储罐
         if (nbt.contains("InputCoolant")) {
-            inputTank.variant = FluidVariant.fromNbt(nbt.getCompound("InputCoolant"))
+            inputTank.variant = FluidVariant.CODEC.decode(NbtOps.INSTANCE, nbt.getCompound("InputCoolant")).result().map { it.first }.orElse(FluidVariant.blank())
         }
         inputTank.amount = nbt.getLong("InputCoolantAmount")
 
         if (nbt.contains("OutputHotCoolant")) {
-            outputTank.variant = FluidVariant.fromNbt(nbt.getCompound("OutputHotCoolant"))
+            outputTank.variant = FluidVariant.CODEC.decode(NbtOps.INSTANCE, nbt.getCompound("OutputHotCoolant")).result().map { it.first }.orElse(FluidVariant.blank())
         }
         outputTank.amount = nbt.getLong("OutputHotCoolantAmount")
         ownerUuid = if (nbt.containsUuid("OwnerUUID")) nbt.getUuid("OwnerUUID") else null
@@ -331,7 +336,7 @@ class NuclearReactorBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(NuclearReactorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NuclearReactorSync.NBT_HEAT_STORED, sync.temperature)
@@ -344,9 +349,9 @@ class NuclearReactorBlockEntity(
         nbt.putLong("LastModeCheckTick", lastModeCheckTick)
 
         // 写入流体储罐
-        nbt.put("InputCoolant", inputTank.variant.toNbt())
+        nbt.put("InputCoolant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, inputTank.variant).result().orElse(NbtCompound()))
         nbt.putLong("InputCoolantAmount", inputTank.amount)
-        nbt.put("OutputHotCoolant", outputTank.variant.toNbt())
+        nbt.put("OutputHotCoolant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, outputTank.variant).result().orElse(NbtCompound()))
         nbt.putLong("OutputHotCoolantAmount", outputTank.amount)
         ownerUuid?.let { nbt.putUuid("OwnerUUID", it) }
     }
@@ -712,7 +717,7 @@ class NuclearReactorBlockEntity(
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
+        return current.isEmpty || (ItemStack.areItemsAndComponentsEqual(current, toInsert) && current.count < current.maxCount)
     }
 
     private data class CoolantInputInfo(val emptyContainer: ItemStack)

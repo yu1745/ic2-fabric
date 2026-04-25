@@ -31,7 +31,7 @@ object DrillTooltipHandler {
     private const val NANO_SABER_EU_PER_HIT = 1_000L
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, context, lines ->
+        ItemTooltipCallback.EVENT.register { stack, context, type, lines ->
             val item = stack.item
             if (item !is IElectricTool) return@register
 

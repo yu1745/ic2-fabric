@@ -54,7 +54,7 @@ fun <T : Item> KClass<T>.id(): Identifier =
 @JvmName("itemRecipeId")
 fun <T : Item> KClass<T>.recipeId(suffix: String = ""): Identifier {
     val baseId = Registries.ITEM.getId(instance()).path
-    return Identifier(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
+    return Identifier.of(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
 }
 
 /**
@@ -64,7 +64,7 @@ fun <T : Item> KClass<T>.recipeId(suffix: String = ""): Identifier {
 @JvmName("blockRecipeId")
 fun <T : Block> KClass<T>.recipeId(suffix: String = ""): Identifier {
     val baseId = Registries.BLOCK.getId(instance()).path
-    return Identifier(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
+    return Identifier.of(Ic2_120.MOD_ID, if (suffix.isNotEmpty()) "${baseId}_$suffix" else baseId)
 }
 
 // ========== BlockEntity 扩展 ==========

@@ -28,7 +28,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 @ModBlock(name = "magnetizer", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
@@ -88,7 +87,7 @@ class MagnetizerBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val machine = MachineCasingBlock::class.item()
             val ironFence = IronFenceBlock::class.item()
             if (machine != Items.AIR && ironFence != Items.AIR) {

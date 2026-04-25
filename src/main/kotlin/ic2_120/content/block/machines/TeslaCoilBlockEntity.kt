@@ -34,6 +34,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 特斯拉线圈方块实体。无物品槽，仅能量存储。
@@ -45,7 +47,7 @@ class TeslaCoilBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), ITieredMachine, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), ITieredMachine, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val tier: Int = 2
 
@@ -65,9 +67,11 @@ class TeslaCoilBlockEntity(
         state
     )
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.tesla_coil")
@@ -186,10 +190,10 @@ class TeslaCoilBlockEntity(
     private fun damageArmorDurability(world: World, entity: LivingEntity, min: Int, max: Int) {
         val amount = if (min >= max) min else world.random.nextBetween(min, max)
         for (slot in EquipmentSlot.entries) {
-            if (slot.type != EquipmentSlot.Type.ARMOR) continue
+            if (slot.type != EquipmentSlot.Type.HUMANOID_ARMOR) continue
             val stack = entity.getEquippedStack(slot)
             if (!stack.isEmpty && stack.item is ArmorItem) {
-                stack.damage(amount, entity) { it.sendEquipmentBreakStatus(slot) }
+                stack.damage(amount, entity, slot)
             }
         }
     }

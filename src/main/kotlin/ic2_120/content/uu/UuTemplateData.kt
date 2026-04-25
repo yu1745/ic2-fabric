@@ -1,5 +1,8 @@
 package ic2_120.content.uu
 
+import ic2_120.getCustomData
+import ic2_120.getOrCreateCustomData
+import ic2_120.removeCustomData
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtList
@@ -41,13 +44,13 @@ data class UuTemplateEntry(
 }
 
 fun ItemStack.getUuTemplate(): UuTemplateEntry? =
-    UuTemplateEntry.fromNbt(nbt?.getCompound(UU_TEMPLATE_NBT_KEY))
+    UuTemplateEntry.fromNbt(getCustomData()?.getCompound(UU_TEMPLATE_NBT_KEY))
 
 fun ItemStack.setUuTemplate(entry: UuTemplateEntry?) {
-    val root = orCreateNbt
+    val root = getOrCreateCustomData()
     if (entry == null) {
         root.remove(UU_TEMPLATE_NBT_KEY)
-        if (root.isEmpty) nbt = null
+        if (root.isEmpty) removeCustomData()
         return
     }
     root.put(UU_TEMPLATE_NBT_KEY, entry.toNbt())

@@ -44,6 +44,8 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = MetalFormerBlock::class)
 @ModMachineRecipeBinding(MetalFormerRecipeSerializer::class)
@@ -52,7 +54,7 @@ class MetalFormerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = MetalFormerBlock.ACTIVE
 
@@ -146,9 +148,11 @@ class MetalFormerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.metal_former")
@@ -164,7 +168,7 @@ class MetalFormerBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(MetalFormerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -174,7 +178,7 @@ class MetalFormerBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(MetalFormerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(MetalFormerSync.NBT_MODE, sync.mode)
@@ -305,9 +309,8 @@ class MetalFormerBlockEntity(
         if (!isInputItem(stack)) return false
         val currentWorld = world ?: return true
         val input = MetalFormerRecipe.Input(stack.copyWithCount(1))
-        return currentWorld.recipeManager
-            .listAllOfType(getRecipeType<MetalFormerRecipe>())
-            .any { it.matches(input, currentWorld) }
+        val recipes = currentWorld.recipeManager.listAllOfType(getRecipeType<MetalFormerRecipe>())
+        return recipes.any { entry: net.minecraft.recipe.RecipeEntry<MetalFormerRecipe> -> entry.value.matches(input, currentWorld) }
     }
 
 }

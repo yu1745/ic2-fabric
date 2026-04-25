@@ -3,12 +3,13 @@ package ic2_120.content.item
 import ic2_120.Ic2_120
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ArmorMaterial
-import net.minecraft.item.Item
 import net.minecraft.recipe.Ingredient
 import net.minecraft.registry.Registries
+import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.sound.SoundEvent
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Identifier
+import java.util.function.Supplier
 
 /**
  * 护甲材料定义
@@ -29,30 +30,23 @@ object ModArmorMaterials {
      */
     private fun createArmorMaterial(
         name: String,
-        durabilityMultiplier: Int,
         protection: Map<ArmorItem.Type, Int>,
         enchantability: Int,
-        equipSound: SoundEvent,
+        equipSound: RegistryEntry<SoundEvent>,
         toughness: Float,
         knockbackResistance: Float,
         repairIngredient: Ingredient
-    ): ArmorMaterial = object : ArmorMaterial {
-        private val durabilityMap = mapOf(
-            ArmorItem.Type.HELMET to 11 * durabilityMultiplier,
-            ArmorItem.Type.CHESTPLATE to 16 * durabilityMultiplier,
-            ArmorItem.Type.LEGGINGS to 15 * durabilityMultiplier,
-            ArmorItem.Type.BOOTS to 13 * durabilityMultiplier
+    ): RegistryEntry<ArmorMaterial> = RegistryEntry.of(
+        ArmorMaterial(
+            protection,
+            enchantability,
+            equipSound,
+            Supplier { repairIngredient },
+            listOf(ArmorMaterial.Layer(Identifier.of(Ic2_120.MOD_ID, name))),
+            toughness,
+            knockbackResistance
         )
-
-        override fun getDurability(type: ArmorItem.Type) = durabilityMap[type] ?: 0
-        override fun getProtection(type: ArmorItem.Type) = protection[type] ?: 0
-        override fun getEnchantability() = enchantability
-        override fun getEquipSound() = equipSound
-        override fun getRepairIngredient() = repairIngredient
-        override fun getName() = name
-        override fun getToughness() = toughness
-        override fun getKnockbackResistance() = knockbackResistance
-    }
+    )
 
     // ========== 纳米护甲材料 ==========
     /**
@@ -61,7 +55,6 @@ object ModArmorMaterials {
      */
     val NANO_ARMOR = createArmorMaterial(
         name = "ic2_nano",
-        durabilityMultiplier = 15,
         protection = mapOf(
             ArmorItem.Type.HELMET to 3,
             ArmorItem.Type.CHESTPLATE to 8,
@@ -82,7 +75,6 @@ object ModArmorMaterials {
      */
     val QUANTUM_ARMOR = createArmorMaterial(
         name = "ic2_quantum",
-        durabilityMultiplier = 25,
         protection = mapOf(
             ArmorItem.Type.HELMET to 4,
             ArmorItem.Type.CHESTPLATE to 9,
@@ -102,7 +94,6 @@ object ModArmorMaterials {
      */
     val JETPACK_ARMOR = createArmorMaterial(
         name = "ic2_jet_pack",
-        durabilityMultiplier = 15,
         protection = mapOf(
             ArmorItem.Type.HELMET to 0,
             ArmorItem.Type.CHESTPLATE to 8,  // 钻石胸甲级别
@@ -122,7 +113,6 @@ object ModArmorMaterials {
      */
     val ELECTRIC_JETPACK_ARMOR = createArmorMaterial(
         name = "ic2_electric_jet_pack",
-        durabilityMultiplier = 15,
         protection = mapOf(
             ArmorItem.Type.HELMET to 0,
             ArmorItem.Type.CHESTPLATE to 8,  // 钻石胸甲级别
@@ -135,4 +125,10 @@ object ModArmorMaterials {
         knockbackResistance = 0f,
         repairIngredient = carbonFibre
     )
+
+    // ========== 耐久倍率常量（供 Item.Settings.maxDamage 使用）==========
+    const val NANO_DURABILITY_MULTIPLIER = 15
+    const val QUANTUM_DURABILITY_MULTIPLIER = 25
+    const val JETPACK_DURABILITY_MULTIPLIER = 15
+    const val ELECTRIC_JETPACK_DURABILITY_MULTIPLIER = 15
 }

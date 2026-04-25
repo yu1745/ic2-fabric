@@ -7,27 +7,28 @@ import ic2_120.content.crop.CropSystem
 import ic2_120.content.crop.CropType
 import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.CropSeedData
+import com.mojang.serialization.MapCodec
 import ic2_120.content.item.CropnalyzerItem
-import ic2_120.content.item.CoffeeBeans
-import ic2_120.content.item.Fertilizer
-import ic2_120.content.item.GrinPowder
-import ic2_120.content.item.Hops
-import ic2_120.content.item.Resin
-import ic2_120.content.item.TerraWart
-import ic2_120.content.item.Weed
 import ic2_120.content.item.WeedEx
 import ic2_120.content.item.WeedingSpade
-import ic2_120.content.item.SmallCopperDust
-import ic2_120.content.item.SmallGoldDust
+import ic2_120.content.item.Resin
+import ic2_120.content.item.CoffeeBeans
+import ic2_120.content.item.Hops
+import ic2_120.content.item.GrinPowder
+import ic2_120.content.item.TerraWart
 import ic2_120.content.item.SmallIronDust
-import ic2_120.content.item.SmallLeadDust
-import ic2_120.content.item.SmallSilverDust
+import ic2_120.content.item.SmallCopperDust
 import ic2_120.content.item.SmallTinDust
+import ic2_120.content.item.SmallLeadDust
+import ic2_120.content.item.SmallGoldDust
+import ic2_120.content.item.SmallSilverDust
 import ic2_120.registry.instance
+import ic2_120.registry.type
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
-import ic2_120.registry.type
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -57,6 +58,7 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Box
+import net.minecraft.util.shape.VoxelShape
 import net.minecraft.world.World
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.server.world.ServerWorld
@@ -73,115 +75,12 @@ class CropBlock : BlockWithEntity(
     AbstractBlock.Settings.copy(Blocks.WHEAT)
         .breakInstantly()
         .noCollision()
-        .nonOpaque()
-        .luminance { state ->
-            if (state.contains(CROP_TYPE) && state.contains(AGE) &&
-                state.get(CROP_TYPE) == CropType.RED_WHEAT &&
-                state.get(AGE) >= CropSystem.maxAge(CropType.RED_WHEAT)
-            ) 7 else 0
-        }
         .ticksRandomly()
 ) {
-    override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
-    override fun emitsRedstonePower(state: BlockState): Boolean =
-        state.get(CROP_TYPE) == CropType.RED_WHEAT
-
-    override fun getWeakRedstonePower(
-        state: BlockState,
-        world: net.minecraft.world.BlockView,
-        pos: BlockPos,
-        direction: Direction
-    ): Int {
-        if (state.get(CROP_TYPE) != CropType.RED_WHEAT) return 0
-        return if (state.get(AGE) >= CropSystem.maxAge(CropType.RED_WHEAT)) 15 else 0
-    }
-
-    init {
-        defaultState = stateManager.defaultState
-            .with(CROP_TYPE, CropType.WHEAT)
-            .with(AGE, 0)
-    }
-
-    override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
-        super.appendProperties(builder)
-        builder.add(CROP_TYPE, AGE)
-    }
-
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
-        CropBlockEntity(pos, state)
-
-    override fun <T : BlockEntity> getTicker(
-        world: World,
-        state: BlockState,
-        type: BlockEntityType<T>
-    ): BlockEntityTicker<T>? =
-        if (world.isClient) null
-        else validateTicker(type, CropBlockEntity::class.type()){ w, p, s, be -> (be as CropBlockEntity).tick(w, p, s) }
-
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
-        val stack = player.getStackInHand(hand)
-        // 手持种子扫描仪时，优先走物品 useOnBlock（扫描）逻辑，不触发作物采摘。
-        if (stack.item is CropnalyzerItem) return ActionResult.PASS
-        // 除草铲：由物品 useOnBlock 清除杂草，不走采摘逻辑
-        if (stack.item == WeedingSpade::class.instance()) return ActionResult.PASS
-        // 除草剂：由物品 useOnBlock 直接喷洒，不走采摘逻辑
-        if (stack.item == WeedEx::class.instance()) return ActionResult.PASS
-
-        if (world.isClient) return ActionResult.SUCCESS
-        val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return ActionResult.PASS
-        val isCreative = player.abilities.creativeMode
-
-        if (stack.item == Fertilizer::class.instance()) {
-            if (be.applyFertilizerDirect(simulate = false)) {
-                if (!isCreative) stack.decrement(1)
-                return ActionResult.SUCCESS
-            }
-        }
-
-        if (!be.canBeHarvested(state)) return ActionResult.PASS
-
-        val result = be.performHarvest(state) ?: return ActionResult.PASS
-        result.drops.forEach { ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), it) }
-        if (result.ageAfterHarvest != null) {
-            world.setBlockState(
-                pos,
-                state.with(CropBlock.AGE, result.ageAfterHarvest.coerceIn(0, 7)),
-                net.minecraft.block.Block.NOTIFY_ALL
-            )
-        } else {
-            world.setBlockState(pos, CropStickBlock.defaultStickState(), net.minecraft.block.Block.NOTIFY_ALL)
-        }
-        return ActionResult.SUCCESS
-    }
-
-    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
-        if (world is ServerWorld && !player.isCreative) {
-            val be = world.getBlockEntity(pos) as? CropBlockEntity
-            if (be != null) {
-                val cropType = state.get(CROP_TYPE)
-                if (cropType == CropType.WEED) {
-                    ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), Weed::class.instance().defaultStack)
-                } else {
-                    val seedBag = CropSeedBagItem.createStack(cropType, be.stats, scanLevel = be.scanLevel)
-                    ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), seedBag)
-                }
-                ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), CropStickBlock::class.instance().asItem().defaultStack)
-            }
-        }
-        super.onBreak(world, pos, state, player)
-    }
-
-    override fun onStacksDropped(
-        state: BlockState,
-        world: ServerWorld,
-        pos: BlockPos,
-        tool: ItemStack,
-        dropExperience: Boolean
-    ) {
-        // 不掉落默认战利品表项；种子袋与作物架由 [onBreak] 处理
-    }
-
     companion object {
+        val CROP_CODEC: MapCodec<CropBlock> = Block.createCodec { error("CropBlock cannot be deserialized from JSON") }
+
+        fun getShape(state: BlockState): VoxelShape? = null
         val CROP_TYPE: EnumProperty<CropType> = EnumProperty.of("crop_type", CropType::class.java)
         val AGE: IntProperty = IntProperty.of("stage", 0, 7)
 
@@ -190,6 +89,11 @@ class CropBlock : BlockWithEntity(
                 .with(CROP_TYPE, type)
                 .with(AGE, age.coerceIn(0, 7))
     }
+
+    override fun getCodec(): MapCodec<out BlockWithEntity> = CROP_CODEC
+
+    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
+        CropBlockEntity(pos, state)
 }
 
 @ModBlockEntity(block = CropBlock::class)
@@ -888,7 +792,7 @@ class CropBlockEntity(
                         if (world.random.nextInt(4) == 0 && world.getBlockState(targetPos.up()).isAir) {
                             world.setBlockState(targetPos, Blocks.TALL_GRASS.defaultState, net.minecraft.block.Block.NOTIFY_ALL)
                         } else {
-                            world.setBlockState(targetPos, Blocks.GRASS.defaultState, net.minecraft.block.Block.NOTIFY_ALL)
+                            world.setBlockState(targetPos, Blocks.SHORT_GRASS.defaultState, net.minecraft.block.Block.NOTIFY_ALL)
                         }
                     }
                 }

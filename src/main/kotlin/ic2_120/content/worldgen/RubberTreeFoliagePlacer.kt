@@ -1,6 +1,7 @@
 package ic2_120.content.worldgen
 
 import com.mojang.serialization.Codec
+import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
@@ -99,7 +100,7 @@ class RubberTreeFoliagePlacer(
     companion object {
         private val logger = LoggerFactory.getLogger("ic2_120/RubberTreeFoliagePlacer")
 
-        val CODEC: Codec<RubberTreeFoliagePlacer> = RecordCodecBuilder.create { instance ->
+        val CODEC: MapCodec<RubberTreeFoliagePlacer> = RecordCodecBuilder.mapCodec { instance ->
             fillFoliagePlacerFields(instance).and(
                 Codec.INT.fieldOf("height").forGetter { it.height }
             ).apply(instance) { radius, offset, height ->

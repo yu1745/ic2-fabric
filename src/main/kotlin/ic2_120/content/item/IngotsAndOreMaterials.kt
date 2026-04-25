@@ -27,11 +27,10 @@ import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 private fun offerIngotSmelting(
-    exporter: Consumer<RecipeExporter>,
+    exporter: RecipeExporter,
     input: Item,
     output: Item,
     recipeId: Identifier,
@@ -56,7 +55,7 @@ private fun offerIngotSmelting(
 class MixedMetalIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 配方1：铁板 + 青铜板 + 锡板 = 合金锭
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MixedMetalIngot::class.instance(), 2)
                 .pattern("III")
@@ -87,7 +86,7 @@ class MixedMetalIngot : Item(Item.Settings()) {
 class LeadIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, LeadIngot::class.instance(), 9)
                 .input(LeadBlock::class.instance())
                 .criterion(hasItem(LeadBlock::class.instance()), conditionsFromItem(LeadBlock::class.instance()))
@@ -140,7 +139,7 @@ class LeadIngot : Item(Item.Settings()) {
 class SilverIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SilverIngot::class.instance(), 9)
                 .input(SilverBlock::class.instance())
                 .criterion(hasItem(SilverBlock::class.instance()), conditionsFromItem(SilverBlock::class.instance()))
@@ -175,7 +174,7 @@ class SilverIngot : Item(Item.Settings()) {
 class SteelIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SteelIngot::class.instance(), 9)
                 .input(SteelBlock::class.instance())
                 .criterion(hasItem(SteelBlock::class.instance()), conditionsFromItem(SteelBlock::class.instance()))
@@ -202,7 +201,7 @@ class RefinedIronIngot : Item(Item.Settings())
 class UraniumIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, UraniumIngot::class.instance(), 9)
                 .input(UraniumBlock::class.instance())
                 .criterion(hasItem(UraniumBlock::class.instance()), conditionsFromItem(UraniumBlock::class.instance()))
@@ -270,7 +269,7 @@ class RawUranium : Item(Item.Settings())
 class CrushedCopper : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             offerIngotSmelting(
                 exporter,
                 Items.COPPER_ORE,
@@ -303,7 +302,7 @@ class CrushedCopper : Item(Item.Settings()) {
 class CrushedGold : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             offerIngotSmelting(
                 exporter,
                 Items.GOLD_ORE,
@@ -336,7 +335,7 @@ class CrushedGold : Item(Item.Settings()) {
 class CrushedIron : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             offerIngotSmelting(
                 exporter,
                 Items.IRON_ORE,

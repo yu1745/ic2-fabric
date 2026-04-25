@@ -17,8 +17,8 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.data.server.recipe.CookingRecipeJsonBuilder
-import net.minecraft.client.item.TooltipContext
 import net.minecraft.item.Item
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.item.Items
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
@@ -29,7 +29,6 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.getCustomData
 
@@ -39,7 +38,7 @@ import ic2_120.getCustomData
 class CarbonFibre : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonFibre::class.instance(), 1)
                 .pattern("CC")
                 .pattern("CC")
@@ -54,7 +53,7 @@ class CarbonFibre : Item(Item.Settings()) {
 class CarbonMesh : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonMesh::class.instance(), 1)
                 .pattern("CC")
                 .input('C', CarbonFibre::class.instance())
@@ -68,7 +67,7 @@ class CarbonMesh : Item(Item.Settings()) {
 class CarbonPlate : Item(Item.Settings()) {
     // companion object {
     //     @RecipeProvider
-    //     fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+    //     fun generateRecipes(exporter: RecipeExporter) {
     //         ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonPlate::class.instance(), 1)
     //             .pattern("   ").pattern("   ").pattern(" MM")
     //             .input('M', CarbonMesh::class.instance())
@@ -82,7 +81,7 @@ class CarbonPlate : Item(Item.Settings()) {
 class WoodenRotorBlade : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodenRotorBlade::class.instance(), 1)
                 .pattern("xxx").pattern("yyy").pattern("xxx")
                 .input('x', ItemTags.PLANKS)
@@ -100,7 +99,7 @@ class BronzeRotorBlade : Item(Item.Settings())
 class IronRotorBlade : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = IronPlate::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronRotorBlade::class.instance(), 1)
                 .pattern("xxx").pattern("yyy").pattern("xxx")
@@ -116,7 +115,7 @@ class IronRotorBlade : Item(Item.Settings()) {
 class SteelRotorBlade : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = SteelPlate::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelRotorBlade::class.instance(), 1)
                 .pattern("xxx").pattern("yyy").pattern("xxx")
@@ -132,7 +131,7 @@ class SteelRotorBlade : Item(Item.Settings()) {
 class CarbonRotorBlade : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val mesh = CarbonMesh::class.instance()
             val plate = CarbonPlate::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonRotorBlade::class.instance(), 1)
@@ -155,8 +154,8 @@ abstract class RotorItem(private val lifetimeHours: Int) : Item(
         private const val TICKS_PER_HOUR = 72_000.0
     }
 
-    override fun appendTooltip(stack: net.minecraft.item.ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: net.minecraft.item.ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+        super.appendTooltip(stack, context, tooltip, type)
         val remainder = stack.getCustomData()?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0
         val remainingHours = ((stack.maxDamage - stack.damage).toDouble() - remainder).coerceAtLeast(0.0) / TICKS_PER_HOUR
         tooltip.add(
@@ -173,7 +172,7 @@ abstract class RotorItem(private val lifetimeHours: Int) : Item(
 class WoodenRotor : RotorItem(3) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val blade = WoodenRotorBlade::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodenRotor::class.instance(), 1)
                 .pattern(" B ").pattern("BIB").pattern(" B ")
@@ -189,7 +188,7 @@ class WoodenRotor : RotorItem(3) {
 class IronRotor : RotorItem(24) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val blade = IronRotorBlade::class.instance()
             val plate = IronPlate::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronRotor::class.instance(), 1)
@@ -206,7 +205,7 @@ class IronRotor : RotorItem(24) {
 class SteelRotor : RotorItem(48) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val blade = SteelRotorBlade::class.instance()
             val plate = SteelPlate::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelRotor::class.instance(), 1)
@@ -223,7 +222,7 @@ class SteelRotor : RotorItem(48) {
 class CarbonRotor : RotorItem(168) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val blade = CarbonRotorBlade::class.instance()
             val plate = SteelPlate::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonRotor::class.instance(), 1)
@@ -243,7 +242,7 @@ class CarbonRotor : RotorItem(168) {
 class Circuit : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Circuit::class.instance(), 1)
                 .pattern("xxx").pattern("rfr").pattern("xxx")
                 .input('x', ic2_120.content.block.cables.InsulatedCopperCableBlock::class.instance())
@@ -259,7 +258,7 @@ class Circuit : Item(Item.Settings()) {
 class AdvancedCircuit : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedCircuit::class.instance(), 1)
                 .pattern("rlr").pattern("bxb").pattern("rlr")
                 .input('r', Items.REDSTONE)
@@ -279,7 +278,7 @@ class Alloy : Item(Item.Settings())
 class IridiumShard : Item(Item.Settings()){
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, IridiumShard::class.instance(), 9)
                 .input(IridiumOreItem::class.instance())
                 .criterion(hasItem(IridiumOreItem::class.instance()), conditionsFromItem(IridiumOreItem::class.instance()))
@@ -295,7 +294,7 @@ class IridiumOreItem : Item(Item.Settings())
 class IridiumPlate : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 四个铱矿石和四个高级合金交替摆放围成一圈，中间一个钻石
             // I A I
             // A D A
@@ -322,7 +321,7 @@ class IridiumPlate : Item(Item.Settings()) {
 class Coil : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val cable = CopperCableBlock::class.instance()
             if (cable != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Coil::class.instance(), 1)
@@ -342,7 +341,7 @@ class Coil : Item(Item.Settings()) {
 class ElectricMotor : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ElectricMotor::class.instance(), 1)
                 .pattern(" C ").pattern("TFT").pattern(" C ")
                 .input('T', TinCasing::class.instance())
@@ -358,7 +357,7 @@ class ElectricMotor : Item(Item.Settings()) {
 class HeatConductor : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val rubber = Ingredient.fromTag(ModTags.Compat.Items.RUBBER)
             val plate = Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER)
             if (RubberItem::class.instance() != Items.AIR && CopperPlate::class.instance() != Items.AIR) {
@@ -379,7 +378,7 @@ class HeatConductor : Item(Item.Settings()) {
 class CopperBoiler : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 8个铜外壳围成一圈，中间空
             // C C C
             // C   C
@@ -399,7 +398,7 @@ class CopperBoiler : Item(Item.Settings()) {
 class CoalBall : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CoalBall::class.instance(), 1)
                 .pattern("DCD").pattern("CFC").pattern("DCD")
                 .input('D', CoalDust::class.instance())
@@ -415,7 +414,7 @@ class CoalBall : Item(Item.Settings()) {
 class CoalChunk : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CoalChunk::class.instance(), 1)
                 .pattern("CCC")
                 .pattern("COC")
@@ -435,7 +434,7 @@ class IndustrialDiamond : Item(Item.Settings())
 class PlantBall : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 甘蔗配方
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, PlantBall::class.instance(), 1)
                 .pattern("RRR").pattern("R R").pattern("RRR")
@@ -515,7 +514,7 @@ class Scrap : Item(Item.Settings())
 class ScrapBox : ScrapBoxItem() {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ScrapBox::class.instance(), 1)
                 .pattern("SSS").pattern("SSS").pattern("SSS")
                 .input('S', Scrap::class.instance())
@@ -542,7 +541,7 @@ class JetpackAttachmentPlate : Item(Item.Settings())
 class Resin : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 熔炉烧炼：粘性树脂 -> 橡胶
             CookingRecipeJsonBuilder.createSmelting(
                 Ingredient.ofItems(Resin::class.instance()),
@@ -566,7 +565,7 @@ class Iodine : Item(Item.Settings())
 class IodineTablet : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IodineTablet::class.instance(), 1)
                 .pattern("IT")
                 .input('I', Iodine::class.instance())
@@ -583,7 +582,7 @@ class IodineTablet : Item(Item.Settings()) {
 class RawCrystalMemory : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 交叉摆法：5个二氧化硅粉 + 4个黑曜石粉
             // O S O
             // S O S
@@ -601,14 +600,14 @@ class RawCrystalMemory : Item(Item.Settings()) {
 
 @ModItem(name = "crystal_memory", tab = CreativeTab.IC2_MATERIALS, group = "pattern_storage")
 class CrystalMemory : Item(Item.Settings().maxCount(1)) {
-    override fun appendTooltip(stack: net.minecraft.item.ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: net.minecraft.item.ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+        super.appendTooltip(stack, context, tooltip, type)
         stack.appendUuTemplateTooltip(tooltip)
     }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 熔炉烧制：粗制模式存储水晶 -> 模式存储水晶 (200 tick = 10秒, 0.1f 经验)
             CookingRecipeJsonBuilder.createSmelting(
                 Ingredient.ofItems(RawCrystalMemory::class.instance()),

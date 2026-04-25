@@ -6,7 +6,7 @@ import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.type
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import ic2_120.getOrCreateCustomData
 
@@ -29,7 +29,7 @@ abstract class BatteryItemBase(
     override val tier: Int,
     override val maxCapacity: Long,
     override val canChargeWireless: Boolean,
-    settings: FabricItemSettings = Item.Settings()
+    settings: Item.Settings = Item.Settings()
 ) : Item(settings), IBatteryItem {
 
     companion object {
@@ -96,11 +96,11 @@ abstract class BatteryItemBase(
      */
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
 
         val energy = getCurrentCharge(stack)
         val ratio = getChargeRatio(stack)

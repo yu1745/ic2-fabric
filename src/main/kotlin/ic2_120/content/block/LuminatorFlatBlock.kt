@@ -1,5 +1,6 @@
 package ic2_120.content.block
 
+import com.mojang.serialization.MapCodec
 import ic2_120.Ic2_120
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.block.cables.TinCableBlock
@@ -39,7 +40,6 @@ import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -52,6 +52,7 @@ class LuminatorFlatBlock : BlockWithEntity(
         .strength(5.0f, 6.0f)
         .luminance { state -> if (state.get(ACTIVE)) 15 else 0 }
 ) {
+    override fun getCodec(): MapCodec<out BlockWithEntity> = LUMINATOR_CODEC
 
     init {
         defaultState = stateManager.defaultState
@@ -113,6 +114,8 @@ class LuminatorFlatBlock : BlockWithEntity(
     }
 
     companion object {
+        val LUMINATOR_CODEC: MapCodec<LuminatorFlatBlock> = Block.createCodec { error("LuminatorFlatBlock cannot be deserialized from JSON") }
+
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         /** 薄板厚度 1/16，与 luminator_shape_flat 模型一致 */
@@ -126,7 +129,7 @@ class LuminatorFlatBlock : BlockWithEntity(
         private val SHAPE_DOWN = VoxelShapes.cuboid(0.0, 1.0 - THICK, 0.0, 1.0, 1.0, 1.0)
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val insulatedCopperCable = InsulatedCopperCableBlock::class.item()
             val tinCable = TinCableBlock::class.item()
             val ironCasing = IronCasing::class.instance()

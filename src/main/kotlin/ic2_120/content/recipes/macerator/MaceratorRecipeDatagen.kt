@@ -1,29 +1,29 @@
 package ic2_120.content.recipes.macerator
 
-import com.google.gson.JsonObject
-import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.block.DeepslateLeadOreBlock
 import ic2_120.content.block.DeepslateTinOreBlock
 import ic2_120.content.block.DeepslateUraniumOreBlock
 import ic2_120.content.block.LeadOreBlock
 import ic2_120.content.block.TinOreBlock
 import ic2_120.content.block.UraniumOreBlock
+import ic2_120.content.item.BioChaff
 import ic2_120.content.item.BronzeDust
 import ic2_120.content.item.BronzeIngot
 import ic2_120.content.item.BronzePlate
+import ic2_120.content.item.ClayDust
+import ic2_120.content.item.CoalDust
 import ic2_120.content.item.CopperDust
 import ic2_120.content.item.CopperPlate
 import ic2_120.content.item.CrushedCopper
 import ic2_120.content.item.CrushedGold
 import ic2_120.content.item.CrushedIron
-import ic2_120.content.item.RawLead
-import ic2_120.content.item.RawTin
-import ic2_120.content.item.RawUranium
 import ic2_120.content.item.CrushedLead
 import ic2_120.content.item.CrushedTin
 import ic2_120.content.item.CrushedUranium
+import ic2_120.content.item.DiamondDust
 import ic2_120.content.item.GoldDust
 import ic2_120.content.item.GoldPlate
+import ic2_120.content.item.GrinPowder
 import ic2_120.content.item.IronDust
 import ic2_120.content.item.IronPlate
 import ic2_120.content.item.LapisDust
@@ -34,27 +34,25 @@ import ic2_120.content.item.LeadPlate
 import ic2_120.content.item.NetherrackDust
 import ic2_120.content.item.ObsidianDust
 import ic2_120.content.item.ObsidianPlate
+import ic2_120.content.item.PlantBall
+import ic2_120.content.item.RawLead
+import ic2_120.content.item.RawTin
+import ic2_120.content.item.RawUranium
 import ic2_120.content.item.SilverDust
 import ic2_120.content.item.SilverIngot
 import ic2_120.content.item.SmallObsidianDust
 import ic2_120.content.item.TinDust
 import ic2_120.content.item.TinIngot
 import ic2_120.content.item.TinPlate
-import ic2_120.content.item.PlantBall
-import ic2_120.content.item.BioChaff
 import ic2_120.content.item.Weed
-import ic2_120.content.item.CoalDust
-import ic2_120.content.item.ClayDust
-import ic2_120.content.item.DiamondDust
-import ic2_120.content.item.GrinPowder
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.registry.Registries
+import net.minecraft.recipe.Ingredient
 import net.minecraft.util.Identifier
-import java.util.function.Consumer
 
 object MaceratorRecipeDatagen {
     data class Entry(
@@ -136,46 +134,15 @@ object MaceratorRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+    fun generateRecipes(exporter: RecipeExporter) {
         entries.forEach { entry ->
-            MaceratorRecipeExporter(
-                recipeId = Identifier.of("ic2_120", "macerating/${entry.name}"),
-                inputItem = entry.input,
-                outputItem = entry.output,
-                outputCount = entry.count,
-                inputCount = entry.inputCount
-            ).also(exporter::accept)
+            val id = Identifier.of("ic2_120", "macerating/${entry.name}")
+            val recipe = MaceratorRecipe(
+                id = id,
+                ingredient = Ingredient.ofItems(entry.input),
+                output = ItemStack(entry.output, entry.count)
+            )
+            exporter.accept(id, recipe, null)
         }
-    }
-
-    private class MaceratorRecipeExporter(
-        private val recipeId: Identifier,
-        private val inputItem: Item,
-        private val outputItem: Item,
-        private val outputCount: Int,
-        private val inputCount: Int = 1
-    ) : RecipeExporter {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(MaceratorRecipe::class)}")
-            val ingredient = JsonObject()
-            ingredient.addProperty("item", Registries.ITEM.getId(inputItem).toString())
-            if (inputCount > 1) {
-                ingredient.addProperty("count", inputCount)
-            }
-            json.add("ingredient", ingredient)
-
-            val result = JsonObject()
-            result.addProperty("item", Registries.ITEM.getId(outputItem).toString())
-            result.addProperty("count", outputCount)
-            json.add("result", result)
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(MaceratorRecipe::class)
-
-        override fun getRecipeId(): Identifier = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): Identifier? = null
     }
 }

@@ -14,11 +14,11 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditio
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 // 发热计算
@@ -54,7 +54,7 @@ private fun checkHeatAcceptor(reactor: IReactor, x: Int, y: Int, out: MutableLis
     }
 }
 
-abstract class AbstractUraniumFuelRodItem(settings: FabricItemSettings, maxUse: Int, val numberOfCells: Int) :
+abstract class AbstractUraniumFuelRodItem(settings: Item.Settings, maxUse: Int, val numberOfCells: Int) :
     AbstractDamageableReactorComponent(settings, maxUse) {
     override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {
         if (!reactor.produceEnergy()) return
@@ -147,7 +147,7 @@ class DualUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_00
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 双联 <- 单联 × 2：XFX（X=单联燃料棒, F=铁板）
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, DualUraniumFuelRodItem::class.instance(), 1)
                 .pattern("XFX")
@@ -166,7 +166,7 @@ class QuadUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_00
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 四联 <- 双联：OXO / CFC / OXO（X=双联, F=铁板, C=铜板, O=空气）
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, QuadUraniumFuelRodItem::class.instance(), 1)
                 .pattern(" X ").pattern("CFC").pattern(" X ")
@@ -199,7 +199,7 @@ class DepletedDualUraniumFuelRodItem : AbstractReactorComponent(Item.Settings())
 @ModItem(name = "depleted_quad_uranium_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
 class DepletedQuadUraniumFuelRodItem : AbstractReactorComponent(Item.Settings())
 
-abstract class AbstractMoxFuelRodItem(settings: FabricItemSettings, maxUse: Int, val numberOfCells: Int) :
+abstract class AbstractMoxFuelRodItem(settings: Item.Settings, maxUse: Int, val numberOfCells: Int) :
     AbstractDamageableReactorComponent(settings, maxUse) {
     override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {
         if (!reactor.produceEnergy()) return
@@ -296,7 +296,7 @@ class MoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 1) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 双联 <- 单联 × 2：XFX（X=单联MOX燃料棒, F=铁板）
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, DualMoxFuelRodItem::class.instance(), 1)
                 .pattern("XFX")
@@ -315,7 +315,7 @@ class DualMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 2) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 四联 <- 双联：OXO / CFC / OXO（X=双联MOX燃料棒, F=铁板, C=铜板, O=空气）
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, QuadMoxFuelRodItem::class.instance(), 1)
                 .pattern(" X ").pattern("CFC").pattern(" X ")

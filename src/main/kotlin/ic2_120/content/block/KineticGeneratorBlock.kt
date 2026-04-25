@@ -29,7 +29,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 @ModBlock(name = "kinetic_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
 class KineticGeneratorBlock : MachineBlock() {
@@ -72,7 +71,7 @@ class KineticGeneratorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val generator = GeneratorBlock::class.item()
             val casing = MachineCasingBlock::class.instance()
             val motor = ElectricMotor::class.instance()

@@ -5,6 +5,9 @@ import ic2_120.content.block.RubberLogBlock
 import net.fabricmc.fabric.api.client.model.loading.v1.BlockStateResolver
 import net.fabricmc.fabric.api.client.model.loading.v1.DelegatingUnbakedModel
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin
+import net.fabricmc.fabric.api.client.model.loading.v1.ModelModifier
+import net.fabricmc.fabric.api.client.model.loading.v1.ModelModifier.OnLoad
+import net.minecraft.client.render.model.UnbakedModel
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 
@@ -26,9 +29,10 @@ object RubberLogModelPlugin {
                     block.stateManager.states.forEach { state -> resolverCtx.setModel(state, model) }
                 })
             }
-            ctx.modifyModelOnLoad().register { original, context ->
-                if (context.id() == MODEL_ID) RubberLogModel() else original
-            }
+            ctx.modifyModelOnLoad().register(ModelModifier.OnLoad { original, ctx ->
+                val ctx0 = ctx as ModelModifier.OnLoad.Context
+                if (RubberLogModelHelper.getModelId(ctx0) == MODEL_ID) RubberLogModel() else original
+            })
         }
     }
 }

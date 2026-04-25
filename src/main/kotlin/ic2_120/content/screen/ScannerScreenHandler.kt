@@ -1,6 +1,5 @@
 package ic2_120.content.screen
 
-import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -11,6 +10,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 import net.minecraft.sound.SoundCategory
@@ -109,19 +109,15 @@ class ScannerScreenHandler(
         )
 
         // 发送结果 S2C 包
-        val buf = PacketByteBuf(Unpooled.buffer())
-        ScannerResultPacket.write(
-            ScannerResultPacket(
-                energy = sync.energy,
-                energyCapacity = sync.energyCapacity,
-                usesRemaining = sync.usesRemaining,
-                maxUses = sync.maxUses,
-                results = results
-            ),
-            buf
+        val packet = ScannerResultPacket(
+            energy = sync.energy,
+            energyCapacity = sync.energyCapacity,
+            usesRemaining = sync.usesRemaining,
+            maxUses = sync.maxUses,
+            results = results
         )
         (player as? net.minecraft.server.network.ServerPlayerEntity)?.let {
-            ServerPlayNetworking.send(it, ScannerResultPacket.ID, buf)
+            ServerPlayNetworking.send(it, packet)
         }
 
         return true

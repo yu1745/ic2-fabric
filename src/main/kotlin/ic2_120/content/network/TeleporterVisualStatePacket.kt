@@ -1,7 +1,8 @@
 package ic2_120.content.network
 
-
-import net.minecraft.util.Identifier
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.network.codec.PacketCodec
+import net.minecraft.network.packet.CustomPayload
 import net.minecraft.util.math.BlockPos
 
 class TeleporterVisualStatePacket(
@@ -11,9 +12,15 @@ class TeleporterVisualStatePacket(
     val chargeMax: Int,
     val teleportRange: Int,
     val chargingEntityId: Int
-) {
+) : CustomPayload {
+    override fun getId(): CustomPayload.Id<*> = ID
+
     companion object {
-        val ID: Identifier = Identifier.of("ic2_120", "teleporter_visual_state")
+        val ID = CustomPayload.Id<TeleporterVisualStatePacket>(net.minecraft.util.Identifier.of("ic2_120", "teleporter_visual_state"))
+        val CODEC: PacketCodec<PacketByteBuf, TeleporterVisualStatePacket> = PacketCodec.of(
+            { value, buf -> write(value, buf) },
+            { read(it) }
+        )
 
         fun read(buf: PacketByteBuf): TeleporterVisualStatePacket {
             val pos = buf.readBlockPos()

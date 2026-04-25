@@ -34,9 +34,9 @@ import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.nbt.NbtCompound
 
 import net.minecraft.recipe.RecipeManager
@@ -47,6 +47,8 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 热能离心机方块实体。
@@ -62,7 +64,7 @@ class CentrifugeBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CentrifugeBlock.ACTIVE
 
@@ -151,9 +153,11 @@ class CentrifugeBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.centrifuge")
@@ -163,7 +167,7 @@ class CentrifugeBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CentrifugeSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -173,7 +177,7 @@ class CentrifugeBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CentrifugeSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -305,16 +309,15 @@ class CentrifugeBlockEntity(
         val input = getStack(SLOT_INPUT)
         if (input.isEmpty) return null
 
-        val inv = SimpleInventory(input)
         val recipeManager = world?.recipeManager ?: return null
 
         val optionalRecipe = recipeManager.getFirstMatch(
             getRecipeType<CentrifugeRecipe>(),
-            inv,
+            SingleStackRecipeInput(input),
             world ?: return null
         )
 
-        return optionalRecipe.orElse(null)
+        return optionalRecipe.map { it.value() }.orElse(null)
     }
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem
@@ -322,7 +325,6 @@ class CentrifugeBlockEntity(
     private fun isRecipeInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || isBatteryItem(stack)) return false
         val w = world ?: return true
-        val inv = SimpleInventory(stack.copyWithCount(1))
-        return w.recipeManager.getFirstMatch(getRecipeType<CentrifugeRecipe>(), inv, w).isPresent
+        return w.recipeManager.getFirstMatch(getRecipeType<CentrifugeRecipe>(), SingleStackRecipeInput(stack.copyWithCount(1)), w).isPresent
     }
 }

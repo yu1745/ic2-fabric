@@ -13,7 +13,7 @@ object ModEntities {
         Registries.ENTITY_TYPE,
         Identifier.of(Ic2_120.MOD_ID, "broken_rubber_boat"),
         EntityType.Builder.create<BrokenRubberBoatEntity>({ type, world -> BrokenRubberBoatEntity(type, world) }, SpawnGroup.MISC)
-            .setDimensions(1.375f, 0.5625f)
+            .dimensions(1.375f, 0.5625f)
             .maxTrackingRange(10)
             .build("minecraft:boat")
     )
@@ -22,7 +22,7 @@ object ModEntities {
         Registries.ENTITY_TYPE,
         Identifier.of(Ic2_120.MOD_ID, "carbon_boat"),
         EntityType.Builder.create<CarbonBoatEntity>({ type, world -> CarbonBoatEntity(type, world) }, SpawnGroup.MISC)
-            .setDimensions(1.375f, 0.5625f)
+            .dimensions(1.375f, 0.5625f)
             .maxTrackingRange(10)
             .build("minecraft:boat")
     )
@@ -31,7 +31,7 @@ object ModEntities {
         Registries.ENTITY_TYPE,
         Identifier.of(Ic2_120.MOD_ID, "rubber_boat"),
         EntityType.Builder.create<RubberBoatEntity>({ type, world -> RubberBoatEntity(type, world) }, SpawnGroup.MISC)
-            .setDimensions(1.375f, 0.5625f)
+            .dimensions(1.375f, 0.5625f)
             .maxTrackingRange(10)
             .build("minecraft:boat")
     )
@@ -40,7 +40,7 @@ object ModEntities {
         Registries.ENTITY_TYPE,
         Identifier.of(Ic2_120.MOD_ID, "electric_boat"),
         EntityType.Builder.create<ElectricBoatEntity>({ type, world -> ElectricBoatEntity(type, world) }, SpawnGroup.MISC)
-            .setDimensions(1.375f, 0.5625f)
+            .dimensions(1.375f, 0.5625f)
             .maxTrackingRange(10)
             .build("minecraft:boat")
     )
@@ -49,7 +49,7 @@ object ModEntities {
         Registries.ENTITY_TYPE,
         Identifier.of(Ic2_120.MOD_ID, "laser_projectile"),
         EntityType.Builder.create<LaserProjectileEntity>({ type, world -> LaserProjectileEntity(type, world) }, SpawnGroup.MISC)
-            .setDimensions(0.1f, 0.1f)
+            .dimensions(0.1f, 0.1f)
             .maxTrackingRange(256)
             .trackingTickInterval(1)
             .build("laser_projectile")

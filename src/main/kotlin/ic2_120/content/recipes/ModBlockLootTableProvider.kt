@@ -16,20 +16,24 @@ import ic2_120.registry.ClassScanner
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootTableProvider
+import net.minecraft.enchantment.Enchantment
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.ItemStack
 import net.minecraft.loot.LootPool
 import net.minecraft.loot.LootTable
 import net.minecraft.loot.condition.InvertedLootCondition
 import net.minecraft.loot.condition.MatchToolLootCondition
 import net.minecraft.loot.entry.ItemEntry
-import net.minecraft.enchantment.Enchantments
 import net.minecraft.loot.function.ApplyBonusLootFunction
 import net.minecraft.loot.function.ExplosionDecayLootFunction
-
 import net.minecraft.loot.provider.number.ConstantLootNumberProvider
 import net.minecraft.predicate.item.ItemPredicate
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
+import java.util.concurrent.CompletableFuture
 
 /**
  * 生成方块掉落表。
@@ -38,7 +42,10 @@ import net.minecraft.util.Identifier
  * - `@ModBlock(generateBlockLootTable = false)`：由 [ClassScanner] 登记路径后此处跳过。例如：
  *   橡胶叶（`resources` 自定义掉落）、储物箱/储罐（`onStateReplaced` 带 BE 标签）、作物（`onBreak`）等。
  */
-class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTableProvider(output) {
+class ModBlockLootTableProvider(
+    output: FabricDataOutput,
+    registryLookup: CompletableFuture<RegistryWrapper.WrapperLookup>
+) : FabricBlockLootTableProvider(output, registryLookup) {
 
     private val wrenchPredicateBuilder = ItemPredicate.Builder.create()
         .items(
@@ -97,9 +104,12 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
      * count + Binomial(fortune+0, 0.2) → 时运0=1, 时运1≈1.2, 时运2≈1.4, 时运3≈1.6
      */
     private fun addCustomOreDrop(block: net.minecraft.block.Block, dropItem: net.minecraft.item.Item) {
+        val lookup: RegistryWrapper.WrapperLookup = registryLookup
+        val enchantmentLookup = lookup.getWrapperOrThrow(RegistryKeys.ENCHANTMENT)
+        val fortuneEntry = enchantmentLookup.getOrThrow(Enchantments.FORTUNE)
         addDrop(block, dropsWithSilkTouch(block,
             applyExplosionDecay(dropItem, ItemEntry.builder(dropItem)
-                .apply(ApplyBonusLootFunction.binomialWithBonusCount(Enchantments.FORTUNE, 0.2f, 0))
+                .apply(ApplyBonusLootFunction.binomialWithBonusCount(fortuneEntry, 0.2f, 0))
             )
         ))
     }

@@ -29,6 +29,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 反应堆流体接口方块实体。
@@ -41,7 +43,7 @@ class ReactorFluidPortBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : BlockEntity(type, pos, state), Inventory, IFluidPipeUpgradeSupport,
-    ExtendedScreenHandlerFactory {
+    ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     // 次构造函数：仅接受 pos 和 state，自动获取 type
     constructor(pos: BlockPos, state: BlockState) : this(
@@ -126,9 +128,11 @@ class ReactorFluidPortBlockEntity(
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.reactor_fluid_port")
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(propertyDelegate.size())
+        return buf
     }
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler? {
@@ -143,12 +147,12 @@ class ReactorFluidPortBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
     }
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {

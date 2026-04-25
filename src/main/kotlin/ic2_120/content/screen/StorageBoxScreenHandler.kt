@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack
 
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.slot.Slot
+import net.minecraft.network.PacketByteBuf
 import ic2_120.registry.annotation.ScreenFactory
 
 /**

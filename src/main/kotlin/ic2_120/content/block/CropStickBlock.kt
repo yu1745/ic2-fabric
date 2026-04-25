@@ -1,5 +1,6 @@
 package ic2_120.content.block
 
+import com.mojang.serialization.MapCodec
 import ic2_120.content.crop.CropStats
 import ic2_120.content.crop.CropCareTarget
 import ic2_120.content.crop.CropSystem
@@ -20,7 +21,6 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -37,7 +37,6 @@ import net.minecraft.nbt.NbtCompound
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
 import net.minecraft.util.ItemScatterer
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
@@ -61,6 +60,8 @@ class CropStickBlock : BlockWithEntity(
         .nonOpaque()
         .ticksRandomly()
 ) {
+    override fun getCodec(): MapCodec<out BlockWithEntity> = CROP_STICK_CODEC
+
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
 
     init {
@@ -105,17 +106,15 @@ class CropStickBlock : BlockWithEntity(
 
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.getStackInHand(hand)
+        val stack = player.mainHandStack
         val isCreative = player.abilities.creativeMode
 
-        // 放置第二根作物架：变为杂交底座
         if (!state.get(CROSSING_BASE) && stack.item == this.asItem()) {
             if (!isCreative) stack.decrement(1)
             world.setBlockState(pos, state.with(CROSSING_BASE, true), Block.NOTIFY_ALL)
             return ActionResult.SUCCESS
         }
 
-        // 空架种植基础种子
         if (!state.get(CROSSING_BASE)) {
             if (stack.item is CropSeedBagItem) {
                 val cropType = CropSeedData.readType(stack)
@@ -145,7 +144,6 @@ class CropStickBlock : BlockWithEntity(
             }
         }
 
-        // 右键空手可拆除杂交底座并返还一根作物架
         if (state.get(CROSSING_BASE) && stack.isEmpty) {
             world.setBlockState(pos, state.with(CROSSING_BASE, false), Block.NOTIFY_ALL)
             ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), this.asItem().defaultStack)
@@ -159,7 +157,6 @@ class CropStickBlock : BlockWithEntity(
         if (!state.get(CROSSING_BASE)) {
             val stickBe = world.getBlockEntity(pos) as? CropStickBlockEntity
             if (stickBe?.hasWeedExProtection(random) == true) return
-            // IC2: 空作物架有极低概率自发长出杂草。
             if (random.nextInt(100) == 0) {
                 world.setBlockState(pos, CropBlock.defaultCropState(CropType.WEED, 0), Block.NOTIFY_ALL)
                 val be = world.getBlockEntity(pos) as? CropBlockEntity
@@ -258,13 +255,14 @@ class CropStickBlock : BlockWithEntity(
     }
 
     companion object {
+        val CROP_STICK_CODEC: MapCodec<CropStickBlock> = Block.createCodec { error("CropStickBlock cannot be deserialized from JSON") }
         val CROSSING_BASE: BooleanProperty = BooleanProperty.of("crossing_base")
         private val HORIZONTAL_DIRS = arrayOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
 
         fun defaultStickState(): BlockState = CropStickBlock::class.instance().defaultState.with(CROSSING_BASE, false)
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CropStickBlock::class.item(), 2)
                 .pattern("   ")
                 .pattern("S S")

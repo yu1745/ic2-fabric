@@ -33,7 +33,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 @ModBlock(name = "liquid_heat_exchanger", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "heat")
 class FluidHeatExchangerBlock : MachineBlock() {
@@ -74,7 +73,7 @@ class FluidHeatExchangerBlock : MachineBlock() {
         if (!world.isClient) {
             val storage = FluidStorage.SIDED.find(world, pos, hit.side)
                 ?: FluidStorage.SIDED.find(world, pos, null)
-            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
+            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, net.minecraft.util.Hand.MAIN_HAND)) {
                 return ActionResult.SUCCESS
             }
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
@@ -88,7 +87,7 @@ class FluidHeatExchangerBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val casing = IronCasing::class.instance()
             val emptyCell = EmptyCell::class.instance()
             val heat = HeatConductor::class.instance()

@@ -19,14 +19,15 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.client.item.TooltipContext
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Item
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.state.StateManager
@@ -38,7 +39,7 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
-import java.util.function.Consumer
+import net.minecraft.world.WorldView
 import ic2_120.getCustomData
 import ic2_120.getOrCreateCustomData
 
@@ -73,11 +74,11 @@ class PatternStorageBlock : MachineBlock() {
     @Environment(EnvType.CLIENT)
     override fun appendTooltip(
         stack: ItemStack,
-        world: BlockView?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val blockEntityTag = stack.getCustomData()?.getCompound("BlockEntityTag")
         val templateCount = blockEntityTag?.getList("UuTemplates", 10)?.size ?: 0
         tooltip.add(Text.literal("模板数量: $templateCount").formatted(Formatting.GRAY))
@@ -88,7 +89,8 @@ class PatternStorageBlock : MachineBlock() {
             val blockEntity = world.getBlockEntity(pos) as? PatternStorageBlockEntity
             if (blockEntity != null) {
                 val stack = ItemStack(asItem())
-                val nbt = blockEntity.createNbt()
+                val lookup = world.registryManager
+                val nbt = blockEntity.createNbt(lookup)
                 if (!nbt.isEmpty) {
                     stack.getOrCreateCustomData().put("BlockEntityTag", nbt)
                 }
@@ -106,10 +108,11 @@ class PatternStorageBlock : MachineBlock() {
         }
     }
 
-    override fun getPickStack(world: BlockView, pos: BlockPos, state: BlockState): ItemStack {
+    override fun getPickStack(world: WorldView, pos: BlockPos, state: BlockState): ItemStack {
         val itemStack = super.getPickStack(world, pos, state)
-        val blockEntity = world.getBlockEntity(pos) as? PatternStorageBlockEntity ?: return itemStack
-        val nbt = blockEntity.createNbt()
+        val blockEntity = (world as BlockView).getBlockEntity(pos) as? PatternStorageBlockEntity ?: return itemStack
+        val lookup = (world as World).registryManager
+        val nbt = blockEntity.createNbt(lookup)
         if (!nbt.isEmpty) {
             itemStack.getOrCreateCustomData().put("BlockEntityTag", nbt)
         }
@@ -125,7 +128,7 @@ class PatternStorageBlock : MachineBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val crystalMemory = CrystalMemory::class.instance()
             val reinforcedStone = ReinforcedStoneBlock::class.item()

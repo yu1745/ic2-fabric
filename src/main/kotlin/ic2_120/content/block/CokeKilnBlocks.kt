@@ -1,5 +1,6 @@
 package ic2_120.content.block
 
+import com.mojang.serialization.MapCodec
 import ic2_120.content.block.machines.CokeKilnBlockEntity
 import ic2_120.content.block.machines.CokeKilnGrateBlockEntity
 import ic2_120.registry.type
@@ -16,6 +17,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
+import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntity
@@ -36,7 +38,6 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 @ModBlock(name = "refractory_bricks", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "building")
 /** 耐火砖（Refractory Bricks） */
@@ -53,7 +54,7 @@ class RefractoryBricksBlock : Block(AbstractBlock.Settings.copy(Blocks.BRICKS).s
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RefractoryBricksBlock::class.item(), 8)
                 .pattern("BBB")
                 .pattern("BCB")
@@ -102,7 +103,7 @@ class CokeKilnBlock : MachineBlock(AbstractBlock.Settings.copy(Blocks.BRICKS).st
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val refractory = RefractoryBricksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.DECORATIONS, CokeKilnBlock::class.item(), 1)
                 .pattern("RRR")
@@ -118,6 +119,8 @@ class CokeKilnBlock : MachineBlock(AbstractBlock.Settings.copy(Blocks.BRICKS).st
 @ModBlock(name = "coke_kiln_grate", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "steam")
 /** 焦炉炉篦（Coke Kiln Grate） */
 class CokeKilnGrateBlock : net.minecraft.block.BlockWithEntity(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(3.0f, 10.0f)) {
+    override fun getCodec(): MapCodec<out BlockWithEntity> = CODEC
+
     override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
         super.onBlockAdded(state, world, pos, oldState, notify)
         if (!world.isClient) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
@@ -143,7 +146,7 @@ class CokeKilnGrateBlock : net.minecraft.block.BlockWithEntity(AbstractBlock.Set
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
         val storage = FluidStorage.SIDED.find(world, pos, hit.side) ?: FluidStorage.SIDED.find(world, pos, null)
-        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
+        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, net.minecraft.util.Hand.MAIN_HAND)) {
             return ActionResult.SUCCESS
         }
         return ActionResult.PASS
@@ -153,7 +156,7 @@ class CokeKilnGrateBlock : net.minecraft.block.BlockWithEntity(AbstractBlock.Set
         val FACING: DirectionProperty = DirectionProperty.of("facing")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val refractory = RefractoryBricksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.DECORATIONS, CokeKilnGrateBlock::class.item(), 1)
                 .pattern("III")
@@ -164,6 +167,8 @@ class CokeKilnGrateBlock : net.minecraft.block.BlockWithEntity(AbstractBlock.Set
                 .criterion(hasItem(refractory), conditionsFromItem(refractory))
                 .offerTo(exporter, CokeKilnGrateBlock::class.id())
         }
+
+        val CODEC: MapCodec<CokeKilnGrateBlock> = Block.createCodec { error("CokeKilnGrateBlock cannot be deserialized from JSON") }
     }
 
     init {
@@ -197,7 +202,7 @@ class CokeKilnHatchBlock : Block(AbstractBlock.Settings.copy(Blocks.BRICKS).stre
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val refractory = RefractoryBricksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.DECORATIONS, CokeKilnHatchBlock::class.item(), 1)
                 .pattern("RRR")

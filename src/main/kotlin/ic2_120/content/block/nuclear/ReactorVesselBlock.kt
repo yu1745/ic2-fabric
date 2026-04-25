@@ -16,7 +16,6 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 /**
  * 核反应堆压力容器。
@@ -26,7 +25,7 @@ class ReactorVesselBlock(settings: AbstractBlock.Settings = AbstractBlock.Settin
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val leadPlate = LeadPlate::class.instance()
             if (leadPlate != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorVesselBlock::class.item(), 4)

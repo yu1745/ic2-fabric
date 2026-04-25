@@ -13,7 +13,6 @@ import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.RotationAxis
-import org.joml.Matrix3f
 import org.joml.Matrix4f
 
 class WindGeneratorBlockEntityRenderer(
@@ -21,7 +20,7 @@ class WindGeneratorBlockEntityRenderer(
 ) : BlockEntityRenderer<WindGeneratorBlockEntity> {
 
     companion object {
-        private val WHITE_TEXTURE = Identifier("textures/misc/white.png")
+        private val WHITE_TEXTURE = Identifier.ofVanilla("textures/misc/white.png")
         private const val BASE_SPEED_DEG_PER_TICK = 6.0f
         private const val SPEED_PER_EU = 3.0f
     }
@@ -108,29 +107,28 @@ class WindGeneratorBlockEntityRenderer(
     ) {
         val entry = matrices.peek()
         val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
 
-        quad(vc, pos, normal, light, overlay,
+        quad(vc, pos, entry, light, overlay,
             minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ,
             0f, 0f, 1f
         )
-        quad(vc, pos, normal, light, overlay,
+        quad(vc, pos, entry, light, overlay,
             maxX, minY, minZ, minX, minY, minZ, minX, maxY, minZ, maxX, maxY, minZ,
             0f, 0f, -1f
         )
-        quad(vc, pos, normal, light, overlay,
+        quad(vc, pos, entry, light, overlay,
             minX, minY, minZ, minX, minY, maxZ, minX, maxY, maxZ, minX, maxY, minZ,
             -1f, 0f, 0f
         )
-        quad(vc, pos, normal, light, overlay,
+        quad(vc, pos, entry, light, overlay,
             maxX, minY, maxZ, maxX, minY, minZ, maxX, maxY, minZ, maxX, maxY, maxZ,
             1f, 0f, 0f
         )
-        quad(vc, pos, normal, light, overlay,
+        quad(vc, pos, entry, light, overlay,
             minX, maxY, maxZ, maxX, maxY, maxZ, maxX, maxY, minZ, minX, maxY, minZ,
             0f, 1f, 0f
         )
-        quad(vc, pos, normal, light, overlay,
+        quad(vc, pos, entry, light, overlay,
             minX, minY, minZ, maxX, minY, minZ, maxX, minY, maxZ, minX, minY, maxZ,
             0f, -1f, 0f
         )
@@ -139,7 +137,7 @@ class WindGeneratorBlockEntityRenderer(
     private fun quad(
         vc: VertexConsumer,
         pos: Matrix4f,
-        normal: Matrix3f,
+        entry: MatrixStack.Entry,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float,
@@ -148,16 +146,16 @@ class WindGeneratorBlockEntityRenderer(
         x4: Float, y4: Float, z4: Float,
         nx: Float, ny: Float, nz: Float
     ) {
-        vertex(vc, pos, normal, x1, y1, z1, light, overlay, nx, ny, nz)
-        vertex(vc, pos, normal, x2, y2, z2, light, overlay, nx, ny, nz)
-        vertex(vc, pos, normal, x3, y3, z3, light, overlay, nx, ny, nz)
-        vertex(vc, pos, normal, x4, y4, z4, light, overlay, nx, ny, nz)
+        vertex(vc, pos, entry, x1, y1, z1, light, overlay, nx, ny, nz)
+        vertex(vc, pos, entry, x2, y2, z2, light, overlay, nx, ny, nz)
+        vertex(vc, pos, entry, x3, y3, z3, light, overlay, nx, ny, nz)
+        vertex(vc, pos, entry, x4, y4, z4, light, overlay, nx, ny, nz)
     }
 
     private fun vertex(
         vc: VertexConsumer,
         pos: Matrix4f,
-        normal: Matrix3f,
+        entry: MatrixStack.Entry,
         x: Float,
         y: Float,
         z: Float,
@@ -172,8 +170,7 @@ class WindGeneratorBlockEntityRenderer(
             .texture(0f, 0f)
             .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV)
             .light(light)
-            .normal(normal, nx, ny, nz)
-            .next()
+            .normal(entry, nx, ny, nz)
     }
 
     override fun rendersOutsideBoundingBox(blockEntity: WindGeneratorBlockEntity): Boolean = true

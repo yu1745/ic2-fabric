@@ -15,9 +15,9 @@ import net.minecraft.item.ArmorItem
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import java.util.function.Consumer
 
 /**
  * 纳米护腿 (Nano Leggings)
@@ -40,7 +40,7 @@ class NanoLeggings : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = CarbonPlate::class.instance()
             val crystal = EnergyCrystalItem::class.instance()
             if (plate == Items.AIR || crystal == Items.AIR) return
@@ -58,8 +58,8 @@ class NanoLeggings : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+        super.appendTooltip(stack, context, tooltip, type)
         tooltip.add(Text.literal("减伤: 23.07%").formatted(Formatting.GRAY))
     }
 }

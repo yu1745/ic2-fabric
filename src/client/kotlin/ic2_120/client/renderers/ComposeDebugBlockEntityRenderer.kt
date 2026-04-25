@@ -11,8 +11,6 @@ import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.RotationAxis
-import org.joml.Matrix3f
-import org.joml.Matrix4f
 import kotlin.math.PI
 import kotlin.math.sin
 
@@ -21,7 +19,7 @@ class ComposeDebugBlockEntityRenderer(
 ) : BlockEntityRenderer<ComposeDebugBlockEntity> {
 
     companion object {
-        private val WHITE_TEXTURE = Identifier("textures/misc/white.png")
+        private val WHITE_TEXTURE = Identifier.ofVanilla("textures/misc/white.png")
         private const val RING_SEGMENTS = 24
     }
 
@@ -131,8 +129,6 @@ class ComposeDebugBlockEntityRenderer(
         alpha: Int
     ) {
         val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
 
         val bx1 = -baseHalf
         val bz1 = -baseHalf
@@ -144,12 +140,12 @@ class ComposeDebugBlockEntityRenderer(
         val bz4 = baseHalf
 
         // 四个三角侧面（用退化四边形提交）
-        quadColor(vc, pos, normal, light, overlay, 0f, tipY, 0f, bx1, baseY, bz1, bx2, baseY, bz2, 0f, tipY, 0f, red, green, blue, alpha, 0f, 1f, -1f)
-        quadColor(vc, pos, normal, light, overlay, 0f, tipY, 0f, bx2, baseY, bz2, bx3, baseY, bz3, 0f, tipY, 0f, red, green, blue, alpha, 1f, 1f, 0f)
-        quadColor(vc, pos, normal, light, overlay, 0f, tipY, 0f, bx3, baseY, bz3, bx4, baseY, bz4, 0f, tipY, 0f, red, green, blue, alpha, 0f, 1f, 1f)
-        quadColor(vc, pos, normal, light, overlay, 0f, tipY, 0f, bx4, baseY, bz4, bx1, baseY, bz1, 0f, tipY, 0f, red, green, blue, alpha, -1f, 1f, 0f)
+        quadColor(vc, entry, light, overlay, 0f, tipY, 0f, bx1, baseY, bz1, bx2, baseY, bz2, 0f, tipY, 0f, red, green, blue, alpha, 0f, 1f, -1f)
+        quadColor(vc, entry, light, overlay, 0f, tipY, 0f, bx2, baseY, bz2, bx3, baseY, bz3, 0f, tipY, 0f, red, green, blue, alpha, 1f, 1f, 0f)
+        quadColor(vc, entry, light, overlay, 0f, tipY, 0f, bx3, baseY, bz3, bx4, baseY, bz4, 0f, tipY, 0f, red, green, blue, alpha, 0f, 1f, 1f)
+        quadColor(vc, entry, light, overlay, 0f, tipY, 0f, bx4, baseY, bz4, bx1, baseY, bz1, 0f, tipY, 0f, red, green, blue, alpha, -1f, 1f, 0f)
 
-        quadColor(vc, pos, normal, light, overlay, bx1, baseY, bz4, bx2, baseY, bz3, bx3, baseY, bz2, bx4, baseY, bz1, red, green, blue, alpha, 0f, -1f, 0f)
+        quadColor(vc, entry, light, overlay, bx1, baseY, bz4, bx2, baseY, bz3, bx3, baseY, bz2, bx4, baseY, bz1, red, green, blue, alpha, 0f, -1f, 0f)
     }
 
     private fun drawCuboid(
@@ -169,21 +165,18 @@ class ComposeDebugBlockEntityRenderer(
         alpha: Int
     ) {
         val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
 
-        quadColor(vc, pos, normal, light, overlay, minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ, red, green, blue, alpha, 0f, 0f, 1f)
-        quadColor(vc, pos, normal, light, overlay, maxX, minY, minZ, minX, minY, minZ, minX, maxY, minZ, maxX, maxY, minZ, red, green, blue, alpha, 0f, 0f, -1f)
-        quadColor(vc, pos, normal, light, overlay, minX, minY, minZ, minX, minY, maxZ, minX, maxY, maxZ, minX, maxY, minZ, red, green, blue, alpha, -1f, 0f, 0f)
-        quadColor(vc, pos, normal, light, overlay, maxX, minY, maxZ, maxX, minY, minZ, maxX, maxY, minZ, maxX, maxY, maxZ, red, green, blue, alpha, 1f, 0f, 0f)
-        quadColor(vc, pos, normal, light, overlay, minX, maxY, maxZ, maxX, maxY, maxZ, maxX, maxY, minZ, minX, maxY, minZ, red, green, blue, alpha, 0f, 1f, 0f)
-        quadColor(vc, pos, normal, light, overlay, minX, minY, minZ, maxX, minY, minZ, maxX, minY, maxZ, minX, minY, maxZ, red, green, blue, alpha, 0f, -1f, 0f)
+        quadColor(vc, entry, light, overlay, minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ, red, green, blue, alpha, 0f, 0f, 1f)
+        quadColor(vc, entry, light, overlay, maxX, minY, minZ, minX, minY, minZ, minX, maxY, minZ, maxX, maxY, minZ, red, green, blue, alpha, 0f, 0f, -1f)
+        quadColor(vc, entry, light, overlay, minX, minY, minZ, minX, minY, maxZ, minX, maxY, maxZ, minX, maxY, minZ, red, green, blue, alpha, -1f, 0f, 0f)
+        quadColor(vc, entry, light, overlay, maxX, minY, maxZ, maxX, minY, minZ, maxX, maxY, minZ, maxX, maxY, maxZ, red, green, blue, alpha, 1f, 0f, 0f)
+        quadColor(vc, entry, light, overlay, minX, maxY, maxZ, maxX, maxY, maxZ, maxX, maxY, minZ, minX, maxY, minZ, red, green, blue, alpha, 0f, 1f, 0f)
+        quadColor(vc, entry, light, overlay, minX, minY, minZ, maxX, minY, minZ, maxX, minY, maxZ, minX, minY, maxZ, red, green, blue, alpha, 0f, -1f, 0f)
     }
 
     private fun quadColor(
         vc: VertexConsumer,
-        pos: Matrix4f,
-        normal: Matrix3f,
+        entry: MatrixStack.Entry,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float,
@@ -193,16 +186,15 @@ class ComposeDebugBlockEntityRenderer(
         red: Int, green: Int, blue: Int, alpha: Int,
         nx: Float, ny: Float, nz: Float
     ) {
-        vertex(vc, pos, normal, x1, y1, z1, light, overlay, red, green, blue, alpha, nx, ny, nz)
-        vertex(vc, pos, normal, x2, y2, z2, light, overlay, red, green, blue, alpha, nx, ny, nz)
-        vertex(vc, pos, normal, x3, y3, z3, light, overlay, red, green, blue, alpha, nx, ny, nz)
-        vertex(vc, pos, normal, x4, y4, z4, light, overlay, red, green, blue, alpha, nx, ny, nz)
+        vertex(vc, entry, x1, y1, z1, light, overlay, red, green, blue, alpha, nx, ny, nz)
+        vertex(vc, entry, x2, y2, z2, light, overlay, red, green, blue, alpha, nx, ny, nz)
+        vertex(vc, entry, x3, y3, z3, light, overlay, red, green, blue, alpha, nx, ny, nz)
+        vertex(vc, entry, x4, y4, z4, light, overlay, red, green, blue, alpha, nx, ny, nz)
     }
 
     private fun vertex(
         vc: VertexConsumer,
-        pos: Matrix4f,
-        normal: Matrix3f,
+        entry: MatrixStack.Entry,
         x: Float,
         y: Float,
         z: Float,
@@ -216,13 +208,12 @@ class ComposeDebugBlockEntityRenderer(
         ny: Float,
         nz: Float
     ) {
-        vc.vertex(pos, x, y, z)
+        vc.vertex(entry.positionMatrix, x, y, z)
             .color(red, green, blue, alpha)
             .texture(0f, 0f)
             .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV)
             .light(light)
-            .normal(normal, nx, ny, nz)
-            .next()
+            .normal(entry, nx, ny, nz)
     }
 
     override fun rendersOutsideBoundingBox(blockEntity: ComposeDebugBlockEntity): Boolean = true

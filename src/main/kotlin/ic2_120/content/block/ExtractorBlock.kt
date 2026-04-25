@@ -30,7 +30,6 @@ import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
-import java.util.function.Consumer
 
 /**
  * 提取机方块。消耗电力从粘性树脂、橡胶原木、橡胶树苗等提取橡胶。
@@ -76,7 +75,7 @@ class ExtractorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 机器本身合成配方
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()

@@ -6,6 +6,8 @@ import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.Recipe
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.recipe.RecipeType
+import net.minecraft.recipe.input.RecipeInput
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
 
@@ -22,22 +24,24 @@ sealed class MetalFormerRecipe(
         return ingredient.test(inventory.getStack(0))
     }
 
-    override fun craft(inventory: Input, registry: net.minecraft.registry.DynamicRegistryManager): ItemStack {
+    override fun craft(inventory: Input, lookup: RegistryWrapper.WrapperLookup): ItemStack {
         return output.copy()
     }
 
-    override fun getId(): Identifier = recipeId
+    fun getId(): Identifier = recipeId
 
     override fun fits(width: Int, height: Int): Boolean = true
 
-    override fun getOutput(registry: net.minecraft.registry.DynamicRegistryManager): ItemStack = output.copy()
+    override fun getResult(lookup: RegistryWrapper.WrapperLookup): ItemStack = output.copy()
 
     override fun getRemainder(inventory: Input): net.minecraft.util.collection.DefaultedList<ItemStack> {
         return net.minecraft.util.collection.DefaultedList.ofSize(1, ItemStack.EMPTY)
     }
 
-    class Input(val inputStack: ItemStack) : net.minecraft.inventory.Inventory {
+    class Input(val inputStack: ItemStack) : RecipeInput, net.minecraft.inventory.Inventory {
         override fun getStack(slot: Int): ItemStack = if (slot == 0) inputStack else ItemStack.EMPTY
+        override fun getStackInSlot(slot: Int): ItemStack = getStack(slot)
+        override fun getSize(): Int = 1
         override fun size(): Int = 1
         override fun isEmpty(): Boolean = inputStack.isEmpty
         override fun clear() {}

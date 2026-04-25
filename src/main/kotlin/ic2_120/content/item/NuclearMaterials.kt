@@ -13,7 +13,6 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 // ========== 核能相关材料 ==========
@@ -23,7 +22,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class Uranium : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Uranium::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")
@@ -61,7 +60,7 @@ class Plutonium : Item(Item.Settings())
 class Mox : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, Mox::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")
@@ -87,7 +86,7 @@ class Mox : Item(Item.Settings()) {
 class SmallUranium235 : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 9 小撮 -> 1 铀-235
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, Uranium235::class.instance(), 1)
                 .input(SmallUranium235::class.instance()).input(SmallUranium235::class.instance())
@@ -111,7 +110,7 @@ class SmallUranium235 : Item(Item.Settings()) {
 class SmallUranium238 : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 9 小撮 -> 1 铀-238
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, Uranium238::class.instance(), 1)
                 .input(SmallUranium238::class.instance()).input(SmallUranium238::class.instance())
@@ -135,7 +134,7 @@ class SmallUranium238 : Item(Item.Settings()) {
 class SmallPlutonium : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 9 小撮 -> 1 钚
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, Plutonium::class.instance(), 1)
                 .input(SmallPlutonium::class.instance()).input(SmallPlutonium::class.instance())
@@ -169,7 +168,7 @@ class SmallPlutonium : Item(Item.Settings()) {
 class RtgPellet : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RtgPellet::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")

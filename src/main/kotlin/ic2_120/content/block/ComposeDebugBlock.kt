@@ -1,10 +1,13 @@
 package ic2_120.content.block
 
+import com.mojang.serialization.MapCodec
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import net.minecraft.block.AbstractBlock
+import net.minecraft.block.Block
+import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.Blocks
@@ -12,12 +15,13 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * Compose UI 调试方块。
@@ -28,19 +32,22 @@ import net.minecraft.text.Text
     name = "compose_debug",
     registerItem = true,
     tab = CreativeTab.IC2_MACHINES,
-    group = "debug"
+    group = "misc"
 )
 class ComposeDebugBlock : BlockWithEntity(
     AbstractBlock.Settings.copy(Blocks.STONE).strength(-1.0f, 6000000.0f)
 ) {
+    companion object {
+        val DEBUG_CODEC: MapCodec<ComposeDebugBlock> = Block.createCodec { error("ComposeDebugBlock cannot be deserialized from JSON") }
+    }
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
-        ComposeDebugBlockEntity(ComposeDebugBlockEntity::class.type(), pos, state)
+    override fun getCodec(): MapCodec<out BlockWithEntity> = DEBUG_CODEC
 
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
-        val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.screen.NamedScreenHandlerFactory
+    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
+        return ComposeDebugBlockEntity(pos, state)
+    }
+    override fun getRenderType(state: BlockState): BlockRenderType {
+        return BlockRenderType.MODEL
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -63,7 +70,7 @@ class ComposeDebugBlockEntity(
     pos: net.minecraft.util.math.BlockPos,
     state: net.minecraft.block.BlockState
 ) : BlockEntity(type, pos, state),
-    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     constructor(pos: net.minecraft.util.math.BlockPos, state: net.minecraft.block.BlockState) : this(
         ComposeDebugBlockEntity::class.type(), pos, state
@@ -78,10 +85,9 @@ class ComposeDebugBlockEntity(
     ): net.minecraft.screen.ScreenHandler =
         ic2_120.content.screen.ComposeDebugScreenHandler(syncId, playerInventory)
 
-    override fun writeScreenOpeningData(
-        player: net.minecraft.server.network.ServerPlayerEntity,
-        buf: net.minecraft.network.PacketByteBuf
-    ) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
+        return buf
     }
 }

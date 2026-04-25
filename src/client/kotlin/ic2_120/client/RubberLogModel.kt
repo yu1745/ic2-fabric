@@ -40,8 +40,7 @@ class RubberLogModel : UnbakedModel, BakedModel, FabricBakedModel {
     override fun bake(
         baker: Baker,
         textureGetter: Function<SpriteIdentifier, Sprite>,
-        rotationContainer: ModelBakeSettings,
-        modelId: Identifier
+        rotationContainer: ModelBakeSettings
     ): BakedModel {
         val atlas = PlayerScreenHandler.BLOCK_ATLAS_TEXTURE
         val tex = { path: String -> SpriteIdentifier(atlas, Identifier.of("ic2", "block/resource/$path")) }

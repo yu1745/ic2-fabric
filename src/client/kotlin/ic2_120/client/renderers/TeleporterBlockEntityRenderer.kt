@@ -11,8 +11,6 @@ import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.util.Identifier
-import org.joml.Matrix3f
-import org.joml.Matrix4f
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.max
@@ -23,7 +21,7 @@ class TeleporterBlockEntityRenderer(
 ) : BlockEntityRenderer<TeleporterBlockEntity> {
 
     companion object {
-        private val WHITE_TEXTURE = Identifier("textures/misc/white.png")
+        private val WHITE_TEXTURE = Identifier.ofVanilla("textures/misc/white.png")
         private const val SEGMENTS = 36
         private data class RenderCache(
             var lastProgress: Float = 0f,
@@ -145,8 +143,6 @@ class TeleporterBlockEntityRenderer(
         alpha: Int
     ) {
         val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
         val step = (2.0 * PI / SEGMENTS).toFloat()
 
         for (i in 0 until SEGMENTS) {
@@ -162,7 +158,7 @@ class TeleporterBlockEntityRenderer(
             val iz1 = sin(a1) * innerR
 
             quadColor(
-                vc, pos, normal, light, overlay,
+                vc, entry, light, overlay,
                 ox0.toFloat(), y, oz0.toFloat(),
                 ox1.toFloat(), y, oz1.toFloat(),
                 ix1.toFloat(), y, iz1.toFloat(),
@@ -188,19 +184,16 @@ class TeleporterBlockEntityRenderer(
         val y0 = 0.03f
         val y1 = y0 + height
         val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
 
-        quadColor(vc, pos, normal, light, overlay, -half, y0, -half, -half, y1, -half, half, y1, -half, half, y0, -half, red, green, blue, alpha, 0f, 0f, -1f)
-        quadColor(vc, pos, normal, light, overlay, half, y0, half, half, y1, half, -half, y1, half, -half, y0, half, red, green, blue, alpha, 0f, 0f, 1f)
-        quadColor(vc, pos, normal, light, overlay, -half, y0, half, -half, y1, half, -half, y1, -half, -half, y0, -half, red, green, blue, alpha, -1f, 0f, 0f)
-        quadColor(vc, pos, normal, light, overlay, half, y0, -half, half, y1, -half, half, y1, half, half, y0, half, red, green, blue, alpha, 1f, 0f, 0f)
+        quadColor(vc, entry, light, overlay, -half, y0, -half, -half, y1, -half, half, y1, -half, half, y0, -half, red, green, blue, alpha, 0f, 0f, -1f)
+        quadColor(vc, entry, light, overlay, half, y0, half, half, y1, half, -half, y1, half, -half, y0, half, red, green, blue, alpha, 0f, 0f, 1f)
+        quadColor(vc, entry, light, overlay, -half, y0, half, -half, y1, half, -half, y1, -half, -half, y0, -half, red, green, blue, alpha, -1f, 0f, 0f)
+        quadColor(vc, entry, light, overlay, half, y0, -half, half, y1, -half, half, y1, half, half, y0, half, red, green, blue, alpha, 1f, 0f, 0f)
     }
 
     private fun quadColor(
         vc: VertexConsumer,
-        pos: Matrix4f,
-        normal: Matrix3f,
+        entry: MatrixStack.Entry,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float,
@@ -210,16 +203,15 @@ class TeleporterBlockEntityRenderer(
         red: Int, green: Int, blue: Int, alpha: Int,
         nx: Float, ny: Float, nz: Float
     ) {
-        vertex(vc, pos, normal, x1, y1, z1, light, overlay, red, green, blue, alpha, nx, ny, nz)
-        vertex(vc, pos, normal, x2, y2, z2, light, overlay, red, green, blue, alpha, nx, ny, nz)
-        vertex(vc, pos, normal, x3, y3, z3, light, overlay, red, green, blue, alpha, nx, ny, nz)
-        vertex(vc, pos, normal, x4, y4, z4, light, overlay, red, green, blue, alpha, nx, ny, nz)
+        vertex(vc, entry, x1, y1, z1, light, overlay, red, green, blue, alpha, nx, ny, nz)
+        vertex(vc, entry, x2, y2, z2, light, overlay, red, green, blue, alpha, nx, ny, nz)
+        vertex(vc, entry, x3, y3, z3, light, overlay, red, green, blue, alpha, nx, ny, nz)
+        vertex(vc, entry, x4, y4, z4, light, overlay, red, green, blue, alpha, nx, ny, nz)
     }
 
     private fun vertex(
         vc: VertexConsumer,
-        pos: Matrix4f,
-        normal: Matrix3f,
+        entry: MatrixStack.Entry,
         x: Float,
         y: Float,
         z: Float,
@@ -233,13 +225,12 @@ class TeleporterBlockEntityRenderer(
         ny: Float,
         nz: Float
     ) {
-        vc.vertex(pos, x, y, z)
+        vc.vertex(entry.positionMatrix, x, y, z)
             .color(red, green, blue, alpha)
             .texture(0f, 0f)
             .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV)
             .light(light)
-            .normal(normal, nx, ny, nz)
-            .next()
+            .normal(entry, nx, ny, nz)
     }
 
     override fun rendersOutsideBoundingBox(blockEntity: TeleporterBlockEntity): Boolean = true

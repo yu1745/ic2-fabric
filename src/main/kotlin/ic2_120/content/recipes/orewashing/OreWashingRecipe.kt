@@ -5,7 +5,8 @@ import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.Recipe
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.recipe.RecipeType
-import net.minecraft.registry.Registries
+import net.minecraft.recipe.input.RecipeInput
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
 
@@ -30,16 +31,17 @@ class OreWashingRecipe(
         return ingredient.test(inventory.getStack(0))
     }
 
-    override fun craft(inventory: Input, registry: net.minecraft.registry.DynamicRegistryManager): ItemStack {
+    override fun craft(inventory: Input, lookup: RegistryWrapper.WrapperLookup): ItemStack {
         return outputItems.firstOrNull()?.copy() ?: ItemStack.EMPTY
     }
+
     override fun getSerializer(): RecipeSerializer<*> = ic2_120.content.recipes.ModMachineRecipes.recipeSerializer(OreWashingRecipe::class)
 
     override fun getType(): RecipeType<*> = ic2_120.content.recipes.ModMachineRecipes.recipeType(OreWashingRecipe::class)
 
     override fun fits(width: Int, height: Int): Boolean = true
 
-    override fun getOutput(registry: net.minecraft.registry.DynamicRegistryManager): ItemStack {
+    override fun getResult(lookup: RegistryWrapper.WrapperLookup): ItemStack {
         return outputItems.firstOrNull()?.copy() ?: ItemStack.EMPTY
     }
 
@@ -55,9 +57,11 @@ class OreWashingRecipe(
     /**
      * 简单输入容器，仅包含单个物品栈用于配方匹配
      */
-    class Input(val inputStack: ItemStack) : net.minecraft.inventory.Inventory {
+    class Input(val inputStack: ItemStack) : RecipeInput, net.minecraft.inventory.Inventory {
         override fun getStack(slot: Int): ItemStack = if (slot == 0) inputStack else ItemStack.EMPTY
+        override fun getStackInSlot(slot: Int): ItemStack = getStack(slot)
 
+        override fun getSize(): Int = 1
         override fun size(): Int = 1
 
         override fun isEmpty(): Boolean = inputStack.isEmpty

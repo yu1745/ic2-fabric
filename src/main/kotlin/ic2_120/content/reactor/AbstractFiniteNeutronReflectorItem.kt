@@ -2,11 +2,11 @@ package ic2_120.content.reactor
 
 import ic2_120.content.item.AbstractMoxFuelRodItem
 import ic2_120.content.item.AbstractUraniumFuelRodItem
-import net.minecraft.client.item.TooltipContext
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import net.minecraft.world.World
 import ic2_120.getCustomData
 import ic2_120.getOrCreateCustomData
 
@@ -14,7 +14,7 @@ import ic2_120.getOrCreateCustomData
  * 带脉冲耐久的中子反射板。NBT `use` 为已消耗的脉冲数，枯竭后槽位清空且不再提供脉冲加成。
  */
 abstract class AbstractFiniteNeutronReflectorItem(
-    settings: FabricItemSettings,
+    settings: Item.Settings,
     private val maxPulses: Int
 ) : AbstractReactorComponent(settings) {
 
@@ -77,8 +77,8 @@ abstract class AbstractFiniteNeutronReflectorItem(
         return (13.0 * frac).toInt().coerceIn(0, 13)
     }
 
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+        super.appendTooltip(stack, context, tooltip, type)
         if (!isDepleted(stack)) {
             tooltip.add(
                 Text.translatable("tooltip.ic2_120.neutron_reflector_pulses", remainingPulses(stack))

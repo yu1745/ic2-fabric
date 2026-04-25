@@ -1,7 +1,7 @@
 package ic2_120.content.worldgen
 
 import ic2_120.Ic2_120
-import net.fabricmc.fabric.api.loot.v2.LootTableEvents
+import net.fabricmc.fabric.api.loot.v3.LootTableEvents
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.loot.LootPool
@@ -110,8 +110,8 @@ object ChestLootInjector {
         )
 
     fun register() {
-        LootTableEvents.MODIFY.register { _, _, lootTableId, tableBuilder, source ->
-            if (!source.isBuiltin) return@register
+        LootTableEvents.MODIFY.register { key, tableBuilder, source, lookup ->
+            val lootTableId = key.value
             if (lootTableId !in allChests) return@register
 
             when (lootTableId) {

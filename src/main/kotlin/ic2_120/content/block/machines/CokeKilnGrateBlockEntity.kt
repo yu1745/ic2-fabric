@@ -17,6 +17,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtOps
 import net.minecraft.util.math.BlockPos
 import net.minecraft.registry.RegistryWrapper
 
@@ -100,7 +101,7 @@ class CokeKilnGrateBlockEntity(
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
         val tankNbt = NbtCompound()
-        tankNbt.put("Variant", creosoteTank.variant.toNbt())
+        tankNbt.put("Variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, creosoteTank.variant).result().orElse(NbtCompound()))
         tankNbt.putLong("Amount", creosoteTank.amount)
         nbt.put(NBT_TANK, tankNbt)
     }
@@ -109,7 +110,7 @@ class CokeKilnGrateBlockEntity(
         super.readNbt(nbt, lookup)
         val tankNbt = nbt.getCompound(NBT_TANK)
         if (!tankNbt.isEmpty) {
-            creosoteTank.variant = FluidVariant.fromNbt(tankNbt.getCompound("Variant"))
+            creosoteTank.variant = FluidVariant.CODEC.decode(NbtOps.INSTANCE, tankNbt.getCompound("Variant")).result().map { it.first }.orElse(FluidVariant.blank())
             creosoteTank.amount = tankNbt.getLong("Amount").coerceIn(0L, TANK_CAPACITY)
         }
     }

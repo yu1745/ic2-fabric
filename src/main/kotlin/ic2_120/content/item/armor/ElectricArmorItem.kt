@@ -3,7 +3,10 @@ package ic2_120.content.item.armor
 import ic2_120.content.item.energy.IElectricTool
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ArmorMaterial
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.item.tooltip.TooltipType
+import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.text.Text
 import ic2_120.getOrCreateCustomData
 
@@ -34,9 +37,9 @@ import ic2_120.getOrCreateCustomData
  * - 能量不足时回退到普通护甲效果
  */
 abstract class ElectricArmorItem(
-    material: ArmorMaterial,
+    material: RegistryEntry<ArmorMaterial>,
     type: Type,
-    settings: FabricItemSettings
+    settings: Item.Settings
 ) : ArmorItem(material, type, settings), IElectricTool {
 
     // ========== IElectricTool 实现 ==========
@@ -57,8 +60,6 @@ abstract class ElectricArmorItem(
      * 会在每次受击时同时消耗原版耐久度，导致护甲在耐久耗尽时消失，
      * 即使 EU 能量充足。详见 [ic2_120.mixin.PlayerEntityMixin]。
      */
-    override fun isDamageable(): Boolean = false
-
     // ========== 抽象方法 ==========
 
     /**
@@ -80,8 +81,8 @@ abstract class ElectricArmorItem(
     override fun getItemBarColor(stack: ItemStack): Int =
         getEnergyBarColor(stack)
 
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 }

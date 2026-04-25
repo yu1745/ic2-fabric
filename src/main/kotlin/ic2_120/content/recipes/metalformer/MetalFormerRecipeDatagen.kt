@@ -1,12 +1,11 @@
 package ic2_120.content.recipes.metalformer
 
-import com.google.gson.JsonObject
-import ic2_120.content.recipes.ModMachineRecipes
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.recipe.Ingredient
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import java.util.function.Consumer
 
 /**
  * 金属成型机配方数据生成
@@ -127,49 +126,21 @@ object MetalFormerRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+    fun generateRecipes(exporter: RecipeExporter) {
         entries.forEach { entry ->
-            MetalFormerRecipeExporter(
-                recipeId = Identifier.of("ic2_120", "metal_forming/${entry.mode.name.lowercase()}/${entry.name}"),
-                inputItem = entry.input,
-                outputItem = entry.output,
-                outputCount = entry.outputCount,
-                mode = entry.mode
-            ).also(exporter::accept)
+            val id = Identifier.of("ic2_120", "metal_forming/${entry.mode.name.lowercase()}/${entry.name}")
+            val recipe = when (entry.mode) {
+                Mode.ROLLING -> RollingRecipe(
+                    id, Ingredient.ofItems(entry.input), ItemStack(entry.output, entry.outputCount)
+                )
+                Mode.CUTTING -> CuttingRecipe(
+                    id, Ingredient.ofItems(entry.input), ItemStack(entry.output, entry.outputCount)
+                )
+                Mode.EXTRUDING -> ExtrudingRecipe(
+                    id, Ingredient.ofItems(entry.input), ItemStack(entry.output, entry.outputCount)
+                )
+            }
+            exporter.accept(id, recipe, null)
         }
-    }
-
-    private class MetalFormerRecipeExporter(
-        private val recipeId: Identifier,
-        private val inputItem: Item,
-        private val outputItem: Item,
-        private val outputCount: Int,
-        private val mode: Mode
-    ) : RecipeExporter {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "ic2_120:metal_forming")
-
-            // 输入成分
-            val ingredient = JsonObject()
-            ingredient.addProperty("item", Registries.ITEM.getId(inputItem).toString())
-            json.add("ingredient", ingredient)
-
-            // 输出
-            val result = JsonObject()
-            result.addProperty("item", Registries.ITEM.getId(outputItem).toString())
-            result.addProperty("count", outputCount)
-            json.add("result", result)
-
-            // 模式（用于序列化）
-            json.addProperty("mode", mode.name.lowercase())
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(MetalFormerRecipe::class)
-
-        override fun getRecipeId(): Identifier = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): Identifier? = null
     }
 }

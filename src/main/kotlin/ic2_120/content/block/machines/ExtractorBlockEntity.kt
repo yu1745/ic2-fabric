@@ -36,8 +36,8 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.nbt.NbtCompound
 
 import net.minecraft.recipe.RecipeManager
@@ -47,6 +47,8 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = ExtractorBlock::class)
 @ModMachineRecipeBinding(ExtractorRecipeSerializer::class)
@@ -54,7 +56,7 @@ class ExtractorBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = ExtractorBlock.ACTIVE
 
@@ -151,9 +153,11 @@ class ExtractorBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.extractor")
@@ -163,7 +167,7 @@ class ExtractorBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ExtractorSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -172,7 +176,7 @@ class ExtractorBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(ExtractorSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -240,10 +244,9 @@ class ExtractorBlockEntity(
 
     private fun getRecipe(world: World, input: ItemStack): ExtractorRecipe? {
         if (input.isEmpty) return null
-        val inventory = SimpleInventory(input)
         val recipeManager = world.recipeManager
-        val optionalRecipe = recipeManager.getFirstMatch(getRecipeType<ExtractorRecipe>(), inventory, world)
-        return optionalRecipe.orElse(null)
+        val optionalRecipe = recipeManager.getFirstMatch(getRecipeType<ExtractorRecipe>(), SingleStackRecipeInput(input), world)
+        return optionalRecipe.map { it.value() }.orElse(null)
     }
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem
@@ -251,8 +254,7 @@ class ExtractorBlockEntity(
     private fun isRecipeInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || isBatteryItem(stack)) return false
         val w = world ?: return true
-        val inv = SimpleInventory(stack.copyWithCount(1))
-        return w.recipeManager.getFirstMatch(getRecipeType<ExtractorRecipe>(), inv, w).isPresent
+        return w.recipeManager.getFirstMatch(getRecipeType<ExtractorRecipe>(), SingleStackRecipeInput(stack.copyWithCount(1)), w).isPresent
     }
 
     /**

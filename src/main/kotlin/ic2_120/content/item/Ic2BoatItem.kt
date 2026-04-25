@@ -18,7 +18,7 @@ import net.minecraft.world.event.GameEvent
  */
 open class Ic2BoatItem(
     private val entityType: EntityType<out BoatEntity>,
-    settings: net.fabricmc.fabric.api.item.v1.FabricItemSettings
+    settings: Item.Settings
 ) : Item(settings) {
 
     override fun use(world: World, user: net.minecraft.entity.player.PlayerEntity, hand: Hand): net.minecraft.util.TypedActionResult<ItemStack> {

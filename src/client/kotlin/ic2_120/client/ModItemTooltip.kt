@@ -31,7 +31,7 @@ import net.minecraft.util.math.BlockPos
 object ModItemTooltip {
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, context, lines ->
+        ItemTooltipCallback.EVENT.register { stack, context, type, lines ->
             // 导线 tooltip
             val item = stack.item
             if (item is BlockItem) {

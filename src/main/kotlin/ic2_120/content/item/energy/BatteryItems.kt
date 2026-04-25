@@ -28,7 +28,6 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 // ========== 普通充电电池 ==========
 
@@ -45,7 +44,7 @@ class ReBatteryItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val tinCable = InsulatedTinCableBlock::class.item()
             val copperCable = InsulatedCopperCableBlock::class.item()
             val tinCasing = TinCasing::class.instance()
@@ -86,7 +85,7 @@ class AdvancedReBatteryItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val copperCable = InsulatedCopperCableBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedReBatteryItem::class.instance(), 1)
                 .pattern("WBW")
@@ -123,7 +122,7 @@ class LapotronCrystalItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 含能量水晶：使用 battery_energy_shaped 继承输入水晶电量
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -153,7 +152,7 @@ class ReBatteryWirelessItem : WirelessBatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 四角电路板，四边充电电池，中心空
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -180,7 +179,7 @@ class AdvancedReBatteryWirelessItem : WirelessBatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 四角热交换器，四边高级充电电池，中心无线充电电池（等级1）
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -208,7 +207,7 @@ class EnergyCrystalWirelessItem : WirelessBatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 四角元件热交换器，四边能量水晶，中心高级无线充电电池
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -236,7 +235,7 @@ class LapotronCrystalWirelessItem : WirelessBatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 四角高级热交换器，四边兰波顿水晶，中心无线能量水晶
             BatteryEnergyShapedRecipeDatagen.offer(
                 exporter = exporter,
@@ -268,7 +267,7 @@ class SingleUseBatteryItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val copperCable = InsulatedCopperCableBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SingleUseBatteryItem::class.instance(), 8)
                 .pattern(" W ")

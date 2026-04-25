@@ -1,13 +1,12 @@
 package ic2_120.content.recipes.solidcanner
 
 import ic2_120.content.recipes.ModMachineRecipes
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.Recipe
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.recipe.RecipeType
-import net.minecraft.recipe.input.SingleStackRecipeInput
+import net.minecraft.recipe.input.RecipeInput
 import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
@@ -25,12 +24,12 @@ class SolidCannerRecipe(
     val slot1Ingredient: Ingredient,
     val slot1Count: Int,
     val output: ItemStack
-) : Recipe<SingleStackRecipeInput> {
+) : Recipe<RecipeInput> {
 
-    override fun matches(input: SingleStackRecipeInput, world: World): Boolean {
-        if (inventory.size() < 2) return false
-        val slot0 = inventory.getStack(0)
-        val slot1 = inventory.getStack(1)
+    override fun matches(input: RecipeInput, world: World): Boolean {
+        if (input.size < 2) return false
+        val slot0 = input.getStackInSlot(0)
+        val slot1 = input.getStackInSlot(1)
         if (slot0.isEmpty || slot1.isEmpty) return false
         if (slot0.count < slot0Count) return false
         if (!slot0Ingredient.test(slot0)) return false
@@ -39,7 +38,7 @@ class SolidCannerRecipe(
         return true
     }
 
-    override fun craft(inventory: RecipeInput, lookup: RegistryWrapper.WrapperLookup): ItemStack {
+    override fun craft(input: RecipeInput, lookup: RegistryWrapper.WrapperLookup): ItemStack {
         return output.copy()
     }
 

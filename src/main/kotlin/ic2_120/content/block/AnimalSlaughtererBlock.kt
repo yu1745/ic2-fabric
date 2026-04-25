@@ -29,7 +29,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 @ModBlock(name = "animal_slaughterer", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
 class AnimalSlaughtererBlock : MachineBlock() {
@@ -75,7 +74,7 @@ class AnimalSlaughtererBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             val ironPlate = IronPlate::class.instance()

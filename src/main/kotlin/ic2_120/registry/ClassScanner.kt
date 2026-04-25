@@ -43,6 +43,10 @@ import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.ByteBuf
+import net.minecraft.network.RegistryByteBuf
+import net.minecraft.network.codec.PacketCodec
 import net.minecraft.util.math.BlockPos
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -68,7 +72,6 @@ import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.superclasses
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
-import java.util.function.Consumer
 import java.nio.file.Files
 import java.nio.file.Paths
 import net.minecraft.data.server.recipe.RecipeExporter
@@ -117,7 +120,7 @@ object ClassScanner {
     private val screenHandlerTypes = mutableMapOf<kotlin.reflect.KClass<*>, ScreenHandlerType<*>>()
 
     /** 配方生成器列表（带 modId 标记，支持附属 mod 按需过滤） */
-    private data class RecipeGeneratorEntry(val modId: String, val generator: (Consumer<RecipeExporter>) -> Unit)
+    private data class RecipeGeneratorEntry(val modId: String, val generator: (RecipeExporter) -> Unit)
     private val recipeGenerators = mutableListOf<RecipeGeneratorEntry>()
 
     /**
@@ -631,9 +634,17 @@ object ClassScanner {
 
                     val id = Identifier.of(modId, finalName)
 
-                    val type = ExtendedScreenHandlerType { syncId, playerInventory, buf ->
-                        createFromBuffer(syncId, playerInventory, buf)
-                    }
+                    val type = ExtendedScreenHandlerType<ScreenHandler, PacketByteBuf>(
+                        { syncId, playerInventory, buf -> createFromBuffer(syncId, playerInventory, buf) },
+                        object : PacketCodec<RegistryByteBuf, PacketByteBuf> {
+                            override fun encode(buf: RegistryByteBuf, value: PacketByteBuf) {
+                                buf.writeBytes(value, value.readableBytes())
+                            }
+                            override fun decode(buf: RegistryByteBuf): PacketByteBuf {
+                                return PacketByteBuf(buf.readBytes(buf.readableBytes()) as ByteBuf)
+                            }
+                        }
+                    )
 
                     Registry.register(Registries.SCREEN_HANDLER, id, type)
                     screenHandlerTypes[clazz] = type
@@ -966,7 +977,7 @@ object ClassScanner {
     }
 
     private fun parseItemGroupKey(modId: String, tab: CreativeTab): RegistryKey<ItemGroup> {
-        val id = Identifier(tab.getNamespacedId(modId))
+        val id = Identifier.of(tab.getNamespacedId(modId))
         return RegistryKey.of(RegistryKeys.ITEM_GROUP, id)
     }
 
@@ -1019,9 +1030,9 @@ object ClassScanner {
                 // 验证方法签名
                 val parameters = generateRecipesMethod.parameters
                 if (parameters.size != 2 ||
-                    parameters[1].type.classifier != Consumer::class) {
+                    parameters[1].type.classifier != RecipeExporter::class) {
                     logger.warn(
-                        "类 {} 的 {} 方法签名不正确，应为 (Consumer<RecipeExporter>) -> Unit",
+                        "类 {} 的 {} 方法签名不正确，应为 (RecipeExporter) -> Unit",
                         clazz.simpleName,
                         generateRecipesMethod.name
                     )
@@ -1029,7 +1040,7 @@ object ClassScanner {
                 }
 
                 // 创建生成器闭包
-                val generator: (Consumer<RecipeExporter>) -> Unit = { exporter ->
+                val generator: (RecipeExporter) -> Unit = { exporter ->
                     @Suppress("UNCHECKED_CAST")
                     generateRecipesMethod.call(companion, exporter as Any?)
                 }
@@ -1048,7 +1059,7 @@ object ClassScanner {
      * 执行所有配方生成
      * 供 ModRecipeProvider 调用
      */
-    fun generateAllRecipes(recipeExporter: Consumer<RecipeExporter>) {
+    fun generateAllRecipes(recipeExporter: RecipeExporter) {
         logger.info("开始生成配方...")
         var successCount = 0
         var failCount = 0
@@ -1068,7 +1079,7 @@ object ClassScanner {
     /**
      * 执行指定 modId 的配方生成（供附属 mod 使用）。
      */
-    fun generateRecipesForMod(modId: String, recipeExporter: Consumer<RecipeExporter>) {
+    fun generateRecipesForMod(modId: String, recipeExporter: RecipeExporter) {
         logger.info("开始生成 {} 配方...", modId)
         var successCount = 0
         var failCount = 0

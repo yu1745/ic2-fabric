@@ -52,6 +52,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.enchantment.Enchantments
+import net.minecraft.registry.RegistryKeys
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
@@ -80,6 +81,8 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.sign
 import kotlin.random.Random
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 abstract class BaseMinerBlockEntity(
     type: BlockEntityType<*>,
@@ -90,7 +93,7 @@ abstract class BaseMinerBlockEntity(
     private val acceptsAdvancedScanner: Boolean
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
     IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
-    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty = BaseMinerBlock.ACTIVE
 
@@ -287,10 +290,12 @@ abstract class BaseMinerBlockEntity(
         }
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
         buf.writeBoolean(acceptsAdvancedScanner)
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.$blockKey")
@@ -300,7 +305,7 @@ abstract class BaseMinerBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -322,7 +327,7 @@ abstract class BaseMinerBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_ENERGY_STORED, sync.amount)
         nbt.putBoolean(NBT_CURSOR_INITIALIZED, cursorInitialized)
@@ -339,7 +344,7 @@ abstract class BaseMinerBlockEntity(
         }
     }
 
-    override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
+    override fun toInitialChunkDataNbt(lookup: RegistryWrapper.WrapperLookup): NbtCompound = createNbt(lookup)
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 
@@ -1195,7 +1200,10 @@ abstract class BaseMinerBlockEntity(
             else -> ItemStack(Items.IRON_PICKAXE)
         }
         if (sync.silkTouch != 0 && acceptsAdvancedScanner) {
-            baseTool.addEnchantment(Enchantments.SILK_TOUCH, 1)
+            val enchantmentRegistry = world?.registryManager?.get(RegistryKeys.ENCHANTMENT)
+            if (enchantmentRegistry != null) {
+                baseTool.addEnchantment(enchantmentRegistry.entryOf(Enchantments.SILK_TOUCH), 1)
+            }
         }
         return baseTool
     }
@@ -1216,7 +1224,7 @@ abstract class BaseMinerBlockEntity(
                 inserted.count = toInsert
                 setStack(slot, inserted)
                 remaining.decrement(toInsert)
-            } else if (ItemStack.canCombine(existing, remaining)) {
+            } else if (ItemStack.areItemsAndComponentsEqual(existing, remaining)) {
                 val room = minOf(existing.maxCount, maxCountPerStack) - existing.count
                 if (room > 0) {
                     val move = minOf(room, remaining.count)

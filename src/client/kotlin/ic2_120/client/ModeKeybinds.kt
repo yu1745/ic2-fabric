@@ -3,8 +3,8 @@ package ic2_120.client
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
-import ic2_120.content.network.NetworkManager
-import io.netty.buffer.Unpooled
+import ic2_120.content.network.ToggleJetpackFlightPayload
+import ic2_120.content.network.ToggleFoamSprayerModePayload
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
@@ -13,7 +13,6 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import net.minecraft.entity.EquipmentSlot
-import net.minecraft.network.PacketByteBuf
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -45,20 +44,14 @@ object ModeKeybinds {
                 // 优先级 1：胸甲 → 喷气背包飞行开关
                 val chest = player.getEquippedStack(EquipmentSlot.CHEST)
                 if (chest.item is JetpackItem || chest.item is ElectricJetpack) {
-                    ClientPlayNetworking.send(
-                        NetworkManager.TOGGLE_JETPACK_FLIGHT_PACKET,
-                        PacketByteBuf(Unpooled.buffer())
-                    )
+                    ClientPlayNetworking.send(ToggleJetpackFlightPayload)
                     return@register
                 }
 
                 val offHand = player.offHandStack
                 val mainHand = player.mainHandStack
                 if (mainHand.item is FoamSprayerItem || offHand.item is FoamSprayerItem) {
-                    ClientPlayNetworking.send(
-                        NetworkManager.TOGGLE_FOAM_SPRAYER_MODE_PACKET,
-                        PacketByteBuf(Unpooled.buffer())
-                    )
+                    ClientPlayNetworking.send(ToggleFoamSprayerModePayload)
                     return@register
                 }
             }

@@ -18,14 +18,13 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.FoodComponent
+import net.minecraft.component.type.FoodComponent
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 // ========== 金属成型机制品 ==========
@@ -34,7 +33,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class EmptyTinCanItem : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val tinIngot = TinIngot::class.instance()
 
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 16)
@@ -62,7 +61,7 @@ class FilledTinCanItem : Item(
     Item.Settings()
         .food(
             FoodComponent.Builder()
-                .hunger(2)
+                .nutrition(2)
                 .saturationModifier(0.2f)
                 .snack()
                 .alwaysEdible()
@@ -74,7 +73,7 @@ class FilledTinCanItem : Item(
         get() = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "tin_can"))
 
     /** 10 tick ≈ 1秒吃2个） */
-    override fun getMaxUseTime(stack: ItemStack): Int = 10
+    override fun getMaxUseTime(stack: ItemStack, user: LivingEntity): Int = 10
 
     override fun finishUsing(stack: ItemStack, world: World, user: LivingEntity): ItemStack {
         if (!world.isClient && user is PlayerEntity) {
@@ -112,7 +111,7 @@ class SmallPowerUnitItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             //   C F
             // B X M
             //   C F
@@ -146,7 +145,7 @@ class PowerUnitItem : BatteryItemBase(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // B C F
             // B X M
             // B C F

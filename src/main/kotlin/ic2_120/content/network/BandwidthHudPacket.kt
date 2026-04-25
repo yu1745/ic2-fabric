@@ -1,7 +1,9 @@
 package ic2_120.content.network
 
 import ic2_120.Ic2_120
-
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.network.codec.PacketCodec
+import net.minecraft.network.packet.CustomPayload
 import net.minecraft.util.Identifier
 
 data class BandwidthPlayerStat(
@@ -10,12 +12,18 @@ data class BandwidthPlayerStat(
     val totalBytes: Long
 )
 
-data class BandwidthHudPacket(
+class BandwidthHudPacket(
     val serverBytesPerSecond: Long,
     val players: List<BandwidthPlayerStat>
-) {
+) : CustomPayload {
+    override fun getId(): CustomPayload.Id<*> = ID
+
     companion object {
-        val ID: Identifier = Identifier.of(Ic2_120.MOD_ID, "bandwidth_hud")
+        val ID = CustomPayload.Id<BandwidthHudPacket>(Identifier.of(Ic2_120.MOD_ID, "bandwidth_hud"))
+        val CODEC: PacketCodec<PacketByteBuf, BandwidthHudPacket> = PacketCodec.of(
+            { value, buf -> write(value, buf) },
+            { read(it) }
+        )
 
         fun read(buf: PacketByteBuf): BandwidthHudPacket {
             val serverBytesPerSecond = buf.readVarLong()

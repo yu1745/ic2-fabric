@@ -22,9 +22,11 @@ import com.google.common.collect.ImmutableMultimap
 import com.google.common.collect.Multimap
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
+import net.minecraft.registry.tag.BlockTags
 import net.minecraft.entity.attribute.EntityAttribute
 import net.minecraft.entity.attribute.EntityAttributeModifier
 import net.minecraft.entity.attribute.EntityAttributes
+import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -34,7 +36,7 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
-import java.util.UUID
+import net.minecraft.util.Identifier
 import net.minecraft.util.ItemScatterer
 import net.minecraft.util.math.BlockPos
 import ic2_120.registry.recipeId
@@ -42,6 +44,7 @@ import ic2_120.registry.type
 import net.minecraft.item.AxeItem
 import net.minecraft.item.HoeItem
 import net.minecraft.item.Item
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.item.PickaxeItem
@@ -51,19 +54,24 @@ import net.minecraft.item.ToolMaterial
 import net.minecraft.inventory.Inventories
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.recipe.Ingredient
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.registry.tag.ItemTags
-import net.minecraft.client.item.TooltipContext
 import net.minecraft.sound.SoundCategory
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Formatting
 import net.minecraft.util.collection.DefaultedList
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.AttributeModifierSlot
+import net.minecraft.component.type.AttributeModifiersComponent
+import net.minecraft.component.type.ItemEnchantmentsComponent
+import net.minecraft.component.type.NbtComponent
 import net.minecraft.enchantment.EnchantmentHelper
+import net.minecraft.registry.RegistryKeys
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
@@ -72,6 +80,8 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.getCustomData
 import ic2_120.getOrCreateCustomData
 import ic2_120.removeCustomData
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 // ========== 工具材料 ==========
 
@@ -80,8 +90,8 @@ object BronzeToolMaterial : ToolMaterial {
     override fun getDurability() = 250
     override fun getMiningSpeedMultiplier() = 4.0f
     override fun getAttackDamage() = 2.0f
-    override fun getMiningLevel() = 2
     override fun getEnchantability() = 10
+    override fun getInverseTag() = BlockTags.INCORRECT_FOR_IRON_TOOL
     override fun getRepairIngredient(): Ingredient =
         Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
 }
@@ -91,14 +101,14 @@ object BronzeToolMaterial : ToolMaterial {
 /** 锻造锤 - 将锭锻造成板，将板锻造成外壳 */
 @ModItem(name = "forge_hammer", tab = CreativeTab.IC2_TOOLS)
 class ForgeHammer : Item(Item.Settings().maxDamage(80)) {
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
         val remaining = stack.maxDamage - stack.damage
         tooltip.add(Text.literal("剩余使用次数: $remaining").formatted(Formatting.GRAY))
     }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val iron = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ForgeHammer::class.instance(), 1)
@@ -113,14 +123,14 @@ class ForgeHammer : Item(Item.Settings().maxDamage(80)) {
 /** 板材切割剪刀 - 将板材切割成导线 */
 @ModItem(name = "cutter", tab = CreativeTab.IC2_TOOLS)
 class Cutter : Item(Item.Settings().maxDamage(60)) {
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
         val remaining = stack.maxDamage - stack.damage
         tooltip.add(Text.literal("剩余使用次数: $remaining").formatted(Formatting.GRAY))
     }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val ironIngot = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON)
             val ironPlate = Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON)
             val steelIngot = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_STEEL)
@@ -145,10 +155,10 @@ class Cutter : Item(Item.Settings().maxDamage(60)) {
 // ========== 青铜工具 ==========
 
 @ModItem(name = "bronze_axe", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeAxe : AxeItem(BronzeToolMaterial, 5f, -3f, Item.Settings().maxCount(1)) {
+class BronzeAxe : AxeItem(BronzeToolMaterial, Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzeAxe::class.instance(), 1)
@@ -161,10 +171,10 @@ class BronzeAxe : AxeItem(BronzeToolMaterial, 5f, -3f, Item.Settings().maxCount(
 }
 
 @ModItem(name = "bronze_hoe", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeHoe : HoeItem(BronzeToolMaterial, -1, 0f, Item.Settings().maxCount(1)) {
+class BronzeHoe : HoeItem(BronzeToolMaterial, Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzeHoe::class.instance(), 1)
@@ -177,10 +187,10 @@ class BronzeHoe : HoeItem(BronzeToolMaterial, -1, 0f, Item.Settings().maxCount(1
 }
 
 @ModItem(name = "bronze_sword", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeSword : SwordItem(BronzeToolMaterial, 3, -2.4f, Item.Settings().maxCount(1)) {
+class BronzeSword : SwordItem(BronzeToolMaterial, Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzeSword::class.instance(), 1)
@@ -193,10 +203,10 @@ class BronzeSword : SwordItem(BronzeToolMaterial, 3, -2.4f, Item.Settings().maxC
 }
 
 @ModItem(name = "bronze_shovel", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeShovel : ShovelItem(BronzeToolMaterial, 1.5f, -3f, Item.Settings().maxCount(1)) {
+class BronzeShovel : ShovelItem(BronzeToolMaterial, Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzeShovel::class.instance(), 1)
@@ -209,10 +219,10 @@ class BronzeShovel : ShovelItem(BronzeToolMaterial, 1.5f, -3f, Item.Settings().m
 }
 
 @ModItem(name = "bronze_pickaxe", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzePickaxe : PickaxeItem(BronzeToolMaterial, 1, -2.8f, Item.Settings().maxCount(1)) {
+class BronzePickaxe : PickaxeItem(BronzeToolMaterial, Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzePickaxe::class.instance(), 1)
@@ -260,9 +270,9 @@ class WeedEx : Item(Item.Settings().maxCount(1)) {
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: TooltipContext
+        type: TooltipType
     ) {
         val amount = getAmount(stack)
         val pct = (amount * 100 / CAPACITY).coerceIn(0, 100)
@@ -307,14 +317,14 @@ class WeedEx : Item(Item.Settings().maxCount(1)) {
                 stack.getCustomData()?.remove(NBT_KEY)
                 if (stack.getCustomData()?.isEmpty == true) stack.removeCustomData()
             } else if (amount > 0) {
-                stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putInt(NBT_KEY, amount.coerceAtMost(CAPACITY) })))
+                stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putInt(NBT_KEY, amount.coerceAtMost(CAPACITY)) }))
             } else {
-                stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putInt(NBT_KEY, 0) }))
+                stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putInt(NBT_KEY, 0) }))
             }
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val cell = WeedExCell::class.instance()
             if (cell == Items.AIR) return
             ShapelessRecipeJsonBuilder.create(RecipeCategory.TOOLS, WeedEx::class.instance(), 1)
@@ -349,14 +359,14 @@ class WeedingSpade : Item(Item.Settings().maxDamage(120)) {
         )
         world.setBlockState(pos, CropStickBlock.defaultStickState(), Block.NOTIFY_ALL)
         if (!isCreative) {
-            stack.damage(1, player) { it.sendToolBreakStatus(context.hand) }
+            stack.damage(1, player, if (context.hand == Hand.MAIN_HAND) EquipmentSlot.MAINHAND else EquipmentSlot.OFFHAND)
         }
         return ActionResult.SUCCESS
     }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, WeedingSpade::class.instance(), 1)
@@ -382,7 +392,8 @@ class ToolBox : Item(Item.Settings().maxCount(1)) {
         val stack = user.getStackInHand(hand)
         if (world.isClient) return TypedActionResult.success(stack)
 
-        val internal = loadInternal(stack)
+        val lookup = world.registryManager
+        val internal = loadInternal(stack, lookup)
         if (user.isSneaking) {
             var transferredAny = false
             for (i in internal.indices) {
@@ -397,13 +408,13 @@ class ToolBox : Item(Item.Settings().maxCount(1)) {
                 }
             }
             if (transferredAny) {
-                user.playSound(SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2f, 1.1f)
+                world.playSound(null, user.blockPos, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2f, 1.1f)
             }
             if (internal.any { !it.isEmpty }) {
                 user.sendMessage(Text.translatable("message.ic2_120.tool_box.inventory_partial"), true)
             }
-            saveInternal(stack, internal)
-            return TypedActionResult.success(stack, true)
+            saveInternal(stack, internal, lookup)
+            return TypedActionResult.success(stack)
         }
 
         val inv = user.inventory
@@ -420,23 +431,30 @@ class ToolBox : Item(Item.Settings().maxCount(1)) {
             deposited = true
         }
         if (deposited) {
-            user.playSound(SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.PLAYERS, 0.35f, 1.25f)
+            world.playSound(null, user.blockPos, SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.PLAYERS, 0.35f, 1.25f)
         }
-        saveInternal(stack, internal)
-        return TypedActionResult.success(stack, true)
+        saveInternal(stack, internal, lookup)
+        return TypedActionResult.success(stack)
     }
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         tooltip.add(Text.translatable("tooltip.ic2_120.tool_box.hint").formatted(Formatting.DARK_GRAY))
         tooltip.add(Text.translatable("tooltip.ic2_120.tool_box.hint_detail").formatted(Formatting.DARK_GRAY))
-        val internal = loadInternal(stack)
-        val filled = internal.count { !it.isEmpty }
+        val root = stack.getCustomData()
+        val filled = if (root?.contains(NBT_KEY) == true) {
+            val tag = root.getCompound(NBT_KEY)
+            val itemsTag = tag.getList("Items", 10)
+            (0 until minOf(itemsTag.size, CAPACITY)).count { i ->
+                val itemTag = itemsTag.getCompound(i)
+                itemTag.contains("id")
+            }
+        } else 0
         if (filled == 0) {
             tooltip.add(Text.translatable("tooltip.ic2_120.tool_box.empty").formatted(Formatting.GRAY))
             return
@@ -444,13 +462,21 @@ class ToolBox : Item(Item.Settings().maxCount(1)) {
         tooltip.add(
             Text.translatable("tooltip.ic2_120.tool_box.summary", filled, CAPACITY).formatted(Formatting.GRAY)
         )
-        for (s in internal) {
-            if (s.isEmpty) continue
-            val line = Text.literal("· ").formatted(Formatting.DARK_GRAY).append(s.name)
-            if (s.count > 1) {
-                line.append(Text.literal(" ×${s.count}").formatted(Formatting.DARK_GRAY))
+        if (root?.contains(NBT_KEY) == true) {
+            val tag = root.getCompound(NBT_KEY)
+            val itemsTag = tag.getList("Items", 10)
+            for (i in 0 until minOf(itemsTag.size, CAPACITY)) {
+                val itemTag = itemsTag.getCompound(i)
+                if (!itemTag.contains("id")) continue
+                val id = itemTag.getString("id")
+                val count = itemTag.getByte("Count").toInt().coerceAtLeast(1)
+                val line = Text.literal("· ").formatted(Formatting.DARK_GRAY)
+                    .append(Text.translatable(id))
+                if (count > 1) {
+                    line.append(Text.literal(" ×$count").formatted(Formatting.DARK_GRAY))
+                }
+                tooltip.add(line)
             }
-            tooltip.add(line)
         }
     }
 
@@ -459,7 +485,7 @@ class ToolBox : Item(Item.Settings().maxCount(1)) {
         const val NBT_KEY = "ToolBoxItems"
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val casing = BronzeCasing::class.instance()
             val chest = Items.CHEST
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ToolBox::class.instance(), 1)
@@ -473,19 +499,19 @@ class ToolBox : Item(Item.Settings().maxCount(1)) {
                 .offerTo(exporter, ToolBox::class.id())
         }
 
-        internal fun loadInternal(stack: ItemStack): DefaultedList<ItemStack> {
+        internal fun loadInternal(stack: ItemStack, lookup: RegistryWrapper.WrapperLookup): DefaultedList<ItemStack> {
             val list = DefaultedList.ofSize(CAPACITY, ItemStack.EMPTY)
             val root = stack.getCustomData() ?: return list
             if (!root.contains(NBT_KEY)) return list
             val tag = root.getCompound(NBT_KEY)
-            Inventories.readNbt(tag, list)
+            Inventories.readNbt(tag, list, lookup)
             return list
         }
 
-        internal fun saveInternal(stack: ItemStack, list: DefaultedList<ItemStack>) {
+        internal fun saveInternal(stack: ItemStack, list: DefaultedList<ItemStack>, lookup: RegistryWrapper.WrapperLookup) {
             val nbt = stack.getOrCreateCustomData()
             val tag = NbtCompound()
-            Inventories.writeNbt(tag, list)
+            Inventories.writeNbt(tag, list, lookup)
             nbt.put(NBT_KEY, tag)
         }
 
@@ -530,7 +556,7 @@ class Meter : Item(Item.Settings().maxCount(1))
 class Treetap : Item(Item.Settings().maxDamage(10)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, Treetap::class.instance(), 1)
                 .pattern(" P ")
                 .pattern("PPP")
@@ -547,7 +573,7 @@ class Treetap : Item(Item.Settings().maxDamage(10)) {
 class Wrench : Item(Item.Settings().maxDamage(120)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, Wrench::class.instance(), 1)
                 .pattern("B B")
@@ -571,7 +597,7 @@ class FrequencyTransmitter : Item(Item.Settings().maxCount(1)) {
         private const val NBT_HAS_BIND = "HasBind"
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             if (cable == Items.AIR || circuit == Items.AIR) return
@@ -644,11 +670,11 @@ class FrequencyTransmitter : Item(Item.Settings().maxCount(1)) {
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val nbt = stack.getCustomData()
         val hasBind = nbt?.getBoolean(NBT_HAS_BIND) == true
         if (!hasBind) {
@@ -679,7 +705,7 @@ class Chainsaw : ElectricMiningDrillItem(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val ironPlate = IronPlate::class.instance()
             val powerUnit = PowerUnitItem::class.instance()
             BatteryEnergyShapedRecipeDatagen.offer(
@@ -702,11 +728,11 @@ class Chainsaw : ElectricMiningDrillItem(
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<net.minecraft.text.Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 
@@ -716,7 +742,7 @@ class Chainsaw : ElectricMiningDrillItem(
 }
 
 abstract class ElectricMiningDrillItem(
-    settings: FabricItemSettings,
+    settings: Item.Settings,
     private val miningToolFactory: () -> ItemStack,
     private val baseEnergyPerBlock: Long
 ) : Item(settings.maxCount(1)), IElectricTool {
@@ -725,17 +751,6 @@ abstract class ElectricMiningDrillItem(
 
     protected fun hasEnoughEnergyForMining(stack: ItemStack): Boolean =
         getEnergy(stack) >= getEnergyCostPerBlock(stack)
-
-    override fun getMiningSpeedMultiplier(stack: ItemStack, state: BlockState): Float {
-        if (!hasEnoughEnergyForMining(stack)) return 1.0f
-        val tool = miningToolFactory()
-        return tool.item.getMiningSpeedMultiplier(tool, state)
-    }
-
-    override fun isSuitableFor(state: BlockState): Boolean {
-        val tool = miningToolFactory()
-        return tool.item.isSuitableFor(state)
-    }
 
     override fun postMine(
         stack: ItemStack,
@@ -764,7 +779,7 @@ class DiamondDrill : ElectricMiningDrillItem(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val diamond = Items.DIAMOND
             val drill = Drill::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, DiamondDrill::class.instance(), 1)
@@ -781,11 +796,11 @@ class DiamondDrill : ElectricMiningDrillItem(
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<net.minecraft.text.Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 
@@ -803,7 +818,7 @@ class Drill : ElectricMiningDrillItem(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val ironPlate = IronPlate::class.instance()
             val powerUnit = PowerUnitItem::class.instance()
             BatteryEnergyShapedRecipeDatagen.offer(
@@ -826,11 +841,11 @@ class Drill : ElectricMiningDrillItem(
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<net.minecraft.text.Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 
@@ -844,7 +859,7 @@ class Drill : ElectricMiningDrillItem(
 class ElectricTreetap : Item(Item.Settings().maxCount(1)), IElectricTool {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val treetap = Treetap::class.instance()
             val smallPower = SmallPowerUnitItem::class.instance()
             ConsumeTreetapShapedRecipeDatagen.offer(
@@ -866,11 +881,11 @@ class ElectricTreetap : Item(Item.Settings().maxCount(1)), IElectricTool {
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<net.minecraft.text.Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 
@@ -884,7 +899,7 @@ class ElectricTreetap : Item(Item.Settings().maxCount(1)), IElectricTool {
 class ElectricWrench : Item(Item.Settings().maxCount(1)), IElectricTool {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val wrench = Wrench::class.instance()
             val smallPower = SmallPowerUnitItem::class.instance()
             ConsumeWrenchShapedRecipeDatagen.offer(
@@ -907,11 +922,11 @@ class ElectricWrench : Item(Item.Settings().maxCount(1)), IElectricTool {
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<net.minecraft.text.Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 
@@ -935,7 +950,7 @@ class IridiumDrill : ElectricMiningDrillItem(
         private const val SILK_TOUCH_MULTIPLIER = 10L
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val reinforcedIridium = IridiumPlate::class.instance()
             val diamondDrill = DiamondDrill::class.instance()
             val energyCrystal = EnergyCrystalItem::class.instance()
@@ -958,28 +973,24 @@ class IridiumDrill : ElectricMiningDrillItem(
             return enabled
         }
 
-        private fun getExpectedEnchantments(
-            stack: ItemStack,
-            hasEnergyForCurrentMode: Boolean
-        ): Map<net.minecraft.enchantment.Enchantment, Int> {
-            if (!hasEnergyForCurrentMode) return emptyMap()
-            return if (isSilkTouchEnabled(stack)) {
-                mapOf(Enchantments.SILK_TOUCH to 1)
-            } else {
-                mapOf(
-                    Enchantments.FORTUNE to 3,
-                    Enchantments.EFFICIENCY to 3
-                )
+        fun syncVirtualEnchantments(stack: ItemStack, world: World, hasEnergyForCurrentMode: Boolean) {
+            val enchantmentRegistry = world.registryManager.get(RegistryKeys.ENCHANTMENT)
+            val current = stack.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
+            val builder = ItemEnchantmentsComponent.Builder(current)
+            builder.remove { enchantment ->
+                enchantment.matchesKey(Enchantments.SILK_TOUCH) ||
+                enchantment.matchesKey(Enchantments.FORTUNE) ||
+                enchantment.matchesKey(Enchantments.EFFICIENCY)
             }
-        }
-
-        fun syncVirtualEnchantments(stack: ItemStack, hasEnergyForCurrentMode: Boolean) {
-            val enchants = EnchantmentHelper.get(stack).toMutableMap()
-            enchants.remove(Enchantments.SILK_TOUCH)
-            enchants.remove(Enchantments.FORTUNE)
-            enchants.remove(Enchantments.EFFICIENCY)
-            enchants.putAll(getExpectedEnchantments(stack, hasEnergyForCurrentMode))
-            EnchantmentHelper.set(enchants, stack)
+            if (hasEnergyForCurrentMode) {
+                if (isSilkTouchEnabled(stack)) {
+                    builder.set(enchantmentRegistry.entryOf(Enchantments.SILK_TOUCH), 1)
+                } else {
+                    builder.set(enchantmentRegistry.entryOf(Enchantments.FORTUNE), 3)
+                    builder.set(enchantmentRegistry.entryOf(Enchantments.EFFICIENCY), 3)
+                }
+            }
+            stack.set(DataComponentTypes.ENCHANTMENTS, builder.build())
         }
     }
 
@@ -998,16 +1009,16 @@ class IridiumDrill : ElectricMiningDrillItem(
     ) {
         super.inventoryTick(stack, world, entity, slot, selected)
         val enoughEnergy = getEnergy(stack) >= getEnergyCostPerBlock(stack)
-        syncVirtualEnchantments(stack, enoughEnergy)
+        syncVirtualEnchantments(stack, world, enoughEnergy)
     }
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<net.minecraft.text.Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 
@@ -1020,8 +1031,8 @@ private object NanoSaberMaterial : ToolMaterial {
     override fun getDurability() = 1
     override fun getMiningSpeedMultiplier() = 1.0f
     override fun getAttackDamage() = 0f
-    override fun getMiningLevel() = 0
     override fun getEnchantability() = 15
+    override fun getInverseTag() = BlockTags.INCORRECT_FOR_WOODEN_TOOL
     override fun getRepairIngredient(): Ingredient = Ingredient.EMPTY
 }
 
@@ -1032,17 +1043,15 @@ private object NanoSaberMaterial : ToolMaterial {
 @ModItem(name = "nano_saber", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
 class NanoSaber : SwordItem(
     NanoSaberMaterial,
-    0,
-    -2.4f,
-    Item.Settings().maxCount(1)
+    Item.Settings()
 ), IElectricTool {
 
     companion object {
         private const val NBT_ACTIVE = "NanoSaberActive"
         private const val ENERGY_PER_HIT = 1000L
 
-        private val ATTACK_DAMAGE_MODIFIER_ID = UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5CF")
-        private val ATTACK_SPEED_MODIFIER_ID = UUID.fromString("FA233E1C-4180-4865-B01B-BCCE9785ACA3")
+        private val ATTACK_DAMAGE_MODIFIER_ID = Identifier.ofVanilla("cb3f55d3-645c-4f38-a497-9c13a33db5cf")
+        private val ATTACK_SPEED_MODIFIER_ID = Identifier.ofVanilla("fa233e1c-4180-4865-b01b-bcce9785aca3")
 
         private const val DAMAGE_INACTIVE_TOTAL = 5.0
         private const val DAMAGE_ACTIVE_TOTAL = 21.0
@@ -1057,7 +1066,7 @@ class NanoSaber : SwordItem(
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val glow = Items.GLOWSTONE_DUST
             val alloy = Alloy::class.instance()
             val plate = CarbonPlate::class.instance()
@@ -1081,8 +1090,6 @@ class NanoSaber : SwordItem(
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
 
-    override fun isDamageable() = false
-
     private fun weaponAttackModifier(stack: ItemStack): Double {
         val active = isActive(stack)
         val fullPower = active && getEnergy(stack) > 0
@@ -1090,33 +1097,27 @@ class NanoSaber : SwordItem(
         return total - 1.0
     }
 
-    override fun getAttributeModifiers(
-        stack: ItemStack,
-        slot: EquipmentSlot
-    ): Multimap<EntityAttribute, EntityAttributeModifier> {
-        if (slot != EquipmentSlot.MAINHAND) {
-            return super.getAttributeModifiers(stack, slot)
-        }
-        val builder = ImmutableMultimap.builder<EntityAttribute, EntityAttributeModifier>()
-        builder.put(
-            EntityAttributes.GENERIC_ATTACK_DAMAGE,
-            EntityAttributeModifier(
-                ATTACK_DAMAGE_MODIFIER_ID,
-                "Weapon modifier",
-                weaponAttackModifier(stack),
-                EntityAttributeModifier.Operation.ADDITION
+    override fun getAttributeModifiers(): AttributeModifiersComponent {
+        return AttributeModifiersComponent.builder()
+            .add(
+                EntityAttributes.GENERIC_ATTACK_DAMAGE,
+                EntityAttributeModifier(
+                    ATTACK_DAMAGE_MODIFIER_ID,
+                    DAMAGE_ACTIVE_TOTAL - 1.0,
+                    EntityAttributeModifier.Operation.ADD_VALUE
+                ),
+                AttributeModifierSlot.MAINHAND
             )
-        )
-        builder.put(
-            EntityAttributes.GENERIC_ATTACK_SPEED,
-            EntityAttributeModifier(
-                ATTACK_SPEED_MODIFIER_ID,
-                "Weapon modifier",
-                -2.4,
-                EntityAttributeModifier.Operation.ADDITION
+            .add(
+                EntityAttributes.GENERIC_ATTACK_SPEED,
+                EntityAttributeModifier(
+                    ATTACK_SPEED_MODIFIER_ID,
+                    -2.4,
+                    EntityAttributeModifier.Operation.ADD_VALUE
+                ),
+                AttributeModifierSlot.MAINHAND
             )
-        )
-        return builder.build()
+            .build()
     }
 
     override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
@@ -1128,7 +1129,7 @@ class NanoSaber : SwordItem(
                 true
             )
         }
-        return TypedActionResult.success(stack, world.isClient)
+        return TypedActionResult.success(stack)
     }
 
     override fun postHit(stack: ItemStack, target: LivingEntity, attacker: LivingEntity): Boolean {
@@ -1151,11 +1152,11 @@ class NanoSaber : SwordItem(
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: net.minecraft.world.World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
         val key = if (isActive(stack)) "tooltip.ic2_120.nano_saber.active" else "tooltip.ic2_120.nano_saber.inactive"
         tooltip.add(Text.translatable(key).formatted(net.minecraft.util.Formatting.GRAY))
@@ -1203,13 +1204,11 @@ class WindMeter : Item(Item.Settings().maxCount(1)) {
             return -1
         }
 
-        user.openHandledScreen(object : net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+        user.openHandledScreen(object : net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory<PacketByteBuf> {
             override fun getDisplayName(): Text = Text.translatable("item.ic2_120.wind_meter")
 
-            override fun writeScreenOpeningData(
-                serverPlayer: net.minecraft.server.network.ServerPlayerEntity,
-                buf: net.minecraft.network.PacketByteBuf
-            ) {
+            override fun getScreenOpeningData(serverPlayer: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+                val buf = PacketByteBuf(Unpooled.buffer())
                 buf.writeVarInt((mean * 1000.0).toInt().coerceAtLeast(0))
                 buf.writeVarInt((weather * 1000.0).toInt().coerceAtLeast(0))
                 buf.writeVarInt((gust * 1000.0).toInt().coerceAtLeast(0))
@@ -1222,6 +1221,7 @@ class WindMeter : Item(Item.Settings().maxCount(1)) {
                 buf.writeVarInt(requiredStartY(2))
                 buf.writeVarInt(requiredStartY(3))
                 buf.writeVarInt(requiredStartY(4))
+                return buf
             }
 
             override fun createMenu(

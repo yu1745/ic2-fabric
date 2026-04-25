@@ -27,7 +27,6 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 @ModBlock(name = "manual_kinetic_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
 class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
@@ -36,7 +35,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val casing = MachineCasingBlock::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ManualKineticGeneratorBlock::class.item(), 1)
                 .pattern("L")
@@ -69,7 +68,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
-        checkType(type, ManualKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        validateTicker(type, ManualKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
             (be as ManualKineticGeneratorBlockEntity).tick(w, p, s)
         }
 
@@ -81,15 +80,15 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
             return ActionResult.PASS
         }
 
-        return be.onUse(player, hand, world, pos, state)
+        return be.onUse(player, net.minecraft.util.Hand.MAIN_HAND, world, pos, state)
     }
 
-    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
+    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity): BlockState {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? ManualKineticGeneratorBlockEntity
             be?.dropCrank()
         }
-        super.onBreak(world, pos, state, player)
+        return super.onBreak(world, pos, state, player)
     }
 
     override fun onEntityCollision(state: BlockState, world: World, pos: BlockPos, entity: net.minecraft.entity.Entity) {

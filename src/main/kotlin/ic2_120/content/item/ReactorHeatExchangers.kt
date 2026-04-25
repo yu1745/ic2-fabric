@@ -13,10 +13,10 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditio
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 import kotlin.math.roundToInt
 
 /**
@@ -25,7 +25,7 @@ import kotlin.math.roundToInt
  * switchReactor: 每周期与反应堆的最大交换量
  */
 abstract class ReactorHeatExchangerBase(
-    settings: FabricItemSettings,
+    settings: Item.Settings,
     heatStorage: Int,
     private val switchSide: Int,
     private val switchReactor: Int
@@ -166,7 +166,7 @@ abstract class ReactorHeatExchangerBase(
 class HeatExchangerItem : ReactorHeatExchangerBase(Item.Settings(), 2500, 12, 4) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val copper = CopperPlate::class.instance()
             val tin = TinPlate::class.instance()
             val circuit = Circuit::class.instance()
@@ -185,7 +185,7 @@ class HeatExchangerItem : ReactorHeatExchangerBase(Item.Settings(), 2500, 12, 4)
 class ReactorHeatExchangerItem : ReactorHeatExchangerBase(Item.Settings(), 5000, 0, 72) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val plate = CopperPlate::class.instance()
             val base = HeatExchangerItem::class.instance()
             if (plate != Items.AIR && base != Items.AIR) {
@@ -203,7 +203,7 @@ class ReactorHeatExchangerItem : ReactorHeatExchangerBase(Item.Settings(), 5000,
 class ComponentHeatExchangerItem : ReactorHeatExchangerBase(Item.Settings(), 5000, 36, 0) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val gold = GoldPlate::class.instance()
             val base = HeatExchangerItem::class.instance()
             if (gold != Items.AIR && base != Items.AIR) {
@@ -221,7 +221,7 @@ class ComponentHeatExchangerItem : ReactorHeatExchangerBase(Item.Settings(), 500
 class AdvancedHeatExchangerItem : ReactorHeatExchangerBase(Item.Settings(), 10000, 24, 8) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val lapis = LapisPlate::class.instance()
             val copper = CopperPlate::class.instance()
             val circuit = Circuit::class.instance()

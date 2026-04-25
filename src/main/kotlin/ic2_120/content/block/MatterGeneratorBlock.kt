@@ -29,7 +29,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 @ModBlock(name = "matter_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "uu")
 class MatterGeneratorBlock : MachineBlock() {
@@ -77,7 +76,7 @@ class MatterGeneratorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val advancedCircuit = AdvancedCircuit::class.instance()
             val lapotronCrystal = LapotronCrystalItem::class.instance()

@@ -28,7 +28,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -78,7 +77,7 @@ class BlastFurnaceBlock : MachineBlock() {
          * 为 ClassScanner 生成配方
          */
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             BlastFurnaceRecipeDatagen.generateRecipes(exporter)
             val ironCasing = IronCasing::class.instance()
             val machineCasing = MachineCasingBlock::class.item()

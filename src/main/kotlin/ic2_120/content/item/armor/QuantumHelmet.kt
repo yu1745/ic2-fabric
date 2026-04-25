@@ -25,12 +25,12 @@ import net.minecraft.item.ArmorItem
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
-import java.util.function.Consumer
 import ic2_120.getOrCreateCustomData
 
 /**
@@ -78,7 +78,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val glass = ReinforcedGlassBlock::class.item()
             val nano = NanoHelmet::class.instance()
             val adv = AdvancedCircuit::class.instance()
@@ -104,7 +104,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
     }
 
-    override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
+    override fun inventoryTick(stack: ItemStack, world: net.minecraft.world.World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
         if (world.isClient) return
 
@@ -200,7 +200,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         return false
     }
 
-    private fun applyNightVisionEffect(player: PlayerEntity, world: World) {
+    private fun applyNightVisionEffect(player: PlayerEntity, world: net.minecraft.world.World) {
         val brightness = world.getLightLevel(player.blockPos)
         if (brightness >= 8) {
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)
@@ -211,8 +211,8 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+        super.appendTooltip(stack, context, tooltip, type)
         val nvEnabled = stack.getOrCreateCustomData().getBoolean(NIGHT_VISION_KEY)
         val energy = getEnergy(stack)
 

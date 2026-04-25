@@ -17,6 +17,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.Block
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ItemStack
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.item.Items
@@ -190,7 +191,7 @@ object WrenchHandler {
                             tool.setEnergy(stack, current - 1000)
                         }
                         stack.isDamageable -> {
-                            stack.damage(10, player) { it.sendToolBreakStatus(hand) }
+                            stack.damage(10, player, if (hand == Hand.MAIN_HAND) EquipmentSlot.MAINHAND else EquipmentSlot.OFFHAND)
                         }
                     }
                     world.playSound(null, pos, WRENCH_USE_SOUND, SoundCategory.BLOCKS, 1.0f, 1.0f)

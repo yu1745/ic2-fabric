@@ -28,7 +28,6 @@ import net.minecraft.item.Items
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.sound.SoundCategory
@@ -102,7 +101,7 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)) {
             if (v <= 0L) {
                 stack.getOrCreateCustomData().remove(NBT_FLUID_DROPLETS)
             } else {
-                stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putLong(NBT_FLUID_DROPLETS, v) }))
+                stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putLong(NBT_FLUID_DROPLETS, v) }))
             }
         }
 
@@ -209,7 +208,7 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)) {
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val iron = IronCasing::class.instance()
             val emptyCell = EmptyCell::class.instance()
             if (iron != Items.AIR && emptyCell != Items.AIR) {

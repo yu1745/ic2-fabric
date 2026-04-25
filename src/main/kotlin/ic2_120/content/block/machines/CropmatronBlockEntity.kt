@@ -51,6 +51,8 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.random.Random
 import net.minecraft.world.World
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = CropmatronBlock::class)
 class CropmatronBlockEntity(
@@ -62,7 +64,7 @@ class CropmatronBlockEntity(
     IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport,
-    ExtendedScreenHandlerFactory {
+    ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CropmatronBlock.ACTIVE
     override val tier: Int = CROPMATRON_TIER
@@ -176,9 +178,11 @@ class CropmatronBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.cropmatron")
@@ -194,7 +198,7 @@ class CropmatronBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CropmatronSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -209,7 +213,7 @@ class CropmatronBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CropmatronSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_WATER_MB, waterAmountMb)
@@ -432,7 +436,7 @@ class CropmatronBlockEntity(
                 setStack(slot, fertilizer)
                 return
             }
-            if (ItemStack.canCombine(stack, fertilizer) && stack.count < stack.maxCount) {
+            if (ItemStack.areItemsAndComponentsEqual(stack, fertilizer) && stack.count < stack.maxCount) {
                 stack.increment(1)
                 markDirty()
                 return
@@ -442,7 +446,7 @@ class CropmatronBlockEntity(
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
+        return current.isEmpty || (ItemStack.areItemsAndComponentsEqual(current, toInsert) && current.count < current.maxCount)
     }
 
     private fun extractFromDischargingSlot() {

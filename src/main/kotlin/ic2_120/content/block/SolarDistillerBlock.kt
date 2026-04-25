@@ -30,7 +30,6 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 @ModBlock(name = "solar_distiller", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "heat")
 class SolarDistillerBlock : MachineBlock() {
@@ -65,7 +64,7 @@ class SolarDistillerBlock : MachineBlock() {
         if (!world.isClient) {
             val storage = FluidStorage.SIDED.find(world, pos, hit.side)
                 ?: FluidStorage.SIDED.find(world, pos, null)
-            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
+            if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, net.minecraft.util.Hand.MAIN_HAND)) {
                 return ActionResult.SUCCESS
             }
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
@@ -79,7 +78,7 @@ class SolarDistillerBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val emptyCell = EmptyCell::class.instance()
             val casing = MachineCasingBlock::class.instance()
             if (emptyCell != Items.AIR && casing != Items.AIR) {

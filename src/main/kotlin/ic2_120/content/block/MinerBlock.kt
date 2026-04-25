@@ -17,7 +17,6 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -135,7 +134,7 @@ class MinerBlock : BaseMinerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             val miningPipe = MiningPipeBlock::class.item()
@@ -171,7 +170,7 @@ class AdvancedMinerBlock : BaseMinerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val alloy = Alloy::class.instance()
             val miner = MinerBlock::class.item()
             val teleporter = TeleporterBlock::class.item()

@@ -34,9 +34,9 @@ import net.minecraft.block.BlockState
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.nbt.NbtCompound
 
 import net.minecraft.recipe.RecipeManager
@@ -47,6 +47,8 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = BlockCutterBlock::class)
 @ModMachineRecipeBinding(BlockCutterRecipeSerializer::class)
@@ -55,7 +57,7 @@ class BlockCutterBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = BlockCutterBlock.ACTIVE
 
@@ -148,9 +150,11 @@ class BlockCutterBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.block_cutter")
@@ -160,7 +164,7 @@ class BlockCutterBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(BlockCutterSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -169,7 +173,7 @@ class BlockCutterBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(BlockCutterSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -197,16 +201,14 @@ class BlockCutterBlockEntity(
     private fun getRecipeForInput(input: ItemStack): BlockCutterRecipe? {
         if (input.isEmpty) return null
 
-        val inv = SimpleInventory(input)
         val recipeManager = world?.recipeManager ?: return null
 
         // 获取第一个匹配的配方（优先选择inputCount较大的配方）
-        val recipe = recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), inv, world ?: return null).orElse(null)
+        val recipe = recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), SingleStackRecipeInput(input), world ?: return null).map { it.value() }.orElse(null)
 
         // 对于木板，尝试获取匹配2个输入的配方（木棍配方）
         if (input.count >= 2) {
-            val inv2 = SimpleInventory(ItemStack(input.item, 2))
-            val recipe2 = recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), inv2, world ?: return null).orElse(null)
+            val recipe2 = recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), SingleStackRecipeInput(ItemStack(input.item, 2)), world ?: return null).map { it.value() }.orElse(null)
             if (recipe2 != null && recipe2.inputCount == 2) {
                 return recipe2
             }

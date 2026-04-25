@@ -87,7 +87,7 @@ object RubberTreeCommand {
             val nearest = result.trees.first()
             if (teleport) {
                 val tpPos = findSafeTeleportPos(world, nearest)
-                player.teleport(tpPos.x + 0.5, tpPos.y.toDouble(), tpPos.z + 0.5)
+                player.teleport(player.serverWorld, tpPos.x + 0.5, tpPos.y.toDouble(), tpPos.z + 0.5, player.yaw, player.pitch)
                 source.sendFeedback({
                     Text.literal("已传送到橡胶树位置 [${nearest.x}, ${nearest.y}, ${nearest.z}] (共 ${result.count} 棵, 耗时 ${elapsedMs}ms)")
                 }, true)

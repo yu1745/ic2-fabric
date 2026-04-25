@@ -1,17 +1,15 @@
 package ic2_120.content.recipes.centrifuge
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
 import ic2_120.content.item.*
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.registry.Registries
+import net.minecraft.recipe.Ingredient
 import net.minecraft.util.Identifier
-import java.util.function.Consumer
 
 /**
  * 热能离心机配方数据生成
@@ -274,56 +272,17 @@ object CentrifugeRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+    fun generateRecipes(exporter: RecipeExporter) {
         entries.forEach { entry ->
-            CentrifugeRecipeExporter(
-                recipeId = Identifier.of("ic2_120", "centrifuging/${entry.name}"),
-                inputItem = entry.input,
+            val id = Identifier.of("ic2_120", "centrifuging/${entry.name}")
+            val recipe = CentrifugeRecipe(
+                id = id,
+                ingredient = Ingredient.ofItems(entry.input),
                 inputCount = entry.inputCount,
                 minHeat = entry.minHeat,
-                outputs = entry.outputs
-            ).also(exporter::accept)
+                outputs = entry.outputs.map { ItemStack(it.item, it.count) }
+            )
+            exporter.accept(id, recipe, null)
         }
-    }
-
-    private class CentrifugeRecipeExporter(
-        private val recipeId: Identifier,
-        private val inputItem: Item,
-        private val inputCount: Int,
-        private val minHeat: Int,
-        private val outputs: List<OutputEntry>
-    ) : RecipeExporter {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(CentrifugeRecipe::class)}")
-
-            // 输入成分
-            val ingredient = JsonObject()
-            ingredient.addProperty("item", Registries.ITEM.getId(inputItem).toString())
-            json.add("ingredient", ingredient)
-
-            // 输入数量
-            json.addProperty("input_count", inputCount)
-
-            // 最低热量
-            json.addProperty("min_heat", minHeat)
-
-            // 输出数组
-            val resultsArray = JsonArray()
-            outputs.forEach { output ->
-                val resultObj = JsonObject()
-                resultObj.addProperty("item", Registries.ITEM.getId(output.item).toString())
-                resultObj.addProperty("count", output.count)
-                resultsArray.add(resultObj)
-            }
-            json.add("results", resultsArray)
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(CentrifugeRecipe::class)
-
-        override fun getRecipeId(): Identifier = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): Identifier? = null
     }
 }

@@ -3,9 +3,7 @@ package ic2_120.content.item
 import ic2_120.Ic2_120
 import ic2_120.content.fluid.ModFluids
 import ic2_120.registry.CreativeTab
-import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
-import ic2_120.registry.type
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -27,6 +25,7 @@ import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.Fluids
 import net.minecraft.item.FluidModificationItem
 import net.minecraft.item.Item
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.item.ItemStack
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.registry.Registries
@@ -47,12 +46,12 @@ import net.minecraft.world.event.GameEvent
 import net.minecraft.item.Items
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
-import net.minecraft.client.item.TooltipContext
 import net.minecraft.util.Formatting
+import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtOps
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -70,12 +69,12 @@ fun ItemStack.getFluidCellVariant(): FluidVariant? {
     val nbt = getCustomData() ?: return null
     val fluidTag = nbt.getCompound(FLUID_CELL_NBT_KEY)
     if (fluidTag.isEmpty) return null
-    return FluidVariant.fromNbt(fluidTag)
+    return FluidVariant.CODEC.decode(NbtOps.INSTANCE, fluidTag).result().map { it.first }.orElse(FluidVariant.blank())
 }
 
 /** 将 FluidVariant 写入 NBT */
 fun ItemStack.setFluidCellVariant(variant: FluidVariant) {
-    getOrCreateCustomData().put(FLUID_CELL_NBT_KEY, variant.toNbt())
+    getOrCreateCustomData().put(FLUID_CELL_NBT_KEY, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, variant).result().orElse(NbtCompound()))
 }
 
 /** 判断流体单元是否为空 */
@@ -140,7 +139,7 @@ internal fun bucketToFilledFluidCell(bucketStack: ItemStack): ItemStack? {
         Items.WATER_BUCKET -> Fluids.WATER
         Items.LAVA_BUCKET -> Fluids.LAVA
         else -> {
-            val ctx = ContainerItemContext.withInitial(bucketStack)
+            val ctx = ContainerItemContext.withConstant(bucketStack)
             val storage = ctx.find(FluidStorage.ITEM) ?: return null
             var found: Fluid? = null
             for (view in storage) {
@@ -210,7 +209,7 @@ class FluidCellItem : Item(Item.Settings()), FluidModificationItem {
 
         // FluidFillable：如炼药锅等可注入液体的方块
         if (block is FluidFillable) {
-            if (block.canFillWithFluid(world, pos, state, fluid)) {
+            if (block.canFillWithFluid(player, world, pos, state, fluid)) {
                 block.tryFillWithFluid(world, pos, state, fluid.defaultState)
                 fluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
                 world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos)
@@ -253,11 +252,11 @@ class FluidCellItem : Item(Item.Settings()), FluidModificationItem {
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         if (stack.isFluidCellEmpty()) {
             tooltip.add(Text.translatable("tooltip.ic2_120.fluid_cell.empty_hint").formatted(Formatting.GRAY))
         }
@@ -273,7 +272,7 @@ private fun cellItem(id: String): Item = Registries.ITEM.get(Identifier.of(Ic2_1
  * 空单元：通过 Fabric FluidStorage 与世界/方块流体交互（收集与转移）。
  * 使用 use() + RaycastContext.FluidHandling.ANY 射线检测，才能命中流体方块（默认射线会穿透水/岩浆）。
  */
-abstract class EmptyCellItem(settings: FabricItemSettings) : Item(settings) {
+abstract class EmptyCellItem(settings: Item.Settings) : Item(settings) {
 
     private fun interactAt(world: World, user: net.minecraft.entity.player.PlayerEntity, hand: Hand, hit: BlockHitResult): Boolean {
         val sided = FluidStorage.SIDED.find(world, hit.blockPos, hit.side) ?: return false
@@ -308,7 +307,7 @@ abstract class EmptyCellItem(settings: FabricItemSettings) : Item(settings) {
         val filled = fluidToFilledCellStack(fluid)
 
         if (state.block is FluidDrainable) {
-            val drained = (state.block as FluidDrainable).tryDrainFluid(world, sourcePos, state)
+            val drained = (state.block as FluidDrainable).tryDrainFluid(user, world, sourcePos, state)
             if (drained.isEmpty) return false
         } else {
             if (!world.setBlockState(sourcePos, net.minecraft.block.Blocks.AIR.defaultState)) return false
@@ -379,7 +378,7 @@ abstract class EmptyCellItem(settings: FabricItemSettings) : Item(settings) {
  *
  * 子类只需实现 getFluid() 方法，其他功能（右键放置、与储罐交互）由基类提供。
  */
-abstract class ModFluidCell(settings: FabricItemSettings) : Item(settings), FluidModificationItem {
+abstract class ModFluidCell(settings: Item.Settings) : Item(settings), FluidModificationItem {
 
     /** 子类实现：返回对应的流体 */
     abstract fun getFluid(): Fluid
@@ -429,7 +428,7 @@ abstract class ModFluidCell(settings: FabricItemSettings) : Item(settings), Flui
 
         // FluidFillable：如炼药锅等可注入液体的方块
         if (block is FluidFillable) {
-            if (block.canFillWithFluid(world, pos, state, fluid)) {
+            if (block.canFillWithFluid(player, world, pos, state, fluid)) {
                 block.tryFillWithFluid(world, pos, state, fluid.defaultState)
                 fluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
                 world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos)
@@ -467,7 +466,7 @@ abstract class ModFluidCell(settings: FabricItemSettings) : Item(settings), Flui
 class EmptyCell : EmptyCellItem(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val tin = TinCasing::class.instance()
             if (tin != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EmptyCell::class.instance(), 1)
@@ -530,8 +529,8 @@ class DistilledWaterCell : ModFluidCell(Item.Settings()) {
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+        super.appendTooltip(stack, context, tooltip, type)
         tooltip.add(Text.translatable("tooltip.ic2_120.distilled_water_places_water").formatted(Formatting.GRAY))
     }
 }
@@ -615,7 +614,7 @@ class BioCell : Item(Item.Settings())
 class CfPowder : Item(Item.Settings()){
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 合成配方：6×石粉 + 2×沙子 + 1×黏土球 → 1×建筑泡沫粉（cf_powder），与 IC2 经典摆法一致
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CfPowder::class.instance(), 1)
                 .pattern("dsd")
@@ -710,7 +709,7 @@ private class FluidCellStorage(private val ctx: ContainerItemContext) : Storage<
         val current = ctx.itemVariant
         if (current.item != fluidCell) return 0
 
-        val stored = current.components?.get(DataComponentTypes.CUSTOM_DATA)?.copyNbt()?.getCompound(FLUID_CELL_NBT_KEY)?.let { FluidVariant.fromNbt(it) } ?: return 0
+        val stored = (current.components?.get(DataComponentTypes.CUSTOM_DATA) as? NbtComponent)?.copyNbt()?.getCompound(FLUID_CELL_NBT_KEY)?.let { FluidVariant.CODEC.decode(NbtOps.INSTANCE, it).result().map { p -> p.first }.orElse(FluidVariant.blank()) } ?: return 0
         if (!resource.equals(stored)) return 0
 
         val emptyStack = ItemStack(emptyCell)
@@ -722,15 +721,15 @@ private class FluidCellStorage(private val ctx: ContainerItemContext) : Storage<
     override fun iterator(): MutableIterator<StorageView<FluidVariant>> {
         val current = ctx.itemVariant
         if (current.item != fluidCell) return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
-        val stored = current.components?.get(DataComponentTypes.CUSTOM_DATA)?.copyNbt()?.getCompound(FLUID_CELL_NBT_KEY)?.let { FluidVariant.fromNbt(it) } ?: return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
-        if (stored.isBlank) return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
+        val stored = (current.components?.get(DataComponentTypes.CUSTOM_DATA) as? NbtComponent)?.copyNbt()?.getCompound(FLUID_CELL_NBT_KEY)?.let { FluidVariant.CODEC.decode(NbtOps.INSTANCE, it).result().map { p -> p.first }.orElse(FluidVariant.blank()) } ?: return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
+        if (stored.isBlank()) return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
         return mutableListOf(object : StorageView<FluidVariant> {
             override fun getResource(): FluidVariant = stored
             override fun getAmount(): Long = FluidConstants.BUCKET
             override fun getCapacity(): Long = FluidConstants.BUCKET
             override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long =
                 this@FluidCellStorage.extract(resource, maxAmount, transaction)
-            override fun isResourceBlank(): Boolean = stored.isBlank
+            override fun isResourceBlank(): Boolean = stored.isBlank()
         }).iterator() as MutableIterator<StorageView<FluidVariant>>
     }
 }

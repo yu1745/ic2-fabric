@@ -49,6 +49,7 @@ import net.minecraft.item.BucketItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtOps
 
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryWrapper
@@ -64,6 +65,8 @@ import ic2_120.Ic2_120
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.ModFluidCell
 import ic2_120.content.item.fluidToFilledCellStack
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 流体装罐机方块实体。
@@ -76,7 +79,7 @@ class FluidBottlerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = FluidBottlerBlock.ACTIVE
 
@@ -192,9 +195,11 @@ class FluidBottlerBlockEntity(
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.fluid_bottler")
@@ -204,26 +209,26 @@ class FluidBottlerBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(FluidBottlerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, TANK_CAPACITY)
         val fluidTag = nbt.getCompound(NBT_FLUID_VARIANT)
-        tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(fluidTag)
+        tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, fluidTag).result().map { it.first }.orElse(FluidVariant.blank())
         sync.fluidAmountMb = (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
         sync.fluidCapacityMb = (TANK_CAPACITY * 1000L / FluidConstants.BUCKET).toInt()
     }
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(FluidBottlerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_FLUID_AMOUNT, tankInternal.amount)
         if (!tankInternal.variant.isBlank) {
-            nbt.put(NBT_FLUID_VARIANT, tankInternal.variant.toNbt())
+            nbt.put(NBT_FLUID_VARIANT, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, tankInternal.variant).result().orElse(NbtCompound()))
         }
     }
 
@@ -418,7 +423,7 @@ class FluidBottlerBlockEntity(
 
     private fun canAcceptOutput(outputSlot: ItemStack, result: ItemStack): Boolean {
         if (outputSlot.isEmpty) return true
-        return ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= result.maxCount
+        return ItemStack.areItemsAndComponentsEqual(outputSlot, result) && outputSlot.count + result.count <= result.maxCount
     }
 
     private fun completeCurrentOperation(wasFill: Boolean, wasPrimarySlot: Boolean) {
@@ -429,7 +434,7 @@ class FluidBottlerBlockEntity(
             val emptyResult = getEmptyContainerFor(filled) ?: return
 
             Transaction.openOuter().use { tx ->
-                val ctx = ContainerItemContext.withInitial(filled)
+                val ctx = ContainerItemContext.withConstant(filled)
                 val itemStorage = ctx.find(FluidStorage.ITEM) ?: return@use
                 for (view in itemStorage) {
                     if (view.amount >= FluidConstants.BUCKET && !view.resource.isBlank) {
@@ -500,7 +505,7 @@ class FluidBottlerBlockEntity(
                     val filledResult = getFilledContainerFor(inputSlot, fluid) ?: return
 
             Transaction.openOuter().use { tx ->
-                val ctx = ContainerItemContext.withInitial(inputSlot)
+                val ctx = ContainerItemContext.withConstant(inputSlot)
                 val itemStorage = ctx.find(FluidStorage.ITEM) ?: return@use
                 val inserted = itemStorage.insert(variant, FluidConstants.BUCKET, tx)
                 if (inserted == FluidConstants.BUCKET) {

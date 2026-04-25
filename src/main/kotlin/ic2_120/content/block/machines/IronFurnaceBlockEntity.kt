@@ -18,8 +18,8 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.nbt.NbtCompound
 
 import net.minecraft.recipe.RecipeType
@@ -31,6 +31,8 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 铁炉方块实体。
@@ -46,7 +48,7 @@ class IronFurnaceBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     private val activeProperty: net.minecraft.state.property.BooleanProperty = IronFurnaceBlock.ACTIVE
 
@@ -110,9 +112,11 @@ class IronFurnaceBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = canPlaceInSlot(slot, stack)
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text =
@@ -123,7 +127,7 @@ class IronFurnaceBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.burnTime = nbt.getInt(IronFurnaceSync.NBT_BURN_TIME)
         sync.totalBurnTime = nbt.getInt(IronFurnaceSync.NBT_TOTAL_BURN_TIME)
@@ -133,7 +137,7 @@ class IronFurnaceBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putInt(IronFurnaceSync.NBT_BURN_TIME, sync.burnTime)
         nbt.putInt(IronFurnaceSync.NBT_TOTAL_BURN_TIME, sync.totalBurnTime)
@@ -150,16 +154,14 @@ class IronFurnaceBlockEntity(
 
         // 检查是否有有效的烧制配方
         val hasRecipe = if (!inputItem.isEmpty) {
-            val inputInv = SimpleInventory(1).apply { setStack(0, inputItem) }
-            val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, inputInv, world)
+            val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(inputItem), world)
             !match.isEmpty
         } else false
 
         // 检查输出槽是否可以接收物品
         val canAcceptOutput = if (hasRecipe) {
-            val inputInv = SimpleInventory(1).apply { setStack(0, inputItem) }
-            val recipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, inputInv, world).get()
-            val result = recipe.getOutput(world.registryManager)
+            val recipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(inputItem), world).get().value()
+            val result = recipe.getResult(world.registryManager)
             outputItem.isEmpty ||
                 (ItemStack.areItemsEqual(outputItem, result) &&
                  outputItem.count + result.count <= result.maxCount)
@@ -188,9 +190,8 @@ class IronFurnaceBlockEntity(
 
             // 烧制完成
             if (sync.cookTime >= IronFurnaceSync.COOK_TIME_MAX) {
-                val inputInv = SimpleInventory(1).apply { setStack(0, inputItem) }
-                val recipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, inputInv, world).get()
-                val result = recipe.getOutput(world.registryManager).copy()
+                val recipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(inputItem), world).get().value()
+                val result = recipe.getResult(world.registryManager).copy()
 
                 inputItem.decrement(1)
                 if (outputItem.isEmpty) {
@@ -255,8 +256,7 @@ class IronFurnaceBlockEntity(
                 // 输入槽：检查是否有烧制配方
                 val world = this.world
                 if (world != null && !world.isClient) {
-                    val inputInv = SimpleInventory(1).apply { setStack(0, stack) }
-                    val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, inputInv, world)
+                    val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(stack), world)
                     match.isPresent
                 } else {
                     true  // 客户端或无世界时允许，由服务器端验证
@@ -274,8 +274,7 @@ class IronFurnaceBlockEntity(
     private fun isSmeltingInput(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         val w = world ?: return true
-        val inv = SimpleInventory(stack.copyWithCount(1))
-        return w.recipeManager.getFirstMatch(RecipeType.SMELTING, inv, w).isPresent
+        return w.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(stack.copyWithCount(1)), w).isPresent
     }
 
     fun dropStoredExperience() {

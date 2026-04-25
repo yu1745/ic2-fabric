@@ -3,6 +3,8 @@ package ic2_120.content.item.armor
 import ic2_120.content.item.ModArmorMaterials
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ArmorMaterial
+import net.minecraft.item.Item
+import net.minecraft.registry.entry.RegistryEntry
 
 /**
  * 纳米护甲基类
@@ -33,9 +35,9 @@ import net.minecraft.item.ArmorMaterial
  * - 光线 >= 8 时移除夜视并添加致盲
  */
 abstract class NanoArmorItem(
-    material: ArmorMaterial,
+    material: RegistryEntry<ArmorMaterial>,
     type: Type,
-    settings: FabricItemSettings
+    settings: Item.Settings
 ) : ElectricArmorItem(material, type, settings) {
 
     override val tier: Int = 3

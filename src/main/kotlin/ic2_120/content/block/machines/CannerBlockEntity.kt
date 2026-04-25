@@ -53,11 +53,12 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluids
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.BucketItem
+import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtOps
 
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryWrapper
@@ -69,6 +70,8 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 流体/固体装罐机方块实体。
@@ -88,7 +91,7 @@ class CannerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CannerBlock.ACTIVE
 
@@ -258,9 +261,11 @@ class CannerBlockEntity(
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.canner")
@@ -270,17 +275,17 @@ class CannerBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CannerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         leftTankInternal.amount = nbt.getLong(NBT_LEFT_FLUID_AMOUNT).coerceIn(0L, TANK_CAPACITY)
         val leftFluidTag = nbt.getCompound(NBT_LEFT_FLUID_VARIANT)
-        leftTankInternal.variant = if (leftFluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(leftFluidTag)
+        leftTankInternal.variant = if (leftFluidTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, leftFluidTag).result().map { it.first }.orElse(FluidVariant.blank())
         rightTankInternal.amount = nbt.getLong(NBT_RIGHT_FLUID_AMOUNT).coerceIn(0L, TANK_CAPACITY)
         val rightFluidTag = nbt.getCompound(NBT_RIGHT_FLUID_VARIANT)
-        rightTankInternal.variant = if (rightFluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(rightFluidTag)
+        rightTankInternal.variant = if (rightFluidTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, rightFluidTag).result().map { it.first }.orElse(FluidVariant.blank())
         sync.leftFluidAmountMb = (leftTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
         sync.leftFluidCapacityMb = (TANK_CAPACITY * 1000L / FluidConstants.BUCKET).toInt()
         sync.rightFluidAmountMb = (rightTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
@@ -289,13 +294,13 @@ class CannerBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_LEFT_FLUID_AMOUNT, leftTankInternal.amount)
-        if (!leftTankInternal.variant.isBlank) nbt.put(NBT_LEFT_FLUID_VARIANT, leftTankInternal.variant.toNbt())
+        if (!leftTankInternal.variant.isBlank) nbt.put(NBT_LEFT_FLUID_VARIANT, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, leftTankInternal.variant).result().orElse(NbtCompound()))
         nbt.putLong(NBT_RIGHT_FLUID_AMOUNT, rightTankInternal.amount)
-        if (!rightTankInternal.variant.isBlank) nbt.put(NBT_RIGHT_FLUID_VARIANT, rightTankInternal.variant.toNbt())
+        if (!rightTankInternal.variant.isBlank) nbt.put(NBT_RIGHT_FLUID_VARIANT, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, rightTankInternal.variant).result().orElse(NbtCompound()))
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
@@ -397,10 +402,9 @@ class CannerBlockEntity(
         if (container.isEmpty || material.isEmpty) return false
         if (container.item != tinCanItem && container.item !is EmptyFuelRodItem) return false
         val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class) ?: return false
-        val recipeInventory = SimpleInventory(container.copyWithCount(1), material.copyWithCount(1))
-        val match = world?.recipeManager?.getFirstMatch(recipeType, recipeInventory, world) ?: return false
+        val match = world?.recipeManager?.getFirstMatch(recipeType, SingleStackRecipeInput(container.copyWithCount(1)), world) ?: return false
         if (match.isEmpty) return false
-        val recipe = match.get()
+        val recipe = match.get().value()
         if (container.count < recipe.slot0Count || material.count < recipe.slot1Count) return false
         if (!canAcceptOutput(outputSlot, recipe.output.copy())) return false
         return true
@@ -549,10 +553,9 @@ class CannerBlockEntity(
         val material = getStack(SLOT_MATERIAL)
         val outputSlot = getStack(SLOT_OUTPUT)
         val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class) ?: return
-        val recipeInventory = SimpleInventory(container.copyWithCount(1), material.copyWithCount(1))
-        val match = world?.recipeManager?.getFirstMatch(recipeType, recipeInventory, world) ?: return
+        val match = world?.recipeManager?.getFirstMatch(recipeType, SingleStackRecipeInput(container.copyWithCount(1)), world) ?: return
         if (match.isEmpty) return
-        val recipe = match.get()
+        val recipe = match.get().value()
         container.decrement(recipe.slot0Count)
         material.decrement(recipe.slot1Count)
         if (container.isEmpty) setStack(SLOT_CONTAINER, ItemStack.EMPTY)

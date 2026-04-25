@@ -1,14 +1,12 @@
 package ic2_120.content.recipes.orewashing
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
-import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.recipe.Ingredient
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import java.util.function.Consumer
 
 /**
  * 洗矿机配方数据生成
@@ -119,51 +117,16 @@ object OreWashingRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+    fun generateRecipes(exporter: RecipeExporter) {
         entries.forEach { entry ->
-            OreWashingRecipeExporter(
-                recipeId = Identifier.of("ic2_120", "ore_washing/${entry.name}"),
-                inputItem = entry.input,
-                outputs = entry.outputs,
+            val id = Identifier.of("ic2_120", "ore_washing/${entry.name}")
+            val recipe = OreWashingRecipe(
+                id = id,
+                ingredient = Ingredient.ofItems(entry.input),
+                outputItems = entry.outputs.map { ItemStack(it.item, it.count) },
                 waterConsumptionMb = entry.waterConsumptionMb
-            ).also(exporter::accept)
+            )
+            exporter.accept(id, recipe, null)
         }
-    }
-
-    private class OreWashingRecipeExporter(
-        private val recipeId: Identifier,
-        private val inputItem: Item,
-        private val outputs: List<OutputItem>,
-        private val waterConsumptionMb: Long
-    ) : RecipeExporter {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(OreWashingRecipe::class)}")
-
-            // 输入成分
-            val ingredient = JsonObject()
-            ingredient.addProperty("item", Registries.ITEM.getId(inputItem).toString())
-            json.add("ingredient", ingredient)
-
-            // 输出数组
-            val outputsArray = JsonArray()
-            outputs.forEach { output ->
-                val outputObj = JsonObject()
-                outputObj.addProperty("item", Registries.ITEM.getId(output.item).toString())
-                outputObj.addProperty("count", output.count)
-                outputsArray.add(outputObj)
-            }
-            json.add("outputs", outputsArray)
-
-            // 水消耗
-            json.addProperty("water_consumption_mb", waterConsumptionMb)
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(OreWashingRecipe::class)
-
-        override fun getRecipeId(): Identifier = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): Identifier? = null
     }
 }

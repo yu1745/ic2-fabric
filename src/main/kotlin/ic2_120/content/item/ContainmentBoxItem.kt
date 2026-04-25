@@ -26,9 +26,10 @@ import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.world.World
-import java.util.function.Consumer
 import ic2_120.getCustomData
 import ic2_120.getOrCreateCustomData
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 防辐射容纳盒：12 格物品栏，数据存于物品 NBT；禁止再放入容纳盒避免嵌套。
@@ -41,14 +42,13 @@ class ContainmentBoxItem : Item(Item.Settings().maxCount(1)) {
         if (world.isClient) return TypedActionResult.success(stack)
         if (stack.isEmpty || stack.item !is ContainmentBoxItem) return TypedActionResult.pass(stack)
 
-        player.openHandledScreen(object : ExtendedScreenHandlerFactory {
+        player.openHandledScreen(object : ExtendedScreenHandlerFactory<PacketByteBuf> {
             override fun getDisplayName(): Text = Text.translatable("item.ic2_120.containment_box")
 
-            override fun writeScreenOpeningData(
-                serverPlayer: net.minecraft.server.network.ServerPlayerEntity,
-                buf: PacketByteBuf
-            ) {
+            override fun getScreenOpeningData(serverPlayer: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+                val buf = PacketByteBuf(Unpooled.buffer())
                 buf.writeEnumConstant(hand)
+                return buf
             }
 
             override fun createMenu(
@@ -65,7 +65,7 @@ class ContainmentBoxItem : Item(Item.Settings().maxCount(1)) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val chest = Items.CHEST
             val leadCasing = LeadCasing::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ContainmentBoxItem::class.instance(), 1)
@@ -114,7 +114,7 @@ class ContainmentBoxInventory(
         if (!root.contains(NBT_KEY)) return
         val tag = root.getCompound(NBT_KEY)
         val list = DefaultedList.ofSize(SIZE, ItemStack.EMPTY)
-        Inventories.readNbt(tag, list)
+        Inventories.readNbt(tag, list, player.world.registryManager)
         for (i in 0 until SIZE) setStack(i, list[i])
     }
 
@@ -125,7 +125,7 @@ class ContainmentBoxInventory(
         val tag = NbtCompound()
         val list = DefaultedList.ofSize(SIZE, ItemStack.EMPTY)
         for (i in 0 until SIZE) list[i] = getStack(i).copy()
-        Inventories.writeNbt(tag, list)
+        Inventories.writeNbt(tag, list, player.world.registryManager)
         nbt.put(NBT_KEY, tag)
     }
 

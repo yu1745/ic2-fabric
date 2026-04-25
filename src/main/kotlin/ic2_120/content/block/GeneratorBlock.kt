@@ -29,7 +29,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 /**
  * 火力发电机方块。燃烧燃料产生 EU，支持 facing 与 active 状态。
@@ -73,7 +72,7 @@ class GeneratorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val battery = ReBatteryItem::class.instance()
             val ironPlate = IronPlate::class.instance()
             val ironFurnace = IronFurnaceBlock::class.item()

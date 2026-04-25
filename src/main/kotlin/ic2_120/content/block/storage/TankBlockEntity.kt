@@ -15,6 +15,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtOps
 import net.minecraft.util.math.BlockPos
 import net.minecraft.registry.RegistryWrapper
 
@@ -140,7 +141,7 @@ class TankBlockEntity(
         super.writeNbt(nbt, lookup)
         nbt.putLong(NBT_FLUID_AMOUNT, tankInternal.amount)
         if (!tankInternal.variant.isBlank) {
-            nbt.put(NBT_FLUID_VARIANT, tankInternal.variant.toNbt())
+            nbt.put(NBT_FLUID_VARIANT, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, tankInternal.variant).result().orElse(NbtCompound()))
         }
     }
 
@@ -148,6 +149,6 @@ class TankBlockEntity(
         super.readNbt(nbt, lookup)
         tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, getCapacity())
         val fluidTag = nbt.getCompound(NBT_FLUID_VARIANT)
-        tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(fluidTag)
+        tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, fluidTag).result().map { it.first }.orElse(FluidVariant.blank())
     }
 }

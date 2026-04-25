@@ -1,5 +1,6 @@
 package ic2_120.content.block.cables
 
+import com.mojang.serialization.MapCodec
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.energy.EnergyNetworkManager
 import net.minecraft.block.AbstractBlock
@@ -42,6 +43,8 @@ import team.reborn.energy.api.EnergyStorage
 abstract class BaseCableBlock(settings: AbstractBlock.Settings = defaultSettings()) :
     BlockWithEntity(settings),
     Waterloggable {
+
+    override fun getCodec(): MapCodec<out BlockWithEntity> = CABLE_CODEC
 
     // ── BlockState 属性 ─────────────────────────────────────────
 
@@ -89,7 +92,7 @@ abstract class BaseCableBlock(settings: AbstractBlock.Settings = defaultSettings
         if (state.get(Properties.WATERLOGGED)) Fluids.WATER.getStill(false) else Fluids.EMPTY.getDefaultState()
 
     // 流动水通过 FluidFillable.tryFillWithFluid 含水；需显式实现（与栅栏等原版方块一致）。
-    override fun canFillWithFluid(world: BlockView, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
+    override fun canFillWithFluid(player: net.minecraft.entity.player.PlayerEntity?, world: BlockView, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
         !state.get(Properties.WATERLOGGED) && fluid == Fluids.WATER
 
     override fun tryFillWithFluid(
@@ -98,7 +101,7 @@ abstract class BaseCableBlock(settings: AbstractBlock.Settings = defaultSettings
         state: BlockState,
         fluidState: FluidState
     ): Boolean {
-        if (!canFillWithFluid(world, pos, state, fluidState.fluid)) return false
+        if (!canFillWithFluid(null, world, pos, state, fluidState.fluid)) return false
         if (!state.get(Properties.WATERLOGGED)) {
             world.setBlockState(pos, state.with(Properties.WATERLOGGED, true), Block.NOTIFY_ALL)
             world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
@@ -106,7 +109,7 @@ abstract class BaseCableBlock(settings: AbstractBlock.Settings = defaultSettings
         return true
     }
 
-    override fun tryDrainFluid(world: WorldAccess, pos: BlockPos, state: BlockState): ItemStack =
+    override fun tryDrainFluid(player: net.minecraft.entity.player.PlayerEntity?, world: WorldAccess, pos: BlockPos, state: BlockState): ItemStack =
         ItemStack.EMPTY
 
     private fun canConnect(world: WorldAccess, pos: BlockPos, direction: Direction): Boolean {
@@ -149,7 +152,7 @@ abstract class BaseCableBlock(settings: AbstractBlock.Settings = defaultSettings
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, CableBlockEntity.TYPE) { w, p, s, be -> be.tick(w, p, s) }
+        else validateTicker(type, CableBlockEntity.TYPE) { w, p, s, be -> be.tick(w, p, s) }
 
     // ── 导线能量参数（子类覆写） ────────────────────────────────
 
@@ -214,6 +217,8 @@ abstract class BaseCableBlock(settings: AbstractBlock.Settings = defaultSettings
     protected open fun getCableMax(): Double = DEFAULT_CABLE_MAX
 
     companion object {
+        val CABLE_CODEC: MapCodec<BaseCableBlock> = Block.createCodec { error("BaseCableBlock cannot be deserialized from JSON") }
+
         val NORTH: BooleanProperty = Properties.NORTH
         val SOUTH: BooleanProperty = Properties.SOUTH
         val EAST: BooleanProperty = Properties.EAST

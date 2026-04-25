@@ -22,8 +22,8 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.nbt.NbtCompound
 
 import net.minecraft.recipe.RecipeType
@@ -34,6 +34,8 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 感应炉方块实体。支持双槽同时烧制，热量机制控制加工速度。
@@ -50,7 +52,7 @@ class InductionFurnaceBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = InductionFurnaceBlock.ACTIVE
 
@@ -136,9 +138,11 @@ class InductionFurnaceBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.induction_furnace")
@@ -154,7 +158,7 @@ class InductionFurnaceBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(InductionFurnaceSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -163,7 +167,7 @@ class InductionFurnaceBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(InductionFurnaceSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -313,10 +317,9 @@ class InductionFurnaceBlockEntity(
 
     private fun findSmeltingRecipe(world: World, input: ItemStack): ItemStack? {
         if (input.isEmpty) return null
-        val inv = SimpleInventory(1).apply { setStack(0, input) }
-        val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, inv, world)
+        val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(input), world)
         return if (match.isPresent) {
-            match.get().getOutput(world.registryManager).copy()
+            match.get().value().getResult(world.registryManager).copy()
         } else null
     }
 
@@ -347,8 +350,7 @@ class InductionFurnaceBlockEntity(
     private fun isSmeltingInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || isBatteryItem(stack)) return false
         val w = world ?: return true
-        val inv = SimpleInventory(stack.copyWithCount(1))
-        return w.recipeManager.getFirstMatch(RecipeType.SMELTING, inv, w).isPresent
+        return w.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(stack.copyWithCount(1)), w).isPresent
     }
 }
 

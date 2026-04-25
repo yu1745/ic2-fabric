@@ -6,6 +6,7 @@ import ic2_120.content.block.RubberLogBlock
 import ic2_120.content.block.RubberLogBlockEntity
 import ic2_120.content.item.energy.IElectricTool
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
@@ -105,7 +106,7 @@ object RubberTreetapHandler {
                     tool.setEnergy(stack, tool.getEnergy(stack) - EU_PER_USE)
                 }
                 isTreetap(stack) -> {
-                    stack.damage(1, player) { it.sendToolBreakStatus(hand) }
+                    stack.damage(1, player, if (hand == Hand.MAIN_HAND) EquipmentSlot.MAINHAND else EquipmentSlot.OFFHAND)
                 }
             }
 

@@ -30,7 +30,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 @ModBlock(name = "uu_scanner", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "uu")
 class UuScannerBlock : MachineBlock() {
@@ -76,7 +75,7 @@ class UuScannerBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val advancedCircuit = AdvancedCircuit::class.instance()
             val electricMotor = ElectricMotor::class.instance()

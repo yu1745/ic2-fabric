@@ -4,8 +4,9 @@ import ic2_120.content.item.NightVisionGoggles
 import ic2_120.content.item.armor.NanoHelmet
 import ic2_120.content.item.armor.QuantumChestplate
 import ic2_120.content.item.armor.QuantumHelmet
-import ic2_120.content.network.NetworkManager
-import io.netty.buffer.Unpooled
+import ic2_120.content.network.ToggleNightVisionGogglesPayload
+import ic2_120.content.network.ToggleNanoVisionPayload
+import ic2_120.content.network.ToggleQuantumFlightPayload
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
@@ -14,7 +15,6 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
 import net.minecraft.entity.EquipmentSlot
-import net.minecraft.network.PacketByteBuf
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -55,19 +55,13 @@ object ArmorKeybinds {
                 // 优先级 1：头盔 → 夜视眼镜
                 val helmet = player.getEquippedStack(EquipmentSlot.HEAD)
                 if (helmet.item is NightVisionGoggles) {
-                    ClientPlayNetworking.send(
-                        NetworkManager.TOGGLE_NIGHT_VISION_GOGGLES_PACKET,
-                        PacketByteBuf(Unpooled.buffer())
-                    )
+                    ClientPlayNetworking.send(ToggleNightVisionGogglesPayload)
                     return@register
                 }
 
                 // 优先级 2：头盔 → 纳米/量子头盔夜视
                 if (helmet.item is NanoHelmet || helmet.item is QuantumHelmet) {
-                    ClientPlayNetworking.send(
-                        NetworkManager.TOGGLE_NANO_VISION_PACKET,
-                        PacketByteBuf(Unpooled.buffer())
-                    )
+                    ClientPlayNetworking.send(ToggleNanoVisionPayload)
                 }
             }
 
@@ -76,10 +70,7 @@ object ArmorKeybinds {
 
                 val chest = player.getEquippedStack(EquipmentSlot.CHEST)
                 if (chest.item is QuantumChestplate) {
-                    ClientPlayNetworking.send(
-                        NetworkManager.TOGGLE_QUANTUM_FLIGHT_PACKET,
-                        PacketByteBuf(Unpooled.buffer())
-                    )
+                    ClientPlayNetworking.send(ToggleQuantumFlightPayload)
                 }
             }
         }

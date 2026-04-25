@@ -15,6 +15,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.item.tooltip.TooltipType
 
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.text.Text
@@ -23,6 +24,8 @@ import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.getOrCreateCustomData
+import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.network.PacketByteBuf
 
 /**
  * 扫描仪类型：OD（矿石密度）与 OV（矿石价值）。
@@ -69,11 +72,11 @@ class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
         val uses = getUsesRemaining(stack)
         tooltip.add(Text.literal("剩余使用次数: $uses").formatted(net.minecraft.util.Formatting.GRAY))
@@ -87,8 +90,8 @@ class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
     /**
      * 右键：打开扫描仪 GUI。
      */
-    override fun use(world: World, player: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
-        return openScannerScreen(world, player, hand)
+    override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
+        return openScannerScreen(world, user, hand)
     }
 
     companion object {
@@ -101,15 +104,17 @@ class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
             val stack = player.getStackInHand(hand)
             if (world.isClient) return TypedActionResult.pass(stack)
 
-            player.openHandledScreen(object : ExtendedScreenHandlerFactory {
+            player.openHandledScreen(object : ExtendedScreenHandlerFactory<PacketByteBuf> {
                 override fun getDisplayName(): Text = Text.translatable("item.ic2_120.scanner")
-                override fun writeScreenOpeningData(serverPlayer: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+                override fun getScreenOpeningData(serverPlayer: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+                    val buf = PacketByteBuf(Unpooled.buffer())
                     val s = serverPlayer.getStackInHand(hand)
                     val t = getScannerType(s)
                     buf.writeInt(IElectricTool.getEnergy(s).toInt().coerceAtMost(Int.MAX_VALUE))
                     buf.writeInt(t.energyCapacity.toInt().coerceAtMost(Int.MAX_VALUE))
                     buf.writeVarInt(getUsesRemaining(s))
                     buf.writeVarInt(t.maxUses)
+                    return buf
                 }
                 override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): net.minecraft.screen.ScreenHandler {
                     val s = player.getStackInHand(hand)
@@ -144,7 +149,7 @@ class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
         }
 
         fun setUsesRemaining(stack: ItemStack, uses: Int) {
-            stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putInt(NBT_USES, uses) }))
+            stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putInt(NBT_USES, uses) }))
         }
 
         /**
@@ -155,7 +160,7 @@ class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
          * [绝缘铜质导线] [绝缘铜质导线] [绝缘铜质导线]
          */
         @RecipeProvider
-        fun generateRecipes(exporter: java.util.function.Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val circuit = ic2_120.content.item.AdvancedCircuit::class.instance()
             val battery = ic2_120.content.item.energy.ReBatteryItem::class.instance()
             val insulatedCopper = ic2_120.content.block.cables.InsulatedCopperCableBlock::class.item()
@@ -196,11 +201,11 @@ class AdvancedScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
         val uses = OdScannerItem.getUsesRemaining(stack)
         tooltip.add(Text.literal("剩余使用次数: $uses").formatted(net.minecraft.util.Formatting.GRAY))
@@ -216,8 +221,8 @@ class AdvancedScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
      * 右键：打开扫描仪 GUI。
      * 与 OD 扫描仪共用同一套逻辑（通过 getScannerType 区分类型）。
      */
-    override fun use(world: World, player: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
-        return OdScannerItem.openScannerScreen(world, player, hand)
+    override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
+        return OdScannerItem.openScannerScreen(world, user, hand)
     }
 
     companion object {
@@ -229,7 +234,7 @@ class AdvancedScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
          * [2x绝缘金质导线] [OD扫描器] [2x绝缘金质导线]
          */
         @RecipeProvider
-        fun generateRecipes(exporter: java.util.function.Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val goldCasing = ic2_120.content.item.GoldCasing::class.instance()
             val energyCrystal = ic2_120.content.item.energy.EnergyCrystalItem::class.instance()
             val glowstone = net.minecraft.item.Items.GLOWSTONE_DUST

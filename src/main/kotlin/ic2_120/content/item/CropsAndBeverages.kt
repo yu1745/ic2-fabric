@@ -13,7 +13,6 @@ import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 
 // ========== 植物种子类 ==========
 
@@ -21,7 +20,7 @@ import java.util.function.Consumer
 class Fertilizer : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             // 两个废料 + 一个骨粉 -> 两个肥料
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, Fertilizer::class.instance(), 2)
                 .input(Scrap::class.instance(), 2)

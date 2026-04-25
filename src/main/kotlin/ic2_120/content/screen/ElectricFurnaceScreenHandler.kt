@@ -19,6 +19,7 @@ import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 
 import net.minecraft.screen.ScreenHandler
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 import net.minecraft.screen.ArrayPropertyDelegate

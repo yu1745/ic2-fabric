@@ -24,7 +24,7 @@ public final class NanoSaberDamageHelper {
     private NanoSaberDamageHelper() {}
 
     public static final RegistryKey<DamageType> NANO_SABER_ARMOR_PIERCE_KEY =
-        RegistryKey.of(RegistryKeys.DAMAGE_TYPE, new Identifier("ic2_120", "nano_saber_armor_pierce"));
+        RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("ic2_120", "nano_saber_armor_pierce"));
 
     public static boolean isNanoSaberArmorPierceDamage(DamageSource source) {
         return source.isOf(NANO_SABER_ARMOR_PIERCE_KEY);
@@ -66,7 +66,7 @@ public final class NanoSaberDamageHelper {
 
     private static boolean hasQuantumArmorPiece(PlayerEntity player) {
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (slot.getType() != EquipmentSlot.Type.ARMOR) {
+            if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
                 continue;
             }
             ItemStack stack = player.getEquippedStack(slot);
@@ -79,7 +79,7 @@ public final class NanoSaberDamageHelper {
 
     private static boolean hasNanoArmorPiece(PlayerEntity player) {
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (slot.getType() != EquipmentSlot.Type.ARMOR) {
+            if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
                 continue;
             }
             ItemStack stack = player.getEquippedStack(slot);

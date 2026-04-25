@@ -29,7 +29,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import java.util.function.Consumer
 
 /**
  * 太阳能发电机方块。
@@ -77,7 +76,7 @@ class SolarGeneratorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val generator = GeneratorBlock::class.item()
             val coalDust = CoalDust::class.instance()
             val circuit = Circuit::class.instance()

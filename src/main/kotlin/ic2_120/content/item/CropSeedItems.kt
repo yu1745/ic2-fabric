@@ -18,12 +18,12 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
-import java.util.function.Consumer
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.item.tooltip.TooltipType
 
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
@@ -32,6 +32,8 @@ import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
 import ic2_120.getCustomData
 import ic2_120.getOrCreateCustomData
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 object CropSeedData {
     private const val NBT_OWNER = "owner"
@@ -78,23 +80,23 @@ object CropSeedData {
 class CropSeedBagItem : Item(Item.Settings().maxCount(1)) {
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val scanLevel = CropSeedData.readScanLevel(stack)
-        val type = CropSeedData.readType(stack)
+        val cropType = CropSeedData.readType(stack)
         tooltip.add(Text.literal("扫描等级: $scanLevel/4").formatted(net.minecraft.util.Formatting.GRAY))
-        if (scanLevel <= 0 || type == null) {
+        if (scanLevel <= 0 || cropType == null) {
             tooltip.add(Text.literal("作物: 未知").formatted(net.minecraft.util.Formatting.DARK_GRAY))
             return
         }
 
-        val def = CropSystem.definition(type)
+        val def = CropSystem.definition(cropType)
         tooltip.add(
             Text.literal("作物: ")
-                .append(CropSeedData.displayName(type))
+                .append(CropSeedData.displayName(cropType))
                 .formatted(net.minecraft.util.Formatting.GRAY)
         )
         if (scanLevel >= 2) {
@@ -143,11 +145,11 @@ class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
         tooltip.add(Text.literal("右键打开 GUI 扫描种子袋").formatted(net.minecraft.util.Formatting.GRAY))
     }
@@ -156,11 +158,13 @@ class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
         val scanner = user.getStackInHand(hand)
         if (world.isClient) return TypedActionResult.success(scanner)
 
-        user.openHandledScreen(object : ExtendedScreenHandlerFactory {
+        user.openHandledScreen(object : ExtendedScreenHandlerFactory<PacketByteBuf> {
             override fun getDisplayName(): Text = Text.translatable("item.ic2_120.cropnalyzer")
 
-            override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+            override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+                val buf = PacketByteBuf(Unpooled.buffer())
                 buf.writeEnumConstant(hand)
+                return buf
             }
 
             override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): net.minecraft.screen.ScreenHandler {
@@ -201,7 +205,7 @@ class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
         const val ENERGY_PER_SCAN = 50L
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             if (cable == Items.AIR || circuit == Items.AIR) return

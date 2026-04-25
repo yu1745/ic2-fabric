@@ -38,7 +38,6 @@ import net.minecraft.state.StateManager
 import net.minecraft.state.property.Properties
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 // ============== Block Definitions ==============
 
@@ -52,7 +51,7 @@ class BatBoxBlock : EnergyStorageBlock(EnergyStorageConfig.BATBOX) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val tinCable = InsulatedTinCableBlock::class.item()
             val battery = ReBatteryItem::class.instance()
             val planks = Items.OAK_PLANKS
@@ -86,7 +85,7 @@ class CesuBlock : EnergyStorageBlock(EnergyStorageConfig.CESU) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val copperCable = InsulatedCopperCableBlock::class.item()
             val battery = AdvancedReBatteryItem::class.instance()
             val plate = BronzePlate::class.instance()
@@ -120,7 +119,7 @@ class MfeBlock : EnergyStorageBlock(EnergyStorageConfig.MFE) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val goldCable = DoubleInsulatedGoldCableBlock::class.item()
             val crystal = EnergyCrystalItem::class.instance()
             val machine = MachineCasingBlock::class.item()
@@ -155,7 +154,7 @@ class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val lapotron = LapotronCrystalItem::class.instance()
             val advCircuit = AdvancedCircuit::class.instance()
             val mfe = MfeBlock::class.item()
@@ -225,7 +224,7 @@ class BatBoxChargepadBlock : ChargepadBlock(EnergyStorageConfig.BATBOX_CHARGEPAD
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val circuit = Circuit::class.instance()
             val rubber = RubberItem::class.instance()
             val base = BatBoxBlock::class.item()
@@ -259,7 +258,7 @@ class CesuChargepadBlock : ChargepadBlock(EnergyStorageConfig.CESU_CHARGEPAD) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val circuit = Circuit::class.instance()
             val rubber = RubberItem::class.instance()
             val base = CesuBlock::class.item()
@@ -293,7 +292,7 @@ class MfeChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFE_CHARGEPAD) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val circuit = Circuit::class.instance()
             val rubber = RubberItem::class.instance()
             val base = MfeBlock::class.item()
@@ -328,7 +327,7 @@ class MfsuChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFSU_CHARGEPAD) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val circuit = Circuit::class.instance()
             val rubber = RubberItem::class.instance()
             val base = MfsuBlock::class.item()

@@ -64,7 +64,7 @@ class Ic2BoatEntityRenderer(
         is CarbonBoatEntity -> Identifier.of("ic2", "textures/entity/boat/boat_carbon.png")
         is RubberBoatEntity -> Identifier.of("ic2", "textures/entity/boat/boat_rubber.png")
         is ElectricBoatEntity -> Identifier.of("ic2", "textures/entity/boat/boat_electric.png")
-        else -> Identifier("textures/entity/boat/oak.png")
+        else -> Identifier.ofVanilla("textures/entity/boat/oak.png")
     }
 
     override fun render(
@@ -102,7 +102,7 @@ class Ic2BoatEntityRenderer(
         model.setAngles(boat, tickDelta, 0.0f, -0.1f, 0.0f, 0.0f)
 
         val vertexConsumer = vertexConsumers.getBuffer(model.getLayer(texture))
-        model.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, 1.0f, 1.0f, 1.0f, 1.0f)
+        model.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, -1)
 
         if (!boat.isSubmergedInWater && model is ModelWithWaterPatch) {
             val waterMask = vertexConsumers.getBuffer(RenderLayer.getWaterMask())

@@ -23,14 +23,14 @@ import net.minecraft.util.Formatting
 object ArmorTooltipHandler {
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, context, type ->
+        ItemTooltipCallback.EVENT.register { stack, context, type, tooltip ->
             val item = stack.item
 
             // 喷气背包：M 键
             if (item is JetpackItem) {
                 val key = ModeKeybinds.getModeKey()
                 val name = key.boundKeyLocalizedText.string
-                type.add(Text.literal("模式切换: ").formatted(Formatting.GRAY)
+                tooltip.add(Text.literal("模式切换: ").formatted(Formatting.GRAY)
                     .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
                     .append(Text.literal(name).formatted(Formatting.YELLOW)))
             }
@@ -39,7 +39,7 @@ object ArmorTooltipHandler {
             if (item is NightVisionGoggles || item is NanoHelmet || item is QuantumHelmet) {
                 val key = ArmorKeybinds.getVisionKey()
                 val name = key.boundKeyLocalizedText.string
-                type.add(Text.literal("夜视按键: ").formatted(Formatting.GRAY)
+                tooltip.add(Text.literal("夜视按键: ").formatted(Formatting.GRAY)
                     .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
                     .append(Text.literal(name).formatted(Formatting.YELLOW)))
             }
@@ -48,7 +48,7 @@ object ArmorTooltipHandler {
             if (item is QuantumChestplate) {
                 val key = ArmorKeybinds.getFlightKey()
                 val name = key.boundKeyLocalizedText.string
-                type.add(Text.literal("飞行按键: ").formatted(Formatting.GRAY)
+                tooltip.add(Text.literal("飞行按键: ").formatted(Formatting.GRAY)
                     .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
                     .append(Text.literal(name).formatted(Formatting.YELLOW)))
             }

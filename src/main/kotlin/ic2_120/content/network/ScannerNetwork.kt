@@ -1,13 +1,15 @@
 package ic2_120.content.network
 
-
-import net.minecraft.util.Identifier
+import io.netty.buffer.ByteBuf
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.network.codec.PacketCodec
+import net.minecraft.network.packet.CustomPayload
 
 /**
  * 扫描结果条目
  */
 data class OreScanEntry(
-    val blockId: String,  // 带命名空间的方块ID，如 "minecraft:coal_ore"
+    val blockId: String,
     val count: Int
 )
 
@@ -16,14 +18,20 @@ data class OreScanEntry(
  * 服务端扫描完成后，将结果编码到此包发给客户端。
  */
 class ScannerResultPacket(
-    val energy: Int,          // 当前能量（UI 显示用）
-    val energyCapacity: Int,  // 最大能量
-    val usesRemaining: Int,   // 剩余使用次数
-    val maxUses: Int,         // 最大使用次数
+    val energy: Int,
+    val energyCapacity: Int,
+    val usesRemaining: Int,
+    val maxUses: Int,
     val results: List<OreScanEntry>
-) {
+) : CustomPayload {
+    override fun getId(): CustomPayload.Id<*> = ID
+
     companion object {
-        val ID: Identifier = net.minecraft.util.Identifier.of("ic2_120", "scanner_result")
+        val ID = CustomPayload.Id<ScannerResultPacket>(net.minecraft.util.Identifier.of("ic2_120", "scanner_result"))
+        val CODEC: PacketCodec<PacketByteBuf, ScannerResultPacket> = PacketCodec.of(
+            { value, buf -> write(value, buf) },
+            { read(it) }
+        )
 
         fun read(buf: PacketByteBuf): ScannerResultPacket {
             val energy = buf.readInt()

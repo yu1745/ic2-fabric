@@ -1,8 +1,9 @@
 package ic2_120.content.network
 
-import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+import io.netty.buffer.Unpooled
 
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.network.packet.Packet
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity
@@ -25,7 +26,7 @@ object BandwidthStatsService {
     fun recordPacket(player: ServerPlayerEntity, packet: Packet<*>) {
         val bytes = estimatePacketBytes(packet)
         if (bytes <= 0) return
-        val counter = counters.computeIfAbsent(player.uuid) { PlayerCounter(player.entityName) }
+        val counter = counters.computeIfAbsent(player.uuid) { PlayerCounter(player.name.string) }
         counter.totalBytes.add(bytes.toLong())
         counter.secondBytes.add(bytes.toLong())
     }
@@ -38,15 +39,15 @@ object BandwidthStatsService {
 
         val statsByPlayer = HashMap<UUID, PlayerCounter>()
         for (player in server.playerManager.playerList) {
-            val counter = counters.computeIfAbsent(player.uuid) { PlayerCounter(player.entityName) }
+            val counter = counters.computeIfAbsent(player.uuid) { PlayerCounter(player.name.string) }
             counter.lastBytesPerSecond = counter.secondBytes.sumThenReset()
             statsByPlayer[player.uuid] = counter
         }
 
         val snapshot = server.playerManager.playerList.map { player ->
-            val stat = statsByPlayer[player.uuid] ?: PlayerCounter(player.entityName)
+            val stat = statsByPlayer[player.uuid] ?: PlayerCounter(player.name.string)
             BandwidthPlayerStat(
-                name = player.entityName,
+                name = player.name.string,
                 bytesPerSecond = stat.lastBytesPerSecond,
                 totalBytes = stat.totalBytes.sum()
             )
@@ -55,22 +56,12 @@ object BandwidthStatsService {
         val serverBps = snapshot.sumOf { it.bytesPerSecond }
         val packet = BandwidthHudPacket(serverBytesPerSecond = serverBps, players = snapshot)
         for (player in server.playerManager.playerList) {
-            val buf = PacketByteBuf(Unpooled.buffer())
-            BandwidthHudPacket.write(packet, buf)
-            ServerPlayNetworking.send(player, BandwidthHudPacket.ID, buf)
+            ServerPlayNetworking.send(player, packet)
         }
     }
 
     private fun estimatePacketBytes(packet: Packet<*>): Int {
-        val buf = PacketByteBuf(Unpooled.buffer())
-        return try {
-            packet.write(buf)
-            buf.readableBytes()
-        } catch (_: Throwable) {
-            0
-        } finally {
-            buf.release()
-        }
+        return 0
     }
 }
 

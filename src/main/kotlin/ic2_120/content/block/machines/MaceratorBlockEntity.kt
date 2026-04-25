@@ -36,8 +36,8 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.nbt.NbtCompound
 
 import net.minecraft.screen.ScreenHandler
@@ -46,6 +46,8 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = MaceratorBlock::class)
 @ModMachineRecipeBinding(MaceratorRecipeSerializer::class)
@@ -54,7 +56,7 @@ class MaceratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = MaceratorBlock.ACTIVE
 
@@ -149,9 +151,11 @@ class MaceratorBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.macerator")
@@ -161,7 +165,7 @@ class MaceratorBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(MaceratorSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -170,7 +174,7 @@ class MaceratorBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(MaceratorSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -200,14 +204,13 @@ class MaceratorBlockEntity(
             return
         }
 
-        val recipeInventory = SimpleInventory(input.copyWithCount(1))
-        val match = world.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), recipeInventory, world)
+        val match = world.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), SingleStackRecipeInput(input.copyWithCount(1)), world)
         if (match.isEmpty) {
             if (sync.progress != 0) sync.progress = 0
             sync.syncCurrentTickFlow()
             return
         }
-        val result = match.get().output.copy()
+        val result = match.get().value().output.copy()
         val outputSlot = getStack(SLOT_OUTPUT)
         val maxStack = result.maxCount
         val canAccept = outputSlot.isEmpty() ||
@@ -263,8 +266,7 @@ class MaceratorBlockEntity(
     private fun isRecipeInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || isBatteryItem(stack)) return false
         val currentWorld = world ?: return true
-        val recipeInventory = SimpleInventory(stack.copyWithCount(1))
-        return currentWorld.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), recipeInventory, currentWorld).isPresent
+        return currentWorld.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), SingleStackRecipeInput(stack.copyWithCount(1)), currentWorld).isPresent
     }
 }
 

@@ -6,7 +6,7 @@ import net.minecraft.item.ItemStack
 /**
  * 反应堆组件抽象基类。所有方法默认空实现。
  */
-abstract class AbstractReactorComponent(settings: FabricItemSettings) : Item(settings), IReactorComponent {
+abstract class AbstractReactorComponent(settings: Item.Settings) : Item(settings), IReactorComponent {
 
     override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {}
 

@@ -5,17 +5,17 @@ import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffectCategory
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
-
+import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.util.Identifier
 
 object ModStatusEffects {
-    val SOLAR_GENERATING: StatusEffect = Registry.register(
+    val SOLAR_GENERATING: RegistryEntry<StatusEffect> = Registry.registerReference(
         Registries.STATUS_EFFECT,
         Identifier.of("ic2", "solar_generating"),
         object : StatusEffect(StatusEffectCategory.BENEFICIAL, 0xF6D743) {}
     )
 
-    val RADIATION: StatusEffect = Registry.register(
+    val RADIATION: RegistryEntry<StatusEffect> = Registry.registerReference(
         Registries.STATUS_EFFECT,
         Identifier.of("ic2", "radiation"),
         RadiationStatusEffect()

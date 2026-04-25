@@ -1,6 +1,6 @@
 package ic2_120.content.worldgen
 
-import com.mojang.serialization.Codec
+import com.mojang.serialization.MapCodec
 import ic2_120.config.Ic2Config
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.random.Random
@@ -41,8 +41,8 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
         ModWorldgen.RUBBER_TREE_CONFIG_PLACEMENT_MODIFIER_TYPE
 
     companion object {
-        val CODEC: Codec<RubberTreeConfigPlacementModifier> =
-            Codec.unit(::RubberTreeConfigPlacementModifier)
+        val CODEC: MapCodec<RubberTreeConfigPlacementModifier> =
+            MapCodec.unit(::RubberTreeConfigPlacementModifier)
     }
 }
 
@@ -70,7 +70,7 @@ class RubberTreeConfigWaterDepthFilterPlacementModifier : AbstractConditionalPla
         ModWorldgen.RUBBER_TREE_CONFIG_WATER_DEPTH_FILTER_TYPE
 
     companion object {
-        val CODEC: Codec<RubberTreeConfigWaterDepthFilterPlacementModifier> =
-            Codec.unit(::RubberTreeConfigWaterDepthFilterPlacementModifier)
+        val CODEC: MapCodec<RubberTreeConfigWaterDepthFilterPlacementModifier> =
+            MapCodec.unit(::RubberTreeConfigWaterDepthFilterPlacementModifier)
     }
 }

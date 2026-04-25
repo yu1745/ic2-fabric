@@ -16,6 +16,7 @@ import net.minecraft.fluid.FluidState
 import net.minecraft.fluid.Fluids
 import net.minecraft.item.BucketItem
 import net.minecraft.item.Item
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
@@ -46,7 +47,6 @@ import net.minecraft.item.ItemStack
 import net.minecraft.util.ActionResult
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
-import net.minecraft.client.item.TooltipContext
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
@@ -282,12 +282,12 @@ object ModFluids {
             fluid: Fluid,
             direction: Direction
         ): Boolean = false
-        override fun getFlowSpeed(world: WorldView): Int = 4
         override fun getLevelDecreasePerBlock(world: WorldView): Int = 1
         override fun getTickRate(world: WorldView): Int = 5
         override fun getBlastResistance(): Float = 100f
 
         class Still(name: String, stillTex: String, flowTex: String) : Ic2Fluid(name, stillTex, flowTex) {
+            override fun getMaxFlowDistance(world: WorldView): Int = 4
             override fun getLevel(state: FluidState): Int = 8
             override fun isStill(state: FluidState): Boolean = true
             override fun getStillFluid(): Fluid = when (name) {
@@ -345,6 +345,7 @@ object ModFluids {
         }
 
         class Flowing(name: String, stillTex: String, flowTex: String) : Ic2Fluid(name, stillTex, flowTex) {
+            override fun getMaxFlowDistance(world: WorldView): Int = 4
             override fun appendProperties(builder: StateManager.Builder<Fluid, FluidState>) {
                 super.appendProperties(builder)
                 builder.add(LEVEL)
@@ -418,7 +419,7 @@ object ModFluids {
     private open class Ic2BucketItem(
         internal val bucketFluid: FlowableFluid, // 改名为 bucketFluid 避免与父类冲突
         private val placeFluidOverride: FlowableFluid? = null,
-        settings: FabricItemSettings
+        settings: Item.Settings
     ) : BucketItem(bucketFluid, settings.recipeRemainder(Items.BUCKET).maxCount(1)) {
 
         /** 实际放置到世界的流体（用于蒸馏水等特殊情况） */
@@ -428,11 +429,11 @@ object ModFluids {
         @Environment(EnvType.CLIENT)
         override fun appendTooltip(
             stack: ItemStack,
-            world: World?,
+            context: Item.TooltipContext?,
             tooltip: MutableList<Text>,
-            context: TooltipContext
+            type: TooltipType
         ) {
-            super.appendTooltip(stack, world, tooltip, context)
+            super.appendTooltip(stack, context, tooltip, type)
             if (placeFluidOverride != null) {
                 tooltip.add(Text.translatable("tooltip.ic2_120.distilled_water_places_water").formatted(Formatting.GRAY))
             }
@@ -450,7 +451,7 @@ object ModFluids {
 
             // FluidFillable：如炼药锅等可注入液体的方块
             if (block is FluidFillable) {
-                if (block.canFillWithFluid(world, pos, state, actualFluid)) {
+                if (block.canFillWithFluid(player, world, pos, state, actualFluid)) {
                     block.tryFillWithFluid(world, pos, state, actualFluid.defaultState)
                     actualFluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
                     world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos)

@@ -1,6 +1,5 @@
 package ic2_120.content.recipes.compressor
 
-import com.google.gson.JsonObject
 import ic2_120.content.block.*
 import ic2_120.content.item.*
 import ic2_120.content.item.energy.EnergyCrystalItem
@@ -9,10 +8,10 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.registry.Registries
+import net.minecraft.recipe.Ingredient
 import net.minecraft.util.Identifier
-import java.util.function.Consumer
 
 object CompressorRecipeDatagen {
     data class Entry(
@@ -115,44 +114,16 @@ object CompressorRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+    fun generateRecipes(exporter: RecipeExporter) {
         entries.forEach { entry ->
-            CompressorRecipeExporter(
-                recipeId = Identifier.of("ic2_120", "compressing/${entry.name}"),
-                inputItem = entry.input,
+            val id = Identifier.of("ic2_120", "compressing/${entry.name}")
+            val recipe = CompressorRecipe(
+                id = id,
+                ingredient = Ingredient.ofItems(entry.input),
                 inputCount = entry.inputCount,
-                outputItem = entry.output,
-                outputCount = entry.count
-            ).also(exporter::accept)
+                output = ItemStack(entry.output, entry.count)
+            )
+            exporter.accept(id, recipe, null)
         }
-    }
-
-    private class CompressorRecipeExporter(
-        private val recipeId: Identifier,
-        private val inputItem: Item,
-        private val inputCount: Int,
-        private val outputItem: Item,
-        private val outputCount: Int
-    ) : RecipeExporter {
-        override fun serialize(json: JsonObject) {
-            json.addProperty("type", "${ModMachineRecipes.recipeType(CompressorRecipe::class)}")
-            val ingredient = JsonObject()
-            ingredient.addProperty("item", Registries.ITEM.getId(inputItem).toString())
-            json.add("ingredient", ingredient)
-            json.addProperty("input_count", inputCount)
-
-            val result = JsonObject()
-            result.addProperty("item", Registries.ITEM.getId(outputItem).toString())
-            result.addProperty("count", outputCount)
-            json.add("result", result)
-        }
-
-        override fun getSerializer() = ModMachineRecipes.recipeSerializer(CompressorRecipe::class)
-
-        override fun getRecipeId(): Identifier = recipeId
-
-        override fun toAdvancementJson(): JsonObject? = null
-
-        override fun getAdvancementId(): Identifier? = null
     }
 }

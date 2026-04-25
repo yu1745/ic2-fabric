@@ -52,6 +52,8 @@ import java.util.UUID
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = TeleporterBlock::class)
 class TeleporterBlockEntity(
@@ -64,7 +66,7 @@ class TeleporterBlockEntity(
     IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport,
-    ExtendedScreenHandlerFactory {
+    ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = TeleporterBlock.ACTIVE
     override fun getInventory(): net.minecraft.inventory.Inventory = this
@@ -204,9 +206,11 @@ class TeleporterBlockEntity(
         markDirty()
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.teleporter")
@@ -216,7 +220,7 @@ class TeleporterBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
 
         sync.amount = nbt.getLong(TeleporterSync.NBT_ENERGY_STORED)
@@ -256,7 +260,7 @@ class TeleporterBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
 
         nbt.putLong(TeleporterSync.NBT_ENERGY_STORED, sync.amount)

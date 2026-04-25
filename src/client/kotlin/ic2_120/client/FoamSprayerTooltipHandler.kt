@@ -15,7 +15,7 @@ import net.minecraft.util.Formatting
 object FoamSprayerTooltipHandler {
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, _, lines ->
+        ItemTooltipCallback.EVENT.register { stack, _, type, lines ->
             if (stack.item !is FoamSprayerItem) return@register
             val amt = FoamSprayerItem.getFluidAmount(stack)
             val capBuckets = FoamSprayerItem.CAPACITY_DROPLETS / FluidConstants.BUCKET

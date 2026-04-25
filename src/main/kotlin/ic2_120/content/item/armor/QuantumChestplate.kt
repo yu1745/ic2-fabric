@@ -18,9 +18,9 @@ import net.minecraft.item.ArmorItem
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
+import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import java.util.function.Consumer
 import ic2_120.getOrCreateCustomData
 
 /**
@@ -65,7 +65,7 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
             stack.getOrCreateCustomData().getBoolean(FLIGHT_KEY)
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val alloy = Alloy::class.instance()
             val nano = NanoChestplate::class.instance()
             val iridium = IridiumPlate::class.instance()
@@ -89,8 +89,8 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
         }
     }
 
-    override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
+        super.appendTooltip(stack, context, tooltip, type)
         val flightEnabled = stack.getOrCreateCustomData().getBoolean(FLIGHT_KEY)
         val energy = getEnergy(stack)
 

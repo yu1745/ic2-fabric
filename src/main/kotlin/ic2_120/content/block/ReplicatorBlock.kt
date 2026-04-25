@@ -28,7 +28,6 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 @ModBlock(name = "replicator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "uu")
 class ReplicatorBlock : MachineBlock() {
@@ -74,7 +73,7 @@ class ReplicatorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val reinforcedStone = ReinforcedStoneBlock::class.item()
             val teleporter = TeleporterBlock::class.item()

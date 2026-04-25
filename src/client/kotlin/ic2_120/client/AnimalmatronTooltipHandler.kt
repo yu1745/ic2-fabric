@@ -15,21 +15,21 @@ object AnimalmatronTooltipHandler {
     private val ANIMALMATRON_ID = Identifier.of("ic2_120", "animalmatron")
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, context, type ->
+        ItemTooltipCallback.EVENT.register { stack, context, type, tooltip ->
             val itemId = net.minecraft.registry.Registries.ITEM.getId(stack.item)
             if (itemId != ANIMALMATRON_ID) return@register
 
             if (Screen.hasShiftDown()) {
-                type.add(Text.translatable("item.ic2_120.animalmatron.tooltip.food_table").formatted(Formatting.GRAY))
+                tooltip.add(Text.translatable("item.ic2_120.animalmatron.tooltip.food_table").formatted(Formatting.GRAY))
                 AnimalFoodMapping.getFoodMap().forEach { (id, food) ->
                     val animalKey = "entity.${id.namespace}.${id.path}"
                     val animalName = Text.translatable(animalKey).string
                     val foodName = Text.translatable(food.first().translationKey).string
-                    type.add(Text.literal("  ${animalName}: ${foodName}").formatted(Formatting.DARK_GRAY))
+                    tooltip.add(Text.literal("  ${animalName}: ${foodName}").formatted(Formatting.DARK_GRAY))
                 }
-                type.add(Text.translatable("item.ic2_120.animalmatron.tooltip.breeding_limit").formatted(Formatting.DARK_GRAY))
+                tooltip.add(Text.translatable("item.ic2_120.animalmatron.tooltip.breeding_limit").formatted(Formatting.DARK_GRAY))
             } else {
-                type.add(Text.translatable("item.ic2_120.animalmatron.tooltip").formatted(Formatting.GRAY))
+                tooltip.add(Text.translatable("item.ic2_120.animalmatron.tooltip").formatted(Formatting.GRAY))
             }
         }
     }

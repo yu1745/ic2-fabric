@@ -8,7 +8,6 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import ic2_120.registry.instance
 import ic2_120.registry.id
-import java.util.function.Consumer
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -80,7 +79,7 @@ class WindGeneratorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val generator = GeneratorBlock::class.item()
             if (generator != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WindGeneratorBlock::class.item(), 1)

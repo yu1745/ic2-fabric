@@ -1,5 +1,6 @@
 package ic2_120.content.block.transmission
 
+import com.mojang.serialization.MapCodec
 import ic2_120.content.item.CarbonPlate
 import ic2_120.content.item.IronPlate
 import ic2_120.content.item.SteelPlate
@@ -20,6 +21,7 @@ import net.minecraft.block.Waterloggable
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.fluid.Fluid
@@ -40,7 +42,6 @@ import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
 import net.minecraft.world.WorldAccess
 import net.minecraft.world.WorldView
-import java.util.function.Consumer
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 
@@ -85,6 +86,11 @@ enum class BevelPlane(private val key: String) : StringIdentifiable {
 abstract class BaseTransmissionBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(2.0f, 3.0f)
 ) : BlockWithEntity(settings), Waterloggable {
+    companion object {
+        val TRANSMISSION_CODEC: MapCodec<BaseTransmissionBlock> = Block.createCodec { error("BaseTransmissionBlock cannot be deserialized from JSON") }
+    }
+
+    override fun getCodec(): MapCodec<out BlockWithEntity> = TRANSMISSION_CODEC
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         builder.add(Properties.WATERLOGGED)
@@ -115,7 +121,7 @@ abstract class BaseTransmissionBlock(
     override fun getFluidState(state: BlockState): FluidState =
         if (state.get(Properties.WATERLOGGED)) Fluids.WATER.getStill(false) else Fluids.EMPTY.getDefaultState()
 
-    override fun canFillWithFluid(world: BlockView, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
+    override fun canFillWithFluid(player: PlayerEntity?, world: BlockView, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
         !state.get(Properties.WATERLOGGED) && fluid == Fluids.WATER
 
     override fun tryFillWithFluid(
@@ -124,7 +130,7 @@ abstract class BaseTransmissionBlock(
         state: BlockState,
         fluidState: FluidState
     ): Boolean {
-        if (!canFillWithFluid(world, pos, state, fluidState.fluid)) return false
+        if (!canFillWithFluid(null, world, pos, state, fluidState.fluid)) return false
         if (!state.get(Properties.WATERLOGGED)) {
             world.setBlockState(pos, state.with(Properties.WATERLOGGED, true), Block.NOTIFY_ALL)
             world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
@@ -132,7 +138,7 @@ abstract class BaseTransmissionBlock(
         return true
     }
 
-    override fun tryDrainFluid(world: WorldAccess, pos: BlockPos, state: BlockState): ItemStack =
+    override fun tryDrainFluid(player: PlayerEntity?, world: WorldAccess, pos: BlockPos, state: BlockState): ItemStack =
         ItemStack.EMPTY
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
@@ -160,7 +166,7 @@ abstract class BaseTransmissionBlock(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, TransmissionBlockEntity.TYPE) { w, _, _, be ->
+        else validateTicker(type, TransmissionBlockEntity.TYPE) { w, _, _, be ->
             (be as TransmissionBlockEntity).tick(w)
         }
 }
@@ -240,7 +246,7 @@ abstract class TransmissionShaftBlock(
 class WoodTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.WOOD) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
@@ -256,7 +262,7 @@ class WoodTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.WOOD) {
 class IronTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.IRON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
@@ -272,7 +278,7 @@ class IronTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.IRON) {
 class SteelTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.STEEL) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
@@ -288,7 +294,7 @@ class SteelTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.STEEL) 
 class CarbonTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
@@ -460,7 +466,7 @@ class BevelGearBlock(
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BevelGearBlock::class.instance(), 1)
                 .pattern("s s")
                 .pattern("s s")

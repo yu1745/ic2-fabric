@@ -22,8 +22,6 @@ import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.RotationAxis
-import org.joml.Matrix3f
-import org.joml.Matrix4f
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -34,7 +32,7 @@ class TransmissionBlockEntityRenderer(
     context: BlockEntityRendererFactory.Context
 ) : BlockEntityRenderer<TransmissionBlockEntity> {
     companion object {
-        private val WHITE_TEXTURE = Identifier("textures/misc/white.png")
+        private val WHITE_TEXTURE = Identifier.ofVanilla("textures/misc/white.png")
         private const val SHAFT_HALF = 1.0f / 6.0f
         private const val SHAFT_LENGTH_HALF = 0.5f
         private const val BEVEL_GEAR_TOOTH_COUNT = 8
@@ -292,8 +290,6 @@ class TransmissionBlockEntityRenderer(
         baseColor: IntArray
     ) {
         val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
 
         val basis = basisForAxis(axis)
         val ax = basis[0]
@@ -348,7 +344,7 @@ class TransmissionBlockEntityRenderer(
             val u0 = i / segments.toFloat()
             val u1 = (i + 1) / segments.toFloat()
             quadUv(
-                vc, pos, normal, light, overlay,
+                vc, entry, light, overlay,
                 p1x, p1y, p1z, u0, 0f,
                 p2x, p2y, p2z, u1, 0f,
                 p3x, p3y, p3z, u1, 1f,
@@ -492,8 +488,6 @@ class TransmissionBlockEntityRenderer(
     ) {
         if (outline.size < 3) return
         val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
 
         fun to3D(u: Float, v: Float, depth: Float): FloatArray = when (axis) {
             Direction.Axis.X -> floatArrayOf(depth, u, v)
@@ -523,7 +517,7 @@ class TransmissionBlockEntityRenderer(
             }
 
             quadUv(
-                vc, pos, normal, light, overlay,
+                vc, entry, light, overlay,
                 f0[0], f0[1], f0[2], 0f, 0f,
                 f1[0], f1[1], f1[2], 1f, 0f,
                 b1[0], b1[1], b1[2], 1f, 1f,
@@ -550,7 +544,7 @@ class TransmissionBlockEntityRenderer(
             val b1 = to3D(u1, v1, -halfThickness)
 
             triangleUv(
-                vc, pos, normal, light, overlay,
+                vc, entry, light, overlay,
                 cFront[0], cFront[1], cFront[2], 0.5f, 0.5f,
                 f0[0], f0[1], f0[2], 0f, 0f,
                 f1[0], f1[1], f1[2], 1f, 0f,
@@ -559,7 +553,7 @@ class TransmissionBlockEntityRenderer(
             )
 
             triangleUv(
-                vc, pos, normal, light, overlay,
+                vc, entry, light, overlay,
                 cBack[0], cBack[1], cBack[2], 0.5f, 0.5f,
                 b1[0], b1[1], b1[2], 1f, 0f,
                 b0[0], b0[1], b0[2], 0f, 0f,
@@ -591,22 +585,19 @@ class TransmissionBlockEntityRenderer(
         maxZ: Float
     ) {
         val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
         val fallbackColor = intArrayOf(128, 128, 128)
 
-        quad(vc, pos, normal, light, overlay, minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ, 0f, 0f, 1f, fallbackColor)
-        quad(vc, pos, normal, light, overlay, maxX, minY, minZ, minX, minY, minZ, minX, maxY, minZ, maxX, maxY, minZ, 0f, 0f, -1f, fallbackColor)
-        quad(vc, pos, normal, light, overlay, minX, minY, minZ, minX, minY, maxZ, minX, maxY, maxZ, minX, maxY, minZ, -1f, 0f, 0f, fallbackColor)
-        quad(vc, pos, normal, light, overlay, maxX, minY, maxZ, maxX, minY, minZ, maxX, maxY, minZ, maxX, maxY, maxZ, 1f, 0f, 0f, fallbackColor)
-        quad(vc, pos, normal, light, overlay, minX, maxY, maxZ, maxX, maxY, maxZ, maxX, maxY, minZ, minX, maxY, minZ, 0f, 1f, 0f, fallbackColor)
-        quad(vc, pos, normal, light, overlay, minX, minY, minZ, maxX, minY, minZ, maxX, minY, maxZ, minX, minY, maxZ, 0f, -1f, 0f, fallbackColor)
+        quad(vc, entry, light, overlay, minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ, 0f, 0f, 1f, fallbackColor)
+        quad(vc, entry, light, overlay, maxX, minY, minZ, minX, minY, minZ, minX, maxY, minZ, maxX, maxY, minZ, 0f, 0f, -1f, fallbackColor)
+        quad(vc, entry, light, overlay, minX, minY, minZ, minX, minY, maxZ, minX, maxY, maxZ, minX, maxY, minZ, -1f, 0f, 0f, fallbackColor)
+        quad(vc, entry, light, overlay, maxX, minY, maxZ, maxX, minY, minZ, maxX, maxY, minZ, maxX, maxY, maxZ, 1f, 0f, 0f, fallbackColor)
+        quad(vc, entry, light, overlay, minX, maxY, maxZ, maxX, maxY, maxZ, maxX, maxY, minZ, minX, maxY, minZ, 0f, 1f, 0f, fallbackColor)
+        quad(vc, entry, light, overlay, minX, minY, minZ, maxX, minY, minZ, maxX, minY, maxZ, minX, minY, maxZ, 0f, -1f, 0f, fallbackColor)
     }
 
     private fun quad(
         vc: VertexConsumer,
-        pos: Matrix4f,
-        normal: Matrix3f,
+        entry: MatrixStack.Entry,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float,
@@ -617,7 +608,7 @@ class TransmissionBlockEntityRenderer(
         baseColor: IntArray
     ) {
         quadUv(
-            vc, pos, normal, light, overlay,
+            vc, entry, light, overlay,
             x1, y1, z1, 0f, 0f,
             x2, y2, z2, 1f, 0f,
             x3, y3, z3, 1f, 1f,
@@ -629,8 +620,7 @@ class TransmissionBlockEntityRenderer(
 
     private fun quadUv(
         vc: VertexConsumer,
-        pos: Matrix4f,
-        normal: Matrix3f,
+        entry: MatrixStack.Entry,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float, u1: Float, v1: Float,
@@ -640,16 +630,15 @@ class TransmissionBlockEntityRenderer(
         nx: Float, ny: Float, nz: Float,
         baseColor: IntArray
     ) {
-        vertex(vc, pos, normal, x1, y1, z1, u1, v1, light, overlay, nx, ny, nz, baseColor)
-        vertex(vc, pos, normal, x2, y2, z2, u2, v2, light, overlay, nx, ny, nz, baseColor)
-        vertex(vc, pos, normal, x3, y3, z3, u3, v3, light, overlay, nx, ny, nz, baseColor)
-        vertex(vc, pos, normal, x4, y4, z4, u4, v4, light, overlay, nx, ny, nz, baseColor)
+        vertex(vc, entry, x1, y1, z1, u1, v1, light, overlay, nx, ny, nz, baseColor)
+        vertex(vc, entry, x2, y2, z2, u2, v2, light, overlay, nx, ny, nz, baseColor)
+        vertex(vc, entry, x3, y3, z3, u3, v3, light, overlay, nx, ny, nz, baseColor)
+        vertex(vc, entry, x4, y4, z4, u4, v4, light, overlay, nx, ny, nz, baseColor)
     }
 
     private fun triangleUv(
         vc: VertexConsumer,
-        pos: Matrix4f,
-        normal: Matrix3f,
+        entry: MatrixStack.Entry,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float, u1: Float, v1: Float,
@@ -660,16 +649,15 @@ class TransmissionBlockEntityRenderer(
     ) {
         // EntityCutout/NoCull 这类渲染层按 QUADS 消费顶点。
         // 这里用退化四边形表达三角形，避免 3 顶点写入把后续几何串坏。
-        vertex(vc, pos, normal, x1, y1, z1, u1, v1, light, overlay, nx, ny, nz, baseColor)
-        vertex(vc, pos, normal, x2, y2, z2, u2, v2, light, overlay, nx, ny, nz, baseColor)
-        vertex(vc, pos, normal, x3, y3, z3, u3, v3, light, overlay, nx, ny, nz, baseColor)
-        vertex(vc, pos, normal, x3, y3, z3, u3, v3, light, overlay, nx, ny, nz, baseColor)
+        vertex(vc, entry, x1, y1, z1, u1, v1, light, overlay, nx, ny, nz, baseColor)
+        vertex(vc, entry, x2, y2, z2, u2, v2, light, overlay, nx, ny, nz, baseColor)
+        vertex(vc, entry, x3, y3, z3, u3, v3, light, overlay, nx, ny, nz, baseColor)
+        vertex(vc, entry, x3, y3, z3, u3, v3, light, overlay, nx, ny, nz, baseColor)
     }
 
     private fun vertex(
         vc: VertexConsumer,
-        pos: Matrix4f,
-        normal: Matrix3f,
+        entry: MatrixStack.Entry,
         x: Float,
         y: Float,
         z: Float,
@@ -682,12 +670,11 @@ class TransmissionBlockEntityRenderer(
         nz: Float,
         baseColor: IntArray
     ) {
-        vc.vertex(pos, x, y, z)
+        vc.vertex(entry.positionMatrix, x, y, z)
             .color(baseColor[0], baseColor[1], baseColor[2], 255)
             .texture(u, v)
             .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV)
             .light(light)
-            .normal(normal, nx, ny, nz)
-            .next()
+            .normal(entry, nx, ny, nz)
     }
 }

@@ -32,8 +32,8 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.nbt.NbtCompound
 
 import net.minecraft.recipe.RecipeType
@@ -44,6 +44,8 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.registry.RegistryWrapper
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 /**
  * 电力熔炉方块实体。提供输入/输出槽位并实现简单 GUI。
@@ -56,7 +58,7 @@ class ElectricFurnaceBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
     IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = ElectricFurnaceBlock.ACTIVE
 
@@ -158,9 +160,11 @@ class ElectricFurnaceBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text =
@@ -171,7 +175,7 @@ class ElectricFurnaceBlockEntity(
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ElectricFurnaceSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -181,7 +185,7 @@ class ElectricFurnaceBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(ElectricFurnaceSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat(FurnaceExperienceHelper.NBT_EXPERIENCE, storedExperience)
@@ -215,8 +219,7 @@ class ElectricFurnaceBlockEntity(
             return
         }
 
-        val inputInv = SimpleInventory(1).apply { setStack(0, input) }
-        val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, inputInv, world)
+        val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(input), world)
         if (match.isEmpty) {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
@@ -224,8 +227,8 @@ class ElectricFurnaceBlockEntity(
             return
         }
 
-        val recipe = match.get()
-        val result = recipe.getOutput(world.registryManager).copy()
+        val recipe = match.get().value()
+        val result = recipe.getResult(world.registryManager).copy()
         val outputSlot = getStack(1)
         val maxStack = result.maxCount
         val canAccept = outputSlot.isEmpty() ||
@@ -292,8 +295,7 @@ class ElectricFurnaceBlockEntity(
     private fun isSmeltingInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || isBatteryItem(stack)) return false
         val w = world ?: return true
-        val inv = SimpleInventory(stack.copyWithCount(1))
-        return w.recipeManager.getFirstMatch(RecipeType.SMELTING, inv, w).isPresent
+        return w.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(stack.copyWithCount(1)), w).isPresent
     }
 }
 

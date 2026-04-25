@@ -18,3 +18,4 @@ uiscope.kt目前越来越长了，改成扩展函数去添加
 电动船实现功能
 防化服实现真的功能,每个子防具也有自己单独效果 还有辐射效果也要实现
 动能发电机动态电压等级：当前 tier=3(HV) 固定不变，手摇动能发生机接入动能发电机后电网 outputLevel=3，导致低压导线烧毁、低压机器超压爆炸。需决定方案：(1)降低固定tier (2)根据实际输出EU动态调整tier（需每tick重建拓扑，有性能代价）(3)保持HV但作为设计取舍。相关代码：KineticGeneratorBlockEntity tier字段、EnergyNetwork buildTopology 的 outputLevel 计算、topologyCache 缓存机制
+双手纳米剑获得左手伤害高，右手高伤害成就
