@@ -85,9 +85,9 @@ abstract class ReactorHeatVentBase(
                 if (hasCoolant) {
                     // 有冷却液时，可以修复耐久
                     alterHeat(stack, reactor, x, y, -dissipated)
+                    // 记录额定散热能力
+                    reactor.addHeatDissipated(dissipated)
                 }
-                // 记录额定散热能力
-                reactor.addHeatDissipated(dissipated)
             } else {
                 // 电模式：正常蒸发，修复自身耐久
                 alterHeat(stack, reactor, x, y, -dissipated)
