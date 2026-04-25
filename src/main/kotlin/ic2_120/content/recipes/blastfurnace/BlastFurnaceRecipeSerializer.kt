@@ -3,7 +3,7 @@ package ic2_120.content.recipes.blastfurnace
 import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonObject
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.registry.Registries
@@ -42,16 +42,16 @@ object BlastFurnaceRecipeSerializer : RecipeSerializer<BlastFurnaceRecipe> {
     }
 
     override fun read(id: Identifier, buf: PacketByteBuf): BlastFurnaceRecipe {
-        val ingredient = Ingredient.fromPacket(buf)
-        val steelOutput = buf.readItemStack()
-        val slagOutput = buf.readItemStack()
+        val ingredient = Ingredient.PACKET_CODEC.decode(buf)
+        val steelOutput = ItemStack.PACKET_CODEC.decode(buf)
+        val slagOutput = ItemStack.PACKET_CODEC.decode(buf)
 
         return BlastFurnaceRecipe(id, ingredient, steelOutput, slagOutput)
     }
 
     override fun write(buf: PacketByteBuf, recipe: BlastFurnaceRecipe) {
-        recipe.ingredient.write(buf)
-        buf.writeItemStack(recipe.steelOutput.copy())
-        buf.writeItemStack(recipe.slagOutput.copy())
+        Ingredient.PACKET_CODEC.encode(buf, recipe.ingredient)
+        ItemStack.PACKET_CODEC.encode(buf, recipe.steelOutput.copy())
+        ItemStack.PACKET_CODEC.encode(buf, recipe.slagOutput.copy())
     }
 }

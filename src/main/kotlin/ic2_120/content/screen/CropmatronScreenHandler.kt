@@ -26,7 +26,7 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -154,10 +154,10 @@ class CropmatronScreenHandler(
         const val PLAYER_INV_START = 16
         const val HOTBAR_END = 51
 
-        private val fluidCellId = Identifier(Ic2_120.MOD_ID, "fluid_cell")
-        private val waterCellId = Identifier(Ic2_120.MOD_ID, "water_cell")
-        private val distilledWaterCellId = Identifier(Ic2_120.MOD_ID, "distilled_water_cell")
-        private val weedExCellId = Identifier(Ic2_120.MOD_ID, "weed_ex_cell")
+        private val fluidCellId = Identifier.of(Ic2_120.MOD_ID, "fluid_cell")
+        private val waterCellId = Identifier.of(Ic2_120.MOD_ID, "water_cell")
+        private val distilledWaterCellId = Identifier.of(Ic2_120.MOD_ID, "distilled_water_cell")
+        private val weedExCellId = Identifier.of(Ic2_120.MOD_ID, "weed_ex_cell")
 
         private val WATER_INPUT_SLOT_SPEC = SlotSpec(canInsert = { stack ->
             when {

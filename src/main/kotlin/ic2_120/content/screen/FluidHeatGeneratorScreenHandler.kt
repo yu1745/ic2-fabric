@@ -19,7 +19,7 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
@@ -133,9 +133,9 @@ class FluidHeatGeneratorScreenHandler(
         private val FUEL_SLOT_SPEC = SlotSpec(canInsert = { stack ->
             !stack.isEmpty && (
                 stack.item == Items.LAVA_BUCKET ||
-                stack.item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier("ic2_120", "biofuel_bucket")) ||
-                stack.item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier("ic2_120", "biofuel_cell")) ||
-                stack.item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier("ic2_120", "fluid_cell"))
+                stack.item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier.of("ic2_120", "biofuel_bucket")) ||
+                stack.item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier.of("ic2_120", "biofuel_cell")) ||
+                stack.item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier.of("ic2_120", "fluid_cell"))
             )
         })
 

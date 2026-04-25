@@ -23,7 +23,7 @@ import net.minecraft.block.Blocks
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
@@ -43,6 +43,8 @@ import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.minecraft.world.BlockView
 import java.util.function.Consumer
+import ic2_120.getCustomData
+import ic2_120.getOrCreateCustomData
 
 /**
  * 储物箱基类
@@ -72,7 +74,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
     ) {
         super.appendTooltip(stack, world, tooltip, context)
 
-        val blockEntityTag = stack.getSubNbt("BlockEntityTag")
+        val blockEntityTag = stack.getCustomData()?.getCompound("BlockEntityTag")
         if (blockEntityTag == null || !blockEntityTag.contains("Inventory")) {
             tooltip.add(Text.literal("物品数量: 0").formatted(Formatting.GRAY))
             return
@@ -109,14 +111,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
     /**
      * 玩家右键点击打开 GUI
      */
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             val blockEntity = world.getBlockEntity(pos)
             if (blockEntity is StorageBoxBlockEntity) {
@@ -137,7 +132,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
                 val itemStack = ItemStack(this.asItem())
                 val nbt = blockEntity.createNbtWithIdentifyingData()
                 if (!nbt.isEmpty) {
-                    itemStack.orCreateNbt.put("BlockEntityTag", nbt)
+                    itemStack.getOrCreateCustomData().put("BlockEntityTag", nbt)
                 }
 
                 // 掉落物品
@@ -171,7 +166,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
         if (blockEntity is StorageBoxBlockEntity) {
             val nbt = blockEntity.createNbtWithIdentifyingData()
             if (!nbt.isEmpty) {
-                itemStack.orCreateNbt.put("BlockEntityTag", nbt)
+                itemStack.getOrCreateCustomData().put("BlockEntityTag", nbt)
             }
         }
 
@@ -213,7 +208,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
 class WoodenStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.OAK_PLANKS).strength(2.5f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val log = Items.OAK_LOG
             val plank = Items.OAK_PLANKS
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodenStorageBoxBlock::class.item(), 1)
@@ -235,7 +230,7 @@ class WoodenStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks
 class BronzeStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = BronzePlate::class.instance()
             val casing = BronzeCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
@@ -259,7 +254,7 @@ class BronzeStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks
 class IronStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = IronPlate::class.instance()
             val casing = IronCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
@@ -283,7 +278,7 @@ class IronStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.I
 class SteelStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = SteelPlate::class.instance()
             val casing = SteelCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
@@ -307,7 +302,7 @@ class SteelStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.
 class IridiumStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(6.0f, 8.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val iridium = IridiumPlate::class.instance()
             val steel = SteelPlate::class.instance()
             if (iridium != Items.AIR && steel != Items.AIR) {

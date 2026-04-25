@@ -32,8 +32,9 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
@@ -118,7 +119,7 @@ class AnimalSlaughtererBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -134,8 +135,8 @@ class AnimalSlaughtererBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(AnimalSlaughtererSync.NBT_ENERGY_STORED)
@@ -143,8 +144,8 @@ class AnimalSlaughtererBlockEntity(
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(AnimalSlaughtererSync.NBT_ENERGY_STORED, sync.amount)

@@ -15,8 +15,9 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ScreenHandler
+import net.minecraft.registry.RegistryWrapper
 
 /**
  * 储物箱 BlockEntity
@@ -177,16 +178,16 @@ class StorageBoxBlockEntity(
         buf.writeBlockPos(pos)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         // 保存物品栏到 NBT
         val inventoryNbt = NbtCompound()
         Inventories.writeNbt(inventoryNbt, inventory)
         nbt.put(INVENTORY_KEY, inventoryNbt)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         // 从 NBT 读取物品栏
         val inventoryNbt = nbt.getCompound(INVENTORY_KEY)
         if (inventoryNbt.size == 0) {

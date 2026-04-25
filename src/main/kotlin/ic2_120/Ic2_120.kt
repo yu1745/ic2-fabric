@@ -121,7 +121,7 @@ object Ic2_120 : ModInitializer {
 
         // 焦炭作为固体燃料：燃烧时间为煤炭 2 倍（影响原版熔炉、铁炉、发电机等读取 FuelRegistry 的设备）
         val coalBurnTicks = FuelRegistry.INSTANCE.get(Items.COAL) ?: 1600
-        Registries.ITEM.getOrEmpty(Identifier(MOD_ID, "coke")).ifPresent { cokeItem ->
+        Registries.ITEM.getOrEmpty(Identifier.of(MOD_ID, "coke")).ifPresent { cokeItem ->
             FuelRegistry.INSTANCE.add(cokeItem, coalBurnTicks * 2)
         }
 
@@ -191,20 +191,20 @@ object Ic2_120 : ModInitializer {
             "mfe_chargepad",
             "mfsu_chargepad"
         )
-        val ic2MachinesKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_MACHINES.id))
+        val ic2MachinesKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(MOD_ID, CreativeTab.IC2_MACHINES.id))
         ItemGroupEvents.modifyEntriesEvent(ic2MachinesKey).register { entries ->
             for (id in storageIds) {
-                val fullStack = ItemStack(Registries.ITEM.get(Identifier(MOD_ID, id)))
-                fullStack.orCreateNbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
+                val fullStack = ItemStack(Registries.ITEM.get(Identifier.of(MOD_ID, id)))
+                fullStack.getOrCreateCustomData().putBoolean(EnergyStorageBlock.NBT_FULL, true)
                 entries.add(fullStack)
             }
         }
 
         // 注册满燃料喷气背包到创造模式
-        val jetpackItem = Registries.ITEM.get(Identifier(MOD_ID, "jetpack"))
+        val jetpackItem = Registries.ITEM.get(Identifier.of(MOD_ID, "jetpack"))
         if (jetpackItem != null) {
             val ic2MaterialsKey =
-                RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_MATERIALS.id))
+                RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(MOD_ID, CreativeTab.IC2_MATERIALS.id))
             ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
                 // 添加满燃料的喷气背包
                 val fullFuelJetpack = ItemStack(jetpackItem).also {
@@ -216,9 +216,9 @@ object Ic2_120 : ModInitializer {
 
         // 建筑泡沫喷枪：满流体（8 桶）变体
         val ic2MaterialsKey =
-            RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_MATERIALS.id))
+            RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(MOD_ID, CreativeTab.IC2_MATERIALS.id))
         ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
-            val sprayer = Registries.ITEM.get(Identifier(MOD_ID, "foam_sprayer"))
+            val sprayer = Registries.ITEM.get(Identifier.of(MOD_ID, "foam_sprayer"))
             if (sprayer == Items.AIR || sprayer !is FoamSprayerItem) return@register
             val fullSprayer = ItemStack(sprayer).also {
                 FoamSprayerItem.setFluidAmount(it, FoamSprayerItem.CAPACITY_DROPLETS)
@@ -227,9 +227,9 @@ object Ic2_120 : ModInitializer {
         }
 
         // 杂交作物初始种子袋（三维属性 1/1/1）加入作物种子物品栏
-        val ic2CropSeedsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
+        val ic2CropSeedsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
         ItemGroupEvents.modifyEntriesEvent(ic2CropSeedsKey).register { entries ->
-            val seedBag = Registries.ITEM.get(Identifier(MOD_ID, "crop_seed_bag"))
+            val seedBag = Registries.ITEM.get(Identifier.of(MOD_ID, "crop_seed_bag"))
             val initialSeeds = CropSeedBagItem.createInitialSeedStacks()
             if (seedBag != net.minecraft.item.Items.AIR) {
                 for (stack in initialSeeds) entries.addAfter(seedBag, stack)
@@ -252,5 +252,5 @@ object Ic2_120 : ModInitializer {
     /**
      * 创建模组内的标识符
      */
-    fun id(path: String): Identifier = Identifier(MOD_ID, path)
+    fun id(path: String): Identifier = Identifier.of(MOD_ID, path)
 }

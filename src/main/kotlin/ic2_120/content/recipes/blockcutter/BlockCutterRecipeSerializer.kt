@@ -3,7 +3,7 @@ package ic2_120.content.recipes.blockcutter
 import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonObject
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.registry.Registries
@@ -37,18 +37,18 @@ object BlockCutterRecipeSerializer : RecipeSerializer<BlockCutterRecipe> {
     }
 
     override fun read(id: Identifier, buf: PacketByteBuf): BlockCutterRecipe {
-        val ingredient = Ingredient.fromPacket(buf)
+        val ingredient = Ingredient.PACKET_CODEC.decode(buf)
         val inputCount = buf.readVarInt()
         val materialHardness = buf.readFloat()
-        val output = buf.readItemStack()
+        val output = ItemStack.PACKET_CODEC.decode(buf)
 
         return BlockCutterRecipe(id, ingredient, inputCount, materialHardness, output)
     }
 
     override fun write(buf: PacketByteBuf, recipe: BlockCutterRecipe) {
-        recipe.ingredient.write(buf)
+        Ingredient.PACKET_CODEC.encode(buf, recipe.ingredient)
         buf.writeVarInt(recipe.inputCount)
         buf.writeFloat(recipe.materialHardness)
-        buf.writeItemStack(recipe.output.copy())
+        ItemStack.PACKET_CODEC.encode(buf, recipe.output.copy())
     }
 }

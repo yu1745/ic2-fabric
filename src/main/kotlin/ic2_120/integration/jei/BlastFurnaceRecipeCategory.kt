@@ -17,7 +17,7 @@ import net.minecraft.util.Identifier
 class BlastFurnaceRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlastFurnaceJeiRecipe> {
     private val background: IDrawable = guiHelper.createBlankDrawable(140, 50)
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "blast_furnace")))
+        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "blast_furnace")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.BLAST_FURNACE

@@ -40,13 +40,14 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.minecraft.fluid.Fluids
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 
 /**
  * 地热发电机方块实体。
@@ -277,7 +278,7 @@ class GeoGeneratorBlockEntity(
         }
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -293,8 +294,8 @@ class GeoGeneratorBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(GeoGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, GeoGeneratorSync.ENERGY_CAPACITY)
@@ -303,8 +304,8 @@ class GeoGeneratorBlockEntity(
         lavaTankInternal.setStoredLava(nbt.getLong(NBT_LAVA_AMOUNT))
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(GeoGeneratorSync.NBT_ENERGY_STORED, sync.amount)
@@ -338,7 +339,7 @@ class GeoGeneratorBlockEntity(
             }
             fuelStack.item is LavaCell -> {
                 // 岩浆单元 = 1 桶 = 1000 mB
-                val emptyCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
+                val emptyCell = ItemStack(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")))
                 if (lavaTankInternal.canAcceptFullBucket() && canInsertEmptyContainer(emptyCell)) {
                     val inserted = lavaTankInternal.tryInsertLava(FluidConstants.BUCKET)
                     if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyCell)) {

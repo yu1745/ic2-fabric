@@ -12,6 +12,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.registry.Registry
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
@@ -57,8 +58,8 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         }
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         localEnergy = nbt.getLong(NBT_ENERGY)
         // println("readNbt load: ${nbt.getLong(NBT_LOAD)}")
         // repeat(20) {
@@ -66,8 +67,8 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         // }
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         nbt.putLong(NBT_ENERGY, network?.getEnergySharePerCable() ?: localEnergy)
         // nbt.putLong(NBT_LOAD, cableLoad)
     }
@@ -107,7 +108,7 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
             TYPE = FabricBlockEntityTypeBuilder.create(factory, *cableBlocks.toTypedArray())
                 .build() as BlockEntityType<CableBlockEntity>
 
-            Registry.register(Registries.BLOCK_ENTITY_TYPE, Identifier(modId, "cable"), TYPE)
+            Registry.register(Registries.BLOCK_ENTITY_TYPE, Identifier.of(modId, "cable"), TYPE)
             EnergyStorage.SIDED.registerForBlockEntity({ be, _ -> be.energyStorage }, TYPE)
 
             logger.info("已注册 CableBlockEntity（电网模型），关联 {} 种导线方块", cableBlocks.size)

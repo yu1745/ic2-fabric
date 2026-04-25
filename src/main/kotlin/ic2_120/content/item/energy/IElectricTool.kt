@@ -2,6 +2,7 @@ package ic2_120.content.item.energy
 
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
+import ic2_120.getOrCreateCustomData
 
 /**
  * 电动工具接口
@@ -85,11 +86,11 @@ interface IElectricTool : ITiered {
         const val ENERGY_KEY = "Energy"
 
         /** 从物品栈获取电量 */
-        fun getEnergy(stack: ItemStack): Long = stack.orCreateNbt.getLong(ENERGY_KEY)
+        fun getEnergy(stack: ItemStack): Long = stack.getOrCreateCustomData().getLong(ENERGY_KEY)
 
         /** 设置物品栈的电量 */
         fun setEnergy(stack: ItemStack, energy: Long, maxCapacity: Long) {
-            val nbt = stack.orCreateNbt
+            val nbt = stack.getOrCreateCustomData()
             nbt.putLong(ENERGY_KEY, energy.coerceIn(0, maxCapacity))
         }
 

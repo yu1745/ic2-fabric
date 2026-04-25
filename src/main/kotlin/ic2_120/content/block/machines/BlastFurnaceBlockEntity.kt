@@ -29,9 +29,10 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.RecipeManager
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -137,7 +138,7 @@ class BlastFurnaceBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -148,16 +149,16 @@ class BlastFurnaceBlockEntity(
         BlastFurnaceScreenHandler(syncId, playerInventory, this,
             net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         preheat = nbt.getLong(NBT_PREHEAT).coerceIn(0L, BlastFurnaceSync.PREHEAT_MAX.toLong())
         sync.preheat = preheat.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_PREHEAT, preheat)
@@ -265,7 +266,7 @@ class BlastFurnaceBlockEntity(
         if (airSlot.isEmpty || airSlot.item !is AirCell) return false
 
         val emptySlot = getStack(SLOT_OUTPUT_EMPTY)
-        val emptyCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
+        val emptyCell = ItemStack(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")))
         val canAcceptEmpty = emptySlot.isEmpty ||
             (ItemStack.areItemsEqual(emptySlot, emptyCell) && emptySlot.count + 1 <= emptyCell.maxCount)
         if (!canAcceptEmpty) return false

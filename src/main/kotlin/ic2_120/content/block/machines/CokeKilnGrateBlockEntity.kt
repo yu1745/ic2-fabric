@@ -18,6 +18,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.util.math.BlockPos
+import net.minecraft.registry.RegistryWrapper
 
 @ModBlockEntity(block = CokeKilnGrateBlock::class)
 class CokeKilnGrateBlockEntity(
@@ -96,16 +97,16 @@ class CokeKilnGrateBlockEntity(
         return moved
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         val tankNbt = NbtCompound()
         tankNbt.put("Variant", creosoteTank.variant.toNbt())
         tankNbt.putLong("Amount", creosoteTank.amount)
         nbt.put(NBT_TANK, tankNbt)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         val tankNbt = nbt.getCompound(NBT_TANK)
         if (!tankNbt.isEmpty) {
             creosoteTank.variant = FluidVariant.fromNbt(tankNbt.getCompound("Variant"))

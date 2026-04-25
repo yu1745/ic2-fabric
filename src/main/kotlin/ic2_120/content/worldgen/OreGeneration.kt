@@ -19,15 +19,15 @@ object OreGeneration {
     // private val logger = LoggerFactory.getLogger("ic2_120.oregen")
 
     val ORE_TIN_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_tin"))
+        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier.of(Ic2_120.MOD_ID, "ore_tin"))
     val ORE_TIN_DEEP_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_tin_deep"))
+        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier.of(Ic2_120.MOD_ID, "ore_tin_deep"))
     val ORE_TIN_UPPER_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_tin_upper"))
+        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier.of(Ic2_120.MOD_ID, "ore_tin_upper"))
     val ORE_LEAD_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_lead"))
+        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier.of(Ic2_120.MOD_ID, "ore_lead"))
     val ORE_URANIUM_PLACED_KEY: RegistryKey<net.minecraft.world.gen.feature.PlacedFeature> =
-        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier(Ic2_120.MOD_ID, "ore_uranium"))
+        RegistryKey.of(RegistryKeys.PLACED_FEATURE, Identifier.of(Ic2_120.MOD_ID, "ore_uranium"))
 
     fun register() {
         BiomeModifications.addFeature(

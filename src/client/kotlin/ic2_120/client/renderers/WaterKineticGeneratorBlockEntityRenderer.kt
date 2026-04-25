@@ -22,10 +22,10 @@ class WaterKineticGeneratorBlockEntityRenderer(
     context: BlockEntityRendererFactory.Context
 ) : BlockEntityRenderer<WaterKineticGeneratorBlockEntity> {
     companion object {
-        private val WOOD_ROTOR_TEXTURE = Identifier("ic2", "textures/item/rotor/wood_rotor_model.png")
-        private val IRON_ROTOR_TEXTURE = Identifier("ic2", "textures/item/rotor/iron_rotor_model.png")
-        private val STEEL_ROTOR_TEXTURE = Identifier("ic2", "textures/item/rotor/steel_rotor_model.png")
-        private val CARBON_ROTOR_TEXTURE = Identifier("ic2", "textures/item/rotor/carbon_rotor_model.png")
+        private val WOOD_ROTOR_TEXTURE = Identifier.of("ic2", "textures/item/rotor/wood_rotor_model.png")
+        private val IRON_ROTOR_TEXTURE = Identifier.of("ic2", "textures/item/rotor/iron_rotor_model.png")
+        private val STEEL_ROTOR_TEXTURE = Identifier.of("ic2", "textures/item/rotor/steel_rotor_model.png")
+        private val CARBON_ROTOR_TEXTURE = Identifier.of("ic2", "textures/item/rotor/carbon_rotor_model.png")
 
         private const val PIXEL = 1.0f / 16.0f
         private const val BLADE_HALF_WIDTH = 6.0f * PIXEL

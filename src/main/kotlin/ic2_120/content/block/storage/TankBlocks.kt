@@ -28,7 +28,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.entity.BlockEntity
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.entity.player.PlayerEntity
@@ -50,6 +50,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import java.util.function.Consumer
+import ic2_120.getCustomData
+import ic2_120.getOrCreateCustomData
 
 /**
  * 储罐基类
@@ -68,14 +70,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
 
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
 
         val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return ActionResult.PASS
@@ -85,8 +80,8 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
 
         val heldItem = held.item
         val modId = "ic2_120"
-        val emptyCell = Registries.ITEM.get(Identifier(modId, "empty_cell"))
-        val fluidCellItem = Registries.ITEM.get(Identifier(modId, "fluid_cell"))
+        val emptyCell = Registries.ITEM.get(Identifier.of(modId, "empty_cell"))
+        val fluidCellItem = Registries.ITEM.get(Identifier.of(modId, "fluid_cell"))
 
         // 空单元（empty_cell / empty fluid_cell）：取出 1 桶流体
         if (heldItem === emptyCell || (heldItem === fluidCellItem && held.getFluidCellVariant() == null)) {
@@ -188,7 +183,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
             // 消耗 1 桶流体：变为空单元
             if (!player.abilities.creativeMode) {
                 held.decrement(1)
-                val emptyStack = ItemStack(Registries.ITEM.get(Identifier("ic2_120", "empty_cell")))
+                val emptyStack = ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell")))
                 if (held.isEmpty) {
                     player.setStackInHand(hand, emptyStack)
                 } else if (!player.inventory.insertStack(emptyStack)) {
@@ -352,7 +347,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         if (!be.fluidVariant.isBlank) {
             nbt.put(NBT_FLUID_VARIANT, be.fluidVariant.toNbt())
         }
-        stack.orCreateNbt.put("BlockEntityTag", nbt)
+        stack.getOrCreateCustomData().put("BlockEntityTag", nbt)
     }
 
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
@@ -416,7 +411,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         if (block !is TankBlock) return
 
         val capMb = fluidCapacityMbForBlock(block)
-        val beTag = stack.getSubNbt("BlockEntityTag")
+        val beTag = stack.getCustomData()?.getCompound("BlockEntityTag")
         val amountRaw = beTag?.getLong(NBT_FLUID_AMOUNT) ?: 0L
         val variantTag = beTag?.getCompound(NBT_FLUID_VARIANT)
         val variant =
@@ -461,7 +456,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
 class BronzeTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = BronzePlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
@@ -485,7 +480,7 @@ class BronzeTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.bloc
 class IronTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = IronPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
@@ -509,7 +504,7 @@ class IronTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.
 class SteelTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(6.0f, 7.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = SteelPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
@@ -533,7 +528,7 @@ class SteelTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block
 class IridiumTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.Blocks.IRON_BLOCK).strength(8.0f, 10.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = IridiumPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {

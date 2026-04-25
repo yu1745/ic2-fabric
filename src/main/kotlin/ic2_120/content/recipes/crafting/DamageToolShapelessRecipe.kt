@@ -6,16 +6,16 @@ import ic2_120.content.item.Cutter
 import ic2_120.content.item.ForgeHammer
 import ic2_120.content.item.Treetap
 import ic2_120.content.item.Wrench
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.inventory.RecipeInputInventory
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.recipe.ShapelessRecipe
 import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.registry.DynamicRegistryManager
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
@@ -32,7 +32,7 @@ class DamageToolShapelessRecipe(delegate: ShapelessRecipe) : ShapelessRecipe(
     delegate.id,
     delegate.group,
     delegate.category,
-    delegate.getOutput(DynamicRegistryManager.EMPTY),
+    delegate.getResult(RegistryWrapper.WrapperLookup.EMPTY),
     delegate.ingredients
 ) {
     override fun getRemainder(inventory: RecipeInputInventory): DefaultedList<ItemStack> {
@@ -99,7 +99,7 @@ object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapeles
  */
 object DamageToolShapelessRecipeDatagen {
     fun offer(
-        exporter: Consumer<RecipeJsonProvider>,
+        exporter: Consumer<RecipeExporter>,
         recipeId: Identifier,
         result: Item,
         resultCount: Int = 1,
@@ -126,7 +126,7 @@ object DamageToolShapelessRecipeDatagen {
         private val resultCount: Int,
         private val ingredients: List<Ingredient>,
         private val category: String
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "ic2_120:damage_tool_shapeless")
             json.addProperty("category", category)

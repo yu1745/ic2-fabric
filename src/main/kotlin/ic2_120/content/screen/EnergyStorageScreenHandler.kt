@@ -17,7 +17,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -192,7 +192,7 @@ class EnergyStorageScreenHandler(
             val ctx = ScreenHandlerContext.create(playerInventory.player.world, pos)
             val blockInv = SimpleInventory(slotCount.coerceAtLeast(1))
             val blockId = Registries.BLOCK.getId(playerInventory.player.world.getBlockState(pos).block)
-            val screenHandlerType = Registries.SCREEN_HANDLER.get(Identifier(blockId.namespace, blockId.path))
+            val screenHandlerType = Registries.SCREEN_HANDLER.get(Identifier.of(blockId.namespace, blockId.path))
                 ?: error("ScreenHandler type not found for $blockId")
             @Suppress("UNCHECKED_CAST")
             return EnergyStorageScreenHandler(

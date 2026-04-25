@@ -12,6 +12,8 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import ic2_120.getCustomData
+import ic2_120.getOrCreateCustomData
 
 object EjectorUpgradeComponent {
     private const val NBT_ITEM_FILTER = "PipeItemFilter"
@@ -75,7 +77,7 @@ object EjectorUpgradeComponent {
     }
 
     fun readFilter(stack: ItemStack): Item? {
-        val nbt = stack.nbt ?: return null
+        val nbt = stack.getCustomData() ?: return null
         val raw = nbt.getString(NBT_ITEM_FILTER)
         if (raw.isNullOrBlank()) return null
         val id = Identifier.tryParse(raw) ?: return null
@@ -83,7 +85,7 @@ object EjectorUpgradeComponent {
     }
 
     fun writeFilter(stack: ItemStack, item: Item?) {
-        val nbt = stack.orCreateNbt
+        val nbt = stack.getOrCreateCustomData()
         if (item == null) {
             nbt.remove(NBT_ITEM_FILTER)
             return
@@ -94,14 +96,14 @@ object EjectorUpgradeComponent {
     }
 
     fun readDirection(stack: ItemStack): Direction? {
-        val nbt = stack.nbt ?: return null
+        val nbt = stack.getCustomData() ?: return null
         val raw = nbt.getString(NBT_DIRECTION)
         if (raw.isNullOrBlank()) return null
         return Direction.byName(raw.lowercase())
     }
 
     fun writeDirection(stack: ItemStack, side: Direction?) {
-        val nbt = stack.orCreateNbt
+        val nbt = stack.getOrCreateCustomData()
         if (side == null) {
             nbt.remove(NBT_DIRECTION)
             return

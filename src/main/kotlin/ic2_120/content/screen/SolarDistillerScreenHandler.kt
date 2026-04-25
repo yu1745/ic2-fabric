@@ -21,7 +21,7 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -138,7 +138,7 @@ class SolarDistillerScreenHandler(
 
         private val INPUT_CELL_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->
-                val emptyCell = Registries.ITEM.get(Identifier("ic2_120", "empty_cell"))
+                val emptyCell = Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell"))
                 stack.item == emptyCell || (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             }
         )

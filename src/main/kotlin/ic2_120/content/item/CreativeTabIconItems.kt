@@ -1,6 +1,5 @@
 package ic2_120.content.item
 
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.Item
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
@@ -11,10 +10,10 @@ import net.minecraft.util.Identifier
  * 不使用类扫描注解，由 [CreativeTabIconItemsRegistration] 在 [ic2_120.Ic2_120] 中手动注册。
  * 贴图路径映射见 [ic2_120.registry.CreativeTabIconProvider]。
  */
-class TabIconIc2ToolsItem : Item(FabricItemSettings())
+class TabIconIc2ToolsItem : Item(Item.Settings())
 
 object CreativeTabIconItemsRegistration {
     fun register(modId: String) {
-        Registry.register(Registries.ITEM, Identifier(modId, "tab_icon_ic2_tools"), TabIconIc2ToolsItem())
+        Registry.register(Registries.ITEM, Identifier.of(modId, "tab_icon_ic2_tools"), TabIconIc2ToolsItem())
     }
 }

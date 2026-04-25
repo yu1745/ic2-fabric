@@ -3,14 +3,14 @@ package ic2_120.content.recipes.crafting
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import ic2_120.content.item.isFluidCellEmpty
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.inventory.RecipeInputInventory
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.recipe.ShapelessRecipe
-import net.minecraft.registry.DynamicRegistryManager
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
@@ -25,7 +25,7 @@ class EmptyFluidCellToEmptyCellRecipe(delegate: ShapelessRecipe) : ShapelessReci
     delegate.id,
     delegate.group,
     delegate.category,
-    delegate.getOutput(DynamicRegistryManager.EMPTY),
+    delegate.getResult(RegistryWrapper.WrapperLookup.EMPTY),
     delegate.ingredients
 ) {
     private val fluidCellItem = delegate.ingredients.firstOrNull()?.matchingStacks?.firstOrNull()?.item
@@ -69,7 +69,7 @@ object EmptyFluidCellToEmptyCellRecipeSerializer : RecipeSerializer<EmptyFluidCe
 
 object EmptyFluidCellToEmptyCellRecipeDatagen {
     fun offer(
-        exporter: Consumer<RecipeJsonProvider>,
+        exporter: Consumer<RecipeExporter>,
         recipeId: Identifier,
         input: Item,
         result: Item,
@@ -93,7 +93,7 @@ object EmptyFluidCellToEmptyCellRecipeDatagen {
         private val result: Item,
         private val count: Int,
         private val category: String
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "ic2_120:empty_fluid_cell_to_empty_cell")
             json.addProperty("category", category)

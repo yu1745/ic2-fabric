@@ -18,7 +18,7 @@ import net.minecraft.state.property.BooleanProperty
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
@@ -47,21 +47,14 @@ class BlastFurnaceBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, BlastFurnaceBlockEntity::class.type()) { w, p, s, be -> (be as BlastFurnaceBlockEntity).tick(w, p, s) }
+        else validateTicker(type, BlastFurnaceBlockEntity::class.type()){ w, p, s, be -> (be as BlastFurnaceBlockEntity).tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -85,7 +78,7 @@ class BlastFurnaceBlock : MachineBlock() {
          * 为 ClassScanner 生成配方
          */
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             BlastFurnaceRecipeDatagen.generateRecipes(exporter)
             val ironCasing = IronCasing::class.instance()
             val machineCasing = MachineCasingBlock::class.item()

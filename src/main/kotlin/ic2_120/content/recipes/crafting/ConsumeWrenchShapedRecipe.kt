@@ -7,18 +7,20 @@ import ic2_120.content.block.storage.EnergyStorageConfig
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.sync.EnergyStorageSync
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.inventory.RecipeInputInventory
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.recipe.ShapedRecipe
-import net.minecraft.registry.DynamicRegistryManager
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import java.util.function.Consumer
+import ic2_120.getCustomData
+import ic2_120.getOrCreateCustomData
 
 /**
  * 工作台有序配方：消耗参与合成的扳手/电动工具，完全不返回余物，并继承电量累加功能。
@@ -30,10 +32,10 @@ class ConsumeWrenchShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
     delegate.width,
     delegate.height,
     delegate.ingredients,
-    delegate.getOutput(DynamicRegistryManager.EMPTY),
+    delegate.getResult(RegistryWrapper.WrapperLookup.EMPTY),
     delegate.showNotification()
 ) {
-    override fun craft(inventory: RecipeInputInventory, registryManager: DynamicRegistryManager): ItemStack {
+    override fun craft(inventory: RecipeInput, lookup: RegistryWrapper.WrapperLookup): ItemStack {
         val result = super.craft(inventory, registryManager)
 
         val totalEnergy = sumEnergyFromIngredients(inventory)
@@ -89,11 +91,11 @@ private fun getEnergyFromStack(stack: ItemStack): Long {
         val id = Registries.ITEM.getId(item)
         val config = EnergyStorageConfig.fromBlockPath(id.path) ?: return 0L
 
-        if (stack.nbt?.getBoolean(EnergyStorageBlock.NBT_FULL) == true) {
+        if (stack.getCustomData()?.getBoolean(EnergyStorageBlock.NBT_FULL) == true) {
             return config.capacity
         }
 
-        val blockEntityTag = stack.getSubNbt(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG) ?: return 0L
+        val blockEntityTag = stack.getCustomData()?.getCompound(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG) ?: return 0L
         return blockEntityTag
             .getLong(EnergyStorageSync.NBT_ENERGY_STORED)
             .coerceIn(0L, config.capacity)
@@ -108,12 +110,12 @@ private fun setStorageEnergy(result: ItemStack, energy: Long) {
     val clamped = energy.coerceIn(0L, config.capacity)
 
     if (clamped >= config.capacity) {
-        result.orCreateNbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
-        result.orCreateNbt.remove(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG)
+        result.getOrCreateCustomData().putBoolean(EnergyStorageBlock.NBT_FULL, true)
+        result.getOrCreateCustomData().remove(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG)
         return
     }
 
-    val nbt = result.orCreateNbt
+    val nbt = result.getOrCreateCustomData()
     nbt.putBoolean(EnergyStorageBlock.NBT_FULL, false)
 
     if (clamped <= 0L) {
@@ -149,7 +151,7 @@ object ConsumeWrenchShapedRecipeSerializer : RecipeSerializer<ConsumeWrenchShape
 
 object ConsumeWrenchShapedRecipeDatagen {
     fun offer(
-        exporter: Consumer<RecipeJsonProvider>,
+        exporter: Consumer<RecipeExporter>,
         recipeId: Identifier,
         result: Item,
         pattern: List<String>,
@@ -176,7 +178,7 @@ object ConsumeWrenchShapedRecipeDatagen {
         private val keys: Map<Char, Item>,
         private val count: Int,
         private val category: String
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "ic2_120:consume_wrench_shaped")
             json.addProperty("category", category)

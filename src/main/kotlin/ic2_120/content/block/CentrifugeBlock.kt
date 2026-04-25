@@ -17,7 +17,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
@@ -52,21 +52,14 @@ class CentrifugeBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, CentrifugeBlockEntity::class.type()) { w, p, s, be -> (be as CentrifugeBlockEntity).tick(w, p, s) }
+        else validateTicker(type, CentrifugeBlockEntity::class.type()){ w, p, s, be -> (be as CentrifugeBlockEntity).tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -90,7 +83,7 @@ class CentrifugeBlock : MachineBlock() {
          * 为 ClassScanner 生成配方
          */
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val advCasing = AdvancedMachineCasingBlock::class.item()
             val coil = Coil::class.instance()
             val laser = MiningLaserItem::class.instance()

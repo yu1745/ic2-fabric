@@ -6,7 +6,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -41,7 +41,7 @@ class ScannerScreenHandler(
 
     private val syncedData = SyncedData()
     val sync = ScannerSync(syncedData)
-    private val scannerUseSound: SoundEvent = SoundEvent.of(Identifier("ic2", "item.scanner.use"))
+    private val scannerUseSound: SoundEvent = SoundEvent.of(Identifier.of("ic2", "item.scanner.use"))
 
     init {
         addProperties(syncedData)

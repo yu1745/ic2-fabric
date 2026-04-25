@@ -127,7 +127,7 @@ object MachineLoopSoundController {
 
     private class BlockLoopSoundInstance(pos: BlockPos, def: LoopDef) :
         MovingSoundInstance(
-            SoundEvent.of(Identifier("ic2", def.eventId)),
+            SoundEvent.of(Identifier.of("ic2", def.eventId)),
             SoundCategory.BLOCKS,
             Random.create()
         ) {

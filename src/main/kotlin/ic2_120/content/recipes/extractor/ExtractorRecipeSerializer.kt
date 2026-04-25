@@ -3,7 +3,7 @@ package ic2_120.content.recipes.extractor
 import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonObject
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.registry.Registries
@@ -22,13 +22,13 @@ object ExtractorRecipeSerializer : RecipeSerializer<ExtractorRecipe> {
     }
 
     override fun read(id: Identifier, buf: PacketByteBuf): ExtractorRecipe {
-        val ingredient = Ingredient.fromPacket(buf)
-        val output = buf.readItemStack()
+        val ingredient = Ingredient.PACKET_CODEC.decode(buf)
+        val output = ItemStack.PACKET_CODEC.decode(buf)
         return ExtractorRecipe(id, ingredient, output)
     }
 
     override fun write(buf: PacketByteBuf, recipe: ExtractorRecipe) {
-        recipe.ingredient.write(buf)
-        buf.writeItemStack(recipe.output.copy())
+        Ingredient.PACKET_CODEC.encode(buf, recipe.ingredient)
+        ItemStack.PACKET_CODEC.encode(buf, recipe.output.copy())
     }
 }

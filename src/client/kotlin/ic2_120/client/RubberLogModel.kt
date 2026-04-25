@@ -44,7 +44,7 @@ class RubberLogModel : UnbakedModel, BakedModel, FabricBakedModel {
         modelId: Identifier
     ): BakedModel {
         val atlas = PlayerScreenHandler.BLOCK_ATLAS_TEXTURE
-        val tex = { path: String -> SpriteIdentifier(atlas, Identifier("ic2", "block/resource/$path")) }
+        val tex = { path: String -> SpriteIdentifier(atlas, Identifier.of("ic2", "block/resource/$path")) }
         sprites[0] = textureGetter.apply(tex("rubber_wood_wet_front"))
         sprites[1] = textureGetter.apply(tex("rubber_wood_dry_front"))
         sprites[2] = textureGetter.apply(tex("rubber_wood_wet_leftrightback"))

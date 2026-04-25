@@ -11,7 +11,7 @@ object ModEntities {
 
     val BROKEN_RUBBER_BOAT: EntityType<BrokenRubberBoatEntity> = Registry.register(
         Registries.ENTITY_TYPE,
-        Identifier(Ic2_120.MOD_ID, "broken_rubber_boat"),
+        Identifier.of(Ic2_120.MOD_ID, "broken_rubber_boat"),
         EntityType.Builder.create<BrokenRubberBoatEntity>({ type, world -> BrokenRubberBoatEntity(type, world) }, SpawnGroup.MISC)
             .setDimensions(1.375f, 0.5625f)
             .maxTrackingRange(10)
@@ -20,7 +20,7 @@ object ModEntities {
 
     val CARBON_BOAT: EntityType<CarbonBoatEntity> = Registry.register(
         Registries.ENTITY_TYPE,
-        Identifier(Ic2_120.MOD_ID, "carbon_boat"),
+        Identifier.of(Ic2_120.MOD_ID, "carbon_boat"),
         EntityType.Builder.create<CarbonBoatEntity>({ type, world -> CarbonBoatEntity(type, world) }, SpawnGroup.MISC)
             .setDimensions(1.375f, 0.5625f)
             .maxTrackingRange(10)
@@ -29,7 +29,7 @@ object ModEntities {
 
     val RUBBER_BOAT: EntityType<RubberBoatEntity> = Registry.register(
         Registries.ENTITY_TYPE,
-        Identifier(Ic2_120.MOD_ID, "rubber_boat"),
+        Identifier.of(Ic2_120.MOD_ID, "rubber_boat"),
         EntityType.Builder.create<RubberBoatEntity>({ type, world -> RubberBoatEntity(type, world) }, SpawnGroup.MISC)
             .setDimensions(1.375f, 0.5625f)
             .maxTrackingRange(10)
@@ -38,7 +38,7 @@ object ModEntities {
 
     val ELECTRIC_BOAT: EntityType<ElectricBoatEntity> = Registry.register(
         Registries.ENTITY_TYPE,
-        Identifier(Ic2_120.MOD_ID, "electric_boat"),
+        Identifier.of(Ic2_120.MOD_ID, "electric_boat"),
         EntityType.Builder.create<ElectricBoatEntity>({ type, world -> ElectricBoatEntity(type, world) }, SpawnGroup.MISC)
             .setDimensions(1.375f, 0.5625f)
             .maxTrackingRange(10)
@@ -47,7 +47,7 @@ object ModEntities {
 
     val LASER_PROJECTILE: EntityType<LaserProjectileEntity> = Registry.register(
         Registries.ENTITY_TYPE,
-        Identifier(Ic2_120.MOD_ID, "laser_projectile"),
+        Identifier.of(Ic2_120.MOD_ID, "laser_projectile"),
         EntityType.Builder.create<LaserProjectileEntity>({ type, world -> LaserProjectileEntity(type, world) }, SpawnGroup.MISC)
             .setDimensions(0.1f, 0.1f)
             .maxTrackingRange(256)

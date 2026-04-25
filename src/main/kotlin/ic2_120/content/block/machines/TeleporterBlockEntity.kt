@@ -33,8 +33,9 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
@@ -76,8 +77,8 @@ class TeleporterBlockEntity(
 
     companion object {
         const val TELEPORTER_TIER = 4
-        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.of(Identifier("ic2", "machine.teleporter.charge"))
-        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.of(Identifier("ic2", "machine.teleporter.use"))
+        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.of(Identifier.of("ic2", "machine.teleporter.charge"))
+        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.of(Identifier.of("ic2", "machine.teleporter.use"))
 
         const val SLOT_DISCHARGING = 0
         const val SLOT_UPGRADE_0 = 1
@@ -203,7 +204,7 @@ class TeleporterBlockEntity(
         markDirty()
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -213,8 +214,8 @@ class TeleporterBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): net.minecraft.screen.ScreenHandler =
         TeleporterScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
 
@@ -253,8 +254,8 @@ class TeleporterBlockEntity(
         sync.teleportRange = teleportRange
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
 

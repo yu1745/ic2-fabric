@@ -7,7 +7,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.world.World
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+import ic2_120.getCustomData
+import ic2_120.getOrCreateCustomData
 
 /**
  * 带脉冲耐久的中子反射板。NBT `use` 为已消耗的脉冲数，枯竭后槽位清空且不再提供脉冲加成。
@@ -18,10 +19,10 @@ abstract class AbstractFiniteNeutronReflectorItem(
 ) : AbstractReactorComponent(settings) {
 
     private fun getConsumed(stack: ItemStack): Int =
-        (stack.nbt?.getInt("use") ?: 0).coerceIn(0, maxPulses)
+        (stack.getCustomData()?.getInt("use") ?: 0).coerceIn(0, maxPulses)
 
     private fun setConsumed(stack: ItemStack, value: Int) {
-        stack.orCreateNbt.putInt("use", value.coerceIn(0, maxPulses))
+        stack.getOrCreateCustomData().putInt("use", value.coerceIn(0, maxPulses))
     }
 
     private fun isDepleted(stack: ItemStack): Boolean = getConsumed(stack) >= maxPulses

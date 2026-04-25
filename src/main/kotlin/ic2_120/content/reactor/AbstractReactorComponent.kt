@@ -2,7 +2,6 @@ package ic2_120.content.reactor
 
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 
 /**
  * 反应堆组件抽象基类。所有方法默认空实现。

@@ -38,7 +38,7 @@ import net.minecraft.inventory.SimpleInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.RecipeManager
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
@@ -46,6 +46,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.registry.RegistryWrapper
 
 @ModBlockEntity(block = BlockCutterBlock::class)
 @ModMachineRecipeBinding(BlockCutterRecipeSerializer::class)
@@ -147,7 +148,7 @@ class BlockCutterBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -157,8 +158,8 @@ class BlockCutterBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         BlockCutterScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(BlockCutterSync.NBT_ENERGY_STORED)
@@ -166,8 +167,8 @@ class BlockCutterBlockEntity(
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(BlockCutterSync.NBT_ENERGY_STORED, sync.amount)

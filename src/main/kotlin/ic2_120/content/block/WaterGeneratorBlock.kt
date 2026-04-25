@@ -15,7 +15,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -46,7 +46,7 @@ class WaterGeneratorBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, WaterGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, WaterGeneratorBlockEntity::class.type()){ w, p, s, be ->
             (be as WaterGeneratorBlockEntity).tick(w, p, s)
         }
 
@@ -63,14 +63,7 @@ class WaterGeneratorBlock : MachineBlock() {
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             val storage = FluidStorage.SIDED.find(world, pos, hit.side)
                 ?: FluidStorage.SIDED.find(world, pos, null)
@@ -88,7 +81,7 @@ class WaterGeneratorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val generator = GeneratorBlock::class.item()
             if (generator != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WaterGeneratorBlock::class.item(), 2)

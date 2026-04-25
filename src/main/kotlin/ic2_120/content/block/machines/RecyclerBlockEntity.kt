@@ -36,8 +36,9 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
 import net.minecraft.item.Item
@@ -100,7 +101,7 @@ class RecyclerBlockEntity(
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT)
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_INPUT)
         const val INVENTORY_SIZE = 7
-        private val SCRAP_ID = Identifier("ic2_120", "scrap")
+        private val SCRAP_ID = Identifier.of("ic2_120", "scrap")
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -186,8 +187,8 @@ class RecyclerBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(RecyclerSync.NBT_ENERGY_STORED)
@@ -195,8 +196,8 @@ class RecyclerBlockEntity(
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(RecyclerSync.NBT_ENERGY_STORED, sync.amount)

@@ -19,7 +19,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -46,7 +46,7 @@ class FermenterBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, FermenterBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, FermenterBlockEntity::class.type()){ w, p, s, be ->
             (be as FermenterBlockEntity).tick(w, p, s)
         }
 
@@ -67,14 +67,7 @@ class FermenterBlock : MachineBlock() {
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             val storage = FluidStorage.SIDED.find(world, pos, hit.side)
                 ?: FluidStorage.SIDED.find(world, pos, null)
@@ -92,7 +85,7 @@ class FermenterBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val emptyCell = EmptyCell::class.instance()
             val ironCasing = IronCasing::class.instance()
             val heatConductor = HeatConductor::class.instance()

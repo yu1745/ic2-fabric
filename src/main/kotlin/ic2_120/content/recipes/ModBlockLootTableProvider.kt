@@ -42,12 +42,12 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
 
     private val wrenchPredicateBuilder = ItemPredicate.Builder.create()
         .items(
-            Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "wrench")),
-            Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "electric_wrench"))
+            Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "wrench")),
+            Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "electric_wrench"))
         )
 
     override fun generate() {
-        val reinforcedDoorId = Identifier(Ic2_120.MOD_ID, "reinforced_door")
+        val reinforcedDoorId = Identifier.of(Ic2_120.MOD_ID, "reinforced_door")
 
         for (block in Registries.BLOCK) {
             val id = Registries.BLOCK.getId(block)

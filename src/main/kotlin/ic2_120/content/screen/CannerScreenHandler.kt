@@ -25,7 +25,7 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -51,7 +51,7 @@ class CannerScreenHandler(
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
-    private val tinCanItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "tin_can")) }
+    private val tinCanItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "tin_can")) }
 
     private val containerSlotSpec = SlotSpec(
         canInsert = { stack ->

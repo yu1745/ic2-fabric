@@ -67,7 +67,7 @@ object ModTags {
             val ORES_IRIDIUM = item("ores/iridium")
 
             private fun item(path: String): TagKey<Item> =
-                TagKey.of(RegistryKeys.ITEM, Identifier(Ic2_120.MOD_ID, "compat/$path"))
+                TagKey.of(RegistryKeys.ITEM, Identifier.of(Ic2_120.MOD_ID, "compat/$path"))
         }
 
         object Blocks {
@@ -83,7 +83,7 @@ object ModTags {
             val STORAGE_BLOCKS_URANIUM = block("storage_blocks/uranium")
 
             private fun block(path: String): TagKey<Block> =
-                TagKey.of(RegistryKeys.BLOCK, Identifier(Ic2_120.MOD_ID, "compat/$path"))
+                TagKey.of(RegistryKeys.BLOCK, Identifier.of(Ic2_120.MOD_ID, "compat/$path"))
         }
     }
 }

@@ -99,7 +99,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
  */
 object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val PIPE_FLOW = Identifier("ic2_120", "pipe_flow")
+    private val PIPE_FLOW = Identifier.of("ic2_120", "pipe_flow")
 
     /**
      * Per-block-position sliding window filter to smooth flow rate display.
@@ -192,7 +192,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
  */
 object CableJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val CABLE_LOAD = Identifier("ic2_120", "cable_load")
+    private val CABLE_LOAD = Identifier.of("ic2_120", "cable_load")
 
     private val filterCache = object : LinkedHashMap<Long, FilteredLong>(32, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, FilteredLong>?): Boolean =
@@ -254,7 +254,7 @@ object CableJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcc
 }
 
 object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
-    private val CROP_GROWTH = Identifier("ic2_120", "crop_growth")
+    private val CROP_GROWTH = Identifier.of("ic2_120", "crop_growth")
 
     override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
         val world = accessor.level
@@ -410,7 +410,7 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
 }
 
 object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
-    private val KINETIC_INFO = Identifier("ic2_120", "kinetic_info")
+    private val KINETIC_INFO = Identifier.of("ic2_120", "kinetic_info")
 
     override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
         val world = accessor.level
@@ -543,7 +543,7 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
  */
 object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<EntityAccessor> {
 
-    private val ANIMAL_MONITOR = Identifier("ic2_120", "animal_monitor")
+    private val ANIMAL_MONITOR = Identifier.of("ic2_120", "animal_monitor")
 
     override fun appendServerData(data: NbtCompound, accessor: EntityAccessor) {
         val entity = accessor.entity

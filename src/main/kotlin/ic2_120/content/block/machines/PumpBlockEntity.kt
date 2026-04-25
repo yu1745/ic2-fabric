@@ -51,8 +51,9 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -212,7 +213,7 @@ class PumpBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         slot == SLOT_INPUT -> {
-            val emptyCell = Registries.ITEM.get(Identifier("ic2_120", "empty_cell"))
+            val emptyCell = Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell"))
             stack.item == emptyCell || stack.item is FluidCellItem
         }
         slot == SLOT_OUTPUT -> false
@@ -221,7 +222,7 @@ class PumpBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -231,8 +232,8 @@ class PumpBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         PumpScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(PumpSync.NBT_ENERGY_STORED)
@@ -241,8 +242,8 @@ class PumpBlockEntity(
         tankInternal.setStored(nbt.getString(NBT_TANK_FLUID), nbt.getLong(NBT_TANK_AMOUNT))
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(PumpSync.NBT_ENERGY_STORED, sync.amount)
@@ -362,7 +363,7 @@ class PumpBlockEntity(
 
         val output = getStack(SLOT_OUTPUT)
         val filled = when {
-            input.item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) ->
+            input.item == Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")) ->
                 fluidToFilledCellStack(tankInternal.variant.fluid)
             input.item is FluidCellItem && input.isFluidCellEmpty() ->
                 ItemStack(input.item).apply { setFluidCellVariant(FluidVariant.of(tankInternal.variant.fluid)) }

@@ -18,11 +18,11 @@ import net.minecraft.util.Identifier
 object ModArmorMaterials {
 
     // ========== 修复原料 ==========
-    private val bronzeIngot = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "bronze_ingot")))
-    private val rubber = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "rubber")))
-    private val carbonFibre = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "carbon_fibre")))
-    private val advancedAlloy = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "alloy")))
-    private val iridium = Ingredient.ofItems(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "iridium")))
+    private val bronzeIngot = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "bronze_ingot")))
+    private val rubber = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "rubber")))
+    private val carbonFibre = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "carbon_fibre")))
+    private val advancedAlloy = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "alloy")))
+    private val iridium = Ingredient.ofItems(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "iridium")))
 
     /**
      * 创建自定义护甲材料

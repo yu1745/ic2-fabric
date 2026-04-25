@@ -60,10 +60,10 @@ class Ic2BoatEntityRenderer(
     }
 
     override fun getTexture(boat: BoatEntity): Identifier = when (boat) {
-        is BrokenRubberBoatEntity -> Identifier("ic2", "textures/entity/boat/boat_rubber.png")
-        is CarbonBoatEntity -> Identifier("ic2", "textures/entity/boat/boat_carbon.png")
-        is RubberBoatEntity -> Identifier("ic2", "textures/entity/boat/boat_rubber.png")
-        is ElectricBoatEntity -> Identifier("ic2", "textures/entity/boat/boat_electric.png")
+        is BrokenRubberBoatEntity -> Identifier.of("ic2", "textures/entity/boat/boat_rubber.png")
+        is CarbonBoatEntity -> Identifier.of("ic2", "textures/entity/boat/boat_carbon.png")
+        is RubberBoatEntity -> Identifier.of("ic2", "textures/entity/boat/boat_rubber.png")
+        is ElectricBoatEntity -> Identifier.of("ic2", "textures/entity/boat/boat_electric.png")
         else -> Identifier("textures/entity/boat/oak.png")
     }
 

@@ -8,8 +8,8 @@ import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 
-private val RUBBER_LOG_ID = Identifier(Ic2_120.MOD_ID, "rubber_log")
-private val MODEL_ID = Identifier(Ic2_120.MOD_ID, "block/rubber_log")
+private val RUBBER_LOG_ID = Identifier.of(Ic2_120.MOD_ID, "rubber_log")
+private val MODEL_ID = Identifier.of(Ic2_120.MOD_ID, "block/rubber_log")
 
 /**
  * 为橡胶树原木注册动态模型，替代 243 个 blockstate 变体和 81 个静态模型文件。

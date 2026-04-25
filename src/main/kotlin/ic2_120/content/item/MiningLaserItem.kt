@@ -12,8 +12,7 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
@@ -34,6 +33,8 @@ import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.util.ActionResult
+import ic2_120.getCustomData
+import ic2_120.getOrCreateCustomData
 
 /**
  * 采矿镭射枪：电动远程采矿工具，发射弹射体破坏方块。
@@ -43,7 +44,7 @@ import net.minecraft.util.ActionResult
  */
 @ModItem(name = "mining_laser", tab = CreativeTab.IC2_TOOLS)
 class MiningLaserItem : Item(
-    FabricItemSettings().maxCount(1)
+    Item.Settings().maxCount(1)
 ), IElectricTool {
 
     companion object {
@@ -54,13 +55,13 @@ class MiningLaserItem : Item(
 
         /** 从 ItemStack NBT 读取当前模式 */
         fun getMode(stack: ItemStack): LaserMode {
-            val nbt = stack.nbt ?: return LaserMode.DEFAULT
+            val nbt = stack.getCustomData() ?: return LaserMode.DEFAULT
             return try { LaserMode.valueOf(nbt.getString(MODE_KEY)) } catch (_: Exception) { LaserMode.DEFAULT }
         }
 
         /** 向 ItemStack NBT 写入模式 */
         fun setMode(stack: ItemStack, mode: LaserMode) {
-            stack.getOrCreateNbt().putString(MODE_KEY, mode.name)
+            stack.getOrCreateCustomData().putString(MODE_KEY, mode.name)
         }
 
         /** 循环切换到下一个模式 */
@@ -72,7 +73,7 @@ class MiningLaserItem : Item(
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val alloy = Alloy::class.instance()
             val crystal = EnergyCrystalItem::class.instance()
             val advCircuit = AdvancedCircuit::class.instance()

@@ -14,7 +14,7 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.util.Identifier
 
 object NetworkManager {
-    private val REACTOR_HEAT_INFO_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_heat_info")
+    private val REACTOR_HEAT_INFO_PACKET = Identifier.of(Ic2_120.MOD_ID, "reactor_heat_info")
     private val BANDWIDTH_HUD_PACKET = BandwidthHudPacket.ID
     private val WIND_ROTOR_STATE_PACKET = WindRotorStatePacket.ID
     private val WATER_ROTOR_STATE_PACKET = WaterRotorStatePacket.ID
@@ -67,9 +67,8 @@ object NetworkManager {
         
 
         // 注册扫描结果 S2C 包
-        ClientPlayNetworking.registerGlobalReceiver(SCANNER_RESULT_PACKET) { client, handler, buf, responseSender ->
-            val packet = ScannerResultPacket.read(buf)
-            client.execute {
+        ClientPlayNetworking.registerGlobalReceiver(ScannerResultPacket.ID) { packet, context ->
+            context.client().execute {
                 ScannerScreen.receiveResults(packet)
             }
         }

@@ -29,7 +29,7 @@ class PipeBlockEntityRenderer(
 ) : BlockEntityRenderer<PipeBlockEntity> {
 
     companion object {
-        private val PIPE_TEXTURE = Identifier("ic2_120", "textures/block/transport/pipe_white.png")
+        private val PIPE_TEXTURE = Identifier.of("ic2_120", "textures/block/transport/pipe_white.png")
 
         private const val BRONZE_COLOR_R = 133
         private const val BRONZE_COLOR_G = 66

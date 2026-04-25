@@ -67,7 +67,7 @@ class WindGeneratorScreen(
                 Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
                     // 风力图标
                     Image(
-                        texture = Identifier("ic2", "textures/gui/overlay/solar_sun.png"),
+                        texture = Identifier.of("ic2", "textures/gui/overlay/solar_sun.png"),
                         width = 16,
                         height = 16,
                         u = if (isGenerating) 16f else 0f,

@@ -26,7 +26,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
@@ -44,7 +44,7 @@ class SolarDistillerBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, SolarDistillerBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, SolarDistillerBlockEntity::class.type()){ w, p, s, be ->
             (be as SolarDistillerBlockEntity).tick(w, p, s)
         }
 
@@ -61,14 +61,7 @@ class SolarDistillerBlock : MachineBlock() {
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             val storage = FluidStorage.SIDED.find(world, pos, hit.side)
                 ?: FluidStorage.SIDED.find(world, pos, null)
@@ -86,7 +79,7 @@ class SolarDistillerBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val emptyCell = EmptyCell::class.instance()
             val casing = MachineCasingBlock::class.instance()
             if (emptyCell != Items.AIR && casing != Items.AIR) {

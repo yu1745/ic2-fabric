@@ -15,7 +15,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
@@ -97,7 +97,7 @@ class PatternStorageScreenHandler(
         }, true)
 
     companion object {
-        private val CRYSTAL_MEMORY_ID = Identifier(Ic2_120.MOD_ID, "crystal_memory")
+        private val CRYSTAL_MEMORY_ID = Identifier.of(Ic2_120.MOD_ID, "crystal_memory")
 
         private val CRYSTAL_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,

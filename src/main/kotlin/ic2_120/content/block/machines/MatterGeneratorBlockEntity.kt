@@ -49,8 +49,9 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -133,9 +134,9 @@ class MatterGeneratorBlockEntity(
         extractSlots = intArrayOf(SLOT_SCRAP, SLOT_CONTAINER_INPUT, SLOT_CONTAINER_OUTPUT, SLOT_DISCHARGING),
         markDirty = { markDirty() }
     )
-    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val uuMatterCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "uu_matter_cell")) }
+    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val uuMatterCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "uu_matter_cell")) }
 
     private val outputPerCycle = mbToDroplets(1)
 
@@ -260,20 +261,20 @@ class MatterGeneratorBlockEntity(
     private fun matterGenIsFillableContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         val itemId = Registries.ITEM.getId(stack.item)
-        return itemId == Identifier(Ic2_120.MOD_ID, "empty_cell") ||
+        return itemId == Identifier.of(Ic2_120.MOD_ID, "empty_cell") ||
             stack.item == Items.BUCKET ||
-            (itemId == Identifier(Ic2_120.MOD_ID, "fluid_cell") && stack.isFluidCellEmpty())
+            (itemId == Identifier.of(Ic2_120.MOD_ID, "fluid_cell") && stack.isFluidCellEmpty())
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
-        SLOT_SCRAP -> !stack.isEmpty && Registries.ITEM.getId(stack.item) == Identifier(Ic2_120.MOD_ID, "scrap")
+        SLOT_SCRAP -> !stack.isEmpty && Registries.ITEM.getId(stack.item) == Identifier.of(Ic2_120.MOD_ID, "scrap")
         SLOT_CONTAINER_INPUT -> !stack.isEmpty && stack.item !is IBatteryItem && matterGenIsFillableContainer(stack)
         SLOT_CONTAINER_OUTPUT -> false
         SLOT_DISCHARGING -> !stack.isEmpty && stack.item is IBatteryItem
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -289,8 +290,8 @@ class MatterGeneratorBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(MatterGeneratorSync.NBT_ENERGY_STORED))
@@ -301,8 +302,8 @@ class MatterGeneratorBlockEntity(
         sync.mode = resolveDisplayedMode()
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(MatterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
@@ -466,7 +467,7 @@ class MatterGeneratorBlockEntity(
     }
 
     private fun isScrap(stack: ItemStack): Boolean =
-        !stack.isEmpty && Registries.ITEM.getId(stack.item) == Identifier(Ic2_120.MOD_ID, "scrap")
+        !stack.isEmpty && Registries.ITEM.getId(stack.item) == Identifier.of(Ic2_120.MOD_ID, "scrap")
 
     private fun isUuMatter(fluid: net.minecraft.fluid.Fluid): Boolean =
         fluid == ModFluids.UU_MATTER_STILL || fluid == ModFluids.UU_MATTER_FLOWING

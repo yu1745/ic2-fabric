@@ -161,7 +161,7 @@ object ClientScreenRegistrar {
 
             // 为每个 handler 名称注册一次（多个方块共用同一个 UI）
             for (handlerName in handlersToRegister) {
-                val id = Identifier(modId, handlerName)
+                val id = Identifier.of(modId, handlerName)
                 val type = Registries.SCREEN_HANDLER.get(id)
                     ?: run {
                         logger.error("未找到 ScreenHandler 类型: {}，请确保主端已注册 @ModScreenHandler(name = \"{}\")", id, handlerName)

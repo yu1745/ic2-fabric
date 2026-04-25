@@ -7,7 +7,7 @@ import ic2_120.content.item.energy.EnergyCrystalItem
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
 import ic2_120.registry.item
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
@@ -115,10 +115,10 @@ object CompressorRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
         entries.forEach { entry ->
-            CompressorRecipeJsonProvider(
-                recipeId = Identifier("ic2_120", "compressing/${entry.name}"),
+            CompressorRecipeExporter(
+                recipeId = Identifier.of("ic2_120", "compressing/${entry.name}"),
                 inputItem = entry.input,
                 inputCount = entry.inputCount,
                 outputItem = entry.output,
@@ -127,13 +127,13 @@ object CompressorRecipeDatagen {
         }
     }
 
-    private class CompressorRecipeJsonProvider(
+    private class CompressorRecipeExporter(
         private val recipeId: Identifier,
         private val inputItem: Item,
         private val inputCount: Int,
         private val outputItem: Item,
         private val outputCount: Int
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(CompressorRecipe::class)}")
             val ingredient = JsonObject()

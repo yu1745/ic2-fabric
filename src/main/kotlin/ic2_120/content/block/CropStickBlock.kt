@@ -16,7 +16,7 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
@@ -45,6 +45,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
 import net.minecraft.world.WorldView
+import net.minecraft.registry.RegistryWrapper
 
 @ModBlock(
     name = "crop_stick",
@@ -102,14 +103,7 @@ class CropStickBlock : BlockWithEntity(
         return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
     }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
         val stack = player.getStackInHand(hand)
         val isCreative = player.abilities.creativeMode
@@ -270,7 +264,7 @@ class CropStickBlock : BlockWithEntity(
         fun defaultStickState(): BlockState = CropStickBlock::class.instance().defaultState.with(CROSSING_BASE, false)
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CropStickBlock::class.item(), 2)
                 .pattern("   ")
                 .pattern("S S")
@@ -343,15 +337,15 @@ class CropStickBlockEntity(
         return accepted
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         nbt.putInt("nutrients", storageNutrients)
         nbt.putInt("water", storageWater)
         nbt.putInt("weed_ex", storageWeedEx)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         storageNutrients = nbt.getInt("nutrients")
         storageWater = nbt.getInt("water")
         storageWeedEx = nbt.getInt("weed_ex")

@@ -4,28 +4,27 @@ import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.Item
 
 // ========== 地形转换模板类 ==========
 
 @ModItem(name = "blank_tfbp", tab = CreativeTab.IC2_MATERIALS, group = "tfbp")
-class BlankTfbpItem : Item(FabricItemSettings())
+class BlankTfbpItem : Item(Item.Settings())
 
 @ModItem(name = "chilling_tfbp", tab = CreativeTab.IC2_MATERIALS, group = "tfbp")
-class ChillingTfbpItem : Item(FabricItemSettings())
+class ChillingTfbpItem : Item(Item.Settings())
 
 @ModItem(name = "cultivation_tfbp", tab = CreativeTab.IC2_MATERIALS, group = "tfbp")
-class CultivationTfbpItem : Item(FabricItemSettings())
+class CultivationTfbpItem : Item(Item.Settings())
 
 @ModItem(name = "desertification_tfbp", tab = CreativeTab.IC2_MATERIALS, group = "tfbp")
-class DesertificationTfbpItem : Item(FabricItemSettings())
+class DesertificationTfbpItem : Item(Item.Settings())
 
 @ModItem(name = "flatification_tfbp", tab = CreativeTab.IC2_MATERIALS, group = "tfbp")
-class FlatificationTfbpItem : Item(FabricItemSettings())
+class FlatificationTfbpItem : Item(Item.Settings())
 
 @ModItem(name = "irrigation_tfbp", tab = CreativeTab.IC2_MATERIALS, group = "tfbp")
-class IrrigationTfbpItem : Item(FabricItemSettings())
+class IrrigationTfbpItem : Item(Item.Settings())
 
 @ModItem(name = "mushroom_tfbp", tab = CreativeTab.IC2_MATERIALS, group = "tfbp")
-class MushroomTfbpItem : Item(FabricItemSettings())
+class MushroomTfbpItem : Item(Item.Settings())

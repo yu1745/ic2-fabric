@@ -19,7 +19,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -45,7 +45,7 @@ class PumpScreenHandler(
     }
 
     private val inputSlotSpec = SlotSpec(canInsert = { stack ->
-        val emptyCell = Registries.ITEM.get(Identifier("ic2_120", "empty_cell"))
+        val emptyCell = Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell"))
         stack.item == emptyCell || stack.item is FluidCellItem
     })
     private val outputSlotSpec = SlotSpec(canInsert = { false }, canTake = { true })

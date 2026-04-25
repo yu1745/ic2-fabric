@@ -23,7 +23,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
@@ -52,21 +52,14 @@ class SolidCannerBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, SolidCannerBlockEntity::class.type()) { w, p, s, be -> (be as SolidCannerBlockEntity).tick(w, p, s) }
+        else validateTicker(type, SolidCannerBlockEntity::class.type()){ w, p, s, be -> (be as SolidCannerBlockEntity).tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -87,7 +80,7 @@ class SolidCannerBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // 固体装罐机机器配方
             SolidCannerRecipeDatagen.generateRecipes(exporter)
 
@@ -109,7 +102,7 @@ class SolidCannerBlock : MachineBlock() {
             //         .pattern("TCT").pattern("TMT").pattern("TTT")
             //         .input('T', tinIngot).input('C', circuit).input('M', machine)
             //         .criterion(hasItem(machine), conditionsFromItem(machine))
-            //         .offerTo(exporter, Identifier(Ic2_120.MOD_ID, "solid_canner_lf"))
+            //         .offerTo(exporter, Identifier.of(Ic2_120.MOD_ID, "solid_canner_lf"))
             // }
         }
     }

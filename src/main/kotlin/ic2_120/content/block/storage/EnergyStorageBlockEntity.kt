@@ -20,12 +20,13 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -99,7 +100,7 @@ abstract class EnergyStorageBlockEntity(
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
         val blockId = Registries.BLOCK.getId(world!!.getBlockState(pos).block)
-        val screenHandlerType = Registries.SCREEN_HANDLER.get(Identifier(blockId.namespace, blockId.path))
+        val screenHandlerType = Registries.SCREEN_HANDLER.get(Identifier.of(blockId.namespace, blockId.path))
             ?: error("ScreenHandler type not found for $blockId")
         @Suppress("UNCHECKED_CAST")
         return ic2_120.content.screen.EnergyStorageScreenHandler(
@@ -108,8 +109,8 @@ abstract class EnergyStorageBlockEntity(
         )
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(EnergyStorageSync.NBT_ENERGY_STORED)
@@ -117,8 +118,8 @@ abstract class EnergyStorageBlockEntity(
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(EnergyStorageSync.NBT_ENERGY_STORED, sync.amount)

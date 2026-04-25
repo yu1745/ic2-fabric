@@ -17,7 +17,7 @@ import net.minecraft.util.Identifier
 class BlockCutterRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlockCutterJeiRecipe> {
     private val background: IDrawable = guiHelper.createBlankDrawable(140, 50)
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "block_cutter")))
+        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "block_cutter")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.BLOCK_CUTTER

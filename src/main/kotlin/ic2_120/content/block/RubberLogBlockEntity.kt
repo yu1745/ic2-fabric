@@ -11,6 +11,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import java.util.ArrayDeque
+import net.minecraft.registry.RegistryWrapper
 
 /** 1 MC 天 = 24000 tick */
 private const val RECOVERY_TICKS = 24000L
@@ -42,15 +43,15 @@ class RubberLogBlockEntity(
         }
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         for (i in 0..3) {
             extractedAt[i] = nbt.getLong("extracted_$i")
         }
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         for (i in 0..3) {
             nbt.putLong("extracted_$i", extractedAt[i])
         }

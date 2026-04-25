@@ -25,11 +25,12 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
@@ -63,7 +64,7 @@ class PatternStorageBlockEntity(
         extractSlots = intArrayOf(SLOT_CRYSTAL),
         markDirty = { markDirty() }
     )
-    private val crystalMemoryId = Identifier(Ic2_120.MOD_ID, "crystal_memory")
+    private val crystalMemoryId = Identifier.of(Ic2_120.MOD_ID, "crystal_memory")
 
     private val templates = mutableListOf<UuTemplateEntry>()
 
@@ -153,7 +154,7 @@ class PatternStorageBlockEntity(
         markDirtyAndSync()
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(0)
     }
@@ -163,8 +164,8 @@ class PatternStorageBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         PatternStorageScreenHandler(syncId, playerInventory, this, pos, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos))
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         templates.clear()
         templates += decodeUuTemplateList(nbt.getList(UU_TEMPLATE_LIST_NBT_KEY, 10))
@@ -174,8 +175,8 @@ class PatternStorageBlockEntity(
         }
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         nbt.put(UU_TEMPLATE_LIST_NBT_KEY, encodeUuTemplateList(templates))
         nbt.putInt(NBT_SELECTED_INDEX, selectedTemplateIndex)

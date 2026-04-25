@@ -4,7 +4,7 @@ import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.registry.Registries
@@ -46,11 +46,11 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
     }
 
     override fun read(id: Identifier, buf: PacketByteBuf): OreWashingRecipe {
-        val ingredient = Ingredient.fromPacket(buf)
+        val ingredient = Ingredient.PACKET_CODEC.decode(buf)
 
         val outputCount = buf.readVarInt()
         val outputs = (0 until outputCount).map {
-            buf.readItemStack()
+            ItemStack.PACKET_CODEC.decode(buf)
         }
 
         val waterConsumption = buf.readLong()
@@ -59,11 +59,11 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
     }
 
     override fun write(buf: PacketByteBuf, recipe: OreWashingRecipe) {
-        recipe.ingredient.write(buf)
+        Ingredient.PACKET_CODEC.encode(buf, recipe.ingredient)
 
         buf.writeVarInt(recipe.outputItems.size)
         recipe.outputItems.forEach { output ->
-            buf.writeItemStack(output.copy())
+            ItemStack.PACKET_CODEC.encode(buf, output.copy())
         }
 
         buf.writeLong(recipe.waterConsumptionMb)

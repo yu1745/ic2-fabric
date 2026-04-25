@@ -16,8 +16,8 @@ import net.minecraft.util.Identifier
  */
 object BatteryModelPredicates {
 
-    private val CHARGE_ID = Identifier("ic2", "charge")
-    private val NANO_SABER_ACTIVE_ID = Identifier(Ic2_120.MOD_ID, "nano_saber_active")
+    private val CHARGE_ID = Identifier.of("ic2", "charge")
+    private val NANO_SABER_ACTIVE_ID = Identifier.of(Ic2_120.MOD_ID, "nano_saber_active")
 
     /**
      * 注册所有电池物品的模型 predicate
@@ -36,7 +36,7 @@ object BatteryModelPredicates {
     }
 
     private fun registerNanoSaberPredicate() {
-        val saber = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "nano_saber"))
+        val saber = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "nano_saber"))
         ModelPredicateProviderRegistry.register(
             saber,
             NANO_SABER_ACTIVE_ID

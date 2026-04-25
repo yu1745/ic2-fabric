@@ -40,8 +40,9 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -107,11 +108,11 @@ class CropmatronBlockEntity(
     private var weedExAmountMb: Int = 0
     private var workOffset: Int = random.nextBetween(0, WORK_INTERVAL_TICKS - 1)
 
-    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val waterCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "water_cell")) }
-    private val distilledWaterCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "distilled_water_cell")) }
-    private val weedExCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "weed_ex_cell")) }
+    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val waterCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "water_cell")) }
+    private val distilledWaterCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "distilled_water_cell")) }
+    private val weedExCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "weed_ex_cell")) }
 
     constructor(pos: BlockPos, state: BlockState) : this(CropmatronBlockEntity::class.type(), pos, state)
 
@@ -133,9 +134,9 @@ class CropmatronBlockEntity(
 
     private fun cropmatronMatchesWaterInput(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val fluidCellId = Identifier(Ic2_120.MOD_ID, "fluid_cell")
-        val waterCellId = Identifier(Ic2_120.MOD_ID, "water_cell")
-        val distilledWaterCellId = Identifier(Ic2_120.MOD_ID, "distilled_water_cell")
+        val fluidCellId = Identifier.of(Ic2_120.MOD_ID, "fluid_cell")
+        val waterCellId = Identifier.of(Ic2_120.MOD_ID, "water_cell")
+        val distilledWaterCellId = Identifier.of(Ic2_120.MOD_ID, "distilled_water_cell")
         return when {
             stack.item == Items.WATER_BUCKET || stack.item == ModFluids.DISTILLED_WATER_BUCKET -> true
             Registries.ITEM.getId(stack.item) == waterCellId -> true
@@ -151,8 +152,8 @@ class CropmatronBlockEntity(
 
     private fun cropmatronMatchesWeedExInput(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val fluidCellId = Identifier(Ic2_120.MOD_ID, "fluid_cell")
-        val weedExCellId = Identifier(Ic2_120.MOD_ID, "weed_ex_cell")
+        val fluidCellId = Identifier.of(Ic2_120.MOD_ID, "fluid_cell")
+        val weedExCellId = Identifier.of(Ic2_120.MOD_ID, "weed_ex_cell")
         return when {
             stack.item == ModFluids.WEED_EX_BUCKET -> true
             Registries.ITEM.getId(stack.item) == weedExCellId -> true
@@ -175,7 +176,7 @@ class CropmatronBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -191,8 +192,8 @@ class CropmatronBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CropmatronSync.NBT_ENERGY_STORED)
@@ -206,8 +207,8 @@ class CropmatronBlockEntity(
         sync.weedExAmountMb = weedExAmountMb
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(CropmatronSync.NBT_ENERGY_STORED, sync.amount)

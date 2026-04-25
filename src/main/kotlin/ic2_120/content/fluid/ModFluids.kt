@@ -4,7 +4,6 @@ import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
@@ -44,7 +43,6 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
 import net.minecraft.item.ItemStack
-import net.minecraft.util.Hand
 import net.minecraft.util.ActionResult
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
@@ -64,62 +62,62 @@ object ModFluids {
     private const val TEXTURE_NS = "ic2"
 
     // Coolant - 冷却液（核反应堆）
-    val COOLANT_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "coolant")) as FlowableFluid }
-    val COOLANT_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_coolant")) as FlowableFluid }
+    val COOLANT_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "coolant")) as FlowableFluid }
+    val COOLANT_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "flowing_coolant")) as FlowableFluid }
     lateinit var COOLANT_BLOCK: Block
     lateinit var COOLANT_BUCKET: Item
 
     // Hot Coolant - 热冷却液
-    val HOT_COOLANT_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "hot_coolant")) as FlowableFluid }
-    val HOT_COOLANT_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_hot_coolant")) as FlowableFluid }
+    val HOT_COOLANT_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "hot_coolant")) as FlowableFluid }
+    val HOT_COOLANT_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "flowing_hot_coolant")) as FlowableFluid }
     lateinit var HOT_COOLANT_BLOCK: Block
     lateinit var HOT_COOLANT_BUCKET: Item
 
     // UU Matter - UU物质
-    val UU_MATTER_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "uu_matter")) as FlowableFluid }
-    val UU_MATTER_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_uu_matter")) as FlowableFluid }
+    val UU_MATTER_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "uu_matter")) as FlowableFluid }
+    val UU_MATTER_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "flowing_uu_matter")) as FlowableFluid }
     lateinit var UU_MATTER_BLOCK: Block
     lateinit var UU_MATTER_BUCKET: Item
 
     // Weed-EX - 除草剂
-    val WEED_EX_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "weed_ex")) as FlowableFluid }
-    val WEED_EX_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_weed_ex")) as FlowableFluid }
+    val WEED_EX_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "weed_ex")) as FlowableFluid }
+    val WEED_EX_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "flowing_weed_ex")) as FlowableFluid }
     lateinit var WEED_EX_BLOCK: Block
     lateinit var WEED_EX_BUCKET: Item
 
     // Pahoehoe Lava - 熔岩岩浆
-    val PAHOEHOE_LAVA_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "pahoehoe_lava")) as FlowableFluid }
-    val PAHOEHOE_LAVA_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_pahoehoe_lava")) as FlowableFluid }
+    val PAHOEHOE_LAVA_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "pahoehoe_lava")) as FlowableFluid }
+    val PAHOEHOE_LAVA_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "flowing_pahoehoe_lava")) as FlowableFluid }
     lateinit var PAHOEHOE_LAVA_BLOCK: Block
     lateinit var PAHOEHOE_LAVA_BUCKET: Item
 
     // Biofuel - 生物燃料
-    val BIOFUEL_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "biofuel")) as FlowableFluid }
-    val BIOFUEL_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_biofuel")) as FlowableFluid }
+    val BIOFUEL_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "biofuel")) as FlowableFluid }
+    val BIOFUEL_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "flowing_biofuel")) as FlowableFluid }
     lateinit var BIOFUEL_BLOCK: Block
     lateinit var BIOFUEL_BUCKET: Item
 
     // Biomass - 生物质
-    val BIOMASS_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "biomass")) as FlowableFluid }
-    val BIOMASS_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_biomass")) as FlowableFluid }
+    val BIOMASS_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "biomass")) as FlowableFluid }
+    val BIOMASS_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "flowing_biomass")) as FlowableFluid }
     lateinit var BIOMASS_BLOCK: Block
     lateinit var BIOMASS_BUCKET: Item
 
     // Distilled Water - 蒸馏水
-    val DISTILLED_WATER_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "distilled_water")) as FlowableFluid }
-    val DISTILLED_WATER_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_distilled_water")) as FlowableFluid }
+    val DISTILLED_WATER_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "distilled_water")) as FlowableFluid }
+    val DISTILLED_WATER_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "flowing_distilled_water")) as FlowableFluid }
     lateinit var DISTILLED_WATER_BLOCK: Block
     lateinit var DISTILLED_WATER_BUCKET: Item
 
     // Construction foam - 建筑泡沫（装罐机水+泡沫粉产出；桶由 registerFluid 注册，勿再 @ModItem 重复注册）
-    val CONSTRUCTION_FOAM_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "construction_foam")) as FlowableFluid }
-    val CONSTRUCTION_FOAM_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_construction_foam")) as FlowableFluid }
+    val CONSTRUCTION_FOAM_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "construction_foam")) as FlowableFluid }
+    val CONSTRUCTION_FOAM_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "flowing_construction_foam")) as FlowableFluid }
     lateinit var CONSTRUCTION_FOAM_BLOCK: Block
     lateinit var CONSTRUCTION_FOAM_BUCKET: Item
 
     // Creosote - 杂酚油
-    val CREOSOTE_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "creosote")) as FlowableFluid }
-    val CREOSOTE_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_creosote")) as FlowableFluid }
+    val CREOSOTE_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "creosote")) as FlowableFluid }
+    val CREOSOTE_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "flowing_creosote")) as FlowableFluid }
     lateinit var CREOSOTE_BLOCK: Block
     lateinit var CREOSOTE_BUCKET: Item
 
@@ -170,19 +168,19 @@ object ModFluids {
         // 1. 注册 Still 和 Flowing 流体
         val still = Registry.register(
             Registries.FLUID,
-            Identifier(modId, name),
+            Identifier.of(modId, name),
             Ic2Fluid.Still(name, stillTex, flowTex)
         )
         val flowing = Registry.register(
             Registries.FLUID,
-            Identifier(modId, "flowing_$name"),
+            Identifier.of(modId, "flowing_$name"),
             Ic2Fluid.Flowing(name, stillTex, flowTex)
         )
 
         // 2. 注册 FluidBlock
         val block = Registry.register(
             Registries.BLOCK,
-            Identifier(modId, name),
+            Identifier.of(modId, name),
             FluidBlock(still as FlowableFluid, AbstractBlock.Settings.copy(Blocks.WATER).noCollision().dropsNothing())
         )
 
@@ -191,11 +189,11 @@ object ModFluids {
         val bucketItem = Ic2BucketItem(
             still,
             if (name == "distilled_water") Fluids.WATER else null, // 蒸馏水放置时转为普通水
-            FabricItemSettings().recipeRemainder(Items.BUCKET).maxCount(1)
+            Item.Settings().recipeRemainder(Items.BUCKET).maxCount(1)
         )
         val bucket = Registry.register(
             Registries.ITEM,
-            Identifier(modId, "${name}_bucket"),
+            Identifier.of(modId, "${name}_bucket"),
             bucketItem
         )
 
@@ -244,7 +242,7 @@ object ModFluids {
         }
 
         // 5. 添加到创造模式物品栏
-        val ic2MaterialsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(modId, CreativeTab.IC2_MATERIALS.id))
+        val ic2MaterialsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(modId, CreativeTab.IC2_MATERIALS.id))
         ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
             entries.add(bucket)
         }

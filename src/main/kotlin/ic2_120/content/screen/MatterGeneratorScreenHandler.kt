@@ -21,7 +21,7 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -129,9 +129,9 @@ class MatterGeneratorScreenHandler(
 
         const val SLOT_SIZE = 18
 
-        private val SCRAP_ITEM_ID = Identifier(Ic2_120.MOD_ID, "scrap")
-        private val EMPTY_CELL_ID = Identifier(Ic2_120.MOD_ID, "empty_cell")
-        private val FLUID_CELL_ID = Identifier(Ic2_120.MOD_ID, "fluid_cell")
+        private val SCRAP_ITEM_ID = Identifier.of(Ic2_120.MOD_ID, "scrap")
+        private val EMPTY_CELL_ID = Identifier.of(Ic2_120.MOD_ID, "empty_cell")
+        private val FLUID_CELL_ID = Identifier.of(Ic2_120.MOD_ID, "fluid_cell")
 
         private val SCRAP_SLOT_SPEC = SlotSpec(
             canInsert = { stack -> !stack.isEmpty && Registries.ITEM.getId(stack.item) == SCRAP_ITEM_ID }

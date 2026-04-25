@@ -21,7 +21,7 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -128,8 +128,8 @@ class FermenterScreenHandler(
         const val PLAYER_INV_START = 8
         const val HOTBAR_END = 43
 
-        private val biomassCellId = Identifier("ic2_120", "biomass_cell")
-        private val emptyCellId = Identifier("ic2_120", "empty_cell")
+        private val biomassCellId = Identifier.of("ic2_120", "biomass_cell")
+        private val emptyCellId = Identifier.of("ic2_120", "empty_cell")
 
         private val INPUT_FILLED_CONTAINER_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->

@@ -14,6 +14,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.registry.RegistryWrapper
 
 /**
  * 日光灯方块实体。无 GUI，仅消耗 EU 发光。
@@ -41,15 +42,15 @@ class LuminatorFlatBlockEntity(
         state
     )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(LuminatorSync.NBT_ENERGY_STORED))
         cycleTicks = nbt.getInt("CycleTicks")
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(LuminatorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt("CycleTicks", cycleTicks)

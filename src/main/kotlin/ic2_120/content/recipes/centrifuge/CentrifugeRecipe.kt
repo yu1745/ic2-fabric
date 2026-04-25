@@ -7,7 +7,8 @@ import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.Recipe
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.recipe.RecipeType
-import net.minecraft.registry.DynamicRegistryManager
+import net.minecraft.recipe.input.SingleStackRecipeInput
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
 
@@ -26,18 +27,18 @@ class CentrifugeRecipe(
     val inputCount: Int,
     val minHeat: Int,
     val outputs: List<ItemStack>
-) : Recipe<SimpleInventory> {
+) : Recipe<SingleStackRecipeInput> {
     init {
         require(outputs.size <= 3) { "Centrifuge recipes can have at most 3 outputs" }
         require(outputs.isNotEmpty()) { "Centrifuge recipes must have at least 1 output" }
     }
 
-    override fun matches(inventory: SimpleInventory, world: World): Boolean {
+    override fun matches(input: SingleStackRecipeInput, world: World): Boolean {
         val stack = inventory.getStack(0)
         return ingredient.test(stack) && stack.count >= inputCount
     }
 
-    override fun craft(inventory: SimpleInventory, registryManager: DynamicRegistryManager): ItemStack {
+    override fun craft(inventory: RecipeInput, lookup: RegistryWrapper.WrapperLookup): ItemStack {
         // 返回第一个输出作为主要输出（实际机器逻辑会处理所有输出）
         return outputs.first().copy()
     }
@@ -53,9 +54,6 @@ class CentrifugeRecipe(
      * 获取所有输出物品
      */
     fun getAllOutputs(): List<ItemStack> = outputs.map { it.copy() }
-
-    override fun getId(): Identifier = id
-
     override fun getSerializer(): RecipeSerializer<*> = ModMachineRecipes.recipeSerializer(CentrifugeRecipe::class)
 
     override fun getType(): RecipeType<*> = ModMachineRecipes.recipeType(CentrifugeRecipe::class)

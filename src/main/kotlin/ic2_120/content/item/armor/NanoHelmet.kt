@@ -13,12 +13,11 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Item
 import net.minecraft.item.Items
@@ -27,6 +26,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.world.World
 import java.util.function.Consumer
+import ic2_120.getOrCreateCustomData
 
 /**
  * 纳米头盔 (Nano Helmet)
@@ -51,7 +51,7 @@ import java.util.function.Consumer
  * - 能量从所有纳米装备均匀扣除
  */
 @ModItem(name = "nano_helmet", tab = CreativeTab.IC2_MATERIALS, group = "nano_armor")
-class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1)) {
+class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)) {
 
     companion object {
         private const val NIGHT_VISION_DURATION = 220
@@ -62,14 +62,14 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
             get() = Ic2Config.getNanoHelmetNightVisionEuPerTick()
 
         fun toggleNightVision(stack: ItemStack): Boolean {
-            val nbt = stack.orCreateNbt
+            val nbt = stack.getOrCreateCustomData()
             val enabled = !nbt.getBoolean(NIGHT_VISION_KEY)
             nbt.putBoolean(NIGHT_VISION_KEY, enabled)
             return enabled
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = CarbonPlate::class.instance()
             val crystal = EnergyCrystalItem::class.instance()
             val goggles = NightVisionGoggles::class.instance()
@@ -96,7 +96,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         val player = entity as? PlayerEntity ?: return
         if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) return
 
-        val nbt = stack.orCreateNbt
+        val nbt = stack.getOrCreateCustomData()
         if (!nbt.getBoolean(NIGHT_VISION_KEY)) return
 
         val energy = getEnergy(stack)
@@ -129,7 +129,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
 
     override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
-        val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
+        val nvEnabled = stack.getOrCreateCustomData().getBoolean(NIGHT_VISION_KEY)
         val energy = getEnergy(stack)
 
         // 计算夜视剩余时间（分钟）

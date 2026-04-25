@@ -2,11 +2,11 @@ package ic2_120.content.item.armor
 
 import ic2_120.config.Ic2Config
 import ic2_120.content.item.ModArmorMaterials
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import ic2_120.getOrCreateCustomData
 
 /**
  * 喷气背包 (Jetpack)
@@ -23,7 +23,7 @@ import net.minecraft.util.Formatting
  *
  * - **垂直模式**：类似创造飞行，按空格上升、Shift下降
  */
-open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)) {
+open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
 
     companion object {
         private const val FUEL_KEY = "Fuel"
@@ -44,29 +44,29 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
 
         @JvmStatic
         fun getFuel(stack: ItemStack): Long =
-            stack.orCreateNbt.getLong(FUEL_KEY).coerceIn(0L, maxFuel)
+            stack.getOrCreateCustomData().getLong(FUEL_KEY).coerceIn(0L, maxFuel)
 
         @JvmStatic
         fun setFuel(stack: ItemStack, fuel: Long) {
-            stack.orCreateNbt.putLong(FUEL_KEY, fuel.coerceIn(0L, maxFuel))
+            stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putLong(FUEL_KEY, fuel.coerceIn(0L, maxFuel) })))
         }
 
         @JvmStatic
         fun isHovering(stack: ItemStack): Boolean =
-            stack.orCreateNbt.getBoolean(IS_HOVER_KEY)
+            stack.getOrCreateCustomData().getBoolean(IS_HOVER_KEY)
 
         @JvmStatic
         fun setHovering(stack: ItemStack, hovering: Boolean) {
-            stack.orCreateNbt.putBoolean(IS_HOVER_KEY, hovering)
+            stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putBoolean(IS_HOVER_KEY, hovering) }))
         }
 
         @JvmStatic
         fun isFlightEnabled(stack: ItemStack): Boolean =
-            stack.orCreateNbt.getBoolean(FLIGHT_ENABLED_KEY)
+            stack.getOrCreateCustomData().getBoolean(FLIGHT_ENABLED_KEY)
 
         @JvmStatic
         fun setFlightEnabled(stack: ItemStack, enabled: Boolean) {
-            stack.orCreateNbt.putBoolean(FLIGHT_ENABLED_KEY, enabled)
+            stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putBoolean(FLIGHT_ENABLED_KEY, enabled) }))
         }
 
         @JvmStatic

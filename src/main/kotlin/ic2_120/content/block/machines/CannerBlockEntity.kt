@@ -58,8 +58,9 @@ import net.minecraft.item.BucketItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -131,7 +132,7 @@ class CannerBlockEntity(
         private const val TANK_CAPACITY_BUCKETS = 10
         private val TANK_CAPACITY = FluidConstants.BUCKET * TANK_CAPACITY_BUCKETS
 
-        private val tinCanItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "tin_can")) }
+        private val tinCanItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "tin_can")) }
 
         @Volatile
         private var fluidLookupRegistered = false
@@ -257,7 +258,7 @@ class CannerBlockEntity(
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -267,8 +268,8 @@ class CannerBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         CannerScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CannerSync.NBT_ENERGY_STORED)
@@ -286,8 +287,8 @@ class CannerBlockEntity(
         sync.rightFluidCapacityMb = (TANK_CAPACITY * 1000L / FluidConstants.BUCKET).toInt()
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(CannerSync.NBT_ENERGY_STORED, sync.amount)
@@ -500,7 +501,7 @@ class CannerBlockEntity(
         else -> {
             val path = Registries.ITEM.getId(filled.item).path
             if (path == "fluid_cell" || path.endsWith("_cell")) {
-                ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
+                ItemStack(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")))
             } else null
         }
     }

@@ -7,7 +7,6 @@ import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.Item
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.util.ActionResult
@@ -20,7 +19,7 @@ import team.reborn.energy.api.EnergyStorage
  * 右键方块时显示该方块在 Tech Reborn Energy API 下的能量信息（当前储能、容量、是否可输入/输出）。
  */
 @ModItem(name = "energy_debug_stick", tab = CreativeTab.IC2_TOOLS, group = "debug")
-class EnergyDebugStickItem : Item(FabricItemSettings()) {
+class EnergyDebugStickItem : Item(Item.Settings()) {
 
     override fun useOnBlock(context: ItemUsageContext): ActionResult {
         val world = context.world

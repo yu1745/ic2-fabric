@@ -88,7 +88,7 @@ object StorageBoxColorProvider {
         var registeredBlockCount = 0
         var registeredItemCount = 0
         for (blockId in storageBoxIds) {
-            val id = Identifier("ic2_120", blockId)
+            val id = Identifier.of("ic2_120", blockId)
             val block = Registries.BLOCK.getOrEmpty(id)
             if (block.isPresent) {
                 ColorProviderRegistry.BLOCK.register(blockProvider, block.get())

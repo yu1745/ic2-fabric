@@ -10,8 +10,7 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import net.minecraft.item.Item
 import net.minecraft.recipe.Ingredient
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
 import java.util.function.Consumer
@@ -23,10 +22,10 @@ import ic2_120.registry.annotation.RecipeProvider
 
 /** 青铜外壳 */
 @ModItem(name = "bronze_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class BronzeCasing : Item(FabricItemSettings()) {
+class BronzeCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = BronzeCasing::class.id(),
@@ -43,10 +42,10 @@ class BronzeCasing : Item(FabricItemSettings()) {
 
 /** 铜质外壳 */
 @ModItem(name = "copper_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class CopperCasing : Item(FabricItemSettings()) {
+class CopperCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = CopperCasing::class.id(),
@@ -63,10 +62,10 @@ class CopperCasing : Item(FabricItemSettings()) {
 
 /** 黄金外壳 */
 @ModItem(name = "gold_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class GoldCasing : Item(FabricItemSettings()) {
+class GoldCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = GoldCasing::class.id(),
@@ -83,10 +82,10 @@ class GoldCasing : Item(FabricItemSettings()) {
 
 /** 铁质外壳 */
 @ModItem(name = "iron_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class IronCasing : Item(FabricItemSettings()) {
+class IronCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = IronCasing::class.id(),
@@ -103,10 +102,10 @@ class IronCasing : Item(FabricItemSettings()) {
 
 /** 铅质外壳 */
 @ModItem(name = "lead_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class LeadCasing : Item(FabricItemSettings()) {
+class LeadCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = LeadCasing::class.id(),
@@ -123,10 +122,10 @@ class LeadCasing : Item(FabricItemSettings()) {
 
 /** 钢质外壳 */
 @ModItem(name = "steel_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class SteelCasing : Item(FabricItemSettings()) {
+class SteelCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = SteelCasing::class.id(),
@@ -143,10 +142,10 @@ class SteelCasing : Item(FabricItemSettings()) {
 
 /** 锡质外壳 */
 @ModItem(name = "tin_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class TinCasing : Item(FabricItemSettings()) {
+class TinCasing : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = TinCasing::class.id(),

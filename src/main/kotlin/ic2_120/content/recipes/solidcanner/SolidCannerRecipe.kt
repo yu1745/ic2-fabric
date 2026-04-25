@@ -7,7 +7,8 @@ import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.Recipe
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.recipe.RecipeType
-import net.minecraft.registry.DynamicRegistryManager
+import net.minecraft.recipe.input.SingleStackRecipeInput
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
 
@@ -24,9 +25,9 @@ class SolidCannerRecipe(
     val slot1Ingredient: Ingredient,
     val slot1Count: Int,
     val output: ItemStack
-) : Recipe<SimpleInventory> {
+) : Recipe<SingleStackRecipeInput> {
 
-    override fun matches(inventory: SimpleInventory, world: World): Boolean {
+    override fun matches(input: SingleStackRecipeInput, world: World): Boolean {
         if (inventory.size() < 2) return false
         val slot0 = inventory.getStack(0)
         val slot1 = inventory.getStack(1)
@@ -38,16 +39,13 @@ class SolidCannerRecipe(
         return true
     }
 
-    override fun craft(inventory: SimpleInventory, registryManager: DynamicRegistryManager): ItemStack {
+    override fun craft(inventory: RecipeInput, lookup: RegistryWrapper.WrapperLookup): ItemStack {
         return output.copy()
     }
 
     override fun fits(width: Int, height: Int): Boolean = true
 
-    override fun getOutput(registryManager: DynamicRegistryManager): ItemStack = output.copy()
-
-    override fun getId(): Identifier = id
-
+    override fun getResult(lookup: RegistryWrapper.WrapperLookup): ItemStack = output.copy()
     override fun getSerializer(): RecipeSerializer<*> = ModMachineRecipes.recipeSerializer(SolidCannerRecipe::class)
 
     override fun getType(): RecipeType<*> = ModMachineRecipes.recipeType(SolidCannerRecipe::class)

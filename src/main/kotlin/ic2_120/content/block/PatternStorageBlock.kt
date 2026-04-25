@@ -20,7 +20,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -39,6 +39,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import java.util.function.Consumer
+import ic2_120.getCustomData
+import ic2_120.getOrCreateCustomData
 
 @ModBlock(name = "pattern_storage", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "uu")
 class PatternStorageBlock : MachineBlock() {
@@ -61,14 +63,7 @@ class PatternStorageBlock : MachineBlock() {
     ): net.minecraft.screen.NamedScreenHandlerFactory? =
         world.getBlockEntity(pos) as? net.minecraft.screen.NamedScreenHandlerFactory
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let(player::openHandledScreen)
         }
@@ -83,7 +78,7 @@ class PatternStorageBlock : MachineBlock() {
         context: TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
-        val blockEntityTag = stack.getSubNbt("BlockEntityTag")
+        val blockEntityTag = stack.getCustomData()?.getCompound("BlockEntityTag")
         val templateCount = blockEntityTag?.getList("UuTemplates", 10)?.size ?: 0
         tooltip.add(Text.literal("模板数量: $templateCount").formatted(Formatting.GRAY))
     }
@@ -95,7 +90,7 @@ class PatternStorageBlock : MachineBlock() {
                 val stack = ItemStack(asItem())
                 val nbt = blockEntity.createNbt()
                 if (!nbt.isEmpty) {
-                    stack.orCreateNbt.put("BlockEntityTag", nbt)
+                    stack.getOrCreateCustomData().put("BlockEntityTag", nbt)
                 }
                 val itemEntity = ItemEntity(
                     world,
@@ -116,7 +111,7 @@ class PatternStorageBlock : MachineBlock() {
         val blockEntity = world.getBlockEntity(pos) as? PatternStorageBlockEntity ?: return itemStack
         val nbt = blockEntity.createNbt()
         if (!nbt.isEmpty) {
-            itemStack.orCreateNbt.put("BlockEntityTag", nbt)
+            itemStack.getOrCreateCustomData().put("BlockEntityTag", nbt)
         }
         return itemStack
     }
@@ -130,7 +125,7 @@ class PatternStorageBlock : MachineBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val crystalMemory = CrystalMemory::class.instance()
             val reinforcedStone = ReinforcedStoneBlock::class.item()

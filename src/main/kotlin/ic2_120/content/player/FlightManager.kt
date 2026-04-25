@@ -9,6 +9,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.server.MinecraftServer
+import ic2_120.getOrCreateCustomData
 
 object FlightManager {
     private const val JETPACK_HOVER_KEY = "IsHover"
@@ -38,7 +39,7 @@ object FlightManager {
     }
 
     private fun handleJetpackFlight(player: PlayerEntity, jetpackStack: ItemStack) {
-        val nbt = jetpackStack.orCreateNbt
+        val nbt = jetpackStack.getOrCreateCustomData()
         val fuel = JetpackItem.getFuel(jetpackStack)
 
         if (fuel <= 0L || player.isCreative || player.isSpectator || !JetpackItem.isFlightEnabled(jetpackStack)) {
@@ -56,7 +57,7 @@ object FlightManager {
 
     private fun handleElectricJetpackFlight(player: PlayerEntity, jetpackStack: ItemStack) {
         val jetpack = jetpackStack.item as ElectricJetpack
-        val nbt = jetpackStack.orCreateNbt
+        val nbt = jetpackStack.getOrCreateCustomData()
 
         if (player.isCreative || player.isSpectator || !jetpack.isFlightEnabled(jetpackStack)) {
             disableJetpackFlight(player, nbt)
@@ -124,7 +125,7 @@ object FlightManager {
         }
 
         val chestplate = chestStack.item as? QuantumChestplate ?: return
-        val nbt = chestStack.orCreateNbt
+        val nbt = chestStack.getOrCreateCustomData()
         val flightEnabled = QuantumChestplate.isFlightEnabled(chestStack)
         val isActive = player.abilities.allowFlying
 

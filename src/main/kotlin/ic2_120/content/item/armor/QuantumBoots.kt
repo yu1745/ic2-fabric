@@ -11,8 +11,7 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Item
 import net.minecraft.item.Items
@@ -42,11 +41,11 @@ import java.util.function.Consumer
  * - 能量从所有量子装备均匀扣除
  */
 @ModItem(name = "quantum_boots", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.BOOTS, FabricItemSettings().maxCount(1)) {
+class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.BOOTS, Item.Settings().maxCount(1)) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val iridium = IridiumPlate::class.instance()
             val nano = NanoBoots::class.instance()
             val rubber = RubberBoots::class.instance()

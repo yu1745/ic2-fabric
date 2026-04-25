@@ -44,7 +44,7 @@ class LaserProjectileEntity(
         /** 最大存活 tick 数 */
         private const val MAX_LIFE = 200
 
-        private val LASER_HIT_SOUND: SoundEvent = SoundEvent.of(Identifier("ic2", "item.laser.hit"))
+        private val LASER_HIT_SOUND: SoundEvent = SoundEvent.of(Identifier.of("ic2", "item.laser.hit"))
 
         private val MODE: TrackedData<String> = DataTracker.registerData(
             LaserProjectileEntity::class.java, TrackedDataHandlerRegistry.STRING

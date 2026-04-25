@@ -43,8 +43,9 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -359,7 +360,7 @@ class SolarDistillerBlockEntity(
     }
 
     // ExtendedScreenHandlerFactory 接口实现（用于打开 GUI）
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -376,16 +377,16 @@ class SolarDistillerBlockEntity(
         )
 
     // NBT 数据读写
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         inputTankInternal.setStoredWater(nbt.getLong(NBT_INPUT_TANK))
         outputTankInternal.setStoredDistilled(nbt.getLong(NBT_OUTPUT_TANK))
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_INPUT_TANK, inputTankInternal.getStoredAmount())
@@ -479,7 +480,7 @@ class SolarDistillerBlockEntity(
         if (input.isEmpty) return
 
         val emptyOutput = getStack(SLOT_OUTPUT_EMPTY)
-        val emptyCellItem = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
+        val emptyCellItem = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell"))
 
         // 确定输入容器类型和对应的空容器
         val emptyContainer = when {
@@ -522,11 +523,11 @@ class SolarDistillerBlockEntity(
         val input = getStack(SLOT_INPUT_CELL)
         if (input.isEmpty) return
 
-        val distilledCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "distilled_water_cell")))
+        val distilledCell = ItemStack(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "distilled_water_cell")))
 
         // 确定输出电池类型
         val outputCell = when {
-            input.item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) -> distilledCell
+            input.item == Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")) -> distilledCell
             input.item is FluidCellItem && input.isFluidCellEmpty() -> {
                 ItemStack(input.item).apply { setFluidCellVariant(FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)) }
             }
@@ -569,7 +570,7 @@ class SolarDistillerBlockEntity(
 
     private fun isInputCellStack(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val emptyCell = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
+        val emptyCell = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell"))
         return stack.item == emptyCell || (stack.item is FluidCellItem && stack.isFluidCellEmpty())
     }
 }

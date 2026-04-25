@@ -35,7 +35,7 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.RecipeType
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.world.ServerWorld
@@ -43,6 +43,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.registry.RegistryWrapper
 
 /**
  * 电力熔炉方块实体。提供输入/输出槽位并实现简单 GUI。
@@ -168,8 +169,8 @@ class ElectricFurnaceBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         ElectricFurnaceScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ElectricFurnaceSync.NBT_ENERGY_STORED)
@@ -178,8 +179,8 @@ class ElectricFurnaceBlockEntity(
         storedExperience = nbt.getFloat(FurnaceExperienceHelper.NBT_EXPERIENCE)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(ElectricFurnaceSync.NBT_ENERGY_STORED, sync.amount)

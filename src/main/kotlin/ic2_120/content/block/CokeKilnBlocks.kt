@@ -21,7 +21,7 @@ import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -53,7 +53,7 @@ class RefractoryBricksBlock : Block(AbstractBlock.Settings.copy(Blocks.BRICKS).s
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RefractoryBricksBlock::class.item(), 8)
                 .pattern("BBB")
                 .pattern("BCB")
@@ -88,18 +88,11 @@ class CokeKilnBlock : MachineBlock(AbstractBlock.Settings.copy(Blocks.BRICKS).st
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, CokeKilnBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, CokeKilnBlockEntity::class.type()){ w, p, s, be ->
             (be as CokeKilnBlockEntity).tick(w, p, s)
         }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? net.minecraft.screen.NamedScreenHandlerFactory
             if (be != null) player.openHandledScreen(be)
@@ -109,7 +102,7 @@ class CokeKilnBlock : MachineBlock(AbstractBlock.Settings.copy(Blocks.BRICKS).st
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val refractory = RefractoryBricksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.DECORATIONS, CokeKilnBlock::class.item(), 1)
                 .pattern("RRR")
@@ -147,14 +140,7 @@ class CokeKilnGrateBlock : net.minecraft.block.BlockWithEntity(AbstractBlock.Set
 
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState = defaultState.with(FACING, Direction.DOWN)
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
         val storage = FluidStorage.SIDED.find(world, pos, hit.side) ?: FluidStorage.SIDED.find(world, pos, null)
         if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
@@ -167,7 +153,7 @@ class CokeKilnGrateBlock : net.minecraft.block.BlockWithEntity(AbstractBlock.Set
         val FACING: DirectionProperty = DirectionProperty.of("facing")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val refractory = RefractoryBricksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.DECORATIONS, CokeKilnGrateBlock::class.item(), 1)
                 .pattern("III")
@@ -198,14 +184,7 @@ class CokeKilnHatchBlock : Block(AbstractBlock.Settings.copy(Blocks.BRICKS).stre
         if (!world.isClient && !state.isOf(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
         val ok = isValidCokeKilnStructure(world, pos)
         player.sendMessage(
@@ -218,7 +197,7 @@ class CokeKilnHatchBlock : Block(AbstractBlock.Settings.copy(Blocks.BRICKS).stre
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val refractory = RefractoryBricksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.DECORATIONS, CokeKilnHatchBlock::class.item(), 1)
                 .pattern("RRR")

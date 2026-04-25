@@ -21,12 +21,13 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.registry.RegistryWrapper
 
 /**
  * 固体加热机：
@@ -107,8 +108,8 @@ class SolidHeatGeneratorBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean =
         slot == SLOT_FUEL && !stack.isEmpty && getFuelTimeForSolidHeat(stack) > 0
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         burnTime = nbt.getInt("BurnTime").coerceAtLeast(0)
@@ -117,8 +118,8 @@ class SolidHeatGeneratorBlockEntity(
         sync.burnTotal = burnTotal
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putInt("BurnTime", burnTime)
@@ -166,7 +167,7 @@ class SolidHeatGeneratorBlockEntity(
         val item = stack.item
         val isSupported = item == Items.COAL ||
             item == Items.CHARCOAL ||
-            item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier("ic2_120", "coke"))
+            item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier.of("ic2_120", "coke"))
         if (!isSupported) return 0
         val furnaceTicks = FuelRegistry.INSTANCE.get(item) ?: return 0
         return (furnaceTicks / SOLID_HEAT_BURN_DIVISOR).coerceAtLeast(1)

@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.util.math.BlockPos
+import net.minecraft.registry.RegistryWrapper
 
 
 /**
@@ -135,16 +136,16 @@ class TankBlockEntity(
 
     // ========== NBT 持久化 ==========
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         nbt.putLong(NBT_FLUID_AMOUNT, tankInternal.amount)
         if (!tankInternal.variant.isBlank) {
             nbt.put(NBT_FLUID_VARIANT, tankInternal.variant.toNbt())
         }
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, getCapacity())
         val fluidTag = nbt.getCompound(NBT_FLUID_VARIANT)
         tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(fluidTag)

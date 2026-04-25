@@ -18,7 +18,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
@@ -28,6 +28,7 @@ import net.minecraft.world.World
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import net.minecraft.registry.RegistryWrapper
 
 /**
  * 变压器方块实体。
@@ -123,8 +124,8 @@ open class TransformerBlockEntity(
         )
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(TransformerSync.NBT_ENERGY_STORED).coerceIn(0L, sync.capacity)
         sync.syncCommittedAmount()
@@ -132,8 +133,8 @@ open class TransformerBlockEntity(
         sync.setMode(TransformerSync.Mode.fromId(nbt.getInt(TransformerSync.NBT_MODE)))
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(TransformerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(TransformerSync.NBT_MODE, sync.mode)

@@ -209,7 +209,7 @@ class TextNode(
 /**
  * 纹理图片节点。渲染指定 Identifier 的 PNG 纹理（或其中一个区域）。
  *
- * @param texture      纹理资源路径，如 Identifier("ic2", "textures/gui/slot.png")
+ * @param texture      纹理资源路径，如 Identifier.of("ic2", "textures/gui/slot.png")
  * @param width        绘制宽度（像素）
  * @param height       绘制高度（像素）
  * @param u            纹理裁剪起始 U（默认 0）

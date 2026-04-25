@@ -17,7 +17,7 @@ import net.minecraft.util.Identifier
 class ExtractorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<ExtractorJeiRecipe> {
     private val background: IDrawable = guiHelper.createBlankDrawable(140, 54)
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "extractor")))
+        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "extractor")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.EXTRACTOR

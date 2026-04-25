@@ -18,35 +18,35 @@ object ModWorldgen {
     val RUBBER_TREE_FEATURE: Feature<TreeFeatureConfig> =
         Registry.register(
             Registries.FEATURE,
-            Identifier(Ic2_120.MOD_ID, "rubber_tree_feature"),
+            Identifier.of(Ic2_120.MOD_ID, "rubber_tree_feature"),
             RubberTreeFeature()
         )
 
     val RUBBER_TREE_FOLIAGE_PLACER_TYPE: FoliagePlacerType<RubberTreeFoliagePlacer> =
         Registry.register(
             Registries.FOLIAGE_PLACER_TYPE,
-            Identifier(Ic2_120.MOD_ID, "rubber_tree_foliage_placer"),
+            Identifier.of(Ic2_120.MOD_ID, "rubber_tree_foliage_placer"),
             FoliagePlacerType(RubberTreeFoliagePlacer.CODEC)
         )
 
     val RUBBER_HOLE_TREE_DECORATOR_TYPE: TreeDecoratorType<RubberHoleTreeDecorator> =
         Registry.register(
             Registries.TREE_DECORATOR_TYPE,
-            Identifier(Ic2_120.MOD_ID, "rubber_hole_tree_decorator"),
+            Identifier.of(Ic2_120.MOD_ID, "rubber_hole_tree_decorator"),
             TreeDecoratorType(RubberHoleTreeDecorator.CODEC)
         )
 
     val RUBBER_TREE_CONFIG_PLACEMENT_MODIFIER_TYPE: PlacementModifierType<RubberTreeConfigPlacementModifier> =
         Registry.register(
             Registries.PLACEMENT_MODIFIER_TYPE,
-            Identifier(Ic2_120.MOD_ID, "rubber_tree_config_placement"),
+            Identifier.of(Ic2_120.MOD_ID, "rubber_tree_config_placement"),
             PlacementModifierType { RubberTreeConfigPlacementModifier.CODEC }
         )
 
     val RUBBER_TREE_CONFIG_WATER_DEPTH_FILTER_TYPE: PlacementModifierType<RubberTreeConfigWaterDepthFilterPlacementModifier> =
         Registry.register(
             Registries.PLACEMENT_MODIFIER_TYPE,
-            Identifier(Ic2_120.MOD_ID, "rubber_tree_config_water_depth_filter"),
+            Identifier.of(Ic2_120.MOD_ID, "rubber_tree_config_water_depth_filter"),
             PlacementModifierType { RubberTreeConfigWaterDepthFilterPlacementModifier.CODEC }
         )
 }

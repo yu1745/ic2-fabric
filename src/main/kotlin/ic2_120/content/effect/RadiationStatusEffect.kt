@@ -23,11 +23,11 @@ class RadiationStatusEffect : StatusEffect(StatusEffectCategory.HARMFUL, 0x55FF5
         val registry = world.registryManager.get(RegistryKeys.DAMAGE_TYPE)
         val key = RegistryKey.of(
             RegistryKeys.DAMAGE_TYPE,
-            Identifier(Ic2_120.MOD_ID, "radiation")
+            Identifier.of(Ic2_120.MOD_ID, "radiation")
         )
         val entry = registry.getEntry(key).orElse(null)
             ?: registry.getEntry(
-                RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier("minecraft", "magic"))
+                RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("minecraft", "magic"))
             ).orElse(null)
 
         if (entry != null) {

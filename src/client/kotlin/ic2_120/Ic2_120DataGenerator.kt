@@ -20,7 +20,7 @@ object Ic2_120DataGenerator : DataGeneratorEntrypoint {
 		// datagen 可能在 ModInitializer 之前执行；若注解矿辞表为空且物品未注册，则先完成扫描注册。
 		// 即使附属 mod 设置了 skip，注册扫描仍会执行（附属 datagen 可能依赖本体的注册信息）。
 		if (MaterialTagRegistry.itemEntries.isEmpty()) {
-			val tinId = Identifier(Ic2_120.MOD_ID, "tin_ingot")
+			val tinId = Identifier.of(Ic2_120.MOD_ID, "tin_ingot")
 			if (!Registries.ITEM.containsId(tinId)) {
 				ModFluids.register()
 				ModEntities.register()

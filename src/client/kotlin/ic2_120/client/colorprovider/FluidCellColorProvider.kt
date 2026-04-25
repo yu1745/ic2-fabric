@@ -18,7 +18,7 @@ import net.minecraft.util.Identifier
 object FluidCellColorProvider {
 
     fun register() {
-        val fluidCell = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell"))
+        val fluidCell = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fluid_cell"))
         ColorProviderRegistry.ITEM.register({ stack, tintIndex ->
             if (tintIndex != 1) return@register -1
             val fluid = stack.getFluidCellVariant()?.fluid ?: return@register -1
@@ -26,7 +26,7 @@ object FluidCellColorProvider {
         }, fluidCell)
 
         // 专用流体单元：从 ModFluidCell.getFluid() 获取流体颜色
-        val weedExCell = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "weed_ex_cell"))
+        val weedExCell = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "weed_ex_cell"))
         ColorProviderRegistry.ITEM.register({ stack, tintIndex ->
             if (tintIndex != 1) return@register -1
             val item = stack.item

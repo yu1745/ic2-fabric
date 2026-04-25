@@ -37,8 +37,9 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -279,7 +280,7 @@ class WaterGeneratorBlockEntity(
         } else false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -295,8 +296,8 @@ class WaterGeneratorBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(WaterGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, WaterGeneratorSync.ENERGY_CAPACITY)
@@ -308,8 +309,8 @@ class WaterGeneratorBlockEntity(
         cachedWaterCount = nbt.getInt(NBT_CACHED_WATER_COUNT).coerceAtLeast(0)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(WaterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
@@ -367,7 +368,7 @@ class WaterGeneratorBlockEntity(
         // 燃料槽：水桶、水单元、通用流体单元（NBT 为水）倒入水罐（必须在发电之后处理，否则会干扰发电）
         // 水罐仅 1 桶容量，必须等水罐空才能倒入整桶
         val fuelStack = getStack(FUEL_SLOT)
-        val emptyCell = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell"))
+        val emptyCell = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell"))
         val canAcceptFullBucket = waterTankInternal.amount <= 0L
         when {
             fuelStack.item == Items.WATER_BUCKET && canAcceptFullBucket -> {

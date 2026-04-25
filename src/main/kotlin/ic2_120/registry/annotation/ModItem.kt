@@ -10,7 +10,7 @@ import ic2_120.registry.type
  * 使用示例：
  * ```kotlin
  * @ModItem(name = "copper_ingot", tab = CreativeTab.IC2_MATERIALS)
- * class CopperIngot : Item(FabricItemSettings())
+ * class CopperIngot : Item(Item.Settings())
  * ```
  *
  * @param name 注册名（不含命名空间），如 "copper_ingot"。为空则使用类名转换（驼峰转下划线小写）

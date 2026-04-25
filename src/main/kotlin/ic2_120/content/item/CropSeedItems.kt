@@ -14,23 +14,24 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
+import ic2_120.getCustomData
+import ic2_120.getOrCreateCustomData
 
 object CropSeedData {
     private const val NBT_OWNER = "owner"
@@ -41,14 +42,14 @@ object CropSeedData {
     private const val NBT_SCAN_LEVEL = "scan"
 
     fun readType(stack: ItemStack): CropType? {
-        val nbt = stack.nbt ?: return null
+        val nbt = stack.getCustomData() ?: return null
         val id = if (nbt.contains(NBT_ID)) nbt.getString(NBT_ID) else ""
         if (id.isEmpty()) return null
         return CropType.entries.firstOrNull { it.asString() == id }
     }
 
     fun readStats(stack: ItemStack): CropStats {
-        val nbt = stack.nbt
+        val nbt = stack.getCustomData()
         if (nbt == null) return CropStats()
         return CropStats(
             growth = nbt.getInt(NBT_GROWTH).coerceIn(0, 31),
@@ -58,10 +59,10 @@ object CropSeedData {
     }
 
     fun readScanLevel(stack: ItemStack): Int =
-        stack.nbt?.getInt(NBT_SCAN_LEVEL)?.coerceIn(0, 4) ?: 0
+        stack.getCustomData()?.getInt(NBT_SCAN_LEVEL)?.coerceIn(0, 4) ?: 0
 
     fun write(stack: ItemStack, type: CropType, stats: CropStats, scanLevel: Int) {
-        val nbt = stack.orCreateNbt
+        val nbt = stack.getOrCreateCustomData()
         nbt.putString(NBT_OWNER, "ic2_120")
         nbt.putString(NBT_ID, type.asString())
         nbt.putInt(NBT_GROWTH, stats.growth.coerceIn(0, 31))
@@ -74,7 +75,7 @@ object CropSeedData {
 }
 
 @ModItem(name = "crop_seed_bag", tab = CreativeTab.IC2_CROP_SEEDS, group = "crops")
-class CropSeedBagItem : Item(FabricItemSettings().maxCount(1)) {
+class CropSeedBagItem : Item(Item.Settings().maxCount(1)) {
     override fun appendTooltip(
         stack: ItemStack,
         world: World?,
@@ -133,7 +134,7 @@ class CropSeedBagItem : Item(FabricItemSettings().maxCount(1)) {
 }
 
 @ModItem(name = "cropnalyzer", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class CropnalyzerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
+class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
     override val tier: Int = 1
     override val maxCapacity: Long = 10_000L
 
@@ -200,7 +201,7 @@ class CropnalyzerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
         const val ENERGY_PER_SCAN = 50L
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             if (cable == Items.AIR || circuit == Items.AIR) return

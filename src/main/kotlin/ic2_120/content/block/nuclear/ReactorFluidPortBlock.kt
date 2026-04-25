@@ -23,7 +23,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
@@ -45,7 +45,7 @@ class ReactorFluidPortBlock(settings: AbstractBlock.Settings = AbstractBlock.Set
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, ReactorFluidPortBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, ReactorFluidPortBlockEntity::class.type()){ w, p, s, be ->
             (be as ReactorFluidPortBlockEntity).tick(w, p, s)
         }
 
@@ -59,14 +59,7 @@ class ReactorFluidPortBlock(settings: AbstractBlock.Settings = AbstractBlock.Set
     }
     
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -77,7 +70,7 @@ class ReactorFluidPortBlock(settings: AbstractBlock.Settings = AbstractBlock.Set
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val vessel = ReactorVesselBlock::class.item()
             val emptyCell = EmptyCell::class.instance()
             if (vessel != Items.AIR && emptyCell != Items.AIR) {

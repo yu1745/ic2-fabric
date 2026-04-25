@@ -21,7 +21,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -137,7 +137,7 @@ class ReplicatorScreenHandler(
 
     companion object {
         private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false })
-        private val FLUID_CELL_ID = Identifier("ic2_120", "fluid_cell")
+        private val FLUID_CELL_ID = Identifier.of("ic2_120", "fluid_cell")
         private val BATTERY_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack -> stack.item is IBatteryItem }

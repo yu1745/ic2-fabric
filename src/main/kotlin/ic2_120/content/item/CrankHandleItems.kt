@@ -7,10 +7,9 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.recipeId
 import ic2_120.content.recipes.ModTags
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Item
 import net.minecraft.recipe.book.RecipeCategory
@@ -39,7 +38,7 @@ enum class CrankMaterial(
  */
 abstract class CrankHandleItem(
     val material: CrankMaterial,
-    settings: FabricItemSettings = FabricItemSettings()
+    settings: FabricItemSettings = Item.Settings()
 ) : Item(settings) {
     fun getKuPerTick(): Int = material.kuPerTick
 }
@@ -48,7 +47,7 @@ abstract class CrankHandleItem(
 class WoodenCrankHandle : CrankHandleItem(CrankMaterial.WOOD) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val stick = net.minecraft.item.Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodenCrankHandle::class.instance(), 1)
                 .pattern(" S ")
@@ -65,7 +64,7 @@ class WoodenCrankHandle : CrankHandleItem(CrankMaterial.WOOD) {
 class IronCrankHandle : CrankHandleItem(CrankMaterial.IRON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val wooden = WoodenCrankHandle::class.instance()
             val plate = IronPlate::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronCrankHandle::class.instance(), 1)
@@ -84,7 +83,7 @@ class IronCrankHandle : CrankHandleItem(CrankMaterial.IRON) {
 class SteelCrankHandle : CrankHandleItem(CrankMaterial.STEEL) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val iron = IronCrankHandle::class.instance()
             val plate = SteelPlate::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelCrankHandle::class.instance(), 1)
@@ -103,7 +102,7 @@ class SteelCrankHandle : CrankHandleItem(CrankMaterial.STEEL) {
 class CarbonCrankHandle : CrankHandleItem(CrankMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val steel = SteelCrankHandle::class.instance()
             val plate = CarbonPlate::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonCrankHandle::class.instance(), 1)

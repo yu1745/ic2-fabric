@@ -3,7 +3,7 @@ package ic2_120.content.recipes.compressor
 import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonObject
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.registry.Registries
@@ -23,15 +23,15 @@ object CompressorRecipeSerializer : RecipeSerializer<CompressorRecipe> {
     }
 
     override fun read(id: Identifier, buf: PacketByteBuf): CompressorRecipe {
-        val ingredient = Ingredient.fromPacket(buf)
+        val ingredient = Ingredient.PACKET_CODEC.decode(buf)
         val inputCount = buf.readVarInt()
-        val output = buf.readItemStack()
+        val output = ItemStack.PACKET_CODEC.decode(buf)
         return CompressorRecipe(id, ingredient, inputCount, output)
     }
 
     override fun write(buf: PacketByteBuf, recipe: CompressorRecipe) {
-        recipe.ingredient.write(buf)
+        Ingredient.PACKET_CODEC.encode(buf, recipe.ingredient)
         buf.writeVarInt(recipe.inputCount)
-        buf.writeItemStack(recipe.output.copy())
+        ItemStack.PACKET_CODEC.encode(buf, recipe.output.copy())
     }
 }

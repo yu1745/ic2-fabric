@@ -6,7 +6,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.world.World
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+import ic2_120.getCustomData
+import ic2_120.getOrCreateCustomData
 
 /**
  * 带耐久/热容的反应堆组件。使用 NBT "use" 存储热量，
@@ -18,7 +19,7 @@ abstract class AbstractDamageableReactorComponent(
 ) : AbstractReactorComponent(settings) {
 
     protected fun getUse(stack: ItemStack): Int {
-        val nbt = stack.nbt ?: return 0
+        val nbt = stack.getCustomData() ?: return 0
         return nbt.getInt("use").coerceIn(0, maxUse)
     }
 
@@ -26,7 +27,7 @@ abstract class AbstractDamageableReactorComponent(
     fun isOperationalFuelRod(stack: ItemStack): Boolean = getUse(stack) < maxUse - 1
 
     fun setUse(stack: ItemStack, use: Int) {
-        stack.orCreateNbt.putInt("use", use.coerceIn(0, maxUse))
+        stack.getOrCreateCustomData().putInt("use", use.coerceIn(0, maxUse))
     }
 
     protected fun incrementUse(stack: ItemStack) {

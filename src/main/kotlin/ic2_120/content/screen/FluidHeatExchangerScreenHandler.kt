@@ -22,7 +22,7 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -194,7 +194,7 @@ class FluidHeatExchangerScreenHandler(
         private val EXCHANGER_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack ->
-                !stack.isEmpty && Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "heat_conductor")
+                !stack.isEmpty && Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "heat_conductor")
             }
         )
 
@@ -203,8 +203,8 @@ class FluidHeatExchangerScreenHandler(
                 when {
                     stack.item == Items.LAVA_BUCKET -> true
                     stack.item == ModFluids.HOT_COOLANT_BUCKET -> true
-                    Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "lava_cell") -> true
-                    Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "hot_coolant_cell") -> true
+                    Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "lava_cell") -> true
+                    Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "hot_coolant_cell") -> true
                     stack.item is FluidCellItem -> {
                         val fluid = stack.getFluidCellVariant()?.fluid
                         fluid == net.minecraft.fluid.Fluids.LAVA ||
@@ -221,7 +221,7 @@ class FluidHeatExchangerScreenHandler(
         private val OUTPUT_EMPTY_CONTAINER_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->
                 stack.item == Items.BUCKET ||
-                    Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "empty_cell") ||
+                    Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "empty_cell") ||
                     (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             }
         )

@@ -17,7 +17,7 @@ import net.minecraft.util.Identifier
 class CompressorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<CompressorJeiRecipe> {
     private val background: IDrawable = guiHelper.createBlankDrawable(140, 54)
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "compressor")))
+        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "compressor")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.COMPRESSOR

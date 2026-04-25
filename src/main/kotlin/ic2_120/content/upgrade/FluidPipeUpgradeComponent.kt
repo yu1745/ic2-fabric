@@ -15,6 +15,8 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import ic2_120.getCustomData
+import ic2_120.getOrCreateCustomData
 
 object FluidPipeUpgradeComponent {
     private const val NBT_FILTER = "PipeFluidFilter"
@@ -63,7 +65,7 @@ object FluidPipeUpgradeComponent {
     }
 
     fun readFilter(stack: ItemStack): Fluid? {
-        val nbt = stack.nbt ?: return null
+        val nbt = stack.getCustomData() ?: return null
         val raw = nbt.getString(NBT_FILTER)
         if (raw.isNullOrBlank()) return null
         val id = Identifier.tryParse(raw) ?: return null
@@ -71,7 +73,7 @@ object FluidPipeUpgradeComponent {
     }
 
     fun writeFilter(stack: ItemStack, fluid: Fluid?) {
-        val nbt = stack.orCreateNbt
+        val nbt = stack.getOrCreateCustomData()
         if (fluid == null) {
             nbt.remove(NBT_FILTER)
             return
@@ -85,14 +87,14 @@ object FluidPipeUpgradeComponent {
     }
 
     fun readDirection(stack: ItemStack): Direction? {
-        val nbt = stack.nbt ?: return null
+        val nbt = stack.getCustomData() ?: return null
         val raw = nbt.getString(NBT_DIRECTION)
         if (raw.isNullOrBlank()) return null
         return Direction.byName(raw.lowercase())
     }
 
     fun writeDirection(stack: ItemStack, side: Direction?) {
-        val nbt = stack.orCreateNbt
+        val nbt = stack.getOrCreateCustomData()
         if (side == null) {
             nbt.remove(NBT_DIRECTION)
             return

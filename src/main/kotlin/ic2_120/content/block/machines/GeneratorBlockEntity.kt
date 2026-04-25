@@ -21,7 +21,7 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
@@ -33,6 +33,7 @@ import ic2_120.content.storage.RoutedItemStorage
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.minecraft.registry.RegistryWrapper
 
 /**
  * 火力发电机方块实体。燃料槽燃烧产生 EU，能量可被相邻方块提取。
@@ -151,8 +152,8 @@ class GeneratorBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         GeneratorScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(GeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, GeneratorSync.ENERGY_CAPACITY)
@@ -162,8 +163,8 @@ class GeneratorBlockEntity(
         sync.totalBurnTime = nbt.getInt("TotalBurnTime")
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(GeneratorSync.NBT_ENERGY_STORED, sync.amount)

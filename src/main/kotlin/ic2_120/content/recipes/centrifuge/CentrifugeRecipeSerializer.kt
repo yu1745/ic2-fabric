@@ -4,7 +4,7 @@ import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.registry.Registries
@@ -48,7 +48,7 @@ object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
     }
 
     override fun read(id: Identifier, buf: PacketByteBuf): CentrifugeRecipe {
-        val ingredient = Ingredient.fromPacket(buf)
+        val ingredient = Ingredient.PACKET_CODEC.decode(buf)
         val inputCount = buf.readVarInt()
         val minHeat = buf.readVarInt()
 
@@ -56,20 +56,20 @@ object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
         val outputs = mutableListOf<ItemStack>()
 
         repeat(outputCount) {
-            outputs.add(buf.readItemStack())
+            outputs.add(ItemStack.PACKET_CODEC.decode(buf))
         }
 
         return CentrifugeRecipe(id, ingredient, inputCount, minHeat, outputs)
     }
 
     override fun write(buf: PacketByteBuf, recipe: CentrifugeRecipe) {
-        recipe.ingredient.write(buf)
+        Ingredient.PACKET_CODEC.encode(buf, recipe.ingredient)
         buf.writeVarInt(recipe.inputCount)
         buf.writeVarInt(recipe.minHeat)
 
         buf.writeVarInt(recipe.outputs.size)
         recipe.outputs.forEach { output ->
-            buf.writeItemStack(output.copy())
+            ItemStack.PACKET_CODEC.encode(buf, output.copy())
         }
     }
 }

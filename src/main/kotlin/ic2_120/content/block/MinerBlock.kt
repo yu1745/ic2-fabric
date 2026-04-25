@@ -13,7 +13,7 @@ import ic2_120.registry.type
 import ic2_120.registry.id
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
@@ -58,14 +58,7 @@ abstract class BaseMinerBlock : MachineBlock() {
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let(player::openHandledScreen)
         }
@@ -136,13 +129,13 @@ class MinerBlock : BaseMinerBlock() {
 
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, MinerBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, MinerBlockEntity::class.type()){ w, p, s, be ->
             (be as MinerBlockEntity).tick(w, p, s)
         }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             val miningPipe = MiningPipeBlock::class.item()
@@ -172,13 +165,13 @@ class AdvancedMinerBlock : BaseMinerBlock() {
 
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, AdvancedMinerBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, AdvancedMinerBlockEntity::class.type()){ w, p, s, be ->
             (be as AdvancedMinerBlockEntity).tick(w, p, s)
         }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val alloy = Alloy::class.instance()
             val miner = MinerBlock::class.item()
             val teleporter = TeleporterBlock::class.item()

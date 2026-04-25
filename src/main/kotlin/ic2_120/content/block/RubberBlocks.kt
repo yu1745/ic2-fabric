@@ -62,7 +62,7 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, RubberLogBlockEntity::class.type()) { w, p, s, be -> RubberLogBlockEntity.tick(w, p, s, be as RubberLogBlockEntity) }
+        else validateTicker(type, RubberLogBlockEntity::class.type()){ w, p, s, be -> RubberLogBlockEntity.tick(w, p, s, be as RubberLogBlockEntity) }
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         super.appendProperties(builder)
@@ -197,7 +197,7 @@ class RubberPressurePlateBlock(settings: AbstractBlock.Settings = AbstractBlock.
 /** 橡胶树生成器，用于树苗生长与骨粉催熟。 */
 private class RubberSaplingGenerator : net.minecraft.block.sapling.SaplingGenerator() {
     override fun getTreeFeature(random: net.minecraft.util.math.random.Random, bees: Boolean): RegistryKey<ConfiguredFeature<*, *>>? =
-        RegistryKey.of(RegistryKeys.CONFIGURED_FEATURE, Identifier(Ic2_120.MOD_ID, "rubber_tree"))
+        RegistryKey.of(RegistryKeys.CONFIGURED_FEATURE, Identifier.of(Ic2_120.MOD_ID, "rubber_tree"))
 }
 
 @ModBlock(name = "rubber_leaves", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood", generateBlockLootTable = false)

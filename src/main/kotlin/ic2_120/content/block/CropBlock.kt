@@ -45,6 +45,7 @@ import net.minecraft.state.StateManager
 import net.minecraft.state.property.EnumProperty
 import net.minecraft.state.property.IntProperty
 import net.minecraft.registry.RegistryKeys
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.registry.tag.BlockTags
 import net.minecraft.registry.tag.TagKey
 import net.minecraft.text.Text
@@ -115,16 +116,9 @@ class CropBlock : BlockWithEntity(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, CropBlockEntity::class.type()) { w, p, s, be -> (be as CropBlockEntity).tick(w, p, s) }
+        else validateTicker(type, CropBlockEntity::class.type()){ w, p, s, be -> (be as CropBlockEntity).tick(w, p, s) }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         val stack = player.getStackInHand(hand)
         // 手持种子扫描仪时，优先走物品 useOnBlock（扫描）逻辑，不触发作物采摘。
         if (stack.item is CropnalyzerItem) return ActionResult.PASS
@@ -397,8 +391,8 @@ class CropBlockEntity(
         return accepted
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         nbt.putInt("growth", stats.growth)
         nbt.putInt("gain", stats.gain)
         nbt.putInt("resistance", stats.resistance)
@@ -412,8 +406,8 @@ class CropBlockEntity(
         nbt.putInt("terrain_air_quality", terrainAirQuality)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         stats = CropStats(
             growth = nbt.getInt("growth"),
             gain = nbt.getInt("gain"),
@@ -985,18 +979,18 @@ class CropBlockEntity(
 
     companion object {
         private const val TICK_RATE = 256
-        private val TAG_ORES_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/iron"))
-        private val TAG_STORAGE_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/iron"))
-        private val TAG_ORES_COPPER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/copper"))
-        private val TAG_STORAGE_COPPER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/copper"))
-        private val TAG_ORES_TIN: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/tin"))
-        private val TAG_STORAGE_TIN: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/tin"))
-        private val TAG_ORES_LEAD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/lead"))
-        private val TAG_STORAGE_LEAD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/lead"))
-        private val TAG_ORES_GOLD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/gold"))
-        private val TAG_STORAGE_GOLD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/gold"))
-        private val TAG_ORES_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/silver"))
-        private val TAG_STORAGE_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/silver"))
+        private val TAG_ORES_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/iron"))
+        private val TAG_STORAGE_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/iron"))
+        private val TAG_ORES_COPPER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/copper"))
+        private val TAG_STORAGE_COPPER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/copper"))
+        private val TAG_ORES_TIN: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/tin"))
+        private val TAG_STORAGE_TIN: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/tin"))
+        private val TAG_ORES_LEAD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/lead"))
+        private val TAG_STORAGE_LEAD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/lead"))
+        private val TAG_ORES_GOLD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/gold"))
+        private val TAG_STORAGE_GOLD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/gold"))
+        private val TAG_ORES_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/silver"))
+        private val TAG_STORAGE_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/silver"))
         private val METAL_IRON = MetalRootGroup.IRON
         private val METAL_COPPER = MetalRootGroup.COPPER
         private val METAL_TIN = MetalRootGroup.TIN

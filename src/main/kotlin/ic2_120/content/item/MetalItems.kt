@@ -13,9 +13,8 @@ import ic2_120.content.item.RawTin
 import net.minecraft.data.server.recipe.CookingRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
@@ -29,10 +28,10 @@ import ic2_120.registry.annotation.RecipeProvider
  * 锡锭。
  */
 @ModItem(name = "tin_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/tin"])
-class TinIngot : Item(FabricItemSettings()) {
+class TinIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, TinIngot::class.instance(), 9)
                 .input(TinBlock::class.instance())
                 .criterion(hasItem(TinBlock::class.instance()), conditionsFromItem(TinBlock::class.instance()))
@@ -106,10 +105,10 @@ class TinIngot : Item(FabricItemSettings()) {
  * 青铜锭。
  */
 @ModItem(name = "bronze_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/bronze"])
-class BronzeIngot : Item(FabricItemSettings()) {
+class BronzeIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, BronzeIngot::class.instance(), 9)
                 .input(BronzeBlock::class.instance())
                 .criterion(hasItem(BronzeBlock::class.instance()), conditionsFromItem(BronzeBlock::class.instance()))
@@ -130,5 +129,5 @@ class BronzeIngot : Item(FabricItemSettings()) {
  * 橡胶。
  */
 @ModItem(name = "rubber", tab = CreativeTab.IC2_MATERIALS, group = "materials", materialTags = ["rubber"])
-class RubberItem : Item(FabricItemSettings())
+class RubberItem : Item(Item.Settings())
 

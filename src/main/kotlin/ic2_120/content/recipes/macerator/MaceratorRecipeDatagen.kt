@@ -49,7 +49,7 @@ import ic2_120.content.item.DiamondDust
 import ic2_120.content.item.GrinPowder
 import ic2_120.registry.instance
 import ic2_120.registry.item
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
@@ -136,10 +136,10 @@ object MaceratorRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
         entries.forEach { entry ->
-            MaceratorRecipeJsonProvider(
-                recipeId = Identifier("ic2_120", "macerating/${entry.name}"),
+            MaceratorRecipeExporter(
+                recipeId = Identifier.of("ic2_120", "macerating/${entry.name}"),
                 inputItem = entry.input,
                 outputItem = entry.output,
                 outputCount = entry.count,
@@ -148,13 +148,13 @@ object MaceratorRecipeDatagen {
         }
     }
 
-    private class MaceratorRecipeJsonProvider(
+    private class MaceratorRecipeExporter(
         private val recipeId: Identifier,
         private val inputItem: Item,
         private val outputItem: Item,
         private val outputCount: Int,
         private val inputCount: Int = 1
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(MaceratorRecipe::class)}")
             val ingredient = JsonObject()

@@ -22,6 +22,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import ic2_120.getCustomData
 
 /**
  * 储电盒方块基类。四个等级（BatBox/CESU/MFE/MFSU）共用。
@@ -41,14 +42,7 @@ abstract class EnergyStorageBlock(
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -69,15 +63,15 @@ abstract class EnergyStorageBlock(
         protected val config: EnergyStorageConfig
     ) : BlockItem(block, settings) {
         private fun getStoredEnergy(stack: ItemStack): Long {
-            if (stack.nbt?.getBoolean(NBT_FULL) == true) return config.capacity
-            val blockEntityTag = stack.getSubNbt(NBT_BLOCK_ENTITY_TAG) ?: return 0L
+            if (stack.getCustomData()?.getBoolean(NBT_FULL) == true) return config.capacity
+            val blockEntityTag = stack.getCustomData()?.getCompound(NBT_BLOCK_ENTITY_TAG) ?: return 0L
             return blockEntityTag.getLong(EnergyStorageSync.NBT_ENERGY_STORED).coerceIn(0L, config.capacity)
         }
 
         override fun place(context: ItemPlacementContext): ActionResult {
             val result = super.place(context)
             if (result.isAccepted && !context.world.isClient) {
-                val nbt = context.stack.nbt ?: return result
+                val nbt = context.stack.getCustomData() ?: return result
                 val be = context.world.getBlockEntity(context.blockPos) as? EnergyStorageBlockEntity ?: return result
                 val blockEntityTag = nbt.getCompound(NBT_BLOCK_ENTITY_TAG)
                 if (!blockEntityTag.isEmpty && blockEntityTag.contains(EnergyStorageSync.NBT_ENERGY_STORED)) {
@@ -93,7 +87,7 @@ abstract class EnergyStorageBlock(
         }
 
         override fun getName(stack: ItemStack): net.minecraft.text.Text =
-            if (stack.nbt?.getBoolean(NBT_FULL) == true)
+            if (stack.getCustomData()?.getBoolean(NBT_FULL) == true)
                 net.minecraft.text.Text.translatable(translationKeyFull)
             else
                 super.getName(stack)

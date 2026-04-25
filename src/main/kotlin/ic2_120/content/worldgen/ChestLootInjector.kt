@@ -288,5 +288,5 @@ object ChestLootInjector {
 
     private fun modItem(path: String): Item = Registries.ITEM.get(Ic2_120.id(path))
 
-    private fun chest(path: String): Identifier = Identifier("minecraft", "chests/$path")
+    private fun chest(path: String): Identifier = Identifier.of("minecraft", "chests/$path")
 }

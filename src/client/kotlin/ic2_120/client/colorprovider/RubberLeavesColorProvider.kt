@@ -22,8 +22,8 @@ object RubberLeavesColorProvider {
     private const val DEFAULT_RUBBER_LEAVES_COLOR = 0xc4b848
 
     fun register() {
-        val block = Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "rubber_leaves"))
-        val item = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "rubber_leaves"))
+        val block = Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "rubber_leaves"))
+        val item = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "rubber_leaves"))
 
         ColorProviderRegistry.BLOCK.register({ _, world, pos, _ ->
             if (world != null && pos != null) {

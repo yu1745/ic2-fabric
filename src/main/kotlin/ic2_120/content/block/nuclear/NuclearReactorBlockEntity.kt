@@ -55,8 +55,9 @@ import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
@@ -300,8 +301,8 @@ class NuclearReactorBlockEntity(
             isThermalMode()
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(NuclearReactorSync.NBT_ENERGY_STORED).coerceIn(0L, NuclearReactorSync.ENERGY_CAPACITY)
@@ -328,8 +329,8 @@ class NuclearReactorBlockEntity(
         ownerUuid = if (nbt.containsUuid("OwnerUUID")) nbt.getUuid("OwnerUUID") else null
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(NuclearReactorSync.NBT_ENERGY_STORED, sync.amount)
@@ -687,10 +688,10 @@ class NuclearReactorBlockEntity(
     }
 
     private fun resolveCoolantInput(stack: ItemStack): CoolantInputInfo? {
-        val emptyCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
+        val emptyCell = ItemStack(Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")))
         return when {
             stack.item == ModFluids.COOLANT_BUCKET -> CoolantInputInfo(ItemStack(Items.BUCKET))
-            stack.item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "coolant_cell")) -> CoolantInputInfo(emptyCell)
+            stack.item == Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "coolant_cell")) -> CoolantInputInfo(emptyCell)
             stack.item is FluidCellItem && stack.getFluidCellVariant()?.fluid?.let {
                 it == ModFluids.COOLANT_STILL || it == ModFluids.COOLANT_FLOWING
             } == true -> CoolantInputInfo(emptyCell)
@@ -701,7 +702,7 @@ class NuclearReactorBlockEntity(
     private fun resolveHotCoolantOutput(emptyContainer: ItemStack): ItemStack? {
         return when {
             emptyContainer.item == Items.BUCKET -> ItemStack(ModFluids.HOT_COOLANT_BUCKET)
-            emptyContainer.item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) ->
+            emptyContainer.item == Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")) ->
                 fluidToFilledCellStack(ModFluids.HOT_COOLANT_STILL)
             emptyContainer.item is FluidCellItem && emptyContainer.isFluidCellEmpty() ->
                 ItemStack(emptyContainer.item).apply { setFluidCellVariant(FluidVariant.of(ModFluids.HOT_COOLANT_STILL)) }
@@ -1302,13 +1303,13 @@ class NuclearReactorBlockEntity(
         val registry = world.registryManager.get(net.minecraft.registry.RegistryKeys.DAMAGE_TYPE)
         val key = net.minecraft.registry.RegistryKey.of(
             net.minecraft.registry.RegistryKeys.DAMAGE_TYPE,
-            Identifier(Ic2_120.MOD_ID, "nuclear_heat")
+            Identifier.of(Ic2_120.MOD_ID, "nuclear_heat")
         )
         val entry = registry.getEntry(key).orElse(null)
             ?: registry.getEntry(
                 net.minecraft.registry.RegistryKey.of(
                     net.minecraft.registry.RegistryKeys.DAMAGE_TYPE,
-                    Identifier("minecraft", "lava")
+                    Identifier.of("minecraft", "lava")
                 )
             ).orElseThrow()
         return net.minecraft.entity.damage.DamageSource(entry)

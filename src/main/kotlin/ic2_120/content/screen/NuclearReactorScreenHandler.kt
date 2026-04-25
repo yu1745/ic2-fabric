@@ -21,7 +21,7 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -168,7 +168,7 @@ class NuclearReactorScreenHandler(
         private val COOLANT_INPUT_SPEC = SlotSpec(
             canInsert = { stack ->
                 stack.item == ModFluids.COOLANT_BUCKET ||
-                    Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "coolant_cell") ||
+                    Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "coolant_cell") ||
                     (stack.item is FluidCellItem && stack.getFluidCellVariant()?.fluid?.let {
                         it == ModFluids.COOLANT_STILL || it == ModFluids.COOLANT_FLOWING
                     } == true)
@@ -179,7 +179,7 @@ class NuclearReactorScreenHandler(
         private val HOT_COOLANT_INPUT_SPEC = SlotSpec(
             canInsert = { stack ->
                 stack.item == Items.BUCKET ||
-                    Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "empty_cell") ||
+                    Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "empty_cell") ||
                     (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             }
         )

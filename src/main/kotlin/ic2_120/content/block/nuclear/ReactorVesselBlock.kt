@@ -12,7 +12,7 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditio
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Blocks
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
@@ -26,7 +26,7 @@ class ReactorVesselBlock(settings: AbstractBlock.Settings = AbstractBlock.Settin
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val leadPlate = LeadPlate::class.instance()
             if (leadPlate != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorVesselBlock::class.item(), 4)

@@ -12,8 +12,8 @@ fun ItemStack.isSemifluidFuel(): Boolean {
     return when (item) {
         ModFluids.BIOFUEL_BUCKET -> true
         ModFluids.CREOSOTE_BUCKET -> true
-        Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "biofuel_cell")) -> true
-        Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) -> {
+        Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "biofuel_cell")) -> true
+        Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fluid_cell")) -> {
             val fluid = getFluidCellVariant()?.fluid ?: return false
             fluid == ModFluids.BIOFUEL_STILL || fluid == ModFluids.BIOFUEL_FLOWING ||
                 fluid == ModFluids.CREOSOTE_STILL || fluid == ModFluids.CREOSOTE_FLOWING

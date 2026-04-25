@@ -41,8 +41,9 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.server.network.ServerPlayerEntity
@@ -157,11 +158,11 @@ class FluidHeatExchangerBlockEntity(
         extractSlots = IntArray(INVENTORY_SIZE) { it },
         markDirty = { markDirty() }
     )
-    private val heatConductorItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "heat_conductor")) }
-    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val lavaCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "lava_cell")) }
-    private val hotCoolantCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "hot_coolant_cell")) }
+    private val heatConductorItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "heat_conductor")) }
+    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val lavaCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "lava_cell")) }
+    private val hotCoolantCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "hot_coolant_cell")) }
 
     val syncedData = SyncedData(this)
     override val heatFlow = HeatFlowSync(syncedData, this)
@@ -388,8 +389,8 @@ class FluidHeatExchangerBlockEntity(
     private fun fheMatchesInputFilledContainer(stack: ItemStack): Boolean = when {
         stack.item == Items.LAVA_BUCKET -> true
         stack.item == ModFluids.HOT_COOLANT_BUCKET -> true
-        Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "lava_cell") -> true
-        Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "hot_coolant_cell") -> true
+        Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "lava_cell") -> true
+        Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "hot_coolant_cell") -> true
         stack.item is FluidCellItem -> {
             val fluid = stack.getFluidCellVariant()?.fluid
             fluid == Fluids.LAVA || fluid == Fluids.FLOWING_LAVA ||
@@ -400,7 +401,7 @@ class FluidHeatExchangerBlockEntity(
 
     private fun fheMatchesOutputEmptyContainer(stack: ItemStack): Boolean =
         stack.item == Items.BUCKET ||
-            Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "empty_cell") ||
+            Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "empty_cell") ||
             (stack.item is FluidCellItem && stack.isFluidCellEmpty())
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
@@ -414,7 +415,7 @@ class FluidHeatExchangerBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -430,8 +431,8 @@ class FluidHeatExchangerBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
 
@@ -447,8 +448,8 @@ class FluidHeatExchangerBlockEntity(
         )
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
 

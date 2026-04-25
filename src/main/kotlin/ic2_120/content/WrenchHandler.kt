@@ -32,6 +32,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import ic2_120.getOrCreateCustomData
 
 /**
  * 扳手与机器方块的交互逻辑：
@@ -47,9 +48,9 @@ import net.minecraft.world.World
  */
 object WrenchHandler {
 
-    private val WRENCH_ID = Identifier(Ic2_120.MOD_ID, "wrench")
-    private val ELECTRIC_WRENCH_ID = Identifier(Ic2_120.MOD_ID, "electric_wrench")
-    private val WRENCH_USE_SOUND = SoundEvent.of(Identifier("ic2", "item.wrench.use"))
+    private val WRENCH_ID = Identifier.of(Ic2_120.MOD_ID, "wrench")
+    private val ELECTRIC_WRENCH_ID = Identifier.of(Ic2_120.MOD_ID, "electric_wrench")
+    private val WRENCH_USE_SOUND = SoundEvent.of(Identifier.of("ic2", "item.wrench.use"))
     private const val ENERGY_RETAIN_RATIO = 0.8
 
     fun isWrench(stack: ItemStack): Boolean {
@@ -154,7 +155,7 @@ object WrenchHandler {
                                 ic2_120.content.sync.EnergyStorageSync.NBT_ENERGY_STORED,
                                 retained
                             )
-                            dropped.orCreateNbt.put(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG, blockEntityTag)
+                            dropped.getOrCreateCustomData().put(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG, blockEntityTag)
                         }
                         val itemEntity = net.minecraft.entity.ItemEntity(
                             world,

@@ -1,6 +1,6 @@
 package ic2_120.content.network
 
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 
@@ -13,7 +13,7 @@ class TeleporterVisualStatePacket(
     val chargingEntityId: Int
 ) {
     companion object {
-        val ID: Identifier = Identifier("ic2_120", "teleporter_visual_state")
+        val ID: Identifier = Identifier.of("ic2_120", "teleporter_visual_state")
 
         fun read(buf: PacketByteBuf): TeleporterVisualStatePacket {
             val pos = buf.readBlockPos()

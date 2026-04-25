@@ -6,7 +6,7 @@ import ic2_120.content.item.*
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
 import ic2_120.registry.item
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
@@ -274,10 +274,10 @@ object CentrifugeRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
         entries.forEach { entry ->
-            CentrifugeRecipeJsonProvider(
-                recipeId = Identifier("ic2_120", "centrifuging/${entry.name}"),
+            CentrifugeRecipeExporter(
+                recipeId = Identifier.of("ic2_120", "centrifuging/${entry.name}"),
                 inputItem = entry.input,
                 inputCount = entry.inputCount,
                 minHeat = entry.minHeat,
@@ -286,13 +286,13 @@ object CentrifugeRecipeDatagen {
         }
     }
 
-    private class CentrifugeRecipeJsonProvider(
+    private class CentrifugeRecipeExporter(
         private val recipeId: Identifier,
         private val inputItem: Item,
         private val inputCount: Int,
         private val minHeat: Int,
         private val outputs: List<OutputEntry>
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(CentrifugeRecipe::class)}")
 

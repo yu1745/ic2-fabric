@@ -10,11 +10,12 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluid
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
@@ -86,8 +87,8 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         markDirty()
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         disabledMask = nbt.getInt("DisabledMask")
         pipeLoad = nbt.getLong("PipeLoad")
         currentFluidId = nbt.getString("CurrentFluid").takeIf { it.isNotBlank() }
@@ -99,8 +100,8 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         pumpFilterFluidId = nbt.getString("PumpFilterFluid").takeIf { it.isNotBlank() }
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         nbt.putInt("DisabledMask", disabledMask)
         nbt.putLong("PipeLoad", pipeLoad)
         currentFluidId?.let { nbt.putString("CurrentFluid", it) }

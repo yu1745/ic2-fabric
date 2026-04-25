@@ -1,6 +1,6 @@
 package ic2_120.content.network
 
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 
@@ -16,7 +16,7 @@ class WindRotorStatePacket(
     val stuckAngle: Float
 ) {
     companion object {
-        val ID = Identifier("ic2_120", "wind_rotor_state")
+        val ID = Identifier.of("ic2_120", "wind_rotor_state")
 
         fun read(buf: PacketByteBuf): WindRotorStatePacket {
             val pos = buf.readBlockPos()

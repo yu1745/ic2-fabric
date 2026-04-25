@@ -14,7 +14,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.Items
@@ -39,14 +39,7 @@ import ic2_120.registry.annotation.RecipeProvider
 @ModBlock(name = "reactor_chamber", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor")
 class ReactorChamberBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
         for (dir in Direction.values()) {
             val neighborPos = pos.offset(dir)
@@ -80,7 +73,7 @@ class ReactorChamberBlock(settings: AbstractBlock.Settings = AbstractBlock.Setti
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val machine = MachineCasingBlock::class.item()
             val leadPlate = ic2_120.content.item.LeadPlate::class.instance()
             if (machine != Items.AIR && leadPlate != Items.AIR) {

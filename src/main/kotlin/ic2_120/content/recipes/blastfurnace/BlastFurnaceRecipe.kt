@@ -29,9 +29,6 @@ class BlastFurnaceRecipe(
     override fun craft(inventory: Input, registry: net.minecraft.registry.DynamicRegistryManager): ItemStack {
         return steelOutput.copy()
     }
-
-    override fun getId(): Identifier = id
-
     override fun getSerializer(): RecipeSerializer<*> = ic2_120.content.recipes.ModMachineRecipes.recipeSerializer(BlastFurnaceRecipe::class)
 
     override fun getType(): RecipeType<*> = ic2_120.content.recipes.ModMachineRecipes.recipeType(BlastFurnaceRecipe::class)

@@ -19,10 +19,9 @@ import ic2_120.content.block.UraniumBlock
 import net.minecraft.data.server.recipe.CookingRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.item.Items
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
@@ -32,7 +31,7 @@ import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 private fun offerIngotSmelting(
-    exporter: Consumer<RecipeJsonProvider>,
+    exporter: Consumer<RecipeExporter>,
     input: Item,
     output: Item,
     recipeId: Identifier,
@@ -54,10 +53,10 @@ private fun offerIngotSmelting(
 
 /** 合金锭 */
 @ModItem(name = "mixed_metal_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots")
-class MixedMetalIngot : Item(FabricItemSettings()) {
+class MixedMetalIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // 配方1：铁板 + 青铜板 + 锡板 = 合金锭
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, MixedMetalIngot::class.instance(), 2)
                 .pattern("III")
@@ -85,10 +84,10 @@ class MixedMetalIngot : Item(FabricItemSettings()) {
 
 /** 铅锭 */
 @ModItem(name = "lead_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/lead"])
-class LeadIngot : Item(FabricItemSettings()) {
+class LeadIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, LeadIngot::class.instance(), 9)
                 .input(LeadBlock::class.instance())
                 .criterion(hasItem(LeadBlock::class.instance()), conditionsFromItem(LeadBlock::class.instance()))
@@ -138,10 +137,10 @@ class LeadIngot : Item(FabricItemSettings()) {
 
 /** 银锭 */
 @ModItem(name = "silver_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/silver"])
-class SilverIngot : Item(FabricItemSettings()) {
+class SilverIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SilverIngot::class.instance(), 9)
                 .input(SilverBlock::class.instance())
                 .criterion(hasItem(SilverBlock::class.instance()), conditionsFromItem(SilverBlock::class.instance()))
@@ -173,10 +172,10 @@ class SilverIngot : Item(FabricItemSettings()) {
 
 /** 钢锭 */
 @ModItem(name = "steel_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/steel"])
-class SteelIngot : Item(FabricItemSettings()) {
+class SteelIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SteelIngot::class.instance(), 9)
                 .input(SteelBlock::class.instance())
                 .criterion(hasItem(SteelBlock::class.instance()), conditionsFromItem(SteelBlock::class.instance()))
@@ -196,14 +195,14 @@ class SteelIngot : Item(FabricItemSettings()) {
 //已删除
 /** 精炼铁锭 */
 // @ModItem(name = "refined_iron_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/refined_iron"])
-class RefinedIronIngot : Item(FabricItemSettings())
+class RefinedIronIngot : Item(Item.Settings())
 
 /** 铀锭 */
 @ModItem(name = "uranium_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/uranium"])
-class UraniumIngot : Item(FabricItemSettings()) {
+class UraniumIngot : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, UraniumIngot::class.instance(), 9)
                 .input(UraniumBlock::class.instance())
                 .criterion(hasItem(UraniumBlock::class.instance()), conditionsFromItem(UraniumBlock::class.instance()))
@@ -255,23 +254,23 @@ class UraniumIngot : Item(FabricItemSettings()) {
 
 /** 粗铅 */
 @ModItem(name = "raw_lead", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals", materialTags = ["raw_materials/lead"])
-class RawLead : Item(FabricItemSettings())
+class RawLead : Item(Item.Settings())
 
 /** 粗锡 */
 @ModItem(name = "raw_tin", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals", materialTags = ["raw_materials/tin"])
-class RawTin : Item(FabricItemSettings())
+class RawTin : Item(Item.Settings())
 
 /** 粗铀 */
 @ModItem(name = "raw_uranium", tab = CreativeTab.IC2_MATERIALS, group = "raw_metals", materialTags = ["raw_materials/uranium"])
-class RawUranium : Item(FabricItemSettings())
+class RawUranium : Item(Item.Settings())
 
 // ========== 粉碎矿石（打粉机产物） ==========
 
 @ModItem(name = "crushed_copper", tab = CreativeTab.IC2_MATERIALS, group = "crushed_ore")
-class CrushedCopper : Item(FabricItemSettings()) {
+class CrushedCopper : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             offerIngotSmelting(
                 exporter,
                 Items.COPPER_ORE,
@@ -301,10 +300,10 @@ class CrushedCopper : Item(FabricItemSettings()) {
 }
 
 @ModItem(name = "crushed_gold", tab = CreativeTab.IC2_MATERIALS, group = "crushed_ore")
-class CrushedGold : Item(FabricItemSettings()) {
+class CrushedGold : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             offerIngotSmelting(
                 exporter,
                 Items.GOLD_ORE,
@@ -334,10 +333,10 @@ class CrushedGold : Item(FabricItemSettings()) {
 }
 
 @ModItem(name = "crushed_iron", tab = CreativeTab.IC2_MATERIALS, group = "crushed_ore")
-class CrushedIron : Item(FabricItemSettings()) {
+class CrushedIron : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             offerIngotSmelting(
                 exporter,
                 Items.IRON_ORE,
@@ -367,36 +366,36 @@ class CrushedIron : Item(FabricItemSettings()) {
 }
 
 @ModItem(name = "crushed_lead", tab = CreativeTab.IC2_MATERIALS, group = "crushed_ore")
-class CrushedLead : Item(FabricItemSettings())
+class CrushedLead : Item(Item.Settings())
 
 @ModItem(name = "crushed_silver", tab = CreativeTab.IC2_MATERIALS, group = "crushed_ore")
-class CrushedSilver : Item(FabricItemSettings())
+class CrushedSilver : Item(Item.Settings())
 
 @ModItem(name = "crushed_tin", tab = CreativeTab.IC2_MATERIALS, group = "crushed_ore")
-class CrushedTin : Item(FabricItemSettings())
+class CrushedTin : Item(Item.Settings())
 
 @ModItem(name = "crushed_uranium", tab = CreativeTab.IC2_MATERIALS, group = "crushed_ore")
-class CrushedUranium : Item(FabricItemSettings())
+class CrushedUranium : Item(Item.Settings())
 
 // ========== 纯净的粉碎矿石（洗矿机产物） ==========
 
 @ModItem(name = "purified_copper", tab = CreativeTab.IC2_MATERIALS, group = "purified_ore")
-class PurifiedCopper : Item(FabricItemSettings())
+class PurifiedCopper : Item(Item.Settings())
 
 @ModItem(name = "purified_gold", tab = CreativeTab.IC2_MATERIALS, group = "purified_ore")
-class PurifiedGold : Item(FabricItemSettings())
+class PurifiedGold : Item(Item.Settings())
 
 @ModItem(name = "purified_iron", tab = CreativeTab.IC2_MATERIALS, group = "purified_ore")
-class PurifiedIron : Item(FabricItemSettings())
+class PurifiedIron : Item(Item.Settings())
 
 @ModItem(name = "purified_lead", tab = CreativeTab.IC2_MATERIALS, group = "purified_ore")
-class PurifiedLead : Item(FabricItemSettings())
+class PurifiedLead : Item(Item.Settings())
 
 @ModItem(name = "purified_silver", tab = CreativeTab.IC2_MATERIALS, group = "purified_ore")
-class PurifiedSilver : Item(FabricItemSettings())
+class PurifiedSilver : Item(Item.Settings())
 
 @ModItem(name = "purified_tin", tab = CreativeTab.IC2_MATERIALS, group = "purified_ore")
-class PurifiedTin : Item(FabricItemSettings())
+class PurifiedTin : Item(Item.Settings())
 
 @ModItem(name = "purified_uranium", tab = CreativeTab.IC2_MATERIALS, group = "purified_ore")
-class PurifiedUranium : Item(FabricItemSettings())
+class PurifiedUranium : Item(Item.Settings())

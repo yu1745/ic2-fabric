@@ -12,8 +12,7 @@ import ic2_120.registry.instance
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -102,10 +101,10 @@ abstract class ReactorHeatVentBase(
 }
 
 @ModItem(name = "heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class HeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 6, 0) {
+class HeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 6, 0) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = IronPlate::class.instance()
             val motor = ElectricMotor::class.instance()
             if (plate != Items.AIR && motor != Items.AIR) {
@@ -120,10 +119,10 @@ class HeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 6, 0) {
 }
 
 @ModItem(name = "reactor_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ReactorHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 5, 5) {
+class ReactorHeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 5, 5) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = CopperPlate::class.instance()
             val vent = HeatVentItem::class.instance()
             if (plate != Items.AIR && vent != Items.AIR) {
@@ -138,10 +137,10 @@ class ReactorHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 5, 5
 }
 
 @ModItem(name = "advanced_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class AdvancedHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 12, 0) {
+class AdvancedHeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 12, 0) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val vent = HeatVentItem::class.instance()
             if (vent != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AdvancedHeatVentItem::class.instance(), 1)
@@ -155,10 +154,10 @@ class AdvancedHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 12,
 }
 
 @ModItem(name = "overclocked_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class OverclockedHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 20, 36) {
+class OverclockedHeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 20, 36) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val gold = GoldPlate::class.instance()
             val reactorVent = ReactorHeatVentItem::class.instance()
             if (gold != Items.AIR && reactorVent != Items.AIR) {
@@ -174,7 +173,7 @@ class OverclockedHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 
 
 /** 元件散热片：无热容量，向四方向邻接可储热组件蒸发 4 点热量 */
 @ModItem(name = "component_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ComponentHeatVentItem(settings: FabricItemSettings = FabricItemSettings()) : AbstractReactorComponent(settings) {
+class ComponentHeatVentItem(settings: FabricItemSettings = Item.Settings()) : AbstractReactorComponent(settings) {
 
     private val sideVent = 4
 
@@ -212,7 +211,7 @@ class ComponentHeatVentItem(settings: FabricItemSettings = FabricItemSettings())
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val tin = TinPlate::class.instance()
             val vent = HeatVentItem::class.instance()
             if (tin != Items.AIR && vent != Items.AIR) {

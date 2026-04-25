@@ -42,7 +42,7 @@ abstract class MachineBlock(settings: AbstractBlock.Settings = defaultMachineSet
      * 子类可覆写以改为高级机器外壳或其他物品。
      */
     open fun getCasingDrop(): Item =
-        Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "machine"))
+        Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "machine"))
 
     init {
         defaultState = stateManager.defaultState.with(Properties.HORIZONTAL_FACING, Direction.NORTH)
@@ -109,7 +109,7 @@ abstract class DirectionalMachineBlock(settings: AbstractBlock.Settings = defaul
      * 子类可覆写以改为高级机器外壳或其他物品。
      */
     open fun getCasingDrop(): Item =
-        Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "machine"))
+        Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "machine"))
 
     init {
         defaultState = stateManager.defaultState.with(Properties.FACING, Direction.NORTH)

@@ -4,7 +4,6 @@ import ic2_120.content.block.machines.CreativeGeneratorBlockEntity
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
@@ -47,7 +46,7 @@ class CreativeGeneratorBlock : MachineBlock(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, CreativeGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, CreativeGeneratorBlockEntity::class.type()){ w, p, s, be ->
             (be as CreativeGeneratorBlockEntity).tick(w, p, s)
         }
 
@@ -64,14 +63,7 @@ class CreativeGeneratorBlock : MachineBlock(
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -86,7 +78,7 @@ class CreativeGeneratorBlock : MachineBlock(
     class CreativeGeneratorBlockItem(
         block: net.minecraft.block.Block,
         @Suppress("UNUSED_PARAMETER") settings: Item.Settings
-    ) : BlockItem(block, FabricItemSettings().fireproof())
+    ) : BlockItem(block, Item.Settings().fireproof())
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")

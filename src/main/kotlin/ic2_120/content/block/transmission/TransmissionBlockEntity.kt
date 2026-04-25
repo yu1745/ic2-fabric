@@ -11,6 +11,7 @@ import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.registry.Registry
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
@@ -39,13 +40,13 @@ class TransmissionBlockEntity(
         world.chunkManager.markForUpdate(pos)
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         currentKu = nbt.getInt("CurrentKu").coerceAtLeast(0)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         nbt.putInt("CurrentKu", currentKu)
     }
 
@@ -64,11 +65,11 @@ class TransmissionBlockEntity(
 
         fun register(modId: String) {
             val blockIds = listOf(
-                Identifier(modId, "wood_transmission_shaft"),
-                Identifier(modId, "iron_transmission_shaft"),
-                Identifier(modId, "steel_transmission_shaft"),
-                Identifier(modId, "carbon_transmission_shaft"),
-                Identifier(modId, "bevel_gear")
+                Identifier.of(modId, "wood_transmission_shaft"),
+                Identifier.of(modId, "iron_transmission_shaft"),
+                Identifier.of(modId, "steel_transmission_shaft"),
+                Identifier.of(modId, "carbon_transmission_shaft"),
+                Identifier.of(modId, "bevel_gear")
             )
 
             val blocks = blockIds.mapNotNull { id -> Registries.BLOCK.getOrEmpty(id).orElse(null) }
@@ -85,7 +86,7 @@ class TransmissionBlockEntity(
                 .build() as BlockEntityType<TransmissionBlockEntity>
 
             TYPE = type
-            Registry.register(Registries.BLOCK_ENTITY_TYPE, Identifier(modId, "transmission"), type)
+            Registry.register(Registries.BLOCK_ENTITY_TYPE, Identifier.of(modId, "transmission"), type)
             ic2_120.registry.ClassScanner.registerBlockEntityType(TransmissionBlockEntity::class, type)
         }
     }

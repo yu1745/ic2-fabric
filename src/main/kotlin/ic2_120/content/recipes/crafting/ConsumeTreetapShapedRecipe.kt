@@ -3,14 +3,14 @@ package ic2_120.content.recipes.crafting
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import ic2_120.content.item.Treetap
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.inventory.RecipeInputInventory
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.recipe.ShapedRecipe
-import net.minecraft.registry.DynamicRegistryManager
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
@@ -26,7 +26,7 @@ class ConsumeTreetapShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
     delegate.width,
     delegate.height,
     delegate.ingredients,
-    delegate.getOutput(DynamicRegistryManager.EMPTY),
+    delegate.getResult(RegistryWrapper.WrapperLookup.EMPTY),
     delegate.showNotification()
 ) {
     override fun getRemainder(inventory: RecipeInputInventory): DefaultedList<ItemStack> {
@@ -60,7 +60,7 @@ object ConsumeTreetapShapedRecipeSerializer : RecipeSerializer<ConsumeTreetapSha
 
 object ConsumeTreetapShapedRecipeDatagen {
     fun offer(
-        exporter: Consumer<RecipeJsonProvider>,
+        exporter: Consumer<RecipeExporter>,
         recipeId: Identifier,
         result: Item,
         pattern: List<String>,
@@ -87,7 +87,7 @@ object ConsumeTreetapShapedRecipeDatagen {
         private val keys: Map<Char, Item>,
         private val count: Int,
         private val category: String
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "ic2_120:consume_treetap_shaped")
             json.addProperty("category", category)

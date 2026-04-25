@@ -33,9 +33,6 @@ class OreWashingRecipe(
     override fun craft(inventory: Input, registry: net.minecraft.registry.DynamicRegistryManager): ItemStack {
         return outputItems.firstOrNull()?.copy() ?: ItemStack.EMPTY
     }
-
-    override fun getId(): Identifier = id
-
     override fun getSerializer(): RecipeSerializer<*> = ic2_120.content.recipes.ModMachineRecipes.recipeSerializer(OreWashingRecipe::class)
 
     override fun getType(): RecipeType<*> = ic2_120.content.recipes.ModMachineRecipes.recipeType(OreWashingRecipe::class)

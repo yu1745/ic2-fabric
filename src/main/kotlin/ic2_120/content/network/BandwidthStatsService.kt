@@ -2,7 +2,7 @@ package ic2_120.content.network
 
 import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.network.packet.Packet
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.network.ServerPlayerEntity

@@ -1,6 +1,6 @@
 package ic2_120.content.network
 
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.util.Identifier
 
 /**
@@ -23,7 +23,7 @@ class ScannerResultPacket(
     val results: List<OreScanEntry>
 ) {
     companion object {
-        val ID: Identifier = net.minecraft.util.Identifier("ic2_120", "scanner_result")
+        val ID: Identifier = net.minecraft.util.Identifier.of("ic2_120", "scanner_result")
 
         fun read(buf: PacketByteBuf): ScannerResultPacket {
             val energy = buf.readInt()

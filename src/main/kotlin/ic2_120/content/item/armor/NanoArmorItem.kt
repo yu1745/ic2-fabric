@@ -1,7 +1,6 @@
 package ic2_120.content.item.armor
 
 import ic2_120.content.item.ModArmorMaterials
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ArmorMaterial
 

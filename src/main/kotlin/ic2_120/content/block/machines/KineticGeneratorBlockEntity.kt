@@ -17,7 +17,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -25,6 +25,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import net.minecraft.registry.RegistryWrapper
 
 @ModBlockEntity(block = KineticGeneratorBlock::class)
 class KineticGeneratorBlockEntity(
@@ -145,7 +146,7 @@ class KineticGeneratorBlockEntity(
         markDirty()
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -160,8 +161,8 @@ class KineticGeneratorBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(KineticGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, KineticGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -169,8 +170,8 @@ class KineticGeneratorBlockEntity(
         kuRemainder = nbt.getInt("KuRemainder").coerceIn(0, KineticGeneratorSync.KU_PER_EU - 1)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(KineticGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt("KuRemainder", kuRemainder.coerceIn(0, KineticGeneratorSync.KU_PER_EU - 1))

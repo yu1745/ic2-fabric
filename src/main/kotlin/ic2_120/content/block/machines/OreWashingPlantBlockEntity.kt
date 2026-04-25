@@ -49,7 +49,7 @@ import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.RecipeManager
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
@@ -59,6 +59,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import ic2_120.Ic2_120
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
 
 /**
@@ -249,7 +250,7 @@ class OreWashingPlantBlockEntity(
         else -> false
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -260,8 +261,8 @@ class OreWashingPlantBlockEntity(
         OreWashingPlantScreenHandler(syncId, playerInventory, this,
             net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(OreWashingPlantSync.NBT_ENERGY_STORED)
@@ -270,8 +271,8 @@ class OreWashingPlantBlockEntity(
         waterTankInternal.setStoredWater(nbt.getLong(NBT_WATER_AMOUNT))
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(OreWashingPlantSync.NBT_ENERGY_STORED, sync.amount)
@@ -443,7 +444,7 @@ class OreWashingPlantBlockEntity(
         val emptyStack = when (waterInput.item) {
             Items.WATER_BUCKET -> ItemStack(Items.BUCKET)
             is WaterCell -> {
-                val cellId = Identifier(Ic2_120.MOD_ID, "empty_cell")
+                val cellId = Identifier.of(Ic2_120.MOD_ID, "empty_cell")
                 ItemStack(Registries.ITEM.get(cellId))
             }
             else -> return

@@ -20,8 +20,9 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
@@ -54,7 +55,7 @@ class RtHeatGeneratorBlockEntity(
         const val INVENTORY_SIZE = FUEL_SLOT_COUNT
 
         private val RTG_PELLET_ITEM = lazy {
-            Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "rtg_pellet"))
+            Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "rtg_pellet"))
         }
 
         fun isRtgPellet(stack: ItemStack): Boolean =
@@ -129,14 +130,14 @@ class RtHeatGeneratorBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean =
         slot in FUEL_SLOT_START..FUEL_SLOT_END && !stack.isEmpty && isRtgPellet(stack)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
     }

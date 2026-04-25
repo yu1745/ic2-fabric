@@ -35,7 +35,7 @@ import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.type
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
 import java.util.function.Consumer
@@ -182,7 +182,7 @@ abstract class BasePipeBlock(
 
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, PipeBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else validateTicker(type, PipeBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
 
     /** Pre-computed shape cache for all block states. Uses IdentityHashMap since BlockState is a flyweight. */
     protected var shapeCache: Map<BlockState, VoxelShape> = emptyMap()
@@ -361,7 +361,7 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
 class BronzePipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.BRONZE) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzePipeTinyBlock::class.item(), 6)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .input('X', BronzeCasing::class.instance())
@@ -375,7 +375,7 @@ class BronzePipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.BRONZE) {
 class BronzePipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.BRONZE) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzePipeSmallBlock::class.item(), 3)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .input('X', BronzeCasing::class.instance())
@@ -389,7 +389,7 @@ class BronzePipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.BRONZE) 
 class BronzePipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.BRONZE) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzePipeMediumBlock::class.item(), 2)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .input('X', BronzePlate::class.instance())
@@ -403,7 +403,7 @@ class BronzePipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.BRONZE
 class BronzePipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.BRONZE) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzePipeLargeBlock::class.item(), 1)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .input('X', BronzePlate::class.instance())
@@ -417,7 +417,7 @@ class BronzePipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.BRONZE) 
 class CarbonPipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonPipeTinyBlock::class.item(), 6)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .input('X', CarbonFibre::class.instance())
@@ -431,7 +431,7 @@ class CarbonPipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.CARBON) {
 class CarbonPipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonPipeSmallBlock::class.item(), 3)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .input('X', CarbonFibre::class.instance())
@@ -445,7 +445,7 @@ class CarbonPipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.CARBON) 
 class CarbonPipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonPipeMediumBlock::class.item(), 2)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .input('X', CarbonMesh::class.instance())
@@ -459,7 +459,7 @@ class CarbonPipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.CARBON
 class CarbonPipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonPipeLargeBlock::class.item(), 1)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .input('X', CarbonMesh::class.instance())
@@ -473,7 +473,7 @@ class CarbonPipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.CARBON) 
 class BronzePumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.BRONZE) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzePumpAttachmentBlock::class.item(), 1)
                 .pattern(" P ").pattern(" T ").pattern(" P ")
                 .input('P', BronzePlate::class.instance())
@@ -488,7 +488,7 @@ class BronzePumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.BRONZE) {
 class CarbonPumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonPumpAttachmentBlock::class.item(), 1)
                 .pattern(" P ").pattern(" T ").pattern(" P ")
                 .input('P', CarbonPlate::class.instance())

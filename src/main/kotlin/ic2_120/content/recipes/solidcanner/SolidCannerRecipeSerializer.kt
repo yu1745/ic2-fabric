@@ -3,7 +3,7 @@ package ic2_120.content.recipes.solidcanner
 import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonObject
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.util.Identifier
@@ -25,19 +25,19 @@ object SolidCannerRecipeSerializer : RecipeSerializer<SolidCannerRecipe> {
     }
 
     override fun read(id: Identifier, buf: PacketByteBuf): SolidCannerRecipe {
-        val slot0Ingredient = Ingredient.fromPacket(buf)
+        val slot0Ingredient = Ingredient.PACKET_CODEC.decode(buf)
         val slot0Count = buf.readInt()
-        val slot1Ingredient = Ingredient.fromPacket(buf)
+        val slot1Ingredient = Ingredient.PACKET_CODEC.decode(buf)
         val slot1Count = buf.readInt()
-        val output = buf.readItemStack()
+        val output = ItemStack.PACKET_CODEC.decode(buf)
         return SolidCannerRecipe(id, slot0Ingredient, slot0Count, slot1Ingredient, slot1Count, output)
     }
 
     override fun write(buf: PacketByteBuf, recipe: SolidCannerRecipe) {
-        recipe.slot0Ingredient.write(buf)
+        Ingredient.PACKET_CODEC.encode(buf, recipe.slot0Ingredient)
         buf.writeInt(recipe.slot0Count)
-        recipe.slot1Ingredient.write(buf)
+        Ingredient.PACKET_CODEC.encode(buf, recipe.slot1Ingredient)
         buf.writeInt(recipe.slot1Count)
-        buf.writeItemStack(recipe.output.copy())
+        ItemStack.PACKET_CODEC.encode(buf, recipe.output.copy())
     }
 }

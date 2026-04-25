@@ -13,8 +13,7 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Item
 import net.minecraft.item.Items
@@ -22,6 +21,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.util.function.Consumer
+import ic2_120.getOrCreateCustomData
 
 /**
  * 量子胸甲 (Quantum Chestplate)
@@ -46,7 +46,7 @@ import java.util.function.Consumer
  * - 能量从所有量子装备均匀扣除
  */
 @ModItem(name = "quantum_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)) {
+class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
 
     companion object {
         private const val FLIGHT_KEY = "QuantumFlightEnabled"
@@ -55,17 +55,17 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
             get() = Ic2Config.getQuantumChestplateEuPerTick()
 
         fun toggleFlight(stack: ItemStack): Boolean {
-            val nbt = stack.orCreateNbt
+            val nbt = stack.getOrCreateCustomData()
             val enabled = !nbt.getBoolean(FLIGHT_KEY)
             nbt.putBoolean(FLIGHT_KEY, enabled)
             return enabled
         }
 
         fun isFlightEnabled(stack: ItemStack): Boolean =
-            stack.orCreateNbt.getBoolean(FLIGHT_KEY)
+            stack.getOrCreateCustomData().getBoolean(FLIGHT_KEY)
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val alloy = Alloy::class.instance()
             val nano = NanoChestplate::class.instance()
             val iridium = IridiumPlate::class.instance()
@@ -91,7 +91,7 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
 
     override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
-        val flightEnabled = stack.orCreateNbt.getBoolean(FLIGHT_KEY)
+        val flightEnabled = stack.getOrCreateCustomData().getBoolean(FLIGHT_KEY)
         val energy = getEnergy(stack)
 
         // 计算飞行剩余时间（分钟）

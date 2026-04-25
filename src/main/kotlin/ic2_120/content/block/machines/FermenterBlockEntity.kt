@@ -42,8 +42,9 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -128,9 +129,9 @@ class FermenterBlockEntity(
         ),
         markDirty = { markDirty() }
     )
-    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
-    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) }
-    private val biomassCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "biomass_cell")) }
+    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")) }
+    private val fluidCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fluid_cell")) }
+    private val biomassCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "biomass_cell")) }
 
     private val inputPerCycle = mbToDroplets(FermenterSync.INPUT_MB_PER_CYCLE)
     private val outputPerCycle = mbToDroplets(FermenterSync.OUTPUT_MB_PER_CYCLE)
@@ -310,7 +311,7 @@ class FermenterBlockEntity(
         markDirty()
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -326,8 +327,8 @@ class FermenterBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         inputTankInternal.setStoredFluid(nbt.getLong(NBT_INPUT_TANK))
@@ -336,8 +337,8 @@ class FermenterBlockEntity(
         sync.bufferedHeat = heatBuffer.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_INPUT_TANK, inputTankInternal.getStoredAmount())
@@ -485,7 +486,7 @@ class FermenterBlockEntity(
         if (stack.isEmpty) return false
         return when {
             stack.item == ModFluids.BIOMASS_BUCKET -> true
-            Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "biomass_cell") -> true
+            Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "biomass_cell") -> true
             stack.item is FluidCellItem -> {
                 val fluid = stack.getFluidCellVariant()?.fluid
                 fluid != null && isBiomass(fluid)
@@ -497,7 +498,7 @@ class FermenterBlockEntity(
     private fun isEmptyContainerForFermenter(stack: ItemStack): Boolean =
         !stack.isEmpty && (
             stack.item == Items.BUCKET ||
-                Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "empty_cell") ||
+                Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "empty_cell") ||
                 (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             )
 }

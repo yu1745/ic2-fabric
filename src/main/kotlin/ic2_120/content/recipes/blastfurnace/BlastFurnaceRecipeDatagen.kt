@@ -3,7 +3,7 @@ package ic2_120.content.recipes.blastfurnace
 import com.google.gson.JsonObject
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
@@ -26,32 +26,32 @@ object BlastFurnaceRecipeDatagen {
     )
 
     private val entries = listOf(
-        Entry("iron_dust", Registries.ITEM.get(Identifier("ic2_120", "iron_dust")),
-            Registries.ITEM.get(Identifier("ic2_120", "steel_ingot")), 1,
-            Registries.ITEM.get(Identifier("ic2_120", "slag")), 1),
-        Entry("crushed_iron", Registries.ITEM.get(Identifier("ic2_120", "crushed_iron")),
-            Registries.ITEM.get(Identifier("ic2_120", "steel_ingot")), 1,
-            Registries.ITEM.get(Identifier("ic2_120", "slag")), 1),
-        Entry("purified_iron", Registries.ITEM.get(Identifier("ic2_120", "purified_iron")),
-            Registries.ITEM.get(Identifier("ic2_120", "steel_ingot")), 1,
-            Registries.ITEM.get(Identifier("ic2_120", "slag")), 1),
+        Entry("iron_dust", Registries.ITEM.get(Identifier.of("ic2_120", "iron_dust")),
+            Registries.ITEM.get(Identifier.of("ic2_120", "steel_ingot")), 1,
+            Registries.ITEM.get(Identifier.of("ic2_120", "slag")), 1),
+        Entry("crushed_iron", Registries.ITEM.get(Identifier.of("ic2_120", "crushed_iron")),
+            Registries.ITEM.get(Identifier.of("ic2_120", "steel_ingot")), 1,
+            Registries.ITEM.get(Identifier.of("ic2_120", "slag")), 1),
+        Entry("purified_iron", Registries.ITEM.get(Identifier.of("ic2_120", "purified_iron")),
+            Registries.ITEM.get(Identifier.of("ic2_120", "steel_ingot")), 1,
+            Registries.ITEM.get(Identifier.of("ic2_120", "slag")), 1),
         Entry("iron_ingot", Items.IRON_INGOT,
-            Registries.ITEM.get(Identifier("ic2_120", "steel_ingot")), 1,
-            Registries.ITEM.get(Identifier("ic2_120", "slag")), 1),
+            Registries.ITEM.get(Identifier.of("ic2_120", "steel_ingot")), 1,
+            Registries.ITEM.get(Identifier.of("ic2_120", "slag")), 1),
         Entry("iron_ore", Items.IRON_ORE,
-            Registries.ITEM.get(Identifier("ic2_120", "steel_ingot")), 1,
-            Registries.ITEM.get(Identifier("ic2_120", "slag")), 1),
+            Registries.ITEM.get(Identifier.of("ic2_120", "steel_ingot")), 1,
+            Registries.ITEM.get(Identifier.of("ic2_120", "slag")), 1),
         Entry("deepslate_iron_ore", Items.DEEPSLATE_IRON_ORE,
-            Registries.ITEM.get(Identifier("ic2_120", "steel_ingot")), 1,
-            Registries.ITEM.get(Identifier("ic2_120", "slag")), 1)
+            Registries.ITEM.get(Identifier.of("ic2_120", "steel_ingot")), 1,
+            Registries.ITEM.get(Identifier.of("ic2_120", "slag")), 1)
     )
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
         entries.forEach { entry ->
-            BlastFurnaceRecipeJsonProvider(
-                recipeId = Identifier("ic2_120", "blast_furnacing/${entry.name}"),
+            BlastFurnaceRecipeExporter(
+                recipeId = Identifier.of("ic2_120", "blast_furnacing/${entry.name}"),
                 inputItem = entry.input,
                 steelOutputItem = entry.steelOutput,
                 steelOutputCount = entry.steelCount,
@@ -61,14 +61,14 @@ object BlastFurnaceRecipeDatagen {
         }
     }
 
-    private class BlastFurnaceRecipeJsonProvider(
+    private class BlastFurnaceRecipeExporter(
         private val recipeId: Identifier,
         private val inputItem: Item,
         private val steelOutputItem: Item,
         private val steelOutputCount: Int,
         private val slagOutputItem: Item,
         private val slagOutputCount: Int
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(BlastFurnaceRecipe::class)}")
 

@@ -10,7 +10,7 @@ object Ic2JeiRecipeTypes {
         MaceratorJeiRecipe::class.java
     )
 
-    val MACERATOR_UID: Identifier = Identifier("ic2_120", "macerating")
+    val MACERATOR_UID: Identifier = Identifier.of("ic2_120", "macerating")
 
     val COMPRESSOR: RecipeType<CompressorJeiRecipe> = RecipeType.create(
         "ic2_120",
@@ -18,7 +18,7 @@ object Ic2JeiRecipeTypes {
         CompressorJeiRecipe::class.java
     )
 
-    val COMPRESSOR_UID: Identifier = Identifier("ic2_120", "compressing")
+    val COMPRESSOR_UID: Identifier = Identifier.of("ic2_120", "compressing")
 
     val EXTRACTOR: RecipeType<ExtractorJeiRecipe> = RecipeType.create(
         "ic2_120",
@@ -26,7 +26,7 @@ object Ic2JeiRecipeTypes {
         ExtractorJeiRecipe::class.java
     )
 
-    val EXTRACTOR_UID: Identifier = Identifier("ic2_120", "extracting")
+    val EXTRACTOR_UID: Identifier = Identifier.of("ic2_120", "extracting")
 
     val CENTRIFUGE: RecipeType<CentrifugeJeiRecipe> = RecipeType.create(
         "ic2_120",
@@ -34,7 +34,7 @@ object Ic2JeiRecipeTypes {
         CentrifugeJeiRecipe::class.java
     )
 
-    val CENTRIFUGE_UID: Identifier = Identifier("ic2_120", "centrifuging")
+    val CENTRIFUGE_UID: Identifier = Identifier.of("ic2_120", "centrifuging")
 
     val BLAST_FURNACE: RecipeType<BlastFurnaceJeiRecipe> = RecipeType.create(
         "ic2_120",
@@ -42,7 +42,7 @@ object Ic2JeiRecipeTypes {
         BlastFurnaceJeiRecipe::class.java
     )
 
-    val BLAST_FURNACE_UID: Identifier = Identifier("ic2_120", "blast_furnacing")
+    val BLAST_FURNACE_UID: Identifier = Identifier.of("ic2_120", "blast_furnacing")
 
     val BLOCK_CUTTER: RecipeType<BlockCutterJeiRecipe> = RecipeType.create(
         "ic2_120",
@@ -56,7 +56,7 @@ object Ic2JeiRecipeTypes {
         OreWashingJeiRecipe::class.java
     )
 
-    val ORE_WASHING_UID: Identifier = Identifier("ic2_120", "ore_washing")
+    val ORE_WASHING_UID: Identifier = Identifier.of("ic2_120", "ore_washing")
 
     val METAL_FORMER_ROLLING: RecipeType<MetalFormerRollingJeiRecipe> = RecipeType.create(
         "ic2_120",

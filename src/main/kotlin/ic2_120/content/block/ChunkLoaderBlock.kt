@@ -46,21 +46,14 @@ class ChunkLoaderBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, ChunkLoaderBlockEntity::class.type()) { w, p, s, be -> (be as ChunkLoaderBlockEntity).tick(w, p, s) }
+        else validateTicker(type, ChunkLoaderBlockEntity::class.type()){ w, p, s, be -> (be as ChunkLoaderBlockEntity).tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->
                 player.openHandledScreen(factory)
@@ -88,7 +81,7 @@ class ChunkLoaderBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             val tinPlate = ic2_120.content.item.TinPlate::class.instance()
             val machine = MachineCasingBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()

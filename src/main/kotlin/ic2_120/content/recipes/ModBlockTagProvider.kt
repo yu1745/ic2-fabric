@@ -141,11 +141,11 @@ class ModBlockTagProvider(
     }
 
     private fun cBlock(path: String): TagKey<Block> =
-        TagKey.of(RegistryKeys.BLOCK, Identifier("c", path))
+        TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", path))
 
     private fun forgeBlock(path: String): TagKey<Block> =
-        TagKey.of(RegistryKeys.BLOCK, Identifier("forge", path))
+        TagKey.of(RegistryKeys.BLOCK, Identifier.of("forge", path))
 
     private fun compatBlock(path: String): TagKey<Block> =
-        TagKey.of(RegistryKeys.BLOCK, Identifier("ic2_120", "compat/$path"))
+        TagKey.of(RegistryKeys.BLOCK, Identifier.of("ic2_120", "compat/$path"))
 }

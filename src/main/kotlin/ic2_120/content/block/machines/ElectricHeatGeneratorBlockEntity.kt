@@ -21,8 +21,9 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
@@ -57,7 +58,7 @@ class ElectricHeatGeneratorBlockEntity(
     override var redstoneInverted: Boolean = false
 
     private val inventory = DefaultedList.ofSize(SLOT_COUNT, ItemStack.EMPTY)
-    private val coilItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "coil")) }
+    private val coilItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "coil")) }
 
     val syncedData = SyncedData(this)
     override val heatFlow = HeatFlowSync(syncedData, this)
@@ -113,8 +114,8 @@ class ElectricHeatGeneratorBlockEntity(
         markDirty()
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ElectricHeatGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, ElectricHeatGeneratorSync.ENERGY_CAPACITY)
@@ -123,8 +124,8 @@ class ElectricHeatGeneratorBlockEntity(
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(ElectricHeatGeneratorSync.NBT_ENERGY_STORED, sync.amount)

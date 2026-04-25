@@ -19,11 +19,12 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
@@ -41,6 +42,8 @@ import net.minecraft.world.World
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
+import ic2_120.getCustomData
+import ic2_120.getOrCreateCustomData
 
 @ModBlockEntity(block = WaterKineticGeneratorBlock::class)
 class WaterKineticGeneratorBlockEntity(
@@ -158,7 +161,7 @@ class WaterKineticGeneratorBlockEntity(
     fun getRotorRemainingClearHours(): Double {
         val rotor = inventory[ROTOR_SLOT]
         if (rotor.isEmpty || !rotor.isDamageable) return 0.0
-        val remainder = rotor.nbt?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0
+        val remainder = rotor.getCustomData()?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0
         val remainingTicks = ((rotor.maxDamage - rotor.damage).toDouble() - remainder).coerceAtLeast(0.0)
         // 显示静水条件下的寿命（与风力显示晴天寿命一致，都是理想条件）
         return remainingTicks / TICKS_PER_HOUR / BASE_WEAR_PER_TICK
@@ -413,7 +416,7 @@ class WaterKineticGeneratorBlockEntity(
 
     private fun applyRotorWear(rotor: ItemStack, wearMultiplier: Double): Boolean {
         if (!rotor.isDamageable || wearMultiplier <= 0.0) return false
-        val nbt = rotor.orCreateNbt
+        val nbt = rotor.getOrCreateCustomData()
         val accumulated = (nbt.getDouble(ROTOR_WEAR_REMAINDER_KEY) + wearMultiplier).coerceAtLeast(0.0)
         val wear = floor(accumulated).toInt()
         val remainder = accumulated - wear
@@ -665,15 +668,15 @@ class WaterKineticGeneratorBlockEntity(
 
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         inventory[ROTOR_SLOT] = ItemStack.EMPTY
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
     }
@@ -682,7 +685,7 @@ class WaterKineticGeneratorBlockEntity(
 
     override fun toUpdatePacket(): Packet<ClientPlayPacketListener> = BlockEntityUpdateS2CPacket.create(this)
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }

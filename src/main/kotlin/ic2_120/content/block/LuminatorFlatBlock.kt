@@ -22,7 +22,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
@@ -80,7 +80,7 @@ class LuminatorFlatBlock : BlockWithEntity(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, LuminatorFlatBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, LuminatorFlatBlockEntity::class.type()){ w, p, s, be ->
             (be as LuminatorFlatBlockEntity).tick(w, p, s)
         }
 
@@ -126,7 +126,7 @@ class LuminatorFlatBlock : BlockWithEntity(
         private val SHAPE_DOWN = VoxelShapes.cuboid(0.0, 1.0 - THICK, 0.0, 1.0, 1.0, 1.0)
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val insulatedCopperCable = InsulatedCopperCableBlock::class.item()
             val tinCable = TinCableBlock::class.item()
             val ironCasing = IronCasing::class.instance()

@@ -11,8 +11,7 @@ import ic2_120.registry.instance
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -164,10 +163,10 @@ abstract class ReactorHeatExchangerBase(
 }
 
 @ModItem(name = "heat_exchanger", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class HeatExchangerItem : ReactorHeatExchangerBase(FabricItemSettings(), 2500, 12, 4) {
+class HeatExchangerItem : ReactorHeatExchangerBase(Item.Settings(), 2500, 12, 4) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val copper = CopperPlate::class.instance()
             val tin = TinPlate::class.instance()
             val circuit = Circuit::class.instance()
@@ -183,10 +182,10 @@ class HeatExchangerItem : ReactorHeatExchangerBase(FabricItemSettings(), 2500, 1
 }
 
 @ModItem(name = "reactor_heat_exchanger", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ReactorHeatExchangerItem : ReactorHeatExchangerBase(FabricItemSettings(), 5000, 0, 72) {
+class ReactorHeatExchangerItem : ReactorHeatExchangerBase(Item.Settings(), 5000, 0, 72) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = CopperPlate::class.instance()
             val base = HeatExchangerItem::class.instance()
             if (plate != Items.AIR && base != Items.AIR) {
@@ -201,10 +200,10 @@ class ReactorHeatExchangerItem : ReactorHeatExchangerBase(FabricItemSettings(), 
 }
 
 @ModItem(name = "component_heat_exchanger", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ComponentHeatExchangerItem : ReactorHeatExchangerBase(FabricItemSettings(), 5000, 36, 0) {
+class ComponentHeatExchangerItem : ReactorHeatExchangerBase(Item.Settings(), 5000, 36, 0) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val gold = GoldPlate::class.instance()
             val base = HeatExchangerItem::class.instance()
             if (gold != Items.AIR && base != Items.AIR) {
@@ -219,10 +218,10 @@ class ComponentHeatExchangerItem : ReactorHeatExchangerBase(FabricItemSettings()
 }
 
 @ModItem(name = "advanced_heat_exchanger", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class AdvancedHeatExchangerItem : ReactorHeatExchangerBase(FabricItemSettings(), 10000, 24, 8) {
+class AdvancedHeatExchangerItem : ReactorHeatExchangerBase(Item.Settings(), 10000, 24, 8) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val lapis = LapisPlate::class.instance()
             val copper = CopperPlate::class.instance()
             val circuit = Circuit::class.instance()

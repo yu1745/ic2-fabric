@@ -1,9 +1,9 @@
 accessWidener	v2	named
 # 为了让访问加宽造成的的变化显示在反编译后的源代码中，请运行 genSources Gradle 任务，然后在 IDE 中重新加载 Gradle 项目。
 # 使 FoliagePlacerType 构造函数可访问，用于注册自定义橡胶树树叶放置器
-accessible	method	net/minecraft/world/gen/foliage/FoliagePlacerType	<init>	(Lcom/mojang/serialization/Codec;)V
+accessible	method	net/minecraft/world/gen/foliage/FoliagePlacerType	<init>	(Lcom/mojang/serialization/MapCodec;)V
 # 使 TreeDecoratorType 构造函数可访问，用于注册橡胶树橡胶孔装饰器
-accessible	method	net/minecraft/world/gen/treedecorator/TreeDecoratorType	<init>	(Lcom/mojang/serialization/Codec;)V
+accessible	method	net/minecraft/world/gen/treedecorator/TreeDecoratorType	<init>	(Lcom/mojang/serialization/MapCodec;)V
 mutable field   net/minecraft/screen/slot/Slot  x   I
 mutable field   net/minecraft/screen/slot/Slot  y   I
 # 使 SpriteContents 的 image 字段可访问，用于流体颜色采样

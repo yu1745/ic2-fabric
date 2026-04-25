@@ -11,13 +11,13 @@ import net.minecraft.util.Identifier
 object ModStatusEffects {
     val SOLAR_GENERATING: StatusEffect = Registry.register(
         Registries.STATUS_EFFECT,
-        Identifier("ic2", "solar_generating"),
+        Identifier.of("ic2", "solar_generating"),
         object : StatusEffect(StatusEffectCategory.BENEFICIAL, 0xF6D743) {}
     )
 
     val RADIATION: StatusEffect = Registry.register(
         Registries.STATUS_EFFECT,
-        Identifier("ic2", "radiation"),
+        Identifier.of("ic2", "radiation"),
         RadiationStatusEffect()
     )
 

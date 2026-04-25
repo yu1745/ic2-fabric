@@ -218,9 +218,9 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
 
     private fun createCableShockDamageSource(world: ServerWorld): DamageSource {
         val registry = world.registryManager.get(RegistryKeys.DAMAGE_TYPE)
-        val key = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier("ic2_120", "cable_shock"))
+        val key = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("ic2_120", "cable_shock"))
         val entry = registry.getEntry(key).orElse(null)
-            ?: registry.getEntry(RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier("minecraft", "lightning")))
+            ?: registry.getEntry(RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier.of("minecraft", "lightning")))
                 .orElseThrow()
         return DamageSource(entry)
     }

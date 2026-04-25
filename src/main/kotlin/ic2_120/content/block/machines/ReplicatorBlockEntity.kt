@@ -49,8 +49,9 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.BucketItem
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -133,7 +134,7 @@ class ReplicatorBlockEntity(
     )
     private var singlePulseConsumed = false
     private var fluidConsumptionRemainder = 0L
-    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "empty_cell")) }
+    private val emptyCellItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell")) }
 
     val syncedData = SyncedData(this)
 
@@ -208,7 +209,7 @@ class ReplicatorBlockEntity(
     private fun replicatorIsDrainableUuContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         val itemId = Registries.ITEM.getId(stack.item)
-        val fluidCellId = Identifier("ic2_120", "fluid_cell")
+        val fluidCellId = Identifier.of("ic2_120", "fluid_cell")
         return itemId.path == "uu_matter_bucket" ||
             itemId.path == "uu_matter_cell" ||
             (itemId == fluidCellId &&
@@ -224,7 +225,7 @@ class ReplicatorBlockEntity(
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
     }
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: RegistryByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
     }
@@ -241,8 +242,8 @@ class ReplicatorBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(ReplicatorSync.NBT_ENERGY_STORED))
@@ -253,8 +254,8 @@ class ReplicatorBlockEntity(
         tankInternal.setStoredAmount(nbt.getLong(NBT_TANK_AMOUNT))
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(ReplicatorSync.NBT_ENERGY_STORED, sync.amount)

@@ -14,7 +14,7 @@ import ic2_120.content.item.armor.QuantumHelmet
 import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.networking.v1.PacketSender
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -22,18 +22,18 @@ import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
 
 object NetworkManager {
-    private val REACTOR_HEAT_INFO_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_heat_info")
-    private val WIND_ROTOR_STATE_PACKET = Identifier(Ic2_120.MOD_ID, "wind_rotor_state")
-    private val WATER_ROTOR_STATE_PACKET = Identifier(Ic2_120.MOD_ID, "water_rotor_state")
+    private val REACTOR_HEAT_INFO_PACKET = Identifier.of(Ic2_120.MOD_ID, "reactor_heat_info")
+    private val WIND_ROTOR_STATE_PACKET = Identifier.of(Ic2_120.MOD_ID, "wind_rotor_state")
+    private val WATER_ROTOR_STATE_PACKET = Identifier.of(Ic2_120.MOD_ID, "water_rotor_state")
     
     private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
-    val TOGGLE_NIGHT_VISION_GOGGLES_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_night_vision_goggles")
-    val TOGGLE_NANO_VISION_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_nano_vision")
-    val TOGGLE_QUANTUM_FLIGHT_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_flight")
-    val TOGGLE_IRIDIUM_SILK_TOUCH_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_iridium_silk_touch")
-    val TOGGLE_JETPACK_FLIGHT_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_jetpack_flight")
-    val TOGGLE_FOAM_SPRAYER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
-    val TOGGLE_MINING_LASER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
+    val TOGGLE_NIGHT_VISION_GOGGLES_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_night_vision_goggles")
+    val TOGGLE_NANO_VISION_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_nano_vision")
+    val TOGGLE_QUANTUM_FLIGHT_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_quantum_flight")
+    val TOGGLE_IRIDIUM_SILK_TOUCH_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_iridium_silk_touch")
+    val TOGGLE_JETPACK_FLIGHT_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_jetpack_flight")
+    val TOGGLE_FOAM_SPRAYER_MODE_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
+    val TOGGLE_MINING_LASER_MODE_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
 
     fun register() {
         // 注册服务端接收处理器（如果需要）

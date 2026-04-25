@@ -24,7 +24,7 @@ import net.minecraft.state.property.Properties
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
@@ -36,7 +36,7 @@ class WaterKineticGeneratorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WaterKineticGeneratorBlock::class.item(), 1)
                 .pattern("S S")
                 .pattern(" C ")
@@ -68,18 +68,11 @@ class WaterKineticGeneratorBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, WaterKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, WaterKineticGeneratorBlockEntity::class.type()){ w, p, s, be ->
             (be as WaterKineticGeneratorBlockEntity).tick(w, p, s)
         }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         val be = world.getBlockEntity(pos) as? WaterKineticGeneratorBlockEntity ?: return ActionResult.PASS
         if (world.isClient) return ActionResult.SUCCESS
 

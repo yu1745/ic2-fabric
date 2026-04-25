@@ -16,7 +16,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
+
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -44,7 +44,7 @@ class ElectricHeatGeneratorScreenHandler(
         }
     )
     val sync = ElectricHeatGeneratorSync(syncedView, heatFlow = heatFlow)
-    private val coilItem = Registries.ITEM.get(Identifier("ic2_120", "coil"))
+    private val coilItem = Registries.ITEM.get(Identifier.of("ic2_120", "coil"))
 
     init {
         checkSize(blockInventory, ElectricHeatGeneratorBlockEntity.SLOT_COUNT)
@@ -108,7 +108,7 @@ class ElectricHeatGeneratorScreenHandler(
         const val HOTBAR_END = PLAYER_INV_START + 36
 
         private val COIL_SLOT_SPEC = SlotSpec(maxItemCount = 1, canInsert = { stack ->
-            !stack.isEmpty && stack.item == Registries.ITEM.get(Identifier("ic2_120", "coil"))
+            !stack.isEmpty && stack.item == Registries.ITEM.get(Identifier.of("ic2_120", "coil"))
         })
 
         @ScreenFactory

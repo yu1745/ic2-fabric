@@ -15,7 +15,6 @@ import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -25,7 +24,7 @@ import net.minecraft.state.property.Properties
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
@@ -37,7 +36,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val casing = MachineCasingBlock::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ManualKineticGeneratorBlock::class.item(), 1)
                 .pattern("L")
@@ -74,14 +73,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
             (be as ManualKineticGeneratorBlockEntity).tick(w, p, s)
         }
 
-    override fun onUse(
-        state: BlockState,
-        world: World,
-        pos: BlockPos,
-        player: PlayerEntity,
-        hand: Hand,
-        hit: BlockHitResult
-    ): ActionResult {
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         val be = world.getBlockEntity(pos) as? ManualKineticGeneratorBlockEntity ?: return ActionResult.PASS
 
         // 只有顶部（UP 面）可以插入/转动曲柄

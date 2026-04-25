@@ -1,11 +1,11 @@
 package ic2_120.content.item.armor
 
 import ic2_120.content.item.energy.IElectricTool
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ArmorMaterial
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
+import ic2_120.getOrCreateCustomData
 
 /**
  * 能量护甲基类
@@ -42,10 +42,10 @@ abstract class ElectricArmorItem(
     // ========== IElectricTool 实现 ==========
 
     override fun getEnergy(stack: ItemStack): Long =
-        stack.orCreateNbt.getLong(IElectricTool.ENERGY_KEY)
+        stack.getOrCreateCustomData().getLong(IElectricTool.ENERGY_KEY)
 
     override fun setEnergy(stack: ItemStack, energy: Long) {
-        stack.orCreateNbt.putLong(IElectricTool.ENERGY_KEY, energy.coerceIn(0L, maxCapacity))
+        stack.getOrCreateCustomData().putLong(IElectricTool.ENERGY_KEY, energy.coerceIn(0L, maxCapacity))
     }
 
     // ========== 防止原版耐久消耗 ==========

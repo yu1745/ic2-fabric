@@ -12,7 +12,7 @@ import net.minecraft.util.Identifier
 @Environment(EnvType.CLIENT)
 object AnimalmatronTooltipHandler {
 
-    private val ANIMALMATRON_ID = Identifier("ic2_120", "animalmatron")
+    private val ANIMALMATRON_ID = Identifier.of("ic2_120", "animalmatron")
 
     fun register() {
         ItemTooltipCallback.EVENT.register { stack, context, type ->
