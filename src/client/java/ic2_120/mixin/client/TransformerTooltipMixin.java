@@ -41,7 +41,7 @@ public abstract class TransformerTooltipMixin {
             return;
         }
 
-        if (client.options.debugEnabled || client.options.hudHidden) {
+        if (client.getDebugHud().shouldShowDebugHud() || client.options.hudHidden) {
             return;
         }
 

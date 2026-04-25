@@ -5,6 +5,6 @@ import net.minecraft.util.Identifier;
 
 public class RubberLogModelHelper {
     public static Identifier getModelId(ModelModifier.OnLoad.Context context) {
-        return context.id();
+        return context.resourceId();
     }
 }

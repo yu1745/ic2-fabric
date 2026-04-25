@@ -23,7 +23,7 @@ public abstract class BandwidthHudMixin {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void ic2_120$renderBandwidthHud(DrawContext context, float tickDelta, CallbackInfo ci) {
-        if (client.options.debugEnabled || client.options.hudHidden || !BandwidthHudState.INSTANCE.getEnabled()) {
+        if (client.getDebugHud().shouldShowDebugHud() || client.options.hudHidden || !BandwidthHudState.INSTANCE.getEnabled()) {
             return;
         }
 
