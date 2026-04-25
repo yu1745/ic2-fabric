@@ -1,7 +1,27 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		maven { url "https://maven.fabricmc.net/" }
+	}
+	dependencies {
+		classpath "net.fabricmc:fabric-loom:${loom_version}"
+	}
+}
+
 plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'maven-publish'
 	id "org.jetbrains.kotlin.jvm" version "2.3.10"
+}
+
+import net.fabricmc.loom.api.remapping.RemapperParameters
+
+apply plugin: 'net.fabricmc.fabric-loom-remap'
+
+def addRemapperExtensionByClassName = { loomExt, String extensionClassName ->
+	def holderClass = Class.forName("net.fabricmc.loom.extension.RemapperExtensionHolder")
+	def holder = objects.newInstance(holderClass, RemapperParameters.None.INSTANCE)
+	holder.getRemapperExtensionClass().set(extensionClassName)
+	loomExt.getRemapperExtensions().add(holder)
 }
 
 def ciRunNumberProvider = providers.environmentVariable("GITHUB_RUN_NUMBER").orElse("0")
@@ -38,6 +58,12 @@ loom {
 			sourceSet sourceSets.client
 		}
 	}
+
+	// MC 1.21.1 Yarn mappings 中 Inventory.isEmpty() 和 RecipeInput.isEmpty()
+	// 映射到不同的 intermediary 名 (method_5442 vs method_59987)，
+	// 导致 TinyRemapper 类层次传播时检测到冲突。
+	// 注册此扩展反射设置 ignoreConflicts=true，让 remapper 自动沿父类链选择正确映射。
+	addRemapperExtensionByClassName(delegate, "ic2_120.gradle.IgnoreMappingConflictsExtension")
 
 	// 修复 Windows 控制台中文乱码（通过 Loom runs API 配置）
 	runs {

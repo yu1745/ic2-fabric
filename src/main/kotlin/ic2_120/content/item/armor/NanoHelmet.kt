@@ -26,7 +26,8 @@ import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.world.World
-import ic2_120.getOrCreateCustomData
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 /**
  * 纳米头盔 (Nano Helmet)
@@ -62,9 +63,8 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
             get() = Ic2Config.getNanoHelmetNightVisionEuPerTick()
 
         fun toggleNightVision(stack: ItemStack): Boolean {
-            val nbt = stack.getOrCreateCustomData()
-            val enabled = !nbt.getBoolean(NIGHT_VISION_KEY)
-            nbt.putBoolean(NIGHT_VISION_KEY, enabled)
+            val enabled = !(stack.getCustomData()?.getBoolean(NIGHT_VISION_KEY) ?: false)
+            stack.editCustomData { it.putBoolean(NIGHT_VISION_KEY, enabled) }
             return enabled
         }
 
@@ -96,13 +96,12 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         val player = entity as? PlayerEntity ?: return
         if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) return
 
-        val nbt = stack.getOrCreateCustomData()
-        if (!nbt.getBoolean(NIGHT_VISION_KEY)) return
+        if (stack.getCustomData()?.getBoolean(NIGHT_VISION_KEY) != true) return
 
         val energy = getEnergy(stack)
         if (energy < nightVisionCostPerTick) {
             setEnergy(stack, 0)
-            nbt.putBoolean(NIGHT_VISION_KEY, false)
+            stack.editCustomData { it.putBoolean(NIGHT_VISION_KEY, false) }
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)
             return
         }
@@ -129,7 +128,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
 
     override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
         super.appendTooltip(stack, context, tooltip, type)
-        val nvEnabled = stack.getOrCreateCustomData().getBoolean(NIGHT_VISION_KEY)
+        val nvEnabled = stack.getCustomData()?.getBoolean(NIGHT_VISION_KEY) ?: false
         val energy = getEnergy(stack)
 
         // 计算夜视剩余时间（分钟）

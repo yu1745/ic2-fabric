@@ -5,6 +5,7 @@ import ic2_120.content.network.BandwidthPlayerStat;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,7 +23,7 @@ public abstract class BandwidthHudMixin {
     private MinecraftClient client;
 
     @Inject(method = "render", at = @At("RETURN"))
-    private void ic2_120$renderBandwidthHud(DrawContext context, float tickDelta, CallbackInfo ci) {
+    private void ic2_120$renderBandwidthHud(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (client.getDebugHud().shouldShowDebugHud() || client.options.hudHidden || !BandwidthHudState.INSTANCE.getEnabled()) {
             return;
         }

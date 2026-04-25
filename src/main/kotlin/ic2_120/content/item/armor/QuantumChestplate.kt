@@ -21,7 +21,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import ic2_120.getOrCreateCustomData
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 /**
  * 量子胸甲 (Quantum Chestplate)
@@ -55,14 +56,13 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
             get() = Ic2Config.getQuantumChestplateEuPerTick()
 
         fun toggleFlight(stack: ItemStack): Boolean {
-            val nbt = stack.getOrCreateCustomData()
-            val enabled = !nbt.getBoolean(FLIGHT_KEY)
-            nbt.putBoolean(FLIGHT_KEY, enabled)
+            val enabled = !(stack.getCustomData()?.getBoolean(FLIGHT_KEY) ?: false)
+            stack.editCustomData { it.putBoolean(FLIGHT_KEY, enabled) }
             return enabled
         }
 
         fun isFlightEnabled(stack: ItemStack): Boolean =
-            stack.getOrCreateCustomData().getBoolean(FLIGHT_KEY)
+            stack.getCustomData()?.getBoolean(FLIGHT_KEY) ?: false
 
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
@@ -91,7 +91,7 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
 
     override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
         super.appendTooltip(stack, context, tooltip, type)
-        val flightEnabled = stack.getOrCreateCustomData().getBoolean(FLIGHT_KEY)
+        val flightEnabled = stack.getCustomData()?.getBoolean(FLIGHT_KEY) ?: false
         val energy = getEnergy(stack)
 
         // 计算飞行剩余时间（分钟）

@@ -10,10 +10,13 @@ fun ItemStack.getCustomData(): NbtCompound? =
     this.get(DataComponentTypes.CUSTOM_DATA)?.copyNbt()
 
 fun ItemStack.getOrCreateCustomData(): NbtCompound {
-    val existing = this.get(DataComponentTypes.CUSTOM_DATA)
-    val nbt = existing?.copyNbt() ?: NbtCompound()
+    return this.get(DataComponentTypes.CUSTOM_DATA)?.copyNbt() ?: NbtCompound()
+}
+
+inline fun ItemStack.editCustomData(editor: (NbtCompound) -> Unit) {
+    val nbt = this.get(DataComponentTypes.CUSTOM_DATA)?.copyNbt() ?: NbtCompound()
+    editor(nbt)
     this.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(nbt))
-    return nbt
 }
 
 fun ItemStack.removeCustomData() {

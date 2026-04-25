@@ -11,9 +11,6 @@ import ic2_120.content.recipes.orewashing.OreWashingRecipeDatagen
 import ic2_120.content.recipes.solidcanner.SolidCannerRecipeDatagen
 import ic2_120.integration.jei.BlastFurnaceJeiRecipe
 import ic2_120.integration.jei.BlastFurnaceRecipeCategory
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.component.type.NbtComponent
-import net.minecraft.nbt.NbtCompound
 import ic2_120.integration.jei.BlockCutterJeiRecipe
 import ic2_120.integration.jei.BlockCutterRecipeCategory
 import ic2_120.integration.jei.MetalFormerCuttingJeiRecipe
@@ -47,6 +44,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
+import ic2_120.editCustomData
 import ic2_120.getCustomData
 
 /**
@@ -145,19 +143,10 @@ class Ic2JeiPlugin : IModPlugin {
                 is EnergyStorageBlock.EnergyStorageBlockItem -> {
                     // 储电盒/充电座：补充空电 + 满电两个明确变体
                     extraStacks += ItemStack(item as Item).also { stack ->
-                        stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(NbtCompound().also { nbt ->
-                            nbt.putBoolean(EnergyStorageBlock.NBT_FULL, false)
-                        }))
+                        stack.editCustomData { nbt -> nbt.putBoolean(EnergyStorageBlock.NBT_FULL, false) }
                     }
                     extraStacks += ItemStack(item as Item).also { stack ->
-                        stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(NbtCompound().also { nbt ->
-                            nbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
-                        }))
-                    }
-                    extraStacks += ItemStack(item as Item).also { stack ->
-                        stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(NbtCompound().also { nbt ->
-                            nbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
-                        }))
+                        stack.editCustomData { nbt -> nbt.putBoolean(EnergyStorageBlock.NBT_FULL, true) }
                     }
                 }
             }
@@ -506,21 +495,11 @@ class Ic2JeiPlugin : IModPlugin {
             if (item === net.minecraft.item.Items.AIR) continue
             // 空电
             extraStacks += ItemStack(item).also { stack ->
-                stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(NbtCompound().also { nbt ->
-                    nbt.putBoolean(EnergyStorageBlock.NBT_FULL, false)
-                }))
+                stack.editCustomData { nbt -> nbt.putBoolean(EnergyStorageBlock.NBT_FULL, false) }
             }
             // 满电
             extraStacks += ItemStack(item).also { stack ->
-                stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(NbtCompound().also { nbt ->
-                    nbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
-                }))
-            }
-            // 满电
-            extraStacks += ItemStack(item).also { stack ->
-                stack.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(NbtCompound().also { nbt ->
-                    nbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
-                }))
+                stack.editCustomData { nbt -> nbt.putBoolean(EnergyStorageBlock.NBT_FULL, true) }
             }
         }
     }

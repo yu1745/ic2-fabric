@@ -10,6 +10,7 @@ import ic2_120.content.block.storage.EnergyStorageBlockEntity
 import ic2_120.content.block.storage.TankBlock
 import ic2_120.content.block.storage.TankBlockEntity
 import ic2_120.content.item.energy.IElectricTool
+import ic2_120.editCustomData
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
@@ -33,7 +34,6 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-import ic2_120.getOrCreateCustomData
 
 /**
  * 扳手与机器方块的交互逻辑：
@@ -156,7 +156,7 @@ object WrenchHandler {
                                 ic2_120.content.sync.EnergyStorageSync.NBT_ENERGY_STORED,
                                 retained
                             )
-                            dropped.getOrCreateCustomData().put(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG, blockEntityTag)
+                            dropped.editCustomData { it.put(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG, blockEntityTag) }
                         }
                         val itemEntity = net.minecraft.entity.ItemEntity(
                             world,

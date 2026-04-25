@@ -1,0 +1,13 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://maven.fabricmc.net/" }
+}
+
+dependencies {
+    implementation("net.fabricmc:fabric-loom:1.15.5")
+    compileOnly("net.fabricmc:tiny-remapper:0.12.3")
+}

@@ -8,7 +8,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.text.Text
-import ic2_120.getOrCreateCustomData
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 /**
  * 能量护甲基类
@@ -45,10 +46,10 @@ abstract class ElectricArmorItem(
     // ========== IElectricTool 实现 ==========
 
     override fun getEnergy(stack: ItemStack): Long =
-        stack.getOrCreateCustomData().getLong(IElectricTool.ENERGY_KEY)
+        stack.getCustomData()?.getLong(IElectricTool.ENERGY_KEY) ?: 0L
 
     override fun setEnergy(stack: ItemStack, energy: Long) {
-        stack.getOrCreateCustomData().putLong(IElectricTool.ENERGY_KEY, energy.coerceIn(0L, maxCapacity))
+        stack.editCustomData { it.putLong(IElectricTool.ENERGY_KEY, energy.coerceIn(0L, maxCapacity)) }
     }
 
     // ========== 防止原版耐久消耗 ==========

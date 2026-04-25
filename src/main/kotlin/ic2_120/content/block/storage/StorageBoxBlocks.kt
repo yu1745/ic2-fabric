@@ -1,5 +1,6 @@
 package ic2_120.content.block.storage
 
+import ic2_120.editCustomData
 import ic2_120.content.item.BronzeCasing
 import net.minecraft.item.Item
 import net.minecraft.item.tooltip.TooltipType
@@ -47,7 +48,6 @@ import net.fabricmc.api.Environment
 import net.minecraft.world.BlockView
 import net.minecraft.world.WorldView
 import ic2_120.getCustomData
-import ic2_120.getOrCreateCustomData
 
 /**
  * 储物箱基类
@@ -141,7 +141,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
                 val lookup = world.registryManager
                 val nbt = blockEntity.createNbtWithIdentifyingData(lookup)
                 if (!nbt.isEmpty) {
-                    itemStack.getOrCreateCustomData().put("BlockEntityTag", nbt)
+                    itemStack.editCustomData { it.put("BlockEntityTag", nbt) }
                 }
 
                 // 掉落物品
@@ -176,7 +176,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
             val lookup = (world as World).registryManager
             val nbt = blockEntity.createNbtWithIdentifyingData(lookup)
             if (!nbt.isEmpty) {
-                itemStack.getOrCreateCustomData().put("BlockEntityTag", nbt)
+                itemStack.editCustomData { it.put("BlockEntityTag", nbt) }
             }
         }
 

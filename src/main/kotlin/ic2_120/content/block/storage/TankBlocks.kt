@@ -1,5 +1,6 @@
 package ic2_120.content.block.storage
 
+import ic2_120.editCustomData
 import ic2_120.content.item.BronzePlate
 import ic2_120.content.item.EmptyCell
 import ic2_120.content.item.IridiumPlate
@@ -45,7 +46,6 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.world.WorldView
-import ic2_120.getOrCreateCustomData
 
 /**
  * 储罐基类
@@ -339,7 +339,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         if (!be.fluidVariant.isBlank) {
             nbt.put(NBT_FLUID_VARIANT, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, be.fluidVariant).result().orElse(NbtCompound()))
         }
-        stack.getOrCreateCustomData().put("BlockEntityTag", nbt)
+        stack.editCustomData { it.put("BlockEntityTag", nbt) }
     }
 
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {

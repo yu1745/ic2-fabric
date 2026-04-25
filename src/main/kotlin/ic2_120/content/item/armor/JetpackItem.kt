@@ -6,7 +6,8 @@ import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import ic2_120.getOrCreateCustomData
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 import net.minecraft.item.Item
 import net.minecraft.item.tooltip.TooltipType
 
@@ -50,29 +51,29 @@ open class JetpackItem : ArmorItem(
 
         @JvmStatic
         fun getFuel(stack: ItemStack): Long =
-            stack.getOrCreateCustomData().getLong(FUEL_KEY).coerceIn(0L, maxFuel)
+            (stack.getCustomData()?.getLong(FUEL_KEY) ?: 0L).coerceIn(0L, maxFuel)
 
         @JvmStatic
         fun setFuel(stack: ItemStack, fuel: Long) {
-            stack.getOrCreateCustomData().putLong(FUEL_KEY, fuel.coerceIn(0L, maxFuel))
+            stack.editCustomData { it.putLong(FUEL_KEY, fuel.coerceIn(0L, maxFuel)) }
         }
 
         @JvmStatic
         fun isHovering(stack: ItemStack): Boolean =
-            stack.getOrCreateCustomData().getBoolean(IS_HOVER_KEY)
+            stack.getCustomData()?.getBoolean(IS_HOVER_KEY) ?: false
 
         @JvmStatic
         fun setHovering(stack: ItemStack, hovering: Boolean) {
-            stack.getOrCreateCustomData().putBoolean(IS_HOVER_KEY, hovering)
+            stack.editCustomData { it.putBoolean(IS_HOVER_KEY, hovering) }
         }
 
         @JvmStatic
         fun isFlightEnabled(stack: ItemStack): Boolean =
-            stack.getOrCreateCustomData().getBoolean(FLIGHT_ENABLED_KEY)
+            stack.getCustomData()?.getBoolean(FLIGHT_ENABLED_KEY) ?: false
 
         @JvmStatic
         fun setFlightEnabled(stack: ItemStack, enabled: Boolean) {
-            stack.getOrCreateCustomData().putBoolean(FLIGHT_ENABLED_KEY, enabled)
+            stack.editCustomData { it.putBoolean(FLIGHT_ENABLED_KEY, enabled) }
         }
 
         @JvmStatic

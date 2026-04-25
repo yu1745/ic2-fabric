@@ -540,6 +540,15 @@ object ClassScanner {
                     .icon(iconStackSupplier)
                     .displayName(Text.translatable("itemGroup.$modId.$name"))
                     .entries { _, collector ->
+                        val addedStacks = mutableListOf<ItemStack>()
+                        fun addUnique(stack: ItemStack) {
+                            if (addedStacks.any { ItemStack.areEqual(it, stack) }) {
+                                return
+                            }
+                            collector.add(stack)
+                            addedStacks.add(stack.copy())
+                        }
+
                         // 添加所有属于这个物品栏的物品（已按 group 排序）
                         for (entry in entries) {
                             val item = Registries.ITEM.get(entry.itemId)
@@ -561,7 +570,7 @@ object ClassScanner {
                                         val electricTool = item as IElectricTool
                                         electricTool.setEnergy(emptyStack, 0)
                                     }
-                                    collector.add(emptyStack)
+                                    addUnique(emptyStack)
 
                                     // 添加满电版本
                                     val fullStack = ItemStack(item)
@@ -572,10 +581,10 @@ object ClassScanner {
                                         val electricTool = item as IElectricTool
                                         electricTool.setEnergy(fullStack, electricTool.maxCapacity)
                                     }
-                                    collector.add(fullStack)
+                                    addUnique(fullStack)
                                 } else {
                                     // 普通物品，直接添加
-                                    collector.add(item)
+                                    addUnique(ItemStack(item))
                                 }
                             }
                         }

@@ -8,7 +8,8 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
-import ic2_120.getOrCreateCustomData
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 /**
  * 电池物品基类
@@ -40,8 +41,7 @@ abstract class BatteryItemBase(
          * 从物品栈获取电量
          */
         fun getEnergy(stack: ItemStack): Long {
-            val nbt = stack.getOrCreateCustomData()
-            return nbt.getLong(ENERGY_KEY)
+            return stack.getCustomData()?.getLong(ENERGY_KEY) ?: 0L
         }
 
         /**
@@ -51,9 +51,8 @@ abstract class BatteryItemBase(
          * @param maxCapacity 最大容量（用于限制上限）
          */
         fun setEnergy(stack: ItemStack, energy: Long, maxCapacity: Long) {
-            val nbt = stack.getOrCreateCustomData()
             val clampedEnergy = energy.coerceIn(0, maxCapacity)
-            nbt.putLong(ENERGY_KEY, clampedEnergy)
+            stack.editCustomData { it.putLong(ENERGY_KEY, clampedEnergy) }
         }
 
         /**

@@ -54,7 +54,8 @@ import ic2_120.content.item.armor.ElectricArmorItem
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.recipes.crafting.BatteryEnergyShapedRecipeDatagen
 import ic2_120.config.Ic2Config
-import ic2_120.getOrCreateCustomData
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 
 //todo 全套防化服，防化三件套加橡胶靴 可免疫特斯拉线圈伤害 可免疫触电伤害，只要有单个防化头盔，物品栏有压缩空气单元，就可以在气泡值用尽时消耗压缩空气单元回满
@@ -474,11 +475,13 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
         val player = entity as? PlayerEntity ?: return
         if (player.getEquippedStack(EquipmentSlot.FEET) !== stack) return
 
-        val nbt = stack.getOrCreateCustomData()
-        val hasLastPos = nbt.contains(LAST_X_KEY) && nbt.contains(LAST_Z_KEY)
+        val nbt = stack.getCustomData()
+        val hasLastPos = nbt?.contains(LAST_X_KEY) == true && nbt.contains(LAST_Z_KEY)
         if (!hasLastPos) {
-            nbt.putDouble(LAST_X_KEY, player.x)
-            nbt.putDouble(LAST_Z_KEY, player.z)
+            stack.editCustomData {
+                it.putDouble(LAST_X_KEY, player.x)
+                it.putDouble(LAST_Z_KEY, player.z)
+            }
             return
         }
 
@@ -486,8 +489,10 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
         val lastZ = nbt.getDouble(LAST_Z_KEY)
         val dx = player.x - lastX
         val dz = player.z - lastZ
-        nbt.putDouble(LAST_X_KEY, player.x)
-        nbt.putDouble(LAST_Z_KEY, player.z)
+        stack.editCustomData {
+            it.putDouble(LAST_X_KEY, player.x)
+            it.putDouble(LAST_Z_KEY, player.z)
+        }
 
         if (!player.isOnGround) return
         val segment = kotlin.math.sqrt(dx * dx + dz * dz)
@@ -499,7 +504,7 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
         var acc = nbt.getDouble(WALK_ACC_KEY) + segment
         val charges = kotlin.math.floor(acc / distance).toLong()
         if (charges <= 0L) {
-            nbt.putDouble(WALK_ACC_KEY, acc)
+            stack.editCustomData { it.putDouble(WALK_ACC_KEY, acc) }
             return
         }
 
@@ -508,7 +513,7 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
         remaining -= chargePlayerInventory(player, remaining)
         val actualCharged = (toCharge - remaining) / eu
         acc -= actualCharged * distance
-        nbt.putDouble(WALK_ACC_KEY, acc.coerceAtLeast(0.0))
+        stack.editCustomData { it.putDouble(WALK_ACC_KEY, acc.coerceAtLeast(0.0)) }
     }
 
     override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
@@ -562,10 +567,10 @@ class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Setting
         if (!player.isTouchingWater) return
 
         // 检查冷却，防止同一tick多次消耗
-        val nbt = stack.getOrCreateCustomData()
-        val cooldown = nbt.getInt(CHECK_COOLDOWN_KEY)
+        val nbt = stack.getCustomData()
+        val cooldown = nbt?.getInt(CHECK_COOLDOWN_KEY) ?: 0
         if (cooldown > 0) {
-            nbt.putInt(CHECK_COOLDOWN_KEY, cooldown - 1)
+            stack.editCustomData { it.putInt(CHECK_COOLDOWN_KEY, cooldown - 1) }
             return
         }
 
@@ -595,7 +600,7 @@ class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Setting
                 player.air = player.maxAir
 
                 // 设置冷却时间，防止同一tick多次触发（20 ticks = 1秒）
-                nbt.putInt(CHECK_COOLDOWN_KEY, 20)
+                stack.editCustomData { it.putInt(CHECK_COOLDOWN_KEY, 20) }
             }
         }
     }
@@ -827,10 +832,10 @@ class ElectricJetpack : ElectricArmorItem(
     override fun getDamageReduction(): Float = 0f
 
     fun isFlightEnabled(stack: ItemStack): Boolean =
-        stack.getOrCreateCustomData().getBoolean(FLIGHT_ENABLED_KEY)
+        stack.getCustomData()?.getBoolean(FLIGHT_ENABLED_KEY) ?: false
 
     fun setFlightEnabled(stack: ItemStack, enabled: Boolean) {
-        stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putBoolean(FLIGHT_ENABLED_KEY, enabled) }))
+        stack.editCustomData { it.putBoolean(FLIGHT_ENABLED_KEY, enabled) }
     }
 
     fun toggleFlightEnabled(stack: ItemStack): Boolean {
@@ -931,20 +936,19 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
         }
 
         fun toggleEnabled(stack: ItemStack): Boolean {
-            val nbt = stack.getOrCreateCustomData()
-            val enabled = !nbt.getBoolean(ENABLED_KEY)
-            nbt.putBoolean(ENABLED_KEY, enabled)
+            val enabled = !(stack.getCustomData()?.getBoolean(ENABLED_KEY) ?: false)
+            stack.editCustomData { it.putBoolean(ENABLED_KEY, enabled) }
             return enabled
         }
     }
 
-    override fun getCurrentCharge(stack: ItemStack): Long = stack.getOrCreateCustomData().getLong(ENERGY_KEY)
+    override fun getCurrentCharge(stack: ItemStack): Long = stack.getCustomData()?.getLong(ENERGY_KEY) ?: 0L
 
     override fun setCurrentCharge(stack: ItemStack, charge: Long) {
-        stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putLong(ENERGY_KEY, charge.coerceIn(0L, maxCapacity)) }))
+        stack.editCustomData { it.putLong(ENERGY_KEY, charge.coerceIn(0L, maxCapacity)) }
     }
 
-    private fun isEnabled(stack: ItemStack): Boolean = stack.getOrCreateCustomData().getBoolean(ENABLED_KEY)
+    private fun isEnabled(stack: ItemStack): Boolean = stack.getCustomData()?.getBoolean(ENABLED_KEY) ?: false
 
     override fun inventoryTick(stack: ItemStack, world: World, entity: net.minecraft.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)

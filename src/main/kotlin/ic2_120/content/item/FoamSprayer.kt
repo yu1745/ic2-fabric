@@ -37,8 +37,8 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.world.event.GameEvent
+import ic2_120.editCustomData
 import ic2_120.getCustomData
-import ic2_120.getOrCreateCustomData
 
 /**
  * 建筑泡沫喷枪：仅储存建筑泡沫流体，容量 8 桶；每喷涂一格消耗 0.1 桶（100mb），满罐约 80 格。
@@ -99,22 +99,21 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)) {
             if (stack.isEmpty || stack.item !is FoamSprayerItem) return
             val v = amount.coerceIn(0L, CAPACITY_DROPLETS)
             if (v <= 0L) {
-                stack.getOrCreateCustomData().remove(NBT_FLUID_DROPLETS)
+                stack.editCustomData { it.remove(NBT_FLUID_DROPLETS) }
             } else {
-                stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putLong(NBT_FLUID_DROPLETS, v) }))
+                stack.editCustomData { it.putLong(NBT_FLUID_DROPLETS, v) }
             }
         }
 
         fun isMultiMode(stack: ItemStack): Boolean {
             if (stack.isEmpty || stack.item !is FoamSprayerItem) return false
-            return stack.getOrCreateCustomData().getBoolean(NBT_MULTI_MODE)
+            return stack.getCustomData()?.getBoolean(NBT_MULTI_MODE) ?: false
         }
 
         /** @return 切换后的模式：true = 多格 */
         fun toggleMultiMode(stack: ItemStack): Boolean {
-            val nbt = stack.getOrCreateCustomData()
-            val next = !nbt.getBoolean(NBT_MULTI_MODE)
-            nbt.putBoolean(NBT_MULTI_MODE, next)
+            val next = !(stack.getCustomData()?.getBoolean(NBT_MULTI_MODE) ?: false)
+            stack.editCustomData { it.putBoolean(NBT_MULTI_MODE, next) }
             return next
         }
 

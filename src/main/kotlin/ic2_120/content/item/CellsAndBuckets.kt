@@ -17,8 +17,8 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.NbtComponent
+import ic2_120.editCustomData
 import ic2_120.getCustomData
-import ic2_120.getOrCreateCustomData
 import net.minecraft.block.FluidDrainable
 import net.minecraft.block.FluidFillable
 import net.minecraft.fluid.Fluid
@@ -74,7 +74,9 @@ fun ItemStack.getFluidCellVariant(): FluidVariant? {
 
 /** 将 FluidVariant 写入 NBT */
 fun ItemStack.setFluidCellVariant(variant: FluidVariant) {
-    getOrCreateCustomData().put(FLUID_CELL_NBT_KEY, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, variant).result().orElse(NbtCompound()))
+    editCustomData {
+        it.put(FLUID_CELL_NBT_KEY, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, variant).result().orElse(NbtCompound()))
+    }
 }
 
 /** 判断流体单元是否为空 */

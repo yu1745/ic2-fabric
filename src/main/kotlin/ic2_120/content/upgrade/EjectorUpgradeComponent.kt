@@ -12,8 +12,8 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import ic2_120.editCustomData
 import ic2_120.getCustomData
-import ic2_120.getOrCreateCustomData
 
 object EjectorUpgradeComponent {
     private const val NBT_ITEM_FILTER = "PipeItemFilter"
@@ -85,14 +85,15 @@ object EjectorUpgradeComponent {
     }
 
     fun writeFilter(stack: ItemStack, item: Item?) {
-        val nbt = stack.getOrCreateCustomData()
-        if (item == null) {
-            nbt.remove(NBT_ITEM_FILTER)
-            return
+        stack.editCustomData { nbt ->
+            if (item == null) {
+                nbt.remove(NBT_ITEM_FILTER)
+                return@editCustomData
+            }
+            val id = Registries.ITEM.getId(item)
+            if (id.path != "air") nbt.putString(NBT_ITEM_FILTER, id.toString())
+            else nbt.remove(NBT_ITEM_FILTER)
         }
-        val id = Registries.ITEM.getId(item)
-        if (id.path != "air") nbt.putString(NBT_ITEM_FILTER, id.toString())
-        else nbt.remove(NBT_ITEM_FILTER)
     }
 
     fun readDirection(stack: ItemStack): Direction? {
@@ -103,12 +104,13 @@ object EjectorUpgradeComponent {
     }
 
     fun writeDirection(stack: ItemStack, side: Direction?) {
-        val nbt = stack.getOrCreateCustomData()
-        if (side == null) {
-            nbt.remove(NBT_DIRECTION)
-            return
+        stack.editCustomData { nbt ->
+            if (side == null) {
+                nbt.remove(NBT_DIRECTION)
+                return@editCustomData
+            }
+            nbt.putString(NBT_DIRECTION, side.name.lowercase())
         }
-        nbt.putString(NBT_DIRECTION, side.name.lowercase())
     }
 
     fun nextDirection(current: Direction?): Direction? {

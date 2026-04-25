@@ -22,8 +22,8 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import java.util.Optional
 import java.util.stream.Stream
+import ic2_120.editCustomData
 import ic2_120.getCustomData
-import ic2_120.getOrCreateCustomData
 
 private val EMPTY_LOOKUP = RegistryWrapper.WrapperLookup.of(Stream.empty())
 
@@ -113,23 +113,26 @@ private fun setStorageEnergy(result: ItemStack, energy: Long) {
     val clamped = energy.coerceIn(0L, config.capacity)
 
     if (clamped >= config.capacity) {
-        result.getOrCreateCustomData().putBoolean(EnergyStorageBlock.NBT_FULL, true)
-        // 满电时清理 BlockEntityTag，保持与现有 Full 变体一致
-        result.getOrCreateCustomData().remove(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG)
+        result.editCustomData {
+            it.putBoolean(EnergyStorageBlock.NBT_FULL, true)
+            // 满电时清理 BlockEntityTag，保持与现有 Full 变体一致
+            it.remove(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG)
+        }
         return
     }
 
-    val nbt = result.getOrCreateCustomData()
-    nbt.putBoolean(EnergyStorageBlock.NBT_FULL, false)
+    result.editCustomData { nbt ->
+        nbt.putBoolean(EnergyStorageBlock.NBT_FULL, false)
 
-    if (clamped <= 0L) {
-        nbt.remove(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG)
-        return
+        if (clamped <= 0L) {
+            nbt.remove(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG)
+            return@editCustomData
+        }
+
+        val blockEntityTag = nbt.getCompound(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG)
+        blockEntityTag.putLong(EnergyStorageSync.NBT_ENERGY_STORED, clamped)
+        nbt.put(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG, blockEntityTag)
     }
-
-    val blockEntityTag = nbt.getCompound(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG)
-    blockEntityTag.putLong(EnergyStorageSync.NBT_ENERGY_STORED, clamped)
-    nbt.put(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG, blockEntityTag)
 }
 
 object BatteryEnergyShapedRecipeSerializer : RecipeSerializer<BatteryEnergyShapedRecipe> {

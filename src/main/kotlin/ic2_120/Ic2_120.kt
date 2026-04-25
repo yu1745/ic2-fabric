@@ -49,13 +49,14 @@ import ic2_120.content.command.ConfigCommand
 import ic2_120.content.command.SeedCommand
 import ic2_120.content.command.RubberTreeCommand
 import ic2_120.content.command.UuReplicationCommand
+import ic2_120.editCustomData
 import ic2_120.registry.ClassScanner
 import ic2_120.registry.type
 import ic2_120.registry.CreativeTab
-import ic2_120.registry.type
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
+import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import net.fabricmc.fabric.api.registry.FuelRegistry
 import ic2_120.content.item.FoamSprayerItem
@@ -69,6 +70,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant
 import net.minecraft.block.entity.BlockEntity
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
@@ -192,11 +194,11 @@ object Ic2_120 : ModInitializer {
             "mfsu_chargepad"
         )
         val ic2MachinesKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(MOD_ID, CreativeTab.IC2_MACHINES.id))
-        ItemGroupEvents.modifyEntriesEvent(ic2MachinesKey).register { entries ->
+        ItemGroupEvents.modifyEntriesEvent(ic2MachinesKey).register { entries: FabricItemGroupEntries ->
             for (id in storageIds) {
                 val fullStack = ItemStack(Registries.ITEM.get(Identifier.of(MOD_ID, id)))
-                fullStack.getOrCreateCustomData().putBoolean(EnergyStorageBlock.NBT_FULL, true)
-                entries.add(fullStack)
+                fullStack.editCustomData { it.putBoolean(EnergyStorageBlock.NBT_FULL, true) }
+                entries.addUnique(fullStack)
             }
         }
 
@@ -205,36 +207,36 @@ object Ic2_120 : ModInitializer {
         if (jetpackItem != null) {
             val ic2MaterialsKey =
                 RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(MOD_ID, CreativeTab.IC2_MATERIALS.id))
-            ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
+            ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries: FabricItemGroupEntries ->
                 // 添加满燃料的喷气背包
                 val fullFuelJetpack = ItemStack(jetpackItem).also {
                     JetpackItem.setFuel(it, JetpackItem.MAX_FUEL)
                 }
-                entries.addAfter(jetpackItem, fullFuelJetpack)
+                entries.addAfterUnique(jetpackItem, fullFuelJetpack)
             }
         }
 
         // 建筑泡沫喷枪：满流体（8 桶）变体
         val ic2MaterialsKey =
             RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(MOD_ID, CreativeTab.IC2_MATERIALS.id))
-        ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
+        ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries: FabricItemGroupEntries ->
             val sprayer = Registries.ITEM.get(Identifier.of(MOD_ID, "foam_sprayer"))
             if (sprayer == Items.AIR || sprayer !is FoamSprayerItem) return@register
             val fullSprayer = ItemStack(sprayer).also {
                 FoamSprayerItem.setFluidAmount(it, FoamSprayerItem.CAPACITY_DROPLETS)
             }
-            entries.addAfter(sprayer, fullSprayer)
+            entries.addAfterUnique(sprayer, fullSprayer)
         }
 
         // 杂交作物初始种子袋（三维属性 1/1/1）加入作物种子物品栏
         val ic2CropSeedsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
-        ItemGroupEvents.modifyEntriesEvent(ic2CropSeedsKey).register { entries ->
+        ItemGroupEvents.modifyEntriesEvent(ic2CropSeedsKey).register { entries: FabricItemGroupEntries ->
             val seedBag = Registries.ITEM.get(Identifier.of(MOD_ID, "crop_seed_bag"))
             val initialSeeds = CropSeedBagItem.createInitialSeedStacks()
             if (seedBag != net.minecraft.item.Items.AIR) {
-                for (stack in initialSeeds) entries.addAfter(seedBag, stack)
+                for (stack in initialSeeds) entries.addAfterUnique(seedBag, stack)
             } else {
-                for (stack in initialSeeds) entries.add(stack)
+                for (stack in initialSeeds) entries.addUnique(stack)
             }
         }
 
@@ -253,4 +255,19 @@ object Ic2_120 : ModInitializer {
      * 创建模组内的标识符
      */
     fun id(path: String): Identifier = Identifier.of(MOD_ID, path)
+
+    private fun FabricItemGroupEntries.addUnique(stack: ItemStack) {
+        if (containsEquivalent(stack)) return
+        add(stack)
+    }
+
+    private fun FabricItemGroupEntries.addAfterUnique(anchor: Item, stack: ItemStack) {
+        if (containsEquivalent(stack)) return
+        addAfter(anchor, stack)
+    }
+
+    private fun FabricItemGroupEntries.containsEquivalent(stack: ItemStack): Boolean {
+        return displayStacks.any { ItemStack.areEqual(it, stack) } ||
+            searchTabStacks.any { ItemStack.areEqual(it, stack) }
+    }
 }

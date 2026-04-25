@@ -40,8 +40,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import net.minecraft.world.WorldView
+import ic2_120.editCustomData
 import ic2_120.getCustomData
-import ic2_120.getOrCreateCustomData
 
 @ModBlock(name = "pattern_storage", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "uu")
 class PatternStorageBlock : MachineBlock() {
@@ -92,7 +92,7 @@ class PatternStorageBlock : MachineBlock() {
                 val lookup = world.registryManager
                 val nbt = blockEntity.createNbt(lookup)
                 if (!nbt.isEmpty) {
-                    stack.getOrCreateCustomData().put("BlockEntityTag", nbt)
+                    stack.editCustomData { it.put("BlockEntityTag", nbt) }
                 }
                 val itemEntity = ItemEntity(
                     world,
@@ -114,7 +114,7 @@ class PatternStorageBlock : MachineBlock() {
         val lookup = (world as World).registryManager
         val nbt = blockEntity.createNbt(lookup)
         if (!nbt.isEmpty) {
-            itemStack.getOrCreateCustomData().put("BlockEntityTag", nbt)
+            itemStack.editCustomData { it.put("BlockEntityTag", nbt) }
         }
         return itemStack
     }

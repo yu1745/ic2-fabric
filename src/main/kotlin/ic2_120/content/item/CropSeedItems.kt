@@ -30,8 +30,8 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
+import ic2_120.editCustomData
 import ic2_120.getCustomData
-import ic2_120.getOrCreateCustomData
 import net.minecraft.network.PacketByteBuf
 import io.netty.buffer.Unpooled
 
@@ -64,13 +64,14 @@ object CropSeedData {
         stack.getCustomData()?.getInt(NBT_SCAN_LEVEL)?.coerceIn(0, 4) ?: 0
 
     fun write(stack: ItemStack, type: CropType, stats: CropStats, scanLevel: Int) {
-        val nbt = stack.getOrCreateCustomData()
-        nbt.putString(NBT_OWNER, "ic2_120")
-        nbt.putString(NBT_ID, type.asString())
-        nbt.putInt(NBT_GROWTH, stats.growth.coerceIn(0, 31))
-        nbt.putInt(NBT_GAIN, stats.gain.coerceIn(0, 31))
-        nbt.putInt(NBT_RESISTANCE, stats.resistance.coerceIn(0, 31))
-        nbt.putInt(NBT_SCAN_LEVEL, scanLevel.coerceIn(0, 4))
+        stack.editCustomData { nbt ->
+            nbt.putString(NBT_OWNER, "ic2_120")
+            nbt.putString(NBT_ID, type.asString())
+            nbt.putInt(NBT_GROWTH, stats.growth.coerceIn(0, 31))
+            nbt.putInt(NBT_GAIN, stats.gain.coerceIn(0, 31))
+            nbt.putInt(NBT_RESISTANCE, stats.resistance.coerceIn(0, 31))
+            nbt.putInt(NBT_SCAN_LEVEL, scanLevel.coerceIn(0, 4))
+        }
     }
 
     fun displayName(type: CropType): Text = Text.translatable("crop.ic2_120.${type.asString()}")

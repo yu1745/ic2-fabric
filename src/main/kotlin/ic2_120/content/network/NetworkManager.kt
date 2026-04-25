@@ -10,6 +10,7 @@ import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.NanoHelmet
 import ic2_120.content.item.armor.QuantumChestplate
 import ic2_120.content.item.armor.QuantumHelmet
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.server.network.ServerPlayerEntity
@@ -18,6 +19,8 @@ import net.minecraft.util.Hand
 
 object NetworkManager {
     fun register() {
+        registerPayloadTypes()
+
         ServerPlayNetworking.registerGlobalReceiver(ToggleNightVisionGogglesPayload.ID) { _, context ->
             val player = context.player()
             val stack = player.getEquippedStack(EquipmentSlot.HEAD)
@@ -168,5 +171,24 @@ object NetworkManager {
                 ServerPlayNetworking.send(player, packet)
             }
         }
+    }
+
+    private fun registerPayloadTypes() {
+        // C2S toggle payloads
+        PayloadTypeRegistry.playC2S().register(ToggleNightVisionGogglesPayload.ID, ToggleNightVisionGogglesPayload.CODEC)
+        PayloadTypeRegistry.playC2S().register(ToggleNanoVisionPayload.ID, ToggleNanoVisionPayload.CODEC)
+        PayloadTypeRegistry.playC2S().register(ToggleQuantumFlightPayload.ID, ToggleQuantumFlightPayload.CODEC)
+        PayloadTypeRegistry.playC2S().register(ToggleIridiumSilkTouchPayload.ID, ToggleIridiumSilkTouchPayload.CODEC)
+        PayloadTypeRegistry.playC2S().register(ToggleJetpackFlightPayload.ID, ToggleJetpackFlightPayload.CODEC)
+        PayloadTypeRegistry.playC2S().register(ToggleFoamSprayerModePayload.ID, ToggleFoamSprayerModePayload.CODEC)
+        PayloadTypeRegistry.playC2S().register(ToggleMiningLaserModePayload.ID, ToggleMiningLaserModePayload.CODEC)
+
+        // S2C sync payloads
+        PayloadTypeRegistry.playS2C().register(ReactorHeatInfoPacket.ID, ReactorHeatInfoPacket.CODEC)
+        PayloadTypeRegistry.playS2C().register(BandwidthHudPacket.ID, BandwidthHudPacket.CODEC)
+        PayloadTypeRegistry.playS2C().register(WindRotorStatePacket.ID, WindRotorStatePacket.CODEC)
+        PayloadTypeRegistry.playS2C().register(WaterRotorStatePacket.ID, WaterRotorStatePacket.CODEC)
+        PayloadTypeRegistry.playS2C().register(ScannerResultPacket.ID, ScannerResultPacket.CODEC)
+        PayloadTypeRegistry.playS2C().register(TeleporterVisualStatePacket.ID, TeleporterVisualStatePacket.CODEC)
     }
 }

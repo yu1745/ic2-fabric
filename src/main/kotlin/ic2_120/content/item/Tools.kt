@@ -77,8 +77,8 @@ import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.editCustomData
 import ic2_120.getCustomData
-import ic2_120.getOrCreateCustomData
 import ic2_120.removeCustomData
 import net.minecraft.network.PacketByteBuf
 import io.netty.buffer.Unpooled
@@ -314,12 +314,12 @@ class WeedEx : Item(Item.Settings().maxCount(1)) {
 
         fun setAmount(stack: ItemStack, amount: Int) {
             if (amount >= CAPACITY) {
-                stack.getCustomData()?.remove(NBT_KEY)
+                stack.editCustomData { it.remove(NBT_KEY) }
                 if (stack.getCustomData()?.isEmpty == true) stack.removeCustomData()
             } else if (amount > 0) {
-                stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putInt(NBT_KEY, amount.coerceAtMost(CAPACITY)) }))
+                stack.editCustomData { it.putInt(NBT_KEY, amount.coerceAtMost(CAPACITY)) }
             } else {
-                stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putInt(NBT_KEY, 0) }))
+                stack.editCustomData { it.putInt(NBT_KEY, 0) }
             }
         }
 
@@ -509,10 +509,9 @@ class ToolBox : Item(Item.Settings().maxCount(1)) {
         }
 
         internal fun saveInternal(stack: ItemStack, list: DefaultedList<ItemStack>, lookup: RegistryWrapper.WrapperLookup) {
-            val nbt = stack.getOrCreateCustomData()
             val tag = NbtCompound()
             Inventories.writeNbt(tag, list, lookup)
-            nbt.put(NBT_KEY, tag)
+            stack.editCustomData { it.put(NBT_KEY, tag) }
         }
 
         /** 可收入工具箱的物品：原版工具标签、常见工具物品、电动工具、IC2 手持工具等。 */
@@ -622,15 +621,17 @@ class FrequencyTransmitter : Item(Item.Settings().maxCount(1)) {
         if (state.block !is TeleporterBlock) return net.minecraft.util.ActionResult.PASS
         if (player == null) return net.minecraft.util.ActionResult.SUCCESS
 
-        val nbt = stack.getOrCreateCustomData()
+        val nbt = stack.getCustomData()
         val dim = world.registryKey.value.toString()
 
-        if (player.isSneaking || !nbt.getBoolean(NBT_HAS_BIND)) {
-            nbt.putBoolean(NBT_HAS_BIND, true)
-            nbt.putInt(NBT_BIND_X, pos.x)
-            nbt.putInt(NBT_BIND_Y, pos.y)
-            nbt.putInt(NBT_BIND_Z, pos.z)
-            nbt.putString(NBT_BIND_DIM, dim)
+        if (player.isSneaking || nbt?.getBoolean(NBT_HAS_BIND) != true) {
+            stack.editCustomData {
+                it.putBoolean(NBT_HAS_BIND, true)
+                it.putInt(NBT_BIND_X, pos.x)
+                it.putInt(NBT_BIND_Y, pos.y)
+                it.putInt(NBT_BIND_Z, pos.z)
+                it.putString(NBT_BIND_DIM, dim)
+            }
             if (!world.isClient) {
                 player.sendMessage(Text.literal("已记录第一台传送机: ${pos.x}, ${pos.y}, ${pos.z}"), true)
             }
@@ -964,12 +965,11 @@ class IridiumDrill : ElectricMiningDrillItem(
         private const val SILK_TOUCH_KEY = "SilkTouchEnabled"
 
         fun isSilkTouchEnabled(stack: ItemStack): Boolean =
-            stack.getOrCreateCustomData().getBoolean(SILK_TOUCH_KEY)
+            stack.getCustomData()?.getBoolean(SILK_TOUCH_KEY) ?: false
 
         fun toggleSilkTouch(stack: ItemStack): Boolean {
-            val nbt = stack.getOrCreateCustomData()
-            val enabled = !nbt.getBoolean(SILK_TOUCH_KEY)
-            nbt.putBoolean(SILK_TOUCH_KEY, enabled)
+            val enabled = !(stack.getCustomData()?.getBoolean(SILK_TOUCH_KEY) ?: false)
+            stack.editCustomData { it.putBoolean(SILK_TOUCH_KEY, enabled) }
             return enabled
         }
 
@@ -1056,12 +1056,11 @@ class NanoSaber : SwordItem(
         private const val DAMAGE_INACTIVE_TOTAL = 5.0
         private const val DAMAGE_ACTIVE_TOTAL = 21.0
 
-        fun isActive(stack: ItemStack): Boolean = stack.getOrCreateCustomData().getBoolean(NBT_ACTIVE)
+        fun isActive(stack: ItemStack): Boolean = stack.getCustomData()?.getBoolean(NBT_ACTIVE) ?: false
 
         fun toggleActive(stack: ItemStack): Boolean {
-            val nbt = stack.getOrCreateCustomData()
-            val v = !nbt.getBoolean(NBT_ACTIVE)
-            nbt.putBoolean(NBT_ACTIVE, v)
+            val v = !(stack.getCustomData()?.getBoolean(NBT_ACTIVE) ?: false)
+            stack.editCustomData { it.putBoolean(NBT_ACTIVE, v) }
             return v
         }
 

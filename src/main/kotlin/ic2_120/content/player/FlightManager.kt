@@ -7,9 +7,9 @@ import ic2_120.content.item.armor.QuantumChestplate
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
 import net.minecraft.server.MinecraftServer
-import ic2_120.getOrCreateCustomData
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 object FlightManager {
     private const val JETPACK_HOVER_KEY = "IsHover"
@@ -39,43 +39,41 @@ object FlightManager {
     }
 
     private fun handleJetpackFlight(player: PlayerEntity, jetpackStack: ItemStack) {
-        val nbt = jetpackStack.getOrCreateCustomData()
         val fuel = JetpackItem.getFuel(jetpackStack)
 
         if (fuel <= 0L || player.isCreative || player.isSpectator || !JetpackItem.isFlightEnabled(jetpackStack)) {
-            disableJetpackFlight(player, nbt)
+            disableJetpackFlight(player, jetpackStack)
             return
         }
         if (player.isOnGround || player.isTouchingWater || player.isClimbing) {
-            disableJetpackFlight(player, nbt)
+            disableJetpackFlight(player, jetpackStack)
             return
         }
 
         JetpackItem.setFuel(jetpackStack, fuel - JetpackItem.fuelPerTick)
-        enableJetpackFlight(player, nbt)
+        enableJetpackFlight(player, jetpackStack)
     }
 
     private fun handleElectricJetpackFlight(player: PlayerEntity, jetpackStack: ItemStack) {
         val jetpack = jetpackStack.item as ElectricJetpack
-        val nbt = jetpackStack.getOrCreateCustomData()
 
         if (player.isCreative || player.isSpectator || !jetpack.isFlightEnabled(jetpackStack)) {
-            disableJetpackFlight(player, nbt)
+            disableJetpackFlight(player, jetpackStack)
             return
         }
         if (player.isOnGround || player.isTouchingWater || player.isClimbing) {
-            disableJetpackFlight(player, nbt)
+            disableJetpackFlight(player, jetpackStack)
             return
         }
         if (!jetpack.consumeFlightEnergyPerTick(jetpackStack)) {
-            disableJetpackFlight(player, nbt)
+            disableJetpackFlight(player, jetpackStack)
             return
         }
 
-        enableJetpackFlight(player, nbt)
+        enableJetpackFlight(player, jetpackStack)
     }
 
-    private fun enableJetpackFlight(player: PlayerEntity, nbt: NbtCompound) {
+    private fun enableJetpackFlight(player: PlayerEntity, stack: ItemStack) {
         var changed = false
         if (!player.abilities.allowFlying) {
             player.abilities.allowFlying = true
@@ -88,12 +86,13 @@ object FlightManager {
         if (changed) {
             player.sendAbilitiesUpdate()
         }
-        nbt.putBoolean(JETPACK_HOVER_KEY, true)
+        stack.editCustomData { it.putBoolean(JETPACK_HOVER_KEY, true) }
         jetpackGrantedPlayers.add(player.uuid)
     }
 
-    private fun disableJetpackFlight(player: PlayerEntity, nbt: NbtCompound?) {
-        if (!jetpackGrantedPlayers.contains(player.uuid) && (nbt == null || !nbt.getBoolean(JETPACK_HOVER_KEY))) {
+    private fun disableJetpackFlight(player: PlayerEntity, stack: ItemStack?) {
+        val hovering = stack?.getCustomData()?.getBoolean(JETPACK_HOVER_KEY) == true
+        if (!jetpackGrantedPlayers.contains(player.uuid) && !hovering) {
             return
         }
 
@@ -112,7 +111,7 @@ object FlightManager {
             }
         }
 
-        nbt?.putBoolean(JETPACK_HOVER_KEY, false)
+        stack?.editCustomData { it.putBoolean(JETPACK_HOVER_KEY, false) }
         jetpackGrantedPlayers.remove(player.uuid)
     }
 
@@ -125,7 +124,6 @@ object FlightManager {
         }
 
         val chestplate = chestStack.item as? QuantumChestplate ?: return
-        val nbt = chestStack.getOrCreateCustomData()
         val flightEnabled = QuantumChestplate.isFlightEnabled(chestStack)
         val isActive = player.abilities.allowFlying
 
@@ -142,7 +140,7 @@ object FlightManager {
 
         val currentEnergy = chestplate.getEnergy(chestStack)
         if (currentEnergy < QuantumChestplate.flightCostPerTick) {
-            nbt.putBoolean("QuantumFlightEnabled", false)
+            chestStack.editCustomData { it.putBoolean("QuantumFlightEnabled", false) }
             disableQuantumFlight(player)
             return
         }

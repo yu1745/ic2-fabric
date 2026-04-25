@@ -32,8 +32,8 @@ import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.util.ActionResult
+import ic2_120.editCustomData
 import ic2_120.getCustomData
-import ic2_120.getOrCreateCustomData
 
 /**
  * 采矿镭射枪：电动远程采矿工具，发射弹射体破坏方块。
@@ -60,7 +60,7 @@ class MiningLaserItem : Item(
 
         /** 向 ItemStack NBT 写入模式 */
         fun setMode(stack: ItemStack, mode: LaserMode) {
-            stack.getOrCreateCustomData().putString(MODE_KEY, mode.name)
+            stack.editCustomData { it.putString(MODE_KEY, mode.name) }
         }
 
         /** 循环切换到下一个模式 */

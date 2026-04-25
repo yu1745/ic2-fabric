@@ -6,6 +6,7 @@ import ic2_120.content.sync.TransformerSync;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.BlockHitResult;
@@ -36,7 +37,7 @@ public abstract class TransformerTooltipMixin {
      * 在 HUD 渲染后，检查玩家指向的方块是否为变压器，如果是则显示模式信息。
      */
     @Inject(method = "render", at = @At("RETURN"))
-    private void renderTransformerMode(DrawContext context, float tickDelta, CallbackInfo ci) {
+    private void renderTransformerMode(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (!showTransformerTooltip) {
             return;
         }

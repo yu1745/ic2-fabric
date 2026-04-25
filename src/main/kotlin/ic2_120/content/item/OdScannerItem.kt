@@ -23,7 +23,8 @@ import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
 import ic2_120.registry.annotation.RecipeProvider
-import ic2_120.getOrCreateCustomData
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.network.PacketByteBuf
 
@@ -144,12 +145,12 @@ class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
         }
 
         fun getUsesRemaining(stack: ItemStack): Int {
-            return stack.getOrCreateCustomData().getInt(NBT_USES).takeIf { it > 0 }
+            return stack.getCustomData()?.getInt(NBT_USES)?.takeIf { it > 0 }
                 ?: getScannerType(stack).maxUses
         }
 
         fun setUsesRemaining(stack: ItemStack, uses: Int) {
-            stack.set(net.minecraft.component.DataComponentTypes.CUSTOM_DATA, net.minecraft.component.type.NbtComponent.of(net.minecraft.nbt.NbtCompound().apply { putInt(NBT_USES, uses) }))
+            stack.editCustomData { it.putInt(NBT_USES, uses) }
         }
 
         /**

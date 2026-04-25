@@ -46,8 +46,8 @@ import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.floor
 import kotlin.math.sin
+import ic2_120.editCustomData
 import ic2_120.getCustomData
-import ic2_120.getOrCreateCustomData
 import net.minecraft.network.PacketByteBuf
 import io.netty.buffer.Unpooled
 @ModBlockEntity(block = WindKineticGeneratorBlock::class)
@@ -407,26 +407,27 @@ class WindKineticGeneratorBlockEntity(
      */
     private fun applyRotorWear(rotor: ItemStack, wearMultiplier: Double): Boolean {
         if (!rotor.isDamageable || wearMultiplier <= 0.0) return false
-        val nbt = rotor.getOrCreateCustomData()
-        val accumulated = (nbt.getDouble(ROTOR_WEAR_REMAINDER_KEY) + wearMultiplier).coerceAtLeast(0.0)
+        val accumulated = ((rotor.getCustomData()?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0) + wearMultiplier).coerceAtLeast(0.0)
         val wear = floor(accumulated).toInt()
         val remainder = accumulated - wear
 
         if (wear <= 0) {
-            nbt.putDouble(ROTOR_WEAR_REMAINDER_KEY, remainder)
+            rotor.editCustomData { it.putDouble(ROTOR_WEAR_REMAINDER_KEY, remainder) }
             return false
         }
 
         if (rotor.damage + wear >= rotor.maxDamage) {
-            nbt.remove(ROTOR_WEAR_REMAINDER_KEY)
+            rotor.editCustomData { it.remove(ROTOR_WEAR_REMAINDER_KEY) }
             return true
         }
 
         rotor.damage += wear
-        if (remainder > 0.0) {
-            nbt.putDouble(ROTOR_WEAR_REMAINDER_KEY, remainder)
-        } else {
-            nbt.remove(ROTOR_WEAR_REMAINDER_KEY)
+        rotor.editCustomData { nbt ->
+            if (remainder > 0.0) {
+                nbt.putDouble(ROTOR_WEAR_REMAINDER_KEY, remainder)
+            } else {
+                nbt.remove(ROTOR_WEAR_REMAINDER_KEY)
+            }
         }
         markDirty()
         return false

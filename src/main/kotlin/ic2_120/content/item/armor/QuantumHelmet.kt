@@ -31,7 +31,8 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import net.minecraft.world.World
-import ic2_120.getOrCreateCustomData
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 
 /**
  * 量子头盔 (Quantum Helmet)
@@ -71,9 +72,8 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         private const val AIR_THRESHOLD = 60
 
         fun toggleNightVision(stack: ItemStack): Boolean {
-            val nbt = stack.getOrCreateCustomData()
-            val enabled = !nbt.getBoolean(NIGHT_VISION_KEY)
-            nbt.putBoolean(NIGHT_VISION_KEY, enabled)
+            val enabled = !(stack.getCustomData()?.getBoolean(NIGHT_VISION_KEY) ?: false)
+            stack.editCustomData { it.putBoolean(NIGHT_VISION_KEY, enabled) }
             return enabled
         }
 
@@ -111,29 +111,29 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         val player = entity as? PlayerEntity ?: return
         if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) return
 
-        val nbt = stack.getOrCreateCustomData()
+        val nbt = stack.getCustomData()
         var energy = getEnergy(stack)
 
         // 功能 1: 水下呼吸（复用 HazmatHelmet 逻辑）
         if (player.isTouchingWater && player.air <= AIR_THRESHOLD) {
-            val cooldown = nbt.getInt(AIR_CHECK_COOLDOWN_KEY)
+            val cooldown = nbt?.getInt(AIR_CHECK_COOLDOWN_KEY) ?: 0
             if (cooldown <= 0) {
                 if (consumeAirCellIfAvailable(player)) {
                     player.air = player.maxAir
-                    nbt.putInt(AIR_CHECK_COOLDOWN_KEY, 20)  // 1 秒冷却
+                    stack.editCustomData { it.putInt(AIR_CHECK_COOLDOWN_KEY, 20) }  // 1 秒冷却
                 }
             } else {
-                nbt.putInt(AIR_CHECK_COOLDOWN_KEY, cooldown - 1)
+                stack.editCustomData { it.putInt(AIR_CHECK_COOLDOWN_KEY, cooldown - 1) }
             }
         }
 
         // 功能 2: 夜视
-        if (nbt.getBoolean(NIGHT_VISION_KEY)) {
+        if (nbt?.getBoolean(NIGHT_VISION_KEY) == true) {
             if (energy >= NIGHT_VISION_COST) {
                 energy -= NIGHT_VISION_COST
                 applyNightVisionEffect(player, world)
             } else {
-                nbt.putBoolean(NIGHT_VISION_KEY, false)
+                stack.editCustomData { it.putBoolean(NIGHT_VISION_KEY, false) }
                 player.removeStatusEffect(StatusEffects.NIGHT_VISION)
             }
         }
@@ -142,16 +142,16 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         if (player.hungerManager.foodLevel < 20 &&
             energy >= FOOD_FILL_COST
         ) {
-            val cooldown = nbt.getInt(FOOD_CHECK_COOLDOWN_KEY)
+            val cooldown = nbt?.getInt(FOOD_CHECK_COOLDOWN_KEY) ?: 0
             if (cooldown <= 0) {
                 if (consumeFilledTinCanIfAvailable(player)) {
                     energy -= FOOD_FILL_COST
                     player.hungerManager.foodLevel = 20
                     player.hungerManager.saturationLevel = 5f
-                    nbt.putInt(FOOD_CHECK_COOLDOWN_KEY, 20)  // 1 秒冷却
+                    stack.editCustomData { it.putInt(FOOD_CHECK_COOLDOWN_KEY, 20) }  // 1 秒冷却
                 }
             } else {
-                nbt.putInt(FOOD_CHECK_COOLDOWN_KEY, cooldown - 1)
+                stack.editCustomData { it.putInt(FOOD_CHECK_COOLDOWN_KEY, cooldown - 1) }
             }
         }
 
@@ -213,7 +213,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
 
     override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
         super.appendTooltip(stack, context, tooltip, type)
-        val nvEnabled = stack.getOrCreateCustomData().getBoolean(NIGHT_VISION_KEY)
+        val nvEnabled = stack.getCustomData()?.getBoolean(NIGHT_VISION_KEY) ?: false
         val energy = getEnergy(stack)
 
         // 计算夜视剩余时间（分钟）

@@ -26,8 +26,8 @@ import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.world.World
+import ic2_120.editCustomData
 import ic2_120.getCustomData
-import ic2_120.getOrCreateCustomData
 import net.minecraft.network.PacketByteBuf
 import io.netty.buffer.Unpooled
 
@@ -121,12 +121,11 @@ class ContainmentBoxInventory(
     private fun saveToStack() {
         val stack = player.getStackInHand(hand)
         if (stack.isEmpty || stack.item !is ContainmentBoxItem) return
-        val nbt = stack.getOrCreateCustomData()
         val tag = NbtCompound()
         val list = DefaultedList.ofSize(SIZE, ItemStack.EMPTY)
         for (i in 0 until SIZE) list[i] = getStack(i).copy()
         Inventories.writeNbt(tag, list, player.world.registryManager)
-        nbt.put(NBT_KEY, tag)
+        stack.editCustomData { it.put(NBT_KEY, tag) }
     }
 
     companion object {

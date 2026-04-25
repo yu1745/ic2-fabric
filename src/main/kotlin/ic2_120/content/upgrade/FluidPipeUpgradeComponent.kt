@@ -15,8 +15,8 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import ic2_120.editCustomData
 import ic2_120.getCustomData
-import ic2_120.getOrCreateCustomData
 
 object FluidPipeUpgradeComponent {
     private const val NBT_FILTER = "PipeFluidFilter"
@@ -73,16 +73,17 @@ object FluidPipeUpgradeComponent {
     }
 
     fun writeFilter(stack: ItemStack, fluid: Fluid?) {
-        val nbt = stack.getOrCreateCustomData()
-        if (fluid == null) {
-            nbt.remove(NBT_FILTER)
-            return
-        }
-        val id = Registries.FLUID.getId(fluid)
-        if (id.path != "empty") {
-            nbt.putString(NBT_FILTER, id.toString())
-        } else {
-            nbt.remove(NBT_FILTER)
+        stack.editCustomData { nbt ->
+            if (fluid == null) {
+                nbt.remove(NBT_FILTER)
+                return@editCustomData
+            }
+            val id = Registries.FLUID.getId(fluid)
+            if (id.path != "empty") {
+                nbt.putString(NBT_FILTER, id.toString())
+            } else {
+                nbt.remove(NBT_FILTER)
+            }
         }
     }
 
@@ -94,12 +95,13 @@ object FluidPipeUpgradeComponent {
     }
 
     fun writeDirection(stack: ItemStack, side: Direction?) {
-        val nbt = stack.getOrCreateCustomData()
-        if (side == null) {
-            nbt.remove(NBT_DIRECTION)
-            return
+        stack.editCustomData { nbt ->
+            if (side == null) {
+                nbt.remove(NBT_DIRECTION)
+                return@editCustomData
+            }
+            nbt.putString(NBT_DIRECTION, side.name.lowercase())
         }
-        nbt.putString(NBT_DIRECTION, side.name.lowercase())
     }
 
     /**
