@@ -1,0 +1,12 @@
+{
+  "type": "ic2_120:cutting",
+  "ingredient": {
+    "item": "minecraft:oxidized_copper"
+  },
+  "input_count": 1,
+  "material_hardness": 3.0,
+  "result": {
+    "count": 9,
+    "id": "minecraft:oxidized_cut_copper_slab"
+  }
+}

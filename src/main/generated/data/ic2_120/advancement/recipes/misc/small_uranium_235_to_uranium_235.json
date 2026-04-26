@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_small_uranium_235": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2_120:small_uranium_235"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:small_uranium_235_to_uranium_235"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_small_uranium_235"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:small_uranium_235_to_uranium_235"
+    ]
+  }
+}

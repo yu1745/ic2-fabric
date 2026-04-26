@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_heat_exchanger": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2_120:heat_exchanger"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:advanced_heat_exchanger"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_heat_exchanger"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:advanced_heat_exchanger"
+    ]
+  }
+}

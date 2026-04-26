@@ -1,0 +1,10 @@
+{
+  "type": "ic2_120:extracting",
+  "ingredient": {
+    "item": "minecraft:magenta_wool"
+  },
+  "result": {
+    "count": 1,
+    "id": "minecraft:white_wool"
+  }
+}

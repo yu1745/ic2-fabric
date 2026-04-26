@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "minecraft:barrier"
+    },
+    "C": {
+      "item": "ic2_120:circuit"
+    },
+    "M": {
+      "item": "ic2_120:machine"
+    },
+    "N": {
+      "item": "minecraft:iron_bars"
+    },
+    "P": {
+      "item": "ic2_120:iron_plate"
+    },
+    "S": {
+      "item": "minecraft:shears"
+    }
+  },
+  "pattern": [
+    "CBC",
+    "SMS",
+    "PNP"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:animal_slaughterer"
+  }
+}

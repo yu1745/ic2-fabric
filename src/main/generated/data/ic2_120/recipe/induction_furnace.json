@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120:advanced_machine"
+    },
+    "C": {
+      "item": "minecraft:copper_ingot"
+    },
+    "E": {
+      "item": "ic2_120:electric_furnace"
+    }
+  },
+  "pattern": [
+    "CCC",
+    "CEC",
+    "CAC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:induction_furnace"
+  }
+}

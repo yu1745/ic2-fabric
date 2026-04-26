@@ -1,0 +1,11 @@
+{
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "item": "minecraft:ice"
+  },
+  "input_count": 2,
+  "result": {
+    "count": 1,
+    "id": "minecraft:packed_ice"
+  }
+}

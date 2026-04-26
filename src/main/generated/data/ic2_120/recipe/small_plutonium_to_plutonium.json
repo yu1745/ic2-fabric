@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ic2_120:small_plutonium"
+    },
+    {
+      "item": "ic2_120:small_plutonium"
+    },
+    {
+      "item": "ic2_120:small_plutonium"
+    },
+    {
+      "item": "ic2_120:small_plutonium"
+    },
+    {
+      "item": "ic2_120:small_plutonium"
+    },
+    {
+      "item": "ic2_120:small_plutonium"
+    },
+    {
+      "item": "ic2_120:small_plutonium"
+    },
+    {
+      "item": "ic2_120:small_plutonium"
+    },
+    {
+      "item": "ic2_120:small_plutonium"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:plutonium"
+  }
+}

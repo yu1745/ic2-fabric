@@ -66,7 +66,7 @@ object BlockCutterRecipeDatagen {
         Entry("blackstone_to_slab", Items.BLACKSTONE, 1, 1.5f, Items.BLACKSTONE_SLAB, 9),
         Entry("polished_blackstone_to_slab", Items.POLISHED_BLACKSTONE, 1, 1.5f, Items.POLISHED_BLACKSTONE_SLAB, 9),
         Entry("polished_blackstone_bricks_to_slab", Items.POLISHED_BLACKSTONE_BRICKS, 1, 1.5f, Items.POLISHED_BLACKSTONE_BRICK_SLAB, 9),
-        Entry("deepslate_to_slab", Items.DEEPSLATE, 1, 3.0f, Registries.ITEM.get(Identifier.of("minecraft", "deepslate_slab")), 9),
+        Entry("cobbled_deepslate_to_slab", Items.COBBLED_DEEPSLATE, 1, 3.0f, Items.COBBLED_DEEPSLATE_SLAB, 9),
         Entry("polished_deepslate_to_slab", Items.POLISHED_DEEPSLATE, 1, 3.0f, Registries.ITEM.get(Identifier.of("minecraft", "polished_deepslate_slab")), 9),
         Entry("deepslate_bricks_to_slab", Items.DEEPSLATE_BRICKS, 1, 3.0f, Registries.ITEM.get(Identifier.of("minecraft", "deepslate_brick_slab")), 9),
         Entry("deepslate_tiles_to_slab", Items.DEEPSLATE_TILES, 1, 3.0f, Registries.ITEM.get(Identifier.of("minecraft", "deepslate_tile_slab")), 9),

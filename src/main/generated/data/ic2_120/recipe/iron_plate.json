@@ -1,0 +1,16 @@
+{
+  "type": "ic2_120:damage_tool_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ic2_120:forge_hammer"
+    },
+    {
+      "tag": "ic2_120:compat/ingots/iron"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:iron_plate"
+  }
+}

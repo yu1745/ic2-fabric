@@ -1,0 +1,22 @@
+{
+  "type": "ic2_120:centrifuging",
+  "ingredient": {
+    "item": "ic2_120:crushed_tin"
+  },
+  "input_count": 1,
+  "min_heat": 1000,
+  "results": [
+    {
+      "count": 1,
+      "id": "ic2_120:small_iron_dust"
+    },
+    {
+      "count": 1,
+      "id": "ic2_120:tin_dust"
+    },
+    {
+      "count": 1,
+      "id": "ic2_120:stone_dust"
+    }
+  ]
+}

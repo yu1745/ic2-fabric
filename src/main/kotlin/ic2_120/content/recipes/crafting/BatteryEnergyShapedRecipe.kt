@@ -36,10 +36,10 @@ private val EMPTY_LOOKUP = RegistryWrapper.WrapperLookup.of(Stream.empty())
  * - 成品为 [IElectricTool] 时：写入成品（按 [IElectricTool.maxCapacity] 截断），例如用驱动把手合成钻头。
  * - 成品为 [EnergyStorageBlock.EnergyStorageBlockItem] 时：写回储电盒 NBT。
  */
-class BatteryEnergyShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
+class BatteryEnergyShapedRecipe(delegate: ShapedRecipe, raw: RawShapedRecipe = RawShapedRecipe(delegate.width, delegate.height, delegate.ingredients, Optional.empty())) : ShapedRecipe(
     delegate.group,
     delegate.category,
-    RawShapedRecipe(delegate.width, delegate.height, delegate.ingredients, Optional.empty()),
+    raw,
     delegate.getResult(EMPTY_LOOKUP),
     delegate.showNotification()
 ) {
@@ -163,7 +163,7 @@ object BatteryEnergyShapedRecipeDatagen {
         val raw = RawShapedRecipe.create(ingredientMap, pattern)
         val resultStack = ItemStack(result, count)
         val shaped = ShapedRecipe("", CraftingRecipeCategory.valueOf(category.uppercase()), raw, resultStack)
-        val recipe = BatteryEnergyShapedRecipe(shaped)
+        val recipe = BatteryEnergyShapedRecipe(shaped, raw)
         exporter.accept(recipeId, recipe, null)
     }
 }

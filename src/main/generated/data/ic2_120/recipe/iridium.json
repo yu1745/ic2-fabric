@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120:alloy"
+    },
+    "D": {
+      "tag": "ic2_120:compat/gems/diamond"
+    },
+    "I": {
+      "item": "ic2_120:iridium_ore_item"
+    }
+  },
+  "pattern": [
+    "IAI",
+    "ADA",
+    "IAI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:iridium"
+  }
+}

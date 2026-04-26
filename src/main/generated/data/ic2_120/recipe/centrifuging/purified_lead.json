@@ -1,0 +1,18 @@
+{
+  "type": "ic2_120:centrifuging",
+  "ingredient": {
+    "item": "ic2_120:purified_lead"
+  },
+  "input_count": 1,
+  "min_heat": 2000,
+  "results": [
+    {
+      "count": 1,
+      "id": "ic2_120:small_copper_dust"
+    },
+    {
+      "count": 1,
+      "id": "ic2_120:lead_dust"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "D": {
+      "tag": "ic2_120:compat/dusts/diamond"
+    },
+    "R": {
+      "tag": "ic2_120:compat/dusts/redstone"
+    }
+  },
+  "pattern": [
+    "DRD",
+    "RDR",
+    "DRD"
+  ],
+  "result": {
+    "count": 9,
+    "id": "ic2_120:energium_dust"
+  }
+}

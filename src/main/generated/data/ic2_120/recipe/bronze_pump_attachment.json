@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": {
+      "item": "ic2_120:bronze_plate"
+    },
+    "T": {
+      "item": "ic2_120:bronze_pipe_tiny"
+    }
+  },
+  "pattern": [
+    " P ",
+    " T ",
+    " P "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:bronze_pump_attachment"
+  }
+}

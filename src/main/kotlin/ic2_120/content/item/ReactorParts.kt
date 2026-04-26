@@ -36,7 +36,7 @@ private object CondensatorRepairRecipe {
                 FabricRecipeProvider.hasItem(condensator),
                 FabricRecipeProvider.conditionsFromItem(condensator)
             )
-            .offerTo(exporter, Identifier.of("ic2_120", "${condensator.toString()}_repair_with_${repairItem.toString()}"))
+            .offerTo(exporter, Identifier.of("ic2_120", "${condensator.toString().replace(':','_')}_repair_with_${repairItem.toString().replace(':','_')}"))
     }
 }
 

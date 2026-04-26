@@ -1,0 +1,10 @@
+{
+  "type": "ic2_120:extracting",
+  "ingredient": {
+    "item": "ic2_120:netherrack_dust"
+  },
+  "result": {
+    "count": 1,
+    "id": "ic2_120:small_sulfur_dust"
+  }
+}

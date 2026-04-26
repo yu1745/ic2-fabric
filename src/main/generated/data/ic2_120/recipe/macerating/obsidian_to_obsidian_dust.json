@@ -1,0 +1,10 @@
+{
+  "type": "ic2_120:macerating",
+  "ingredient": {
+    "item": "minecraft:obsidian"
+  },
+  "result": {
+    "count": 1,
+    "id": "ic2_120:obsidian_dust"
+  }
+}

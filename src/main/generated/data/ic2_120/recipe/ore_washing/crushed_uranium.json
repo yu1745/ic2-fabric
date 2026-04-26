@@ -1,0 +1,21 @@
+{
+  "type": "ic2_120:ore_washing",
+  "ingredient": {
+    "item": "ic2_120:crushed_uranium"
+  },
+  "outputs": [
+    {
+      "count": 1,
+      "id": "ic2_120:purified_uranium"
+    },
+    {
+      "count": 1,
+      "id": "ic2_120:stone_dust"
+    },
+    {
+      "count": 2,
+      "id": "ic2_120:small_lead_dust"
+    }
+  ],
+  "water_consumption_mb": 1000
+}

@@ -1,0 +1,18 @@
+{
+  "type": "ic2_120:centrifuging",
+  "ingredient": {
+    "item": "ic2_120:slag"
+  },
+  "input_count": 1,
+  "min_heat": 1500,
+  "results": [
+    {
+      "count": 1,
+      "id": "ic2_120:small_gold_dust"
+    },
+    {
+      "count": 5,
+      "id": "ic2_120:coal_dust"
+    }
+  ]
+}

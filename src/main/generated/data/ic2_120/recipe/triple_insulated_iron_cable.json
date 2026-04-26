@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ic2_120:iron_cable"
+    },
+    {
+      "item": "ic2_120:rubber"
+    },
+    {
+      "item": "ic2_120:rubber"
+    },
+    {
+      "item": "ic2_120:rubber"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:triple_insulated_iron_cable"
+  }
+}

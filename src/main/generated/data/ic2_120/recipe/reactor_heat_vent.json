@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:copper_plate"
+    },
+    "V": {
+      "item": "ic2_120:heat_vent"
+    }
+  },
+  "pattern": [
+    "CCC",
+    "CVC",
+    "CCC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:reactor_heat_vent"
+  }
+}

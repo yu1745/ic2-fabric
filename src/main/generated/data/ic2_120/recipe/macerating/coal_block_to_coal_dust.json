@@ -1,0 +1,10 @@
+{
+  "type": "ic2_120:macerating",
+  "ingredient": {
+    "item": "minecraft:coal_block"
+  },
+  "result": {
+    "count": 9,
+    "id": "ic2_120:coal_dust"
+  }
+}

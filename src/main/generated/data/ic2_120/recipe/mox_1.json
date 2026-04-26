@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "O": {
+      "item": "ic2_120:plutonium"
+    },
+    "X": {
+      "item": "ic2_120:uranium_ingot"
+    }
+  },
+  "pattern": [
+    "XXX",
+    "OOO",
+    "XXX"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:mox"
+  }
+}

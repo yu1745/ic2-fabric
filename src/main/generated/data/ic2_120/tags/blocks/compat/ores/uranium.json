@@ -1,9 +1,0 @@
-{
-  "replace": false,
-  "values": [
-    "#c:ores/uranium",
-    "#forge:ores/uranium",
-    "#c:ores/uranium",
-    "#forge:ores/uranium"
-  ]
-}

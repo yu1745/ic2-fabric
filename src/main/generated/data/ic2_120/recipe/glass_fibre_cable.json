@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "E": {
+      "item": "ic2_120:energium_dust"
+    },
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "S": {
+      "item": "ic2_120:silver_dust"
+    }
+  },
+  "pattern": [
+    "GGG",
+    "ESE",
+    "GGG"
+  ],
+  "result": {
+    "count": 6,
+    "id": "ic2_120:glass_fibre_cable"
+  }
+}

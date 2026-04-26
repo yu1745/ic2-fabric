@@ -25,10 +25,10 @@ private val EMPTY_LOOKUP = RegistryWrapper.WrapperLookup.of(Stream.empty())
 /**
  * 工作台有序配方：消耗参与合成的木龙头，而不是返回损耗后的余物。
  */
-class ConsumeTreetapShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
+class ConsumeTreetapShapedRecipe(delegate: ShapedRecipe, raw: RawShapedRecipe = RawShapedRecipe(delegate.width, delegate.height, delegate.ingredients, Optional.empty())) : ShapedRecipe(
     delegate.group,
     delegate.category,
-    RawShapedRecipe(delegate.width, delegate.height, delegate.ingredients, Optional.empty()),
+    raw,
     delegate.getResult(EMPTY_LOOKUP),
     delegate.showNotification()
 ) {
@@ -74,7 +74,7 @@ object ConsumeTreetapShapedRecipeDatagen {
         val raw = RawShapedRecipe.create(ingredientMap, pattern)
         val resultStack = ItemStack(result, count)
         val shaped = ShapedRecipe("", CraftingRecipeCategory.valueOf(category.uppercase()), raw, resultStack)
-        val recipe = ConsumeTreetapShapedRecipe(shaped)
+        val recipe = ConsumeTreetapShapedRecipe(shaped, raw)
         exporter.accept(recipeId, recipe, null)
     }
 }

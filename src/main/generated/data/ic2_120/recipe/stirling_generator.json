@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:iron_casing"
+    },
+    "G": {
+      "item": "ic2_120:generator"
+    },
+    "H": {
+      "item": "ic2_120:heat_conductor"
+    }
+  },
+  "pattern": [
+    "CHC",
+    "CGC",
+    "CCC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:stirling_generator"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "item": "ic2_120:steel_plate"
+  },
+  "input_count": 9,
+  "result": {
+    "count": 1,
+    "id": "ic2_120:dense_steel_plate"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "ic2_120:battery_energy_shaped",
+  "category": "equipment",
+  "key": {
+    "I": {
+      "item": "ic2_120:iron_plate"
+    },
+    "P": {
+      "item": "ic2_120:power_unit"
+    }
+  },
+  "pattern": [
+    " II",
+    "III",
+    "PI "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:chainsaw"
+  }
+}

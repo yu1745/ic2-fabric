@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "pattern": [
+    "PPP",
+    " S ",
+    "S S"
+  ],
+  "result": {
+    "count": 4,
+    "id": "ic2_120:wooden_scaffold"
+  }
+}

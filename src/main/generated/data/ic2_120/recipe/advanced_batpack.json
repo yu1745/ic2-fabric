@@ -1,0 +1,24 @@
+{
+  "type": "ic2_120:battery_energy_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120:advanced_re_battery"
+    },
+    "C": {
+      "item": "ic2_120:circuit"
+    },
+    "U": {
+      "item": "ic2_120:copper_casing"
+    }
+  },
+  "pattern": [
+    "ACA",
+    "AUA",
+    "A A"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:advanced_batpack"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "ic2_120:bronze_casing"
+    },
+    "L": {
+      "item": "ic2_120:lead_dust"
+    },
+    "S": {
+      "item": "ic2_120:sulfur_dust"
+    },
+    "W": {
+      "item": "ic2_120:insulated_copper_cable"
+    }
+  },
+  "pattern": [
+    "WBW",
+    "BSB",
+    "BLB"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:advanced_re_battery"
+  }
+}

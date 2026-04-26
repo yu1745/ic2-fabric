@@ -31,10 +31,10 @@ private val EMPTY_LOOKUP = RegistryWrapper.WrapperLookup.of(Stream.empty())
 /**
  * 工作台有序配方：消耗参与合成的扳手/电动工具，完全不返回余物，并继承电量累加功能。
  */
-class ConsumeWrenchShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
+class ConsumeWrenchShapedRecipe(delegate: ShapedRecipe, raw: RawShapedRecipe = RawShapedRecipe(delegate.width, delegate.height, delegate.ingredients, Optional.empty())) : ShapedRecipe(
     delegate.group,
     delegate.category,
-    RawShapedRecipe(delegate.width, delegate.height, delegate.ingredients, Optional.empty()),
+    raw,
     delegate.getResult(EMPTY_LOOKUP),
     delegate.showNotification()
 ) {
@@ -164,7 +164,7 @@ object ConsumeWrenchShapedRecipeDatagen {
         val raw = RawShapedRecipe.create(ingredientMap, pattern)
         val resultStack = ItemStack(result, count)
         val shaped = ShapedRecipe("", CraftingRecipeCategory.valueOf(category.uppercase()), raw, resultStack)
-        val recipe = ConsumeWrenchShapedRecipe(shaped)
+        val recipe = ConsumeWrenchShapedRecipe(shaped, raw)
         exporter.accept(recipeId, recipe, null)
     }
 }
