@@ -42,7 +42,7 @@ object ModArmorMaterials {
             enchantability,
             equipSound,
             Supplier { repairIngredient },
-            listOf(ArmorMaterial.Layer(Identifier.of(Ic2_120.MOD_ID, name))),
+            listOf(ArmorMaterial.Layer(Identifier.ofVanilla(name))),
             toughness,
             knockbackResistance
         )
