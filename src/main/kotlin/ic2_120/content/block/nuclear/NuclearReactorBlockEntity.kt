@@ -139,6 +139,11 @@ class NuclearReactorBlockEntity(
         override fun canInsert(variant: FluidVariant): Boolean =
             variant.fluid == ModFluids.COOLANT_STILL
 
+        override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+            if (insertedVariant.isBlank) return 0L
+            return super.insert(insertedVariant, maxAmount, transaction)
+        }
+
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun onFinalCommit() {
@@ -154,6 +159,11 @@ class NuclearReactorBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
         override fun canInsert(variant: FluidVariant): Boolean =
             variant.fluid == ModFluids.HOT_COOLANT_STILL
+
+        override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+            if (insertedVariant.isBlank) return 0L
+            return super.insert(insertedVariant, maxAmount, transaction)
+        }
 
         override fun canExtract(variant: FluidVariant): Boolean = true
 

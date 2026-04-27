@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.item.ItemStack
@@ -96,6 +97,10 @@ class TankBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = this@TankBlockEntity.getCapacity()
         override fun canInsert(variant: FluidVariant): Boolean = true
         override fun canExtract(variant: FluidVariant): Boolean = true
+        override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+            if (insertedVariant.isBlank) return 0L
+            return super.insert(insertedVariant, maxAmount, transaction)
+        }
         override fun onFinalCommit() {
             markDirty()
         }
