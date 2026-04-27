@@ -37,6 +37,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -150,6 +151,12 @@ class FluidBottlerBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = TANK_CAPACITY
         override fun canInsert(variant: FluidVariant): Boolean = true
         override fun canExtract(variant: FluidVariant): Boolean = true
+
+        override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+            if (insertedVariant.isBlank) return 0L
+            return super.insert(insertedVariant, maxAmount, transaction)
+        }
+
         override fun onFinalCommit() {
             sync.fluidAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
             sync.fluidCapacityMb = (TANK_CAPACITY * 1000L / FluidConstants.BUCKET).toInt()

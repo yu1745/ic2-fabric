@@ -159,6 +159,11 @@ class SolarDistillerBlockEntity(
         override fun canInsert(variant: FluidVariant): Boolean =
             variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER
 
+        override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+            if (insertedVariant.isBlank) return 0L
+            return super.insert(insertedVariant, maxAmount, transaction)
+        }
+
         // 不允许外部提取（只能被机器内部消耗）
         override fun canExtract(variant: FluidVariant): Boolean = false
 
@@ -216,6 +221,11 @@ class SolarDistillerBlockEntity(
 
         // 不允许外部插入（只能由机器内部产出）
         override fun canInsert(variant: FluidVariant): Boolean = false
+
+        override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+            if (insertedVariant.isBlank) return 0L
+            return super.insert(insertedVariant, maxAmount, transaction)
+        }
 
         // 允许提取蒸馏水
         override fun canExtract(variant: FluidVariant): Boolean =
