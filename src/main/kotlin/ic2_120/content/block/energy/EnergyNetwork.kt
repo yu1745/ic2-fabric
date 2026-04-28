@@ -129,7 +129,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
 
         for ((_, consumer) in consumers) {
             if (remaining <= 0) break
-            var demandRemaining = simulateInsertion(consumer.storage, Long.MAX_VALUE)
+            var demandRemaining = simulateInsertion(consumer.storage, Long.MAX_VALUE, transaction)
             if (demandRemaining <= 0) continue
 
             val sortedEntries = consumer.entryCables.sortedBy { dijkstra.dist[it] ?: Long.MAX_VALUE }
@@ -151,7 +151,6 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
 
                 val inserted = consumer.storage.insert(stepDemand, transaction)
                 if (inserted > 0) {
-                    updateSnapshots(transaction)
                     val moved = (inserted + pathLossEu).coerceAtMost(pathCapacity)
                     for (cablePosLong in path) {
                         cableTransferRemaining[cablePosLong] =
@@ -190,8 +189,8 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         for ((_, provider) in providers) {
             if (remaining <= 0) break
 
-            val demand = simulateExtraction(provider.storage, remaining)
-            if (demand <= 0) continue
+            val available = simulateExtraction(provider.storage, remaining, transaction)
+            if (available <= 0) continue
 
             val dijkstra = shortestLossFromSourcesCached(provider.entryCables.toSet(), topology.neighbors)
             val lossMilli = dijkstra.dist[cablePos] ?: continue
@@ -205,14 +204,13 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             val maxObtainable = (pathCapacity - pathLossEu).coerceAtLeast(0L)
             if (maxObtainable <= 0) continue
 
-            val stepExtract = minOf(demand, maxObtainable, remaining)
+            val stepExtract = minOf(available, maxObtainable, remaining)
             if (stepExtract <= 0) continue
 
             val needFromProvider = stepExtract + pathLossEu
 
             val extracted = provider.storage.extract(needFromProvider, transaction)
             if (extracted > 0) {
-                updateSnapshots(transaction)
                 val moved = minOf(extracted, pathCapacity)
                 for (cablePosLong in path) {
                     cableTransferRemaining[cablePosLong] =
@@ -827,21 +825,34 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     }
 
     /**
-     * 模拟插入能量，不改变实际存储，因为有事务在，会自动回滚storage
+     * 模拟插入能量，不改变实际存储。
+     * 有父事务时用 [Transaction.openNested] 避免嵌套 [Transaction.openOuter] 异常。
      */
-    private fun simulateInsertion(storage: EnergyStorage, maxAmount: Long): Long {
+    private fun simulateInsertion(storage: EnergyStorage, maxAmount: Long, parentTx: TransactionContext? = null): Long {
         var accepted = 0L
-        Transaction.openOuter().use { tx ->
-            accepted = storage.insert(maxAmount, tx)
+        if (parentTx != null) {
+            Transaction.openNested(parentTx).use { tx ->
+                accepted = storage.insert(maxAmount, tx)
+            }
+        } else {
+            Transaction.openOuter().use { tx ->
+                accepted = storage.insert(maxAmount, tx)
+            }
         }
         return accepted
     }
 
     /** 模拟抽取能量，不改变实际存储。 */
-    private fun simulateExtraction(storage: EnergyStorage, maxAmount: Long): Long {
+    private fun simulateExtraction(storage: EnergyStorage, maxAmount: Long, parentTx: TransactionContext? = null): Long {
         var accepted = 0L
-        Transaction.openOuter().use { tx ->
-            accepted = storage.extract(maxAmount, tx)
+        if (parentTx != null) {
+            Transaction.openNested(parentTx).use { tx ->
+                accepted = storage.extract(maxAmount, tx)
+            }
+        } else {
+            Transaction.openOuter().use { tx ->
+                accepted = storage.extract(maxAmount, tx)
+            }
         }
         return accepted
     }
