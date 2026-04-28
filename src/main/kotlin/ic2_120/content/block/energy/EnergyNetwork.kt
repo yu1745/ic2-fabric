@@ -26,66 +26,47 @@ import kotlin.math.pow
 import java.util.PriorityQueue
 
 /**
- * 电网：一组相互连接的导线共享的能量池。
+ * 电网：一组相互连接的导线。
  *
- * 发电机通过任意成员导线的 [EnergyStorage] 向池中注入能量；
- * 每 game tick 电网自动按“消费者拉取”模型为边界处用电者供电。
+ * 能量传输全部走"直通"路径：
+ * - 外部注入 → 直接找到消费者路径送达，不进池
+ * - 外部抽取 → 直接从 providers 沿路径拉取
+ * - 内部分发 → providers → 路径 → consumers
+ * - 所有路径共享 [cableTransferRemaining] 容量跟踪，确保每根导线每 tick 不超 transferRate
  *
- * 新传输模型：
- * - 对每个消费者，统计到所有供电者（supportsExtraction）的路径；
- * - 按路径损耗（milliEU 总和）从小到大尝试拉取；
- * - 单条路径每 tick 最大可输送量 = 路径上剩余容量最小导线的剩余容量；
- * - 导线一旦被路径使用，会扣减该导线本 tick 临时容量，避免多路径叠加超载。
+ * [energy] 仅用于 BFS 构建时旧网合并的能量中转，分发完毕即归零。
  */
 class EnergyNetwork : SnapshotParticipant<Long>() {
 
     companion object {
-        /** 漏电/低耐压烧毁的检查周期（tick）。x 秒 */
         const val damageIntervalTicks = 100
         val log = LoggerFactory.getLogger("EnergyNetwork")
 
-        // ========== 日志开关配置 ==========
-
-        /** 超压爆炸日志开关：记录电网过压检测、机器爆炸等 */
         var ENABLE_OVERVOLTAGE_LOG = false
-
-        /** 能量传输日志开关：记录能量流动、输入输出等 */
         var ENABLE_ENERGY_TRANSFER_LOG = false
-
-        /** 拓扑构建日志开关：记录电网拓扑构建、输出等级计算等 */
         var ENABLE_TOPOLOGY_LOG = false
-
-        /** 漏电检测日志开关：记录导线漏电、触电伤害等 */
         var ENABLE_LEAK_LOG = false
-
-        /** 导线烧毁日志开关：记录低耐压导线烧毁等 */
         var ENABLE_CABLE_BURN_LOG = false
     }
 
-    /** 低耐压导线烧毁比例（0.0–1.0）。每次检查时随机选择该比例的“耐压低于电网等级”的导线烧毁。 */
     private val underTierCableBurnRatio = 1
 
-    /** 所有成员导线位置（packed [BlockPos.asLong]）。 */
     val cables = mutableSetOf<Long>()
     var energy: Long = 0
     var capacity: Long = 0
-
-    /** 电网输出等级（1–5），由电网内输出等级最高的机器决定，决定所有导线的电压等级。 */
     var outputLevel: Int = 1
-
-    /** 触电伤害触发 tick 偏移（0–199），用于错开不同电网的伤害时机。 */
     var damageTickOffset: Int = 0
 
-    /** 每根导线的损耗 (milliEU)。 */
     private val cableLossMilliEu = mutableMapOf<Long, Long>()
 
-    /** 拓扑缓存：导线邻接、边界连接、每根导线速率。 */
+    /** 本 tick 每根导线的剩余容量。所有传输路径共享此账本，保证不超载。 */
+    private val cableTransferRemaining = mutableMapOf<Long, Long>()
+
+    /** 用于 [cableTransferRemaining] 的 tick 重置检测。 */
+    private var lastResetTime: Long = -1
+
     private var topologyCache: TopologyCache? = null
-
-    /** 按消费者入口导线集合缓存最短路结果（仅拓扑不变时可复用）。 */
     private val dijkstraCacheByEntries = mutableMapOf<String, DijkstraResult>()
-
-    /** 按消费者入口导线集合缓存到全体导线的候选路径（按损耗升序）。 */
     private val bufferedCandidatesCacheByEntries = mutableMapOf<String, List<PathCandidate>>()
     var lastTickTime: Long = -1
 
@@ -102,28 +83,137 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         invalidatePathCaches()
     }
 
-    /** 导线邻接边界发生变化（如相邻机器放置/移除）时，刷新拓扑与路径缓存。 */
     fun invalidateConnectionCaches() {
         invalidatePathCaches()
     }
 
-    fun insert(maxAmount: Long, transaction: TransactionContext): Long {
-        val space = (capacity - energy).coerceAtLeast(0)
-        val toInsert = minOf(maxAmount, space)
-        if (toInsert > 0) {
-            updateSnapshots(transaction)
-            energy += toInsert
+    /** 每 tick 第一次访问时重置容量跟踪。 */
+    private fun ensureCapacityTracking(world: World, cableRates: Map<Long, Long>) {
+        if (lastResetTime == world.time && cableTransferRemaining.isNotEmpty()) return
+        lastResetTime = world.time
+        cableTransferRemaining.clear()
+        for ((pos, rate) in cableRates) {
+            cableTransferRemaining[pos] = rate
         }
-        return toInsert
     }
 
-    fun extract(maxAmount: Long, transaction: TransactionContext): Long {
-        val toExtract = minOf(maxAmount, energy).coerceAtLeast(0)
-        if (toExtract > 0) {
-            updateSnapshots(transaction)
-            energy -= toExtract
+    /**
+     * 外部通过导线向电网注入能量，直接沿路径送往消费者。
+     * 只接收实际送达的量，不进池缓冲。
+     * 注入速率受该导线的 [cableTransferRemaining] 限制。
+     */
+    fun insertAndDeliver(
+        cablePos: Long, maxAmount: Long, world: World, transaction: TransactionContext
+    ): Long {
+        if (maxAmount <= 0 || cables.isEmpty()) return 0
+        val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
+        ensureCapacityTracking(world, topology.cableRates)
+
+        val cableRemaining = cableTransferRemaining[cablePos] ?: return 0
+        if (cableRemaining <= 0) return 0
+
+        val consumers = findConsumers(world, topology)
+        if (consumers.isEmpty()) return 0
+
+        val toInject = minOf(maxAmount, cableRemaining)
+        val dijkstra = shortestLossFromSourcesCached(setOf(cablePos), topology.neighbors)
+
+        var total = 0L
+        var remaining = toInject
+
+        for ((_, consumer) in consumers) {
+            if (remaining <= 0) break
+            val demand = simulateInsertion(consumer.storage, Long.MAX_VALUE)
+            if (demand <= 0) continue
+
+            for (entry in consumer.entryCables) {
+                val lossMilli = dijkstra.dist[entry] ?: continue
+                val path = buildPath(entry, dijkstra.prev)
+                if (path.isEmpty()) continue
+
+                val pathCapacity = path.minOfOrNull { cableTransferRemaining[it] ?: 0L } ?: 0L
+                if (pathCapacity <= 0) continue
+
+                val pathLossEu = (lossMilli + 999) / 1000
+                val maxDeliverable = (pathCapacity - pathLossEu).coerceAtLeast(0L)
+                if (maxDeliverable <= 0) continue
+
+                val stepDemand = minOf(demand, maxDeliverable, remaining)
+                if (stepDemand <= 0) continue
+
+                val inserted = consumer.storage.insert(stepDemand, transaction)
+                if (inserted > 0) {
+                    val moved = (inserted + pathLossEu).coerceAtMost(pathCapacity)
+                    for (cablePosLong in path) {
+                        cableTransferRemaining[cablePosLong] =
+                            (cableTransferRemaining[cablePosLong] ?: 0L) - moved
+                    }
+                    total += inserted
+                    remaining -= inserted
+                }
+                break
+            }
         }
-        return toExtract
+        return total
+    }
+
+    /**
+     * 外部通过导线从电网抽取能量，直接从 providers 沿路径拉取。
+     * 提取速率受该导线的 [cableTransferRemaining] 限制。
+     */
+    fun extractFromCable(
+        cablePos: Long, maxAmount: Long, world: World, transaction: TransactionContext
+    ): Long {
+        if (maxAmount <= 0 || cables.isEmpty()) return 0
+        val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
+        ensureCapacityTracking(world, topology.cableRates)
+
+        val cableRemaining = cableTransferRemaining[cablePos] ?: return 0
+        if (cableRemaining <= 0) return 0
+
+        val providers = findProviders(world, topology)
+        if (providers.isEmpty()) return 0
+
+        val toExtract = minOf(maxAmount, cableRemaining)
+        var total = 0L
+        var remaining = toExtract
+
+        for ((_, provider) in providers) {
+            if (remaining <= 0) break
+
+            val demand = simulateExtraction(provider.storage, remaining)
+            if (demand <= 0) continue
+
+            val dijkstra = shortestLossFromSourcesCached(provider.entryCables.toSet(), topology.neighbors)
+            val lossMilli = dijkstra.dist[cablePos] ?: continue
+            val path = buildPath(cablePos, dijkstra.prev)
+            if (path.isEmpty()) continue
+
+            val pathCapacity = path.minOfOrNull { cableTransferRemaining[it] ?: 0L } ?: 0L
+            if (pathCapacity <= 0) continue
+
+            val pathLossEu = (lossMilli + 999) / 1000
+            val maxObtainable = (pathCapacity - pathLossEu).coerceAtLeast(0L)
+            if (maxObtainable <= 0) continue
+
+            val stepExtract = minOf(demand, maxObtainable, remaining)
+            if (stepExtract <= 0) continue
+
+            val needFromProvider = stepExtract + pathLossEu
+
+            val extracted = provider.storage.extract(needFromProvider, transaction)
+            if (extracted > 0) {
+                val moved = minOf(extracted, pathCapacity)
+                for (cablePosLong in path) {
+                    cableTransferRemaining[cablePosLong] =
+                        (cableTransferRemaining[cablePosLong] ?: 0L) - moved
+                }
+                val deliverable = (extracted - pathLossEu).coerceAtLeast(0L)
+                total += deliverable
+                remaining -= deliverable
+            }
+        }
+        return total
     }
 
     /** 由任一成员导线的 tick 触发；同一 game tick 仅执行一次。 */
@@ -144,7 +234,6 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         }
     }
 
-    /** 漏电导线触电伤害：绝缘等级 < 电网输出等级的导线会漏电。每 10 秒触发，范围与伤害量由电网输出等级决定。 */
     private fun tryUninsulatedCableDamage(world: World) {
         if (world.isClient) return
         val serverWorld = world as? ServerWorld ?: return
@@ -160,7 +249,7 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         val damageSource = createCableShockDamageSource(serverWorld)
         val rangeInt = outputLevel
         val range = rangeInt.toDouble()
-        val damageAmount = outputLevel * 2f // n 心 = n * 2 伤害
+        val damageAmount = outputLevel * 2f
         val leakingCables = topology.cablesThatLeak.toHashSet()
 
         var minX = Int.MAX_VALUE
@@ -193,7 +282,6 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
             if (hasLeakingCableNearby(entity.blockPos, leakingCables, rangeInt)) {
                 entity.damage(damageSource, damageAmount)
                 hurtEntities.add(entity)
-                // log.debug("触电伤害：${entity.name}，电压等级：$outputLevel")
             }
         }
 
@@ -225,11 +313,6 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         return DamageSource(entry)
     }
 
-    /**
-     * 低耐压导线烧毁：电网输出等级高于导线电压等级时，按 [underTierCableBurnRatio] 比例随机烧毁部分导线。
-     * 仅烧毁电压等级 &lt; outputLevel 的导线（如锡线接入含 MFSU 的玻璃纤维电网会被烧，玻璃纤维不烧）。
-     * 烧毁处生成烟雾/火焰粒子，不掉落物品。
-     */
     private fun tryUnderTierCableBurn(world: World) {
         if (world.isClient) return
         val serverWorld = world as? ServerWorld ?: return
@@ -282,13 +365,6 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         }
     }
 
-    /**
-     * 机器耐压检测：与电网相连的机器若有效耐压等级 &lt; 电网 outputLevel，直接爆炸。
-     * 有效耐压 = 机器 [ITieredMachine.tier] + 高压升级带来的 [ITransformerUpgradeSupport.voltageTierBonus]。
-     * 不按比例随机，只要电压等级不对就炸。
-     * [IGenerator] 发电机不参与过压爆炸。
-     * 爆炸威力按电网电压等级：等级 4 对应 10 颗心伤害，每提高 1 级伤害翻倍。
-     */
     private fun tryMachineOvervoltageExplosion(world: World) {
         if (world.isClient) return
         if ((world.time + damageTickOffset) % damageIntervalTicks != 0L) return
@@ -324,14 +400,12 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
                 if (ENABLE_OVERVOLTAGE_LOG) {
                     log.debug("[超压检测]   → 跳过：不是 ITieredMachine")
                 }
-                skippedNotMachineCount++    
+                skippedNotMachineCount++
                 continue
             }
 
-            // 使用分面电压等级，检查从电网方向看向机器时的耐压等级
             val effectiveTier = be.effectiveVoltageTierForSide(boundary.lookupFromNeighborSide)
 
-            // 详细日志：记录过压检测
             val blockState = world.getBlockState(neighborPos)
             val machineTier = be.tier
             val sidedTier = be.getVoltageTierForSide(boundary.lookupFromNeighborSide)
@@ -359,9 +433,8 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
                 continue
             }
 
-            // 触发爆炸
             if (ENABLE_OVERVOLTAGE_LOG) {
-                log.debug("[超压检测]   → 🔥 触发爆炸！电网等级 $outputLevel > 机器耐压 $effectiveTier")
+                log.debug("[超压检测]   → 触发爆炸！电网等级 $outputLevel > 机器耐压 $effectiveTier")
             }
             if (be is Inventory) be.clear()
             world.breakBlock(neighborPos, false)
@@ -378,61 +451,70 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         }
     }
 
-    /** 电网电压等级对应的爆炸威力：等级 4 = 10 颗心伤害（power=2），每提高 1 级伤害翻倍。 */
     private fun explosionPowerForOutputLevel(level: Int): Float {
         if (level <= 0) return 0.25f
         return (2f * 2.0.pow(level - 4)).toFloat()
+    }
+
+    /** 扫描拓扑边界，返回消费者（supportsInsertion）。 */
+    private fun findConsumers(world: World, topology: TopologyCache): Map<Long, Endpoint> {
+        val consumers = mutableMapOf<Long, Endpoint>()
+        for (boundary in topology.boundaries) {
+            val neighborPos = BlockPos.fromLong(boundary.neighborPosLong)
+            val storage = EnergyStorage.SIDED.find(world, neighborPos, boundary.lookupFromNeighborSide) ?: continue
+            if (storage.supportsInsertion()) {
+                val ep = consumers.getOrPut(boundary.neighborPosLong) { Endpoint(storage) }
+                ep.entryCables.add(boundary.cablePosLong)
+                ep.blockPos = boundary.neighborPosLong
+            }
+        }
+        return consumers
+    }
+
+    /** 扫描拓扑边界，返回 providers（supportsExtraction）。 */
+    private fun findProviders(world: World, topology: TopologyCache): Map<Long, Endpoint> {
+        val providers = mutableMapOf<Long, Endpoint>()
+        for (boundary in topology.boundaries) {
+            val neighborPos = BlockPos.fromLong(boundary.neighborPosLong)
+            val storage = EnergyStorage.SIDED.find(world, neighborPos, boundary.lookupFromNeighborSide) ?: continue
+            if (storage.supportsExtraction()) {
+                val ep = providers.getOrPut(boundary.neighborPosLong) { Endpoint(storage) }
+                ep.entryCables.add(boundary.cablePosLong)
+                ep.blockPos = boundary.neighborPosLong
+            }
+        }
+        return providers
     }
 
     private fun pushToConsumers(world: World) {
         if (cables.isEmpty()) return
 
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
+        ensureCapacityTracking(world, topology.cableRates)
 
-        // 初始化所有导线的剩余容量为本 tick 最大载流量
-        val remainingCableCapacity = topology.cableRates.toMutableMap()
+        val consumers = findConsumers(world, topology)
+        val providers = findProviders(world, topology)
 
-        val consumers = mutableMapOf<Long, Endpoint>()
-        val providers = mutableMapOf<Long, Endpoint>()
-
-        for (boundary in topology.boundaries) {
-            val neighborPos = BlockPos.fromLong(boundary.neighborPosLong)
-            val storage = EnergyStorage.SIDED.find(world, neighborPos, boundary.lookupFromNeighborSide) ?: continue
-            if (storage.supportsInsertion()) {
-                val endpoint = consumers.getOrPut(boundary.neighborPosLong) { Endpoint(storage) }
-                endpoint.entryCables.add(boundary.cablePosLong)
-                endpoint.blockPos = boundary.neighborPosLong
-            }
-            if (storage.supportsExtraction()) {
-                val endpoint = providers.getOrPut(boundary.neighborPosLong) { Endpoint(storage) }
-                endpoint.entryCables.add(boundary.cablePosLong)
-                endpoint.blockPos = boundary.neighborPosLong
-            }
-        }
-
-        // 先尝试让消费者从电网缓冲池取能（按路径损耗与路径容量计算）。
+        // Phase 1: 残余池能分发（BFS 合并等场景遗留的 energy，通常一次 tick 即清空）
         for ((_, consumer) in consumers) {
             if (energy <= 0) break
-            pullFromBufferedEnergyByPath(world, consumer, topology.neighbors, remainingCableCapacity)
+            pullFromBufferedEnergyByPath(world, consumer, topology.neighbors)
         }
 
+        // Phase 2: providers → consumers 直送
         if (providers.isNotEmpty()) {
-            // 再按路径损耗从小到大，从所有供电者拉取。
             for ((_, consumer) in consumers) {
-                pullFromProvidersByPath(world, consumer, providers, topology.neighbors, remainingCableCapacity)
+                pullFromProvidersByPath(world, consumer, providers, topology.neighbors)
             }
         }
 
-        // 同步导线负载到 cableLoad（供 Jade 显示）
-        // 无论是否有能量传输都会调用，确保负载显示正确（包括 0）
-        syncCableLoadToLocalStorage(world, topology.cableRates, remainingCableCapacity)
+        syncCableLoadToLocalStorage(world, topology.cableRates)
     }
 
     private fun pullFromBufferedEnergyByPath(
         world: World,
         consumer: Endpoint,
-        neighbors: Map<Long, List<Long>>,
-        remainingCableCapacity: MutableMap<Long, Long>
+        neighbors: Map<Long, List<Long>>
     ) {
         while (energy > 0) {
             val demand = simulateInsertion(consumer.storage, Long.MAX_VALUE)
@@ -444,10 +526,9 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
             var progressed = false
             for (candidate in candidates) {
                 if (energy <= 0) break
-                val pathCapacity = candidate.path.minOfOrNull { remainingCableCapacity[it] ?: 0L } ?: 0L
+                val pathCapacity = candidate.path.minOfOrNull { cableTransferRemaining[it] ?: 0L } ?: 0L
                 if (pathCapacity <= 0) continue
 
-                // 线损向上取整：(milliEU + 999) / 1000，确保"可以多扣不能少扣"
                 val pathLossEu = (candidate.pathLossMilliEu + 999) / 1000
                 val maxDeliverable = (pathCapacity - pathLossEu).coerceAtLeast(0L)
                 if (maxDeliverable <= 0) continue
@@ -466,8 +547,8 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
                         updateSnapshots(tx)
                         energy -= moved
                         for (cablePosLong in candidate.path) {
-                            remainingCableCapacity[cablePosLong] =
-                                (remainingCableCapacity[cablePosLong] ?: 0L) - moved
+                            cableTransferRemaining[cablePosLong] =
+                                (cableTransferRemaining[cablePosLong] ?: 0L) - moved
                         }
 
                         if (ENABLE_ENERGY_TRANSFER_LOG) {
@@ -493,24 +574,20 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         world: World,
         consumer: Endpoint,
         providers: Map<Long, Endpoint>,
-        neighbors: Map<Long, List<Long>>,
-        remainingCableCapacity: MutableMap<Long, Long>
+        neighbors: Map<Long, List<Long>>
     ) {
         while (true) {
             val demand = simulateInsertion(consumer.storage, Long.MAX_VALUE)
             if (demand <= 0) break
-
-            // log.info("demand: $demand")
 
             val candidates = buildProviderCandidates(consumer, providers, neighbors)
             if (candidates.isEmpty()) break
 
             var progressed = false
             for (candidate in candidates) {
-                val pathCapacity = candidate.path.minOfOrNull { remainingCableCapacity[it] ?: 0L } ?: 0L
+                val pathCapacity = candidate.path.minOfOrNull { cableTransferRemaining[it] ?: 0L } ?: 0L
                 if (pathCapacity <= 0) continue
 
-                // 线损向上取整：(milliEU + 999) / 1000，确保"可以多扣不能少扣"
                 val pathLossEu = (candidate.pathLossMilliEu + 999) / 1000
                 val maxDeliverable = (pathCapacity - pathLossEu).coerceAtLeast(0L)
                 if (maxDeliverable <= 0) continue
@@ -532,8 +609,8 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
                     if (inserted > 0) {
                         val moved = (inserted + pathLossEu).coerceAtMost(extracted)
                         for (cablePosLong in candidate.path) {
-                            remainingCableCapacity[cablePosLong] =
-                                (remainingCableCapacity[cablePosLong] ?: 0L) - moved
+                            cableTransferRemaining[cablePosLong] =
+                                (cableTransferRemaining[cablePosLong] ?: 0L) - moved
                         }
 
                         if (ENABLE_ENERGY_TRANSFER_LOG) {
@@ -554,43 +631,26 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
             }
 
             if (!progressed) break
-            //todo 这里好像和ticklimited冲突了
             break
         }
     }
 
-    /**
-     * 同步导线负载到 cableLoad（供 Jade 显示）。
-     *
-     * 负载 = 已使用量 = transferRate - remainingCableCapacity
-     *
-     * 注意：这仅用于显示目的，不影响电网的实际能量传输逻辑。
-     * localEnergy 仍然会在电网重建时被并入网络（保持兼容性）。
-     */
     private fun syncCableLoadToLocalStorage(
         world: World,
-        cableRates: Map<Long, Long>,
-        remainingCableCapacity: Map<Long, Long>
+        cableRates: Map<Long, Long>
     ) {
         if (world.isClient) return
-        // println("====================")
-
         for (cablePosLong in cables) {
-            // 只处理已知导线（避免无效导线）
             if (cablePosLong !in cableLossMilliEu) continue
-
             val transferRate = cableRates[cablePosLong] ?: continue
-            val remaining = remainingCableCapacity[cablePosLong] ?: transferRate
+            val remaining = cableTransferRemaining[cablePosLong] ?: transferRate
             val used = transferRate - remaining
-
-            // 获取导线方块实体并更新 cableLoad
             val pos = BlockPos.fromLong(cablePosLong)
             val be = world.getBlockEntity(pos)
             if (be is ic2_120.content.block.cables.CableBlockEntity) {
                 be.cableLoad = used
             }
         }
-        // println("====================")
     }
 
     private fun buildProviderCandidates(
@@ -599,10 +659,6 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         neighbors: Map<Long, List<Long>>
     ): List<ProviderPath> {
         val candidates = mutableListOf<ProviderPath>()
-
-        // 按每根消费者入口导线分别做 Dijkstra，
-        // 确保每个供电者都有经过不同入口的候选路径。
-        // 当某条路径容量耗尽时，可以 fallback 到通过其他入口的路径。
         for (source in consumer.entryCables) {
             val dijkstra = shortestLossFromSourcesCached(setOf(source), neighbors)
             for ((providerPosLong, provider) in providers) {
@@ -626,7 +682,6 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         val cacheKey = entriesKey(consumer.entryCables)
         bufferedCandidatesCacheByEntries[cacheKey]?.let { return it }
         val candidates = mutableListOf<PathCandidate>()
-        // 按每根消费者入口导线分别做 Dijkstra，生成多路候选
         for (source in consumer.entryCables) {
             val dijkstra = shortestLossFromSourcesCached(setOf(source), neighbors)
             for (cablePosLong in cables) {
@@ -659,7 +714,6 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         entries.sorted().joinToString(",")
 
     private fun trimPathCachesIfNeeded() {
-        // 防止极端场景缓存无限增长（例如频繁移动机器导致入口集合持续变化）
         if (dijkstraCacheByEntries.size > 512) dijkstraCacheByEntries.clear()
         if (bufferedCandidatesCacheByEntries.size > 512) bufferedCandidatesCacheByEntries.clear()
     }
@@ -696,16 +750,11 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
                     boundaries.add(BoundaryEdge(cablePosLong, neighborLong, dir.opposite))
                     val neighborBe = world.getBlockEntity(neighborPos)
                     val storage = EnergyStorage.SIDED.find(world, neighborPos, dir.opposite)
-                    //电网输出等级计算：只考虑向电网输出能量的面（输出面） 例子：mfsu被接在低压电网充电不应该拉高电压等级，mfsu的输出面并没有接入电网
-                    //supportsExtraction() = true 表示机器可以从该方向输出能量
-                    //使用分面电压等级，支持变压器等不同面电压不同的设备
                     if (neighborBe is ITieredMachine && storage?.supportsExtraction() == true) {
-                        //对于被查询电压等级的机器，反向才是面向导线的方向
                         val tierForSide = neighborBe.effectiveVoltageTierForSide(dir.opposite)
                         val oldMax = maxLevel
                         maxLevel = maxOf(maxLevel, tierForSide)
 
-                        // 详细日志：记录电压等级检测
                         if (ENABLE_TOPOLOGY_LOG) {
                             val blockName = world.getBlockState(neighborPos).block.toString()
                             val machineTier = neighborBe.tier
@@ -726,7 +775,6 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
                             }
                         }
                     } else if (ENABLE_TOPOLOGY_LOG && neighborBe is ITieredMachine && storage?.supportsExtraction() == true && storage.supportsInsertion()) {
-                        // 详细日志：记录跳过的输入输出面
                         val blockName = world.getBlockState(neighborPos).block.toString()
                         val machineTier = neighborBe.tier
                         val sidedTier = neighborBe.getVoltageTierForSide(dir)
@@ -772,26 +820,32 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
      */
     private fun simulateInsertion(storage: EnergyStorage, maxAmount: Long): Long {
         var accepted = 0L
-        // println("tx open")
         Transaction.openOuter().use { tx ->
             accepted = storage.insert(maxAmount, tx)
         }
-        // println("tx close")
+        return accepted
+    }
 
+    /** 模拟抽取能量，不改变实际存储。 */
+    private fun simulateExtraction(storage: EnergyStorage, maxAmount: Long): Long {
+        var accepted = 0L
+        Transaction.openOuter().use { tx ->
+            accepted = storage.extract(maxAmount, tx)
+        }
         return accepted
     }
 
     private data class Endpoint(
         val storage: EnergyStorage,
         val entryCables: MutableSet<Long> = mutableSetOf(),
-        var blockPos: Long? = null  // 记录方块位置用于日志
+        var blockPos: Long? = null
     )
 
     private data class ProviderPath(
         val provider: EnergyStorage,
         val path: List<Long>,
         val pathLossMilliEu: Long,
-        val providerPos: Long? = null  // 记录供电者位置用于日志
+        val providerPos: Long? = null
     )
 
     private data class PathCandidate(
@@ -866,10 +920,8 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
         return reversed
     }
 
-    /** 获取每根导线应分摊的能量（用于 NBT 持久化）。 */
     fun getEnergySharePerCable(): Long {
         val count = cables.size
         return if (count > 0) energy / count else 0
     }
 }
-

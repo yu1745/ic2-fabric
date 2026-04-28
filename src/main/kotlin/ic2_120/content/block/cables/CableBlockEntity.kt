@@ -48,12 +48,16 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         override fun getCapacity(): Long = 0
 
         override fun insert(maxAmount: Long, transaction: TransactionContext): Long {
-            return network?.insert(maxAmount, transaction) ?: 0
+            val w = world ?: return 0
+            val net = network ?: return 0
+            return net.insertAndDeliver(this@CableBlockEntity.pos.asLong(), maxAmount, w, transaction)
         }
 
 
         override fun extract(maxAmount: Long, transaction: TransactionContext): Long {
-            return network?.extract(maxAmount, transaction) ?: 0
+            val w = world ?: return 0
+            val net = network ?: return 0
+            return net.extractFromCable(this@CableBlockEntity.pos.asLong(), maxAmount, w, transaction)
         }
     }
 
