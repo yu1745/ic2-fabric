@@ -36,7 +36,7 @@ import java.util.PriorityQueue
  *
  * [energy] 仅用于 BFS 构建时旧网合并的能量中转，分发完毕即归零。
  */
-class EnergyNetwork : SnapshotParticipant<Long>() {
+class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
 
     companion object {
         const val damageIntervalTicks = 100
@@ -70,9 +70,15 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
     private val bufferedCandidatesCacheByEntries = mutableMapOf<String, List<PathCandidate>>()
     var lastTickTime: Long = -1
 
-    override fun createSnapshot(): Long = energy
-    override fun readSnapshot(snapshot: Long) {
-        energy = snapshot
+    override fun createSnapshot(): NetworkSnapshot = NetworkSnapshot(
+        energy = energy,
+        cableTransferRemaining = cableTransferRemaining.toMutableMap()
+    )
+
+    override fun readSnapshot(snapshot: NetworkSnapshot) {
+        energy = snapshot.energy
+        cableTransferRemaining.clear()
+        cableTransferRemaining.putAll(snapshot.cableTransferRemaining)
     }
 
     fun addCable(pos: BlockPos, transferRate: Long, lossMilliEu: Long) {
@@ -123,10 +129,12 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
 
         for ((_, consumer) in consumers) {
             if (remaining <= 0) break
-            val demand = simulateInsertion(consumer.storage, Long.MAX_VALUE)
-            if (demand <= 0) continue
+            var demandRemaining = simulateInsertion(consumer.storage, Long.MAX_VALUE)
+            if (demandRemaining <= 0) continue
 
-            for (entry in consumer.entryCables) {
+            val sortedEntries = consumer.entryCables.sortedBy { dijkstra.dist[it] ?: Long.MAX_VALUE }
+            for (entry in sortedEntries) {
+                if (remaining <= 0 || demandRemaining <= 0) break
                 val lossMilli = dijkstra.dist[entry] ?: continue
                 val path = buildPath(entry, dijkstra.prev)
                 if (path.isEmpty()) continue
@@ -138,11 +146,12 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
                 val maxDeliverable = (pathCapacity - pathLossEu).coerceAtLeast(0L)
                 if (maxDeliverable <= 0) continue
 
-                val stepDemand = minOf(demand, maxDeliverable, remaining)
+                val stepDemand = minOf(demandRemaining, maxDeliverable, remaining)
                 if (stepDemand <= 0) continue
 
                 val inserted = consumer.storage.insert(stepDemand, transaction)
                 if (inserted > 0) {
+                    updateSnapshots(transaction)
                     val moved = (inserted + pathLossEu).coerceAtMost(pathCapacity)
                     for (cablePosLong in path) {
                         cableTransferRemaining[cablePosLong] =
@@ -150,8 +159,8 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
                     }
                     total += inserted
                     remaining -= inserted
+                    demandRemaining -= inserted
                 }
-                break
             }
         }
         return total
@@ -203,6 +212,7 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
 
             val extracted = provider.storage.extract(needFromProvider, transaction)
             if (extracted > 0) {
+                updateSnapshots(transaction)
                 val moved = minOf(extracted, pathCapacity)
                 for (cablePosLong in path) {
                     cableTransferRemaining[cablePosLong] =
@@ -631,6 +641,7 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
             }
 
             if (!progressed) break
+            // 有意保持每 tick 单轮扫描：对当前线性能量容器，一轮完整候选遍历已足够。
             break
         }
     }
@@ -870,6 +881,11 @@ class EnergyNetwork : SnapshotParticipant<Long>() {
     private data class DijkstraResult(
         val dist: Map<Long, Long>,
         val prev: Map<Long, Long?>
+    )
+
+    data class NetworkSnapshot(
+        val energy: Long,
+        val cableTransferRemaining: MutableMap<Long, Long>
     )
 
     private fun shortestLossFromSources(
