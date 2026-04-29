@@ -46,6 +46,14 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
+import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage
+import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
@@ -748,10 +756,109 @@ class AlloyChestplate : ArmorItem(ALLOY_ARMOR, ArmorItem.Type.CHESTPLATE, Item.S
 /**
  * 建筑泡沫背包 (CF Pack)
  * 碳纤维强化背包，用于存储和喷射建筑泡沫的特殊物品。
+ * 存储 80 桶建筑泡沫，装备时自动补充喷枪并为喷枪提供泡沫源。
  * 作为胸甲装备。
  */
 @ModItem(name = "cf_pack", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
+class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1).maxDamage(0)) {
+
+    override fun inventoryTick(stack: ItemStack, world: World, entity: Entity, slot: Int, selected: Boolean) {
+        super.inventoryTick(stack, world, entity, slot, selected)
+        if (world.isClient) return
+        val player = entity as? PlayerEntity ?: return
+        if (player.getEquippedStack(EquipmentSlot.CHEST) !== stack) return
+        autoRefillSprayer(player, stack)
+    }
+
+    private fun autoRefillSprayer(player: PlayerEntity, cfPackStack: ItemStack) {
+        var available = getFluidAmount(cfPackStack)
+        if (available <= 0L) return
+
+        for (i in 0 until player.inventory.main.size) {
+            val s = player.inventory.getStack(i)
+            if (s.item !is FoamSprayerItem) continue
+            val current = FoamSprayerItem.getFluidAmount(s)
+            if (current >= FoamSprayerItem.CAPACITY_DROPLETS) continue
+            val need = FoamSprayerItem.CAPACITY_DROPLETS - current
+            val transfer = minOf(need, available)
+            if (transfer <= 0L) continue
+            FoamSprayerItem.setFluidAmount(s, current + transfer)
+            available -= transfer
+            setFluidAmount(cfPackStack, available)
+            if (available <= 0L) break
+        }
+    }
+
+    override fun appendTooltip(
+        stack: ItemStack,
+        context: Item.TooltipContext,
+        tooltip: MutableList<Text>,
+        type: TooltipType
+    ) {
+        super.appendTooltip(stack, context, tooltip, type)
+        val amt = getFluidAmount(stack)
+        val buckets = amt * 1000L / FluidConstants.BUCKET
+        val maxBuckets = CAPACITY_DROPLETS * 1000L / FluidConstants.BUCKET
+        tooltip.add(
+            Text.literal("建筑泡沫: ${buckets / 1000}.${(buckets % 1000) / 100}桶 / ${maxBuckets / 1000}桶")
+                .formatted(Formatting.GRAY)
+        )
+        tooltip.add(
+            Text.literal("装备时自动为建筑泡沫喷枪补充泡沫")
+                .formatted(Formatting.DARK_AQUA)
+        )
+    }
+
+    override fun isItemBarVisible(stack: ItemStack): Boolean = true
+
+    override fun getItemBarStep(stack: ItemStack): Int {
+        val amt = getFluidAmount(stack)
+        if (amt <= 0L) return 0
+        return (13.0 * amt.toDouble() / CAPACITY_DROPLETS.toDouble()).toInt().coerceIn(1, 13)
+    }
+
+    override fun getItemBarColor(stack: ItemStack): Int = 0xFF_6B8E9F.toInt()
+
+    companion object {
+        private const val NBT_FLUID_DROPLETS = "CfPackFoamDroplets"
+
+        val CAPACITY_DROPLETS: Long = FluidConstants.BUCKET * 80L
+
+        fun getFluidAmount(stack: ItemStack): Long {
+            if (stack.isEmpty || stack.item !is CfPack) return 0L
+            return stack.getCustomData()?.getLong(NBT_FLUID_DROPLETS)?.coerceIn(0L, CAPACITY_DROPLETS) ?: 0L
+        }
+
+        fun setFluidAmount(stack: ItemStack, amount: Long) {
+            if (stack.isEmpty || stack.item !is CfPack) return
+            val v = amount.coerceIn(0L, CAPACITY_DROPLETS)
+            if (v <= 0L) {
+                stack.editCustomData { it.remove(NBT_FLUID_DROPLETS) }
+            } else {
+                stack.editCustomData { it.putLong(NBT_FLUID_DROPLETS, v) }
+            }
+        }
+
+        @RecipeProvider
+        fun generateRecipes(exporter: RecipeExporter) {
+            val sprayer = FoamSprayerItem::class.instance()
+            val circuit = Circuit::class.instance()
+            val emptyCell = EmptyCell::class.instance()
+            val casing = IronCasing::class.instance()
+            if (sprayer != Items.AIR && circuit != Items.AIR && emptyCell != Items.AIR && casing != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CfPack::class.instance(), 1)
+                    .pattern("xox")
+                    .pattern("yzy")
+                    .pattern("y y")
+                    .input('x', sprayer)
+                    .input('o', circuit)
+                    .input('y', emptyCell)
+                    .input('z', casing)
+                    .criterion(hasItem(sprayer), conditionsFromItem(sprayer))
+                    .offerTo(exporter, CfPack::class.id())
+            }
+        }
+    }
 }
 
 /**
@@ -1247,3 +1354,64 @@ class LapPack : BatteryPackArmorItem(LAPPACK_ARMOR, tier = 4, maxCapacity = 60_0
         }
     }
 }
+
+internal class CfPackFluidStorage(
+    private val ctx: ContainerItemContext
+) : Storage<FluidVariant> {
+
+    override fun supportsInsertion(): Boolean = true
+
+    override fun supportsExtraction(): Boolean = true
+
+    override fun insert(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+        StoragePreconditions.notBlankNotNegative(resource, maxAmount)
+        if (ctx.itemVariant.item !is CfPack) return 0L
+        val fluid = resource.fluid
+        if (!isConstructionFoamFluid(fluid)) return 0L
+        val stack = ctx.itemVariant.toStack(1)
+        val current = CfPack.getFluidAmount(stack)
+        val space = CfPack.CAPACITY_DROPLETS - current
+        if (space <= 0L) return 0L
+        val inserted = minOf(maxAmount, space)
+        if (inserted <= 0L) return 0L
+        CfPack.setFluidAmount(stack, current + inserted)
+        return if (ctx.exchange(ItemVariant.of(stack), 1, transaction) == 1L) inserted else 0L
+    }
+
+    override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+        StoragePreconditions.notBlankNotNegative(resource, maxAmount)
+        if (ctx.itemVariant.item !is CfPack) return 0L
+        val stack = ctx.itemVariant.toStack(1)
+        val current = CfPack.getFluidAmount(stack)
+        if (current <= 0L) return 0L
+        if (!resource.isBlank && !isConstructionFoamFluid(resource.fluid)) return 0L
+        val extracted = minOf(maxAmount, current)
+        if (extracted <= 0L) return 0L
+        CfPack.setFluidAmount(stack, current - extracted)
+        return if (ctx.exchange(ItemVariant.of(stack), 1, transaction) == 1L) extracted else 0L
+    }
+
+    override fun iterator(): MutableIterator<StorageView<FluidVariant>> {
+        if (ctx.itemVariant.item !is CfPack) {
+            return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
+        }
+        val stack = ctx.itemVariant.toStack(1)
+        val amt = CfPack.getFluidAmount(stack)
+        if (amt <= 0L) {
+            return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
+        }
+        val variant = FluidVariant.of(ic2_120.content.fluid.ModFluids.CONSTRUCTION_FOAM_STILL)
+        val view = object : StorageView<FluidVariant> {
+            override fun getResource(): FluidVariant = variant
+            override fun getAmount(): Long = amt
+            override fun getCapacity(): Long = CfPack.CAPACITY_DROPLETS
+            override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long =
+                this@CfPackFluidStorage.extract(resource, maxAmount, transaction)
+            override fun isResourceBlank(): Boolean = false
+        }
+        return mutableListOf(view).iterator() as MutableIterator<StorageView<FluidVariant>>
+    }
+}
+
+private fun isConstructionFoamFluid(fluid: net.minecraft.fluid.Fluid): Boolean =
+    fluid == ic2_120.content.fluid.ModFluids.CONSTRUCTION_FOAM_STILL || fluid == ic2_120.content.fluid.ModFluids.CONSTRUCTION_FOAM_FLOWING

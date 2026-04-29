@@ -768,6 +768,9 @@ object CellAndBucketFluidRegistration {
         val foamSprayer = Registries.ITEM.get(Identifier.of(modId, "foam_sprayer"))
         FluidStorage.ITEM.registerForItems({ _, ctx -> FoamSprayerFluidStorage(ctx) }, foamSprayer)
 
+        val cfPack = Registries.ITEM.get(Identifier.of(modId, "cf_pack"))
+        FluidStorage.ITEM.registerForItems({ _, ctx -> CfPackFluidStorage(ctx) }, cfPack)
+
         // 遍历所有流体，将满流体单元注册到创造模式物品栏（IC2 材料）
         // 排除已有独立单元类的本mod流体
         val modFluidCells = setOf(

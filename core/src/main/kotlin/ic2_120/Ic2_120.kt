@@ -59,6 +59,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import net.fabricmc.fabric.api.registry.FuelRegistry
+import ic2_120.content.item.CfPack
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.CreativeTabIconItemsRegistration
@@ -226,6 +227,14 @@ object Ic2_120 : ModInitializer {
                 FoamSprayerItem.setFluidAmount(it, FoamSprayerItem.CAPACITY_DROPLETS)
             }
             entries.addAfterUnique(sprayer, fullSprayer)
+
+            val cfPack = Registries.ITEM.get(Identifier.of(MOD_ID, "cf_pack"))
+            if (cfPack != Items.AIR) {
+                val fullCfPack = ItemStack(cfPack).also {
+                    CfPack.setFluidAmount(it, CfPack.CAPACITY_DROPLETS)
+                }
+                entries.addAfterUnique(cfPack, fullCfPack)
+            }
         }
 
         // 杂交作物初始种子袋（三维属性 1/1/1）加入作物种子物品栏
