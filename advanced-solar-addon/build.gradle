@@ -23,7 +23,7 @@ tasks.named('runDatagen') {
 }
 
 dependencies {
-	modImplementation project(":")
+	implementation project(path: ":core", configuration: "namedElements")
 }
 
 processResources {

@@ -1,0 +1,117 @@
+import net.fabricmc.loom.api.remapping.RemapperParameters
+
+def addRemapperExtensionByClassName = { loomExt, String extensionClassName ->
+	def holderClass = Class.forName("net.fabricmc.loom.extension.RemapperExtensionHolder")
+	def holder = objects.newInstance(holderClass, RemapperParameters.None.INSTANCE)
+	holder.getRemapperExtensionClass().set(extensionClassName)
+	loomExt.getRemapperExtensions().add(holder)
+}
+
+def ciRunNumberProvider = providers.environmentVariable("GITHUB_RUN_NUMBER").orElse("0")
+def githubRepositoryProvider = providers.environmentVariable("GITHUB_REPOSITORY").orElse("yu1745/ic2-fabric")
+def generatedBuildInfoDir = layout.buildDirectory.dir("generated/resources")
+def generatedBuildInfoFile = generatedBuildInfoDir.map { it.file("assets/ic2_120/build_info.json") }
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+loom {
+	splitEnvironmentSourceSets()
+	accessWidenerPath = file("src/main/resources/ic2_120.accesswidener")
+
+	mods {
+		"ic2_120" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+
+	addRemapperExtensionByClassName(delegate, "ic2_120.gradle.IgnoreMappingConflictsExtension")
+
+	runs {
+		client {
+			vmArgs '-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8'
+			programArgs '--width', '2560', '--height', '1440'
+		}
+		server {
+			vmArgs '-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8'
+		}
+	}
+}
+
+fabricApi {
+	configureDataGeneration {
+		client = true
+	}
+}
+
+dependencies {
+	include modImplementation("teamreborn:energy:${project.energy_api_version}") {
+		exclude group: "net.fabricmc"
+		exclude group: "net.fabricmc.fabric-api"
+	}
+
+	modCompileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api-intermediary:${project.jei_version}")
+	modCompileOnlyApi("maven.modrinth:jade:${project.jade_version}")
+
+	modCompileOnly("dev.ftb.mods:ftb-chunks-fabric:${project.ftb_chunks_version}") { transitive = false }
+	modCompileOnly("dev.ftb.mods:ftb-library-fabric:${project.ftb_library_version}") { transitive = false }
+	modCompileOnly("dev.ftb.mods:ftb-teams-fabric:${project.ftb_teams_version}") { transitive = false }
+	modCompileOnly("dev.architectury:architectury-fabric:${project.architectury_version}")
+
+	include implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}")
+	include implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}")
+	include implementation("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}")
+	include implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.jackson_version}")
+}
+
+tasks.register("generateBuildInfo") {
+	inputs.property("ciRunNumber", ciRunNumberProvider)
+	inputs.property("githubRepository", githubRepositoryProvider)
+	outputs.file(generatedBuildInfoFile)
+
+	doLast {
+		def repo = githubRepositoryProvider.get()
+		def repoParts = repo.split("/", 2)
+		def payload = [
+			ciRunNumber    : Integer.parseInt(ciRunNumberProvider.get()),
+			repositoryOwner: repoParts.length > 0 ? repoParts[0] : "",
+			repositoryName : repoParts.length > 1 ? repoParts[1] : ""
+		]
+		def outputFile = generatedBuildInfoFile.get().asFile
+		outputFile.parentFile.mkdirs()
+		outputFile.setText(
+			groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(payload)),
+			"UTF-8"
+		)
+	}
+}
+
+processResources {
+	inputs.property "version", project.version
+	inputs.property "ciRunNumber", ciRunNumberProvider
+	inputs.property "githubRepository", githubRepositoryProvider
+	dependsOn(tasks.named("generateBuildInfo"))
+	from(generatedBuildInfoDir)
+
+	filesMatching("fabric.mod.json") {
+		expand "version": inputs.properties.version
+	}
+}
+
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
+			from components.java
+		}
+	}
+
+	repositories {
+		mavenLocal()
+	}
+}
