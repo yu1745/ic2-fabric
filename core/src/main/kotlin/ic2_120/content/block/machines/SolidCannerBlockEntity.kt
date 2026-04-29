@@ -20,8 +20,11 @@ import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.content.item.EmptyFuelRodItem
+import ic2_120.content.item.EmptyTinCanItem
+import ic2_120.content.item.FilledTinCanItem
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
+import ic2_120.registry.instance
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModBlockEntity
@@ -37,7 +40,8 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
-import net.minecraft.recipe.input.SingleStackRecipeInput
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.recipe.input.RecipeInput
 import net.minecraft.nbt.NbtCompound
 
 import net.minecraft.screen.ScreenHandler
@@ -206,19 +210,37 @@ class SolidCannerBlockEntity(
             return
         }
 
-        val match = world.recipeManager.getFirstMatch(getRecipeType<SolidCannerRecipe>(), SingleStackRecipeInput(tinCan.copyWithCount(1)), world)
-        if (match.isEmpty) {
+        val recipeInput = object : RecipeInput {
+            override fun getStackInSlot(slot: Int) = when (slot) {
+                0 -> tinCan.copyWithCount(1)
+                1 -> food.copyWithCount(1)
+                else -> ItemStack.EMPTY
+            }
+            override fun getSize() = 2
+            override fun isEmpty() = false
+        }
+        val match = world.recipeManager.getFirstMatch(getRecipeType<SolidCannerRecipe>(), recipeInput, world)
+
+        val result: ItemStack
+        val slot0InputCount: Int
+        val slot1InputCount: Int
+
+        if (match.isPresent) {
+            val recipe = match.get().value()
+            result = recipe.output.copy()
+            slot0InputCount = recipe.slot0Count
+            slot1InputCount = recipe.slot1Count
+        } else if (tinCan.item is EmptyTinCanItem && food.get(DataComponentTypes.FOOD) != null) {
+            val canCount = food.get(DataComponentTypes.FOOD)!!.nutrition.coerceAtLeast(1)
+            result = ItemStack(FilledTinCanItem::class.instance(), canCount)
+            slot0InputCount = canCount
+            slot1InputCount = 1
+        } else {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
         }
-
-        val recipe = match.get().value()
-        val result = recipe.output.copy()
-        val slot0InputCount = recipe.slot0Count
-        val slot1InputCount = recipe.slot1Count
-
         if (tinCan.count < slot0InputCount || food.count < slot1InputCount) {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)
@@ -284,5 +306,6 @@ class SolidCannerBlockEntity(
 
     private fun isFoodInput(stack: ItemStack): Boolean =
         !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is IUpgradeItem &&
-            world?.recipeManager?.values()?.any { it is SolidCannerRecipe && it.slot1Ingredient.test(stack) } == true
+            (world?.recipeManager?.values()?.any { it is SolidCannerRecipe && it.slot1Ingredient.test(stack) } == true
+             || stack.get(DataComponentTypes.FOOD) != null)
 }

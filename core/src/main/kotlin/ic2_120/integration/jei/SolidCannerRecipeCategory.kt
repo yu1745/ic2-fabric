@@ -40,7 +40,7 @@ class SolidCannerRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<SolidCa
 
         // 左侧下方：槽1（食物 或 核燃料）
         builder.addSlot(RecipeIngredientRole.INPUT, 20, 31)
-            .addItemStack(recipe.slot1)
+            .addItemStacks(recipe.slot1)
 
         // 右侧：产出
         builder.addSlot(RecipeIngredientRole.OUTPUT, 102, 20)
