@@ -55,8 +55,12 @@ jobs:
           path: build-output
       - name: filter mod jar
         run: |
+          set -x
           mkdir -p mod-release
-          find build-output \( -name 'ic2_120-*.jar' -o -name 'ic2_120_advanced_solar_addon-*.jar' \) -type f | while read f; do
+          shopt -s globstar nullglob
+          for f in build-output/**/ic2_120-*.jar build-output/**/ic2_120_advanced_solar_addon-*.jar; do
+            [[ "$f" != *-sources* && "$f" != *-remapped* ]] && cp "$f" "mod-release/$(basename "$f" .jar)-mc1.20.1.jar" || true
+          done
             [[ "$f" != *-sources* && "$f" != *-remapped* ]] && cp "$f" "mod-release/$(basename "$f" .jar)-mc1.20.1.jar"
           done
           # 复制运行时依赖到 release
