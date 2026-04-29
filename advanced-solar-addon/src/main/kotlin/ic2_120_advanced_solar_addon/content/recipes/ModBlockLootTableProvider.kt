@@ -13,14 +13,16 @@ import net.minecraft.loot.function.ExplosionDecayLootFunction
 import net.minecraft.loot.provider.number.ConstantLootNumberProvider
 import net.minecraft.predicate.item.ItemPredicate
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
+import java.util.concurrent.CompletableFuture
 
-class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTableProvider(output) {
+class ModBlockLootTableProvider(output: FabricDataOutput, registryLookup: CompletableFuture<RegistryWrapper.WrapperLookup>) : FabricBlockLootTableProvider(output, registryLookup) {
 
     private val wrenchPredicateBuilder = ItemPredicate.Builder.create()
         .items(
-            Registries.ITEM.get(Identifier("ic2_120", "wrench")),
-            Registries.ITEM.get(Identifier("ic2_120", "electric_wrench"))
+            Registries.ITEM.get(Identifier.of("ic2_120", "wrench")),
+            Registries.ITEM.get(Identifier.of("ic2_120", "electric_wrench"))
         )
 
     override fun generate() {

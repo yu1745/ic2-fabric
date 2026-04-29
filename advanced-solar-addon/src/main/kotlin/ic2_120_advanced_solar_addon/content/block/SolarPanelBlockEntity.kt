@@ -10,8 +10,10 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
+import io.netty.buffer.Unpooled
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.server.network.ServerPlayerEntity
@@ -38,7 +40,7 @@ abstract class SolarPanelBlockEntity(
     maxStorage: Long,
     override val tier: Int,
     activeProperty: BooleanProperty
-) : MachineBlockEntity(type, pos, state), IGenerator, ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), IGenerator, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     @Suppress("unused")
     val syncedData = SyncedData(this)
@@ -149,22 +151,24 @@ abstract class SolarPanelBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         SolarPanelScreenHandler(syncId, playerInventory, ScreenHandlerContext.create(world!!, pos), syncedData)
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     protected open fun getBlockName(): String = "advanced_solar_panel"
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         sync.restoreEnergy(nbt.getLong(SolarPanelSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
         generationState = GenerationState.values()[nbt.getInt("state").coerceIn(0, 2)]
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         nbt.putLong(SolarPanelSync.NBT_ENERGY, sync.amount)
         nbt.putInt("state", generationState.ordinal)
         syncedData.writeNbt(nbt)

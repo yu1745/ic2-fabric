@@ -13,8 +13,10 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
+import io.netty.buffer.Unpooled
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.server.network.ServerPlayerEntity
@@ -35,7 +37,7 @@ class MolecularTransformerBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(MolecularTransformerBlockEntity::class.type(), pos, state),
-    Inventory, ITieredMachine, ExtendedScreenHandlerFactory {
+    Inventory, ITieredMachine, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     companion object {
         const val TIER = 10
@@ -95,7 +97,7 @@ class MolecularTransformerBlockEntity(
             // Recipe may become invalid while processing (input changed/output blocked).
             if (!canOutput(recipe.output, outputStack) ||
                 inputStack.isEmpty ||
-                !ItemStack.canCombine(recipe.input, inputStack) ||
+                !ItemStack.areItemsAndComponentsEqual(recipe.input, inputStack) ||
                 inputStack.count < recipe.input.count
             ) {
                 currentRecipe = null
@@ -140,7 +142,7 @@ class MolecularTransformerBlockEntity(
 
     private fun canOutput(output: ItemStack, currentOutput: ItemStack): Boolean {
         if (currentOutput.isEmpty) return true
-        if (!ItemStack.canCombine(currentOutput, output)) return false
+        if (!ItemStack.areItemsAndComponentsEqual(currentOutput, output)) return false
         return currentOutput.count + output.count <= currentOutput.maxCount
     }
 
@@ -156,22 +158,24 @@ class MolecularTransformerBlockEntity(
             syncedData
         )
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt, inventory, lookup)
         energyUsed = nbt.getLong("energyUsed")
         sync.restoreEnergy(nbt.getLong(MolecularTransformerSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
         nbt.putLong("energyUsed", energyUsed)
         nbt.putLong(MolecularTransformerSync.NBT_ENERGY, sync.amount)
         syncedData.writeNbt(nbt)

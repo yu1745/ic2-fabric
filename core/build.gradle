@@ -20,7 +20,6 @@ base {
 }
 
 loom {
-	splitEnvironmentSourceSets()
 	accessWidenerPath = file("src/main/resources/ic2_120.accesswidener")
 
 	mods {

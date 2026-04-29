@@ -12,8 +12,6 @@ import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.RotationAxis
-import org.joml.Matrix3f
-import org.joml.Matrix4f
 
 class MolecularTransformerBlockEntityRenderer(
     context: BlockEntityRendererFactory.Context
@@ -125,45 +123,43 @@ class MolecularTransformerBlockEntityRenderer(
         sizeX: Int, sizeY: Int, sizeZ: Int
     ) {
         val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val norm = entry.normalMatrix
 
         val x1 = coords[0]; val y1 = coords[1]; val z1 = coords[2]
         val x2 = coords[3]; val y2 = coords[4]; val z2 = coords[5]
         val w = sizeX.toFloat(); val h = sizeY.toFloat(); val d = sizeZ.toFloat()
 
         // Top (+Y)
-        quad(vc, pos, norm, light, overlay,
+        quad(vc, entry, light, overlay,
             x1, y2, z2,  x2, y2, z2,  x2, y2, z1,  x1, y2, z1,
             (texU+d)/TW, texV/TH, (texU+d+w)/TW, (texV+d)/TH,
             0f, 1f, 0f)
 
         // Bottom (-Y)
-        quad(vc, pos, norm, light, overlay,
+        quad(vc, entry, light, overlay,
             x1, y1, z1,  x2, y1, z1,  x2, y1, z2,  x1, y1, z2,
             (texU+d+w)/TW, texV/TH, (texU+d+2*w)/TW, (texV+d)/TH,
             0f, -1f, 0f)
 
         // North (-Z)
-        quad(vc, pos, norm, light, overlay,
+        quad(vc, entry, light, overlay,
             x2, y2, z1,  x1, y2, z1,  x1, y1, z1,  x2, y1, z1,
             (texU+d+w)/TW, (texV+d)/TH, (texU+d)/TW, (texV+d+h)/TH,
             0f, 0f, -1f)
 
         // South (+Z)
-        quad(vc, pos, norm, light, overlay,
+        quad(vc, entry, light, overlay,
             x1, y2, z2,  x2, y2, z2,  x2, y1, z2,  x1, y1, z2,
             (texU+d)/TW, (texV+d)/TH, (texU+d+w)/TW, (texV+d+h)/TH,
             0f, 0f, 1f)
 
         // West (-X)
-        quad(vc, pos, norm, light, overlay,
+        quad(vc, entry, light, overlay,
             x1, y2, z1,  x1, y2, z2,  x1, y1, z2,  x1, y1, z1,
             texU/TW, (texV+d)/TH, (texU+d)/TW, (texV+d+h)/TH,
             -1f, 0f, 0f)
 
         // East (+X)
-        quad(vc, pos, norm, light, overlay,
+        quad(vc, entry, light, overlay,
             x2, y2, z2,  x2, y2, z1,  x2, y1, z1,  x2, y1, z2,
             (texU+d+w)/TW, (texV+d)/TH, (texU+d+w+d)/TW, (texV+d+h)/TH,
             1f, 0f, 0f)
@@ -171,7 +167,7 @@ class MolecularTransformerBlockEntityRenderer(
 
     private fun quad(
         vc: VertexConsumer,
-        pos: Matrix4f, norm: Matrix3f,
+        entry: MatrixStack.Entry,
         light: Int, overlay: Int,
         x0: Float, y0: Float, z0: Float,
         x1: Float, y1: Float, z1: Float,
@@ -180,27 +176,26 @@ class MolecularTransformerBlockEntityRenderer(
         u0: Float, v0: Float, u1: Float, v1: Float,
         nx: Float, ny: Float, nz: Float
     ) {
-        vertex(vc, pos, norm, x0, y0, z0, u0, v0, nx, ny, nz, light, overlay)
-        vertex(vc, pos, norm, x1, y1, z1, u1, v0, nx, ny, nz, light, overlay)
-        vertex(vc, pos, norm, x2, y2, z2, u1, v1, nx, ny, nz, light, overlay)
-        vertex(vc, pos, norm, x3, y3, z3, u0, v1, nx, ny, nz, light, overlay)
+        vertex(vc, entry, x0, y0, z0, u0, v0, nx, ny, nz, light, overlay)
+        vertex(vc, entry, x1, y1, z1, u1, v0, nx, ny, nz, light, overlay)
+        vertex(vc, entry, x2, y2, z2, u1, v1, nx, ny, nz, light, overlay)
+        vertex(vc, entry, x3, y3, z3, u0, v1, nx, ny, nz, light, overlay)
     }
 
     private fun vertex(
         vc: VertexConsumer,
-        pos: Matrix4f, norm: Matrix3f,
+        entry: MatrixStack.Entry,
         x: Float, y: Float, z: Float,
         u: Float, v: Float,
         nx: Float, ny: Float, nz: Float,
         light: Int, overlay: Int
     ) {
-        vc.vertex(pos, x, y, z)
+        vc.vertex(entry.positionMatrix, x, y, z)
             .color(255, 255, 255, 255)
             .texture(u, v)
             .overlay(overlay)
             .light(light)
-            .normal(norm, nx, ny, nz)
-            .next()
+            .normal(entry, nx, ny, nz)
     }
 
     private fun renderActiveCore(

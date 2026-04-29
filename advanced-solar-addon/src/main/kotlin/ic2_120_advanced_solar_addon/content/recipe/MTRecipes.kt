@@ -41,7 +41,7 @@ object MTRecipes {
 
     fun findRecipe(input: ItemStack): MTRecipe? {
         return recipes.find { recipe ->
-            ItemStack.canCombine(recipe.input, input) && input.count >= recipe.input.count
+            ItemStack.areItemsAndComponentsEqual(recipe.input, input) && input.count >= recipe.input.count
         }
     }
 
