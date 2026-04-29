@@ -56,14 +56,13 @@ jobs:
       - name: filter mod jar
         run: |
           mkdir -p mod-release
-          for f in build-output/ic2_120-*.jar build-output/ic2_120_advanced_solar_addon-*.jar; do
-            [[ "$f" != *-sources* && "$f" != *-remapped* ]] && cp "$f" "mod-release/$(basename "$f" .jar)-mc1.20.1.jar"
+          shopt -s globstar nullglob
+          for f in build-output/**/ic2_120-*.jar build-output/**/ic2_120_advanced_solar_addon-*.jar; do
+            [[ "$f" != *-sources* && "$f" != *-remapped* ]] && cp "$f" "mod-release/$(basename "$f" .jar)-mc1.20.1.jar" || true
           done
-          # 复制运行时依赖到 release
           if [ -d "libs" ]; then
-            cp libs/*.jar mod-release/
+            cp libs/*.jar mod-release/ || true
           fi
-          # 移除已打包进 mod jar 的依赖
           rm -f mod-release/energy-*.jar
       - name: create release
         uses: softprops/action-gh-release@v2
