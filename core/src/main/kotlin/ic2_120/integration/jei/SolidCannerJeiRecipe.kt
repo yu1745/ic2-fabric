@@ -9,6 +9,6 @@ import net.minecraft.item.ItemStack
  */
 data class SolidCannerJeiRecipe(
     val slot0: ItemStack,
-    val slot1: ItemStack,
+    val slot1: List<ItemStack>,
     val output: ItemStack
 )
