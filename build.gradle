@@ -1,173 +1,18 @@
 plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
-	id 'maven-publish'
-	id "org.jetbrains.kotlin.jvm" version "2.3.10"
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}" apply false
+	id "org.jetbrains.kotlin.jvm" version "2.3.10" apply false
 }
 
-def ciRunNumberProvider = providers.environmentVariable("GITHUB_RUN_NUMBER").orElse("0")
-def githubRepositoryProvider = providers.environmentVariable("GITHUB_REPOSITORY").orElse("yu1745/ic2-fabric")
-def generatedBuildInfoDir = layout.buildDirectory.dir("generated/resources")
-def generatedBuildInfoFile = generatedBuildInfoDir.map { it.file("assets/ic2_120/build_info.json") }
-
-version = project.mod_version
-group = project.maven_group
-
-base {
-	archivesName = project.archives_base_name
-}
-
-repositories {
-	flatDir {
-		dir 'libs'
-	}
-	mavenCentral()
-	// maven { url "https://maven.fabricmc.net/" }
-	maven { url "https://maven.blamejared.com/" } // JEI
-	maven { url "https://api.modrinth.com/maven" } // Jade
-	maven { url "https://maven.ftb.dev/releases" } // FTB Chunks
-	maven { url "https://maven.architectury.dev/" } // Architectury (FTB Chunks dependency)
-}
-
-loom {
-	splitEnvironmentSourceSets()
-	accessWidenerPath = file("src/main/resources/ic2_120.accesswidener")
-
-	mods {
-		"ic2_120" {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
-		}
-	}
-
-	// 修复 Windows 控制台中文乱码（通过 Loom runs API 配置）
-	runs {
-		client {
-			vmArgs '-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8'
-			programArgs '--width', '2560', '--height', '1440'
-		}
-		server {
-			vmArgs '-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8'
-		}
-	}
-}
-
-fabricApi {
-	configureDataGeneration {
-		client = true
-	}
-}
-
-dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
-	// Team Reborn Energy API（电力熔炉等与电缆/发电机互通）
-	include modImplementation("teamreborn:energy:${project.energy_api_version}") {
-		exclude group: "net.fabricmc"
-		exclude group: "net.fabricmc.fabric-api"
-	}
-	// compile against JEI API in intermediary namespace for Yarn dev env
-	modCompileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api-intermediary:${project.jei_version}")
-	// runtime JEI is loaded from run/mods to avoid classpath mapping conflicts in dev
-	// Jade / Waila API for pipe flow rate HUD rendering
-	modCompileOnlyApi("maven.modrinth:jade:${project.jade_version}")
-
-	// FTB Chunks API (领地保护集成，软依赖)
-	modCompileOnly("dev.ftb.mods:ftb-chunks-fabric:${project.ftb_chunks_version}") { transitive = false }
-	modCompileOnly("dev.ftb.mods:ftb-library-fabric:${project.ftb_library_version}") { transitive = false }
-	modCompileOnly("dev.ftb.mods:ftb-teams-fabric:${project.ftb_teams_version}") { transitive = false }
-	modCompileOnly("dev.architectury:architectury-fabric:${project.architectury_version}")
-
-	// JSON config and payload parsing via Jackson.
-	// Bundle Jackson into the mod jar so Connector/Forge runtime always has these classes.
-	include implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}")
-	include implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}")
-	include implementation("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}")
-	include implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.jackson_version}")
-}
-
-tasks.register("generateBuildInfo") {
-	inputs.property("ciRunNumber", ciRunNumberProvider)
-	inputs.property("githubRepository", githubRepositoryProvider)
-	outputs.file(generatedBuildInfoFile)
-
-	doLast {
-		def repo = githubRepositoryProvider.get()
-		def repoParts = repo.split("/", 2)
-		def payload = [
-			ciRunNumber    : Integer.parseInt(ciRunNumberProvider.get()),
-			repositoryOwner: repoParts.length > 0 ? repoParts[0] : "",
-			repositoryName : repoParts.length > 1 ? repoParts[1] : ""
-		]
-		def outputFile = generatedBuildInfoFile.get().asFile
-		outputFile.parentFile.mkdirs()
-		outputFile.setText(
-			groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(payload)),
-			"UTF-8"
-		)
-	}
-}
-
-processResources {
-	inputs.property "version", project.version
-	inputs.property "ciRunNumber", ciRunNumberProvider
-	inputs.property "githubRepository", githubRepositoryProvider
-	dependsOn(tasks.named("generateBuildInfo"))
-	from(generatedBuildInfoDir)
-
-	filesMatching("fabric.mod.json") {
-		expand "version": inputs.properties.version
-	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 17
-}
-
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-	kotlinOptions {
-		jvmTarget = 17
-		freeCompilerArgs += [
-			"-Xemit-jvm-type-annotations"
-		]
-	}
-}
-
-java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
-
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
-}
-
-jar {
-	inputs.property "archivesName", project.base.archivesName
-
-	from("LICENSE") {
-		rename { "${it}_${inputs.properties.archivesName}"}
-	}
-}
-
-// configure the maven publication
-publishing {
-	publications {
-		create("mavenJava", MavenPublication) {
-			artifactId = project.archives_base_name
-			from components.java
-		}
-	}
-
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+allprojects {
 	repositories {
 		mavenLocal()
+		mavenCentral()
+		maven { url "https://maven.fabricmc.net/" }
+		maven { url "https://maven.blamejared.com/" }
+		maven { url "https://api.modrinth.com/maven" }
+		maven { url "https://maven.ftb.dev/releases" }
+		maven { url "https://maven.architectury.dev/" }
+		flatDir { dir rootProject.file('libs') }
 	}
 }
 
@@ -182,14 +27,6 @@ subprojects {
 
 	loom {
 		splitEnvironmentSourceSets()
-	}
-
-	repositories {
-		mavenLocal()
-		mavenCentral()
-		maven { url "https://maven.fabricmc.net/" }
-		maven { url "https://maven.blamejared.com/" }
-		maven { url "https://api.modrinth.com/maven" }
 	}
 
 	dependencies {
@@ -225,7 +62,7 @@ subprojects {
 	}
 
 	jar {
-		from("LICENSE") {
+		from(rootProject.file("LICENSE")) {
 			rename { "${it}_${project.name}" }
 		}
 	}

@@ -9,4 +9,5 @@ pluginManagement {
 	}
 }
 
+include 'core'
 include 'advanced-solar-addon'
