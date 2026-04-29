@@ -10,4 +10,4 @@ pluginManagement {
 }
 
 include 'core'
-include 'advanced-solar-addon'
+// include 'advanced-solar-addon'  // 暂时移除，待 26.1 API 迁移完成后恢复
