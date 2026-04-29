@@ -4,6 +4,7 @@ import ic2_120.Ic2_120
 import ic2_120.content.block.CannerBlock
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.EmptyFuelRodItem
+import ic2_120.content.item.CfPack
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.ITieredMachine
@@ -471,6 +472,7 @@ class CannerBlockEntity(
         if (canFillStackFromRightTank(rightInput) && canAcceptOutput(getStack(SLOT_OUTPUT), getFilledResult(rightInput))) return SLOT_RIGHT_INPUT
         val mat = getStack(SLOT_MATERIAL)
         if (mat.item is FoamSprayerItem && canFillStackFromRightTank(mat)) return SLOT_MATERIAL
+        if (mat.item is CfPack && canFillStackFromRightTank(mat)) return SLOT_MATERIAL
         return null
     }
 
@@ -503,6 +505,9 @@ class CannerBlockEntity(
             is FoamSprayerItem ->
                 (fluid == ModFluids.CONSTRUCTION_FOAM_STILL || fluid == ModFluids.CONSTRUCTION_FOAM_FLOWING) &&
                     FoamSprayerItem.getFluidAmount(container) < FoamSprayerItem.CAPACITY_DROPLETS
+            is CfPack ->
+                (fluid == ModFluids.CONSTRUCTION_FOAM_STILL || fluid == ModFluids.CONSTRUCTION_FOAM_FLOWING) &&
+                    CfPack.getFluidAmount(container) < CfPack.CAPACITY_DROPLETS
             else -> fluidToFilledCellStack(fluid).isEmpty.not()
         }
     }
@@ -622,6 +627,22 @@ class CannerBlockEntity(
                 if (extracted <= 0) return@use
                 tx.commit()
                 FoamSprayerItem.setFluidAmount(container, before + extracted)
+            }
+            setStack(slot, container)
+            sync.rightFluidAmountMb = (rightTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            return
+        }
+
+        if (container.item is CfPack) {
+            val before = CfPack.getFluidAmount(container)
+            val space = (CfPack.CAPACITY_DROPLETS - before).coerceAtLeast(0L)
+            val move = minOf(FluidConstants.BUCKET, space)
+            if (move <= 0L) return
+            Transaction.openOuter().use { tx ->
+                val extracted = rightTankInternal.extract(variant, move, tx)
+                if (extracted <= 0) return@use
+                tx.commit()
+                CfPack.setFluidAmount(container, before + extracted)
             }
             setStack(slot, container)
             sync.rightFluidAmountMb = (rightTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
