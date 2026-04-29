@@ -49,18 +49,15 @@ fabricApi {
 }
 
 dependencies {
-	include modImplementation("teamreborn:energy:${project.energy_api_version}") {
-		exclude group: "net.fabricmc"
-		exclude group: "net.fabricmc.fabric-api"
-	}
+	include implementation("teamreborn:energy:${project.energy_api_version}")
 
-	modCompileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api-intermediary:${project.jei_version}")
-	modCompileOnlyApi("maven.modrinth:jade:${project.jade_version}")
+	compileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api-intermediary:${project.jei_version}")
+	compileOnlyApi("maven.modrinth:jade:${project.jade_version}")
 
-	modCompileOnly("dev.ftb.mods:ftb-chunks-fabric:${project.ftb_chunks_version}") { transitive = false }
-	modCompileOnly("dev.ftb.mods:ftb-library-fabric:${project.ftb_library_version}") { transitive = false }
-	modCompileOnly("dev.ftb.mods:ftb-teams-fabric:${project.ftb_teams_version}") { transitive = false }
-	modCompileOnly("dev.architectury:architectury-fabric:${project.architectury_version}")
+	compileOnly("dev.ftb.mods:ftb-chunks-fabric:${project.ftb_chunks_version}") { transitive = false }
+	compileOnly("dev.ftb.mods:ftb-library-fabric:${project.ftb_library_version}") { transitive = false }
+	compileOnly("dev.ftb.mods:ftb-teams-fabric:${project.ftb_teams_version}") { transitive = false }
+	compileOnly("dev.architectury:architectury-fabric:${project.architectury_version}")
 
 	include implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}")
 	include implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}")
