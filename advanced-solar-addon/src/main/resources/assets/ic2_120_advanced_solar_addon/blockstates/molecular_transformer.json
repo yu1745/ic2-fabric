@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,active=false": { "model": "ic2_120_advanced_solar_addon:block/molecular_transformer" },
+    "facing=north,active=true":  { "model": "ic2_120_advanced_solar_addon:block/molecular_transformer" },
+    "facing=east,active=false":  { "model": "ic2_120_advanced_solar_addon:block/molecular_transformer", "y": 90 },
+    "facing=east,active=true":   { "model": "ic2_120_advanced_solar_addon:block/molecular_transformer", "y": 90 },
+    "facing=south,active=false": { "model": "ic2_120_advanced_solar_addon:block/molecular_transformer", "y": 180 },
+    "facing=south,active=true":  { "model": "ic2_120_advanced_solar_addon:block/molecular_transformer", "y": 180 },
+    "facing=west,active=false":  { "model": "ic2_120_advanced_solar_addon:block/molecular_transformer", "y": 270 },
+    "facing=west,active=true":   { "model": "ic2_120_advanced_solar_addon:block/molecular_transformer", "y": 270 }
+  }
+}

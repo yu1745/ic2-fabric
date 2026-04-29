@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_solar_generator": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:solar_generator"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120_advanced_solar_addon:advanced_solar_panel_irradiant"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_solar_generator",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120_advanced_solar_addon:advanced_solar_panel_irradiant"
+    ]
+  },
+  "sends_telemetry_event": false
+}

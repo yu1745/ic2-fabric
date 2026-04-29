@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120:alloy"
+    },
+    "C": {
+      "item": "ic2_120:advanced_circuit"
+    },
+    "G": {
+      "item": "ic2_120:reinforced_glass"
+    },
+    "I": {
+      "item": "ic2_120_advanced_solar_addon:irradiant_reinforced_plate"
+    },
+    "S": {
+      "item": "ic2_120:solar_generator"
+    }
+  },
+  "pattern": [
+    "GGG",
+    "ASA",
+    "CIC"
+  ],
+  "result": {
+    "item": "ic2_120_advanced_solar_addon:advanced_solar_panel"
+  },
+  "show_notification": true
+}

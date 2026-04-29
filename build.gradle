@@ -86,7 +86,7 @@ fabricApi {
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:1.21.1+build.3:v2"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
@@ -194,5 +194,63 @@ publishing {
 	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
 	repositories {
 		mavenLocal()
+	}
+}
+
+subprojects {
+	apply plugin: 'net.fabricmc.fabric-loom-remap'
+	apply plugin: 'maven-publish'
+	apply plugin: 'org.jetbrains.kotlin.jvm'
+
+	base {
+		archivesName = project.archives_base_name
+	}
+
+	loom {
+		splitEnvironmentSourceSets()
+	}
+
+	repositories {
+		mavenLocal()
+		mavenCentral()
+		maven { url "https://maven.fabricmc.net/" }
+		maven { url "https://maven.blamejared.com/" }
+		maven { url "https://api.modrinth.com/maven" }
+	}
+
+	dependencies {
+		minecraft "com.mojang:minecraft:${project.minecraft_version}"
+		mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+		modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+		modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+		modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
+		modImplementation "teamreborn:energy:${project.energy_api_version}"
+		implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}")
+		implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}")
+		implementation("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}")
+		implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.jackson_version}")
+	}
+
+	tasks.withType(JavaCompile).configureEach {
+		it.options.release = 21
+	}
+
+	tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+		kotlinOptions {
+			jvmTarget = 21
+			freeCompilerArgs += ["-Xemit-jvm-type-annotations"]
+		}
+	}
+
+	java {
+		withSourcesJar()
+		sourceCompatibility = JavaVersion.VERSION_21
+		targetCompatibility = JavaVersion.VERSION_21
+	}
+
+	jar {
+		from(rootProject.file("LICENSE")) {
+			rename { "${it}_${project.name}" }
+		}
 	}
 }

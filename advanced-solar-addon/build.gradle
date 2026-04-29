@@ -1,0 +1,35 @@
+version = project.mod_version
+group = project.maven_group
+
+loom {
+	accessWidenerPath = file("src/main/resources/ic2_120_advanced_solar_addon.accesswidener")
+
+	mods {
+		"ic2_120_advanced_solar_addon" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
+fabricApi {
+	configureDataGeneration {
+		client = true
+	}
+}
+
+tasks.named('runDatagen') {
+	jvmArgs '-Dskip.ic2_120.datagen=true'
+}
+
+dependencies {
+	modImplementation project(":")
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": inputs.properties.version
+	}
+}

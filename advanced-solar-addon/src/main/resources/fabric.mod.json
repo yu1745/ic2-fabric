@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "id": "ic2_120_advanced_solar_addon",
+  "version": "${version}",
+  "name": "IC2 Advanced Solar Addon",
+  "description": "Advanced Solar Panels addon for IC2 Fabric",
+  "authors": ["stardust"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      {
+        "value": "ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon",
+        "adapter": "kotlin"
+      }
+    ],
+    "client": [
+      {
+        "value": "ic2_120_advanced_solar_addon.client.IC2AdvancedSolarAddonClient",
+        "adapter": "kotlin"
+      }
+    ],
+    "fabric-datagen": [
+      {
+        "value": "ic2_120_advanced_solar_addon.IC2AdvancedSolarAddonDataGenerator",
+        "adapter": "kotlin"
+      }
+    ]
+  },
+  "mixins": [
+    {
+      "config": "ic2_120_advanced_solar_addon.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~1.20.1",
+    "java": ">=17",
+    "fabric-api": "*",
+    "fabric-language-kotlin": "*",
+    "ic2_120": "*"
+  }
+}

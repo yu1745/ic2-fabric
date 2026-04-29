@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": {
+      "item": "ic2_120:reinforced_glass"
+    },
+    "I": {
+      "item": "ic2_120_advanced_solar_addon:irradiant_uranium"
+    }
+  },
+  "pattern": [
+    "GGG",
+    "GIG",
+    "GGG"
+  ],
+  "result": {
+    "item": "ic2_120_advanced_solar_addon:irradiant_glass_pane"
+  },
+  "show_notification": true
+}

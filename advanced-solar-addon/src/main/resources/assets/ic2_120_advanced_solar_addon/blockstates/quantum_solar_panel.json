@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,active=false": { "model": "ic2_120_advanced_solar_addon:block/quantum_solar_panel" },
+    "facing=north,active=true":  { "model": "ic2_120_advanced_solar_addon:block/quantum_solar_panel" },
+    "facing=east,active=false":  { "model": "ic2_120_advanced_solar_addon:block/quantum_solar_panel", "y": 90 },
+    "facing=east,active=true":   { "model": "ic2_120_advanced_solar_addon:block/quantum_solar_panel", "y": 90 },
+    "facing=south,active=false": { "model": "ic2_120_advanced_solar_addon:block/quantum_solar_panel", "y": 180 },
+    "facing=south,active=true":  { "model": "ic2_120_advanced_solar_addon:block/quantum_solar_panel", "y": 180 },
+    "facing=west,active=false":  { "model": "ic2_120_advanced_solar_addon:block/quantum_solar_panel", "y": 270 },
+    "facing=west,active=true":   { "model": "ic2_120_advanced_solar_addon:block/quantum_solar_panel", "y": 270 }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "O": {
+      "item": "ic2_120_advanced_solar_addon:iridium_ingot"
+    }
+  },
+  "pattern": [
+    "III",
+    "IOI",
+    "III"
+  ],
+  "result": {
+    "item": "ic2_120_advanced_solar_addon:iridium_iron_plate"
+  },
+  "show_notification": true
+}
