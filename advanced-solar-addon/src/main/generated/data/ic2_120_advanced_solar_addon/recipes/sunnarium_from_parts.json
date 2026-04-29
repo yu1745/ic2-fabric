@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "S": {
+      "item": "ic2_120_advanced_solar_addon:sunnarium_part"
+    }
+  },
+  "pattern": [
+    "SSS",
+    "SSS",
+    "SSS"
+  ],
+  "result": {
+    "item": "ic2_120_advanced_solar_addon:sunnarium"
+  },
+  "show_notification": true
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "ic2_120_advanced_solar_addon:block/quantum_generator"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "ic2_120_advanced_solar_addon:block/ultimate_solar_side",
+    "down": "ic2_120_advanced_solar_addon:block/ultimate_solar_bottom",
+    "up": "ic2_120_advanced_solar_addon:block/ultimate_solar_top",
+    "north": "ic2_120_advanced_solar_addon:block/ultimate_solar_side",
+    "east": "ic2_120_advanced_solar_addon:block/ultimate_solar_side",
+    "south": "ic2_120_advanced_solar_addon:block/ultimate_solar_side",
+    "west": "ic2_120_advanced_solar_addon:block/ultimate_solar_side"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "addon_template",
+  "version": "${version}",
+  "name": "Addon Template",
+  "description": "Template addon for IC2 Fabric - copy this directory to create a new addon",
+  "authors": ["your_name"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      {
+        "value": "addon_template.AddonTemplate",
+        "adapter": "kotlin"
+      }
+    ],
+    "client": [
+      {
+        "value": "addon_template.client.AddonTemplateClient",
+        "adapter": "kotlin"
+      }
+    ],
+    "fabric-datagen": [
+      {
+        "value": "addon_template.AddonTemplateDataGenerator",
+        "adapter": "kotlin"
+      }
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~1.20.1",
+    "java": ">=17",
+    "fabric-api": "*",
+    "fabric-language-kotlin": "*",
+    "ic2_120": "*"
+  }
+}

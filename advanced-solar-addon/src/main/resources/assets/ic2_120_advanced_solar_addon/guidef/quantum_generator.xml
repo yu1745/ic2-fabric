@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gui width="176" height="193">
+	<image x="0" y="0" width="176" height="193" basesize="256" src="advanced_solar_panels:textures/gui/QuantumGenerator"/>
+	<text y="7" align="center" color="16777215">%name%</text>
+
+	<only if="active">
+		<image x="145" y="21" width="14" height="14" u="176" v="3" basesize="256" src="advanced_solar_panels:textures/gui/QuantumGenerator"/>
+	</only>
+	
+	<text x="88" y="25" right="true" color="16777215">{advanced_solar_panels.gui.output}</text>
+	<text x="88" y="69" right="true" color="16777215">{advanced_solar_panels.gui.tier}</text>
+
+	<text x="95" y="25" color="16777215">%base.production%</text>
+	<text x="95" y="69" color="16777215">%base.getTier()%</text>
+
+	<button x="6" y="84" width="24" height="20" event="20">1</button>
+	<button x="32" y="84" width="24" height="20" event="21">2</button>
+   	<button x="58" y="84" width="24" height="20" event="22">3</button>
+   	<button x="84" y="84" width="24" height="20" event="23">4</button>
+   	<button x="110" y="84" width="24" height="20" event="24">5</button>
+   	<button x="138" y="84" width="32" height="20" event="25">{advanced_solar_panels.gui.max}</button>
+
+	<key key="shift" inverted="true">
+		<button x="6" y="40" width="32" height="20" event="0">-100</button>
+		<button x="39" y="40" width="26" height="20" event="1">-10</button>
+    	<button x="66" y="40" width="20" height="20" event="2">-1</button>
+    	<button x="89" y="40" width="20" height="20" event="3">+1</button>
+    	<button x="110" y="40" width="26" height="20" event="4">+10</button>
+    	<button x="137" y="40" width="32" height="20" event="5">+100</button>
+	</key>
+	
+	<key key="shift">
+		<button x="6" y="40" width="32" height="20" event="10">-500</button>
+		<button x="39" y="40" width="26" height="20" event="11">-50</button>
+    	<button x="66" y="40" width="20" height="20" event="12">-5</button>
+    	<button x="89" y="40" width="20" height="20" event="13">+5</button>
+    	<button x="110" y="40" width="26" height="20" event="14">+50</button>
+    	<button x="137" y="40" width="32" height="20" event="15">+500</button>
+	</key>
+
+	<playerInventory x="8" y="110" spacing="2" style="plain" title="false"/>
+</gui>
