@@ -21,6 +21,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.Block
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -143,7 +144,14 @@ class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)) {
                 listOf(foamSprayAnchorPos(world, hit))
             }
 
-            var budget = getFluidAmount(stack)
+            val cfPackStack = player.getEquippedStack(EquipmentSlot.CHEST)
+            val useCfPack = cfPackStack.item is CfPack
+
+            var budget = if (useCfPack) {
+                CfPack.getFluidAmount(cfPackStack)
+            } else {
+                getFluidAmount(stack)
+            }
             if (!player.abilities.creativeMode && budget < DROPLETS_PER_BLOCK) return false
 
             var placedAny = false
@@ -166,7 +174,11 @@ class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)) {
 
             if (placedAny) {
                 if (!player.abilities.creativeMode) {
-                    setFluidAmount(stack, budget)
+                    if (useCfPack) {
+                        CfPack.setFluidAmount(cfPackStack, budget)
+                    } else {
+                        setFluidAmount(stack, budget)
+                    }
                 }
                 val soundPos = hit.blockPos.offset(hit.side)
                 world.playSound(null, soundPos, SoundEvents.BLOCK_WOOL_PLACE, SoundCategory.BLOCKS, 0.55f, 0.95f + world.random.nextFloat() * 0.1f)
