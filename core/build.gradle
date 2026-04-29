@@ -1,12 +1,3 @@
-import net.fabricmc.loom.api.remapping.RemapperParameters
-
-def addRemapperExtensionByClassName = { loomExt, String extensionClassName ->
-	def holderClass = Class.forName("net.fabricmc.loom.extension.RemapperExtensionHolder")
-	def holder = objects.newInstance(holderClass, RemapperParameters.None.INSTANCE)
-	holder.getRemapperExtensionClass().set(extensionClassName)
-	loomExt.getRemapperExtensions().add(holder)
-}
-
 def ciRunNumberProvider = providers.environmentVariable("GITHUB_RUN_NUMBER").orElse("0")
 def githubRepositoryProvider = providers.environmentVariable("GITHUB_REPOSITORY").orElse("yu1745/ic2-fabric")
 def generatedBuildInfoDir = layout.buildDirectory.dir("generated/resources")
@@ -29,8 +20,6 @@ loom {
 		}
 	}
 
-	addRemapperExtensionByClassName(delegate, "ic2_120.gradle.IgnoreMappingConflictsExtension")
-
 	runs {
 		client {
 			vmArgs '-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8'
@@ -51,7 +40,7 @@ fabricApi {
 dependencies {
 	include implementation("teamreborn:energy:${project.energy_api_version}")
 
-	compileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api-intermediary:${project.jei_version}")
+	compileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api:${project.jei_version}")
 	compileOnlyApi("maven.modrinth:jade:${project.jade_version}")
 
 	compileOnly("dev.ftb.mods:ftb-chunks-fabric:${project.ftb_chunks_version}") { transitive = false }

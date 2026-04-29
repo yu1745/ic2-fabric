@@ -6,7 +6,3 @@ repositories {
     mavenCentral()
     maven { url "https://maven.fabricmc.net/" }
 }
-
-dependencies {
-    implementation("net.fabricmc:fabric-loom:1.15-SNAPSHOT")
-}
