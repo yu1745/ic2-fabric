@@ -11,8 +11,6 @@ base {
 }
 
 loom {
-	accessWidenerPath = file("src/main/resources/ic2_120.accesswidener")
-
 	mods {
 		"ic2_120" {
 			sourceSet sourceSets.main
