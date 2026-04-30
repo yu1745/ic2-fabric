@@ -96,7 +96,15 @@
 - 发现规则冲突时：以 `docs/README.md` 导航到对应主文档修正，而不是在 AGENTS.md 堆细节。
 - 新增规范时，优先写入对应 `docs/{guides|systems|ui|registry}`，AGENTS.md 只保留摘要与入口。
 
-## 9. 物品与方块清单
+## 9. 分支同步管理
+
+本项目维护 `main` 和 `1.21.1` 两个分支，通过 cherry-pick 保持同步。
+
+- 同步状态表：`docs/branch-sync-status.md`
+- **每次向 main 提交后，必须更新该文件**，记录新 commit 是否已同步到 1.21.1
+- 记录格式：commit SHA、说明、是否已在 1.21.1、备注
+
+## 10. 物品与方块清单
 
 所有使用 `@ModBlock` / `@ModItem` 注解注册的类及其中文翻译：
 
