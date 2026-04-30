@@ -44,6 +44,7 @@ subprojects {
 		modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 		modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 		modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
+		include "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 		modImplementation "teamreborn:energy:${project.energy_api_version}"
 		implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}")
 		implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}")
