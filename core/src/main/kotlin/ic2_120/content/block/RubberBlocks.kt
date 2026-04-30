@@ -208,7 +208,7 @@ private val RUBBER_SAPLING_GENERATOR = SaplingGenerator(
     Optional.empty<RegistryKey<ConfiguredFeature<*, *>>>()
 )
 
-@ModBlock(name = "rubber_leaves", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood", generateBlockLootTable = false)
+@ModBlock(name = "rubber_leaves", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood", generateBlockLootTable = false, renderLayer = "cutout_mipped")
 class RubberLeavesBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_LEAVES).strength(0.2f)) : LeavesBlock(settings)
 
 /** 橡胶树苗，支持骨粉催熟与自然生长。 */
