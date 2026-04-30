@@ -5,7 +5,9 @@
       "conditions": {
         "items": [
           {
-            "items": "ic2_120:foam_sprayer"
+            "items": [
+              "ic2_120:foam_sprayer"
+            ]
           }
         ]
       },
@@ -20,13 +22,14 @@
   },
   "requirements": [
     [
-      "has_the_recipe",
-      "has_foam_sprayer"
+      "has_foam_sprayer",
+      "has_the_recipe"
     ]
   ],
   "rewards": {
     "recipes": [
       "ic2_120:cf_pack"
     ]
-  }
+  },
+  "sends_telemetry_event": false
 }

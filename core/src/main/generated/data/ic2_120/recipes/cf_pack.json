@@ -21,7 +21,7 @@
     "y y"
   ],
   "result": {
-    "count": 1,
-    "id": "ic2_120:cf_pack"
-  }
+    "item": "ic2_120:cf_pack"
+  },
+  "show_notification": true
 }
