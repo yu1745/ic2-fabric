@@ -1,0 +1,11 @@
+{
+  "item.ic2_120_advanced_weapons_addon.quantum_saber": "Quantum Saber",
+
+  "message.ic2_120_advanced_weapons_addon.quantum_saber.active_on": "Quantum Saber activated",
+  "message.ic2_120_advanced_weapons_addon.quantum_saber.active_off": "Quantum Saber deactivated",
+
+  "tooltip.ic2_120_advanced_weapons_addon.quantum_saber.active": "State: ON (full damage when charged)",
+  "tooltip.ic2_120_advanced_weapons_addon.quantum_saber.inactive": "State: OFF",
+
+  "itemGroup.ic2_120_advanced_weapons_addon.ic2_advanced_weapons": "IC2 Advanced Weapons Addon"
+}

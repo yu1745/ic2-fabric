@@ -1,0 +1,11 @@
+{
+  "item.ic2_120_advanced_weapons_addon.quantum_saber": "量子剑",
+
+  "message.ic2_120_advanced_weapons_addon.quantum_saber.active_on": "量子剑已激活",
+  "message.ic2_120_advanced_weapons_addon.quantum_saber.active_off": "量子剑已关闭",
+
+  "tooltip.ic2_120_advanced_weapons_addon.quantum_saber.active": "状态：激活（有余电时高伤害）",
+  "tooltip.ic2_120_advanced_weapons_addon.quantum_saber.inactive": "状态：关闭",
+
+  "itemGroup.ic2_120_advanced_weapons_addon.ic2_advanced_weapons": "IC2高级武器附属"
+}

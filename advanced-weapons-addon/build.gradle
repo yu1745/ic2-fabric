@@ -1,0 +1,33 @@
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = "ic2_120_advanced_weapons_addon"
+}
+
+loom {
+    mods {
+        "ic2_120_advanced_weapons_addon" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+}
+
+fabricApi {
+    configureDataGeneration {
+        client = true
+    }
+}
+
+dependencies {
+    implementation project(path: ":core", configuration: "namedElements")
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": inputs.properties.version
+    }
+}

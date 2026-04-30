@@ -1,4 +1,8 @@
-./gradlew build
-cp build/libs/ic2_120-1.0.0.jar  ~/server/fabric1.20.1-1/mods/
-cp build/libs/ic2_120-1.0.0.jar  ~/server/fabric1.20.1-2/mods/
+./gradlew :core:build :advanced-solar-addon:build :advanced-weapons-addon:build
+cp core/build/libs/ic2_120-1.0.0.jar  ~/server/fabric1.20.1-1/mods/
+cp core/build/libs/ic2_120-1.0.0.jar  ~/server/fabric1.20.1-2/mods/
+cp advanced-solar-addon/build/libs/ic2_120_advanced_solar_addon-1.0.0.jar  ~/server/fabric1.20.1-1/mods/
+cp advanced-solar-addon/build/libs/ic2_120_advanced_solar_addon-1.0.0.jar  ~/server/fabric1.20.1-2/mods/
+cp advanced-weapons-addon/build/libs/ic2_120_advanced_weapons_addon-1.0.0.jar  ~/server/fabric1.20.1-1/mods/
+cp advanced-weapons-addon/build/libs/ic2_120_advanced_weapons_addon-1.0.0.jar  ~/server/fabric1.20.1-2/mods/
 docker restart servers-fabric1 servers-fabric2
