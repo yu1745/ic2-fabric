@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "ic2_120_advanced_weapons_addon",
+  "version": "${version}",
+  "name": "IC2 Advanced Weapons Addon",
+  "description": "Advanced Weapons addon for IC2 Fabric - plugin-based weapon upgrade system",
+  "authors": ["stardust"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      { "value": "ic2_120_advanced_weapons_addon.IC2AdvancedWeaponsAddon", "adapter": "kotlin" }
+    ],
+    "client": [
+      { "value": "ic2_120_advanced_weapons_addon.client.IC2AdvancedWeaponsAddonClient", "adapter": "kotlin" }
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~1.20.1",
+    "java": ">=17",
+    "fabric-api": "*",
+    "fabric-language-kotlin": "*",
+    "ic2_120": "*"
+  }
+}
