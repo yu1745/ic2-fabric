@@ -33,3 +33,4 @@
 ## 同步历史
 
 - 2026-04-30：首次逐 commit 比对并补齐 3 个缺失 commit（`549eeb8` 原已存在、`48934bc` 和 `bf99891` 和 `799fda9` 手动 cherry-pick）
+- 2026-04-30：修复 `bf99891` cherry-pick 后的 1.21.1 API 兼容问题（`QuantumSaber.kt` + `Identifier` 构造函数 + `build.gradle` remapper 扩展）并 push
