@@ -103,6 +103,7 @@
 - 同步状态表：`docs/branch-sync-status.md`
 - **每次向 main 提交后，必须更新该文件**，记录新 commit 是否已同步到 1.21.1
 - 记录格式：commit SHA、说明、是否已在 1.21.1、备注
+- **分支同步跟踪文件的更新必须单独提交，不得 amend 到功能 commit 中**。amend 会改变 commit hash，导致跟踪表中的 SHA 失效
 
 ## 10. 物品与方块清单
 
