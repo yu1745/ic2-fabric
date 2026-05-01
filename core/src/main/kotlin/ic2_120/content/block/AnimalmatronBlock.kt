@@ -78,18 +78,17 @@ class AnimalmatronBlock : MachineBlock() {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             val emptyCell = EmptyCell::class.instance()
-            val cropStick = CropStickBlock::class.item()
-            if (machine == Items.AIR || circuit == Items.AIR || emptyCell == Items.AIR || cropStick == Items.AIR) return
+            if (machine == Items.AIR || circuit == Items.AIR || emptyCell == Items.AIR) return
 
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AnimalmatronBlock::class.item(), 1)
                 .pattern("CHC")
                 .pattern("EME")
-                .pattern("SSS")
+                .pattern("WWW")
                 .input('C', circuit)
                 .input('H', Items.CHEST)
                 .input('E', emptyCell)
                 .input('M', machine)
-                .input('S', cropStick)
+                .input('W', Items.WHEAT)
                 .criterion(hasItem(machine), conditionsFromItem(machine))
                 .offerTo(exporter, AnimalmatronBlock::class.id())
         }
