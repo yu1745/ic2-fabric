@@ -196,9 +196,12 @@ abstract class BasePipeBlock(
     ) {
         super.appendTooltip(stack, world, tooltip, context)
         val flowPerSec = size.baseBucketsPerSecond * material.multiplier * 1000 // 转换为 mB/s
-        tooltip.add(Text.literal("§7流量: §b${
-            "%.1f".format(flowPerSec)
-        } mB/s§7 (${size.baseBucketsPerSecond * material.multiplier} 桶/秒)"))
+        val bucketsPerSec = size.baseBucketsPerSecond * material.multiplier
+        tooltip.add(Text.translatable(
+            "tooltip.ic2_120.pipe.flow_rate",
+            "%.1f".format(flowPerSec),
+            "%.1f".format(bucketsPerSec)
+        ))
     }
 
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =

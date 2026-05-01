@@ -945,5 +945,6 @@
   "gui.ic2_120.solar_distiller.input_water": "Input %s mB",
   "gui.ic2_120.solar_distiller.output_distilled": "Output %s mB",
   "tooltip.ic2_120.weed_ex.amount": "Remaining: %s/%s mB",
-  "tooltip.ic2_120.weed_ex.low": "Weed-Ex low!"
+  "tooltip.ic2_120.weed_ex.low": "Weed-Ex low!",
+  "tooltip.ic2_120.pipe.flow_rate": "Flow: %s mB/s (%s buckets/s)"
 }
