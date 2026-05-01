@@ -35,7 +35,7 @@ run/
 
 # data generator cache
 
-src/main/generated/.cache/
+**/src/main/generated/.cache/
 
 # java
 

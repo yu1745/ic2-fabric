@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **23 个 commit**，**全部已同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **24 个 commit**，**全部已同步**。
 
 ## 逐 commit 状态
 
@@ -37,6 +37,7 @@
 | 21 | `211e8c08` | feat: 扳手右键改为直接设置方块朝向 | ✅ | cherry-pick（跳过 docs 文件） |
 | 22 | `8bd5d4c` | fix: 量子剑创造栏图标改用 iconResource 避免显示耐久条 | ✅ | cherry-pick + API 适配修复（1.21.1 额外提交 `6d3c446`） |
 | 23 | `165faaf` | perf: RadiationHandler 改用 world.players 遍历避免全量实体扫描导致的 CPU 满载 | ✅ | cherry-pick 确认 |
+| 24 | `41fbef2` | fix: 修复牲畜监管和收割机合成配方 | ✅ | cherry-pick，1.21.1 额外排除 datagen 缓存文件 |
 
 ## 同步历史
 
@@ -52,3 +53,4 @@
 - 2026-05-01：修复量子剑在1.21.1的API适配编译错误（Identifier构造器、FabricItemSettings、NBT组件、AttributeModifiers等）
 - 2026-05-01：逐 cherry-pick 同步 commits 16-21，适配 PipeBlocks.kt appendTooltip、BlastFurnaceBlockEntity 接口泛型到 1.21.1 API
 - 2026-05-01：同步 commit 23——RadiationHandler 改用 world.players 遍历，修复 CPU 满载
+- 2026-05-01：同步 commit 24——牲畜监管和收割机合成配方修复，cherry-pick 到 1.21.1 并排除 datagen 缓存文件
