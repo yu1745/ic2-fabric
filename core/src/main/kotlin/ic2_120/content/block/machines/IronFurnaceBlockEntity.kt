@@ -160,7 +160,7 @@ class IronFurnaceBlockEntity(
 
         // 检查输出槽是否可以接收物品
         val canAcceptOutput = if (hasRecipe) {
-            val recipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(inputItem), world).get().value()
+            val recipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(inputItem), world).get().value
             val result = recipe.getResult(world.registryManager)
             outputItem.isEmpty ||
                 (ItemStack.areItemsEqual(outputItem, result) &&
@@ -190,7 +190,7 @@ class IronFurnaceBlockEntity(
 
             // 烧制完成
             if (sync.cookTime >= IronFurnaceSync.COOK_TIME_MAX) {
-                val recipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(inputItem), world).get().value()
+                val recipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(inputItem), world).get().value
                 val result = recipe.getResult(world.registryManager).copy()
 
                 inputItem.decrement(1)

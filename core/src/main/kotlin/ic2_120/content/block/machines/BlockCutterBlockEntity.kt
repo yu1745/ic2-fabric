@@ -204,11 +204,11 @@ class BlockCutterBlockEntity(
         val recipeManager = world?.recipeManager ?: return null
 
         // 获取第一个匹配的配方（优先选择inputCount较大的配方）
-        val recipe = recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), SingleStackRecipeInput(input), world ?: return null).map { it.value() }.orElse(null)
+        val recipe = recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), SingleStackRecipeInput(input), world ?: return null).map { it.value }.orElse(null)
 
         // 对于木板，尝试获取匹配2个输入的配方（木棍配方）
         if (input.count >= 2) {
-            val recipe2 = recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), SingleStackRecipeInput(ItemStack(input.item, 2)), world ?: return null).map { it.value() }.orElse(null)
+            val recipe2 = recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), SingleStackRecipeInput(ItemStack(input.item, 2)), world ?: return null).map { it.value }.orElse(null)
             if (recipe2 != null && recipe2.inputCount == 2) {
                 return recipe2
             }

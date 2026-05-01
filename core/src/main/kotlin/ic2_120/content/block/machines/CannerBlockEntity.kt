@@ -418,7 +418,7 @@ class CannerBlockEntity(
         val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class) ?: return false
         val match = world?.recipeManager?.getFirstMatch(recipeType, SingleStackRecipeInput(container.copyWithCount(1)), world) ?: return false
         if (match.isEmpty) return false
-        val recipe = match.get().value()
+        val recipe = match.get().value
         if (container.count < recipe.slot0Count || material.count < recipe.slot1Count) return false
         if (!canAcceptOutput(outputSlot, recipe.output.copy())) return false
         return true
@@ -573,7 +573,7 @@ class CannerBlockEntity(
         val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class) ?: return
         val match = world?.recipeManager?.getFirstMatch(recipeType, SingleStackRecipeInput(container.copyWithCount(1)), world) ?: return
         if (match.isEmpty) return
-        val recipe = match.get().value()
+        val recipe = match.get().value
         container.decrement(recipe.slot0Count)
         material.decrement(recipe.slot1Count)
         if (container.isEmpty) setStack(SLOT_CONTAINER, ItemStack.EMPTY)

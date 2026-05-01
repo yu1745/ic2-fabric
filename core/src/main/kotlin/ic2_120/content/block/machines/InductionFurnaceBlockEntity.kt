@@ -319,7 +319,7 @@ class InductionFurnaceBlockEntity(
         if (input.isEmpty) return null
         val match = world.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(input), world)
         return if (match.isPresent) {
-            match.get().value().getResult(world.registryManager).copy()
+            match.get().value.getResult(world.registryManager).copy()
         } else null
     }
 

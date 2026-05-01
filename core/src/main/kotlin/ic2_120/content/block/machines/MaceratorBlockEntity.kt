@@ -210,7 +210,7 @@ class MaceratorBlockEntity(
             sync.syncCurrentTickFlow()
             return
         }
-        val result = match.get().value().output.copy()
+        val result = match.get().value.output.copy()
         val outputSlot = getStack(SLOT_OUTPUT)
         val maxStack = result.maxCount
         val canAccept = outputSlot.isEmpty() ||

@@ -247,7 +247,7 @@ class CompressorBlockEntity(
         if (input.isEmpty) return null
         val recipeManager = world.recipeManager
         val optionalRecipe = recipeManager.getFirstMatch(getRecipeType<CompressorRecipe>(), SingleStackRecipeInput(input), world)
-        return optionalRecipe.map { it.value() }.orElse(null)
+        return optionalRecipe.map { it.value }.orElse(null)
     }
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem
