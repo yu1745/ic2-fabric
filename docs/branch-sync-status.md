@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **22 个 commit**，**16 个已同步，6 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **22 个 commit**，**全部已同步**。
 
 ## 逐 commit 状态
 
@@ -29,12 +29,12 @@
 | 13 | `775100f` | chore: 删除 libs/ 目录 | ✅ | |
 | 14 | `bf99891` | feat: advanced-weapons-addon 子项目 | ✅ | cherry-pick + API 适配 |
 | 15 | `799fda9` | revert: 取消 Jar-in-Jar，恢复 libs/ | ✅ | 已 cherry-pick |
-| 16 | `fe72f4e6` | feat: 高炉添加抽入/弹出升级，压缩机修复放电槽UI，电力加热机添加电池槽 | ❌ | 未同步 |
-| 17 | `6ae93daa` | feat: 能量水晶和蓝波顿水晶添加右键一键充电功能 | ❌ | 新增 |
-| 18 | `27f47004` | feat: 所有管道和泵附件tooltip显示流量（按秒计算） | ❌ | 新增 |
-| 19 | `99e13e06` | fix: 管道tooltip使用国际化字符串 | ❌ | 新增 |
-| 20 | `e33e55fe` | feat: 区块加载器改为GUI控制区块加载范围 | ❌ | 新增 |
-| 21 | `211e8c08` | feat: 扳手右键改为直接设置方块朝向 | ❌ | 新增 |
+| 16 | `fe72f4e6` | feat: 高炉添加抽入/弹出升级，压缩机修复放电槽UI，电力加热机添加电池槽 | ✅ | cherry-pick，保留 1.21.1 `ExtendedScreenHandlerFactory<PacketByteBuf>` 泛型 |
+| 17 | `6ae93daa` | feat: 能量水晶和蓝波顿水晶添加右键一键充电功能 | ✅ | cherry-pick（跳过 docs 文件） |
+| 18 | `27f47004` | feat: 所有管道和泵附件tooltip显示流量（按秒计算） | ✅ | cherry-pick + 适配 1.21.1 `appendTooltip` 签名（移除 `world`、`@Environment`，改用 `TooltipType` + `Item.TooltipContext`） |
+| 19 | `99e13e06` | fix: 管道tooltip使用国际化字符串 | ✅ | cherry-pick，在 1.21.1 适配基础上应用 `Text.translatable` |
+| 20 | `e33e55fe` | feat: 区块加载器改为GUI控制区块加载范围 | ✅ | cherry-pick（跳过 docs/runClient.bat） |
+| 21 | `211e8c08` | feat: 扳手右键改为直接设置方块朝向 | ✅ | cherry-pick（跳过 docs 文件） |
 | 22 | `8bd5d4c` | fix: 量子剑创造栏图标改用 iconResource 避免显示耐久条 | ✅ | cherry-pick + API 适配修复（1.21.1 额外提交 `6d3c446`） |
 
 ## 同步历史
@@ -49,3 +49,4 @@
 - 2026-05-01：扳手右键改为直接设置方块朝向（替代循环旋转）
 - 2026-05-01：量子剑创造栏图标改用 iconResource 避免显示耐久条
 - 2026-05-01：修复量子剑在1.21.1的API适配编译错误（Identifier构造器、FabricItemSettings、NBT组件、AttributeModifiers等）
+- 2026-05-01：逐 cherry-pick 同步 commits 16-21，适配 PipeBlocks.kt appendTooltip、BlastFurnaceBlockEntity 接口泛型到 1.21.1 API
