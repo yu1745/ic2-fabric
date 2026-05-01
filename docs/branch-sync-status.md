@@ -1,6 +1,6 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-04-30
+最后更新：2026-05-01
 
 分叉点：`c5e247c`
 
@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **15 个 commit**，**15 个已全部同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **16 个 commit**，**15 个已同步，1 个待同步**。
 
 ## 逐 commit 状态
 
@@ -29,6 +29,7 @@
 | 13 | `775100f` | chore: 删除 libs/ 目录 | ✅ | |
 | 14 | `bf99891` | feat: advanced-weapons-addon 子项目 | ✅ | cherry-pick + API 适配 |
 | 15 | `799fda9` | revert: 取消 Jar-in-Jar，恢复 libs/ | ✅ | 已 cherry-pick |
+| 16 | `fe72f4e6` | feat: 高炉添加抽入/弹出升级，压缩机修复放电槽UI，电力加热机添加电池槽 | ❌ | 未同步 |
 
 ## 同步历史
 
