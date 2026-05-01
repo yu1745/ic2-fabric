@@ -11,7 +11,6 @@ import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.server.MinecraftServer
-import net.minecraft.util.math.Box
 
 object RadiationHandler {
 
@@ -28,24 +27,12 @@ object RadiationHandler {
         if (tickCounter % 20 != 0) return
 
         for (world in server.worlds) {
-            val entities = world.getEntitiesByClass(
-                LivingEntity::class.java,
-                Box(-3e7, -3e7, -3e7, 3e7, 3e7, 3e7)
-            ) { true }
-
-            for (entity in entities) {
-                if (entity.isDead) continue
-                if (isImmune(entity)) continue
-                if (hasRadioactiveItem(entity)) {
-                    entity.addStatusEffect(
-                        StatusEffectInstance(
-                            ModStatusEffects.RADIATION,
-                            400, // 20 秒
-                            0,
-                            true,
-                            true,
-                            true
-                        )
+            for (player in world.players) {
+                if (player.isDead) continue
+                if (isImmune(player)) continue
+                if (hasRadioactiveItem(player)) {
+                    player.addStatusEffect(
+                        StatusEffectInstance(ModStatusEffects.RADIATION, 400, 0, true, true, true)
                     )
                 }
             }
