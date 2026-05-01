@@ -16,6 +16,7 @@ import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.FluidState
 import net.minecraft.fluid.Fluids
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.state.StateManager
@@ -32,10 +33,8 @@ import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.client.item.TooltipContext
-import net.fabricmc.api.EnvType
-import net.fabricmc.api.Environment
 import net.minecraft.text.Text
+import net.minecraft.item.tooltip.TooltipType
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
@@ -186,21 +185,20 @@ abstract class BasePipeBlock(
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = PipeBlockEntity(pos, state)
 
-    /**
-     * 添加物品提示信息（显示流量）
-     */
-    @Environment(EnvType.CLIENT)
     override fun appendTooltip(
         stack: ItemStack,
-        world: BlockView?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
-        val flowPerSec = size.baseBucketsPerSecond * material.multiplier * 1000 // 转换为 mB/s
-        tooltip.add(Text.literal("§7流量: §b${
-            "%.1f".format(flowPerSec)
-        } mB/s§7 (${size.baseBucketsPerSecond * material.multiplier} 桶/秒)"))
+        super.appendTooltip(stack, context, tooltip, type)
+        val flowPerSec = size.baseBucketsPerSecond * material.multiplier * 1000
+        val bucketsPerSec = size.baseBucketsPerSecond * material.multiplier
+        tooltip.add(Text.translatable(
+            "tooltip.ic2_120.pipe.flow_rate",
+            "%.1f".format(flowPerSec),
+            "%.1f".format(bucketsPerSec)
+        ))
     }
 
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
