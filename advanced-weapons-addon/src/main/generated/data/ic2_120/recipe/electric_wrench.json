@@ -1,0 +1,21 @@
+{
+  "type": "ic2_120:consume_wrench_shaped",
+  "category": "equipment",
+  "key": {
+    "P": {
+      "item": "ic2_120:small_power_unit"
+    },
+    "W": {
+      "item": "ic2_120:wrench"
+    }
+  },
+  "pattern": [
+    " W ",
+    " P ",
+    "   "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:electric_wrench"
+  }
+}

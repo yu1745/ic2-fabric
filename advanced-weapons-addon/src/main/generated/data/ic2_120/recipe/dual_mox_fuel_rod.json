@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": {
+      "item": "ic2_120:iron_plate"
+    },
+    "X": {
+      "item": "ic2_120:mox_fuel_rod"
+    }
+  },
+  "pattern": [
+    "XFX"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:dual_mox_fuel_rod"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "type": "ic2_120:extracting",
+  "ingredient": {
+    "item": "ic2_120:air_cell"
+  },
+  "result": {
+    "count": 1,
+    "id": "ic2_120:empty_cell"
+  }
+}

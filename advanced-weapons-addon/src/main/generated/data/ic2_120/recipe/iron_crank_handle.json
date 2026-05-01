@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": {
+      "item": "ic2_120:iron_plate"
+    },
+    "W": {
+      "item": "ic2_120:wooden_crank_handle"
+    }
+  },
+  "pattern": [
+    " P ",
+    "PWP",
+    " P "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:iron_crank_handle"
+  }
+}

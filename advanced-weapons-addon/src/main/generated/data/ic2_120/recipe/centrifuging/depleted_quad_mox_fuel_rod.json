@@ -1,0 +1,22 @@
+{
+  "type": "ic2_120:centrifuging",
+  "ingredient": {
+    "item": "ic2_120:depleted_quad_mox_fuel_rod"
+  },
+  "input_count": 1,
+  "min_heat": 5000,
+  "results": [
+    {
+      "count": 4,
+      "id": "ic2_120:small_plutonium"
+    },
+    {
+      "count": 12,
+      "id": "ic2_120:plutonium"
+    },
+    {
+      "count": 7,
+      "id": "ic2_120:iron_dust"
+    }
+  ]
+}

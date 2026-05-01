@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 0.1,
+  "ingredient": {
+    "item": "ic2_120:crushed_uranium"
+  },
+  "result": {
+    "id": "ic2_120:uranium_ingot"
+  }
+}

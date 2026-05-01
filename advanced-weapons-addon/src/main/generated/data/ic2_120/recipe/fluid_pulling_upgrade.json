@@ -1,0 +1,24 @@
+{
+  "type": "ic2_120:consume_treetap_shaped",
+  "category": "misc",
+  "key": {
+    "M": {
+      "item": "ic2_120:electric_motor"
+    },
+    "T": {
+      "item": "ic2_120:tin_plate"
+    },
+    "W": {
+      "item": "ic2_120:treetap"
+    }
+  },
+  "pattern": [
+    "TWT",
+    " M ",
+    "T T"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:fluid_pulling_upgrade"
+  }
+}

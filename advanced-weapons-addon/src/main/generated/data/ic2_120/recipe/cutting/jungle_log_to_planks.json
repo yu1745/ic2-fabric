@@ -1,0 +1,12 @@
+{
+  "type": "ic2_120:cutting",
+  "ingredient": {
+    "item": "minecraft:jungle_log"
+  },
+  "input_count": 1,
+  "material_hardness": 2.0,
+  "result": {
+    "count": 6,
+    "id": "minecraft:jungle_planks"
+  }
+}

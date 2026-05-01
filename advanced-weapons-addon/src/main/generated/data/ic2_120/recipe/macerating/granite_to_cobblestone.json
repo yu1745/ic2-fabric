@@ -1,0 +1,10 @@
+{
+  "type": "ic2_120:macerating",
+  "ingredient": {
+    "item": "minecraft:granite"
+  },
+  "result": {
+    "count": 1,
+    "id": "minecraft:cobblestone"
+  }
+}

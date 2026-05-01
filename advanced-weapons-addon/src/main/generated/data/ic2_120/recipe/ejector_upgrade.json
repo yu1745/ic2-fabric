@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "P": {
+      "item": "minecraft:piston"
+    },
+    "T": {
+      "item": "ic2_120:tin_plate"
+    }
+  },
+  "pattern": [
+    "T T",
+    " P ",
+    "T T"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:ejector_upgrade"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "type": "ic2_120:cutting",
+  "ingredient": {
+    "item": "minecraft:stripped_crimson_stem"
+  },
+  "input_count": 1,
+  "material_hardness": 2.0,
+  "result": {
+    "count": 6,
+    "id": "minecraft:crimson_planks"
+  }
+}

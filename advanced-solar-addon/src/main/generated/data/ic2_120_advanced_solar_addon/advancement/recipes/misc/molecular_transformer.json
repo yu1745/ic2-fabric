@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_advanced_circuit": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2_120:advanced_circuit"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120_advanced_solar_addon:molecular_transformer"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_advanced_circuit"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120_advanced_solar_addon:molecular_transformer"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": {
+      "item": "ic2_120:iron_crank_handle"
+    },
+    "G": {
+      "item": "ic2_120:generator"
+    },
+    "M": {
+      "item": "ic2_120:electric_motor"
+    },
+    "X": {
+      "item": "ic2_120:machine"
+    }
+  },
+  "pattern": [
+    "XXX",
+    "GMF",
+    "XXX"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:kinetic_generator"
+  }
+}

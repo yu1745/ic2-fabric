@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "x": {
+      "item": "ic2_120:steel_plate"
+    }
+  },
+  "pattern": [
+    "xxx",
+    "   ",
+    "xxx"
+  ],
+  "result": {
+    "count": 16,
+    "id": "ic2_120:steel_transmission_shaft"
+  }
+}

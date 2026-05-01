@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "c": {
+      "item": "minecraft:clay_ball"
+    },
+    "d": {
+      "item": "ic2_120:stone_dust"
+    },
+    "s": {
+      "item": "minecraft:sand"
+    }
+  },
+  "pattern": [
+    "dsd",
+    "dcd",
+    "dsd"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:cf_powder"
+  }
+}

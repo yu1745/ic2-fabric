@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "ic2_120:advanced_re_battery"
+    },
+    "C": {
+      "item": "ic2_120:circuit"
+    },
+    "T": {
+      "item": "ic2_120:mv_transformer"
+    },
+    "W": {
+      "item": "ic2_120:insulated_gold_cable"
+    }
+  },
+  "pattern": [
+    " W ",
+    "CTB",
+    " W "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:hv_transformer"
+  }
+}

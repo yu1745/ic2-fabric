@@ -1,0 +1,11 @@
+{
+  "type": "ic2_120:metal_forming",
+  "ingredient": {
+    "item": "ic2_120:tin_ingot"
+  },
+  "mode": "extruding",
+  "result": {
+    "count": 3,
+    "id": "ic2_120:tin_cable"
+  }
+}

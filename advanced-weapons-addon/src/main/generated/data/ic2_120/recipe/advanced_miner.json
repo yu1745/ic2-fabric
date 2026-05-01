@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {
+      "item": "ic2_120:alloy"
+    },
+    "M": {
+      "item": "ic2_120:mfe"
+    },
+    "T": {
+      "item": "ic2_120:teleporter"
+    },
+    "U": {
+      "item": "ic2_120:advanced_machine"
+    },
+    "m": {
+      "item": "ic2_120:miner"
+    }
+  },
+  "pattern": [
+    "AmA",
+    "TUM",
+    "AmA"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:advanced_miner"
+  }
+}

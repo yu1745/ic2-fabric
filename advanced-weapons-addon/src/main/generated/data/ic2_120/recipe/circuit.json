@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "f": {
+      "tag": "ic2_120:compat/ingots/iron"
+    },
+    "r": {
+      "item": "minecraft:redstone"
+    },
+    "x": {
+      "item": "ic2_120:insulated_copper_cable"
+    }
+  },
+  "pattern": [
+    "xxx",
+    "rfr",
+    "xxx"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:circuit"
+  }
+}

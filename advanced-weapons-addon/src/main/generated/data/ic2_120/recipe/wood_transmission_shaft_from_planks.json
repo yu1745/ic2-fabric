@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "x": {
+      "tag": "minecraft:planks"
+    }
+  },
+  "pattern": [
+    "xxx",
+    "   ",
+    "xxx"
+  ],
+  "result": {
+    "count": 16,
+    "id": "ic2_120:wood_transmission_shaft"
+  }
+}

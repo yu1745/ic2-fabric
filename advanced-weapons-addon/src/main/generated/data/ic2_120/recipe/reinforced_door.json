@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "D": {
+      "item": "minecraft:iron_door"
+    },
+    "S": {
+      "item": "ic2_120:reinforced_stone"
+    }
+  },
+  "pattern": [
+    "SSS",
+    "SDS",
+    "SSS"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:reinforced_door"
+  }
+}

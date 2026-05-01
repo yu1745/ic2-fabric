@@ -1,0 +1,13 @@
+{
+  "type": "ic2_120:empty_fluid_cell_to_empty_cell",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ic2_120:fluid_cell"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:empty_cell"
+  }
+}

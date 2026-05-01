@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "minecraft:iron_bars"
+    },
+    "R": {
+      "item": "ic2_120:refractory_bricks"
+    }
+  },
+  "pattern": [
+    "III",
+    "IRI",
+    "III"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:coke_kiln_grate"
+  }
+}

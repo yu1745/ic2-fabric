@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "O": {
+      "tag": "ic2_120:compat/dusts/obsidian"
+    },
+    "S": {
+      "tag": "ic2_120:compat/dusts/silicon_dioxide"
+    }
+  },
+  "pattern": [
+    "OSO",
+    "SOS",
+    "OSO"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:raw_crystal_memory"
+  }
+}

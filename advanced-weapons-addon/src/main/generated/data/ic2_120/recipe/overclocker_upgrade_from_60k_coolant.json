@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:sextuple_reactor_coolant_cell"
+    },
+    "R": {
+      "item": "ic2_120:circuit"
+    },
+    "W": {
+      "item": "ic2_120:insulated_copper_cable"
+    }
+  },
+  "pattern": [
+    "CCC",
+    "WRW"
+  ],
+  "result": {
+    "count": 12,
+    "id": "ic2_120:overclocker_upgrade"
+  }
+}

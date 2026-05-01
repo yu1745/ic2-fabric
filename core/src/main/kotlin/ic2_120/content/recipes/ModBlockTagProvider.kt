@@ -74,6 +74,12 @@ class ModBlockTagProvider(
         val axeBuilder = getOrCreateTagBuilder(BlockTags.AXE_MINEABLE).setReplace(false)
         val hoeBuilder = getOrCreateTagBuilder(BlockTags.HOE_MINEABLE).setReplace(false)
 
+        // 将橡胶原木添加到原版 logs 标签，使橡胶树叶能正确识别原木
+        val logsBuilder = getOrCreateTagBuilder(BlockTags.LOGS)
+        logsBuilder.add(Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "rubber_log"))!!)
+        logsBuilder.add(Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "stripped_rubber_log"))!!)
+        logsBuilder.add(Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "rubber_wood"))!!)
+
         for (block in Registries.BLOCK) {
             val id = Registries.BLOCK.getId(block)
             if (id.namespace != Ic2_120.MOD_ID) continue

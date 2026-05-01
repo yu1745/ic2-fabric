@@ -1,0 +1,22 @@
+{
+  "type": "ic2_120:centrifuging",
+  "ingredient": {
+    "item": "ic2_120:depleted_dual_uranium_fuel_rod"
+  },
+  "input_count": 1,
+  "min_heat": 4000,
+  "results": [
+    {
+      "count": 2,
+      "id": "ic2_120:small_plutonium"
+    },
+    {
+      "count": 8,
+      "id": "ic2_120:small_uranium_238"
+    },
+    {
+      "count": 3,
+      "id": "ic2_120:iron_dust"
+    }
+  ]
+}

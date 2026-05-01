@@ -1,0 +1,12 @@
+{
+  "type": "ic2_120:cutting",
+  "ingredient": {
+    "item": "minecraft:polished_granite"
+  },
+  "input_count": 1,
+  "material_hardness": 1.5,
+  "result": {
+    "count": 9,
+    "id": "minecraft:polished_granite_slab"
+  }
+}
