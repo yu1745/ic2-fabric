@@ -9,14 +9,14 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 
 object IC2AdvancedWeaponsAddonClient : ClientModInitializer {
-    private val QUANTUM_SABER_ACTIVE_ID = Identifier(IC2AdvancedWeaponsAddon.MOD_ID, "quantum_saber_active")
+    private val QUANTUM_SABER_ACTIVE_ID = Identifier.of(IC2AdvancedWeaponsAddon.MOD_ID, "quantum_saber_active")
 
     override fun onInitializeClient() {
         registerQuantumSaberPredicate()
     }
 
     private fun registerQuantumSaberPredicate() {
-        val saber = Registries.ITEM.get(Identifier(IC2AdvancedWeaponsAddon.MOD_ID, "quantum_saber"))
+        val saber = Registries.ITEM.get(Identifier.of(IC2AdvancedWeaponsAddon.MOD_ID, "quantum_saber"))
         if (saber is QuantumSaber) {
             ModelPredicateProviderRegistry.register(
                 saber,
