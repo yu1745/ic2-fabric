@@ -15,16 +15,17 @@ import net.minecraft.util.Identifier
  */
 object CreativeTabIconProvider {
 
-    /** 贴图路径（与注解中字符串一致）→ 仅图标的占位物品注册名 */
+    /** 贴图路径（与注解中字符串一致）→ 仅图标的占位物品注册名（可含命名空间） */
     private val TEXTURE_PATH_TO_ICON_ITEM: Map<String, String> = mapOf(
         "ic2:item/tool/electric/mining_laser" to "tab_icon_ic2_tools",
+        "ic2_120_advanced_weapons_addon:item/quantum_saber/inactive" to "ic2_120_advanced_weapons_addon:tab_icon_ic2_advanced_weapons",
     )
 
     fun getIconStack(resourcePath: String): ItemStack {
         val key = resourcePath.trim()
         val iconName = TEXTURE_PATH_TO_ICON_ITEM[key]
         if (iconName != null) {
-            val id = Identifier(Ic2_120.MOD_ID, iconName)
+            val id = if (iconName.contains(':')) Identifier(iconName) else Identifier(Ic2_120.MOD_ID, iconName)
             val item = Registries.ITEM.get(id)
             if (item !== Items.AIR) return ItemStack(item)
         }
