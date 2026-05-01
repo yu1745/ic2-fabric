@@ -40,7 +40,7 @@ import io.netty.buffer.Unpooled
 
 /**
  * 区块加载器方块实体。
- * 使用 ChunkTicketType.FORCED 强制加载周围区块，耗能 1 EU/tick 每区块。
+ * 使用 ChunkTicketType.FORCED 逐区块强制加载，耗能 1 EU/tick 每区块。
  */
 @ModBlockEntity(block = ChunkLoaderBlock::class)
 class ChunkLoaderBlockEntity(
@@ -84,8 +84,8 @@ class ChunkLoaderBlockEntity(
         canDischargeNow = { sync.amount < sync.capacity }
     )
 
-    /** 当前是否已添加 chunk ticket（用于避免重复添加） */
-    private var ticketsActive = false
+    /** 当前已添加 chunk ticket 的区块位置集合 */
+    private var activeChunkPositions: Set<ChunkPos> = emptySet()
 
     constructor(pos: BlockPos, state: BlockState) : this(
         ChunkLoaderBlockEntity::class.type(),
@@ -130,7 +130,23 @@ class ChunkLoaderBlockEntity(
         sync.amount = nbt.getLong(ChunkLoaderSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        sync.range = nbt.getInt("Range").coerceIn(0, 2)
+        // 兼容旧存档：Range 0=1区块, 1=9区块, 2=25区块
+        if (nbt.contains("Range")) {
+            val range = nbt.getInt("Range").coerceIn(0, 2)
+            sync.chunkBitmask = when (range) {
+                0 -> 1 shl 12  // 仅中心区块 (row=2, col=2)
+                1 -> {
+                    var mask = 0
+                    for (dy in -1..1) for (dx in -1..1) {
+                        mask = mask or (1 shl ((dy + 2) * 5 + (dx + 2)))
+                    }
+                    mask
+                }
+                else -> ChunkLoaderSync.DEFAULT_BITMASK  // 5×5 全选
+            }
+        } else {
+            sync.chunkBitmask = nbt.getInt("ChunkBitmask")
+        }
     }
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
@@ -138,7 +154,7 @@ class ChunkLoaderBlockEntity(
         Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(ChunkLoaderSync.NBT_ENERGY_STORED, sync.amount)
-        nbt.putInt("Range", sync.range)
+        nbt.putInt("ChunkBitmask", sync.chunkBitmask)
     }
 
     override fun markRemoved() {
@@ -148,13 +164,13 @@ class ChunkLoaderBlockEntity(
 
     /** 释放所有强制加载的区块 */
     fun releaseChunks() {
-        if (!ticketsActive) return
+        if (activeChunkPositions.isEmpty()) return
         val sw = world as? ServerWorld ?: return
         val cm = sw.chunkManager as? ServerChunkManager ?: return
-        val center = ChunkPos(pos)
-        val radius = sync.getTicketRadius()
-        cm.removeTicket(ChunkTicketType.FORCED, center, radius, center)
-        ticketsActive = false
+        for (chunkPos in activeChunkPositions) {
+            cm.removeTicket(ChunkTicketType.FORCED, chunkPos, 0, chunkPos)
+        }
+        activeChunkPositions = emptySet()
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -167,9 +183,9 @@ class ChunkLoaderBlockEntity(
         val chunkCount = sync.getChunkCount()
         val needPerTick = ChunkLoaderSync.EU_PER_CHUNK_PER_TICK * chunkCount
 
-        if (sync.amount < needPerTick) {
-            // 能量不足，停止加载
-            if (ticketsActive) {
+        if (sync.amount < needPerTick || chunkCount == 0) {
+            // 能量不足或无区块选中，停止加载
+            if (activeChunkPositions.isNotEmpty()) {
                 releaseChunks()
                 setActiveState(world, pos, state, false)
             }
@@ -180,24 +196,38 @@ class ChunkLoaderBlockEntity(
         // 消耗能量并维持加载
         if (sync.consumeEnergy(needPerTick) > 0L) {
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            if (!ticketsActive) {
-                val sw = world as? ServerWorld
-                val cm = sw?.chunkManager as? ServerChunkManager
-                if (cm != null) {
-                    val center = ChunkPos(pos)
-                    val radius = sync.getTicketRadius()
-                    cm.addTicket(ChunkTicketType.FORCED, center, radius, center)
-                    ticketsActive = true
+            val center = ChunkPos(pos)
+            val needed = sync.getChunkPositions(center).toSet()
+
+            val sw = world as? ServerWorld
+            val cm = sw?.chunkManager as? ServerChunkManager
+            if (cm != null) {
+                // 新增需要的区块 ticket
+                for (cp in needed - activeChunkPositions) {
+                    cm.addTicket(ChunkTicketType.FORCED, cp, 0, cp)
                 }
+                // 移除不再需要的区块 ticket
+                for (cp in activeChunkPositions - needed) {
+                    cm.removeTicket(ChunkTicketType.FORCED, cp, 0, cp)
+                }
+                activeChunkPositions = needed
             }
             setActiveState(world, pos, state, true)
             markDirty()
         } else {
-            if (ticketsActive) releaseChunks()
+            if (activeChunkPositions.isNotEmpty()) releaseChunks()
             setActiveState(world, pos, state, false)
         }
 
         sync.syncCurrentTickFlow()
+    }
+
+    /** 切换指定区块的加载状态（由 ScreenHandler 调用），中心区块不可关闭 */
+    fun toggleChunk(index: Int) {
+        if (index in 0 until ChunkLoaderSync.CHUNK_COUNT && index != 12) {
+            sync.chunkBitmask = sync.chunkBitmask xor (1 shl index)
+            markDirty()
+        }
     }
 
     private fun extractFromDischargingSlot() {
