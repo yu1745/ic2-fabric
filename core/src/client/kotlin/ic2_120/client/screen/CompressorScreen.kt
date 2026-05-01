@@ -83,7 +83,10 @@ class CompressorScreen(
                         alignItems = AlignItems.CENTER,
                         gap = 4
                     ) {
-                        SlotHost(CompressorScreenHandler.SLOT_INPUT_INDEX)
+                        Column(spacing = 4) {
+                            SlotHost(CompressorScreenHandler.SLOT_INPUT_INDEX)
+                            SlotHost(CompressorScreenHandler.SLOT_DISCHARGING_INDEX)
+                        }
                         EnergyBar(progressFrac, modifier = Modifier.EMPTY.fractionWidth(1.0f))
                         SlotHost(CompressorScreenHandler.SLOT_OUTPUT_INDEX)
                     }

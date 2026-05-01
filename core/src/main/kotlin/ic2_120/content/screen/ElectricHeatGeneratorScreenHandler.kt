@@ -2,6 +2,7 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.ElectricHeatGeneratorBlock
 import ic2_120.content.block.machines.ElectricHeatGeneratorBlockEntity
+import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
@@ -51,9 +52,10 @@ class ElectricHeatGeneratorScreenHandler(
         checkSize(blockInventory, ElectricHeatGeneratorBlockEntity.SLOT_COUNT)
         addProperties(propertyDelegate)
 
-        repeat(ElectricHeatGeneratorBlockEntity.SLOT_COUNT) { i ->
+        repeat(ElectricHeatGeneratorBlockEntity.SLOT_DISCHARGING) { i ->
             addSlot(PredicateSlot(blockInventory, i, 0, 0, COIL_SLOT_SPEC))
         }
+        addSlot(PredicateSlot(blockInventory, ElectricHeatGeneratorBlockEntity.SLOT_DISCHARGING, 0, 0, DISCHARGING_SLOT_SPEC))
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -72,20 +74,31 @@ class ElectricHeatGeneratorScreenHandler(
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
-                index in 0 until ElectricHeatGeneratorBlockEntity.SLOT_COUNT -> {
-                    // 从线圈槽移出到玩家物品栏
+                index == SLOT_DISCHARGING_INDEX -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    slot.onQuickTransfer(stackInSlot, stack)
+                }
+                index in 0 until ElectricHeatGeneratorBlockEntity.SLOT_DISCHARGING -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
-                    // 从玩家物品栏移到线圈槽，使用 SlotMoveHelper 来遵守 maxItemCount 限制
-                    if (stackInSlot.item == coilItem) {
-                        val coilTargets = (0 until ElectricHeatGeneratorBlockEntity.SLOT_COUNT).map {
-                            SlotTarget(slots[it], COIL_SLOT_SPEC)
+                    val moved = when {
+                        stackInSlot.item is IBatteryItem -> {
+                            SlotMoveHelper.insertIntoTargets(
+                                stackInSlot,
+                                listOf(SlotTarget(slots[SLOT_DISCHARGING_INDEX], DISCHARGING_SLOT_SPEC))
+                            )
                         }
-                        val moved = SlotMoveHelper.insertIntoTargets(stackInSlot, coilTargets)
-                        if (!moved) return ItemStack.EMPTY
-                    } else return ItemStack.EMPTY
+                        stackInSlot.item == coilItem -> {
+                            val coilTargets = (0 until ElectricHeatGeneratorBlockEntity.SLOT_DISCHARGING).map {
+                                SlotTarget(slots[it], COIL_SLOT_SPEC)
+                            }
+                            SlotMoveHelper.insertIntoTargets(stackInSlot, coilTargets)
+                        }
+                        else -> false
+                    }
+                    if (!moved) return ItemStack.EMPTY
                 }
                 else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
             }
@@ -105,12 +118,17 @@ class ElectricHeatGeneratorScreenHandler(
     companion object {
         const val SLOT_SIZE = 18
 
+        const val SLOT_DISCHARGING_INDEX = ElectricHeatGeneratorBlockEntity.SLOT_DISCHARGING
         const val PLAYER_INV_START = ElectricHeatGeneratorBlockEntity.SLOT_COUNT
         const val HOTBAR_END = PLAYER_INV_START + 36
 
         private val COIL_SLOT_SPEC = SlotSpec(maxItemCount = 1, canInsert = { stack ->
             !stack.isEmpty && stack.item == Registries.ITEM.get(Identifier.of("ic2_120", "coil"))
         })
+        private val DISCHARGING_SLOT_SPEC = SlotSpec(
+            maxItemCount = 1,
+            canInsert = { stack -> stack.item is IBatteryItem }
+        )
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ElectricHeatGeneratorScreenHandler {

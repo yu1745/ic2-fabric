@@ -26,8 +26,8 @@ class ElectricHeatGeneratorScreen(
     private val ui = ComposeUI()
 
     init {
-        backgroundWidth = PANEL_WIDTH
-        backgroundHeight = PANEL_HEIGHT
+        backgroundWidth = GUI_SIZE.width
+        backgroundHeight = GUI_SIZE.height
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
@@ -36,8 +36,8 @@ class ElectricHeatGeneratorScreen(
             context = context,
             screenX = x,
             screenY = y,
-            playerInvY = GuiSize.STANDARD.playerInvY,
-            hotbarY = GuiSize.STANDARD.hotbarY,
+            playerInvY = GUI_SIZE.playerInvY,
+            hotbarY = GUI_SIZE.hotbarY,
             slotSize = GuiSize.SLOT_SIZE
         )
     }
@@ -94,15 +94,24 @@ class ElectricHeatGeneratorScreen(
                         }
                     }
                 }
-//                Text("线圈 $coils/10", color = 0xFFFFFF, shadow = false)
+                Flex(
+                    direction = FlexDirection.ROW,
+                    justifyContent = JustifyContent.CENTER
+                ) {
+                    SlotAnchor(
+                        id = "slot.${ElectricHeatGeneratorScreenHandler.SLOT_DISCHARGING_INDEX}",
+                        width = ElectricHeatGeneratorScreenHandler.SLOT_SIZE,
+                        height = ElectricHeatGeneratorScreenHandler.SLOT_SIZE
+                    )
+                }
             }
 
             playerInventoryAndHotbarSlotAnchors(
                 left = left,
                 top = top,
                 playerInvStart = ElectricHeatGeneratorScreenHandler.PLAYER_INV_START,
-                playerInvY = GuiSize.STANDARD.playerInvY,
-                hotbarY = GuiSize.STANDARD.hotbarY
+                playerInvY = GUI_SIZE.playerInvY,
+                hotbarY = GUI_SIZE.hotbarY
             )
         }
 
@@ -132,7 +141,6 @@ class ElectricHeatGeneratorScreen(
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
 
     companion object {
-        private val PANEL_WIDTH = GuiSize.STANDARD.width
-        private val PANEL_HEIGHT = GuiSize.STANDARD.height
+        private val GUI_SIZE = GuiSize.STANDARD_TALL
     }
 }
