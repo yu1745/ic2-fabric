@@ -32,6 +32,10 @@ import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.client.item.TooltipContext
+import net.fabricmc.api.EnvType
+import net.fabricmc.api.Environment
+import net.minecraft.text.Text
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
@@ -181,6 +185,23 @@ abstract class BasePipeBlock(
     }
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = PipeBlockEntity(pos, state)
+
+    /**
+     * 添加物品提示信息（显示流量）
+     */
+    @Environment(EnvType.CLIENT)
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: BlockView?,
+        tooltip: MutableList<Text>,
+        context: TooltipContext
+    ) {
+        super.appendTooltip(stack, world, tooltip, context)
+        val flowPerSec = size.baseBucketsPerSecond * material.multiplier * 1000 // 转换为 mB/s
+        tooltip.add(Text.literal("§7流量: §b${
+            "%.1f".format(flowPerSec)
+        } mB/s§7 (${size.baseBucketsPerSecond * material.multiplier} 桶/秒)"))
+    }
 
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
