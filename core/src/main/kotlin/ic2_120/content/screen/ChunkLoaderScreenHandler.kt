@@ -94,6 +94,15 @@ class ChunkLoaderScreenHandler(
         return stack
     }
 
+    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+        if (id < 0 || id >= ChunkLoaderSync.CHUNK_COUNT) return false
+        context.get({ world, pos ->
+            val be = world.getBlockEntity(pos) as? ChunkLoaderBlockEntity ?: return@get
+            be.toggleChunk(id)
+        }, true)
+        return true
+    }
+
     override fun canUse(player: PlayerEntity): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is ChunkLoaderBlock && player.squaredDistanceTo(

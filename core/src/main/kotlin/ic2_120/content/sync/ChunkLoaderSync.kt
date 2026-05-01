@@ -2,10 +2,11 @@ package ic2_120.content.sync
 
 import ic2_120.content.TickLimitedSidedEnergyContainer
 import ic2_120.content.syncs.SyncSchema
+import net.minecraft.util.math.ChunkPos
 
 /**
  * 区块加载器的同步属性与能量存储。
- * 耗能：1 EU/tick 每区块，范围 1～25 区块可配置。
+ * 耗能：1 EU/tick 每区块，使用 25 位 bitmask 逐区块控制加载。
  */
 class ChunkLoaderSync(
     schema: SyncSchema,
@@ -19,13 +20,17 @@ class ChunkLoaderSync(
         const val NBT_ENERGY_STORED = "EnergyStored"
         /** 每区块每 tick 耗能 (EU) */
         const val EU_PER_CHUNK_PER_TICK = 1L
-        /** 范围选项对应的半径：0=1区块, 1=9区块, 2=25区块 */
-        val RADIUS_TO_CHUNK_COUNT = intArrayOf(1, 9, 25)
+        /** 默认 bitmask：25 个区块全选 */
+        const val DEFAULT_BITMASK = (1 shl 25) - 1
+        /** 网格尺寸 5×5 */
+        const val GRID_SIZE = 5
+        /** 总区块数 */
+        const val CHUNK_COUNT = GRID_SIZE * GRID_SIZE
     }
 
     var energy by schema.int("Energy")
-    /** 加载范围：0=1区块, 1=9区块, 2=25区块 */
-    var range by schema.int("Range", default = 2)
+    /** 区块加载 bitmask，每位代表一个区块 (bit index = row * 5 + col) */
+    var chunkBitmask by schema.int("ChunkBitmask", default = DEFAULT_BITMASK)
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
 
     private val flow = EnergyFlowSync(schema, this)
@@ -41,9 +46,23 @@ class ChunkLoaderSync(
     fun getSyncedInsertedAmount(): Long = flow.getSyncedInsertedAmount()
     fun getSyncedConsumedAmount(): Long = flow.getSyncedConsumedAmount()
 
-    /** 当前范围对应的区块数 */
-    fun getChunkCount(): Int = RADIUS_TO_CHUNK_COUNT.getOrElse(range.coerceIn(0, 2)) { 25 }
+    /** 当前 bitmask 中已选中的区块数 */
+    fun getChunkCount(): Int = chunkBitmask.countOneBits()
 
-    /** 当前范围对应的 ticket 半径 (0, 1, 2) */
-    fun getTicketRadius(): Int = range.coerceIn(0, 2)
+    /** 根据 bitmask 和中心区块位置，返回所有需要加载的区块坐标 */
+    fun getChunkPositions(center: ChunkPos): List<ChunkPos> {
+        val positions = mutableListOf<ChunkPos>()
+        for (i in 0 until CHUNK_COUNT) {
+            if ((chunkBitmask and (1 shl i)) != 0) {
+                val row = i / GRID_SIZE
+                val col = i % GRID_SIZE
+                positions.add(ChunkPos(center.x + col - 2, center.z + row - 2))
+            }
+        }
+        return positions
+    }
+
+    /** 检查指定索引的区块是否选中 */
+    fun isChunkEnabled(index: Int): Boolean =
+        index in 0 until CHUNK_COUNT && (chunkBitmask and (1 shl index)) != 0
 }
