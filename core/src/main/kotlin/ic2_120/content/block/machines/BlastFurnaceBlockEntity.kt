@@ -14,8 +14,11 @@ import ic2_120.content.recipes.getRecipeType
 import ic2_120.content.screen.BlastFurnaceScreenHandler
 import ic2_120.content.sync.BlastFurnaceSync
 import ic2_120.content.syncs.SyncedData
+import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
+import ic2_120.content.upgrade.PullingUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.ModMachineRecipeBinding
 import ic2_120.registry.type
@@ -59,7 +62,7 @@ class BlastFurnaceBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IFluidPipeUpgradeSupport, ExtendedScreenHandlerFactory {
+) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = BlastFurnaceBlock.ACTIVE
 
@@ -85,6 +88,8 @@ class BlastFurnaceBlockEntity(
         const val SLOT_UPGRADE_2 = 7
         const val SLOT_UPGRADE_3 = 8
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_STEEL, SLOT_OUTPUT_SLAG, SLOT_OUTPUT_EMPTY)
+        val SLOT_INPUT_INDICES = intArrayOf(SLOT_INPUT, SLOT_AIR_INPUT)
         const val INVENTORY_SIZE = 9
         private const val NBT_PREHEAT = "Preheat"
     }
@@ -197,6 +202,8 @@ class BlastFurnaceBlockEntity(
         val outputSlag = getStack(SLOT_OUTPUT_SLAG)
 
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
+        PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
 
         val isFullyPreheated = preheat >= BlastFurnaceSync.PREHEAT_MAX
 

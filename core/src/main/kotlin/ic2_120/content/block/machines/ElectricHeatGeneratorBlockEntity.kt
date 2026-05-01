@@ -1,6 +1,8 @@
 package ic2_120.content.block.machines
 
 import ic2_120.content.block.ElectricHeatGeneratorBlock
+import ic2_120.content.energy.charge.BatteryDischargerComponent
+import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.pullEnergyFromNeighbors
 import ic2_120.content.sync.ElectricHeatGeneratorSync
 import ic2_120.content.sync.HeatFlowSync
@@ -49,7 +51,8 @@ class ElectricHeatGeneratorBlockEntity(
     override val activeProperty: net.minecraft.state.property.BooleanProperty = ElectricHeatGeneratorBlock.ACTIVE
 
     companion object {
-        const val SLOT_COUNT = 10
+        const val SLOT_COUNT = 11
+        const val SLOT_DISCHARGING = 10
         private const val HU_PER_COIL_PER_TICK = 10L
     }
 
@@ -58,6 +61,13 @@ class ElectricHeatGeneratorBlockEntity(
 
     private val inventory = DefaultedList.ofSize(SLOT_COUNT, ItemStack.EMPTY)
     private val coilItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "coil")) }
+
+    private val batteryDischarger = BatteryDischargerComponent(
+        inventory = this,
+        batterySlot = SLOT_DISCHARGING,
+        machineTierProvider = { tier },
+        canDischargeNow = { sync.amount < ElectricHeatGeneratorSync.ENERGY_CAPACITY }
+    )
 
     val syncedData = SyncedData(this)
     override val heatFlow = HeatFlowSync(syncedData, this)
@@ -99,9 +109,22 @@ class ElectricHeatGeneratorBlockEntity(
     override fun clear() = inventory.clear()
     override fun canPlayerUse(player: net.minecraft.entity.player.PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
+    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+        in 0 until SLOT_DISCHARGING -> !stack.isEmpty && stack.item == coilItem
+        SLOT_DISCHARGING -> !stack.isEmpty && stack.item is IBatteryItem
+        else -> false
+    }
+
     override fun setStack(slot: Int, stack: ItemStack) {
+        if (slot == SLOT_DISCHARGING) {
+            if (stack.isEmpty || stack.item !is IBatteryItem) return
+            val single = stack.copy()
+            single.count = 1
+            inventory[slot] = single
+            markDirty()
+            return
+        }
         if (!stack.isEmpty && stack.item != coilItem) return
-        // 线圈槽只接受单个物品，如果堆叠数量 > 1，只取 1 个
         val stackToSet = if (!stack.isEmpty && stack.count > 1) {
             val single = stack.copy()
             single.count = 1
@@ -134,7 +157,19 @@ class ElectricHeatGeneratorBlockEntity(
     override fun preGenerate(world: World, pos: BlockPos, state: BlockState) {
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         pullEnergyFromNeighbors(world, pos, sync)
+        extractFromDischargingSlot()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+    }
+
+    private fun extractFromDischargingSlot() {
+        val space = (ElectricHeatGeneratorSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0L)
+        if (space <= 0L) return
+        val request = minOf(space, ElectricHeatGeneratorSync.MAX_INSERT)
+        val extracted = batteryDischarger.tick(request)
+        if (extracted <= 0L) return
+        sync.insertEnergy(extracted)
+        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        markDirty()
     }
 
     override fun generateHeat(world: World, pos: BlockPos, state: BlockState): Long {
