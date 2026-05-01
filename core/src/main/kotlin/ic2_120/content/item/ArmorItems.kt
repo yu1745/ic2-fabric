@@ -668,7 +668,7 @@ class HazmatLeggings : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.LEGGINGS, Item.Set
  * 可在日光下自动为玩家装备中的电池物品充电的头盔。
  */
 @ModItem(name = "solar_helmet", tab = CreativeTab.IC2_MATERIALS, group = "solar_armor")
-class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1).maxDamage(0)) {
+class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)) {
     companion object {
         private const val EU_PER_TICK = 1L
 
@@ -769,7 +769,7 @@ class AlloyChestplate : ArmorItem(ALLOY_ARMOR, ArmorItem.Type.CHESTPLATE, Item.S
  * 作为胸甲装备。
  */
 @ModItem(name = "cf_pack", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1).maxDamage(0)) {
+class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
 
     override fun inventoryTick(stack: ItemStack, world: World, entity: Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
@@ -909,7 +909,7 @@ class Jetpack : JetpackItem() {
 class ElectricJetpack : ElectricArmorItem(
     ModArmorMaterials.ELECTRIC_JETPACK_ARMOR,
     ArmorItem.Type.CHESTPLATE,
-    Item.Settings().maxCount(1).maxDamage(0)
+    Item.Settings().maxCount(1)
 ) {
     companion object {
         private const val FLIGHT_ENABLED_KEY = "FlightEnabled"
@@ -1006,7 +1006,7 @@ class ElectricJetpack : ElectricArmorItem(
  * 提供夜视效果的头戴式装备。
  */
 @ModItem(name = "night_vision_goggles", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1).maxDamage(0)), IBatteryItem {
+class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)), IBatteryItem {
     override val tier: Int = 2
     override val maxCapacity: Long
         get() = Ic2Config.current.armor.nightVision.nightVisionGogglesMaxEnergy
@@ -1131,7 +1131,7 @@ abstract class BatteryPackArmorItem(
     armorMaterial: RegistryEntry<ArmorMaterial>,
     override val tier: Int,
     override val maxCapacity: Long,
-) : ArmorItem(armorMaterial, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1).maxDamage(0)), IBatteryItem {
+) : ArmorItem(armorMaterial, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)), IBatteryItem {
 
     init {
         require(tier in 1..4) { "电池背包等级须在 1–4，当前: $tier" }
