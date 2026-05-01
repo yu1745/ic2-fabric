@@ -378,7 +378,7 @@
   "mode.ic2_120.extruding": "Extruding Mode",
   "tooltip.ic2_120.cable_eu_t": "%s EU/t",
   "tooltip.ic2_120.cable_loss": "Loss: %s EU/block",
-  "tooltip.ic2_120.wrench.rotate_machine": "Right-click machines to rotate facing",
+  "tooltip.ic2_120.wrench.rotate_machine": "Right-click: face player / Shift+right-click: face away",
   "tooltip.ic2_120.wrench.pipe_toggle": "Right-click pipes to close/open that side connection",
   "tooltip.ic2_120.wrench.break_machine": "Left-click to quickly dismantle machines and drop full block",
   "tooltip.ic2_120.wrench.tank_retain": "Dismantling tanks retains 80% internal fluid",
