@@ -14,14 +14,14 @@
     "M": {
       "item": "ic2_120:machine"
     },
-    "S": {
-      "item": "ic2_120:crop_stick"
+    "W": {
+      "item": "minecraft:wheat"
     }
   },
   "pattern": [
     "CHC",
     "EME",
-    "SSS"
+    "WWW"
   ],
   "result": {
     "count": 1,
