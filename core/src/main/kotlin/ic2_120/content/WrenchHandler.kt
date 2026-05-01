@@ -37,7 +37,7 @@ import net.minecraft.world.World
  * 扳手与机器方块的交互逻辑：
  * - 普通扳手左键拆机器：瞬间拆，掉完整机器，耗 10 耐久
  * - 电动扳手左键拆机器：瞬间拆，掉完整机器，耗 1000 EU（电量不足则无法拆卸）
- * - 扳手/电扳手右键：旋转机器朝向，不耗耐久/不耗电
+ * - 扳手/电扳手右键：正面朝向玩家，Shift+右键：背面朝向玩家，不耗耐久/不耗电
  * - 非扳手拆卸：只掉机器外壳（由 MachineBlock.getCasingDrop 决定）
  *
  * 注意：World.breakBlock(..., drop=true, player) 内部对掉落使用 ItemStack.EMPTY 作为 TOOL，
@@ -64,7 +64,8 @@ object WrenchHandler {
     }
 
     fun register() {
-        // 右键：扳手旋转机器，不耗耐久
+        // 右键：扳手设置机器朝向，不耗耐久
+            // 右键正面朝向玩家，Shift+右键背面朝向玩家
         UseBlockCallback.EVENT.register { player, world, hand, hitResult ->
             val stack = player.getStackInHand(hand)
             if (!isWrench(stack)) return@register ActionResult.PASS
@@ -94,14 +95,8 @@ object WrenchHandler {
             if (block !is MachineBlock) return@register ActionResult.PASS
 
             if (!world.isClient) {
-                val next = when (state.get(Properties.HORIZONTAL_FACING)) {
-                    Direction.NORTH -> Direction.EAST
-                    Direction.EAST -> Direction.SOUTH
-                    Direction.SOUTH -> Direction.WEST
-                    Direction.WEST -> Direction.NORTH
-                    else -> state.get(Properties.HORIZONTAL_FACING)
-                }
-                world.setBlockState(pos, state.with(Properties.HORIZONTAL_FACING, next))
+                val target = if (player.isSneaking) player.horizontalFacing else player.horizontalFacing.opposite
+                world.setBlockState(pos, state.with(Properties.HORIZONTAL_FACING, target))
                 world.playSound(null, pos, WRENCH_USE_SOUND, SoundCategory.BLOCKS, 1.0f, 1.0f)
             }
             ActionResult.SUCCESS

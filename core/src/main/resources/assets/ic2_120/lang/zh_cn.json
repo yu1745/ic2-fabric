@@ -377,7 +377,7 @@
   "mode.ic2_120.extruding": "挤压模式",
   "tooltip.ic2_120.cable_eu_t": "%s EU/t",
   "tooltip.ic2_120.cable_loss": "损耗: %s EU/格",
-  "tooltip.ic2_120.wrench.rotate_machine": "右键机器可旋转朝向",
+  "tooltip.ic2_120.wrench.rotate_machine": "右键：正面朝向玩家 / Shift+右键：背面朝向玩家",
   "tooltip.ic2_120.wrench.pipe_toggle": "右键管道可封闭/开启该面的连接",
   "tooltip.ic2_120.wrench.break_machine": "左键可快速拆卸机器并掉落整机",
   "tooltip.ic2_120.wrench.tank_retain": "拆卸储罐时保留 80% 内部流体",
