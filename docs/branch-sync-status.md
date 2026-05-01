@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **16 个 commit**，**15 个已同步，1 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **17 个 commit**，**15 个已同步，2 个待同步**。
 
 ## 逐 commit 状态
 
@@ -30,9 +30,11 @@
 | 14 | `bf99891` | feat: advanced-weapons-addon 子项目 | ✅ | cherry-pick + API 适配 |
 | 15 | `799fda9` | revert: 取消 Jar-in-Jar，恢复 libs/ | ✅ | 已 cherry-pick |
 | 16 | `fe72f4e6` | feat: 高炉添加抽入/弹出升级，压缩机修复放电槽UI，电力加热机添加电池槽 | ❌ | 未同步 |
+| 17 | `6a5fbb26` | feat: 能量水晶和蓝波顿水晶添加右键一键充电功能 | ❌ | 新增 |
 
 ## 同步历史
 
 - 2026-04-30：首次逐 commit 比对，确认 3 个缺失 commit：`48934bc`（docs）、`bf99891`（weapons-addon）、`799fda9`（revert）；`549eeb8` 代码已在 1.21.1 中存在
 - 2026-04-30：补齐 3 个缺失 commit（cherry-pick），其中 `bf99891` 需适配 1.21.1 API（`QuantumSaber.kt`、`Identifier` 构造函数、`build.gradle` remapper 扩展）
 - 2026-04-30：全部 15 个 commit 同步完成
+- 2026-05-01：新增能量水晶/蓝波顿水晶右键一键充电功能
