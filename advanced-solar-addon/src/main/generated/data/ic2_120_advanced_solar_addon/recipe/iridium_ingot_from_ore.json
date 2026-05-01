@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "O": {
+      "item": "ic2_120:iridium_ore_item"
+    }
+  },
+  "pattern": [
+    "   ",
+    " O ",
+    "   "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_advanced_solar_addon:iridium_ingot"
+  }
+}

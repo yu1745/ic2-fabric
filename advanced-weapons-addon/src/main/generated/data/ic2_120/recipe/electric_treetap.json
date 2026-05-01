@@ -1,0 +1,21 @@
+{
+  "type": "ic2_120:consume_treetap_shaped",
+  "category": "misc",
+  "key": {
+    "P": {
+      "item": "ic2_120:small_power_unit"
+    },
+    "T": {
+      "item": "ic2_120:treetap"
+    }
+  },
+  "pattern": [
+    "   ",
+    " T ",
+    " P "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:electric_treetap"
+  }
+}

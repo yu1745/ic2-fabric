@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_batbox": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2_120:batbox"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:batbox_chargepad"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_batbox"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:batbox_chargepad"
+    ]
+  }
+}

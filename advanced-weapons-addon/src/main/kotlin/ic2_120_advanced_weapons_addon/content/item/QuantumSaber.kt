@@ -5,8 +5,6 @@ import ic2_120.editCustomData
 import ic2_120.getCustomData
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
-import net.minecraft.registry.tag.BlockTags
-import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.AttributeModifierSlot
 import net.minecraft.component.type.AttributeModifiersComponent
 import net.minecraft.entity.LivingEntity
@@ -19,6 +17,7 @@ import net.minecraft.item.SwordItem
 import net.minecraft.item.ToolMaterial
 import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.recipe.Ingredient
+import net.minecraft.registry.tag.BlockTags
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Hand
@@ -48,8 +47,8 @@ class QuantumSaber : SwordItem(
         private val ATTACK_DAMAGE_MODIFIER_ID = Identifier.ofVanilla("quantum_saber_attack_damage")
         private val ATTACK_SPEED_MODIFIER_ID = Identifier.ofVanilla("quantum_saber_attack_speed")
 
-        private const val DAMAGE_INACTIVE_TOTAL = 5.0
         private const val DAMAGE_ACTIVE_TOTAL = 31.0
+        private const val DAMAGE_INACTIVE_TOTAL = 5.0
 
         fun isActive(stack: ItemStack): Boolean = stack.getCustomData()?.getBoolean(NBT_ACTIVE) ?: false
 
@@ -103,7 +102,7 @@ class QuantumSaber : SwordItem(
                 true
             )
         }
-        return TypedActionResult.success(stack, world.isClient)
+        return TypedActionResult.success(stack)
     }
 
     override fun postHit(stack: ItemStack, target: LivingEntity, attacker: LivingEntity): Boolean {

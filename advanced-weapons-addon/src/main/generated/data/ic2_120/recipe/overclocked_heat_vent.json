@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": {
+      "item": "ic2_120:gold_plate"
+    },
+    "R": {
+      "item": "ic2_120:reactor_heat_vent"
+    }
+  },
+  "pattern": [
+    " G ",
+    "GRG",
+    " G "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:overclocked_heat_vent"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "X": {
+      "item": "ic2_120:carbon_fibre"
+    }
+  },
+  "pattern": [
+    "XXX",
+    "   ",
+    "XXX"
+  ],
+  "result": {
+    "count": 6,
+    "id": "ic2_120:carbon_pipe_tiny"
+  }
+}

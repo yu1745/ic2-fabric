@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:machine"
+    },
+    "S": {
+      "item": "ic2_120:iron_shaft"
+    }
+  },
+  "pattern": [
+    "   ",
+    "SCS",
+    "   "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:wind_kinetic_generator"
+  }
+}

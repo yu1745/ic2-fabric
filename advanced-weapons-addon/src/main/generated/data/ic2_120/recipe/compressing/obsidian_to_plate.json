@@ -1,0 +1,11 @@
+{
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "item": "ic2_120:obsidian_dust"
+  },
+  "input_count": 1,
+  "result": {
+    "count": 1,
+    "id": "ic2_120:obsidian_plate"
+  }
+}

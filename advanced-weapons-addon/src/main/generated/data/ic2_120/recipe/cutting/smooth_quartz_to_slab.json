@@ -1,0 +1,12 @@
+{
+  "type": "ic2_120:cutting",
+  "ingredient": {
+    "item": "minecraft:smooth_quartz"
+  },
+  "input_count": 1,
+  "material_hardness": 0.8,
+  "result": {
+    "count": 9,
+    "id": "minecraft:smooth_quartz_slab"
+  }
+}

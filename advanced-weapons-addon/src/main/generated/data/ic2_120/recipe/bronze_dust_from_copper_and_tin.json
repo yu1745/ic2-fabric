@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ic2_120:copper_dust"
+    },
+    {
+      "item": "ic2_120:copper_dust"
+    },
+    {
+      "item": "ic2_120:copper_dust"
+    },
+    {
+      "item": "ic2_120:tin_dust"
+    }
+  ],
+  "result": {
+    "count": 4,
+    "id": "ic2_120:bronze_dust"
+  }
+}

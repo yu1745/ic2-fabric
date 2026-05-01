@@ -144,6 +144,9 @@ private val BRONZE_ARMOR = createArmorMaterial(
     repairIngredient = bronzeIngot
 )
 
+// 青铜护甲耐久倍率（与铁护甲相同）
+private const val BRONZE_DURABILITY_MULTIPLIER = 15
+
 // ========== 橡胶靴 (Rubber Boots) ==========
 /**
  * IC2 橡胶靴专用护甲材料，提供绝缘特性。
@@ -164,6 +167,8 @@ private val RUBBER_ARMOR = createArmorMaterial(
     knockbackResistance = 0f,
     repairIngredient = rubber
 )
+// 橡胶靴耐久倍率（约 5，使靴子耐久为 64）
+private const val RUBBER_DURABILITY_MULTIPLIER = 5
 
 // ========== 防化服 (Hazmat Armor) ==========
 /**
@@ -186,6 +191,8 @@ private val HAZMAT_ARMOR = createArmorMaterial(
     knockbackResistance = 0f,
     repairIngredient = rubber  // 用橡胶修复
 )
+// 防化服耐久倍率（使各部位耐久约 64）
+private const val HAZMAT_DURABILITY_MULTIPLIER = 5
 
 // ========== 纳米护甲 (Nano Armor) ==========
 /**
@@ -264,6 +271,8 @@ private val ALLOY_ARMOR = createArmorMaterial(
     knockbackResistance = 0f,
     repairIngredient = advancedAlloy
 )
+// 复合胸甲耐久倍率（与钻石胸甲相同）
+private const val ALLOY_DURABILITY_MULTIPLIER = 33
 
 // ========== 背包护甲材料 ==========
 /**
@@ -375,7 +384,7 @@ private val NIGHT_VISION_ARMOR = createArmorMaterial(
  * 适用于游戏早期阶段，属性接近铁质护甲但可通过 IC2 方式获取。
  */
 @ModItem(name = "bronze_helmet", tab = CreativeTab.IC2_MATERIALS, group = "bronze_armor")
-class BronzeHelmet : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)) {
+class BronzeHelmet : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.HELMET.getMaxDamage(BRONZE_DURABILITY_MULTIPLIER))) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
@@ -393,7 +402,7 @@ class BronzeHelmet : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.HELMET, Item.Setting
 }
 
 @ModItem(name = "bronze_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "bronze_armor")
-class BronzeChestplate : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
+class BronzeChestplate : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.CHESTPLATE.getMaxDamage(BRONZE_DURABILITY_MULTIPLIER))) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
@@ -412,7 +421,7 @@ class BronzeChestplate : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.CHESTPLATE, Item
 }
 
 @ModItem(name = "bronze_leggings", tab = CreativeTab.IC2_MATERIALS, group = "bronze_armor")
-class BronzeLeggings : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.LEGGINGS, Item.Settings().maxCount(1)) {
+class BronzeLeggings : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.LEGGINGS, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.LEGGINGS.getMaxDamage(BRONZE_DURABILITY_MULTIPLIER))) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
@@ -431,7 +440,7 @@ class BronzeLeggings : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.LEGGINGS, Item.Set
 }
 
 @ModItem(name = "bronze_boots", tab = CreativeTab.IC2_MATERIALS, group = "bronze_armor")
-class BronzeBoots : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.BOOTS, Item.Settings().maxCount(1)) {
+class BronzeBoots : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.BOOTS, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.BOOTS.getMaxDamage(BRONZE_DURABILITY_MULTIPLIER))) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
@@ -455,7 +464,7 @@ class BronzeBoots : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
  * 行走时可为背包中的可充电物品充电，数值由配置控制。
  */
 @ModItem(name = "rubber_boots", tab = CreativeTab.IC2_MATERIALS, group = "hazmat_armor")
-class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings().maxCount(1)) {
+class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.BOOTS.getMaxDamage(RUBBER_DURABILITY_MULTIPLIER))) {
     companion object {
         private const val WALK_ACC_KEY = "Ic2RubberBootsWalkAcc"
         private const val LAST_X_KEY = "Ic2RubberBootsLastX"
@@ -542,7 +551,7 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, Item.Settings(
  * 参考原版 IC2 各部位耐久：均为 64
  */
 @ModItem(name = "hazmat_helmet", tab = CreativeTab.IC2_MATERIALS, group = "hazmat_armor")
-class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)) {
+class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.HELMET.getMaxDamage(HAZMAT_DURABILITY_MULTIPLIER))) {
     companion object {
         private const val CHECK_COOLDOWN_KEY = "AirCheckCooldown"
         private const val AIR_THRESHOLD = 60  // 当气泡值 <= 60 时触发（约 3 秒，20%）
@@ -615,7 +624,7 @@ class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, Item.Setting
 }
 
 @ModItem(name = "hazmat_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "hazmat_armor")
-class HazmatChestplate : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
+class HazmatChestplate : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.CHESTPLATE.getMaxDamage(HAZMAT_DURABILITY_MULTIPLIER))) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
@@ -634,7 +643,7 @@ class HazmatChestplate : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.CHESTPLATE, Item
 }
 
 @ModItem(name = "hazmat_leggings", tab = CreativeTab.IC2_MATERIALS, group = "hazmat_armor")
-class HazmatLeggings : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.LEGGINGS, Item.Settings().maxCount(1)) {
+class HazmatLeggings : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.LEGGINGS, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.LEGGINGS.getMaxDamage(HAZMAT_DURABILITY_MULTIPLIER))) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
@@ -659,7 +668,7 @@ class HazmatLeggings : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.LEGGINGS, Item.Set
  * 可在日光下自动为玩家装备中的电池物品充电的头盔。
  */
 @ModItem(name = "solar_helmet", tab = CreativeTab.IC2_MATERIALS, group = "solar_armor")
-class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)) {
+class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1).maxDamage(0)) {
     companion object {
         private const val EU_PER_TICK = 1L
 
@@ -731,7 +740,7 @@ class SolarHelmet : ArmorItem(SOLAR_ARMOR, ArmorItem.Type.HELMET, Item.Settings(
  * 9 点护甲、耐久与原版钻石胸甲相同；仅胸甲槽，无其他部位。
  */
 @ModItem(name = "alloy_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-class AlloyChestplate : ArmorItem(ALLOY_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
+class AlloyChestplate : ArmorItem(ALLOY_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1).maxDamage(ArmorItem.Type.CHESTPLATE.getMaxDamage(ALLOY_DURABILITY_MULTIPLIER))) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
@@ -900,7 +909,7 @@ class Jetpack : JetpackItem() {
 class ElectricJetpack : ElectricArmorItem(
     ModArmorMaterials.ELECTRIC_JETPACK_ARMOR,
     ArmorItem.Type.CHESTPLATE,
-    Item.Settings().maxCount(1)
+    Item.Settings().maxCount(1).maxDamage(0)
 ) {
     companion object {
         private const val FLIGHT_ENABLED_KEY = "FlightEnabled"
@@ -997,7 +1006,7 @@ class ElectricJetpack : ElectricArmorItem(
  * 提供夜视效果的头戴式装备。
  */
 @ModItem(name = "night_vision_goggles", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)), IBatteryItem {
+class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1).maxDamage(0)), IBatteryItem {
     override val tier: Int = 2
     override val maxCapacity: Long
         get() = Ic2Config.current.armor.nightVision.nightVisionGogglesMaxEnergy
@@ -1122,7 +1131,7 @@ abstract class BatteryPackArmorItem(
     armorMaterial: RegistryEntry<ArmorMaterial>,
     override val tier: Int,
     override val maxCapacity: Long,
-) : ArmorItem(armorMaterial, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)), IBatteryItem {
+) : ArmorItem(armorMaterial, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1).maxDamage(0)), IBatteryItem {
 
     init {
         require(tier in 1..4) { "电池背包等级须在 1–4，当前: $tier" }

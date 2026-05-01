@@ -1,0 +1,12 @@
+{
+  "type": "ic2_120:cutting",
+  "ingredient": {
+    "item": "minecraft:mangrove_planks"
+  },
+  "input_count": 2,
+  "material_hardness": 2.0,
+  "result": {
+    "count": 6,
+    "id": "minecraft:stick"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:circuit"
+    },
+    "H": {
+      "item": "ic2_120:heat_exchanger"
+    },
+    "L": {
+      "item": "ic2_120:lapis_plate"
+    },
+    "P": {
+      "item": "ic2_120:copper_plate"
+    }
+  },
+  "pattern": [
+    "LCL",
+    "HPH",
+    "LCL"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:advanced_heat_exchanger"
+  }
+}

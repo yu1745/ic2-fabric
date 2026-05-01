@@ -1,0 +1,14 @@
+{
+  "type": "ic2_120:centrifuging",
+  "ingredient": {
+    "item": "minecraft:cobblestone"
+  },
+  "input_count": 1,
+  "min_heat": 100,
+  "results": [
+    {
+      "count": 1,
+      "id": "ic2_120:stone_dust"
+    }
+  ]
+}

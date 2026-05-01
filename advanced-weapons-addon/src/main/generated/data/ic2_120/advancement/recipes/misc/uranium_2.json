@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:uranium_2"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_uranium_238": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2_120:uranium_238"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_uranium_238"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:uranium_2"
+    ]
+  }
+}

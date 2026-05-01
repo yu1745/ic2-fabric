@@ -340,29 +340,24 @@ object ChestLootInjector {
             .withWeightedItem(modItem("bronze_pickaxe"), 5)
             .withWeightedItem(modItem("bronze_sword"), 4)
             .withWeightedItem(modItem("circuit"), 4)
-            .withWeightedItem(modItem("energy_crystal"), 2)
             .withEmpty(30)
 
     private fun createTrialRewardPool(): LootPool.Builder =
         LootPool.builder()
             .rolls(UniformLootNumberProvider.create(1f, 2f))
             .withWeightedItem(modItem("advanced_circuit"), 8)
-            .withWeightedItem(modItem("energy_crystal"), 6)
             .withWeightedItem(modItem("carbon_plate"), 5)
             .withWeightedItem(modItem("iridium_shard"), 8, 2f, 5f)
-            .withWeightedItem(modItem("diamond_drill"), 3)
-            .withWeightedItem(modItem("chainsaw"), 2)
-            .withWeightedItem(modItem("carbon_rotor"), 2)
+            .withWeightedItem(modItem("drill"), 3)
             .withEmpty(25)
 
     private fun createTrialOminousPool(): LootPool.Builder =
         LootPool.builder()
             .rolls(UniformLootNumberProvider.create(1f, 2f))
             .withWeightedItem(modItem("lapotron_crystal"), 6)
+            .withWeightedItem(modItem("energy_crystal"), 4)
             .withWeightedItem(modItem("iridium"), 5, 1f, 3f)
-            .withWeightedItem(modItem("iridium_drill"), 2)
-            .withWeightedItem(modItem("nano_saber"), 2)
-            .withWeightedItem(modItem("mining_laser"), 2)
+            .withWeightedItem(modItem("carbon_plate"), 5)
             .withWeightedItem(modItem("iridium_shard"), 8, 4f, 8f)
             .withEmpty(20)
 

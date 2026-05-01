@@ -1,0 +1,11 @@
+{
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "item": "minecraft:red_sand"
+  },
+  "input_count": 4,
+  "result": {
+    "count": 1,
+    "id": "minecraft:red_sandstone"
+  }
+}

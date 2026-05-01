@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_rubber": {
+      "conditions": {
+        "items": [
+          {
+            "items": "ic2_120:rubber"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "ic2_120:rubber_sheet"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_rubber"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "ic2_120:rubber_sheet"
+    ]
+  }
+}

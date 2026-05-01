@@ -234,8 +234,7 @@ class MetalFormerBlockEntity(
         val recipeInput = MetalFormerRecipe.Input(input)
         // 遍历所有匹配该 RecipeType 的配方，找到当前模式对应的
         val recipe = recipeManager.listAllOfType(getRecipeType<MetalFormerRecipe>())
-            .filterIsInstance(recipeType.java)
-            .firstOrNull { it.matches(recipeInput, world) }
+            .firstOrNull { entry -> entry.value::class.java == recipeType.java && entry.value.matches(recipeInput, world) }?.value
         val result = recipe?.let { MetalFormerRecipe.getOutput(it) } ?: run {
             if (sync.progress != 0) sync.progress = 0
             setActiveState(world, pos, state, false)

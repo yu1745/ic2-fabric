@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "ic2_120:iodine"
+    },
+    "T": {
+      "tag": "ic2_120:compat/plates/tin"
+    }
+  },
+  "pattern": [
+    "IT"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:iodine_tablet"
+  }
+}

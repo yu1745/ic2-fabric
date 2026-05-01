@@ -1,0 +1,10 @@
+{
+  "type": "ic2_120:macerating",
+  "ingredient": {
+    "item": "ic2_120:lead_ingot"
+  },
+  "result": {
+    "count": 1,
+    "id": "ic2_120:lead_dust"
+  }
+}

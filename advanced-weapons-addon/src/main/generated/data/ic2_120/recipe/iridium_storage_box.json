@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "ic2_120:iridium"
+    },
+    "S": {
+      "item": "ic2_120:steel_plate"
+    }
+  },
+  "pattern": [
+    "ISI",
+    "S S",
+    "ISI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:iridium_storage_box"
+  }
+}

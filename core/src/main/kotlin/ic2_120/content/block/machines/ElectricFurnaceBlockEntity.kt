@@ -227,7 +227,7 @@ class ElectricFurnaceBlockEntity(
             return
         }
 
-        val recipe = match.get().value()
+        val recipe = match.get().value
         val result = recipe.getResult(world.registryManager).copy()
         val outputSlot = getStack(1)
         val maxStack = result.maxCount

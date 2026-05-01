@@ -1,0 +1,22 @@
+{
+  "type": "ic2_120:centrifuging",
+  "ingredient": {
+    "item": "ic2_120:crushed_uranium"
+  },
+  "input_count": 1,
+  "min_heat": 3000,
+  "results": [
+    {
+      "count": 1,
+      "id": "ic2_120:small_uranium_235"
+    },
+    {
+      "count": 4,
+      "id": "ic2_120:small_uranium_238"
+    },
+    {
+      "count": 1,
+      "id": "ic2_120:stone_dust"
+    }
+  ]
+}

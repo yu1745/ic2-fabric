@@ -1,0 +1,14 @@
+{
+  "type": "ic2_120:blast_furnacing",
+  "ingredient": {
+    "item": "minecraft:iron_ore"
+  },
+  "slag_output": {
+    "count": 1,
+    "id": "ic2_120:slag"
+  },
+  "steel_output": {
+    "count": 1,
+    "id": "ic2_120:steel_ingot"
+  }
+}

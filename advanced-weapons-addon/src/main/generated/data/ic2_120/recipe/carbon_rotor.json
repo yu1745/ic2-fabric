@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "ic2_120:carbon_rotor_blade"
+    },
+    "I": {
+      "item": "ic2_120:steel_plate"
+    }
+  },
+  "pattern": [
+    " B ",
+    "BIB",
+    " B "
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120:carbon_rotor"
+  }
+}

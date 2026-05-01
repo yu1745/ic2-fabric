@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": {
+      "item": "ic2_120:iron_fence"
+    },
+    "P": {
+      "item": "ic2_120:iron_plate"
+    }
+  },
+  "pattern": [
+    "PPP",
+    "FFF",
+    "PPP"
+  ],
+  "result": {
+    "count": 16,
+    "id": "ic2_120:iron_scaffold"
+  }
+}

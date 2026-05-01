@@ -317,7 +317,7 @@ class CentrifugeBlockEntity(
             world ?: return null
         )
 
-        return optionalRecipe.map { it.value() }.orElse(null)
+        return optionalRecipe.map { it.value }.orElse(null)
     }
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem

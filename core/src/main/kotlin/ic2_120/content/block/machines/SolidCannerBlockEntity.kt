@@ -226,7 +226,7 @@ class SolidCannerBlockEntity(
         val slot1InputCount: Int
 
         if (match.isPresent) {
-            val recipe = match.get().value()
+            val recipe = match.get().value
             result = recipe.output.copy()
             slot0InputCount = recipe.slot0Count
             slot1InputCount = recipe.slot1Count
