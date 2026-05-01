@@ -2,29 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "item": "minecraft:chest"
-    },
     "C": {
       "item": "ic2_120:circuit"
     },
+    "H": {
+      "item": "minecraft:chest"
+    },
     "M": {
       "item": "ic2_120:machine"
-    },
-    "N": {
-      "item": "ic2_120:cropnalyzer"
     },
     "P": {
       "item": "ic2_120:iron_plate"
     },
     "S": {
-      "item": "minecraft:shears"
+      "item": "ic2_120:crop_stick"
     }
   },
   "pattern": [
-    "CBC",
+    "CHC",
     "SMS",
-    "PNP"
+    "PPP"
   ],
   "result": {
     "item": "ic2_120:crop_harvester"

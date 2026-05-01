@@ -1,4 +1,4 @@
-// 1.20.1	2026-04-30T12:54:09.749053959	ic2_1.20/Block Loot Tables
+// 1.20.1	2026-05-01T23:41:53.300043403	ic2_1.20/Block Loot Tables
 f06bd02dfcbbc6dc47b5d31f24f820e9963d52c8 data/ic2_120/loot_tables/blocks/rubber_door.json
 03c007b25b6618c504bb9a62f95881a65bd35edd data/ic2_120/loot_tables/blocks/batbox_chargepad.json
 d6fc9c45a98287c70ff5b9c7ca6a58a214d8299a data/ic2_120/loot_tables/blocks/animalmatron.json
@@ -140,8 +140,8 @@ fbf4a564df1a67c8a081cb130ce7a67f415d8eb8 data/ic2_120/loot_tables/blocks/raw_tin
 0a56bf0ee3508b2c947f41510b0fb4b9258ed5f2 data/ic2_120/loot_tables/blocks/liquid_heat_exchanger.json
 c8fe965ca4ed6e64c541cee541c36f32dd10c258 data/ic2_120/loot_tables/blocks/reinforced_wooden_scaffold.json
 79ba85fc7c1c45daf46df4e836f25c6d76cfbb59 data/ic2_120/loot_tables/blocks/mfsu.json
-bf8427b86bf9e3feaeff37aa20e11148db62cd61 data/ic2_120/loot_tables/blocks/water_generator.json
 98477f4ad388dc763ee6f3ce62eb3a5405c53c89 data/ic2_120/loot_tables/blocks/matter_generator.json
+bf8427b86bf9e3feaeff37aa20e11148db62cd61 data/ic2_120/loot_tables/blocks/water_generator.json
 032b9278c867271a626e16a934f3dec498aaf275 data/ic2_120/loot_tables/blocks/fluid_heat_generator.json
 1acbc059232957ba1ba3b19f823d94c2ab923b86 data/ic2_120/loot_tables/blocks/mfsu_chargepad.json
 0fc539a5f0cc32c2446464f87edea73f61551c13 data/ic2_120/loot_tables/blocks/glass_fibre_cable.json
