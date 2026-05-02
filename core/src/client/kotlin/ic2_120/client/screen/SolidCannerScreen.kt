@@ -86,8 +86,8 @@ class SolidCannerScreen(
                         gap = 4
                     ) {
                         SlotHost(SolidCannerScreenHandler.SLOT_TIN_CAN_INDEX)
-                        EnergyBar(progressFrac, modifier = Modifier().fractionWidth(1f))
                         SlotHost(SolidCannerScreenHandler.SLOT_FOOD_INDEX)
+                        EnergyBar(progressFrac, modifier = Modifier().fractionWidth(1f))
                         SlotHost(SolidCannerScreenHandler.SLOT_OUTPUT_INDEX)
                     }
 

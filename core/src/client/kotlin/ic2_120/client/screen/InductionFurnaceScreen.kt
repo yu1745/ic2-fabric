@@ -17,10 +17,6 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
 
-/**
- * 感应炉 GUI（客户端）。
- * 显示：能量条、热量指示，双槽进度条。
- */
 @ModScreen(block = InductionFurnaceBlock::class)
 class InductionFurnaceScreen(
     handler: InductionFurnaceScreenHandler,
@@ -46,7 +42,6 @@ class InductionFurnaceScreen(
             GuiSize.SLOT_SIZE
         )
 
-        // 双槽进度条（与 BlockEntity 一致：progressNeeded = baseTicks * HEAT_MAX / heat）
         val baseTicks = InductionFurnaceSync.BASE_TICKS_PER_OPERATION
         val heat = handler.sync.heat.coerceAtLeast(InductionFurnaceSync.MIN_HEAT_THRESHOLD)
         val progressNeeded = (baseTicks * InductionFurnaceSync.HEAT_MAX / heat).toInt().coerceAtLeast(baseTicks.toInt())
@@ -56,7 +51,7 @@ class InductionFurnaceScreen(
                 x = x + 8,
                 y = y + 8,
                 spacing = 6,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
+                modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
             ) {
                 Flex(
                     direction = FlexDirection.ROW,
@@ -67,7 +62,6 @@ class InductionFurnaceScreen(
                     Text(title.string, color = 0xFFFFFF)
                 }
 
-                // 双槽位布局（仅用于定位）
                 Flex(
                     direction = FlexDirection.ROW,
                     alignItems = AlignItems.CENTER,
@@ -111,7 +105,6 @@ class InductionFurnaceScreen(
             }
         }
 
-        // 绘制进度条
         val input0Anchor = layout.anchors["anchor.input0"]
         val input1Anchor = layout.anchors["anchor.input1"]
         val progressAnchor = layout.anchors["anchor.progressArea"]
@@ -120,13 +113,11 @@ class InductionFurnaceScreen(
             val barH = 6
             val barW = progressAnchor.w
 
-            // 槽 0 进度
             val progress0 = handler.sync.progressSlot0.coerceIn(0, progressNeeded)
             val progressFrac0 = if (progressNeeded > 0) progress0.toFloat() / progressNeeded else 0f
             val barY0 = input0Anchor.y + (InductionFurnaceScreenHandler.SLOT_SIZE - barH) / 2
             ProgressBar.draw(context, progressAnchor.x, barY0, barW, barH, progressFrac0)
 
-            // 槽 1 进度
             val progress1 = handler.sync.progressSlot1.coerceIn(0, progressNeeded)
             val progressFrac1 = if (progressNeeded > 0) progress1.toFloat() / progressNeeded else 0f
             val barY1 = input1Anchor.y + (InductionFurnaceScreenHandler.SLOT_SIZE - barH) / 2
@@ -154,65 +145,78 @@ class InductionFurnaceScreen(
         val heatPercent = handler.sync.heat / 100
 
         val content: UiScope.() -> Unit = {
-            Column(
+            Row(
                 x = left + 8,
                 y = top + 8,
-                spacing = 6,
+                spacing = 8,
                 modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
             ) {
-                Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                    Text(title.string, color = 0xFFFFFF)
-                    Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
-                }
-                EnergyBar(
-                    energyFraction,
-                    barHeight = 12,
-                )
-
-                // 双槽位布局（用于实际槽位定位）
-                Flex(
-                    direction = FlexDirection.ROW,
-                    alignItems = AlignItems.CENTER,
-                    gap = 4
+                Column(
+                    spacing = 6,
+                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
                 ) {
-                    Column(spacing = 4) {
-                        SlotHost(InductionFurnaceScreenHandler.SLOT_INPUT_0_INDEX)
-                        SlotHost(InductionFurnaceScreenHandler.SLOT_INPUT_1_INDEX)
+                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
+                        Text(title.string, color = 0xFFFFFF)
+                        Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
                     }
-                    Column(spacing = 4) {
-                        // 占位，保持布局一致（进度条在 drawBackground 中绘制）
-                        SlotAnchor(
-                            id = "placeholder.progress0",
-                            width = 40,
-                            height = InductionFurnaceScreenHandler.SLOT_SIZE,
-                            showBorder = false
-                        )
-                        SlotAnchor(
-                            id = "placeholder.progress1",
-                            width = 40,
-                            height = InductionFurnaceScreenHandler.SLOT_SIZE,
-                            showBorder = false
-                        )
-                    }
-                    Column(spacing = 4) {
-                        SlotHost(InductionFurnaceScreenHandler.SLOT_OUTPUT_0_INDEX)
-                        SlotHost(InductionFurnaceScreenHandler.SLOT_OUTPUT_1_INDEX)
-                    }
-                    SlotHost(InductionFurnaceScreenHandler.SLOT_DISCHARGING_INDEX)
-                }
-
-                // 热量条
-                Flex(
-                    direction = FlexDirection.ROW,
-                    alignItems = AlignItems.CENTER,
-                    gap = 8
-                ) {
-                    Text(t("gui.ic2_120.induction_furnace.heat_percent", heatPercent), color = 0xFFFFFF)
                     EnergyBar(
-                        heatFactor,
-                        barHeight = 8,
-                        modifier = Modifier.EMPTY.fractionWidth(1.0f)
+                        energyFraction,
+                        barHeight = 12,
                     )
+
+                    Flex(
+                        direction = FlexDirection.ROW,
+                        alignItems = AlignItems.CENTER,
+                        gap = 4
+                    ) {
+                        Column(spacing = 4) {
+                            SlotHost(InductionFurnaceScreenHandler.SLOT_INPUT_0_INDEX)
+                            SlotHost(InductionFurnaceScreenHandler.SLOT_INPUT_1_INDEX)
+                        }
+                        Column(spacing = 4) {
+                            SlotAnchor(
+                                id = "placeholder.progress0",
+                                width = 40,
+                                height = InductionFurnaceScreenHandler.SLOT_SIZE,
+                                showBorder = false
+                            )
+                            SlotAnchor(
+                                id = "placeholder.progress1",
+                                width = 40,
+                                height = InductionFurnaceScreenHandler.SLOT_SIZE,
+                                showBorder = false
+                            )
+                        }
+                        Column(spacing = 4) {
+                            SlotHost(InductionFurnaceScreenHandler.SLOT_OUTPUT_0_INDEX)
+                            SlotHost(InductionFurnaceScreenHandler.SLOT_OUTPUT_1_INDEX)
+                        }
+                        SlotHost(InductionFurnaceScreenHandler.SLOT_DISCHARGING_INDEX)
+                    }
+
+                    Flex(
+                        direction = FlexDirection.ROW,
+                        alignItems = AlignItems.CENTER,
+                        gap = 8
+                    ) {
+                        Text(t("gui.ic2_120.induction_furnace.heat_percent", heatPercent), color = 0xFFFFFF)
+                        EnergyBar(
+                            heatFactor,
+                            barHeight = 8,
+                            modifier = Modifier.EMPTY.fractionWidth(1.0f)
+                        )
+                    }
+                }
+
+                Column(
+                    spacing = 4,
+                    modifier = Modifier.EMPTY
+                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
+                        .padding(0, 8, 0, 0)
+                ) {
+                    for (slotIndex in InductionFurnaceScreenHandler.SLOT_UPGRADE_INDEX_START..InductionFurnaceScreenHandler.SLOT_UPGRADE_INDEX_END) {
+                        SlotHost(slotIndex)
+                    }
                 }
             }
 
@@ -259,6 +263,6 @@ class InductionFurnaceScreen(
     }
 
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD
+        private val GUI_SIZE = GuiSize.UPGRADE_TALL
     }
 }
