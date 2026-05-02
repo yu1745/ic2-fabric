@@ -8,9 +8,16 @@ import ic2_120.content.block.ITieredMachine
 import ic2_120.content.screen.InductionFurnaceScreenHandler
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.energy.charge.BatteryDischargerComponent
+import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.upgrade.EjectorUpgradeComponent
+import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
+import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
+import ic2_120.content.upgrade.ITransformerUpgradeSupport
+import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
@@ -37,22 +44,14 @@ import net.minecraft.registry.RegistryWrapper
 import net.minecraft.network.PacketByteBuf
 import io.netty.buffer.Unpooled
 
-/**
- * 感应炉方块实体。支持双槽同时烧制，热量机制控制加工速度。
- *
- * 热量机制：
- * - 持续红石信号 → 热量上升（消耗 1 EU/t 维持热量）
- * - 无红石信号 → 热量衰减（不消耗额外能量）
- * - 热量越高，加工速度越快（0% = 不加工，100% = 全速）
- *
- * 每个物品在热量 100% 时总能耗为 150 EU + 加热能耗，与热量无关。
- */
 @ModBlockEntity(block = InductionFurnaceBlock::class)
 class InductionFurnaceBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, ExtendedScreenHandlerFactory<PacketByteBuf> {
+) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport,
+    ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = InductionFurnaceBlock.ACTIVE
 
@@ -69,14 +68,24 @@ class InductionFurnaceBlockEntity(
 
     override val tier: Int = INDUCTION_TIER
 
+    override var capacityBonus: Long = 0L
+    override var voltageTierBonus: Int = 0
+
     companion object {
-        const val INDUCTION_TIER = 2  // MV
+        const val INDUCTION_TIER = 2
         const val SLOT_INPUT_0 = 0
         const val SLOT_INPUT_1 = 1
         const val SLOT_OUTPUT_0 = 2
         const val SLOT_OUTPUT_1 = 3
         const val SLOT_DISCHARGING = 4
-        const val INVENTORY_SIZE = 5
+        const val SLOT_UPGRADE_0 = 5
+        const val SLOT_UPGRADE_1 = 6
+        const val SLOT_UPGRADE_2 = 7
+        const val SLOT_UPGRADE_3 = 8
+        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_0, SLOT_OUTPUT_1)
+        val SLOT_INPUT_INDICES = intArrayOf(SLOT_INPUT_0, SLOT_INPUT_1)
+        const val INVENTORY_SIZE = 9
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -86,6 +95,7 @@ class InductionFurnaceBlockEntity(
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
+            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_0), matcher = { isSmeltingInput(it) }),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_1), matcher = { isSmeltingInput(it) })
@@ -97,13 +107,18 @@ class InductionFurnaceBlockEntity(
     val syncedData = SyncedData(this)
 
     @RegisterEnergy
-    val sync = InductionFurnaceSync(syncedData) { world?.time }
+    val sync = InductionFurnaceSync(
+        syncedData,
+        { world?.time },
+        { capacityBonus },
+        { TransformerUpgradeComponent.maxInsertForTier(INDUCTION_TIER + voltageTierBonus) }
+    )
 
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
-        machineTierProvider = { tier },
-        canDischargeNow = { sync.amount < sync.capacity }
+        machineTierProvider = { INDUCTION_TIER },
+        canDischargeNow = { sync.amount < sync.getEffectiveCapacity() }
     )
 
     constructor(pos: BlockPos, state: BlockState) : this(
@@ -135,6 +150,7 @@ class InductionFurnaceBlockEntity(
         SLOT_INPUT_0, SLOT_INPUT_1 -> isSmeltingInput(stack)
         SLOT_OUTPUT_0, SLOT_OUTPUT_1 -> false
         SLOT_DISCHARGING -> isBatteryItem(stack)
+        in SLOT_UPGRADE_0..SLOT_UPGRADE_3 -> stack.item is IUpgradeItem
         else -> false
     }
 
@@ -176,24 +192,24 @@ class InductionFurnaceBlockEntity(
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
-        // 从相邻导线或电池槽提取能量
+        EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
+        sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
+
         pullEnergyFromNeighbors(world, pos, sync)
         extractFromDischargingSlot()
 
-        // === 热量管理 ===
         val isRedstonePowered = world.isReceivingRedstonePower(pos)
         val currentHeat = sync.heat
 
         if (isRedstonePowered) {
-            // 有红石信号：热量上升，最高 100%
             if (currentHeat < InductionFurnaceSync.HEAT_MAX) {
                 sync.heat = (currentHeat + InductionFurnaceSync.HEAT_CHANGE_PER_TICK)
                     .coerceAtMost(InductionFurnaceSync.HEAT_MAX)
-                // 维持热量消耗 1 EU/t
                 sync.consumeEnergy(InductionFurnaceSync.MAX_HEAT_ENERGY_PER_TICK)
             }
         } else {
-            // 无红石信号：热量衰减，最低 0%
             if (currentHeat > 0) {
                 sync.heat = (currentHeat - InductionFurnaceSync.HEAT_CHANGE_PER_TICK)
                     .coerceAtLeast(0)
@@ -207,16 +223,11 @@ class InductionFurnaceBlockEntity(
         setActiveState(world, pos, state, isActive)
     }
 
-    /**
-     * 处理两个槽位。
-     * 返回是否有任意槽位正在加工。
-     */
     private fun processBothSlots(world: World, heat: Int): Boolean {
         var slot0Working = false
         var slot1Working = false
 
         if (heat >= InductionFurnaceSync.MIN_HEAT_THRESHOLD) {
-            // 槽 0
             val input0 = getStack(SLOT_INPUT_0)
             if (!input0.isEmpty) {
                 val recipe0 = findSmeltingRecipe(world, input0)
@@ -228,7 +239,6 @@ class InductionFurnaceBlockEntity(
                 }
             }
 
-            // 槽 1
             val input1 = getStack(SLOT_INPUT_1)
             if (!input1.isEmpty) {
                 val recipe1 = findSmeltingRecipe(world, input1)
@@ -241,7 +251,6 @@ class InductionFurnaceBlockEntity(
             }
         }
 
-        // 如果热量低于阈值，重置进度
         if (heat < InductionFurnaceSync.MIN_HEAT_THRESHOLD) {
             if (sync.progressSlot0 != 0) sync.progressSlot0 = 0
             if (sync.progressSlot1 != 0) sync.progressSlot1 = 0
@@ -250,7 +259,6 @@ class InductionFurnaceBlockEntity(
         return slot0Working || slot1Working
     }
 
-    /** 处理槽 0 */
     private fun processSlot0(heat: Int, result: ItemStack): Boolean {
         val baseTicks = InductionFurnaceSync.BASE_TICKS_PER_OPERATION
         val euPerOp = InductionFurnaceSync.EU_PER_OPERATION
@@ -258,7 +266,6 @@ class InductionFurnaceBlockEntity(
 
         val progress = sync.progressSlot0
         if (progress >= progressNeeded) {
-            // 加工完成
             val input = getStack(SLOT_INPUT_0)
             input.decrement(1)
             val out = getStack(SLOT_OUTPUT_0)
@@ -272,7 +279,6 @@ class InductionFurnaceBlockEntity(
             return false
         }
 
-        // 每 tick 消耗能量（每个物品总能耗固定为 euPerOp）
         val euPerTick = (euPerOp.toDouble() / progressNeeded).coerceAtLeast(1.0).toLong()
         if (sync.consumeEnergy(euPerTick) > 0L) {
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
@@ -283,7 +289,6 @@ class InductionFurnaceBlockEntity(
         return false
     }
 
-    /** 处理槽 1 */
     private fun processSlot1(heat: Int, result: ItemStack): Boolean {
         val baseTicks = InductionFurnaceSync.BASE_TICKS_PER_OPERATION
         val euPerOp = InductionFurnaceSync.EU_PER_OPERATION
@@ -291,7 +296,6 @@ class InductionFurnaceBlockEntity(
 
         val progress = sync.progressSlot1
         if (progress >= progressNeeded) {
-            // 加工完成
             val input = getStack(SLOT_INPUT_1)
             input.decrement(1)
             val out = getStack(SLOT_OUTPUT_1)
@@ -329,14 +333,11 @@ class InductionFurnaceBlockEntity(
                 currentOutput.count + recipeOutput.count <= currentOutput.maxCount)
     }
 
-    /**
-     * 从放电槽提取能量（如果需要）
-     */
     private fun extractFromDischargingSlot() {
-        val space = (sync.capacity - sync.amount).coerceAtLeast(0L)
+        val space = (sync.getEffectiveCapacity() - sync.amount).coerceAtLeast(0L)
         if (space <= 0L) return
 
-        val request = minOf(space, InductionFurnaceSync.MAX_INSERT)
+        val request = minOf(space, sync.getEffectiveMaxInsertPerTick())
         val extracted = batteryDischarger.tick(request)
         if (extracted <= 0L) return
 
@@ -353,4 +354,3 @@ class InductionFurnaceBlockEntity(
         return w.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(stack.copyWithCount(1)), w).isPresent
     }
 }
-

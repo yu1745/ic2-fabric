@@ -4,10 +4,13 @@ import com.mojang.brigadier.Command
 import com.mojang.brigadier.arguments.IntegerArgumentType
 import ic2_120.config.Ic2Config
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
+import net.minecraft.item.Items
+import net.minecraft.registry.Registries
 import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 
 object UuReplicationCommand {
     fun register() {
@@ -189,11 +192,19 @@ object UuReplicationCommand {
 
         for (i in startIndex until endIndex) {
             val (itemId, cost) = allCosts[i]
+            val itemDisplay: Text = Identifier.tryParse(itemId)?.let {
+                val item = Registries.ITEM.get(it)
+                if (item !== Items.AIR) {
+                    Text.translatable(item.translationKey)
+                        .formatted(Formatting.YELLOW)
+                        .append(Text.literal(" ($itemId)").formatted(Formatting.DARK_GRAY))
+                } else null
+            } ?: Text.literal(itemId).formatted(Formatting.WHITE)
             source.sendFeedback(
                 {
                     Text.literal("")
                         .append(Text.literal("• ").formatted(Formatting.GRAY))
-                        .append(Text.literal(itemId).formatted(Formatting.WHITE))
+                        .append(itemDisplay)
                         .append(Text.literal(": ").formatted(Formatting.GRAY))
                         .append(Text.literal("$cost uB").formatted(Formatting.AQUA))
                 },

@@ -5,10 +5,13 @@ import com.mojang.brigadier.arguments.LongArgumentType
 import ic2_120_advanced_solar_addon.config.Ic2AdvancedSolarAddonConfig
 import ic2_120_advanced_solar_addon.config.MolecularTransformerRecipeConfig
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
+import net.minecraft.item.Items
+import net.minecraft.registry.Registries
 import net.minecraft.server.command.CommandManager.argument
 import net.minecraft.server.command.CommandManager.literal
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 
 object MolecularTransformerCommand {
     fun register() {
@@ -191,13 +194,23 @@ object MolecularTransformerCommand {
 
         for (i in startIndex until endIndex) {
             val recipe = allRecipes[i]
+            fun itemDisplay(id: String): Text {
+                val item = Identifier.tryParse(id)?.let { Registries.ITEM.get(it) }
+                return if (item != null && item !== Items.AIR) {
+                    Text.translatable(item.translationKey)
+                        .formatted(Formatting.YELLOW)
+                        .append(Text.literal(" ($id)").formatted(Formatting.DARK_GRAY))
+                } else {
+                    Text.literal(id).formatted(Formatting.WHITE)
+                }
+            }
             source.sendFeedback(
                 {
                     Text.literal("")
                         .append(Text.literal("• ").formatted(Formatting.GRAY))
-                        .append(Text.literal(recipe.input).formatted(Formatting.WHITE))
+                        .append(itemDisplay(recipe.input))
                         .append(Text.literal(" -> ").formatted(Formatting.GRAY))
-                        .append(Text.literal(recipe.output).formatted(Formatting.WHITE))
+                        .append(itemDisplay(recipe.output))
                         .append(Text.literal(": ").formatted(Formatting.GRAY))
                         .append(Text.literal("${recipe.energy} EU").formatted(Formatting.AQUA))
                 },

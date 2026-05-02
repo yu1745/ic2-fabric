@@ -50,6 +50,7 @@ import ic2_120.content.command.SeedCommand
 import ic2_120.content.command.RubberTreeCommand
 import ic2_120.content.command.UuReplicationCommand
 import ic2_120.editCustomData
+import ic2_120.content.command.ItemIdCommand
 import ic2_120.registry.ClassScanner
 import ic2_120.registry.type
 import ic2_120.registry.CreativeTab
@@ -256,6 +257,7 @@ object Ic2_120 : ModInitializer {
         SeedCommand.register()
         RubberTreeCommand.register()
         UuReplicationCommand.register()
+        ItemIdCommand.register()
 
         logger.info("IC2 1.20 模组已加载（类注解驱动自动注册）")
     }

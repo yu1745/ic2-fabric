@@ -78,7 +78,7 @@
 推荐最小命令：
 
 ```bash
-./gradlew clean compileKotlin compileClientKotlin
+./gradlew build
 ```
 
 - 运行 Gradle 时**不要**使用 `--no-daemon`（保持 daemon 以复用 JVM、加快增量构建）。
