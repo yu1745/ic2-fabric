@@ -1,8 +1,8 @@
 package ic2_120.content.block
 
-import ic2_120.content.block.machines.FluidBottlerBlockEntity
+import ic2_120.content.block.machines.FluidCannerBlockEntity
 import ic2_120.content.item.Circuit
-import ic2_120.content.item.TinCasing
+import ic2_120.content.item.EmptyCell
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.instance
@@ -36,11 +36,11 @@ import ic2_120.registry.annotation.RecipeProvider
  * 能量等级：1 (32 EU/t)
  * 操作时间：5 秒/桶，2 EU/t，单次 200 EU
  */
-@ModBlock(name = "fluid_bottler", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
-class FluidBottlerBlock : MachineBlock() {
+@ModBlock(name = "fluid_canner", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
+class FluidCannerBlock : MachineBlock() {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
-        FluidBottlerBlockEntity(pos, state)
+        FluidCannerBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
         world: World,
@@ -48,7 +48,7 @@ class FluidBottlerBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(type, FluidBottlerBlockEntity::class.type()){ w, p, s, be -> (be as FluidBottlerBlockEntity).tick(w, p, s) }
+        else validateTicker(type, FluidCannerBlockEntity::class.type()) { w, p, s, be -> (be as FluidCannerBlockEntity).tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
@@ -79,17 +79,17 @@ class FluidBottlerBlock : MachineBlock() {
         fun generateRecipes(exporter: RecipeExporter) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
-            val tin = TinCasing::class.instance()
-            if (machine != Items.AIR && circuit != Items.AIR && tin != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, FluidBottlerBlock::class.item(), 1)
-                    .pattern("TCT")
-                    .pattern("TMT")
-                    .pattern("TTT")
-                    .input('T', tin)
-                    .input('C', circuit)
+            val emptyCell = EmptyCell::class.instance()
+            if (machine != Items.AIR && circuit != Items.AIR && emptyCell != Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, FluidCannerBlock::class.item(), 1)
+                    .pattern(" X ")
+                    .pattern(" X ")
+                    .pattern("ZMZ")
+                    .input('X', emptyCell)
+                    .input('Z', circuit)
                     .input('M', machine)
                     .criterion(hasItem(machine), conditionsFromItem(machine))
-                    .offerTo(exporter, FluidBottlerBlock::class.id())
+                    .offerTo(exporter, FluidCannerBlock::class.id())
             }
         }
     }

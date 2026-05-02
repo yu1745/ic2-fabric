@@ -6,11 +6,11 @@ import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.FluidBar
 import ic2_120.client.ui.GuiBackground
-import ic2_120.content.block.FluidBottlerBlock
-import ic2_120.content.screen.FluidBottlerScreenHandler
+import ic2_120.content.block.FluidCannerBlock
+import ic2_120.content.screen.FluidCannerScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.slot.UpgradeSlotLayout
-import ic2_120.content.sync.FluidBottlerSync
+import ic2_120.content.sync.FluidCannerSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -18,12 +18,12 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
 
-@ModScreen(block = FluidBottlerBlock::class)
-class FluidBottlerScreen(
-    handler: FluidBottlerScreenHandler,
+@ModScreen(block = FluidCannerBlock::class)
+class FluidCannerScreen(
+    handler: FluidCannerScreenHandler,
     playerInventory: PlayerInventory,
     title: Text
-) : HandledScreen<FluidBottlerScreenHandler>(handler, playerInventory, title) {
+) : HandledScreen<FluidCannerScreenHandler>(handler, playerInventory, title) {
 
     private val ui = ComposeUI()
 
@@ -54,8 +54,8 @@ class FluidBottlerScreen(
         val fluidAmount = handler.sync.fluidAmountMb.toLong()
         val fluidCapacity = handler.sync.fluidCapacityMb.toLong().coerceAtLeast(1)
         val fluidFraction = if (fluidCapacity > 0) (fluidAmount.toFloat() / fluidCapacity).coerceIn(0f, 1f) else 0f
-        val progress = handler.sync.progress.coerceIn(0, FluidBottlerSync.PROGRESS_MAX)
-        val progressFrac = (progress.toFloat() / FluidBottlerSync.PROGRESS_MAX).coerceIn(0f, 1f)
+        val progress = handler.sync.progress.coerceIn(0, FluidCannerSync.PROGRESS_MAX)
+        val progressFrac = (progress.toFloat() / FluidCannerSync.PROGRESS_MAX).coerceIn(0f, 1f)
 //        val contentW = (backgroundWidth - 16).coerceAtLeast(0)
 
         val energyText = "$energy / $cap EU"
@@ -95,13 +95,13 @@ class FluidBottlerScreen(
                         alignItems = AlignItems.CENTER,
                         gap = 4
                     ) {
-                        SlotHost(FluidBottlerScreenHandler.SLOT_INPUT_FILLED_INDEX)
-                        SlotHost(FluidBottlerScreenHandler.SLOT_INPUT_EMPTY_INDEX)
+                        SlotHost(FluidCannerScreenHandler.SLOT_INPUT_FILLED_INDEX)
+                        SlotHost(FluidCannerScreenHandler.SLOT_INPUT_EMPTY_INDEX)
                         EnergyBar(progressFrac, modifier = Modifier.EMPTY.fractionWidth(1.0f))
-                        SlotHost(FluidBottlerScreenHandler.SLOT_OUTPUT_INDEX)
+                        SlotHost(FluidCannerScreenHandler.SLOT_OUTPUT_INDEX)
                     }
 
-                    SlotHost(FluidBottlerScreenHandler.SLOT_DISCHARGING_INDEX)
+                    SlotHost(FluidCannerScreenHandler.SLOT_DISCHARGING_INDEX)
                 }
 
                 Column(
@@ -110,7 +110,7 @@ class FluidBottlerScreen(
                         .width(GuiSize.UPGRADE_COLUMN_WIDTH)
                         .padding(0, 8, 0, 0)
                 ) {
-                    for (slotIndex in FluidBottlerScreenHandler.SLOT_UPGRADE_INDEX_START..FluidBottlerScreenHandler.SLOT_UPGRADE_INDEX_END) {
+                    for (slotIndex in FluidCannerScreenHandler.SLOT_UPGRADE_INDEX_START..FluidCannerScreenHandler.SLOT_UPGRADE_INDEX_END) {
                         SlotHost(slotIndex)
                     }
                 }
@@ -119,7 +119,7 @@ class FluidBottlerScreen(
             playerInventoryAndHotbarSlotAnchors(
                 left = left,
                 top = top,
-                playerInvStart = FluidBottlerScreenHandler.PLAYER_INV_START,
+                playerInvStart = FluidCannerScreenHandler.PLAYER_INV_START,
                 playerInvY = GUI_SIZE.playerInvY,
                 hotbarY = GUI_SIZE.hotbarY
             )
@@ -145,8 +145,8 @@ class FluidBottlerScreen(
     private fun UiScope.SlotHost(slotIndex: Int) {
         SlotAnchor(
             id = slotAnchorId(slotIndex),
-            width = FluidBottlerScreenHandler.SLOT_SIZE,
-            height = FluidBottlerScreenHandler.SLOT_SIZE
+            width = FluidCannerScreenHandler.SLOT_SIZE,
+            height = FluidCannerScreenHandler.SLOT_SIZE
         )
     }
 

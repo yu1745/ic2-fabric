@@ -22,7 +22,7 @@
               "function": "minecraft:explosion_decay"
             }
           ],
-          "name": "ic2_120:fluid_bottler"
+          "name": "ic2_120:fluid_canner"
         }
       ],
       "rolls": 1.0
