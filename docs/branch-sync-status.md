@@ -1,6 +1,6 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-05-01
+最后更新：2026-05-02
 
 分叉点：`c5e247c`
 
@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **24 个 commit**，**全部已同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **25 个 commit**，**全部已同步**。
 
 ## 逐 commit 状态
 
@@ -38,6 +38,7 @@
 | 22 | `8bd5d4c` | fix: 量子剑创造栏图标改用 iconResource 避免显示耐久条 | ✅ | cherry-pick + API 适配修复（1.21.1 额外提交 `6d3c446`） |
 | 23 | `165faaf` | perf: RadiationHandler 改用 world.players 遍历避免全量实体扫描导致的 CPU 满载 | ✅ | cherry-pick 确认 |
 | 24 | `41fbef2` | fix: 修复牲畜监管和收割机合成配方 | ✅ | cherry-pick，1.21.1 额外排除 datagen 缓存文件 |
+| 25 | `f984ec2` | fix: 流体装罐机配方改为空单元+电路板+机器外壳，FluidBottler 统一更名为 FluidCanner | ✅ | cherry-pick + 适配 1.21.1 API（`validateTicker`、`RecipeExporter`）+ datagen 刷新 |
 
 ## 同步历史
 
@@ -54,3 +55,4 @@
 - 2026-05-01：逐 cherry-pick 同步 commits 16-21，适配 PipeBlocks.kt appendTooltip、BlastFurnaceBlockEntity 接口泛型到 1.21.1 API
 - 2026-05-01：同步 commit 23——RadiationHandler 改用 world.players 遍历，修复 CPU 满载
 - 2026-05-01：同步 commit 24——牲畜监管和收割机合成配方修复，cherry-pick 到 1.21.1 并排除 datagen 缓存文件
+- 2026-05-02：同步 commit 25——流体装罐机配方 + FluidBottler→FluidCanner 更名，cherry-pick 到 1.21.1 + 适配 API + datagen 刷新

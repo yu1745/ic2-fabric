@@ -98,14 +98,58 @@
 
 ## 9. 分支同步管理
 
-本项目维护 `main` 和 `1.21.1` 两个分支，通过 cherry-pick 保持同步。
+本项目维护 `main`（1.20.1）和 `1.21.1` 两个分支，commit 必须双向同步。
 
-- 同步状态表：`docs/branch-sync-status.md`
-- **每次向 main 提交后，必须更新该文件**，记录新 commit 是否已同步到 1.21.1
-- 记录格式：commit SHA、说明、是否已在 1.21.1、备注
-- **分支同步跟踪文件的更新必须单独提交，不得 amend 到功能 commit 中**。amend 会改变 commit hash，导致跟踪表中的 SHA 失效
+### 9.1 提交 → 同步的完整流程（严格按顺序执行）
 
-## 10. 物品与方块清单
+1. 在 main 上完成功能开发，`git commit`（一次性干净提交，禁止修修补补的 fixup commit）
+2. 立即记录同步状态：在 `docs/branch-sync-status.md` 末尾添加新条目，需标注 ❌ （未同步）
+3. `git commit` 同步状态更新（**单独提交，不与功能 commit 混在一起**）
+4. 切换到 1.21.1：`git checkout 1.21.1`
+5. Cherry-pick：`git cherry-pick <功能 commit 的 SHA>`
+6. 解决冲突后，**必须跑 datagen**：`./gradlew :core:runDatagen`
+7. `git add -A && git commit`（提交 datagen 刷新结果）
+8. 切回 main：`git checkout main`
+9. 更新同步状态：将之前标记 ❌ 的条目改为 ✅，确保总览计数正确
+10. `git commit` 同步状态更新（**单独提交**）
+
+### 9.2 同步状态表
+
+- 文件：`docs/branch-sync-status.md`
+- 记录格式：commit SHA、说明、是否已在 1.21.1（✅/❌）、备注
+- **总览计数必须与逐 commit 清单保持一致**（示例：共 25 个 commit，24 个已同步，1 个待同步 → 不要写成"全部已同步"）
+
+### 9.3 Cherry-pick 注意事项
+
+1. 1.21.1 的 data 目录使用单数（`advancement/`、`recipe/`、`loot_table/`），main 使用复数（`advancements/`、`recipes/`、`loot_tables/`）
+2. 1.21.1 API 签名差异：`BlockEntityTicker` 用 `validateTicker`（main 用 `checkType`），`RecipeExporter`（main 用 `Consumer<RecipeJsonProvider>`）
+3. `assets/ic2/**` 为上游引用不可修改；`assets/ic2_120/**` 可修改
+
+## 10. 命名约定
+
+- 中文名 → registry key：在 `zh_cn.json` 中搜索中文名，找到 `"block.ic2_120.<key>"` 或 `"item.ic2_120.<key>"`，key 即 registry name
+- 类名 = registry name 的 PascalCase + 类型后缀（`Block`/`Item`/`BlockEntity`/`ScreenHandler`/`Screen`/`Sync`）
+- 同一功能的 Block、BlockEntity、ScreenHandler、Screen、Sync 类名必须使用一致的命名前缀
+
+## 11. 常见操作检查清单
+
+### 修改合成配方后
+1. 修改 companion object 中 `@RecipeProvider` 方法
+2. 运行 `./gradlew :core:runDatagen`
+3. 构建 `./gradlew build`
+
+### 重命名（注册名 + 类名）
+1. `grep -r` 完整搜索旧名（区分大小写：`FluidBottler` / `fluid_bottler` / `FLUID_BOTTLER`）
+2. `git mv` 移动所有源文件（保持 rename 跟踪）
+3. 全局替换内容（可用 `sed -i`）
+4. 更新 lang 文件（zh_cn.json / en_us.json 中的 key）
+5. 运行 datagen 重新生成 data 文件
+6. 构建验证
+
+### 提交前确认
+- 只有一个功能 commit + 一个同步状态 commit，没有 fixup/amend
+
+## 12. 物品与方块清单
 
 所有使用 `@ModBlock` / `@ModItem` 注解注册的类及其中文翻译：
 
