@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **26 个 commit**，**全部已同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **29 个 commit**，**26 个已同步**，**3 个待同步**。
 
 ## 逐 commit 状态
 
@@ -40,7 +40,10 @@
 | 24 | `41fbef2` | fix: 修复牲畜监管和收割机合成配方 | ✅ | cherry-pick，1.21.1 额外排除 datagen 缓存文件 |
 | 25 | `f984ec2` | fix: 流体装罐机配方改为空单元+电路板+机器外壳，FluidBottler 统一更名为 FluidCanner | ✅ | cherry-pick + 适配 1.21.1 API（`validateTicker`、`RecipeExporter`）+ datagen 刷新 |
 | 26 | `2d14ffe` | feat: 更新分子重组仪默认配方——移除工业钻石/AE/铂/钛/镍/铬，新增萤石→阳光化合物、煤炭→钻石等配方 | ✅ | 无冲突直接 cherry-pick |
-
+| 27 | `e394908` | feat: 添加 shockWhenNoEnergyFlow 配置项，修复空电网仍电人问题 | ❌ | |
+| 28 | `f3fbc77` | fix: solid canner slot 1 左移，感应炉升级支持，命令显示物品 | ❌ | |
+| 29 | `3e9f9d0` | docs: 更新 AGENTS.md 源码参考章节——添加 MC 源码与 Fabric API 获取及参考方式 | ❌ | |
+ 
 ## 同步历史
 
 - 2026-04-30：首次逐 commit 比对，确认 3 个缺失 commit：`48934bc`（docs）、`bf99891`（weapons-addon）、`799fda9`（revert）；`549eeb8` 代码已在 1.21.1 中存在
