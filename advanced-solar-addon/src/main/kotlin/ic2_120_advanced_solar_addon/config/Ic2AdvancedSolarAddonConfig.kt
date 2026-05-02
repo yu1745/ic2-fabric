@@ -40,7 +40,27 @@ data class MolecularTransformerConfig(
 
 private val defaultRecipes = listOf(
     MolecularTransformerRecipeConfig(
+        input = "minecraft:wither_skeleton_skull",
+        output = "minecraft:nether_star",
+        energy = 250000000
+    ),
+    MolecularTransformerRecipeConfig(
+        input = "minecraft:iron_ingot",
+        output = "ic2_120_advanced_solar_addon:iridium_ingot",
+        energy = 9000000
+    ),
+    MolecularTransformerRecipeConfig(
+        input = "minecraft:coal",
+        output = "minecraft:diamond",
+        energy = 9000000
+    ),
+    MolecularTransformerRecipeConfig(
         input = "ic2_120_advanced_solar_addon:fluorite",
+        output = "ic2_120_advanced_solar_addon:sunnarium",
+        energy = 9000000
+    ),
+    MolecularTransformerRecipeConfig(
+        input = "minecraft:glowstone",
         output = "ic2_120_advanced_solar_addon:sunnarium",
         energy = 9000000
     ),
@@ -50,9 +70,49 @@ private val defaultRecipes = listOf(
         energy = 1000000
     ),
     MolecularTransformerRecipeConfig(
-        input = "minecraft:iron_ingot",
-        output = "ic2_120_advanced_solar_addon:iridium_ingot",
-        energy = 9000000
+        input = "minecraft:glowstone_dust",
+        output = "ic2_120_advanced_solar_addon:sunnarium_part",
+        energy = 1000000
+    ),
+    MolecularTransformerRecipeConfig(
+        input = "minecraft:netherrack",
+        output = "minecraft:gunpowder",
+        energy = 70000
+    ),
+    MolecularTransformerRecipeConfig(
+        input = "minecraft:sand",
+        output = "minecraft:gravel",
+        energy = 50000
+    ),
+    MolecularTransformerRecipeConfig(
+        input = "minecraft:dirt",
+        output = "minecraft:clay",
+        energy = 50000
+    ),
+    MolecularTransformerRecipeConfig(
+        input = "minecraft:yellow_wool",
+        output = "minecraft:glowstone",
+        energy = 500000
+    ),
+    MolecularTransformerRecipeConfig(
+        input = "minecraft:blue_wool",
+        output = "minecraft:lapis_block",
+        energy = 500000
+    ),
+    MolecularTransformerRecipeConfig(
+        input = "minecraft:red_wool",
+        output = "minecraft:redstone_block",
+        energy = 500000
+    ),
+    MolecularTransformerRecipeConfig(
+        input = "ic2_120:tin_ingot",
+        output = "ic2_120:silver_ingot",
+        energy = 500000
+    ),
+    MolecularTransformerRecipeConfig(
+        input = "ic2_120:silver_ingot",
+        output = "minecraft:gold_ingot",
+        energy = 500000
     )
 )
 
