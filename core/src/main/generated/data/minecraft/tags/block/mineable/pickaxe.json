@@ -67,6 +67,7 @@
     "ic2_120:mfsu_chargepad",
     "ic2_120:extractor",
     "ic2_120:fermenter",
+    "ic2_120:fluid_canner",
     "ic2_120:liquid_heat_exchanger",
     "ic2_120:fluid_heat_generator",
     "ic2_120:generator",
@@ -182,7 +183,6 @@
     "ic2_120:iron_transmission_shaft",
     "ic2_120:steel_transmission_shaft",
     "ic2_120:carbon_transmission_shaft",
-    "ic2_120:bevel_gear",
-    "ic2_120:fluid_canner"
+    "ic2_120:bevel_gear"
   ]
 }

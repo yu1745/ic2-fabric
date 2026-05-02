@@ -18,13 +18,7 @@
     "ZMZ"
   ],
   "result": {
-<<<<<<<< HEAD:core/src/main/generated/data/ic2_120/recipe/fluid_bottler.json
     "count": 1,
-    "id": "ic2_120:fluid_bottler"
+    "id": "ic2_120:fluid_canner"
   }
-========
-    "item": "ic2_120:fluid_canner"
-  },
-  "show_notification": true
->>>>>>>> f984ec2 (fix: 流体装罐机配方改为空单元+电路板+机器外壳，FluidBottler 统一更名为 FluidCanner):core/src/main/generated/data/ic2_120/recipe/fluid_canner.json
 }
