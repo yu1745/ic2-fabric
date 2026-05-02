@@ -103,3 +103,33 @@
 - 自动生成文档：`docs/item-block-list.md`（154 方块 + 293 物品）
 - 生成脚本：`scripts/generate_item_block_list.py`
 - 重新生成：运行 `python scripts/generate_item_block_list.py`
+
+## 13. 源码参考（MC 源码 & Fabric API）
+
+### MC 源码
+
+使用 Gradle 任务生成脱编译源码：
+
+```bash
+./gradlew :core:genSources
+```
+
+- 产物在 `.gradle/loom-cache/` 下，IDEA 会自动关联。
+- 对应版本：`minecraft_version=1.20.1` + `yarn_mappings=1.20.1+build.10`（见 `gradle.properties`）。
+- 如果源码已生成过可直接参考，不需要重新生成。
+
+### Fabric API 源码
+
+Fabric API 项目通过 `git clone` 获取，按 MC 版本后缀区分目录：
+
+```bash
+# 1.20.1
+git clone -b 1.20.1 https://github.com/FabricMC/fabric-api.git fabric-api_1.20.1
+
+# 1.21.1
+git clone -b 1.21.1 https://github.com/FabricMC/fabric-api.git fabric-api_1.21.1
+```
+
+- 如果已经存在可直接参考，不存在则重新 clone 并签出对应分支。
+- 如果被删除或需要特定版本，重新 clone 并签出对应分支即可。
+- Gradle dependency 版本（如 `fabric_api_version=0.92.7+1.20.1`）用于协调 API 模块版本，源码参考不受限制。
