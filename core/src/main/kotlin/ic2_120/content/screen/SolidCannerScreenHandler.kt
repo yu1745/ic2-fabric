@@ -57,7 +57,7 @@ class SolidCannerScreenHandler(
         canInsert = { stack ->
             !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is IUpgradeItem &&
                 context.get({ world, _ ->
-                    world.recipeManager.values().any { it is SolidCannerRecipe && it.slot1Ingredient.test(stack) }
+                    world.recipeManager.values().any { it.value is SolidCannerRecipe && (it.value as SolidCannerRecipe).slot1Ingredient.test(stack) }
                 }, false)
         }
     )

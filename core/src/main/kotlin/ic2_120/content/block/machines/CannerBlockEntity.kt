@@ -262,7 +262,7 @@ class CannerBlockEntity(
             cannerIsFilledFluidContainer(stack) || stack.item == tinCanItem || stack.item is EmptyFuelRodItem
             )
         SLOT_MATERIAL -> !stack.isEmpty && stack.item !is IBatteryItem && (
-            (world?.recipeManager?.values()?.any { it is SolidCannerRecipe && it.slot1Ingredient.test(stack) } == true) ||
+            (world?.recipeManager?.values()?.any { it.value is SolidCannerRecipe && (it.value as SolidCannerRecipe).slot1Ingredient.test(stack) } == true) ||
                 CannerMixingRecipes.isMixingMaterial(stack.item) ||
                 (sync.getMode() == CannerSync.Mode.BOTTLE_LIQUID && stack.item is FoamSprayerItem &&
                     FoamSprayerItem.getFluidAmount(stack) < FoamSprayerItem.CAPACITY_DROPLETS)

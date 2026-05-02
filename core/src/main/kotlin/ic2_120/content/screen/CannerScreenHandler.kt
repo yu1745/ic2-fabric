@@ -68,7 +68,7 @@ class CannerScreenHandler(
         canInsert = { stack ->
             !stack.isEmpty && stack.item !is IBatteryItem && (
                 context.get({ world, _ ->
-                    world.recipeManager.values().any { it is SolidCannerRecipe && it.slot1Ingredient.test(stack) }
+                    world.recipeManager.values().any { it.value is SolidCannerRecipe && (it.value as SolidCannerRecipe).slot1Ingredient.test(stack) }
                 }, false) ||
                 CannerMixingRecipes.isMixingMaterial(stack.item) ||
                 (sync.getMode() == CannerSync.Mode.BOTTLE_LIQUID && stack.item is FoamSprayerItem &&
