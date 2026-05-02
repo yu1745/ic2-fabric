@@ -42,7 +42,9 @@ data class GeneralConfig(
     @field:ConfigComment("启动/重载时是否把当前配置打印到日志。", "true")
     val logConfigOnLoad: Boolean = true,
     @field:ConfigComment("是否启用更新检查。", "true")
-    val checkForUpdates: Boolean = true
+    val checkForUpdates: Boolean = true,
+    @field:ConfigComment("电网不发生能量流动时是否仍会电人。设为 false 则无能量时不漏电。", "false")
+    val shockWhenNoEnergyFlow: Boolean = false
 )
 
 data class RecyclerConfig(
@@ -343,7 +345,8 @@ data class RubberTreeWorldgenConfig(
 private val DEFAULT_CONFIG_TEMPLATE = Ic2MainConfig(
     general = GeneralConfig(
         logConfigOnLoad = true,
-        checkForUpdates = true
+        checkForUpdates = true,
+        shockWhenNoEnergyFlow = false
     ),
     recycler = RecyclerConfig(
         blacklist = listOf("minecraft:stick")
