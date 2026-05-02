@@ -24,7 +24,6 @@
     "ic2_120:mfsu_chargepad",
     "ic2_120:extractor",
     "ic2_120:fermenter",
-    "ic2_120:fluid_bottler",
     "ic2_120:liquid_heat_exchanger",
     "ic2_120:fluid_heat_generator",
     "ic2_120:generator",
@@ -82,6 +81,7 @@
     "ic2_120:bronze_tank",
     "ic2_120:iron_tank",
     "ic2_120:steel_tank",
-    "ic2_120:iridium_tank"
+    "ic2_120:iridium_tank",
+    "ic2_120:fluid_canner"
   ]
 }

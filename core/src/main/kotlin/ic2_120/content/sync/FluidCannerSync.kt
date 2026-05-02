@@ -7,7 +7,7 @@ import ic2_120.content.syncs.SyncSchema
  * 流体装罐机的同步属性与能量存储。
  * 规格：5 秒/桶，2 EU/t，单次 200 EU，最大输入 32 EU/t (LV)
  */
-class FluidBottlerSync(
+class FluidCannerSync(
     schema: SyncSchema,
     currentTickProvider: () -> Long? = { null },
     capacityBonusProvider: () -> Long = { 0L },
@@ -22,7 +22,7 @@ class FluidBottlerSync(
 ) {
 
     companion object {
-        const val FLUID_BOTTLER_TIER = 1
+        const val FLUID_CANNER_TIER = 1
         /** 基础容量 200 EU，可完成一次完整装罐/倒出 */
         const val ENERGY_CAPACITY = 250L
         const val MAX_INSERT = 32L

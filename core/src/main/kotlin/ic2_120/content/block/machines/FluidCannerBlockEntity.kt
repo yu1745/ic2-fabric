@@ -1,13 +1,13 @@
 package ic2_120.content.block.machines
 
-import ic2_120.content.block.FluidBottlerBlock
+import ic2_120.content.block.FluidCannerBlock
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.pullEnergyFromNeighbors
-import ic2_120.content.screen.FluidBottlerScreenHandler
-import ic2_120.content.sync.FluidBottlerSync
+import ic2_120.content.screen.FluidCannerScreenHandler
+import ic2_120.content.sync.FluidCannerSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.PullingUpgradeComponent
@@ -71,15 +71,15 @@ import ic2_120.content.item.fluidToFilledCellStack
  * 槽位：满流体容器(A)、空容器(B)、输出、放电、4 升级
  * 逻辑：若 A 和 B 都有物品，优先将 A 倒入储罐；否则将储罐灌入 B。
  */
-@ModBlockEntity(block = FluidBottlerBlock::class)
-class FluidBottlerBlockEntity(
+@ModBlockEntity(block = FluidCannerBlock::class)
+class FluidCannerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
-    override val activeProperty: net.minecraft.state.property.BooleanProperty = FluidBottlerBlock.ACTIVE
+    override val activeProperty: net.minecraft.state.property.BooleanProperty = FluidCannerBlock.ACTIVE
 
     override fun getInventory(): net.minecraft.inventory.Inventory = this
 
@@ -90,7 +90,7 @@ class FluidBottlerBlockEntity(
     override var fluidPipeProviderSide: Direction? = null
     override var fluidPipeReceiverSide: Direction? = null
 
-    override val tier: Int = FluidBottlerSync.FLUID_BOTTLER_TIER
+    override val tier: Int = FluidCannerSync.FLUID_CANNER_TIER
 
     override var speedMultiplier: Float = 1f
     override var energyMultiplier: Float = 1f
@@ -117,7 +117,7 @@ class FluidBottlerBlockEntity(
         @RegisterFluidStorage
         fun registerFluidStorageLookup() {
             if (fluidLookupRegistered) return
-            FluidStorage.SIDED.registerForBlockEntity({ be, side -> (be as FluidBottlerBlockEntity).getFluidStorageForSide(side) }, FluidBottlerBlockEntity::class.type())
+            FluidStorage.SIDED.registerForBlockEntity({ be, side -> (be as FluidCannerBlockEntity).getFluidStorageForSide(side) }, FluidCannerBlockEntity::class.type())
             fluidLookupRegistered = true
         }
     }
@@ -140,11 +140,11 @@ class FluidBottlerBlockEntity(
 
     val syncedData = SyncedData(this)
     @RegisterEnergy
-    val sync = FluidBottlerSync(
+    val sync = FluidCannerSync(
         syncedData,
         { world?.time },
         { capacityBonus },
-        { TransformerUpgradeComponent.maxInsertForTier(FluidBottlerSync.FLUID_BOTTLER_TIER + voltageTierBonus) }
+        { TransformerUpgradeComponent.maxInsertForTier(FluidCannerSync.FLUID_CANNER_TIER + voltageTierBonus) }
     )
 
     private val tankInternal = object : SingleVariantStorage<FluidVariant>() {
@@ -170,11 +170,11 @@ class FluidBottlerBlockEntity(
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
-        machineTierProvider = { FluidBottlerSync.FLUID_BOTTLER_TIER },
+        machineTierProvider = { FluidCannerSync.FLUID_CANNER_TIER },
         canDischargeNow = { sync.amount < sync.getEffectiveCapacity() }
     )
 
-    constructor(pos: BlockPos, state: BlockState) : this(FluidBottlerBlockEntity::class.type(), pos, state)
+    constructor(pos: BlockPos, state: BlockState) : this(FluidCannerBlockEntity::class.type(), pos, state)
 
     override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
@@ -204,16 +204,16 @@ class FluidBottlerBlockEntity(
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.fluid_bottler")
+    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.fluid_canner")
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        FluidBottlerScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
+        FluidCannerScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
 
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
-        sync.amount = nbt.getLong(FluidBottlerSync.NBT_ENERGY_STORED)
+        sync.amount = nbt.getLong(FluidCannerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, TANK_CAPACITY)
@@ -227,7 +227,7 @@ class FluidBottlerBlockEntity(
         super.writeNbt(nbt)
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
-        nbt.putLong(FluidBottlerSync.NBT_ENERGY_STORED, sync.amount)
+        nbt.putLong(FluidCannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_FLUID_AMOUNT, tankInternal.amount)
         if (!tankInternal.variant.isBlank) {
             nbt.put(NBT_FLUID_VARIANT, tankInternal.variant.toNbt())
@@ -281,11 +281,11 @@ class FluidBottlerBlockEntity(
 
         if (operating) {
             val progressIncrement = speedMultiplier.toInt().coerceAtLeast(1)
-            val need = (FluidBottlerSync.ENERGY_PER_TICK * energyMultiplier).toLong().coerceAtLeast(1L)
+            val need = (FluidCannerSync.ENERGY_PER_TICK * energyMultiplier).toLong().coerceAtLeast(1L)
             if (sync.consumeEnergy(need) > 0L) {
                 sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
                 sync.progress += progressIncrement
-                if (sync.progress >= FluidBottlerSync.PROGRESS_MAX) {
+                if (sync.progress >= FluidCannerSync.PROGRESS_MAX) {
                     completeCurrentOperation(doFillFromFilled || doFillFromEmpty, doFillFromFilled)
                     sync.progress = 0
                 }

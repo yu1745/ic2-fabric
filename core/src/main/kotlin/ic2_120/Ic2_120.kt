@@ -30,7 +30,7 @@ import ic2_120.content.block.machines.FluidHeatGeneratorBlockEntity
 import ic2_120.content.block.machines.FluidHeatExchangerBlockEntity
 import ic2_120.content.block.machines.FermenterBlockEntity
 import ic2_120.content.block.machines.CannerBlockEntity
-import ic2_120.content.block.machines.FluidBottlerBlockEntity
+import ic2_120.content.block.machines.FluidCannerBlockEntity
 import ic2_120.content.block.machines.OreWashingPlantBlockEntity
 import ic2_120.content.block.machines.PumpBlockEntity
 import ic2_120.content.block.machines.MinerBlockEntity

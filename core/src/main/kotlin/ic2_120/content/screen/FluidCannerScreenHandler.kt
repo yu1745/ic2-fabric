@@ -1,7 +1,7 @@
 package ic2_120.content.screen
 
-import ic2_120.content.block.FluidBottlerBlock
-import ic2_120.content.block.machines.FluidBottlerBlockEntity
+import ic2_120.content.block.FluidCannerBlock
+import ic2_120.content.block.machines.FluidCannerBlockEntity
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
@@ -9,7 +9,7 @@ import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
-import ic2_120.content.sync.FluidBottlerSync
+import ic2_120.content.sync.FluidCannerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
@@ -30,35 +30,35 @@ import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 import ic2_120.registry.annotation.ScreenFactory
 
-@ModScreenHandler(block = FluidBottlerBlock::class)
-class FluidBottlerScreenHandler(
+@ModScreenHandler(block = FluidCannerBlock::class)
+class FluidCannerScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate
-) : ScreenHandler(FluidBottlerScreenHandler::class.type(), syncId) {
+) : ScreenHandler(FluidCannerScreenHandler::class.type(), syncId) {
 
-    val sync = FluidBottlerSync(SyncedDataView(propertyDelegate))
+    val sync = FluidCannerSync(SyncedDataView(propertyDelegate))
 
     private val upgradeSlotSpec: SlotSpec by lazy {
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
     init {
-        checkSize(blockInventory, FluidBottlerBlockEntity.INVENTORY_SIZE)
+        checkSize(blockInventory, FluidCannerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, FluidBottlerBlockEntity.SLOT_INPUT_FILLED, 0, 0, INPUT_FILLED_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, FluidBottlerBlockEntity.SLOT_INPUT_EMPTY, 0, 0, INPUT_EMPTY_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, FluidBottlerBlockEntity.SLOT_OUTPUT, 0, 0, OUTPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, FluidBottlerBlockEntity.SLOT_DISCHARGING, 0, 0, DISCHARGING_SLOT_SPEC))
+        addSlot(PredicateSlot(blockInventory, FluidCannerBlockEntity.SLOT_INPUT_FILLED, 0, 0, INPUT_FILLED_SLOT_SPEC))
+        addSlot(PredicateSlot(blockInventory, FluidCannerBlockEntity.SLOT_INPUT_EMPTY, 0, 0, INPUT_EMPTY_SLOT_SPEC))
+        addSlot(PredicateSlot(blockInventory, FluidCannerBlockEntity.SLOT_OUTPUT, 0, 0, OUTPUT_SLOT_SPEC))
+        addSlot(PredicateSlot(blockInventory, FluidCannerBlockEntity.SLOT_DISCHARGING, 0, 0, DISCHARGING_SLOT_SPEC))
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
             addSlot(
                 PredicateSlot(
                     blockInventory,
-                    FluidBottlerBlockEntity.SLOT_UPGRADE_INDICES[i],
+                    FluidCannerBlockEntity.SLOT_UPGRADE_INDICES[i],
                     0,
                     0,
                     upgradeSlotSpec
@@ -124,7 +124,7 @@ class FluidBottlerScreenHandler(
 
     override fun canUse(player: PlayerEntity): Boolean =
         context.get({ world, pos ->
-            world.getBlockState(pos).block is FluidBottlerBlock && player.squaredDistanceTo(
+            world.getBlockState(pos).block is FluidCannerBlock && player.squaredDistanceTo(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)
@@ -180,12 +180,12 @@ class FluidBottlerScreenHandler(
         const val HOTBAR_END = 44
 
         @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): FluidBottlerScreenHandler {
+        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): FluidCannerScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(FluidBottlerBlockEntity.INVENTORY_SIZE)
-            return FluidBottlerScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
+            val blockInv = SimpleInventory(FluidCannerBlockEntity.INVENTORY_SIZE)
+            return FluidCannerScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
         }
     }
 }
