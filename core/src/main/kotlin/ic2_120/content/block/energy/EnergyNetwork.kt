@@ -249,6 +249,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
 
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
         if (topology.cablesThatLeak.isEmpty() || outputLevel < 1) return
+        if (!ic2_120.config.Ic2Config.current.general.shockWhenNoEnergyFlow && energy <= 0) return
 
         if (ENABLE_LEAK_LOG) {
             log.debug("[漏电检测] 电网输出等级=$outputLevel，漏电导线数量=${topology.cablesThatLeak.size}")
