@@ -1,20 +1,20 @@
 {
   "replace": false,
   "values": [
-    "ic2_120:rubber_wood",
-    "ic2_120:rubber_log",
-    "ic2_120:stripped_rubber_log",
-    "ic2_120:stripped_rubber_wood",
-    "ic2_120:rubber_planks",
-    "ic2_120:rubber_slab",
-    "ic2_120:rubber_stairs",
+    "ic2_120:rubber_button",
+    "ic2_120:rubber_door",
     "ic2_120:rubber_fence",
     "ic2_120:rubber_fence_gate",
-    "ic2_120:rubber_door",
-    "ic2_120:rubber_trapdoor",
-    "ic2_120:rubber_button",
+    "ic2_120:rubber_log",
+    "ic2_120:rubber_planks",
     "ic2_120:rubber_pressure_plate",
     "ic2_120:rubber_sapling",
-    "ic2_120:wooden_storage_box"
+    "ic2_120:rubber_slab",
+    "ic2_120:rubber_stairs",
+    "ic2_120:rubber_trapdoor",
+    "ic2_120:rubber_wood",
+    "ic2_120:wooden_storage_box",
+    "ic2_120:stripped_rubber_log",
+    "ic2_120:stripped_rubber_wood"
   ]
 }
