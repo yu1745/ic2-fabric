@@ -65,19 +65,18 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
          * @return true 如果消耗成功，false 如果能量不足
          */
         fun consumeFlightEnergyPerTick(stack: ItemStack): Boolean {
-            val energy = stack.orCreateNbt.getLong(IElectricTool.ENERGY_KEY)
+            val energy = stack.getCustomData()?.getLong(IElectricTool.ENERGY_KEY) ?: 0L
             if (energy <= 0) return false
-            val nbt = stack.orCreateNbt
-            var remainder = nbt.getDouble(FLIGHT_REMAINDER_KEY)
+            var remainder = stack.getCustomData()?.getDouble(FLIGHT_REMAINDER_KEY) ?: 0.0
             remainder += flightCostPerTick
             val toConsume = remainder.toLong()
             if (toConsume <= 0) {
-                nbt.putDouble(FLIGHT_REMAINDER_KEY, remainder)
+                stack.editCustomData { it.putDouble(FLIGHT_REMAINDER_KEY, remainder) }
                 return true
             }
             if (energy < toConsume) return false
-            nbt.putLong(IElectricTool.ENERGY_KEY, (energy - toConsume).coerceIn(0L, 10_000_000L))
-            nbt.putDouble(FLIGHT_REMAINDER_KEY, remainder - toConsume)
+            (stack.item as IElectricTool).setEnergy(stack, energy - toConsume)
+            stack.editCustomData { it.putDouble(FLIGHT_REMAINDER_KEY, remainder - toConsume) }
             return true
         }
 

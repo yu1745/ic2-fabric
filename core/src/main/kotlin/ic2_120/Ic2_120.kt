@@ -15,7 +15,6 @@ import ic2_120.content.fluid.ModFluids
 import ic2_120.content.network.NetworkManager
 import ic2_120.content.network.BandwidthStatsService
 import ic2_120.content.network.ConfigSyncPacket
-import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.network.PacketByteBuf
@@ -267,9 +266,7 @@ object Ic2_120 : ModInitializer {
             for (index in 0 until totalChunks) {
                 val size = minOf(ConfigSyncPacket.MAX_CHUNK_BYTES, bytes.size - offset)
                 val chunk = bytes.copyOfRange(offset, offset + size)
-                val buf = PacketByteBuf(Unpooled.buffer())
-                ConfigSyncPacket.write(ConfigSyncPacket(totalChunks, index, chunk), buf)
-                ServerPlayNetworking.send(handler.player, ConfigSyncPacket.ID, buf)
+                ServerPlayNetworking.send(handler.player, ConfigSyncPacket(totalChunks, index, chunk))
                 offset += size
             }
         }

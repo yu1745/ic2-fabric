@@ -24,7 +24,7 @@
     "ic2_120:ev_transformer",
     "ic2_120:extractor",
     "ic2_120:fermenter",
-    "ic2_120:fluid_bottler",
+    "ic2_120:fluid_canner",
     "ic2_120:liquid_heat_exchanger",
     "ic2_120:fluid_heat_generator",
     "ic2_120:generator",

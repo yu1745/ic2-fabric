@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "ic2_120:fluid_bottler"
+        "recipe": "ic2_120:fluid_canner"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -26,7 +26,7 @@
   ],
   "rewards": {
     "recipes": [
-      "ic2_120:fluid_bottler"
+      "ic2_120:fluid_canner"
     ]
   }
 }

@@ -141,7 +141,7 @@ object FlightManager {
 
         val currentEnergy = chestplate.getEnergy(chestStack)
         if (currentEnergy <= 0) {
-            nbt.putBoolean("QuantumFlightEnabled", false)
+            chestStack.editCustomData { it.putBoolean("QuantumFlightEnabled", false) }
             disableQuantumFlight(player)
             return
         }
@@ -154,7 +154,7 @@ object FlightManager {
         }
 
         if (!QuantumChestplate.consumeFlightEnergyPerTick(chestStack)) {
-            nbt.putBoolean("QuantumFlightEnabled", false)
+            chestStack.editCustomData { it.putBoolean("QuantumFlightEnabled", false) }
             disableQuantumFlight(player)
             return
         }

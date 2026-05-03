@@ -94,6 +94,6 @@ object Ic2JeiRecipeTypes {
         ReplicatorJeiRecipe::class.java
     )
 
-    val REPLICATOR_UID: Identifier = Identifier("ic2_120", "replicating")
+    val REPLICATOR_UID: Identifier = Identifier.of("ic2_120", "replicating")
 }
 

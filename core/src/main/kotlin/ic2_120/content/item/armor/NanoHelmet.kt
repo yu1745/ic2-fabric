@@ -111,19 +111,19 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         }
 
         // 使用余数累加器消耗能量
-        var remainder = nbt.getDouble(NV_REMAINDER_KEY)
+        var remainder = stack.getCustomData()?.getDouble(NV_REMAINDER_KEY) ?: 0.0
         remainder += nightVisionCostPerTick
         val toConsume = remainder.toLong()
         if (toConsume > 0) {
             if (energy < toConsume) {
                 setEnergy(stack, 0)
-                nbt.putBoolean(NIGHT_VISION_KEY, false)
+                stack.editCustomData { it.putBoolean(NIGHT_VISION_KEY, false) }
                 player.removeStatusEffect(StatusEffects.NIGHT_VISION)
                 return
             }
             setEnergy(stack, energy - toConsume)
         }
-        nbt.putDouble(NV_REMAINDER_KEY, remainder - toConsume)
+        stack.editCustomData { it.putDouble(NV_REMAINDER_KEY, remainder - toConsume) }
 
         // 光线检测（复用 NightVisionGoggles 逻辑）
         val brightness = world.getLightLevel(player.blockPos)

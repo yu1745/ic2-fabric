@@ -15,7 +15,7 @@ import java.text.NumberFormat
 class ReplicatorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<ReplicatorJeiRecipe> {
     private val background: IDrawable = guiHelper.createBlankDrawable(140, 54)
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "replicator")))
+        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "replicator")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.REPLICATOR

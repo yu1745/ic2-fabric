@@ -49,11 +49,8 @@ object IC2AdvancedSolarAddonClient : ClientModInitializer {
         }
 
         // 注册配置同步接收（分包）
-        ClientPlayNetworking.registerGlobalReceiver(AddonConfigSyncPacket.ID) { client, _, buf, _ ->
-            val packet = AddonConfigSyncPacket.read(buf)
-            client.execute {
-                AddonConfigSyncReceiver.accept(packet)
-            }
+        ClientPlayNetworking.registerGlobalReceiver(AddonConfigSyncPacket.ID) { payload, _ ->
+            AddonConfigSyncReceiver.accept(payload)
         }
     }
 }

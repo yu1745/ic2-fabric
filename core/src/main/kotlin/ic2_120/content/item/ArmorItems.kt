@@ -966,18 +966,18 @@ class ElectricJetpack : ElectricArmorItem(
     fun consumeFlightEnergyPerTick(stack: ItemStack): Boolean {
         val energy = getEnergy(stack)
         if (energy <= 0) return false
-        val nbt = stack.orCreateNbt
-        var remainder = nbt.getDouble(FLIGHT_REMAINDER_KEY)
+        val customData = stack.getCustomData()
+        var remainder = customData?.getDouble(FLIGHT_REMAINDER_KEY) ?: 0.0
         val cost = euPerTick
         remainder += cost
         val toConsume = remainder.toLong()
         if (toConsume <= 0) {
-            nbt.putDouble(FLIGHT_REMAINDER_KEY, remainder)
+            stack.editCustomData { it.putDouble(FLIGHT_REMAINDER_KEY, remainder) }
             return true
         }
         if (energy < toConsume) return false
         setEnergy(stack, energy - toConsume)
-        nbt.putDouble(FLIGHT_REMAINDER_KEY, remainder - toConsume)
+        stack.editCustomData { it.putDouble(FLIGHT_REMAINDER_KEY, remainder - toConsume) }
         return true
     }
 
@@ -1096,8 +1096,7 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
         }
 
         // 使用余数累加器消耗能量
-        val nbt = stack.orCreateNbt
-        var remainder = nbt.getDouble(NV_REMAINDER_KEY)
+        var remainder = stack.getCustomData()?.getDouble(NV_REMAINDER_KEY) ?: 0.0
         remainder += euPerTick
         val toConsume = remainder.toLong()
         if (toConsume > 0) {
@@ -1108,7 +1107,7 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
             }
             setCurrentCharge(stack, energy - toConsume)
         }
-        nbt.putDouble(NV_REMAINDER_KEY, remainder - toConsume)
+        stack.editCustomData { it.putDouble(NV_REMAINDER_KEY, remainder - toConsume) }
         val brightness = world.getLightLevel(player.blockPos)
         if (brightness >= 8) {
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)

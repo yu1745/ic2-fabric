@@ -135,7 +135,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
 
         // 功能 2: 夜视（使用余数累加器精确消耗）
-        if (nbt.getBoolean(NIGHT_VISION_KEY)) {
+        if (nbt?.getBoolean(NIGHT_VISION_KEY) == true) {
             if (energy > 0) {
                 var remainder = nbt.getDouble(NV_REMAINDER_KEY)
                 remainder += nightVisionCostPerTick

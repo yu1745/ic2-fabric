@@ -31,7 +31,7 @@ object ArmorTooltipHandler {
             if (item is JetpackItem || item is ElectricJetpack) {
                 val key = ModeKeybinds.getModeKey()
                 val name = key.boundKeyLocalizedText.string
-                type.add(Text.literal("飞行开关: ").formatted(Formatting.GRAY)
+                tooltip.add(Text.literal("飞行开关: ").formatted(Formatting.GRAY)
                     .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
                     .append(Text.literal(name).formatted(Formatting.YELLOW)))
             }

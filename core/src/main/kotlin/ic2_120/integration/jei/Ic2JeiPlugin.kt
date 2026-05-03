@@ -416,7 +416,7 @@ class Ic2JeiPlugin : IModPlugin {
         )
 
         registration.addRecipeCatalyst(
-            ItemStack(Registries.ITEM.get(Identifier("ic2_120", "replicator"))),
+            ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "replicator"))),
             Ic2JeiRecipeTypes.REPLICATOR
         )
     }

@@ -190,5 +190,6 @@ object NetworkManager {
         PayloadTypeRegistry.playS2C().register(WaterRotorStatePacket.ID, WaterRotorStatePacket.CODEC)
         PayloadTypeRegistry.playS2C().register(ScannerResultPacket.ID, ScannerResultPacket.CODEC)
         PayloadTypeRegistry.playS2C().register(TeleporterVisualStatePacket.ID, TeleporterVisualStatePacket.CODEC)
+        PayloadTypeRegistry.playS2C().register(ConfigSyncPacket.ID, ConfigSyncPacket.CODEC)
     }
 }

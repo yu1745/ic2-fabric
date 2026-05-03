@@ -79,18 +79,18 @@ open class JetpackItem : ArmorItem(
         fun consumeFuelPerTick(stack: ItemStack): Boolean {
             val fuel = getFuel(stack)
             if (fuel <= 0) return false
-            val nbt = stack.orCreateNbt
-            var remainder = nbt.getDouble(FUEL_REMAINDER_KEY)
+            val customData = stack.getCustomData()
+            var remainder = customData?.getDouble(FUEL_REMAINDER_KEY) ?: 0.0
             val cost = fuelPerTick
             remainder += cost
             val toConsume = remainder.toLong()
             if (toConsume <= 0) {
-                nbt.putDouble(FUEL_REMAINDER_KEY, remainder)
+                stack.editCustomData { it.putDouble(FUEL_REMAINDER_KEY, remainder) }
                 return true
             }
             if (fuel < toConsume) return false
             setFuel(stack, fuel - toConsume)
-            nbt.putDouble(FUEL_REMAINDER_KEY, remainder - toConsume)
+            stack.editCustomData { it.putDouble(FUEL_REMAINDER_KEY, remainder - toConsume) }
             return true
         }
 
