@@ -116,6 +116,9 @@ class NuclearReactorBlockEntity(
 
     override var redstoneInverted: Boolean = false
 
+    /** 燃料棒是否活跃（受红石控制）；其他器件始终工作 */
+    private var fuelActive: Boolean = true
+
     private var totalHeatProduced: Int = 0
 
     private var totalHeatDissipated: Int = 0
@@ -478,7 +481,7 @@ class NuclearReactorBlockEntity(
         }
     }
 
-    override fun produceEnergy(): Boolean = true
+    override fun produceEnergy(): Boolean = fuelActive
     override fun getTickRate(): Int = 20
     override fun isFluidCooled(): Boolean = isThermalMode()
     override fun getCycleStartHeat(): Int = cycleStartHeatSnapshot
@@ -859,7 +862,8 @@ class NuclearReactorBlockEntity(
         } else {
             RedstoneControlComponent.canRun(world, pos, this)
         }
-        if (shouldTick && redstoneAllowsRun) {
+        fuelActive = redstoneAllowsRun
+        if (shouldTick) {
             dropAllUnfittingStuff(world, pos)
             cycleStartHeatSnapshot = sync.temperature
             cycleAddHeatTotal = 0
