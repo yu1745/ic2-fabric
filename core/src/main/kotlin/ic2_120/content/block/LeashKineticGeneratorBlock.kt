@@ -44,8 +44,8 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
         fun generateRecipes(exporter: RecipeExporter) {
             val casing = MachineCasingBlock::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LeashKineticGeneratorBlock::class.item(), 1)
-                .pattern("L")
-                .pattern("C")
+                .pattern(" L ")
+                .pattern(" C ")
                 .input('L', Items.LEAD)
                 .input('C', casing)
                 .criterion(
