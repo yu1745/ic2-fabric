@@ -1083,6 +1083,10 @@ class NanoSaber : SwordItem(
         }
     }
 
+    override fun postDamageEntity(stack: ItemStack, target: LivingEntity, attacker: LivingEntity) {
+        // 电动工具不使用原版耐久体系，阻止 SwordItem 的 stack.damage(1) 调用
+    }
+
     override val tier = 3
     override val maxCapacity = 160_000L
 
