@@ -17,6 +17,7 @@ import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.machines.KineticGeneratorBlockEntity
 import ic2_120.content.block.machines.WindKineticGeneratorBlockEntity
 import ic2_120.content.block.machines.WaterKineticGeneratorBlockEntity
+import ic2_120.content.block.machines.LeashKineticGeneratorBlockEntity
 import ic2_120.content.block.machines.ManualKineticGeneratorBlockEntity
 import ic2_120.content.block.transmission.BevelGearBlock
 import ic2_120.content.block.transmission.CarbonTransmissionShaftBlock
@@ -75,6 +76,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockDataProvider(KineticJadeProvider, WindKineticGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(KineticJadeProvider, WaterKineticGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(KineticJadeProvider, ManualKineticGeneratorBlockEntity::class.java)
+        registration.registerBlockDataProvider(KineticJadeProvider, LeashKineticGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(KineticJadeProvider, KineticGeneratorBlockEntity::class.java)
         registration.registerEntityDataProvider(AnimalJadeProvider, PassiveEntity::class.java)
     }
@@ -443,6 +445,13 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
                 data.putInt("outputKu", be.sync.outputKu.coerceAtLeast(0))
             }
 
+            is LeashKineticGeneratorBlockEntity -> {
+                data.putString("kind", "leash_kinetic")
+                data.putInt("generatedKu", be.sync.generatedKu.coerceAtLeast(0))
+                data.putInt("angularVelocity", be.sync.angularVelocityDegPerSec.coerceAtLeast(0))
+                data.putString("animalName", be.getMobName())
+            }
+
             is KineticGeneratorBlockEntity -> {
                 val inputKu = be.sync.currentKu.coerceAtLeast(0)
                 val outputEu = be.sync.outputEu.coerceAtLeast(0)
@@ -505,6 +514,17 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
                 val outputKu = accessor.serverData.getInt("outputKu")
                 tooltip.add(Text.translatable("ic2_120.jade.manual_stored_ku", storedKu))
                 tooltip.add(Text.translatable("ic2_120.jade.manual_extracted_ku", outputKu))
+            }
+
+            "leash_kinetic" -> {
+                val generatedKu = accessor.serverData.getInt("generatedKu")
+                val angularVelocity = accessor.serverData.getInt("angularVelocity")
+                val animalName = accessor.serverData.getString("animalName")
+                tooltip.add(Text.translatable("ic2_120.jade.leash_kinetic.generated", generatedKu))
+                tooltip.add(Text.translatable("ic2_120.jade.leash_kinetic.velocity", angularVelocity))
+                if (animalName.isNotEmpty()) {
+                    tooltip.add(Text.translatable("ic2_120.jade.leash_kinetic.animal", animalName))
+                }
             }
 
             "kinetic_generator" -> {

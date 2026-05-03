@@ -947,5 +947,27 @@
   "jei.ic2_120.replicator.uu_cost": "UU消耗：%s uB",
 
   "tooltip.ic2_120.status.on": "开启",
-  "tooltip.ic2_120.status.off": "关闭"
+  "tooltip.ic2_120.status.off": "关闭",
+
+  "block.ic2_120.leash_kinetic_generator": "拴绳动能发生机",
+
+  "gui.ic2_120.leash_kinetic.generated": "生成: %s KU/t",
+  "gui.ic2_120.leash_kinetic.output": "输出: %s KU/t",
+  "gui.ic2_120.leash_kinetic.animal_status": "动物: %s",
+  "gui.ic2_120.leash_kinetic.attached": "已拴绳",
+  "gui.ic2_120.leash_kinetic.no_animal": "未连接",
+  "gui.ic2_120.leash_kinetic.leash_length": "拴绳长度: %s cm",
+  "gui.ic2_120.leash_kinetic.angular_velocity": "角速度: %s °/s",
+  "gui.ic2_120.leash_kinetic.status": "状态: %s",
+  "gui.ic2_120.leash_kinetic.running": "运行中",
+  "gui.ic2_120.leash_kinetic.idle": "待机",
+
+  "message.ic2_120.leash_kinetic.already_leashed": "该机器已经连接了一只动物!",
+  "message.ic2_120.leash_kinetic.attached": "已拴住 %s",
+  "message.ic2_120.leash_kinetic.no_mob": "附近没有拴绳的动物",
+  "message.ic2_120.leash_kinetic.detached": "已解除拴绳",
+
+  "ic2_120.jade.leash_kinetic.generated": "生成: %s KU/t",
+  "ic2_120.jade.leash_kinetic.velocity": "角速度: %s °/s",
+  "ic2_120.jade.leash_kinetic.animal": "动物: %s"
 }

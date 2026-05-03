@@ -1,0 +1,12 @@
+{
+    "parent": "block/cube",
+    "textures": {
+        "particle": "ic2:block/generator/kinetic/manual_kinetic_generator_sides",
+        "down": "ic2:block/generator/kinetic/manual_kinetic_generator_bottom",
+        "up": "ic2:block/generator/kinetic/manual_kinetic_generator_top",
+        "north": "ic2:block/generator/kinetic/manual_kinetic_generator_sides",
+        "east": "ic2:block/generator/kinetic/manual_kinetic_generator_sides",
+        "south": "ic2:block/generator/kinetic/manual_kinetic_generator_sides",
+        "west": "ic2:block/generator/kinetic/manual_kinetic_generator_sides"
+    }
+}
