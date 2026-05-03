@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **35 个 commit**，**31 个已同步，4 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **35 个 commit**，**35 个已同步，0 个待同步**。
 
 ## 逐 commit 状态
 
@@ -45,10 +45,10 @@
 | 29 | `3e9f9d0` | docs: 更新 AGENTS.md 源码参考章节——添加 MC 源码与 Fabric API 获取及参考方式 | ✅ | 无冲突直接 cherry-pick |
 | 30 | `59e897e` | feat: JEI 配方显示(分子重组仪/复制机) + 配置全量分包同步 | ✅ | cherry-pick + 适配 1.21.1 API（Identifier.of、CustomPayload、getCustomData） |
 | 31 | `1bc03c2` | refactor: 统一 Tooltip 格式(状态国际化+剩余时间) + 重构飞行消耗逻辑 | ✅ | cherry-pick + 适配同上 |
-| 32 | `714524c` | feat: 扩展可拴绳实体类型（怪物/村民） | ❌ | |
-| 33 | `8f4078e` | feat: 添加拴绳动能发生机 | ❌ | |
-| 34 | `408c5a3` | chore: 更新 AGENTS.md 与 deploy 脚本 | ❌ | |
-| 35 | `4f0aaad` | refactor: 注释核反应堆热模式检测的粒子效果代码 | ❌ | |
+| 32 | `714524c` | feat: 扩展可拴绳实体类型（怪物/村民） | ✅ | 代码已存在于 1.21.1 |
+| 33 | `8f4078e` | feat: 添加拴绳动能发生机 | ✅ | 代码已存在于 1.21.1，额外 API 适配提交 `6abb6e4` |
+| 34 | `408c5a3` | chore: 更新 AGENTS.md 与 deploy 脚本 | ✅ | 代码已存在于 1.21.1 |
+| 35 | `4f0aaad` | refactor: 注释核反应堆热模式检测的粒子效果代码 | ✅ | 无冲突直接 cherry-pick `d7cdc5c` |
  
 ## 同步历史
 
@@ -70,4 +70,4 @@
 - 2026-05-02：同步 commits 27-29 到 1.21.1——shockWhenNoEnergyFlow、感应炉升级支持、AGENTS.md 源码参考
 - 2026-05-03：同步 commits 30-31 到 1.21.1——JEI 配方显示+配置全量分包同步、Tooltip 统一+飞行消耗重构，适配 1.21.1 API
 - 2026-05-03：提交 commits 32-34（拴绳动能发生机相关）到 main，待同步到 1.21.1
-- 2026-05-03：提交 commit 35（注释核反应堆粒子效果代码）到 main，待同步到 1.21.1
+- 2026-05-03：同步 commits 32-35 到 1.21.1——拴绳动能发生机 API 适配（RecipeExporter、validateTicker、canBeLeashed→canBeLeashed()、updateLeash→beforeLeashTick、Identifier.ofVanilla、RegistryWrapper.WrapperLookup、onBreak 返回 BlockState）+ datagen 刷新，1.21.1 额外提交 `6abb6e4`
