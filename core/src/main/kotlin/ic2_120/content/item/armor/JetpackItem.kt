@@ -11,17 +11,7 @@ import net.minecraft.util.Formatting
 /**
  * 喷气背包 (Jetpack)
  *
- * 使用生物燃料作为动力的飞行装置。
- *
- * ## 核心参数
- *
- * - 燃料容量：30桶生物燃料（30,000 mB）
- * - 燃料消耗：2 mB/tick
- * - 飞行时间：满燃料约12.5分钟
- *
- * ## 飞行模式
- *
- * - **垂直模式**：类似创造飞行，按空格上升、Shift下降
+ * 使用生物燃料作为动力的飞行装置，类似创造飞行，按空格上升、Shift下降。
  */
 open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)) {
 
@@ -29,6 +19,7 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
         private const val FUEL_KEY = "Fuel"
         private const val IS_HOVER_KEY = "IsHover"
         private const val FLIGHT_ENABLED_KEY = "FlightEnabled"
+        private const val FUEL_REMAINDER_KEY = "FuelRemainder"
 
         @JvmStatic
         val maxFuel: Long
@@ -39,8 +30,12 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
             get() = Ic2Config.current.armor.jetpack.maxFuel
 
         @JvmStatic
-        val fuelPerTick: Long
+        val fuelPerTick: Double
             get() = Ic2Config.getJetpackFuelPerTick()
+
+        @JvmStatic
+        val flightDurationSeconds: Int
+            get() = Ic2Config.current.armor.jetpack.flightDurationSeconds
 
         @JvmStatic
         fun getFuel(stack: ItemStack): Long =
@@ -69,6 +64,29 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
             stack.orCreateNbt.putBoolean(FLIGHT_ENABLED_KEY, enabled)
         }
 
+        /**
+         * 使用余数累加器精确消耗燃料（支持小数消耗速率）
+         * @return true 如果消耗成功，false 如果燃料不足
+         */
+        @JvmStatic
+        fun consumeFuelPerTick(stack: ItemStack): Boolean {
+            val fuel = getFuel(stack)
+            if (fuel <= 0) return false
+            val nbt = stack.orCreateNbt
+            var remainder = nbt.getDouble(FUEL_REMAINDER_KEY)
+            val cost = fuelPerTick
+            remainder += cost
+            val toConsume = remainder.toLong()
+            if (toConsume <= 0) {
+                nbt.putDouble(FUEL_REMAINDER_KEY, remainder)
+                return true
+            }
+            if (fuel < toConsume) return false
+            setFuel(stack, fuel - toConsume)
+            nbt.putDouble(FUEL_REMAINDER_KEY, remainder - toConsume)
+            return true
+        }
+
         @JvmStatic
         fun toggleFlightEnabled(stack: ItemStack): Boolean {
             val enabled = !isFlightEnabled(stack)
@@ -88,12 +106,10 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
         val fuel = getFuel(stack)
         val ratio = if (maxFuel > 0) fuel.toDouble() / maxFuel else 0.0
         val flightEnabled = isFlightEnabled(stack)
-        val flightStatusText = if (flightEnabled) "开启" else "关闭"
 
         // 计算剩余飞行时间（秒）
-        val remainingSeconds = if (fuel > 0) {
-            val ticks = fuel / fuelPerTick
-            ticks / 20.0
+        val remainingSeconds = if (fuel > 0 && maxFuel > 0) {
+            fuel.toDouble() / maxFuel * flightDurationSeconds
         } else 0.0
 
         // 格式化时间
@@ -106,9 +122,9 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
         }
 
         tooltip.add(Text.literal("燃料: %,d / %,d mB (%.1f%%)".format(fuel, maxFuel, ratio * 100)))
-        tooltip.add(Text.literal("飞行: $flightStatusText | 剩余飞行: $timeText").formatted(Formatting.GRAY))
-        tooltip.add(Text.literal("  Alt+M：切换飞行开关").formatted(Formatting.DARK_GRAY))
-        tooltip.add(Text.literal("  创造式飞行：空格上升，Shift下降").formatted(Formatting.DARK_GRAY))
+        tooltip.add(Text.literal("飞行: ").append(
+            Text.translatable(if (flightEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
+        ).append(Text.literal(" | 剩余: $timeText")).formatted(Formatting.GRAY))
     }
 
     /**

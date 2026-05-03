@@ -57,9 +57,13 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         private const val NIGHT_VISION_DURATION = 220
         private const val BLINDNESS_DURATION = 80
         private const val NIGHT_VISION_KEY = "NightVisionEnabled"
+        private const val NV_REMAINDER_KEY = "NanoHelmetNvRemainder"
 
-        val nightVisionCostPerTick: Long
+        val nightVisionCostPerTick: Double
             get() = Ic2Config.getNanoHelmetNightVisionEuPerTick()
+
+        val nightVisionDurationSeconds: Int
+            get() = Ic2Config.current.armor.nightVision.nanoHelmetDurationSeconds
 
         fun toggleNightVision(stack: ItemStack): Boolean {
             val nbt = stack.orCreateNbt
@@ -100,15 +104,27 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         if (!nbt.getBoolean(NIGHT_VISION_KEY)) return
 
         val energy = getEnergy(stack)
-        if (energy < nightVisionCostPerTick) {
+        if (energy <= 0) {
             setEnergy(stack, 0)
             nbt.putBoolean(NIGHT_VISION_KEY, false)
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)
             return
         }
 
-        // 消耗能量
-        setEnergy(stack, energy - nightVisionCostPerTick)
+        // 使用余数累加器消耗能量
+        var remainder = nbt.getDouble(NV_REMAINDER_KEY)
+        remainder += nightVisionCostPerTick
+        val toConsume = remainder.toLong()
+        if (toConsume > 0) {
+            if (energy < toConsume) {
+                setEnergy(stack, 0)
+                nbt.putBoolean(NIGHT_VISION_KEY, false)
+                player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+                return
+            }
+            setEnergy(stack, energy - toConsume)
+        }
+        nbt.putDouble(NV_REMAINDER_KEY, remainder - toConsume)
 
         // 光线检测（复用 NightVisionGoggles 逻辑）
         val brightness = world.getLightLevel(player.blockPos)
@@ -132,15 +148,20 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
         val energy = getEnergy(stack)
 
-        // 计算夜视剩余时间（分钟）
-        val remainingMinutes = if (energy > 0 && nvEnabled) {
-            val ticks = energy / nightVisionCostPerTick
-            val seconds = ticks / 20.0
-            val minutes = seconds / 60.0
-            "%.1f".format(minutes)
-        } else "N/A"
+        val remainingSeconds = if (energy > 0 && maxCapacity > 0) {
+            energy.toDouble() / maxCapacity * nightVisionDurationSeconds
+        } else 0.0
+        val timeText = if (remainingSeconds >= 60) {
+            val minutes = (remainingSeconds / 60).toInt()
+            val seconds = (remainingSeconds % 60).toInt()
+            "${minutes}分${seconds}秒"
+        } else {
+            "${remainingSeconds.toInt()}秒"
+        }
 
-        tooltip.add(Text.literal("夜视: ${if (nvEnabled) "§aON" else "§cOFF"} §8[${remainingMinutes}分钟]").formatted(Formatting.GRAY))
+        tooltip.add(Text.literal("夜视: ").append(
+            Text.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
+        ).append(Text.literal(" | 剩余: $timeText")).formatted(Formatting.GRAY))
         tooltip.add(Text.literal("减伤: 11.54%").formatted(Formatting.GRAY))
     }
 }

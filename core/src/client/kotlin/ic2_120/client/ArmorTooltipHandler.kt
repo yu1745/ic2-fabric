@@ -1,5 +1,6 @@
 package ic2_120.client
 
+import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.NightVisionGoggles
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.NanoHelmet
@@ -17,7 +18,7 @@ import net.minecraft.util.Formatting
  *
  * 量子套/纳米套使用 Alt+N(夜视)、Alt+F(飞行)；
  * 夜视仪使用 Alt+N；
- * 喷气背包使用 Alt+M(模式切换)。
+ * 喷气背包使用 Alt+M(飞行开关)。
  */
 @Environment(EnvType.CLIENT)
 object ArmorTooltipHandler {
@@ -27,10 +28,10 @@ object ArmorTooltipHandler {
             val item = stack.item
 
             // 喷气背包：M 键
-            if (item is JetpackItem) {
+            if (item is JetpackItem || item is ElectricJetpack) {
                 val key = ModeKeybinds.getModeKey()
                 val name = key.boundKeyLocalizedText.string
-                type.add(Text.literal("模式切换: ").formatted(Formatting.GRAY)
+                type.add(Text.literal("飞行开关: ").formatted(Formatting.GRAY)
                     .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
                     .append(Text.literal(name).formatted(Formatting.YELLOW)))
             }

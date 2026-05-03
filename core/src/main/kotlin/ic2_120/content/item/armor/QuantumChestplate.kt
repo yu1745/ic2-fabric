@@ -5,6 +5,7 @@ import ic2_120.content.item.Alloy
 import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.IridiumPlate
 import ic2_120.content.item.ModArmorMaterials
+import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.item.energy.LapotronCrystalItem
 import ic2_120.content.recipes.crafting.BatteryEnergyShapedRecipeDatagen
 import ic2_120.registry.CreativeTab
@@ -50,9 +51,34 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
 
     companion object {
         private const val FLIGHT_KEY = "QuantumFlightEnabled"
+        private const val FLIGHT_REMAINDER_KEY = "QuantumChestplateFlightRemainder"
 
-        val flightCostPerTick: Long
+        val flightCostPerTick: Double
             get() = Ic2Config.getQuantumChestplateEuPerTick()
+
+        val flightDurationSeconds: Int
+            get() = Ic2Config.current.armor.quantumChestplate.flightDurationSeconds
+
+        /**
+         * 使用余数累加器精确消耗能量（支持小数消耗速率）
+         * @return true 如果消耗成功，false 如果能量不足
+         */
+        fun consumeFlightEnergyPerTick(stack: ItemStack): Boolean {
+            val energy = stack.orCreateNbt.getLong(IElectricTool.ENERGY_KEY)
+            if (energy <= 0) return false
+            val nbt = stack.orCreateNbt
+            var remainder = nbt.getDouble(FLIGHT_REMAINDER_KEY)
+            remainder += flightCostPerTick
+            val toConsume = remainder.toLong()
+            if (toConsume <= 0) {
+                nbt.putDouble(FLIGHT_REMAINDER_KEY, remainder)
+                return true
+            }
+            if (energy < toConsume) return false
+            nbt.putLong(IElectricTool.ENERGY_KEY, (energy - toConsume).coerceIn(0L, 10_000_000L))
+            nbt.putDouble(FLIGHT_REMAINDER_KEY, remainder - toConsume)
+            return true
+        }
 
         fun toggleFlight(stack: ItemStack): Boolean {
             val nbt = stack.orCreateNbt
@@ -94,15 +120,20 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
         val flightEnabled = stack.orCreateNbt.getBoolean(FLIGHT_KEY)
         val energy = getEnergy(stack)
 
-        // 计算飞行剩余时间（分钟）
-        val remainingMinutes = if (energy > 0 && flightEnabled) {
-            val ticks = energy / flightCostPerTick
-            val seconds = ticks / 20.0
-            val minutes = seconds / 60.0
-            "%.1f".format(minutes)
-        } else "N/A"
+        val remainingSeconds = if (energy > 0) {
+            energy.toDouble() / maxCapacity * flightDurationSeconds
+        } else 0.0
+        val timeText = if (remainingSeconds >= 60) {
+            val minutes = (remainingSeconds / 60).toInt()
+            val seconds = (remainingSeconds % 60).toInt()
+            "${minutes}分${seconds}秒"
+        } else {
+            "${remainingSeconds.toInt()}秒"
+        }
 
-        tooltip.add(Text.literal("飞行: ${if (flightEnabled) "§aON" else "§cOFF"} §8[${remainingMinutes}分钟]").formatted(Formatting.GRAY))
+        tooltip.add(Text.literal("飞行: ").append(
+            Text.translatable(if (flightEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
+        ).append(Text.literal(" | 剩余: $timeText")).formatted(Formatting.GRAY))
         tooltip.add(Text.literal("减伤: 44% | 需全套量子护甲").formatted(Formatting.GRAY))
     }
 }
