@@ -87,5 +87,13 @@ object Ic2JeiRecipeTypes {
         "recycling",
         RecyclerJeiRecipe::class.java
     )
+
+    val REPLICATOR: RecipeType<ReplicatorJeiRecipe> = RecipeType.create(
+        "ic2_120",
+        "replicating",
+        ReplicatorJeiRecipe::class.java
+    )
+
+    val REPLICATOR_UID: Identifier = Identifier("ic2_120", "replicating")
 }
 

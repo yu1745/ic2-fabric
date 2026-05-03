@@ -14,6 +14,11 @@ import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.network.NetworkManager
 import ic2_120.content.network.BandwidthStatsService
+import ic2_120.content.network.ConfigSyncPacket
+import io.netty.buffer.Unpooled
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
+import net.minecraft.network.PacketByteBuf
 import ic2_120.content.effect.ModStatusEffects
 import ic2_120.content.effect.RadiationHandler
 import ic2_120.content.worldgen.ChestLootInjector
@@ -252,6 +257,23 @@ object Ic2_120 : ModInitializer {
 
         // 注册网络管理器
         NetworkManager.register()
+
+        // 玩家加入时发送完整配置同步（分包）
+        ServerPlayConnectionEvents.JOIN.register { handler, _, _ ->
+            val json = Ic2Config.prettyCurrentConfig()
+            val bytes = json.toByteArray(Charsets.UTF_8)
+            val totalChunks = (bytes.size + ConfigSyncPacket.MAX_CHUNK_BYTES - 1) / ConfigSyncPacket.MAX_CHUNK_BYTES
+            var offset = 0
+            for (index in 0 until totalChunks) {
+                val size = minOf(ConfigSyncPacket.MAX_CHUNK_BYTES, bytes.size - offset)
+                val chunk = bytes.copyOfRange(offset, offset + size)
+                val buf = PacketByteBuf(Unpooled.buffer())
+                ConfigSyncPacket.write(ConfigSyncPacket(totalChunks, index, chunk), buf)
+                ServerPlayNetworking.send(handler.player, ConfigSyncPacket.ID, buf)
+                offset += size
+            }
+        }
+
         // 注册配置重载命令（/ic2config reload）
         ConfigCommand.register()
         SeedCommand.register()

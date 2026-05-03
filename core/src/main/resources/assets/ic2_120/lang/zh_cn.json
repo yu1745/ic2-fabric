@@ -942,5 +942,10 @@
   "gui.ic2_120.solar_distiller.output_distilled": "输出 %s mB",
   "tooltip.ic2_120.weed_ex.amount": "剩余容量: %s/%s mB",
   "tooltip.ic2_120.weed_ex.low": "除草剂不足！",
-  "tooltip.ic2_120.pipe.flow_rate": "流量: %s mB/s (%s 桶/秒)"
+  "tooltip.ic2_120.pipe.flow_rate": "流量: %s mB/s (%s 桶/秒)",
+
+  "jei.ic2_120.replicator.uu_cost": "UU消耗：%s uB",
+
+  "tooltip.ic2_120.status.on": "开启",
+  "tooltip.ic2_120.status.off": "关闭"
 }

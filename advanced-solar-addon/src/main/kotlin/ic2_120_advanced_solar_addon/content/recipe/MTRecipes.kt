@@ -16,25 +16,35 @@ object MTRecipes {
     )
 
     fun init() {
-        // 从配置文件加载配方
-        val configRecipes = Ic2AdvancedSolarAddonConfig.getMolecularTransformerRecipes()
+        loadFromConfig()
+    }
+
+    fun loadFromConfig() {
         recipes.clear()
+        for (configRecipe in Ic2AdvancedSolarAddonConfig.getMolecularTransformerRecipes()) {
+            addRecipe(configRecipe.input, configRecipe.output, configRecipe.energy)
+        }
+    }
 
-        for (configRecipe in configRecipes) {
-            val inputId = Identifier.tryParse(configRecipe.input)
-            val outputId = Identifier.tryParse(configRecipe.output)
+    fun loadFromSync(entries: List<MTRecipeEntry>) {
+        recipes.clear()
+        for (entry in entries) {
+            addRecipe(entry.inputId, entry.outputId, entry.energy)
+        }
+    }
 
-            if (inputId != null && outputId != null) {
-                val inputItem = Registries.ITEM.get(inputId)
-                val outputItem = Registries.ITEM.get(outputId)
-
-                if (inputItem != Items.AIR && outputItem != Items.AIR && configRecipe.energy > 0) {
-                    recipes.add(MTRecipe(
-                        input = ItemStack(inputItem),
-                        output = ItemStack(outputItem),
-                        energy = configRecipe.energy
-                    ))
-                }
+    private fun addRecipe(inputId: String, outputId: String, energy: Long) {
+        val inId = Identifier.tryParse(inputId)
+        val outId = Identifier.tryParse(outputId)
+        if (inId != null && outId != null) {
+            val inputItem = Registries.ITEM.get(inId)
+            val outputItem = Registries.ITEM.get(outId)
+            if (inputItem != Items.AIR && outputItem != Items.AIR && energy > 0) {
+                recipes.add(MTRecipe(
+                    input = ItemStack(inputItem),
+                    output = ItemStack(outputItem),
+                    energy = energy
+                ))
             }
         }
     }

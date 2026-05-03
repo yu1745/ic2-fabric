@@ -3,7 +3,10 @@ package ic2_120_advanced_solar_addon.client
 import ic2_120_advanced_solar_addon.client.render.MolecularTransformerBlockEntityRenderer
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlock
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlockEntity
+import ic2_120_advanced_solar_addon.content.recipe.AddonConfigSyncPacket
+import ic2_120_advanced_solar_addon.content.recipe.AddonConfigSyncReceiver
 import net.fabricmc.api.ClientModInitializer
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry
 import net.minecraft.client.MinecraftClient
 import net.minecraft.registry.Registries
@@ -29,6 +32,7 @@ object IC2AdvancedSolarAddonClient : ClientModInitializer {
         )
         println("[MT-BER] Registration complete")
 
+        // Register item renderer for Molecular Transformer
         val mtBlock = Registries.BLOCK.get(Identifier.of("ic2_120_advanced_solar_addon", "molecular_transformer"))
         val mtItemEntity = MolecularTransformerBlockEntity(
             BlockPos.ORIGIN,
@@ -42,6 +46,14 @@ object IC2AdvancedSolarAddonClient : ClientModInitializer {
                 light,
                 overlay
             )
+        }
+
+        // 注册配置同步接收（分包）
+        ClientPlayNetworking.registerGlobalReceiver(AddonConfigSyncPacket.ID) { client, _, buf, _ ->
+            val packet = AddonConfigSyncPacket.read(buf)
+            client.execute {
+                AddonConfigSyncReceiver.accept(packet)
+            }
         }
     }
 }

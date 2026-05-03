@@ -948,5 +948,10 @@
   "gui.ic2_120.solar_distiller.output_distilled": "Output %s mB",
   "tooltip.ic2_120.weed_ex.amount": "Remaining: %s/%s mB",
   "tooltip.ic2_120.weed_ex.low": "Weed-Ex low!",
-  "tooltip.ic2_120.pipe.flow_rate": "Flow: %s mB/s (%s buckets/s)"
+  "tooltip.ic2_120.pipe.flow_rate": "Flow: %s mB/s (%s buckets/s)",
+
+  "jei.ic2_120.replicator.uu_cost": "UU Cost: %s uB",
+
+  "tooltip.ic2_120.status.on": "ON",
+  "tooltip.ic2_120.status.off": "OFF"
 }
