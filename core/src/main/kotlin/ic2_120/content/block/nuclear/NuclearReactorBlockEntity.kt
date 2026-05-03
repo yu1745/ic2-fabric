@@ -65,7 +65,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.Box
-import net.minecraft.particle.ParticleTypes
+// import net.minecraft.particle.ParticleTypes
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -502,7 +502,7 @@ class NuclearReactorBlockEntity(
         // 验证 BE 位置：当前方块必须是反应堆，否则 BE 可能创建在错误位置
         val blockAtPos = w.getBlockState(pos).block
         if (blockAtPos !is NuclearReactorBlock) {
-            spawnErrorParticles(w, pos)
+            // spawnErrorParticles(w, pos)
             return false
         }
 
@@ -526,7 +526,7 @@ class NuclearReactorBlockEntity(
                         block !is ReactorFluidPortBlock &&
                         block !is ReactorAccessHatchBlock
                     ) {
-                        spawnErrorParticles(w, checkPos)
+                        // spawnErrorParticles(w, checkPos)
                         return false
                     }
                     if (block is ReactorFluidPortBlock) fluidPortCount++
@@ -536,7 +536,7 @@ class NuclearReactorBlockEntity(
 
         // 外壳上至少需要 2 个 FluidPort（1 输入冷却液 + 1 输出热冷却液）
         if (fluidPortCount < 2) {
-            spawnErrorParticles(w, pos)
+            // spawnErrorParticles(w, pos)
             return false
         }
         return true
@@ -545,14 +545,14 @@ class NuclearReactorBlockEntity(
     /**
      * 在指定方块位置生成错误提示粒子，用于调试热模式结构问题。
      */
-    private fun spawnErrorParticles(world: World, blockPos: BlockPos) {
-        val serverWorld = world as? ServerWorld ?: return
-        val x = blockPos.x + 0.5
-        val y = blockPos.y + 0.5
-        val z = blockPos.z + 0.5
-        serverWorld.spawnParticles(ParticleTypes.SMOKE, x, y, z, 8, 0.2, 0.2, 0.2, 0.02)
-        serverWorld.spawnParticles(ParticleTypes.FLAME, x, y, z, 4, 0.15, 0.15, 0.15, 0.01)
-    }
+//    private fun spawnErrorParticles(world: World, blockPos: BlockPos) {
+//        val serverWorld = world as? ServerWorld ?: return
+//        val x = blockPos.x + 0.5
+//        val y = blockPos.y + 0.5
+//        val z = blockPos.z + 0.5
+//        serverWorld.spawnParticles(ParticleTypes.SMOKE, x, y, z, 8, 0.2, 0.2, 0.2, 0.02)
+//        serverWorld.spawnParticles(ParticleTypes.FLAME, x, y, z, 4, 0.15, 0.15, 0.15, 0.01)
+//    }
 
     /**
      * 判断当前是否为热模式（带缓存）
