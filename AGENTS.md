@@ -107,7 +107,7 @@
 3. `git commit` 同步状态更新（**单独提交，不与功能 commit 混在一起**）
 4. 切换到 1.21.1：`git checkout 1.21.1`
 5. Cherry-pick：`git cherry-pick <功能 commit 的 SHA>`
-6. 解决冲突后，**必须跑 datagen**：`./gradlew :core:runDatagen`
+6. 解决冲突后，**必须跑 datagen（全项目）**：`./gradlew runDatagen`
 7. `git add -A && git commit`（提交 datagen 刷新结果）
 8. 切回 main：`git checkout main`
 9. 更新同步状态：将之前标记 ❌ 的条目改为 ✅，确保总览计数正确
