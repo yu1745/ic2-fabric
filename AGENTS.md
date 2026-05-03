@@ -82,6 +82,7 @@
 ```
 
 - 运行 Gradle 时**不要**使用 `--no-daemon`（保持 daemon 以复用 JVM、加快增量构建）。
+- `markDirty()` 仅标记区块需要落盘保存，**不会**触发网络包同步到客户端。同步到客户端需要调用 `world.updateListeners(pos, state, state, NOTIFY_LISTENERS)` + `chunkManager.markForUpdate(pos)`（参考 `markDirtyAndSync()` 模式）。
 
 若只改文档，可跳过编译；若改 Kotlin/资源/注册链路，不可跳过。
 
@@ -108,14 +109,16 @@
 
 ### MC 源码
 
-使用 Gradle 任务生成脱编译源码：
+使用 Gradle 任务生成脱编译源码（只需在 core 执行，附属与 core 同 MC 版本）：
 
 ```bash
 ./gradlew :core:genSources
 ```
 
-- 产物在 `.gradle/loom-cache/` 下，IDEA 会自动关联。
-- 对应版本：`minecraft_version=1.20.1` + `yarn_mappings=1.20.1+build.10`（见 `gradle.properties`）。
+- 产物在项目根目录的 `.gradle/loom-cache/minecraftMaven/net/minecraft/` 下，`{hash}` 为自动生成的随机字符串，如：
+  `minecraft-clientOnly-{hash}/{minecraft_version}-net.fabricmc.yarn.{yarn_mappings}-v2/`
+- `../mc_source_{minecraft_version}/` 是手动解压的副本（项目根目录父级，`{minecraft_version}` 替换为 `gradle.properties` 中的 `minecraft_version`）。
+- loom-cache 中路径包含版本后缀（如 `1.20.1-net.fabricmc.yarn.1_20_1.1.20.1+build.10-v2`），搜索时需要用通配符或占位符匹配版本号。
 - 如果源码已生成过可直接参考，不需要重新生成。
 
 ### Fabric API 源码
