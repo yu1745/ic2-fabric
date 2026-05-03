@@ -75,6 +75,7 @@
     "ic2_120:kinetic_generator",
     "ic2_120:lead_block",
     "ic2_120:lead_ore",
+    "ic2_120:leash_kinetic_generator",
     "ic2_120:light_blue_wall",
     "ic2_120:light_gray_wall",
     "ic2_120:lime_wall",
@@ -183,7 +184,6 @@
     "ic2_120:wind_kinetic_generator",
     "ic2_120:wooden_scaffold",
     "ic2_120:wool_sheet",
-    "ic2_120:yellow_wall",
-    "ic2_120:leash_kinetic_generator"
+    "ic2_120:yellow_wall"
   ]
 }
