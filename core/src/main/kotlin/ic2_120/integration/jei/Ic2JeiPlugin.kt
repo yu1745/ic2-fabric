@@ -1,5 +1,6 @@
 package ic2_120.integration.jei
 
+import ic2_120.config.Ic2Config
 import ic2_120.content.recipes.blastfurnace.BlastFurnaceRecipeDatagen
 import ic2_120.content.recipes.blockcutter.BlockCutterRecipeDatagen
 import ic2_120.content.recipes.centrifuge.CentrifugeRecipeDatagen
@@ -42,6 +43,7 @@ import mezz.jei.api.registration.IRecipeCatalystRegistration
 import mezz.jei.api.registration.IRecipeCategoryRegistration
 import mezz.jei.api.registration.IRecipeRegistration
 import mezz.jei.api.registration.ISubtypeRegistration
+import mezz.jei.api.runtime.IJeiRuntime
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -56,6 +58,31 @@ import net.minecraft.util.Identifier
  */
 @JeiPlugin
 class Ic2JeiPlugin : IModPlugin {
+    companion object {
+        @Volatile
+        var jeiRuntime: IJeiRuntime? = null
+
+        private var replicatorRecipes: List<ReplicatorJeiRecipe> = emptyList()
+
+        fun refreshReplicatorRecipes() {
+            val runtime = jeiRuntime ?: return
+            val oldRecipes = replicatorRecipes
+            if (oldRecipes.isNotEmpty()) {
+                runtime.recipeManager.hideRecipes(Ic2JeiRecipeTypes.REPLICATOR, oldRecipes)
+            }
+            val newRecipes = Ic2Config.getAllReplicationCosts()
+                .mapNotNull { (itemId, uuCostUb) ->
+                    val item = Registries.ITEM.get(Identifier.tryParse(itemId))
+                    if (item == Items.AIR) null
+                    else ReplicatorJeiRecipe(ItemStack(item, 1), uuCostUb)
+                }
+            if (newRecipes.isNotEmpty()) {
+                runtime.recipeManager.addRecipes(Ic2JeiRecipeTypes.REPLICATOR, newRecipes)
+            }
+            replicatorRecipes = newRecipes
+        }
+    }
+
     override fun getPluginUid(): Identifier {
         return Identifier("ic2_120", "main")
     }
@@ -167,6 +194,10 @@ class Ic2JeiPlugin : IModPlugin {
         }
     }
 
+    override fun onRuntimeAvailable(runtime: IJeiRuntime) {
+        Ic2JeiPlugin.jeiRuntime = runtime
+    }
+
     override fun registerCategories(registration: IRecipeCategoryRegistration) {
         registration.addRecipeCategories(
             MaceratorRecipeCategory(registration.jeiHelpers.guiHelper),
@@ -180,7 +211,8 @@ class Ic2JeiPlugin : IModPlugin {
             MetalFormerCuttingRecipeCategory(registration.jeiHelpers.guiHelper),
             MetalFormerExtrudingRecipeCategory(registration.jeiHelpers.guiHelper),
             SolidCannerRecipeCategory(registration.jeiHelpers.guiHelper),
-            RecyclerRecipeCategory(registration.jeiHelpers.guiHelper)
+            RecyclerRecipeCategory(registration.jeiHelpers.guiHelper),
+            ReplicatorRecipeCategory(registration.jeiHelpers.guiHelper)
         )
     }
 
@@ -313,6 +345,15 @@ class Ic2JeiPlugin : IModPlugin {
                 )
             )
         )
+
+        // Replicator 配方
+        replicatorRecipes = Ic2Config.getAllReplicationCosts()
+            .mapNotNull { (itemId, uuCostUb) ->
+                val item = Registries.ITEM.get(Identifier.tryParse(itemId))
+                if (item == Items.AIR) null
+                else ReplicatorJeiRecipe(ItemStack(item, 1), uuCostUb)
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.REPLICATOR, replicatorRecipes)
     }
 
     override fun registerRecipeCatalysts(registration: IRecipeCatalystRegistration) {
@@ -373,6 +414,11 @@ class Ic2JeiPlugin : IModPlugin {
         registration.addRecipeCatalyst(
             ItemStack(Registries.ITEM.get(Identifier("ic2_120", "recycler"))),
             Ic2JeiRecipeTypes.RECYCLER
+        )
+
+        registration.addRecipeCatalyst(
+            ItemStack(Registries.ITEM.get(Identifier("ic2_120", "replicator"))),
+            Ic2JeiRecipeTypes.REPLICATOR
         )
     }
 

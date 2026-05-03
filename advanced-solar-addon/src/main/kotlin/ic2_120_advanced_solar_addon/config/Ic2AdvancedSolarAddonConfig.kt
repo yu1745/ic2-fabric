@@ -145,6 +145,11 @@ object Ic2AdvancedSolarAddonConfig {
         return mapper.writeValueAsString(current)
     }
 
+    fun applyServerConfig(json: String) {
+        current = mapper.readValue(json)
+        logLoaded("applied from server")
+    }
+
     fun getMolecularTransformerRecipes(): List<MolecularTransformerRecipeConfig> {
         return current.molecularTransformer.recipes
     }

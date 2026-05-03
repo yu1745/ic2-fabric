@@ -40,5 +40,7 @@
   "gui.ic2_120_advanced_solar_addon.qg_status.active": "Active",
   "gui.ic2_120_advanced_solar_addon.qg_status.disabled": "Disabled (Redstone)",
 
-  "itemGroup.ic2_120_advanced_solar_addon.ic2_solar": "IC2 Advanced Solar Addon"
+  "itemGroup.ic2_120_advanced_solar_addon.ic2_solar": "IC2 Advanced Solar Addon",
+
+  "jei.ic2_120_advanced_solar_addon.molecular_transformer.energy": "Energy: %s EU"
 }

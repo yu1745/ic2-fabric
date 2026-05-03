@@ -53,7 +53,7 @@ object UuReplicationCommand {
                                                         .append(Text.literal(itemId).formatted(Formatting.YELLOW))
                                                         .append(Text.literal(" 的UU复制成本为 ").formatted(Formatting.GREEN))
                                                         .append(Text.literal("$uuCost uB").formatted(Formatting.AQUA))
-                                                        .append(Text.literal("（已写入配置文件）").formatted(Formatting.GRAY))
+                                                        .append(Text.literal("（已写入配置文件，使用 /ic2config reload 同步至客户端）").formatted(Formatting.GRAY))
                                                 },
                                                 true
                                             )
@@ -96,6 +96,7 @@ object UuReplicationCommand {
                                                 .append(Text.literal("成功移除 ").formatted(Formatting.GREEN))
                                                 .append(Text.literal(itemId).formatted(Formatting.YELLOW))
                                                 .append(Text.literal(" 的UU复制配置").formatted(Formatting.GREEN))
+                                                .append(Text.literal("（使用 /ic2config reload 同步至客户端）").formatted(Formatting.GRAY))
                                         },
                                         true
                                     )

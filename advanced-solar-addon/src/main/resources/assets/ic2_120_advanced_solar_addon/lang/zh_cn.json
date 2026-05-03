@@ -40,5 +40,7 @@
   "gui.ic2_120_advanced_solar_addon.qg_status.active": "运行中",
   "gui.ic2_120_advanced_solar_addon.qg_status.disabled": "禁用（红石信号）",
 
-  "itemGroup.ic2_120_advanced_solar_addon.ic2_solar": "IC2高级太阳能附属"
+  "itemGroup.ic2_120_advanced_solar_addon.ic2_solar": "IC2高级太阳能附属",
+
+  "jei.ic2_120_advanced_solar_addon.molecular_transformer.energy": "能耗：%s EU"
 }

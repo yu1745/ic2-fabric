@@ -5,6 +5,8 @@ import ic2_120.content.network.BandwidthHudPacket
 import ic2_120.content.network.ReactorHeatInfoPacket
 import ic2_120.content.network.ScannerResultPacket
 import ic2_120.content.network.TeleporterVisualStatePacket
+import ic2_120.content.network.ConfigSyncPacket
+import ic2_120.content.network.ConfigSyncReceiver
 import ic2_120.content.network.WindRotorStatePacket
 import ic2_120.content.network.WaterRotorStatePacket
 
@@ -21,6 +23,7 @@ object NetworkManager {
     
     private val SCANNER_RESULT_PACKET = ScannerResultPacket.ID
     private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
+    private val CONFIG_SYNC_PACKET = ConfigSyncPacket.ID
 
     fun register() {
         // 注册客户端接收处理器
@@ -87,6 +90,13 @@ object NetworkManager {
                         entityId = packet.chargingEntityId
                     )
                 }
+            }
+        }
+
+        ClientPlayNetworking.registerGlobalReceiver(CONFIG_SYNC_PACKET) { client, _, buf, _ ->
+            val packet = ConfigSyncPacket.read(buf)
+            client.execute {
+                ConfigSyncReceiver.accept(packet)
             }
         }
     }

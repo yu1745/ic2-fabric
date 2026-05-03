@@ -24,6 +24,7 @@ tasks.named('runDatagen') {
 
 dependencies {
 	implementation project(path: ":core", configuration: "namedElements")
+	modCompileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api-intermediary:${project.jei_version}")
 }
 
 processResources {

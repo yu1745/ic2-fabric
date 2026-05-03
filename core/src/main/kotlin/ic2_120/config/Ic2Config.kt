@@ -87,6 +87,8 @@ data class ArmorConfig(
     val electricJetpack: ElectricJetpackConfig = ElectricJetpackConfig(),
     @field:ConfigComment("量子胸甲配置。")
     val quantumChestplate: QuantumChestplateConfig = QuantumChestplateConfig(),
+    @field:ConfigComment("量子头盔配置。")
+    val quantumHelmet: QuantumHelmetConfig = QuantumHelmetConfig(),
     @field:ConfigComment("夜视配置。")
     val nightVision: NightVisionConfig = NightVisionConfig(),
     @field:ConfigComment("橡胶靴配置。")
@@ -118,6 +120,12 @@ data class QuantumChestplateConfig(
     /** 飞行时长（秒）。耗电量自动通过 满电容量 / 时长 计算。 */
     @field:ConfigComment("量子胸甲飞行时长（秒），耗电量自动计算。", "1200")
     val flightDurationSeconds: Int = 1200
+)
+
+data class QuantumHelmetConfig(
+    /** 夜视时长（秒）。耗电量自动通过 满电容量 / 时长 计算。 */
+    @field:ConfigComment("量子头盔夜视时长（秒），耗电量自动计算。", "28800")
+    val nightVisionDurationSeconds: Int = 28800
 )
 
 data class NightVisionConfig(
@@ -392,6 +400,11 @@ object Ic2Config {
         return mapper.writeValueAsString(current)
     }
 
+    fun applyServerConfig(json: String) {
+        current = mapper.readValue(json)
+        logLoaded("applied from server")
+    }
+
     fun getReplicationCostUb(itemId: String): Int? {
         val normalized = itemId.trim()
         if (normalized.isEmpty()) return null
@@ -473,41 +486,50 @@ object Ic2Config {
     /**
      * 喷气背包每tick燃料消耗 = 燃料容量 / (飞行时长 × 20 ticks/秒)
      */
-    fun getJetpackFuelPerTick(): Long {
+    fun getJetpackFuelPerTick(): Double {
         val cfg = current.armor.jetpack
-        return cfg.maxFuel / (cfg.flightDurationSeconds * 20L)
+        return cfg.maxFuel.toDouble() / (cfg.flightDurationSeconds * 20.0)
     }
 
     /**
      * 电力喷气背包每tick能量消耗 = 最大能量 / (飞行时长 × 20 ticks/秒)
      */
-    fun getElectricJetpackEuPerTick(): Long {
+    fun getElectricJetpackEuPerTick(): Double {
         val cfg = current.armor.electricJetpack
-        return cfg.maxEnergy / (cfg.flightDurationSeconds * 20L)
+        return cfg.maxEnergy.toDouble() / (cfg.flightDurationSeconds * 20.0)
     }
 
     /**
      * 量子胸甲每tick能量消耗 = 最大能量 / (飞行时长 × 20 ticks/秒)
      */
-    fun getQuantumChestplateEuPerTick(): Long {
+    fun getQuantumChestplateEuPerTick(): Double {
         val cfg = current.armor.quantumChestplate
-        return cfg.maxEnergy / (cfg.flightDurationSeconds * 20L)
+        return cfg.maxEnergy.toDouble() / (cfg.flightDurationSeconds * 20.0)
+    }
+
+    /**
+     * 量子头盔每tick夜视能量消耗 = 最大能量 / (夜视时长 × 20 ticks/秒)
+     * 注意：量子头盔 maxCapacity 硬编码为 10M EU
+     */
+    fun getQuantumHelmetNightVisionEuPerTick(): Double {
+        val cfg = current.armor.quantumHelmet
+        return 10_000_000.0 / (cfg.nightVisionDurationSeconds * 20.0)
     }
 
     /**
      * 夜视镜每tick能量消耗 = 最大能量 / (夜视时长 × 20 ticks/秒)
      */
-    fun getNightVisionGogglesEuPerTick(): Long {
+    fun getNightVisionGogglesEuPerTick(): Double {
         val cfg = current.armor.nightVision
-        return cfg.nightVisionGogglesMaxEnergy / (cfg.nightVisionGogglesDurationSeconds * 20L)
+        return cfg.nightVisionGogglesMaxEnergy.toDouble() / (cfg.nightVisionGogglesDurationSeconds * 20.0)
     }
 
     /**
      * 纳米头盔每tick能量消耗 = 最大能量 / (夜视时长 × 20 ticks/秒)
      */
-    fun getNanoHelmetNightVisionEuPerTick(): Long {
+    fun getNanoHelmetNightVisionEuPerTick(): Double {
         val cfg = current.armor.nightVision
-        return cfg.nanoHelmetMaxEnergy / (cfg.nanoHelmetDurationSeconds * 20L)
+        return cfg.nanoHelmetMaxEnergy.toDouble() / (cfg.nanoHelmetDurationSeconds * 20.0)
     }
 
     /**

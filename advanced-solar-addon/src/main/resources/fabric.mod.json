@@ -20,6 +20,12 @@
         "adapter": "kotlin"
       }
     ],
+    "jei_mod_plugin": [
+      {
+        "value": "ic2_120_advanced_solar_addon.integration.jei.Ic2AdvancedSolarAddonJeiPlugin",
+        "adapter": "kotlin"
+      }
+    ],
     "fabric-datagen": [
       {
         "value": "ic2_120_advanced_solar_addon.IC2AdvancedSolarAddonDataGenerator",
