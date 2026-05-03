@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **29 个 commit**，**全部已同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **31 个 commit**，**29 个已同步，2 个待同步**。
 
 ## 逐 commit 状态
 
@@ -43,6 +43,8 @@
 | 27 | `e394908` | feat: 添加 shockWhenNoEnergyFlow 配置项，修复空电网仍电人问题 | ✅ | 无冲突直接 cherry-pick |
 | 28 | `f3fbc77` | fix: solid canner slot 1 左移，感应炉升级支持，命令显示物品 | ✅ | cherry-pick + 适配 1.21.1 `ExtendedScreenHandlerFactory<PacketByteBuf>` 泛型 |
 | 29 | `3e9f9d0` | docs: 更新 AGENTS.md 源码参考章节——添加 MC 源码与 Fabric API 获取及参考方式 | ✅ | 无冲突直接 cherry-pick |
+| 30 | `59e897e` | feat: JEI 配方显示(分子重组仪/复制机) + 配置全量分包同步 | ❌ | |
+| 31 | `1bc03c2` | refactor: 统一 Tooltip 格式(状态国际化+剩余时间) + 重构飞行消耗逻辑 | ❌ | |
  
 ## 同步历史
 
