@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **35 个 commit**，**35 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **36 个 commit**，**35 个已同步，1 个待同步**。
 
 ## 逐 commit 状态
 
@@ -49,7 +49,7 @@
 | 33 | `8f4078e` | feat: 添加拴绳动能发生机 | ✅ | 代码已存在于 1.21.1，额外 API 适配提交 `6abb6e4` |
 | 34 | `408c5a3` | chore: 更新 AGENTS.md 与 deploy 脚本 | ✅ | 代码已存在于 1.21.1 |
 | 35 | `4f0aaad` | refactor: 注释核反应堆热模式检测的粒子效果代码 | ✅ | 无冲突直接 cherry-pick `d7cdc5c` |
- 
+| 36 | `f03e79f` | feat: 拴绳动能发生机合成配方改为中间机器外壳上方拴绳的3x3配方 | ❌ | 待同步 |
 ## 同步历史
 
 - 2026-04-30：首次逐 commit 比对，确认 3 个缺失 commit：`48934bc`（docs）、`bf99891`（weapons-addon）、`799fda9`（revert）；`549eeb8` 代码已在 1.21.1 中存在
@@ -71,3 +71,4 @@
 - 2026-05-03：同步 commits 30-31 到 1.21.1——JEI 配方显示+配置全量分包同步、Tooltip 统一+飞行消耗重构，适配 1.21.1 API
 - 2026-05-03：提交 commits 32-34（拴绳动能发生机相关）到 main，待同步到 1.21.1
 - 2026-05-03：同步 commits 32-35 到 1.21.1——拴绳动能发生机 API 适配（RecipeExporter、validateTicker、canBeLeashed→canBeLeashed()、updateLeash→beforeLeashTick、Identifier.ofVanilla、RegistryWrapper.WrapperLookup、onBreak 返回 BlockState）+ datagen 刷新，1.21.1 额外提交 `6abb6e4`
+- 2026-05-03：提交 commit 36 到 main——拴绳动能发生机合成配方从 1×2 改为 3×3（中间机械外壳+上方拴绳），待同步到 1.21.1
