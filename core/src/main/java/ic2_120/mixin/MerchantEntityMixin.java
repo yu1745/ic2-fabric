@@ -1,7 +1,6 @@
 package ic2_120.mixin;
 
 import net.minecraft.entity.passive.MerchantEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
@@ -13,10 +12,10 @@ public class MerchantEntityMixin {
 
     /**
      * @author ic2_120
-     * @reason 原版 MerchantEntity.canBeLeashedBy 返回 false，导致村民无法被拴绳
+     * @reason 原版 MerchantEntity.canBeLeashed 返回 false，导致村民无法被拴绳
      */
     @Overwrite
-    public boolean canBeLeashedBy(PlayerEntity player) {
+    public boolean canBeLeashed() {
         return true;
     }
 }

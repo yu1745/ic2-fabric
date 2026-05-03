@@ -1,11 +1,11 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_advanced_circuit": {
+    "has_machine": {
       "conditions": {
         "items": [
           {
-            "items": "ic2_120:advanced_circuit"
+            "items": "ic2_120:machine"
           }
         ]
       },
@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "ic2_120_advanced_solar_addon:molecular_transformer"
+        "recipe": "ic2_120:leash_kinetic_generator"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -21,12 +21,12 @@
   "requirements": [
     [
       "has_the_recipe",
-      "has_advanced_circuit"
+      "has_machine"
     ]
   ],
   "rewards": {
     "recipes": [
-      "ic2_120_advanced_solar_addon:molecular_transformer"
+      "ic2_120:leash_kinetic_generator"
     ]
   }
 }

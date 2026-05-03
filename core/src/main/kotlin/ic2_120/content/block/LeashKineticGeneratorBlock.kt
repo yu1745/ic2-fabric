@@ -14,7 +14,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityType
@@ -29,12 +29,10 @@ import net.minecraft.state.property.BooleanProperty
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.world.World
-import java.util.function.Consumer
 
 @ModBlock(name = "leash_kinetic_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
 class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
@@ -43,7 +41,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val casing = MachineCasingBlock::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LeashKineticGeneratorBlock::class.item(), 1)
                 .pattern("L")
@@ -76,7 +74,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, LeashKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(type, LeashKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
             (be as LeashKineticGeneratorBlockEntity).tick(w, p, s)
         }
 
@@ -85,12 +83,11 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
         world: World,
         pos: BlockPos,
         player: PlayerEntity,
-        hand: Hand,
         hit: BlockHitResult
     ): ActionResult {
         val be = world.getBlockEntity(pos) as? LeashKineticGeneratorBlockEntity ?: return ActionResult.PASS
 
-        val heldStack = player.getStackInHand(hand)
+        val heldStack = player.mainHandStack
 
         if (heldStack.item === Items.LEAD) {
             if (world.isClient) return ActionResult.SUCCESS
@@ -115,7 +112,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                 MobEntity::class.java,
                 Box(pos).expand(10.0)
             ) { mob ->
-                mob.isAlive && mob.holdingEntity === player
+                mob.isAlive && mob.leashHolder === player
             }
 
             val mob = nearbyMobs.firstOrNull()
@@ -164,7 +161,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
         return be as? NamedScreenHandlerFactory
     }
 
-    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
+    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity): BlockState {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? LeashKineticGeneratorBlockEntity
             be?.let {
@@ -179,6 +176,6 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                 }
             }
         }
-        super.onBreak(world, pos, state, player)
+        return super.onBreak(world, pos, state, player)
     }
 }

@@ -4,7 +4,6 @@ import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.entity.mob.GhastEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PhantomEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
@@ -21,7 +20,7 @@ public class MobEntityMixin {
      * @reason 允许拴绳动能发生机拴住怪物
      */
     @Overwrite
-    public boolean canBeLeashedBy(PlayerEntity player) {
+    public boolean canBeLeashed() {
         MobEntity self = (MobEntity) (Object) this;
         if (self instanceof WitherEntity
             || self instanceof GhastEntity
