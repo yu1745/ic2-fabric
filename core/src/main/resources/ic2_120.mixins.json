@@ -6,6 +6,9 @@
 		"PlayerEntityMixin",
 		"ServerPlayNetworkHandlerMixin",
 		"PassiveEntityMixin",
+		"MerchantEntityMixin",
+		"PathAwareEntityMixin",
+		"MobEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
