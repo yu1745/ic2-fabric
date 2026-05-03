@@ -78,5 +78,12 @@ object NetworkManager {
                 ConfigSyncReceiver.accept(packet)
             }
         }
+
+        ClientPlayNetworking.registerGlobalReceiver(CONFIG_SYNC_PACKET) { client, _, buf, _ ->
+            val packet = ConfigSyncPacket.read(buf)
+            client.execute {
+                ConfigSyncReceiver.accept(packet)
+            }
+        }
     }
 }
