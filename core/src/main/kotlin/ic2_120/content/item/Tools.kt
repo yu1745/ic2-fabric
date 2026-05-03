@@ -1043,7 +1043,7 @@ private object NanoSaberMaterial : ToolMaterial {
 @ModItem(name = "nano_saber", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
 class NanoSaber : SwordItem(
     NanoSaberMaterial,
-    Item.Settings()
+    Item.Settings().maxDamage(0)
 ), IElectricTool {
 
     companion object {
