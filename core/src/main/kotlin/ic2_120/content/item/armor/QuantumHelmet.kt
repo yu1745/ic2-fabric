@@ -1,5 +1,6 @@
 package ic2_120.content.item.armor
 
+import ic2_120.config.Ic2Config
 import ic2_120.Ic2_120
 import ic2_120.content.block.ReinforcedGlassBlock
 import ic2_120.content.effect.ModStatusEffects
@@ -63,13 +64,19 @@ import ic2_120.getCustomData
 class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)) {
 
     companion object {
-        private const val NIGHT_VISION_COST = 17L  // 10M EU / 8h = 576000 ticks ≈ 17 EU/t
         private const val FOOD_FILL_COST = 1000L
         private const val CURE_EFFECT_COST = 100L
         private const val NIGHT_VISION_KEY = "NightVisionEnabled"
         private const val AIR_CHECK_COOLDOWN_KEY = "AirCheckCooldown"
         private const val FOOD_CHECK_COOLDOWN_KEY = "FoodCheckCooldown"
         private const val AIR_THRESHOLD = 60
+        private const val NV_REMAINDER_KEY = "QuantumHelmetNvRemainder"
+
+        val nightVisionCostPerTick: Double
+            get() = Ic2Config.getQuantumHelmetNightVisionEuPerTick()
+
+        val nightVisionDurationSeconds: Int
+            get() = Ic2Config.current.armor.quantumHelmet.nightVisionDurationSeconds
 
         fun toggleNightVision(stack: ItemStack): Boolean {
             val enabled = !(stack.getCustomData()?.getBoolean(NIGHT_VISION_KEY) ?: false)
@@ -127,11 +134,25 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
             }
         }
 
-        // 功能 2: 夜视
-        if (nbt?.getBoolean(NIGHT_VISION_KEY) == true) {
-            if (energy >= NIGHT_VISION_COST) {
-                energy -= NIGHT_VISION_COST
-                applyNightVisionEffect(player, world)
+        // 功能 2: 夜视（使用余数累加器精确消耗）
+        if (nbt.getBoolean(NIGHT_VISION_KEY)) {
+            if (energy > 0) {
+                var remainder = nbt.getDouble(NV_REMAINDER_KEY)
+                remainder += nightVisionCostPerTick
+                val toConsume = remainder.toLong()
+                if (toConsume > 0) {
+                    if (energy < toConsume) {
+                        nbt.putBoolean(NIGHT_VISION_KEY, false)
+                        player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+                        energy = 0
+                    } else {
+                        energy -= toConsume
+                        applyNightVisionEffect(player, world)
+                    }
+                } else {
+                    applyNightVisionEffect(player, world)
+                }
+                nbt.putDouble(NV_REMAINDER_KEY, remainder - (if (toConsume > 0 && energy > 0) toConsume else 0))
             } else {
                 stack.editCustomData { it.putBoolean(NIGHT_VISION_KEY, false) }
                 player.removeStatusEffect(StatusEffects.NIGHT_VISION)
@@ -216,15 +237,20 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         val nvEnabled = stack.getCustomData()?.getBoolean(NIGHT_VISION_KEY) ?: false
         val energy = getEnergy(stack)
 
-        // 计算夜视剩余时间（分钟）
-        val remainingMinutes = if (energy > 0 && nvEnabled) {
-            val ticks = energy / NIGHT_VISION_COST
-            val seconds = ticks / 20.0
-            val minutes = seconds / 60.0
-            "%.1f".format(minutes)
-        } else "N/A"
+        val remainingSeconds = if (energy > 0 && maxCapacity > 0) {
+            energy.toDouble() / maxCapacity * nightVisionDurationSeconds
+        } else 0.0
+        val timeText = if (remainingSeconds >= 60) {
+            val minutes = (remainingSeconds / 60).toInt()
+            val seconds = (remainingSeconds % 60).toInt()
+            "${minutes}分${seconds}秒"
+        } else {
+            "${remainingSeconds.toInt()}秒"
+        }
 
-        tooltip.add(Text.literal("夜视: ${if (nvEnabled) "§aON" else "§cOFF"} §8[${remainingMinutes}分钟]").formatted(Formatting.GRAY))
+        tooltip.add(Text.literal("夜视: ").append(
+            Text.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
+        ).append(Text.literal(" | 剩余: $timeText")).formatted(Formatting.GRAY))
         tooltip.add(Text.literal("减伤: 15% | 水下呼吸 | 夜视 | 饱食不满自动吃满锡罐").formatted(Formatting.GRAY))
         tooltip.add(Text.literal("全套时: 消除debuff").formatted(Formatting.GRAY))
     }

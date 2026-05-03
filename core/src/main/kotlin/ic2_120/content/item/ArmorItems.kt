@@ -918,8 +918,11 @@ class ElectricJetpack : ElectricArmorItem(
         val maxCapacity: Long
             get() = Ic2Config.current.armor.electricJetpack.maxEnergy
 
-        val euPerTick: Long
+        val euPerTick: Double
             get() = Ic2Config.getElectricJetpackEuPerTick()
+
+        val flightDurationSeconds: Int
+            get() = Ic2Config.current.armor.electricJetpack.flightDurationSeconds
 
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
@@ -961,12 +964,20 @@ class ElectricJetpack : ElectricArmorItem(
     }
 
     fun consumeFlightEnergyPerTick(stack: ItemStack): Boolean {
-        val cost = euPerTick
         val energy = getEnergy(stack)
-        if (energy < cost) {
-            return false
+        if (energy <= 0) return false
+        val nbt = stack.orCreateNbt
+        var remainder = nbt.getDouble(FLIGHT_REMAINDER_KEY)
+        val cost = euPerTick
+        remainder += cost
+        val toConsume = remainder.toLong()
+        if (toConsume <= 0) {
+            nbt.putDouble(FLIGHT_REMAINDER_KEY, remainder)
+            return true
         }
-        setEnergy(stack, energy - cost)
+        if (energy < toConsume) return false
+        setEnergy(stack, energy - toConsume)
+        nbt.putDouble(FLIGHT_REMAINDER_KEY, remainder - toConsume)
         return true
     }
 
@@ -979,12 +990,11 @@ class ElectricJetpack : ElectricArmorItem(
         super.appendTooltip(stack, context, tooltip, type)
 
         val enabled = isFlightEnabled(stack)
-        val flightStatusText = if (enabled) "开启" else "关闭"
 
-        // 计算剩余飞行时间（秒），基于平均能量消耗 8 + 1/3 EU/tick
+        // 计算剩余飞行时间（秒）
         val energy = getEnergy(stack)
-        val remainingSeconds = if (energy > 0) {
-            (energy / euPerTick.toDouble()) / 20.0
+        val remainingSeconds = if (energy > 0 && maxCapacity > 0) {
+            energy.toDouble() / maxCapacity * flightDurationSeconds
         } else 0.0
 
         // 格式化时间
@@ -996,8 +1006,9 @@ class ElectricJetpack : ElectricArmorItem(
             "${remainingSeconds.toInt()}秒"
         }
 
-        tooltip.add(Text.literal("飞行: $flightStatusText | 剩余飞行: $timeText").formatted(Formatting.GRAY))
-        tooltip.add(Text.literal("Alt+M：切换飞行开关").formatted(Formatting.DARK_GRAY))
+        tooltip.add(Text.literal("飞行: ").append(
+            Text.translatable(if (enabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
+        ).append(Text.literal(" | 剩余: $timeText")).formatted(Formatting.GRAY))
     }
 }
 
@@ -1017,12 +1028,16 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
         private const val ENABLED_KEY = "NightVisionEnabled"
         private const val BLINDNESS_DURATION_TICKS = 80
         private const val NIGHT_VISION_DURATION_TICKS = 220
+        private const val NV_REMAINDER_KEY = "NightVisionGogglesNvRemainder"
 
         val maxCapacity: Long
             get() = Ic2Config.current.armor.nightVision.nightVisionGogglesMaxEnergy
 
-        val euPerTick: Long
+        val euPerTick: Double
             get() = Ic2Config.getNightVisionGogglesEuPerTick()
+
+        val nightVisionDurationSeconds: Int
+            get() = Ic2Config.current.armor.nightVision.nightVisionGogglesDurationSeconds
 
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
@@ -1074,13 +1089,26 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
         if (!isEnabled(stack)) return
 
         val energy = getCurrentCharge(stack)
-        if (energy < euPerTick) {
+        if (energy <= 0) {
             setCurrentCharge(stack, 0)
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)
             return
         }
 
-        setCurrentCharge(stack, energy - euPerTick)
+        // 使用余数累加器消耗能量
+        val nbt = stack.orCreateNbt
+        var remainder = nbt.getDouble(NV_REMAINDER_KEY)
+        remainder += euPerTick
+        val toConsume = remainder.toLong()
+        if (toConsume > 0) {
+            if (energy < toConsume) {
+                setCurrentCharge(stack, 0)
+                player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+                return
+            }
+            setCurrentCharge(stack, energy - toConsume)
+        }
+        nbt.putDouble(NV_REMAINDER_KEY, remainder - toConsume)
         val brightness = world.getLightLevel(player.blockPos)
         if (brightness >= 8) {
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)
@@ -1106,9 +1134,21 @@ class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, 
         super.appendTooltip(stack, context, tooltip, type)
         val energy = getCurrentCharge(stack)
         val ratio = if (maxCapacity > 0) energy.toDouble() / maxCapacity else 0.0
-        val status = if (isEnabled(stack)) "ON" else "OFF"
+        val nvEnabled = isEnabled(stack)
+        val remainingSeconds = if (energy > 0 && maxCapacity > 0) {
+            energy.toDouble() / maxCapacity * nightVisionDurationSeconds
+        } else 0.0
+        val timeText = if (remainingSeconds >= 60) {
+            val minutes = (remainingSeconds / 60).toInt()
+            val seconds = (remainingSeconds % 60).toInt()
+            "${minutes}分${seconds}秒"
+        } else {
+            "${remainingSeconds.toInt()}秒"
+        }
         tooltip.add(Text.literal("⚡ %,d / %,d EU (%.1f%%)".format(energy, maxCapacity, ratio * 100)))
-        tooltip.add(Text.literal("等级: $tier | 状态: $status").formatted(Formatting.GRAY))
+        tooltip.add(Text.literal("夜视: ").append(
+            Text.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
+        ).append(Text.literal(" | 等级: $tier | 剩余: $timeText")).formatted(Formatting.GRAY))
     }
 
     override fun isItemBarVisible(stack: ItemStack): Boolean = true

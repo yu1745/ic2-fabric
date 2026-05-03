@@ -39,9 +39,7 @@ object FlightManager {
     }
 
     private fun handleJetpackFlight(player: PlayerEntity, jetpackStack: ItemStack) {
-        val fuel = JetpackItem.getFuel(jetpackStack)
-
-        if (fuel <= 0L || player.isCreative || player.isSpectator || !JetpackItem.isFlightEnabled(jetpackStack)) {
+        if (player.isCreative || player.isSpectator || !JetpackItem.isFlightEnabled(jetpackStack)) {
             disableJetpackFlight(player, jetpackStack)
             return
         }
@@ -50,7 +48,10 @@ object FlightManager {
             return
         }
 
-        JetpackItem.setFuel(jetpackStack, fuel - JetpackItem.fuelPerTick)
+        if (!JetpackItem.consumeFuelPerTick(jetpackStack)) {
+            disableJetpackFlight(player, jetpackStack)
+            return
+        }
         enableJetpackFlight(player, jetpackStack)
     }
 
@@ -139,8 +140,8 @@ object FlightManager {
         }
 
         val currentEnergy = chestplate.getEnergy(chestStack)
-        if (currentEnergy < QuantumChestplate.flightCostPerTick) {
-            chestStack.editCustomData { it.putBoolean("QuantumFlightEnabled", false) }
+        if (currentEnergy <= 0) {
+            nbt.putBoolean("QuantumFlightEnabled", false)
             disableQuantumFlight(player)
             return
         }
@@ -152,7 +153,11 @@ object FlightManager {
             return
         }
 
-        chestplate.setEnergy(chestStack, currentEnergy - QuantumChestplate.flightCostPerTick)
+        if (!QuantumChestplate.consumeFlightEnergyPerTick(chestStack)) {
+            nbt.putBoolean("QuantumFlightEnabled", false)
+            disableQuantumFlight(player)
+            return
+        }
         if (!player.abilities.allowFlying || !player.abilities.flying) {
             player.abilities.allowFlying = true
             player.abilities.flying = true
