@@ -953,5 +953,27 @@
   "jei.ic2_120.replicator.uu_cost": "UU Cost: %s uB",
 
   "tooltip.ic2_120.status.on": "ON",
-  "tooltip.ic2_120.status.off": "OFF"
+  "tooltip.ic2_120.status.off": "OFF",
+
+  "block.ic2_120.leash_kinetic_generator": "Leash Kinetic Generator",
+
+  "gui.ic2_120.leash_kinetic.generated": "Generated: %s KU/t",
+  "gui.ic2_120.leash_kinetic.output": "Output: %s KU/t",
+  "gui.ic2_120.leash_kinetic.animal_status": "Animal: %s",
+  "gui.ic2_120.leash_kinetic.attached": "Attached",
+  "gui.ic2_120.leash_kinetic.no_animal": "Not Attached",
+  "gui.ic2_120.leash_kinetic.leash_length": "Leash Length: %s cm",
+  "gui.ic2_120.leash_kinetic.angular_velocity": "Angular Velocity: %s deg/s",
+  "gui.ic2_120.leash_kinetic.status": "Status: %s",
+  "gui.ic2_120.leash_kinetic.running": "Running",
+  "gui.ic2_120.leash_kinetic.idle": "Idle",
+
+  "message.ic2_120.leash_kinetic.already_leashed": "This machine already has a leashed animal!",
+  "message.ic2_120.leash_kinetic.attached": "Leashed %s",
+  "message.ic2_120.leash_kinetic.no_mob": "No leashed animals nearby",
+  "message.ic2_120.leash_kinetic.detached": "Leash detached",
+
+  "ic2_120.jade.leash_kinetic.generated": "Generated: %s KU/t",
+  "ic2_120.jade.leash_kinetic.velocity": "Angular Velocity: %s deg/s",
+  "ic2_120.jade.leash_kinetic.animal": "Animal: %s"
 }

@@ -8,9 +8,11 @@ import ic2_120.client.renderers.WindGeneratorBlockEntityRenderer
 import ic2_120.client.renderers.WindKineticGeneratorBlockEntityRenderer
 import ic2_120.client.renderers.WaterKineticGeneratorBlockEntityRenderer
 import ic2_120.client.renderers.ManualKineticGeneratorBlockEntityRenderer
+import ic2_120.client.renderers.LeashKineticGeneratorBlockEntityRenderer
 import ic2_120.client.renderers.MinerBlockEntityRenderer
 import ic2_120.content.block.ComposeDebugBlockEntity
 import ic2_120.content.block.machines.AdvancedMinerBlockEntity
+import ic2_120.content.block.machines.LeashKineticGeneratorBlockEntity
 import ic2_120.content.block.machines.ManualKineticGeneratorBlockEntity
 import ic2_120.content.block.machines.MinerBlockEntity
 import ic2_120.content.block.machines.TeleporterBlockEntity
@@ -48,6 +50,10 @@ object ClientBlockEntityRenderers {
         BlockEntityRendererFactories.register(
             ManualKineticGeneratorBlockEntity::class.type(),
             ::ManualKineticGeneratorBlockEntityRenderer
+        )
+        BlockEntityRendererFactories.register(
+            LeashKineticGeneratorBlockEntity::class.type(),
+            ::LeashKineticGeneratorBlockEntityRenderer
         )
         BlockEntityRendererFactories.register(
             TransmissionBlockEntity::class.type(),
