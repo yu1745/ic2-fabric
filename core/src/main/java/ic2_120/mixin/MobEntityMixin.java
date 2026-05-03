@@ -46,7 +46,7 @@ public class MobEntityMixin {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/mob/MobEntity;detachLeash(ZZ)V")
     )
     private void keepLeashOnKineticGenerator(MobEntity instance, boolean sendPacket, boolean dropItem) {
-        if (instance.getHoldingEntity() instanceof ArmorStandEntity) {
+        if (instance.getLeashHolder() instanceof ArmorStandEntity) {
             return;
         }
         instance.detachLeash(sendPacket, dropItem);
