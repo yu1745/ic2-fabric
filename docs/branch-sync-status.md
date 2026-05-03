@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **36 个 commit**，**36 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **37 个 commit**，**36 个已同步，1 个待同步**。
 
 ## 逐 commit 状态
 
@@ -50,6 +50,7 @@
 | 34 | `408c5a3` | chore: 更新 AGENTS.md 与 deploy 脚本 | ✅ | 代码已存在于 1.21.1 |
 | 35 | `4f0aaad` | refactor: 注释核反应堆热模式检测的粒子效果代码 | ✅ | 无冲突直接 cherry-pick `d7cdc5c` |
 | 36 | `f03e79f` | feat: 拴绳动能发生机合成配方改为中间机器外壳上方拴绳的3x3配方 | ✅ | cherry-pick `127fa4c` + 适配 1.21.1 recipe JSON 格式 + datagen 刷新 |
+| 37 | `d41976e` | feat: 核反应堆无红石信号时仅停止燃料棒，散热片/热交换器等器件继续工作 | ❌ | 待同步到 1.21.1 |
 ## 同步历史
 
 - 2026-04-30：首次逐 commit 比对，确认 3 个缺失 commit：`48934bc`（docs）、`bf99891`（weapons-addon）、`799fda9`（revert）；`549eeb8` 代码已在 1.21.1 中存在
