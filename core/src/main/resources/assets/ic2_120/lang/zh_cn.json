@@ -384,7 +384,7 @@
   "tooltip.ic2_120.wrench.cost_durability": "普通扳手拆卸消耗 10 耐久",
   "tooltip.ic2_120.wrench.cost_energy": "电动扳手拆卸消耗 1000 EU",
   "tooltip.ic2_120.wrench.energy_required": "电量不足 1000 EU 时无法拆卸",
-  "tooltip.ic2_120.transformer.format": "一个点的面 %s EU/t | 五个点的面 %s EU/t",
+  "tooltip.ic2_120.transformer.format": "五个点的面 %s EU/t | 一个点的面 %s EU/t",
   "tooltip.ic2_120.voltage_tier": "电压等级: %s",
   "tooltip.ic2_120.kinetic_capacity": "动能承载: %s KU/t",
   "tooltip.ic2_120.kinetic_loss": "动能损耗: %s KU/格",
