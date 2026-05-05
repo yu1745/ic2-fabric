@@ -30,7 +30,7 @@ fabricApi {
 }
 
 tasks.named('runDatagen') {
-	jvmArgs '-Dskip.ic2_120.datagen=true'
+	jvmArgs '-Dfabric-api.datagen.modid=ic2_120_advanced_solar_addon'
 }
 
 dependencies {
