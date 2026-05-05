@@ -3,6 +3,7 @@ package ic2_120_advanced_solar_addon.content.recipe
 import ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon
 import ic2_120_advanced_solar_addon.config.Ic2AdvancedSolarAddonConfig
 import ic2_120_advanced_solar_addon.integration.jei.Ic2AdvancedSolarAddonJeiPlugin
+import net.fabricmc.loader.api.FabricLoader
 
 object AddonConfigSyncReceiver {
     private val logger = IC2AdvancedSolarAddon.LOGGER
@@ -36,7 +37,9 @@ object AddonConfigSyncReceiver {
             val json = String(fullData, Charsets.UTF_8)
             Ic2AdvancedSolarAddonConfig.applyServerConfig(json)
             MTRecipes.loadFromConfig()
-            Ic2AdvancedSolarAddonJeiPlugin.refreshMTRecipes()
+            if (FabricLoader.getInstance().isModLoaded("jei")) {
+                Ic2AdvancedSolarAddonJeiPlugin.refreshMTRecipes()
+            }
         }
     }
 }
