@@ -2,11 +2,15 @@ package ic2_120.client
 
 import ic2_120.content.item.NightVisionGoggles
 import ic2_120.content.item.armor.NanoHelmet
+import ic2_120.content.item.armor.QuantumBoots
 import ic2_120.content.item.armor.QuantumChestplate
 import ic2_120.content.item.armor.QuantumHelmet
 import ic2_120.content.network.ToggleNightVisionGogglesPayload
 import ic2_120.content.network.ToggleNanoVisionPayload
 import ic2_120.content.network.ToggleQuantumFlightPayload
+import ic2_120.content.network.ToggleQuantumLeggingsSpeedPayload
+import ic2_120.content.network.ToggleQuantumBootsJumpPayload
+import ic2_120.content.item.armor.QuantumLeggings
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
@@ -18,10 +22,12 @@ import net.minecraft.entity.EquipmentSlot
 import org.lwjgl.glfw.GLFW
 
 /**
- * 量子套 / 纳米套专用按键（夜视、飞行）
+ * 量子套 / 纳米套专用按键（夜视、飞行、神行、大跳）
  *
  * - Alt+N：纳米/量子头盔夜视
  * - Alt+F：量子胸甲飞行
+ * - Alt+L：量子护腿神行
+ * - Alt+J：量子靴子大跳
  *
  * 注：M 键用于铱钻头、夜视仪、采矿镭射等手持设备，量子套不共用。
  */
@@ -41,6 +47,24 @@ object ArmorKeybinds {
             "key.ic2_120.toggle_flight",
             InputUtil.Type.KEYSYM,
             GLFW.GLFW_KEY_F,
+            "category.ic2_120.ic2"
+        )
+    )
+
+    private val toggleSpeedKey = KeyBindingHelper.registerKeyBinding(
+        KeyBinding(
+            "key.ic2_120.toggle_speed",
+            InputUtil.Type.KEYSYM,
+            GLFW.GLFW_KEY_L,
+            "category.ic2_120.ic2"
+        )
+    )
+
+    private val toggleJumpKey = KeyBindingHelper.registerKeyBinding(
+        KeyBinding(
+            "key.ic2_120.toggle_jump",
+            InputUtil.Type.KEYSYM,
+            GLFW.GLFW_KEY_J,
             "category.ic2_120.ic2"
         )
     )
@@ -73,6 +97,24 @@ object ArmorKeybinds {
                     ClientPlayNetworking.send(ToggleQuantumFlightPayload)
                 }
             }
+
+            while (toggleSpeedKey.wasPressed()) {
+                if (!isAltDown(client)) continue
+
+                val legs = player.getEquippedStack(EquipmentSlot.LEGS)
+                if (legs.item is QuantumLeggings) {
+                    ClientPlayNetworking.send(ToggleQuantumLeggingsSpeedPayload)
+                }
+            }
+
+            while (toggleJumpKey.wasPressed()) {
+                if (!isAltDown(client)) continue
+
+                val feet = player.getEquippedStack(EquipmentSlot.FEET)
+                if (feet.item is QuantumBoots) {
+                    ClientPlayNetworking.send(ToggleQuantumBootsJumpPayload)
+                }
+            }
         }
     }
 
@@ -84,4 +126,6 @@ object ArmorKeybinds {
 
     fun getVisionKey(): KeyBinding = toggleVisionKey
     fun getFlightKey(): KeyBinding = toggleFlightKey
+    fun getSpeedKey(): KeyBinding = toggleSpeedKey
+    fun getJumpKey(): KeyBinding = toggleJumpKey
 }

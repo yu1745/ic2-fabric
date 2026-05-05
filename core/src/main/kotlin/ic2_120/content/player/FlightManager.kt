@@ -2,7 +2,6 @@ package ic2_120.content.player
 
 import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
-import ic2_120.content.item.armor.QuantumArmorItem
 import ic2_120.content.item.armor.QuantumChestplate
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
@@ -117,13 +116,6 @@ object FlightManager {
     }
 
     private fun handleQuantumFlight(player: PlayerEntity, chestStack: ItemStack) {
-        if (!hasFullQuantumArmor(player)) {
-            if (isQuantumFlightActive(player)) {
-                disableQuantumFlight(player)
-            }
-            return
-        }
-
         val chestplate = chestStack.item as? QuantumChestplate ?: return
         val flightEnabled = QuantumChestplate.isFlightEnabled(chestStack)
         val isActive = player.abilities.allowFlying
@@ -180,24 +172,5 @@ object FlightManager {
                 player.sendAbilitiesUpdate()
             }
         }
-    }
-
-    private fun hasFullQuantumArmor(player: PlayerEntity): Boolean {
-        val armorSlots = arrayOf(
-            EquipmentSlot.HEAD,
-            EquipmentSlot.CHEST,
-            EquipmentSlot.LEGS,
-            EquipmentSlot.FEET
-        )
-        for (slot in armorSlots) {
-            if (player.getEquippedStack(slot).item !is QuantumArmorItem) {
-                return false
-            }
-        }
-        return true
-    }
-
-    private fun isQuantumFlightActive(player: PlayerEntity): Boolean {
-        return player.abilities.allowFlying && player.getEquippedStack(EquipmentSlot.CHEST).item is QuantumChestplate
     }
 }

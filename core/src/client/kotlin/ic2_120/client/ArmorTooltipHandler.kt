@@ -4,8 +4,10 @@ import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.NightVisionGoggles
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.NanoHelmet
+import ic2_120.content.item.armor.QuantumBoots
 import ic2_120.content.item.armor.QuantumChestplate
 import ic2_120.content.item.armor.QuantumHelmet
+import ic2_120.content.item.armor.QuantumLeggings
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback
@@ -50,6 +52,24 @@ object ArmorTooltipHandler {
                 val key = ArmorKeybinds.getFlightKey()
                 val name = key.boundKeyLocalizedText.string
                 tooltip.add(Text.literal("飞行按键: ").formatted(Formatting.GRAY)
+                    .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
+                    .append(Text.literal(name).formatted(Formatting.YELLOW)))
+            }
+
+            // 量子护腿：L 键
+            if (item is QuantumLeggings) {
+                val key = ArmorKeybinds.getSpeedKey()
+                val name = key.boundKeyLocalizedText.string
+                type.add(Text.literal("神行按键: ").formatted(Formatting.GRAY)
+                    .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
+                    .append(Text.literal(name).formatted(Formatting.YELLOW)))
+            }
+
+            // 量子靴子：J 键
+            if (item is QuantumBoots) {
+                val key = ArmorKeybinds.getJumpKey()
+                val name = key.boundKeyLocalizedText.string
+                type.add(Text.literal("大跳按键: ").formatted(Formatting.GRAY)
                     .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
                     .append(Text.literal(name).formatted(Formatting.YELLOW)))
             }

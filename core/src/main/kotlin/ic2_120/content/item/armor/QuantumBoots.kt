@@ -1,5 +1,6 @@
 package ic2_120.content.item.armor
 
+import ic2_120.config.Ic2Config
 import ic2_120.content.item.IridiumPlate
 import ic2_120.content.item.ModArmorMaterials
 import ic2_120.content.item.RubberBoots
@@ -23,7 +24,7 @@ import net.minecraft.util.Formatting
 /**
  * 量子靴子 (Quantum Boots)
  *
- * 量子套装的靴子部件，提供基础减伤。
+ * 量子套装的靴子部件，提供大跳功能。
  *
  * ## 核心参数
  *
@@ -31,9 +32,12 @@ import net.minecraft.util.Formatting
  * - 能量等级：4
  * - 减伤比例：11%
  *
- * ## 待实现功能
+ * ## 大跳功能
  *
- * - 超级跳（Ctrl+空格，最高 9 格，1000 EU/次）
+ * - Alt + J 开关
+ * - 跳起高度 ~3.75 格（3 倍正常跳高）
+ * - 耗电：10,000 EU/次（满电约 1000 跳）
+ * - 落地自动免疫摔落伤害
  *
  * ## 能量消耗
  *
@@ -44,6 +48,42 @@ import net.minecraft.util.Formatting
 class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.BOOTS, Item.Settings().maxCount(1)) {
 
     companion object {
+        private const val SUPER_JUMP_KEY = "SuperJumpEnabled"
+        const val SUPER_JUMP_PROTECTION_KEY = "SuperJumpProtection"
+
+        val jumpEnergyCost: Long
+            get() = Ic2Config.getQuantumBootsJumpEnergyCost()
+
+        @JvmStatic
+        fun isSuperJumpEnabled(stack: ItemStack): Boolean =
+            stack.orCreateNbt.getBoolean(SUPER_JUMP_KEY)
+
+        @JvmStatic
+        fun toggleSuperJump(stack: ItemStack): Boolean {
+            val nbt = stack.orCreateNbt
+            val enabled = !nbt.getBoolean(SUPER_JUMP_KEY)
+            nbt.putBoolean(SUPER_JUMP_KEY, enabled)
+            return enabled
+        }
+
+        @JvmStatic
+        fun getJumpHeightMultiplier(): Double =
+            Ic2Config.getQuantumBootsJumpHeightMultiplier()
+
+        /**
+         * 消耗大跳能量。由混合在跳跃时调用。
+         * @return true 如果消耗成功
+         */
+        @JvmStatic
+        fun consumeJumpEnergy(stack: ItemStack): Boolean {
+            val item = stack.item as? QuantumBoots ?: return false
+            val energy = item.getEnergy(stack)
+            val cost = jumpEnergyCost
+            if (energy < cost) return false
+            item.setEnergy(stack, energy - cost)
+            return true
+        }
+
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             val iridium = IridiumPlate::class.instance()
@@ -69,6 +109,13 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
 
     override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
         super.appendTooltip(stack, context, tooltip, type)
-        tooltip.add(Text.literal("减伤: 11%").formatted(Formatting.GRAY))
+        val jumpEnabled = stack.orCreateNbt.getBoolean(SUPER_JUMP_KEY)
+        val energy = getEnergy(stack)
+        val jumpCount = if (jumpEnergyCost > 0) energy / jumpEnergyCost else 0L
+
+        tooltip.add(Text.literal("大跳: ").append(
+            Text.translatable(if (jumpEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
+        ).append(Text.literal(" | 剩余: ${jumpCount}次")).formatted(Formatting.GRAY))
+        tooltip.add(Text.literal("减伤: 11% | 落地免伤").formatted(Formatting.GRAY))
     }
 }

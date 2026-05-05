@@ -67,3 +67,21 @@ object ToggleMiningLaserModePayload : CustomPayload {
     )
     override fun getId() = ID
 }
+
+object ToggleQuantumLeggingsSpeedPayload : CustomPayload {
+    val ID = CustomPayload.Id<ToggleQuantumLeggingsSpeedPayload>(Ic2_120.id("toggle_quantum_leggings_speed"))
+    val CODEC: PacketCodec<PacketByteBuf, ToggleQuantumLeggingsSpeedPayload> = PacketCodec.of(
+        { _, _ -> },
+        { ToggleQuantumLeggingsSpeedPayload }
+    )
+    override fun getId() = ID
+}
+
+object ToggleQuantumBootsJumpPayload : CustomPayload {
+    val ID = CustomPayload.Id<ToggleQuantumBootsJumpPayload>(Ic2_120.id("toggle_quantum_boots_jump"))
+    val CODEC: PacketCodec<PacketByteBuf, ToggleQuantumBootsJumpPayload> = PacketCodec.of(
+        { _, _ -> },
+        { ToggleQuantumBootsJumpPayload }
+    )
+    override fun getId() = ID
+}

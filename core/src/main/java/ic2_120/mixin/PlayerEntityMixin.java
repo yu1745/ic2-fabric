@@ -1,6 +1,7 @@
 package ic2_120.mixin;
 
 import ic2_120.content.item.armor.ElectricArmorItem;
+import ic2_120.content.item.armor.QuantumBoots;
 import ic2_120.util.NanoSaberDamageHelper;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.damage.DamageSource;
@@ -54,6 +55,19 @@ public abstract class PlayerEntityMixin {
 
         if (source.getName().equals("outOfWorld")) {
             return;
+        }
+
+        // 量子靴子大跳摔落保护
+        if (source.getName().equals("fall")) {
+            ItemStack boots = player.getEquippedStack(EquipmentSlot.FEET);
+            if (!boots.isEmpty() && boots.getItem() instanceof QuantumBoots) {
+                if (boots.getOrCreateNbt().getBoolean("SuperJumpProtection")) {
+                    boots.getOrCreateNbt().remove("SuperJumpProtection");
+                    cir.setReturnValue(false);
+                    cir.cancel();
+                    return;
+                }
+            }
         }
 
         // 纳米剑穿甲伤害：不走纳米/量子 EU 减伤（量子套不会收到此伤害类型）

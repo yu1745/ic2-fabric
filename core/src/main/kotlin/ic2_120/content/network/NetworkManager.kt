@@ -10,6 +10,8 @@ import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.NanoHelmet
 import ic2_120.content.item.armor.QuantumChestplate
 import ic2_120.content.item.armor.QuantumHelmet
+import ic2_120.content.item.armor.QuantumLeggings
+import ic2_120.content.item.armor.QuantumBoots
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.entity.EquipmentSlot
@@ -56,6 +58,32 @@ object NetworkManager {
                 val enabled = QuantumChestplate.toggleFlight(stack)
                 player.sendMessage(Text.translatable(
                     if (enabled) "message.ic2_120.quantum_chestplate.flight_on" else "message.ic2_120.quantum_chestplate.flight_off"
+                ), true)
+            }
+        }
+
+        ServerPlayNetworking.registerGlobalReceiver(ToggleQuantumLeggingsSpeedPayload.ID) { _, context ->
+            val player = context.player()
+            val stack = player.getEquippedStack(EquipmentSlot.LEGS)
+            if (stack.item is QuantumLeggings) {
+                val tier = QuantumLeggings.cycleSpeedTier(stack)
+                player.sendMessage(Text.translatable(
+                    when (tier) {
+                        1 -> "message.ic2_120.quantum_leggings.speed_tier1"
+                        2 -> "message.ic2_120.quantum_leggings.speed_tier2"
+                        else -> "message.ic2_120.quantum_leggings.speed_off"
+                    }
+                ), true)
+            }
+        }
+
+        ServerPlayNetworking.registerGlobalReceiver(ToggleQuantumBootsJumpPayload.ID) { _, context ->
+            val player = context.player()
+            val stack = player.getEquippedStack(EquipmentSlot.FEET)
+            if (stack.item is QuantumBoots) {
+                val enabled = QuantumBoots.toggleSuperJump(stack)
+                player.sendMessage(Text.translatable(
+                    if (enabled) "message.ic2_120.quantum_boots.jump_on" else "message.ic2_120.quantum_boots.jump_off"
                 ), true)
             }
         }
@@ -178,6 +206,8 @@ object NetworkManager {
         PayloadTypeRegistry.playC2S().register(ToggleNightVisionGogglesPayload.ID, ToggleNightVisionGogglesPayload.CODEC)
         PayloadTypeRegistry.playC2S().register(ToggleNanoVisionPayload.ID, ToggleNanoVisionPayload.CODEC)
         PayloadTypeRegistry.playC2S().register(ToggleQuantumFlightPayload.ID, ToggleQuantumFlightPayload.CODEC)
+        PayloadTypeRegistry.playC2S().register(ToggleQuantumLeggingsSpeedPayload.ID, ToggleQuantumLeggingsSpeedPayload.CODEC)
+        PayloadTypeRegistry.playC2S().register(ToggleQuantumBootsJumpPayload.ID, ToggleQuantumBootsJumpPayload.CODEC)
         PayloadTypeRegistry.playC2S().register(ToggleIridiumSilkTouchPayload.ID, ToggleIridiumSilkTouchPayload.CODEC)
         PayloadTypeRegistry.playC2S().register(ToggleJetpackFlightPayload.ID, ToggleJetpackFlightPayload.CODEC)
         PayloadTypeRegistry.playC2S().register(ToggleFoamSprayerModePayload.ID, ToggleFoamSprayerModePayload.CODEC)

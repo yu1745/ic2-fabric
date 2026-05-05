@@ -89,6 +89,10 @@ data class ArmorConfig(
     val quantumChestplate: QuantumChestplateConfig = QuantumChestplateConfig(),
     @field:ConfigComment("量子头盔配置。")
     val quantumHelmet: QuantumHelmetConfig = QuantumHelmetConfig(),
+    @field:ConfigComment("量子护腿配置（神行加速）。")
+    val quantumLeggings: QuantumLeggingsConfig = QuantumLeggingsConfig(),
+    @field:ConfigComment("量子靴子配置（大跳）。")
+    val quantumBoots: QuantumBootsConfig = QuantumBootsConfig(),
     @field:ConfigComment("夜视配置。")
     val nightVision: NightVisionConfig = NightVisionConfig(),
     @field:ConfigComment("橡胶靴配置。")
@@ -126,6 +130,33 @@ data class QuantumHelmetConfig(
     /** 夜视时长（秒）。耗电量自动通过 满电容量 / 时长 计算。 */
     @field:ConfigComment("量子头盔夜视时长（秒），耗电量自动计算。", "28800")
     val nightVisionDurationSeconds: Int = 28800
+)
+
+data class QuantumLeggingsConfig(
+    /** 最大能量 (EU)。用于计算神行耗电速率。 */
+    @field:ConfigComment("量子护腿计算耗电用的参考容量（EU）。", "10000000")
+    val maxEnergy: Long = 10_000_000L,
+    /** 神行时长（秒）。满电 2 档可连续神行多久。 */
+    @field:ConfigComment("量子护腿神行时长（秒，2档满电），耗电量自动计算。", "1800")
+    val speedBoostDurationSeconds: Int = 1800,
+    /** 神行 1 档速度倍率。 */
+    @field:ConfigComment("神行 1 档速度倍率。0.2 表示 +20% 移速，半耗电。", "0.2")
+    val speedMultiplierTier1: Double = 0.2,
+    /** 神行 2 档速度倍率。 */
+    @field:ConfigComment("神行 2 档速度倍率。0.4 表示 +40% 移速，全耗电。", "0.4")
+    val speedMultiplierTier2: Double = 0.4
+)
+
+data class QuantumBootsConfig(
+    /** 最大能量 (EU)。用于参考。 */
+    @field:ConfigComment("量子靴子计算跳跃耗电的参考容量（EU）。", "10000000")
+    val maxEnergy: Long = 10_000_000L,
+    /** 每次大跳消耗能量（EU）。默认 1000 次跳空靴子。 */
+    @field:ConfigComment("每次大跳消耗能量（EU）。10M EU / 1000 次 = 10000 EU/次。", "10000")
+    val jumpEnergyCost: Long = 10_000,
+    /** 跳跃高度倍率。3.0 表示 3 倍正常跳跃高度（约 3.75 格）。 */
+    @field:ConfigComment("跳跃高度倍率。3.0 = 3 倍正常高度（约 3.75 格）。", "3.0")
+    val jumpHeightMultiplier: Double = 3.0
 )
 
 data class NightVisionConfig(
@@ -505,6 +536,29 @@ object Ic2Config {
     fun getQuantumChestplateEuPerTick(): Double {
         val cfg = current.armor.quantumChestplate
         return cfg.maxEnergy.toDouble() / (cfg.flightDurationSeconds * 20.0)
+    }
+
+    /**
+     * 量子护腿神行每tick能量消耗（2档全速）。
+     * 1档耗电为 2档的一半。
+     */
+    fun getQuantumLeggingsEuPerTick(): Double {
+        val cfg = current.armor.quantumLeggings
+        return cfg.maxEnergy.toDouble() / (cfg.speedBoostDurationSeconds * 20.0)
+    }
+
+    /**
+     * 量子靴子大跳能量消耗 = 配置值（一次性消耗）
+     */
+    fun getQuantumBootsJumpEnergyCost(): Long {
+        return current.armor.quantumBoots.jumpEnergyCost.coerceAtLeast(1L)
+    }
+
+    /**
+     * 量子靴子大跳高度倍率
+     */
+    fun getQuantumBootsJumpHeightMultiplier(): Double {
+        return current.armor.quantumBoots.jumpHeightMultiplier.coerceAtLeast(1.0)
     }
 
     /**
