@@ -8,6 +8,8 @@ import ic2_120.content.block.CropStickBlock
 import ic2_120.content.block.CropStickBlockEntity
 import ic2_120.content.block.AnimalmatronBlock
 import ic2_120.content.block.machines.AnimalmatronBlockEntity
+import ic2_120.content.block.TeleporterBlock
+import ic2_120.content.block.machines.TeleporterBlockEntity
 import ic2_120.content.block.KineticGeneratorBlock
 import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.block.WaterKineticGeneratorBlock
@@ -78,6 +80,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockDataProvider(KineticJadeProvider, ManualKineticGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(KineticJadeProvider, LeashKineticGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(KineticJadeProvider, KineticGeneratorBlockEntity::class.java)
+        registration.registerBlockDataProvider(TeleporterJadeProvider, TeleporterBlockEntity::class.java)
         registration.registerEntityDataProvider(AnimalJadeProvider, PassiveEntity::class.java)
     }
 
@@ -92,6 +95,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockComponent(KineticJadeProvider, WaterKineticGeneratorBlock::class.java)
         registration.registerBlockComponent(KineticJadeProvider, ManualKineticGeneratorBlock::class.java)
         registration.registerBlockComponent(KineticJadeProvider, KineticGeneratorBlock::class.java)
+        registration.registerBlockComponent(TeleporterJadeProvider, TeleporterBlock::class.java)
         registration.registerEntityComponent(AnimalJadeProvider, PassiveEntity::class.java)
     }
 }
