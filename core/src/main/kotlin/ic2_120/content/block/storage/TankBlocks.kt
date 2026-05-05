@@ -368,6 +368,16 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         // 不调用 super，防止默认掉落行为
     }
 
+    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
+        if (!world.isClient) {
+            val be = world.getBlockEntity(pos)
+            if (be is TankBlockEntity) {
+                be.retainFluidPercent(0.0)
+            }
+        }
+        super.onBreak(world, pos, state, player)
+    }
+
     override fun getPickStack(world: WorldView, pos: BlockPos, state: BlockState): ItemStack {
         val itemStack = super.getPickStack(world, pos, state)
         val blockEntity = world.getBlockEntity(pos)
