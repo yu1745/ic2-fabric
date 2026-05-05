@@ -44,9 +44,6 @@ object CompressorRecipeDatagen {
         // 萤石粉 -> 萤石
         Entry("glowstone_dust_to_glowstone", Items.GLOWSTONE_DUST, 4, Items.GLOWSTONE, 1),
 
-        // 青金石 -> 青金石块
-        Entry("lapis_to_lapis_block", Items.LAPIS_LAZULI, 4, Items.LAPIS_BLOCK, 1),
-
         // 黑曜石粉 -> 黑曜石板
         Entry("obsidian_to_plate", ObsidianDust::class.instance(), 1, ObsidianPlate::class.instance(), 1),
 
