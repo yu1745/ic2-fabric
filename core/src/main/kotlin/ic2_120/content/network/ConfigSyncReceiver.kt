@@ -2,6 +2,7 @@ package ic2_120.content.network
 
 import ic2_120.config.Ic2Config
 import ic2_120.integration.jei.Ic2JeiPlugin
+import net.fabricmc.loader.api.FabricLoader
 import org.slf4j.LoggerFactory
 
 object ConfigSyncReceiver {
@@ -35,7 +36,9 @@ object ConfigSyncReceiver {
             receivedCount = 0
             val json = String(fullData, Charsets.UTF_8)
             Ic2Config.applyServerConfig(json)
-            Ic2JeiPlugin.refreshReplicatorRecipes()
+            if (FabricLoader.getInstance().isModLoaded("jei")) {
+                Ic2JeiPlugin.refreshReplicatorRecipes()
+            }
         }
     }
 }
