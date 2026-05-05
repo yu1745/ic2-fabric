@@ -1,4 +1,6 @@
-# AGENTS.md - ic2_120 协作规范（重排版）
+# AGENTS.md / CLAUDE.md - ic2_120 协作规范
+
+本文件通过符号链接同时作为 `AGENTS.md` 和 `CLAUDE.md` 使用，一处更新两处生效。
 
 本文件是代理/协作者的最小执行规范。详细实现细节统一放在 `docs/`，避免重复维护。
 
@@ -30,6 +32,11 @@
 
 主入口通过 `ClassScanner.scanAndRegister(...)` 扫描包。
 注册与参数细节以 `docs/registry/CLASS_BASED_REGISTRY.md` 为准。
+
+注册扩展参考：
+- `docs/registry/biome-colored-blocks.md` — 生物群系着色
+- `docs/registry/block-variants.md` — 创造模式满电变体
+- `docs/registry/loot-table-system.md` — 掉落物系统
 
 合成表同样遵循”基于约定的扫描”：
 
@@ -68,6 +75,7 @@
 
 - Compose UI 总览：`docs/ui/compose-ui.md`
 - 槽位规则：`docs/ui/slot-spec-system.md`
+- GUI 尺寸与坐标参考：`docs/ui/gui-size-handlers.md`
 - DrawContext 参考：`docs/ui/drawcontext-methods.md`
 - 坐标换算：`docs/ui/canner-ui-coordinates.md`
 - Compose 子文档：`docs/compose-ui/*.md`
@@ -90,7 +98,7 @@
   - Linux: `rm -f ~/.gradle/wrapper/dists/gradle-*.zip.lck`
   - Windows: `Remove-Item -Force "$env:USERPROFILE\.gradle\wrapper\dists\...\gradle-*.zip.lck" -ErrorAction SilentlyContinue`
 
-## 8. 变更策略
+## 8. 设计原则
 
 - 优先复用已有组件与模式，避免引入第二套实现。
 - 优先使用机器组合模式复用（见 `docs/guides/machine-composition-reuse.md`）以避免重复的 container/slot/sync 代码。
@@ -150,42 +158,21 @@
 ### 提交前确认
 - 只有一个功能 commit + 一个同步状态 commit，没有 fixup/amend
 
-## 12. 物品与方块清单
-
-所有使用 `@ModBlock` / `@ModItem` 注解注册的类及其中文翻译：
-
-- 自动生成文档：`docs/item-block-list.md`（154 方块 + 293 物品）
-- 生成脚本：`scripts/generate_item_block_list.py`
-- 重新生成：运行 `python scripts/generate_item_block_list.py`
-
-## 13. 源码参考（MC 源码 & Fabric API）
+## 12. 源码参考（MC 源码 & Fabric API）
 
 ### MC 源码
 
-使用 Gradle 任务生成脱编译源码（只需在 core 执行，附属与 core 同 MC 版本）：
+使用 Gradle 任务生成反编译源码：
 
 ```bash
 ./gradlew :core:genSources
 ```
 
-- 产物在项目根目录的 `.gradle/loom-cache/minecraftMaven/net/minecraft/` 下，`{hash}` 为自动生成的随机字符串，如：
-  `minecraft-clientOnly-{hash}/{minecraft_version}-net.fabricmc.yarn.{yarn_mappings}-v2/`
-- `../mc_source_{minecraft_version}/` 是手动解压的副本（项目根目录父级，`{minecraft_version}` 替换为 `gradle.properties` 中的 `minecraft_version`）。
-- loom-cache 中路径包含版本后缀（如 `1.20.1-net.fabricmc.yarn.1_20_1.1.20.1+build.10-v2`），搜索时需要用通配符或占位符匹配版本号。
-- 如果源码已生成过可直接参考，不需要重新生成。
+产物在 `.gradle/loom-cache/minecraftMaven/net/minecraft/` 下，或参考 `../mc_source_{minecraft_version}/` 的副本。
 
 ### Fabric API 源码
 
-Fabric API 项目通过 `git clone` 获取，按 MC 版本后缀区分目录：
-
 ```bash
-# 1.20.1
 git clone -b 1.20.1 https://github.com/FabricMC/fabric-api.git fabric-api_1.20.1
-
-# 1.21.1
 git clone -b 1.21.1 https://github.com/FabricMC/fabric-api.git fabric-api_1.21.1
 ```
-
-- 如果已经存在可直接参考，不存在则重新 clone 并签出对应分支。
-- 如果被删除或需要特定版本，重新 clone 并签出对应分支即可。
-- Gradle dependency 版本（如 `fabric_api_version=0.92.7+1.20.1`）用于协调 API 模块版本，源码参考不受限制。
