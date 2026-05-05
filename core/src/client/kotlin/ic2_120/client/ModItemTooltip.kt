@@ -141,29 +141,12 @@ object ModItemTooltip {
 
     /**
      * 添加变压器的 tooltip 信息
-     * @param tier 低级能量等级
-     * @param nextTier 高级能量等级（tier + 1）
+     * 格式：一个点的面 xxx EU/t | 五个点的面 xxx EU/t
      */
     private fun addTransformerTooltip(lines: MutableList<Text>, tier: Int, nextTier: Int) {
-        val lowEu = ic2_120.content.block.machines.TransformerUtils.getEuForTier(tier)
-        val highEu = ic2_120.content.block.machines.TransformerUtils.getEuForTier(nextTier)
-        val tierName = when (tier) {
-            1 -> "LV"
-            2 -> "MV"
-            3 -> "HV"
-            4 -> "EV"
-            else -> "级$tier"
-        }
-        val nextTierName = when (nextTier) {
-            2 -> "MV"
-            3 -> "HV"
-            4 -> "EV"
-            5 -> "EV"
-            else -> "级$nextTier"
-        }
-
-        lines.add(Text.literal("能量转换: $tierName ↔ $nextTierName").formatted(Formatting.GRAY))
-        lines.add(Text.literal("低级: $lowEu EU/t | 高级: $highEu EU/t").formatted(Formatting.DARK_GRAY))
+        val dotEu = ic2_120.content.block.machines.TransformerUtils.getEuForTier(nextTier)
+        val sideEu = ic2_120.content.block.machines.TransformerUtils.getEuForTier(tier)
+        lines.add(Text.translatable("tooltip.ic2_120.transformer.format", dotEu, sideEu).formatted(Formatting.GRAY))
     }
 
     private fun addKineticTransmissionTooltip(lines: MutableList<Text>, capacityKu: Int, lossKu: Int) {

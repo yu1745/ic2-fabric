@@ -2,7 +2,6 @@ package ic2_120.content.block.machines
 
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.TeleporterBlock
-import ic2_120.content.energy.charge.BatteryDischargerComponent
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import team.reborn.energy.api.EnergyStorage
 import ic2_120.content.screen.TeleporterScreenHandler
@@ -78,12 +77,6 @@ class TeleporterBlockEntity(
     override var capacityBonus: Long = 0L
     override var voltageTierBonus: Int = 0
 
-    private val batteryDischarger = BatteryDischargerComponent(
-        inventory = this,
-        batterySlot = SLOT_DISCHARGING,
-        machineTierProvider = { TELEPORTER_TIER },
-        canDischargeNow = { sync.amount < sync.getEffectiveCapacity() }
-    )
 
     companion object {
         const val TELEPORTER_TIER = 4

@@ -17,8 +17,8 @@ class TeleporterSync(
 ) {
 
     companion object {
-        const val ENERGY_CAPACITY = 100_000L
-        const val MAX_INSERT = 2048L
+        const val ENERGY_CAPACITY = 0L
+        const val MAX_INSERT = 0L
         const val MAX_EXTRACT = 0L
         const val NBT_ENERGY_STORED = "EnergyStored"
 
