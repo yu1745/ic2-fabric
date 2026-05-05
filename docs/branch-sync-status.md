@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **43 个 commit**，**38 个已同步，5 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **43 个 commit**，**43 个已同步，0 个待同步**。
 
 ## 逐 commit 状态
 
@@ -52,11 +52,11 @@
 | 36 | `f03e79f` | feat: 拴绳动能发生机合成配方改为中间机器外壳上方拴绳的3x3配方 | ✅ | cherry-pick `127fa4c` + 适配 1.21.1 recipe JSON 格式 + datagen 刷新 |
 | 37 | `d41976e` | feat: 核反应堆无红石信号时仅停止燃料棒，散热片/热交换器等器件继续工作 | ✅ | 无冲突直接 cherry-pick `8c9ce6d` |
 | 38 | `8863ece` | fix: 拴绳动能发生机拴住的生物坐上矿车时不再断开拴绳 | ✅ | cherry-pick `3a05b8c` + 1.21.1 适配 `getLeashHolder()` (`ef63e23`) + datagen 刷新 (`1146b57`) |
-| 39 | `df4c5ed` | fix: 删除压缩机中 4 青金石→1 青金石块的刷物品配方 | ❌ |  |
-| 40 | `d4de777` | fix: 铁炉和焦窑无扳手拆卸不再掉落机器外壳（防刷物品） | ❌ | 不影响 datagen |
-| 41 | `95e6339` | fix: 徒手/镐子挖储罐不再掉落流体（防止刷流体） | ❌ |  |
-| 42 | `5286bae` | feat: 量子护腿神行+量子靴子大跳，修复量子胸甲飞行条件 | ❌ |  |
-| 43 | `9964f3b` | fix: JEI 缺失时 ConfigSyncReceiver 不再崩溃 | ❌ |  |
+| 39 | `df4c5ed` | fix: 删除压缩机中 4 青金石→1 青金石块的刷物品配方 | ✅ | cherry-pick + 适配 1.21.1 单数 recipe/ 路径 |
+| 40 | `d4de777` | fix: 铁炉和焦窑无扳手拆卸不再掉落机器外壳（防刷物品） | ✅ | 无冲突直接 cherry-pick |
+| 41 | `95e6339` | fix: 徒手/镐子挖储罐不再掉落流体（防止刷流体） | ✅ | cherry-pick + 适配 1.21.1 `onBreak` 返回 `BlockState` |
+| 42 | `5286bae` | feat: 量子护腿神行+量子靴子大跳，修复量子胸甲飞行条件 | ✅ | cherry-pick + 适配 1.21.1 Payload 网络/DataComponent NBT/appendTooltip 签名 |
+| 43 | `9964f3b` | fix: JEI 缺失时 ConfigSyncReceiver 不再崩溃 | ✅ | 无冲突直接 cherry-pick |
 ## 同步历史
 
 - 2026-04-30：首次逐 commit 比对，确认 3 个缺失 commit：`48934bc`（docs）、`bf99891`（weapons-addon）、`799fda9`（revert）；`549eeb8` 代码已在 1.21.1 中存在
@@ -79,3 +79,4 @@
 - 2026-05-03：提交 commits 32-34（拴绳动能发生机相关）到 main，待同步到 1.21.1
 - 2026-05-03：同步 commits 32-35 到 1.21.1——拴绳动能发生机 API 适配（RecipeExporter、validateTicker、canBeLeashed→canBeLeashed()、updateLeash→beforeLeashTick、Identifier.ofVanilla、RegistryWrapper.WrapperLookup、onBreak 返回 BlockState）+ datagen 刷新，1.21.1 额外提交 `6abb6e4`
 - 2026-05-03：提交 commit 36 到 main——拴绳动能发生机合成配方从 1×2 改为 3×3（中间机械外壳+上方拴绳），cherry-pick 到 1.21.1 + datagen 刷新，同步完成
+- 2026-05-05：同步 commits 39-43——配方删除、铁炉/焦窑防刷、储罐防刷流体、量子护腿神行+量子靴子大跳+胸甲飞行修复、JEI 缺失保护，适配 1.21.1 Payload 网络/DataComponent NBT/appendTooltip 签名
