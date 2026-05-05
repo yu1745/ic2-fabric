@@ -44,9 +44,6 @@ class TeleporterScreen(
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         val left = x
         val top = y
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1L)
-        val fraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
         val targetText = if (handler.sync.targetSet != 0) {
             t("gui.ic2_120.teleporter.target_set", handler.sync.targetX, handler.sync.targetY, handler.sync.targetZ)
         } else {
@@ -63,17 +60,7 @@ class TeleporterScreen(
                 spacing = 6,
                 modifier = Modifier().width(GUI_SIZE.contentWidth)
             ) {
-                Flex(
-                    alignItems = AlignItems.CENTER,
-                    gap = 2,
-                ) {
-                    Text(title.string, color = 0xFFFFFF)
-                    EnergyBar(fraction, barHeight = 8, modifier = Modifier().fractionWidth(1f))
-                    Text(
-                        "${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU",
-                        color = 0xFFFFFF
-                    )
-                }
+                Text(title.string, color = 0xFFFFFF)
                 Flex(
                     justifyContent = JustifyContent.SPACE_BETWEEN,
                     alignItems = AlignItems.CENTER,

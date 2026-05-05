@@ -355,6 +355,13 @@ class TeleporterBlockEntity(
         val distance = sqrt(pos.getSquaredDistance(target).toDouble()).toLong().coerceAtLeast(1L)
         val weight = computeWeight(entity).coerceAtMost(5100)
         val energyNeed = computeEnergyNeed(weight, distance)
+        val availableMfe = simulateAdjacentMfeEnergy(world, pos)
+        if (availableMfe < energyNeed) {
+            clearCharging()
+            setActiveState(world, pos, state, false)
+            endTick(world, pos)
+            return
+        }
 
         startCharging(entity, target, energyNeed, distance)
         setActiveState(world, pos, state, true)
@@ -567,11 +574,18 @@ class TeleporterBlockEntity(
             val id = Registries.BLOCK.getId(world.getBlockState(neighborPos).block)
             if (id.namespace != "ic2_120" ||
                 (id.path != "mfe" && id.path != "mfsu" && id.path != "mfe_chargepad" && id.path != "mfsu_chargepad")) continue
-            val source = EnergyStorage.SIDED.find(world, neighborPos, dir.opposite)
-                ?: EnergyStorage.SIDED.find(world, neighborPos, null)
-                ?: continue
-            if (!source.supportsExtraction()) continue
-            remaining -= source.extract(remaining, tx)
+            // 绕过单 tick 输出上限，直接修改储电盒内部 amount
+            val be = world.getBlockEntity(neighborPos)
+            if (be is ic2_120.content.block.storage.EnergyStorageBlockEntity) {
+                val container = be.sync
+                val available = container.amount
+                val toExtract = minOf(remaining, available).coerceAtLeast(0L)
+                if (toExtract > 0L) {
+                    container.amount = available - toExtract
+                    container.syncCommittedAmount()
+                    remaining -= toExtract
+                }
+            }
         }
         return amount - remaining
     }
@@ -586,12 +600,9 @@ class TeleporterBlockEntity(
             val id = Registries.BLOCK.getId(world.getBlockState(neighborPos).block)
             if (id.namespace != "ic2_120" ||
                 (id.path != "mfe" && id.path != "mfsu" && id.path != "mfe_chargepad" && id.path != "mfsu_chargepad")) continue
-            val source = EnergyStorage.SIDED.find(world, neighborPos, dir.opposite)
-                ?: EnergyStorage.SIDED.find(world, neighborPos, null)
-                ?: continue
-            if (!source.supportsExtraction()) continue
-            Transaction.openOuter().use { tx ->
-                total += source.extract(Long.MAX_VALUE, tx)
+            val be = world.getBlockEntity(neighborPos)
+            if (be is ic2_120.content.block.storage.EnergyStorageBlockEntity) {
+                total += be.sync.amount
             }
         }
         return total

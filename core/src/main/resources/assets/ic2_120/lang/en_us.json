@@ -385,7 +385,7 @@
   "tooltip.ic2_120.wrench.cost_durability": "Normal wrench dismantle cost: 10 durability",
   "tooltip.ic2_120.wrench.cost_energy": "Electric wrench dismantle cost: 1000 EU",
   "tooltip.ic2_120.wrench.energy_required": "Dismantle requires at least 1000 EU",
-  "tooltip.ic2_120.transformer.format": "1-dot face %s EU/t | 5-dot faces %s EU/t",
+  "tooltip.ic2_120.transformer.format": "5-dot faces %s EU/t | 1-dot face %s EU/t",
   "tooltip.ic2_120.voltage_tier": "Voltage Tier: %s",
   "tooltip.ic2_120.kinetic_capacity": "Kinetic Capacity: %s KU/t",
   "tooltip.ic2_120.kinetic_loss": "Kinetic Loss: %s KU/block",
