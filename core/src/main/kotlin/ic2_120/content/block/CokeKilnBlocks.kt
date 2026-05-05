@@ -70,6 +70,8 @@ class RefractoryBricksBlock : Block(AbstractBlock.Settings.copy(Blocks.BRICKS).s
 @ModBlock(name = "coke_kiln", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "steam")
 /** 焦炭窑（Coke Kiln） */
 class CokeKilnBlock : MachineBlock(AbstractBlock.Settings.copy(Blocks.BRICKS).strength(3.0f, 10.0f)) {
+    override fun getCasingDrop() = asItem()
+
     override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
         super.onBlockAdded(state, world, pos, oldState, notify)
         if (!world.isClient) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
