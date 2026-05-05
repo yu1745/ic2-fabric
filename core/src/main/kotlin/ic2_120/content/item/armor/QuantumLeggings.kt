@@ -1,6 +1,8 @@
 package ic2_120.content.item.armor
 
 import ic2_120.config.Ic2Config
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 import ic2_120.content.block.MachineCasingBlock
 import ic2_120.content.item.IridiumPlate
 import ic2_120.content.item.ModArmorMaterials
@@ -22,7 +24,11 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.world.World
+import kotlin.math.abs
 
 /**
  * 量子护腿 (Quantum Leggings)
@@ -69,15 +75,14 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
          * @return 切换后的档位
          */
         fun cycleSpeedTier(stack: ItemStack): Int {
-            val nbt = stack.orCreateNbt
-            val current = nbt.getInt(SPEED_TIER_KEY)
+            val current = stack.getCustomData()?.getInt(SPEED_TIER_KEY) ?: 0
             val next = if (current >= 2) 0 else current + 1
-            nbt.putInt(SPEED_TIER_KEY, next)
+            stack.editCustomData { it.putInt(SPEED_TIER_KEY, next) }
             return next
         }
 
         fun getSpeedTier(stack: ItemStack): Int =
-            stack.orCreateNbt.getInt(SPEED_TIER_KEY)
+            stack.getCustomData()?.getInt(SPEED_TIER_KEY) ?: 0
 
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
@@ -110,13 +115,13 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
         val player = entity as? PlayerEntity ?: return
         if (player.getEquippedStack(EquipmentSlot.LEGS) !== stack) return
 
-        val nbt = stack.orCreateNbt
+        val nbt = stack.getCustomData() ?: return
         val tier = nbt.getInt(SPEED_TIER_KEY)
         if (tier <= 0) return
 
         // 检测玩家是否在移动
-        val isMoving = kotlin.math.abs(player.velocity.x) > 0.001 ||
-                       kotlin.math.abs(player.velocity.z) > 0.001
+        val isMoving = abs(player.velocity.x) > 0.001 ||
+                       abs(player.velocity.z) > 0.001
         if (!isMoving) {
             // 不动时不消耗能量，但保持 buff
             applySpeedEffect(player, tier)
@@ -162,7 +167,7 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
 
     override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
         super.appendTooltip(stack, context, tooltip, type)
-        val tier = stack.orCreateNbt.getInt(SPEED_TIER_KEY)
+        val tier = stack.getCustomData()?.getInt(SPEED_TIER_KEY) ?: 0
         val energy = getEnergy(stack)
         val remainingSeconds = if (energy > 0 && maxCapacity > 0) {
             val divisor = if (tier == 1) 2.0 else 1.0

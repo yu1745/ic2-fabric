@@ -61,8 +61,7 @@ public abstract class PlayerEntityMixin {
         if (source.getName().equals("fall")) {
             ItemStack boots = player.getEquippedStack(EquipmentSlot.FEET);
             if (!boots.isEmpty() && boots.getItem() instanceof QuantumBoots) {
-                if (boots.getOrCreateNbt().getBoolean("SuperJumpProtection")) {
-                    boots.getOrCreateNbt().remove("SuperJumpProtection");
+                if (QuantumBoots.checkAndClearSuperJumpProtection(boots)) {
                     cir.setReturnValue(false);
                     cir.cancel();
                     return;

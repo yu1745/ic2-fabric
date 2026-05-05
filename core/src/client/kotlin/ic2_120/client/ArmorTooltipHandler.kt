@@ -60,7 +60,7 @@ object ArmorTooltipHandler {
             if (item is QuantumLeggings) {
                 val key = ArmorKeybinds.getSpeedKey()
                 val name = key.boundKeyLocalizedText.string
-                type.add(Text.literal("神行按键: ").formatted(Formatting.GRAY)
+                tooltip.add(Text.literal("神行按键: ").formatted(Formatting.GRAY)
                     .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
                     .append(Text.literal(name).formatted(Formatting.YELLOW)))
             }
@@ -69,7 +69,7 @@ object ArmorTooltipHandler {
             if (item is QuantumBoots) {
                 val key = ArmorKeybinds.getJumpKey()
                 val name = key.boundKeyLocalizedText.string
-                type.add(Text.literal("大跳按键: ").formatted(Formatting.GRAY)
+                tooltip.add(Text.literal("大跳按键: ").formatted(Formatting.GRAY)
                     .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
                     .append(Text.literal(name).formatted(Formatting.YELLOW)))
             }

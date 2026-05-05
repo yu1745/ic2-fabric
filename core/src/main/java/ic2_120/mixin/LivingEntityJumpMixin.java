@@ -33,6 +33,6 @@ public class LivingEntityJumpMixin {
         player.setVelocity(vel.x, vel.y * multiplier, vel.z);
 
         // 标记摔落保护
-        boots.getOrCreateNbt().putBoolean(QuantumBoots.SUPER_JUMP_PROTECTION_KEY, true);
+        QuantumBoots.markSuperJumpProtection(boots);
     }
 }

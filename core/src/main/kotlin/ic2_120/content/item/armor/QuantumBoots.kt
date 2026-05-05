@@ -6,6 +6,8 @@ import ic2_120.content.item.ModArmorMaterials
 import ic2_120.content.item.RubberBoots
 import ic2_120.content.item.energy.LapotronCrystalItem
 import ic2_120.content.recipes.crafting.BatteryEnergyShapedRecipeDatagen
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -56,14 +58,31 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
 
         @JvmStatic
         fun isSuperJumpEnabled(stack: ItemStack): Boolean =
-            stack.orCreateNbt.getBoolean(SUPER_JUMP_KEY)
+            stack.getCustomData()?.getBoolean(SUPER_JUMP_KEY) ?: false
 
         @JvmStatic
         fun toggleSuperJump(stack: ItemStack): Boolean {
-            val nbt = stack.orCreateNbt
-            val enabled = !nbt.getBoolean(SUPER_JUMP_KEY)
-            nbt.putBoolean(SUPER_JUMP_KEY, enabled)
+            val current = stack.getCustomData()?.getBoolean(SUPER_JUMP_KEY) ?: false
+            val enabled = !current
+            stack.editCustomData { it.putBoolean(SUPER_JUMP_KEY, enabled) }
             return enabled
+        }
+
+        /** 标记大跳摔落保护（给 Java Mixin 用） */
+        @JvmStatic
+        fun markSuperJumpProtection(stack: ItemStack) {
+            stack.editCustomData { it.putBoolean(SUPER_JUMP_PROTECTION_KEY, true) }
+        }
+
+        /** 检测并清除大跳摔落保护（给 Java Mixin 用） */
+        @JvmStatic
+        fun checkAndClearSuperJumpProtection(stack: ItemStack): Boolean {
+            val data = stack.getCustomData() ?: return false
+            val protected = data.getBoolean(SUPER_JUMP_PROTECTION_KEY)
+            if (protected) {
+                stack.editCustomData { it.remove(SUPER_JUMP_PROTECTION_KEY) }
+            }
+            return protected
         }
 
         @JvmStatic
@@ -109,7 +128,7 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
 
     override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
         super.appendTooltip(stack, context, tooltip, type)
-        val jumpEnabled = stack.orCreateNbt.getBoolean(SUPER_JUMP_KEY)
+        val jumpEnabled = stack.getCustomData()?.getBoolean(SUPER_JUMP_KEY) ?: false
         val energy = getEnergy(stack)
         val jumpCount = if (jumpEnergyCost > 0) energy / jumpEnergyCost else 0L
 
