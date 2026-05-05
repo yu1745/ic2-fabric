@@ -38,7 +38,6 @@ import java.util.function.Consumer
  * ## 飞行功能
  *
  * - 耗电：8333 EU/tick（10M EU / 20分钟 = 24000 ticks）
- * - 要求全套量子护甲
  * - 快捷键：Alt + F
  *
  * ## 能量消耗
@@ -134,6 +133,6 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
         tooltip.add(Text.literal("飞行: ").append(
             Text.translatable(if (flightEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
         ).append(Text.literal(" | 剩余: $timeText")).formatted(Formatting.GRAY))
-        tooltip.add(Text.literal("减伤: 44% | 需全套量子护甲").formatted(Formatting.GRAY))
+        tooltip.add(Text.literal("减伤: 44%").formatted(Formatting.GRAY))
     }
 }

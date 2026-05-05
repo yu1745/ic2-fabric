@@ -11,6 +11,8 @@ import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.NanoHelmet
 import ic2_120.content.item.armor.QuantumChestplate
 import ic2_120.content.item.armor.QuantumHelmet
+import ic2_120.content.item.armor.QuantumLeggings
+import ic2_120.content.item.armor.QuantumBoots
 import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.networking.v1.PacketSender
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
@@ -34,6 +36,8 @@ object NetworkManager {
     val TOGGLE_JETPACK_FLIGHT_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_jetpack_flight")
     val TOGGLE_FOAM_SPRAYER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
     val TOGGLE_MINING_LASER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
+    val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
+    val TOGGLE_QUANTUM_BOOTS_JUMP_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_boots_jump")
 
     fun register() {
         // 注册服务端接收处理器（如果需要）
@@ -96,6 +100,34 @@ object NetworkManager {
                     val enabled = QuantumChestplate.toggleFlight(stack)
                     player.sendMessage(Text.translatable(
                         if (enabled) "message.ic2_120.quantum_chestplate.flight_on" else "message.ic2_120.quantum_chestplate.flight_off"
+                    ), true)
+                }
+            }
+        }
+
+        ServerPlayNetworking.registerGlobalReceiver(TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET) { server, player, _, _, _ ->
+            server.execute {
+                val stack = player.getEquippedStack(EquipmentSlot.LEGS)
+                if (stack.item is QuantumLeggings) {
+                    val tier = QuantumLeggings.cycleSpeedTier(stack)
+                    player.sendMessage(Text.translatable(
+                        when (tier) {
+                            1 -> "message.ic2_120.quantum_leggings.speed_tier1"
+                            2 -> "message.ic2_120.quantum_leggings.speed_tier2"
+                            else -> "message.ic2_120.quantum_leggings.speed_off"
+                        }
+                    ), true)
+                }
+            }
+        }
+
+        ServerPlayNetworking.registerGlobalReceiver(TOGGLE_QUANTUM_BOOTS_JUMP_PACKET) { server, player, _, _, _ ->
+            server.execute {
+                val stack = player.getEquippedStack(EquipmentSlot.FEET)
+                if (stack.item is QuantumBoots) {
+                    val enabled = QuantumBoots.toggleSuperJump(stack)
+                    player.sendMessage(Text.translatable(
+                        if (enabled) "message.ic2_120.quantum_boots.jump_on" else "message.ic2_120.quantum_boots.jump_off"
                     ), true)
                 }
             }

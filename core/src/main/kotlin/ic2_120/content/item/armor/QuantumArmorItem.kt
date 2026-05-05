@@ -32,9 +32,9 @@ import net.minecraft.item.ArmorMaterial
  * ## 特殊功能
  *
  * - **头盔**：夜视、水下呼吸、补充饱食度；全套时：消除 debuff
- * - **胸甲**：飞行（需全套量子护甲）
- * - **护腿**：（待实现）3 倍奔跑速度
- * - **靴子**：（待实现）超级跳
+ * - **胸甲**：飞行
+ * - **护腿**：神行（Alt+L 三档加速）
+ * - **靴子**：大跳（Alt+J 超级跳，落地免伤）
  */
 abstract class QuantumArmorItem(
     material: ArmorMaterial,

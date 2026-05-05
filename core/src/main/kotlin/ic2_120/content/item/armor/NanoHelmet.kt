@@ -37,7 +37,7 @@ import java.util.function.Consumer
  *
  * - 载电量：1,000,000 EU（1 MEU）
  * - 能量等级：3
- * - 减伤比例：15%
+ * - 减伤比例：11.54%
  *
  * ## 夜视功能
  *
