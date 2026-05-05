@@ -3,7 +3,8 @@ package ic2_120.content.block.machines
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.TeleporterBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
-import ic2_120.content.pullEnergyFromNeighbors
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
+import team.reborn.energy.api.EnergyStorage
 import ic2_120.content.screen.TeleporterScreenHandler
 import ic2_120.content.sync.TeleporterSync
 import ic2_120.content.syncs.SyncedData
@@ -76,6 +77,13 @@ class TeleporterBlockEntity(
     override var energyMultiplier: Float = 1f
     override var capacityBonus: Long = 0L
     override var voltageTierBonus: Int = 0
+
+    private val batteryDischarger = BatteryDischargerComponent(
+        inventory = this,
+        batterySlot = SLOT_DISCHARGING,
+        machineTierProvider = { TELEPORTER_TIER },
+        canDischargeNow = { sync.amount < sync.getEffectiveCapacity() }
+    )
 
     companion object {
         const val TELEPORTER_TIER = 4
@@ -159,13 +167,6 @@ class TeleporterBlockEntity(
         private set
     var clientChargingEntityId: Int = -1
         private set
-
-    private val batteryDischarger = BatteryDischargerComponent(
-        inventory = this,
-        batterySlot = SLOT_DISCHARGING,
-        machineTierProvider = { TELEPORTER_TIER },
-        canDischargeNow = { sync.amount < sync.getEffectiveCapacity() }
-    )
 
     constructor(pos: BlockPos, state: BlockState) : this(
         TeleporterBlockEntity::class.type(),
@@ -289,16 +290,9 @@ class TeleporterBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
-        sync.energy = sync.amount.toInt().coerceAtLeast(0)
         sync.teleportRange = teleportRange
 
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
-        EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
-        TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
-        sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
-
-        pullEnergyFromNeighbors(world, pos, sync)
-        extractFromDischargingSlot()
 
         if (teleportCooldown > 0) {
             teleportCooldown--
@@ -368,22 +362,16 @@ class TeleporterBlockEntity(
         val distance = sqrt(pos.getSquaredDistance(target).toDouble()).toLong().coerceAtLeast(1L)
         val weight = computeWeight(entity).coerceAtMost(5100)
         val energyNeed = computeEnergyNeed(weight, distance)
-        if (sync.amount < energyNeed) {
-            clearCharging()
-            setActiveState(world, pos, state, false)
-            endTick(world, pos)
-            return
-        }
 
         startCharging(entity, target, energyNeed, distance)
         setActiveState(world, pos, state, true)
         endTick(world, pos)
     }
 
-    private fun hasAdjacentMfeOrMfsu(world: World, pos: BlockPos): Boolean {
+    fun hasAdjacentMfeOrMfsu(world: World, pos: BlockPos): Boolean {
         for (dir in Direction.entries) {
             val id = Registries.BLOCK.getId(world.getBlockState(pos.offset(dir)).block)
-            if (id.namespace == "ic2_120" && (id.path == "mfe" || id.path == "mfsu")) return true
+            if (id.namespace == "ic2_120" && (id.path == "mfe" || id.path == "mfsu" || id.path == "mfe_chargepad" || id.path == "mfsu_chargepad")) return true
         }
         return false
     }
@@ -426,6 +414,7 @@ class TeleporterBlockEntity(
         sync.charging = 1
         sync.chargeProgress = 0
         sync.chargeMax = chargeTicksMax
+        world?.playSound(null, pos, TELEPORTER_CHARGE_SOUND, SoundCategory.BLOCKS, 0.8f, 1.0f)
         markDirty()
     }
 
@@ -478,13 +467,22 @@ class TeleporterBlockEntity(
         val destY = target.y + 1.02
         val destZ = target.z + 0.5
 
-        if (sync.amount < chargingEnergyNeed || !canTeleportTo(serverWorld, entity, destX, destY, destZ)) {
+        if (!canTeleportTo(serverWorld, entity, destX, destY, destZ)) {
             clearCharging()
             return false
         }
 
-        if (sync.consumeEnergy(chargingEnergyNeed) > 0L) {
-            sync.energy = sync.amount.toInt().coerceAtLeast(0)
+        // 通过事务从相邻 MFE/MFSU 一次性抽取能量
+        var success = false
+        Transaction.openOuter().use { tx ->
+            val extracted = extractFromAdjacentMfe(serverWorld, pos, chargingEnergyNeed, tx)
+            if (extracted >= chargingEnergyNeed) {
+                tx.commit()
+                success = true
+            }
+        }
+
+        if (success) {
             teleportEntity(entity, destX, destY, destZ)
             serverWorld.playSound(null, pos, TELEPORTER_USE_SOUND, SoundCategory.BLOCKS, 1.0f, 1.0f)
 
@@ -504,7 +502,8 @@ class TeleporterBlockEntity(
         return false
     }
 
-    private fun isCharging(): Boolean = chargingEntityUuid != null && chargingTargetPos != null && chargeTicksMax > 0
+    fun isCharging(): Boolean = chargingEntityUuid != null && chargingTargetPos != null && chargeTicksMax > 0
+    fun getTeleportCooldown(): Int = teleportCooldown
 
     private fun clearCharging() {
         chargingEntityUuid = null
@@ -522,7 +521,7 @@ class TeleporterBlockEntity(
         ic2_120.content.network.NetworkManager.sendTeleporterVisualStateToNearby(world, pos, this)
     }
 
-    private fun getActivationBox(pos: BlockPos): Box {
+    fun getActivationBox(pos: BlockPos): Box {
         val side = teleportRange.toDouble().coerceIn(TELEPORT_RANGE_MIN.toDouble(), TELEPORT_RANGE_MAX.toDouble())
         val half = side / 2.0
         val centerX = pos.x + 0.5
@@ -563,20 +562,51 @@ class TeleporterBlockEntity(
         return world.isSpaceEmpty(entity, offset)
     }
 
+    /**
+     * 从事务中从相邻 MFE/MFSU/充电座抽取能量。
+     * 若最终事务未 commit（如能量不足），抽取自动退还。
+     */
+    private fun extractFromAdjacentMfe(world: World, pos: BlockPos, amount: Long, tx: Transaction): Long {
+        var remaining = amount
+        for (dir in Direction.entries) {
+            if (remaining <= 0) break
+            val neighborPos = pos.offset(dir)
+            val id = Registries.BLOCK.getId(world.getBlockState(neighborPos).block)
+            if (id.namespace != "ic2_120" ||
+                (id.path != "mfe" && id.path != "mfsu" && id.path != "mfe_chargepad" && id.path != "mfsu_chargepad")) continue
+            val source = EnergyStorage.SIDED.find(world, neighborPos, dir.opposite)
+                ?: EnergyStorage.SIDED.find(world, neighborPos, null)
+                ?: continue
+            if (!source.supportsExtraction()) continue
+            remaining -= source.extract(remaining, tx)
+        }
+        return amount - remaining
+    }
+
+    /**
+     * 模拟查询相邻 MFE/MFSU/充电座当前可提供的总能量（用于 Jade 显示）。
+     */
+    fun simulateAdjacentMfeEnergy(world: World, pos: BlockPos): Long {
+        var total = 0L
+        for (dir in Direction.entries) {
+            val neighborPos = pos.offset(dir)
+            val id = Registries.BLOCK.getId(world.getBlockState(neighborPos).block)
+            if (id.namespace != "ic2_120" ||
+                (id.path != "mfe" && id.path != "mfsu" && id.path != "mfe_chargepad" && id.path != "mfsu_chargepad")) continue
+            val source = EnergyStorage.SIDED.find(world, neighborPos, dir.opposite)
+                ?: EnergyStorage.SIDED.find(world, neighborPos, null)
+                ?: continue
+            if (!source.supportsExtraction()) continue
+            Transaction.openOuter().use { tx ->
+                total += source.extract(Long.MAX_VALUE, tx)
+            }
+        }
+        return total
+    }
+
     private fun teleportEntity(entity: Entity, x: Double, y: Double, z: Double) {
         entity.requestTeleport(x, y, z)
         entity.velocity = Vec3d.ZERO
         entity.velocityModified = true
-    }
-
-    private fun extractFromDischargingSlot() {
-        val space = (sync.getEffectiveCapacity() - sync.amount).coerceAtLeast(0L)
-        if (space <= 0L) return
-        val request = minOf(space, TransformerUpgradeComponent.maxInsertForTier(TELEPORTER_TIER + voltageTierBonus))
-        val extracted = batteryDischarger.tick(request)
-        if (extracted <= 0L) return
-        sync.insertEnergy(extracted)
-        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
     }
 }

@@ -753,6 +753,17 @@ abstract class ElectricMiningDrillItem(
     protected fun hasEnoughEnergyForMining(stack: ItemStack): Boolean =
         getEnergy(stack) >= getEnergyCostPerBlock(stack)
 
+    override fun getMiningSpeed(stack: ItemStack, state: BlockState): Float {
+        if (!hasEnoughEnergyForMining(stack)) return 1.0f
+        val tool = miningToolFactory()
+        return tool.item.getMiningSpeed(tool, state)
+    }
+
+    override fun isCorrectForDrops(stack: ItemStack, state: BlockState): Boolean {
+        val tool = miningToolFactory()
+        return tool.item.isCorrectForDrops(tool, state)
+    }
+
     override fun postMine(
         stack: ItemStack,
         world: World,
