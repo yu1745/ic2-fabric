@@ -44,6 +44,8 @@ import ic2_120.registry.annotation.RecipeProvider
 @ModBlock(name = "iron_furnace", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
 class IronFurnaceBlock : MachineBlock() {
 
+    override fun getCasingDrop() = asItem()
+
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         IronFurnaceBlockEntity(pos, state)
 
