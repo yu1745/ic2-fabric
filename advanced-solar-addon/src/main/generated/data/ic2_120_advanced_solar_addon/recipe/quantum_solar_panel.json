@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "Q": {
+      "item": "ic2_120_advanced_solar_addon:quantum_core"
+    },
+    "U": {
+      "item": "ic2_120_advanced_solar_addon:ultimate_solar_panel"
+    }
+  },
+  "pattern": [
+    "UUU",
+    "UQU",
+    "UUU"
+  ],
+  "result": {
+    "count": 1,
+    "id": "ic2_120_advanced_solar_addon:quantum_solar_panel"
+  }
+}
