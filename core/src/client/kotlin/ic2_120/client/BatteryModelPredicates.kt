@@ -2,6 +2,7 @@ package ic2_120.client
 
 import ic2_120.content.item.NanoSaber
 import ic2_120.content.item.RecallScrollItem
+import ic2_120.getCustomData
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.Ic2_120
 import net.minecraft.client.item.ModelPredicateProviderRegistry
@@ -71,13 +72,13 @@ object BatteryModelPredicates {
     }
 
     private fun registerRecallScrollPredicate() {
-        val scroll = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "recall_scroll"))
+        val scroll = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "recall_scroll"))
         if (scroll !is RecallScrollItem) return
         ModelPredicateProviderRegistry.register(
             scroll,
             SCROLL_BOUND_ID
         ) { stack: ItemStack, _, _, _ ->
-            if (stack.nbt?.getBoolean(NBT_HAS_BIND) == true) 1.0f else 0.0f
+            if (stack.getCustomData()?.getBoolean("HasBind") == true) 1.0f else 0.0f
         }
     }
 }

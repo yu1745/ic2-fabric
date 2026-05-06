@@ -20,7 +20,9 @@ import net.minecraft.text.Text
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
-import net.minecraft.server.world.ServerWorld (feat: 半流体发电机燃料颜色网络同步 + 流体颜色注册表)
+import net.minecraft.server.world.ServerWorld
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 
 object NetworkManager {
     fun register() {
@@ -224,16 +226,15 @@ object NetworkManager {
         PayloadTypeRegistry.playS2C().register(ScannerResultPacket.ID, ScannerResultPacket.CODEC)
         PayloadTypeRegistry.playS2C().register(TeleporterVisualStatePacket.ID, TeleporterVisualStatePacket.CODEC)
         PayloadTypeRegistry.playS2C().register(ConfigSyncPacket.ID, ConfigSyncPacket.CODEC)
+        PayloadTypeRegistry.playS2C().register(SemifluidGeneratorFuelStatePacket.ID, SemifluidGeneratorFuelStatePacket.CODEC)
     }
 
     fun sendSemifluidGeneratorFuelState(world: ServerWorld, pos: BlockPos, fuelColorArgb: Int) {
         val packet = SemifluidGeneratorFuelStatePacket(pos, fuelColorArgb)
         for (player in world.players) {
             if (player.squaredDistanceTo(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
-                val buf = PacketByteBuf(Unpooled.buffer())
-                SemifluidGeneratorFuelStatePacket.write(packet, buf)
-                ServerPlayNetworking.send(player, SemifluidGeneratorFuelStatePacket.ID, buf)
+                ServerPlayNetworking.send(player, packet)
             }
         }
-    } (feat: 半流体发电机燃料颜色网络同步 + 流体颜色注册表)
+    }
 }

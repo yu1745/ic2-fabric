@@ -12,9 +12,6 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
-import net.minecraft.client.item.TooltipContext
-import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
@@ -30,13 +27,17 @@ import net.minecraft.util.TypedActionResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
-import java.util.function.Consumer
+
+import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.item.tooltip.TooltipType
+import ic2_120.getCustomData
+import ic2_120.editCustomData
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 @ModItem(name = "recall_scroll", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class RecallScrollItem : Item(FabricItemSettings().maxCount(1)) {
+class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
     companion object {
         private const val NBT_BIND_X = "BindX"
         private const val NBT_BIND_Y = "BindY"
@@ -45,7 +46,7 @@ class RecallScrollItem : Item(FabricItemSettings().maxCount(1)) {
         private const val NBT_HAS_BIND = "HasBind"
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val teleporter = TeleporterBlock::class.item()
             val paper = Items.PAPER
             val advancedCircuit = AdvancedCircuit::class.instance()
@@ -76,14 +77,15 @@ class RecallScrollItem : Item(FabricItemSettings().maxCount(1)) {
         if (state.block !is TeleporterBlock) return ActionResult.PASS
         if (player == null) return ActionResult.SUCCESS
 
-        val nbt = stack.orCreateNbt
         val dim = world.registryKey.value.toString()
 
-        nbt.putBoolean(NBT_HAS_BIND, true)
-        nbt.putInt(NBT_BIND_X, pos.x)
-        nbt.putInt(NBT_BIND_Y, pos.y)
-        nbt.putInt(NBT_BIND_Z, pos.z)
-        nbt.putString(NBT_BIND_DIM, dim)
+        stack.editCustomData { nbt ->
+            nbt.putBoolean(NBT_HAS_BIND, true)
+            nbt.putInt(NBT_BIND_X, pos.x)
+            nbt.putInt(NBT_BIND_Y, pos.y)
+            nbt.putInt(NBT_BIND_Z, pos.z)
+            nbt.putString(NBT_BIND_DIM, dim)
+        }
         if (!world.isClient) {
             player.sendMessage(Text.literal("已绑定传送机: ${pos.x}, ${pos.y}, ${pos.z}"), true)
         }
@@ -96,14 +98,14 @@ class RecallScrollItem : Item(FabricItemSettings().maxCount(1)) {
         val stack = player.getStackInHand(hand)
         if (world.isClient) return TypedActionResult.success(stack)
 
-        val nbt = stack.orCreateNbt
-        if (!nbt.getBoolean(NBT_HAS_BIND)) {
+        val nbt = stack.getCustomData()
+        if (nbt == null || !nbt.getBoolean(NBT_HAS_BIND)) {
             player.sendMessage(Text.literal("请先绑定传送机。"), true)
             return TypedActionResult.fail(stack)
         }
 
         val dim = world.registryKey.value.toString()
-        val bindDim = nbt.getString(NBT_BIND_DIM)
+        val bindDim = nbt.getString(NBT_BIND_DIM) ?: "" 
         if (bindDim != dim) {
             player.sendMessage(Text.literal("维度不一致，无法传送。"), true)
             return TypedActionResult.fail(stack)
@@ -161,13 +163,13 @@ class RecallScrollItem : Item(FabricItemSettings().maxCount(1)) {
 
     override fun appendTooltip(
         stack: ItemStack,
-        world: World?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Text>,
-        context: TooltipContext
+        type: TooltipType
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
 
-        val nbt = stack.nbt
+        val nbt = stack.getCustomData()
         if (nbt != null && nbt.getBoolean(NBT_HAS_BIND)) {
             val x = nbt.getInt(NBT_BIND_X)
             val y = nbt.getInt(NBT_BIND_Y)

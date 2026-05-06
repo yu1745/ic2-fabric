@@ -82,7 +82,6 @@
     "ic2_120:advanced_machine",
     "ic2_120:magnetizer",
     "ic2_120:manual_kinetic_generator",
-    "ic2_120:matter_generator",
     "ic2_120:tin_block",
     "ic2_120:bronze_block",
     "ic2_120:raw_lead_block",
@@ -132,7 +131,6 @@
     "ic2_120:solid_canner",
     "ic2_120:solid_heat_generator",
     "ic2_120:stirling_generator",
-    "ic2_120:teleporter",
     "ic2_120:tesla_coil",
     "ic2_120:lv_transformer",
     "ic2_120:mv_transformer",
@@ -184,6 +182,8 @@
     "ic2_120:iron_transmission_shaft",
     "ic2_120:steel_transmission_shaft",
     "ic2_120:carbon_transmission_shaft",
-    "ic2_120:bevel_gear"
+    "ic2_120:bevel_gear",
+    "ic2_120:matter_generator",
+    "ic2_120:teleporter"
   ]
 }

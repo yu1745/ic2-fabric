@@ -45,7 +45,7 @@ private val defaultRecipes = listOf(
         energy = 250000000
     ),
     MolecularTransformerRecipeConfig(
-        input = "ic2_120:iridium_ore_item",
+        input = "minecraft:iron_ingot",
         output = "ic2_120_advanced_solar_addon:iridium_ingot",
         energy = 9000000
     ),
@@ -55,19 +55,9 @@ private val defaultRecipes = listOf(
         energy = 9000000
     ),
     MolecularTransformerRecipeConfig(
-        input = "ic2_120_advanced_solar_addon:fluorite",
-        output = "ic2_120_advanced_solar_addon:sunnarium",
-        energy = 9000000
-    ),
-    MolecularTransformerRecipeConfig(
         input = "minecraft:glowstone",
         output = "ic2_120_advanced_solar_addon:sunnarium",
         energy = 9000000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "ic2_120_advanced_solar_addon:fluorite_dust",
-        output = "ic2_120_advanced_solar_addon:sunnarium_part",
-        energy = 1000000
     ),
     MolecularTransformerRecipeConfig(
         input = "minecraft:glowstone_dust",

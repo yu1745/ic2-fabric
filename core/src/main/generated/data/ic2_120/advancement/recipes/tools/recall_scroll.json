@@ -5,9 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "ic2_120:advanced_circuit"
-            ]
+            "items": "ic2_120:advanced_circuit"
           }
         ]
       },
@@ -22,14 +20,13 @@
   },
   "requirements": [
     [
-      "has_advanced_circuit",
-      "has_the_recipe"
+      "has_the_recipe",
+      "has_advanced_circuit"
     ]
   ],
   "rewards": {
     "recipes": [
       "ic2_120:recall_scroll"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }

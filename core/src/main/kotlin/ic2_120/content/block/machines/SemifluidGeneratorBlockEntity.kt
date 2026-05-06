@@ -49,8 +49,10 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 import ic2_120.content.network.NetworkManager
-import ic2_120.content.network.SemifluidGeneratorFuelStatePacket (feat: 半流体发电机燃料颜色网络同步 + 流体颜色注册表)
+import ic2_120.content.network.SemifluidGeneratorFuelStatePacket
 
 @ModBlockEntity(block = SemifluidGeneratorBlock::class)
 class SemifluidGeneratorBlockEntity(
