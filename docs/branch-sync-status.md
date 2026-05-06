@@ -1,6 +1,6 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-05-06
+最后更新：2026-05-07
 
 分叉点：`c5e247c`
 
@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **50 个 commit**，**46 个已同步，4 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **52 个 commit**，**52 个已同步，0 个待同步**。
 
 ## 逐 commit 状态
 
@@ -60,10 +60,12 @@
 | 44 | `2595b3f0` | fix: datagen 使用 modid 过滤避免附属触发本体缓存冲突 | ✅ | cherry-pick + datagen 刷新 |
 | 45 | `cc03769b` | fix: 传送机移除内部缓存改为直接抽取相邻MFE，新增Jade诊断面板 | ✅ | cherry-pick + 适配 1.21.1 API（冲突解决）+ datagen 刷新 |
 | 46 | `1be61024` | fix: 传送机移除能量条，绕过MFE单tick上限直接抽电，能量不足不渲染BER | ✅ | cherry-pick + 移除旧 cherry-pick（冲突 branc-sync-status.md）+ datagen 刷新 |
-| 47 | `1656996e` | fix: 修正量子/纳米护甲减伤值为IC2经典值，工具提示改为可翻译文本 | ❌ |
-| 48 | `4b692f98` | feat: 添加 explodeWhenNoEnergyFlow 配置项，无能量时不触发超压爆炸 | ❌ |
-| 49 | `b708df3e` | feat: 半流体发电机燃料颜色网络同步 + 流体颜色注册表 | ❌ | |
-| 50 | `0d23511f` | feat: 物质生成机移除超频支持，消耗速度按可用能量比例无上限 | ❌ | |
+| 47 | `1656996e` | fix: 修正量子/纳米护甲减伤值为IC2经典值，工具提示改为可翻译文本 | ✅ | cherry-pick + 适配 1.21.1 appendTooltip 签名 |
+| 48 | `4b692f98` | feat: 添加 explodeWhenNoEnergyFlow 配置项，无能量时不触发超压爆炸 | ✅ | 无冲突直接 cherry-pick |
+| 49 | `b708df3e` | feat: 半流体发电机燃料颜色网络同步 + 流体颜色注册表 | ✅ | cherry-pick + 适配 1.21.1 Payload 网络 |
+| 50 | `0d23511f` | feat: 物质生成机移除超频支持，消耗速度按可用能量比例无上限 | ✅ | cherry-pick + 1.21.1 API 适配（ExtendedScreenHandlerFactory 泛型）|
+| 51 | `cedc65d1` | feat: 传送卷轴+传送机玩家文档+NBT动态模型切换 | ✅ | cherry-pick + 适配 1.21.1（DataComponent NBT、TooltipType、Identifier.of、RecipeExporter）|
+| 52 | `8f064e2d` | fix: 泡沫枪独立键位，不与 M 键及其他装备冲突 | ✅ | cherry-pick + 适配 1.21.1 Payload 网络 |
 
 ## 同步历史
 
@@ -89,3 +91,4 @@
 - 2026-05-03：提交 commit 36 到 main——拴绳动能发生机合成配方从 1×2 改为 3×3（中间机械外壳+上方拴绳），cherry-pick 到 1.21.1 + datagen 刷新，同步完成
 - 2026-05-05：同步 commits 39-43——配方删除、铁炉/焦窑防刷、储罐防刷流体、量子护腿神行+量子靴子大跳+胸甲飞行修复、JEI 缺失保护，适配 1.21.1 Payload 网络/DataComponent NBT/appendTooltip 签名
 - 2026-05-05：同步 commit 44——datagen 改用 `fabric-api.datagen.modid` 过滤，附属运行 datagen 不再触发本体 entrypoint；同时运行附属 datagen 首次生成高级太阳能合成表 JSON；移除本体已废弃的 `skip.ic2_120.datagen` 代码
+- 2026-05-06：批量同步 commits 47-52——护甲减伤/explodeWhenNoEnergyFlow/半流体燃料颜色同步/物质生成机移除超频/传送卷轴/泡沫枪独立键位，适配 1.21.1 API（DataComponent NBT、CustomPayload 网络、TooltipType、Identifier.of、RecipeExporter）+ datagen 刷新
