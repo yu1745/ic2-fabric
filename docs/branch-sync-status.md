@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **54 个 commit**，**53 个已同步，1 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **54 个 commit**，**54 个已同步，0 个待同步**。
 
 ## 逐 commit 状态
 
@@ -67,7 +67,7 @@
 | 51 | `cedc65d1` | feat: 传送卷轴+传送机玩家文档+NBT动态模型切换 | ✅ | cherry-pick + 适配 1.21.1（DataComponent NBT、TooltipType、Identifier.of、RecipeExporter）|
 | 52 | `8f064e2d` | fix: 泡沫枪独立键位，不与 M 键及其他装备冲突 | ✅ | cherry-pick + 适配 1.21.1 Payload 网络 |
 | 53 | `e303132b` | refactor: 提取公共 config sync 分包组包/发送逻辑到 core，消除附属重复代码 | ✅ | cherry-pick + 适配 1.21.1 CustomPayload API（保留 AddonConfigSyncPacket），main 的 ConfigSyncHelper 不适用于 1.21.1 已移除 |
-| 54 | `dc4425d2` | fix: 采矿镭射枪散射模式改为平行散布，修复弹体/BER渲染距离限制 | ❌ |
+| 54 | `dc4425d2` | fix: 采矿镭射枪散射模式改为平行散布，修复弹体/BER渲染距离限制 | ✅ | cherry-pick + 适配 1.21.1 API（`canUsePortals(allowVehicles)`），BER 自动合并 |
 
 ## 同步历史
 
