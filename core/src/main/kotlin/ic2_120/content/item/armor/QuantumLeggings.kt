@@ -182,11 +182,12 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
         }
 
         val tierText = when (tier) {
-            1 -> "1档"
-            2 -> "2档"
-            else -> "关"
+            1 -> Text.translatable("tooltip.ic2_120.armor.speed_tier.1")
+            2 -> Text.translatable("tooltip.ic2_120.armor.speed_tier.2")
+            else -> Text.translatable("tooltip.ic2_120.armor.speed_tier.off")
         }
-        tooltip.add(Text.literal("神行: $tierText | 剩余: $timeText").formatted(Formatting.GRAY))
-        tooltip.add(Text.literal("减伤: 30%").formatted(Formatting.GRAY))
+        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_leggings.speed", tierText, timeText).formatted(Formatting.GRAY))
+        val pct = "%.0f".format(getDamageReduction() * 100)
+        tooltip.add(Text.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(Formatting.GRAY))
     }
 }

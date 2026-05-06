@@ -248,10 +248,12 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
             "${remainingSeconds.toInt()}秒"
         }
 
-        tooltip.add(Text.literal("夜视: ").append(
-            Text.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
-        ).append(Text.literal(" | 剩余: $timeText")).formatted(Formatting.GRAY))
-        tooltip.add(Text.literal("减伤: 15% | 水下呼吸 | 夜视 | 饱食不满自动吃满锡罐").formatted(Formatting.GRAY))
-        tooltip.add(Text.literal("全套时: 消除debuff").formatted(Formatting.GRAY))
+        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_helmet.night_vision",
+            Text.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off"),
+            timeText
+        ).formatted(Formatting.GRAY))
+        val pct = "%.0f".format(getDamageReduction() * 100)
+        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_helmet.features", pct).formatted(Formatting.GRAY))
+        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_helmet.full_set").formatted(Formatting.GRAY))
     }
 }

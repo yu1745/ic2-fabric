@@ -32,7 +32,7 @@ import net.minecraft.util.Formatting
  *
  * - 载电量：10,000,000 EU（10 MEU）
  * - 能量等级：4
- * - 减伤比例：11%
+ * - 减伤比例：10%
  *
  * ## 大跳功能
  *
@@ -132,9 +132,11 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
         val energy = getEnergy(stack)
         val jumpCount = if (jumpEnergyCost > 0) energy / jumpEnergyCost else 0L
 
-        tooltip.add(Text.literal("大跳: ").append(
-            Text.translatable(if (jumpEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
-        ).append(Text.literal(" | 剩余: ${jumpCount}次")).formatted(Formatting.GRAY))
-        tooltip.add(Text.literal("减伤: 11% | 落地免伤").formatted(Formatting.GRAY))
+                tooltip.add(Text.translatable("tooltip.ic2_120.quantum_boots.jump",
+            Text.translatable(if (jumpEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off"),
+            jumpCount
+        ).formatted(Formatting.GRAY))
+        val pct = "%.0f".format(getDamageReduction() * 100)
+        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_boots.damage_reduction", pct).formatted(Formatting.GRAY))
     }
 }

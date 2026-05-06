@@ -28,7 +28,7 @@ import net.minecraft.util.Formatting
  *
  * - 载电量：1,000,000 EU（1 MEU）
  * - 能量等级：3
- * - 减伤比例：11.54%
+ * - 减伤比例：8%    （量子 10% × 0.8）
  *
  * ## 能量消耗
  *
@@ -60,6 +60,7 @@ class NanoBoots : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.BOO
 
     override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Text>, type: TooltipType) {
         super.appendTooltip(stack, context, tooltip, type)
-        tooltip.add(Text.literal("减伤: 11.54%").formatted(Formatting.GRAY))
+        val pct = "%.2f".format(getDamageReduction() * 100).trimEnd('0').trimEnd('.')
+        tooltip.add(Text.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(Formatting.GRAY))
     }
 }
