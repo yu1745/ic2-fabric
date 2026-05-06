@@ -248,4 +248,6 @@ class WindKineticGeneratorBlockEntityRenderer(
     }
 
     override fun rendersOutsideBoundingBox(blockEntity: WindKineticGeneratorBlockEntity): Boolean = true
+
+    override fun getRenderDistance(): Int = 256
 }

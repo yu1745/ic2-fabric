@@ -226,4 +226,6 @@ class WaterKineticGeneratorBlockEntityRenderer(
     }
 
     override fun rendersOutsideBoundingBox(blockEntity: WaterKineticGeneratorBlockEntity): Boolean = true
+
+    override fun getRenderDistance(): Int = 256
 }

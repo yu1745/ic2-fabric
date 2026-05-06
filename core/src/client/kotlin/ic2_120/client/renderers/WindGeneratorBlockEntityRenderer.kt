@@ -177,4 +177,6 @@ class WindGeneratorBlockEntityRenderer(
     }
 
     override fun rendersOutsideBoundingBox(blockEntity: WindGeneratorBlockEntity): Boolean = true
+
+    override fun getRenderDistance(): Int = 256
 }
