@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **46 个 commit**，**46 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **47 个 commit**，**46 个已同步，1 个待同步**。
 
 ## 逐 commit 状态
 
@@ -60,6 +60,7 @@
 | 44 | `2595b3f0` | fix: datagen 使用 modid 过滤避免附属触发本体缓存冲突 | ✅ | cherry-pick + datagen 刷新 |
 | 45 | `cc03769b` | fix: 传送机移除内部缓存改为直接抽取相邻MFE，新增Jade诊断面板 | ✅ | cherry-pick + 适配 1.21.1 API（冲突解决）+ datagen 刷新 |
 | 46 | `1be61024` | fix: 传送机移除能量条，绕过MFE单tick上限直接抽电，能量不足不渲染BER | ✅ | cherry-pick + 移除旧 cherry-pick（冲突 branc-sync-status.md）+ datagen 刷新 |
+| 47 | `1656996e` | fix: 修正量子/纳米护甲减伤值为IC2经典值，工具提示改为可翻译文本 | ❌ | |
 
 ## 同步历史
 
