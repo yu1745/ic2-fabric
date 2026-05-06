@@ -62,6 +62,12 @@
 | [MFSU](storage.md) | storage.md#mfsu | 40,000,000 EU | 2048 EU/t |
 | [变压器](transformer.md) | transformer.md | - | 电压转换 |
 
+## 传送
+
+| 机器 | 文件 | 功能 |
+|------|------|------|
+| [传送机](teleporter.md) | teleporter.md | 实体传送 |
+
 ---
 
 ## 相关文档
