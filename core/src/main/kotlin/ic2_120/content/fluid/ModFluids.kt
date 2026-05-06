@@ -123,19 +123,25 @@ object ModFluids {
     lateinit var CREOSOTE_BLOCK: Block
     lateinit var CREOSOTE_BUCKET: Item
 
+    /** 服务端安全的流体 → ARGB 颜色映射。注册时附带颜色，避免硬编码 if-else。 */
+    private val fluidTintColors = mutableMapOf<Fluid, Int>()
+
+    /** 获取流体的 ARGB 颜色，无记录则返回 null */
+    fun getFluidTintOrNull(fluid: Fluid): Int? = fluidTintColors[fluid]
+
     fun register() {
         registerFluid("coolant", "coolant", "coolant")
         registerFluid("hot_coolant", "hot_coolant", "hot_coolant")
         registerFluid("uu_matter", "uu_matter", "uu_matter")
         registerFluid("weed_ex", "weed_ex", "weed_ex")  // 仅 still，flow 用 still
         registerFluid("pahoehoe_lava", "pahoehoe_lava", "pahoehoe_lava")  // 仅 still，flow 用 still
-        registerFluid("biofuel", "biofuel", "biofuel")
-        registerFluid("biomass", "biomass", "biomass")
+        registerFluid("biofuel", "biofuel", "biofuel", tintArgb = 0xFF97CA00.toInt())
+        registerFluid("biomass", "biomass", "biomass", tintArgb = 0xFF476A3C.toInt())
         // 蒸馏水视觉复用原版水纹理
         registerFluid("distilled_water", "water_still", "water_flow")
         // 建筑泡沫：客户端渲染复用通用流体贴图 + 着色（见 ModFluidClient）
-        registerFluid("construction_foam", "fluid_still", "fluid_flow")
-        registerFluid("creosote", "fluid_still", "fluid_flow")
+        registerFluid("construction_foam", "fluid_still", "fluid_flow", tintArgb = 0xFFB4B4AF.toInt())
+        registerFluid("creosote", "fluid_still", "fluid_flow", tintArgb = 0xFF4E2D14.toInt())
 
         // 注册流体桶的玩家存储查找器，让 AE2 等模组能正确交互
         registerBucketPlayerStorage()
@@ -164,7 +170,7 @@ object ModFluids {
         }
     }
 
-    private fun registerFluid(name: String, stillTex: String, flowTex: String) {
+    private fun registerFluid(name: String, stillTex: String, flowTex: String, tintArgb: Int? = null) {
         val modId = Ic2_120.MOD_ID
 
         // 1. 注册 Still 和 Flowing 流体
@@ -178,6 +184,12 @@ object ModFluids {
             Identifier(modId, "flowing_$name"),
             Ic2Fluid.Flowing(name, stillTex, flowTex)
         )
+
+        // 存储 tint 颜色（服务端安全）
+        if (tintArgb != null) {
+            fluidTintColors[still] = tintArgb
+            fluidTintColors[flowing] = tintArgb
+        }
 
         // 2. 注册 FluidBlock
         val block = Registry.register(

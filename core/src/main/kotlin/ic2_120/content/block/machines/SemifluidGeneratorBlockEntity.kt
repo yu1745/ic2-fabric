@@ -47,6 +47,9 @@ import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import net.minecraft.server.world.ServerWorld
+import ic2_120.content.network.NetworkManager
+import ic2_120.content.network.SemifluidGeneratorFuelStatePacket
 
 @ModBlockEntity(block = SemifluidGeneratorBlock::class)
 class SemifluidGeneratorBlockEntity(
@@ -56,6 +59,11 @@ class SemifluidGeneratorBlockEntity(
 ) : MachineBlockEntity(type, pos, state), Inventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SemifluidGeneratorBlock.ACTIVE
+
+    /** 客户端：由网络包更新的燃料颜色 ARGB */
+    @Volatile
+    var clientFuelColorArgb: Int = 0xFFCC4400.toInt()
+    private var fuelColorDirty = true
 
     override var fluidPipeProviderEnabled: Boolean = false
     override var fluidPipeReceiverEnabled: Boolean = false
@@ -89,6 +97,14 @@ class SemifluidGeneratorBlockEntity(
             ModFluids.CREOSOTE_STILL to FuelProfile(euPerBucket = 3_200L, euPerTick = 8L),
             ModFluids.CREOSOTE_FLOWING to FuelProfile(euPerBucket = 3_200L, euPerTick = 8L)
         )
+
+        /** 从 ModFluids 注册的 tint 颜色映射取色；无匹配则返回默认橙 */
+        fun getFuelArgb(fluid: net.minecraft.fluid.Fluid?): Int {
+            return when (fluid) {
+                null -> 0xFFCC4400.toInt()
+                else -> ModFluids.getFluidTintOrNull(fluid) ?: 0xFFCC4400.toInt()
+            }
+        }
 
         @Volatile
         private var fluidLookupRegistered = false
@@ -149,6 +165,7 @@ class SemifluidGeneratorBlockEntity(
         override fun onFinalCommit() {
             sync.fuelAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
             sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) Registries.FLUID.getRawId(variant.fluid) else -1
+            fuelColorDirty = true
             markDirty()
         }
 
@@ -161,6 +178,7 @@ class SemifluidGeneratorBlockEntity(
             }
             sync.fuelAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
             sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) Registries.FLUID.getRawId(variant.fluid) else -1
+            fuelColorDirty = true
         }
 
         fun tryInsertFuel(fluid: net.minecraft.fluid.Fluid, toInsert: Long): Long {
@@ -173,6 +191,7 @@ class SemifluidGeneratorBlockEntity(
             if (variant.fluid != fluid) variant = FluidVariant.of(fluid)
             sync.fuelAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
             sync.fuelFluidRawId = Registries.FLUID.getRawId(variant.fluid)
+            fuelColorDirty = true
             return actual
         }
 
@@ -184,6 +203,7 @@ class SemifluidGeneratorBlockEntity(
             if (amount <= 0L) variant = FluidVariant.blank()
             sync.fuelAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
             sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) Registries.FLUID.getRawId(variant.fluid) else -1
+            fuelColorDirty = true
             return actual
         }
     }
@@ -311,7 +331,17 @@ class SemifluidGeneratorBlockEntity(
         }
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
 
+        // 燃料颜色变化时通过网络包同步到客户端
+        if (fuelColorDirty) {
+            fuelColorDirty = false
+            val color = getFuelArgb(if (fuelTankInternal.amount > 0L) fuelTankInternal.variant.fluid else null)
+            NetworkManager.sendSemifluidGeneratorFuelState(world as ServerWorld, pos, color)
+        }
+
         val fuelStack = getStack(FUEL_SLOT)
+        // 油箱剩余空间不足 1 桶时跳过燃料处理，防止燃料单元被部分抽入后永不消耗（无限燃料 bug）
+        val tankTotalCapacity = 8 * FluidConstants.BUCKET
+        if (fuelTankInternal.amount <= tankTotalCapacity - FluidConstants.BUCKET) {
         when {
             fuelStack.item == ModFluids.BIOFUEL_BUCKET -> {
                 val emptyBucket = ItemStack(Items.BUCKET)
@@ -360,6 +390,7 @@ class SemifluidGeneratorBlockEntity(
                         }
                     }
                 }
+            }
             }
         }
 

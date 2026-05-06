@@ -9,6 +9,7 @@ import ic2_120.content.network.ConfigSyncPacket
 import ic2_120.content.network.ConfigSyncReceiver
 import ic2_120.content.network.WindRotorStatePacket
 import ic2_120.content.network.WaterRotorStatePacket
+import ic2_120.content.network.SemifluidGeneratorFuelStatePacket
 
 import ic2_120.client.screen.ScannerScreen
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
@@ -24,6 +25,7 @@ object NetworkManager {
     private val SCANNER_RESULT_PACKET = ScannerResultPacket.ID
     private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
     private val CONFIG_SYNC_PACKET = ConfigSyncPacket.ID
+    private val SEMIFLUID_GENERATOR_FUEL_STATE_PACKET = SemifluidGeneratorFuelStatePacket.ID
 
     fun register() {
         // 注册客户端接收处理器
@@ -97,6 +99,16 @@ object NetworkManager {
             val packet = ConfigSyncPacket.read(buf)
             client.execute {
                 ConfigSyncReceiver.accept(packet)
+            }
+        }
+
+        ClientPlayNetworking.registerGlobalReceiver(SEMIFLUID_GENERATOR_FUEL_STATE_PACKET) { client, _, buf, _ ->
+            val packet = SemifluidGeneratorFuelStatePacket.read(buf)
+            client.execute {
+                val be = client.world?.getBlockEntity(packet.pos)
+                if (be is ic2_120.content.block.machines.SemifluidGeneratorBlockEntity) {
+                    be.clientFuelColorArgb = packet.fuelColorArgb
+                }
             }
         }
     }

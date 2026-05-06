@@ -22,6 +22,8 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
+import net.minecraft.server.world.ServerWorld
 
 object NetworkManager {
     private val REACTOR_HEAT_INFO_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_heat_info")
@@ -262,5 +264,15 @@ object NetworkManager {
         }
     }
 
-    
+    fun sendSemifluidGeneratorFuelState(world: ServerWorld, pos: BlockPos, fuelColorArgb: Int) {
+        val packet = SemifluidGeneratorFuelStatePacket(pos, fuelColorArgb)
+        for (player in world.players) {
+            if (player.squaredDistanceTo(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
+                val buf = PacketByteBuf(Unpooled.buffer())
+                SemifluidGeneratorFuelStatePacket.write(packet, buf)
+                ServerPlayNetworking.send(player, SemifluidGeneratorFuelStatePacket.ID, buf)
+            }
+        }
+    }
+
 }
