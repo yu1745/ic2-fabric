@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **52 个 commit**，**52 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **53 个 commit**，**52 个已同步，1 个待同步**。
 
 ## 逐 commit 状态
 
@@ -66,6 +66,7 @@
 | 50 | `0d23511f` | feat: 物质生成机移除超频支持，消耗速度按可用能量比例无上限 | ✅ | cherry-pick + 1.21.1 API 适配（ExtendedScreenHandlerFactory 泛型）|
 | 51 | `cedc65d1` | feat: 传送卷轴+传送机玩家文档+NBT动态模型切换 | ✅ | cherry-pick + 适配 1.21.1（DataComponent NBT、TooltipType、Identifier.of、RecipeExporter）|
 | 52 | `8f064e2d` | fix: 泡沫枪独立键位，不与 M 键及其他装备冲突 | ✅ | cherry-pick + 适配 1.21.1 Payload 网络 |
+| 53 | `e303132b` | refactor: 提取公共 config sync 分包组包/发送逻辑到 core，消除附属重复代码 | ❌ | 待同步到 1.21.1 |
 
 ## 同步历史
 
