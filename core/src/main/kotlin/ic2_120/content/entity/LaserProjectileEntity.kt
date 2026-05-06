@@ -77,7 +77,7 @@ class LaserProjectileEntity(
     /**
      * 从发射者位置和视角方向初始化弹射，指定模式。
      */
-    fun init(owner: Entity, pitch: Float, yaw: Float, laserMode: LaserMode) {
+    fun init(owner: Entity, pitch: Float, yaw: Float, laserMode: LaserMode, spreadOffset: Vec3d = Vec3d.ZERO) {
         setOwner(owner)
         mode = laserMode
         remainingRange = laserMode.range
@@ -85,7 +85,11 @@ class LaserProjectileEntity(
         val offsetX = -Math.sin(yaw.toDouble() * 0.017453292) * 0.1
         val offsetY = 0.1
         val offsetZ = Math.cos(yaw.toDouble() * 0.017453292) * 0.1
-        setPosition(owner.x + offsetX, owner.eyeY - offsetY, owner.z + offsetZ)
+        setPosition(
+            owner.x + offsetX + spreadOffset.x,
+            owner.eyeY - offsetY + spreadOffset.y,
+            owner.z + offsetZ + spreadOffset.z
+        )
 
         val radYaw = yaw.toDouble() * 0.017453292
         val radPitch = pitch.toDouble() * 0.017453292
@@ -338,4 +342,20 @@ class LaserProjectileEntity(
 
     override fun isCollidable(): Boolean = false
     override fun canUsePortals(allowVehicles: Boolean): Boolean = false
+
+    /**
+     * 覆盖渲染距离检查。
+     *
+     * 默认实现会将 render distance 乘以 bounding box 平均边长（~0.1），导致
+     * 射弹在约 10 格外就不可见。这里直接使用 256 格作为裁减距离。
+     */
+    override fun shouldRender(cameraX: Double, cameraY: Double, cameraZ: Double): Boolean {
+        // Entity.shouldRender(double,double,double) — cameraX/Y/Z 是相机坐标
+        val dx = x - cameraX
+        val dy = y - cameraY
+        val dz = z - cameraZ
+        val distSq = dx * dx + dy * dy + dz * dz
+        // 碰撞箱 0.1×0.1 导致默认渲染距离 ~10 格，覆盖为匹配追踪距离
+        return distSq < 256.0 * 256.0
+    }
 }

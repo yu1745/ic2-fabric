@@ -29,6 +29,7 @@ import net.minecraft.nbt.NbtCompound
 import net.minecraft.text.Text
 import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
+import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.util.ActionResult
@@ -148,21 +149,32 @@ class MiningLaserItem : Item(
             val yaw = user.yaw
 
             if (mode.scatterCount > 1) {
-                // 散射/3x3 模式：发射多个弹体
-                val basePitch = pitch.toDouble()
-                val baseYaw = yaw.toDouble()
-                val spread = mode.scatterSpread
+                // 散射/3x3 模式：发射多个平行弹体，仅在起点做垂直散布
+                val spread = mode.scatterSpread  // 散布总宽度（格）
                 val count = mode.scatterCount
                 val cols = kotlin.math.sqrt(count.toDouble()).toInt()
                 val rows = (count + cols - 1) / cols
+
+                // 计算视线方向的垂直平面基向量
+                val radYaw = yaw.toDouble() * 0.017453292
+                val radPitch = pitch.toDouble() * 0.017453292
+                val fwdX = -Math.sin(radYaw) * Math.cos(radPitch)
+                val fwdY = -Math.sin(radPitch)
+                val fwdZ = Math.cos(radYaw) * Math.cos(radPitch)
+                val forward = Vec3d(fwdX, fwdY, fwdZ)
+                // 右手向量：forward × up（竖直看时退化为用 X 轴做参考）
+                val upRef = if (Math.abs(forward.y) > 0.99) Vec3d(1.0, 0.0, 0.0) else Vec3d(0.0, 1.0, 0.0)
+                val right = forward.crossProduct(upRef).normalize()
+                val perpUp = right.crossProduct(forward).normalize()
 
                 var idx = 0
                 for (row in 0 until rows) {
                     for (col in 0 until cols) {
                         if (idx >= count) break
-                        val dPitch = (row - (rows - 1) / 2.0) * spread / rows
-                        val dYaw = (col - (cols - 1) / 2.0) * spread / cols
-                        spawnProjectile(world, user, (basePitch + dPitch).toFloat(), (baseYaw + dYaw).toFloat(), mode)
+                        val dRight = (col - (cols - 1) / 2.0) * spread / cols.coerceAtLeast(1)
+                        val dUp = (row - (rows - 1) / 2.0) * spread / rows.coerceAtLeast(1)
+                        val offset = right.multiply(dRight).add(perpUp.multiply(dUp))
+                        spawnProjectile(world, user, pitch, yaw, mode, offset)
                         idx++
                     }
                 }
@@ -186,10 +198,11 @@ class MiningLaserItem : Item(
         owner: PlayerEntity,
         pitch: Float,
         yaw: Float,
-        laserMode: LaserMode
+        laserMode: LaserMode,
+        spreadOffset: Vec3d = Vec3d.ZERO
     ) {
         val projectile = LaserProjectileEntity(ModEntities.LASER_PROJECTILE, world)
-        projectile.init(owner, pitch, yaw, laserMode)
+        projectile.init(owner, pitch, yaw, laserMode, spreadOffset)
         world.spawnEntity(projectile)
     }
 
