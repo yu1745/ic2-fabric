@@ -46,7 +46,7 @@ private val defaultRecipes = listOf(
     ),
     MolecularTransformerRecipeConfig(
         input = "minecraft:iron_ingot",
-        output = "ic2_120_advanced_solar_addon:iridium_ingot",
+        output = "ic2_120:iridium_ore_item",
         energy = 9000000
     ),
     MolecularTransformerRecipeConfig(
