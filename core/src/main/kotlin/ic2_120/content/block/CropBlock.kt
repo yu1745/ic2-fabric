@@ -94,6 +94,16 @@ class CropBlock : BlockWithEntity(
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         CropBlockEntity(pos, state)
+
+    override fun <T : BlockEntity> getTicker(
+        world: World,
+        state: BlockState,
+        type: BlockEntityType<T>
+    ): BlockEntityTicker<T>? =
+        if (world.isClient) null
+        else validateTicker(type, CropBlockEntity::class.type()) { w, p, s, be ->
+            (be as CropBlockEntity).tick(w, p, s)
+        }
 }
 
 @ModBlockEntity(block = CropBlock::class)
