@@ -574,6 +574,7 @@
   "message.ic2_120.jetpack.flight_on": "喷气背包：飞行已开启",
   "message.ic2_120.jetpack.flight_off": "喷气背包：飞行已关闭",
   "key.ic2_120.toggle_mode": "功能切换键",
+  "key.ic2_120.toggle_foam_sprayer_mode": "泡沫喷枪模式切换",
   "key.ic2_120.toggle_vision": "Alt + 夜视键",
   "key.ic2_120.toggle_flight": "Alt + 飞行键",
   "key.ic2_120.toggle_bandwidth_hud": "切换带宽 HUD",

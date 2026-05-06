@@ -34,24 +34,38 @@ object ModeKeybinds {
         )
     )
 
+    /** 泡沫枪专用模式切换键，独立于通用 M 键，避免与其他装备冲突 */
+    private val toggleFoamModeKey = KeyBindingHelper.registerKeyBinding(
+        KeyBinding(
+            "key.ic2_120.toggle_foam_sprayer_mode",
+            InputUtil.Type.KEYSYM,
+            GLFW.GLFW_KEY_UNKNOWN,
+            "category.ic2_120.ic2"
+        )
+    )
+
     fun register() {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
             val player = client.player ?: return@register
 
-            while (toggleModeKey.wasPressed()) {
+            // 泡沫枪专用键（独立处理，不受其他装备影响）
+            while (toggleFoamModeKey.wasPressed()) {
                 if (!isAltDown(client)) continue
-
-                // 优先级 1：胸甲 → 喷气背包飞行开关
-                val chest = player.getEquippedStack(EquipmentSlot.CHEST)
-                if (chest.item is JetpackItem || chest.item is ElectricJetpack) {
-                    ClientPlayNetworking.send(ToggleJetpackFlightPayload)
-                    return@register
-                }
-
                 val offHand = player.offHandStack
                 val mainHand = player.mainHandStack
                 if (mainHand.item is FoamSprayerItem || offHand.item is FoamSprayerItem) {
                     ClientPlayNetworking.send(ToggleFoamSprayerModePayload)
+                    return@register
+                }
+            }
+
+            while (toggleModeKey.wasPressed()) {
+                if (!isAltDown(client)) continue
+
+                // 胸甲 → 喷气背包飞行开关
+                val chest = player.getEquippedStack(EquipmentSlot.CHEST)
+                if (chest.item is JetpackItem || chest.item is ElectricJetpack) {
+                    ClientPlayNetworking.send(ToggleJetpackFlightPayload)
                     return@register
                 }
             }
@@ -64,8 +78,11 @@ object ModeKeybinds {
                InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_RIGHT_ALT)
     }
 
-    /** 供 tooltip 动态显示快捷键 */
+    /** 通用模式切换键（喷气背包、钻头、镭射枪等） */
     fun getModeKey(): KeyBinding = toggleModeKey
+
+    /** 泡沫枪专用模式切换键 */
+    fun getFoamModeKey(): KeyBinding = toggleFoamModeKey
 
     fun isModeKeyDown(): Boolean = toggleModeKey.isPressed
 }
