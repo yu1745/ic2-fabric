@@ -17,7 +17,6 @@ import ic2_120.content.network.BandwidthStatsService
 import ic2_120.content.network.ConfigSyncPacket
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.minecraft.network.PacketByteBuf
 import ic2_120.content.effect.ModStatusEffects
 import ic2_120.content.effect.RadiationHandler
 import ic2_120.content.worldgen.ChestLootInjector
