@@ -1,22 +1,35 @@
 package ic2_120_advanced_solar_addon.client
 
+import ic2_120.client.ClientScreenRegistrar
+import ic2_120.content.network.ChunkedConfigReceiver
+import ic2_120.content.network.ConfigSyncPacket
+import ic2_120.registry.type
+import ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon
 import ic2_120_advanced_solar_addon.client.render.MolecularTransformerBlockEntityRenderer
+import ic2_120_advanced_solar_addon.config.Ic2AdvancedSolarAddonConfig
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlock
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlockEntity
-import ic2_120_advanced_solar_addon.content.recipe.AddonConfigSyncPacket
-import ic2_120_advanced_solar_addon.content.recipe.AddonConfigSyncReceiver
+import ic2_120_advanced_solar_addon.content.recipe.MTRecipes
+import ic2_120_advanced_solar_addon.integration.jei.Ic2AdvancedSolarAddonJeiPlugin
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.MinecraftClient
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactories
-import ic2_120.client.ClientScreenRegistrar
-import ic2_120.registry.type
 
 object IC2AdvancedSolarAddonClient : ClientModInitializer {
+    private val configReceiver = ChunkedConfigReceiver { json ->
+        Ic2AdvancedSolarAddonConfig.applyServerConfig(json)
+        MTRecipes.loadFromConfig()
+        if (FabricLoader.getInstance().isModLoaded("jei")) {
+            Ic2AdvancedSolarAddonJeiPlugin.refreshMTRecipes()
+        }
+    }
+
     override fun onInitializeClient() {
         ClientScreenRegistrar.registerScreens(
             "ic2_120_advanced_solar_addon",
@@ -49,10 +62,10 @@ object IC2AdvancedSolarAddonClient : ClientModInitializer {
         }
 
         // 注册配置同步接收（分包）
-        ClientPlayNetworking.registerGlobalReceiver(AddonConfigSyncPacket.ID) { client, _, buf, _ ->
-            val packet = AddonConfigSyncPacket.read(buf)
+        ClientPlayNetworking.registerGlobalReceiver(IC2AdvancedSolarAddon.id("config_sync")) { client, _, buf, _ ->
+            val packet = ConfigSyncPacket.read(buf)
             client.execute {
-                AddonConfigSyncReceiver.accept(packet)
+                configReceiver.accept(packet.totalChunks, packet.chunkIndex, packet.chunkData)
             }
         }
     }
