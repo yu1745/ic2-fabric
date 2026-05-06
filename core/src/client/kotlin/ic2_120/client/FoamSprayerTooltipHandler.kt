@@ -29,7 +29,7 @@ object FoamSprayerTooltipHandler {
                 Text.translatable("tooltip.ic2_120.foam_sprayer.blocks_left", spraysLeft)
                     .formatted(Formatting.GRAY)
             )
-            val modeKey = ModeKeybinds.getModeKey()
+            val modeKey = ModeKeybinds.getFoamModeKey()
             val keyName = modeKey.boundKeyLocalizedText.string
             val keyLine = Text.literal("Alt + ").formatted(Formatting.YELLOW)
                 .append(Text.literal(keyName).formatted(Formatting.YELLOW))

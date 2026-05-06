@@ -580,6 +580,7 @@
   "message.ic2_120.jetpack.flight_on": "Jetpack: Flight ON",
   "message.ic2_120.jetpack.flight_off": "Jetpack: Flight OFF",
   "key.ic2_120.toggle_mode": "Feature Toggle",
+  "key.ic2_120.toggle_foam_sprayer_mode": "Toggle Foam Sprayer Mode",
   "key.ic2_120.toggle_vision": "Alt + Vision Key",
   "key.ic2_120.toggle_flight": "Alt + Fly Key",
   "key.ic2_120.toggle_bandwidth_hud": "Toggle Bandwidth HUD",
