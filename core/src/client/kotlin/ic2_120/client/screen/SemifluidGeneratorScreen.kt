@@ -1,6 +1,5 @@
 package ic2_120.client.screen
 
-import ic2_120.client.FluidUtils
 import ic2_120.client.t
 import ic2_120.client.compose.*
 import ic2_120.client.EnergyFormatUtils
@@ -16,7 +15,6 @@ import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.registry.Registries
 import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text as McText
 
@@ -58,14 +56,8 @@ class SemifluidGeneratorScreen(
         val fuelCapMb = 8 * 1000
         val fuelFrac = if (fuelCapMb > 0) (fuelMb.toFloat() / fuelCapMb).coerceIn(0f, 1f) else 0f
 
-        // 燃料颜色
-        val fluidRawId = handler.sync.fuelFluidRawId
-        val sampledColor = if (fluidRawId >= 0) {
-            val fluid = Registries.FLUID.get(fluidRawId)
-            FluidUtils.getFluidColor(fluid)
-        } else -1
-        val fuelColor = if (sampledColor != -1) bgrToArgb(sampledColor) else handler.sync.fuelColorArgb
-        handler.sync.fuelColorArgb = fuelColor
+        // 燃料颜色来自网络包 → BE → handler getter
+        val fuelColor = handler.fuelColorArgb
 
         val inputText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
         val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
@@ -90,6 +82,12 @@ class SemifluidGeneratorScreen(
                     EnergyBar(
                         energyFraction,
                         barHeight = 12,
+                    )
+
+                    Text(
+                        t("gui.ic2_120.semifluid_generator.fuel", fuelMb, fuelCapMb),
+                        color = 0xAAAAAA,
+                        shadow = false
                     )
 
                     Flex(
@@ -175,15 +173,6 @@ class SemifluidGeneratorScreen(
     }
 
     private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    private fun bgrToArgb(color: Int): Int {
-        val a = (color ushr 24) and 0xFF
-        val b = (color ushr 16) and 0xFF
-        val g = (color ushr 8) and 0xFF
-        val r = color and 0xFF
-        val alpha = if (a == 0) 0xFF else a
-        return (alpha shl 24) or (r shl 16) or (g shl 8) or b
-    }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
         ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)

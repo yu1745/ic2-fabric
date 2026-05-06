@@ -8,6 +8,7 @@ import ic2_120.content.network.ScannerResultPacket
 import ic2_120.content.network.TeleporterVisualStatePacket
 import ic2_120.content.network.WaterRotorStatePacket
 import ic2_120.content.network.WindRotorStatePacket
+import ic2_120.content.network.SemifluidGeneratorFuelStatePacket (feat: 半流体发电机燃料颜色网络同步 + 流体颜色注册表)
 
 import ic2_120.client.screen.ScannerScreen
 import ic2_120.content.block.machines.TeleporterBlockEntity
@@ -18,6 +19,15 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.MinecraftClient
 
 object NetworkManager {
+    private val REACTOR_HEAT_INFO_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_heat_info")
+    private val BANDWIDTH_HUD_PACKET = BandwidthHudPacket.ID
+    private val WIND_ROTOR_STATE_PACKET = WindRotorStatePacket.ID
+    private val WATER_ROTOR_STATE_PACKET = WaterRotorStatePacket.ID
+    
+    private val SCANNER_RESULT_PACKET = ScannerResultPacket.ID
+    private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
+    private val CONFIG_SYNC_PACKET = ConfigSyncPacket.ID
+    private val SEMIFLUID_GENERATOR_FUEL_STATE_PACKET = SemifluidGeneratorFuelStatePacket.ID (feat: 半流体发电机燃料颜色网络同步 + 流体颜色注册表)
     fun register() {
         ClientPlayNetworking.registerGlobalReceiver(ReactorHeatInfoPacket.ID) { payload, _ ->
             val blockEntity = MinecraftClient.getInstance().world?.getBlockEntity(payload.pos)
@@ -64,6 +74,16 @@ object NetworkManager {
 
         ClientPlayNetworking.registerGlobalReceiver(ConfigSyncPacket.ID) { payload, _ ->
             ConfigSyncReceiver.accept(payload)
+        }
+
+        ClientPlayNetworking.registerGlobalReceiver(SEMIFLUID_GENERATOR_FUEL_STATE_PACKET) { client, _, buf, _ ->
+            val packet = SemifluidGeneratorFuelStatePacket.read(buf)
+            client.execute {
+                val be = client.world?.getBlockEntity(packet.pos)
+                if (be is ic2_120.content.block.machines.SemifluidGeneratorBlockEntity) {
+                    be.clientFuelColorArgb = packet.fuelColorArgb
+                }
+            }
         }
     }
 }

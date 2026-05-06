@@ -919,6 +919,7 @@
   "gui.ic2_120.teleporter.cooldown": "冷却: %st",
   "gui.ic2_120.teleporter.range": "激活范围: %1$sx%1$sx%1$s",
   "gui.ic2_120.fluid_heat_generator.fuel": "燃料: %s mB",
+  "gui.ic2_120.semifluid_generator.fuel": "燃料: %s / %s mB",
   "gui.ic2_120.fluid_heat_exchanger.exchanger_count": "换热器: %s/10",
   "gui.ic2_120.fluid_heat_exchanger.input_fluid": "输入液",
   "gui.ic2_120.fluid_heat_exchanger.output_fluid": "输出液",

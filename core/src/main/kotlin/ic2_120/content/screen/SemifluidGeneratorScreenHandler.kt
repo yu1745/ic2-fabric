@@ -120,6 +120,19 @@ class SemifluidGeneratorScreenHandler(
             ) <= 64.0
         }, true)
 
+    /** 客户端读取 BE 上由网络包更新的燃料颜色 */
+    val fuelColorArgb: Int get() {
+        var color = 0xFFCC4400.toInt()
+        context.get({ world, pos ->
+            val be = world.getBlockEntity(pos)
+            if (be is SemifluidGeneratorBlockEntity) {
+                color = be.clientFuelColorArgb
+            }
+            true
+        }, true)
+        return color
+    }
+
     companion object {
         const val SLOT_SIZE = 18
 
