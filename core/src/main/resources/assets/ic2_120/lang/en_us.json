@@ -993,5 +993,29 @@
   "ic2_120.jade.teleporter.check.entity": "Entity in Range",
   "ic2_120.jade.teleporter.check.charging": "Charging",
   "ic2_120.jade.teleporter.check.energy_insufficient": "Energy Insufficient (%s)",
-  "ic2_120.jade.teleporter.check.energy_sufficient": "Energy Sufficient (%s)"
+  "ic2_120.jade.teleporter.check.energy_sufficient": "Energy Sufficient (%s)",
+
+  "key.ic2_120.toggle_speed": "Speed Boost",
+  "key.ic2_120.toggle_jump": "Jump Boost",
+
+  "tooltip.ic2_120.armor.damage_reduction": "Damage Reduction: %s%%",
+  "tooltip.ic2_120.quantum_boots.damage_reduction": "Damage Reduction: %s%% | Fall Immunity",
+  "tooltip.ic2_120.quantum_helmet.features": "Damage Reduction: %s%% | Water Breathing | Night Vision | Auto-eat Tin Can",
+  "tooltip.ic2_120.quantum_helmet.full_set": "Full Set: Remove Debuffs",
+
+  "tooltip.ic2_120.quantum_boots.jump": "Jump Boost: %s | Remaining: %s",
+  "tooltip.ic2_120.quantum_leggings.speed": "Speed: %s | Remaining: %s",
+  "tooltip.ic2_120.quantum_chestplate.flight": "Flight: %s | Remaining: %s",
+  "tooltip.ic2_120.quantum_helmet.night_vision": "Night Vision: %s | Remaining: %s",
+  "tooltip.ic2_120.nano_helmet.night_vision": "Night Vision: %s | Remaining: %s",
+
+  "tooltip.ic2_120.armor.speed_tier.off": "OFF",
+  "tooltip.ic2_120.armor.speed_tier.1": "Tier 1",
+  "tooltip.ic2_120.armor.speed_tier.2": "Tier 2",
+
+  "tooltip.ic2_120.armor.key.flight_switch": "Flight Toggle: ",
+  "tooltip.ic2_120.armor.key.vision": "Night Vision: ",
+  "tooltip.ic2_120.armor.key.flight": "Flight: ",
+  "tooltip.ic2_120.armor.key.speed": "Speed: ",
+  "tooltip.ic2_120.armor.key.jump": "Jump Boost: "
 }

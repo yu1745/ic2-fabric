@@ -33,7 +33,7 @@ import java.util.function.Consumer
  *
  * - 载电量：10,000,000 EU（10 MEU）
  * - 能量等级：4
- * - 减伤比例：44%
+ * - 减伤比例：45%
  *
  * ## 飞行功能
  *
@@ -130,9 +130,11 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
             "${remainingSeconds.toInt()}秒"
         }
 
-        tooltip.add(Text.literal("飞行: ").append(
-            Text.translatable(if (flightEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
-        ).append(Text.literal(" | 剩余: $timeText")).formatted(Formatting.GRAY))
-        tooltip.add(Text.literal("减伤: 44%").formatted(Formatting.GRAY))
+        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_chestplate.flight",
+            Text.translatable(if (flightEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off"),
+            timeText
+        ).formatted(Formatting.GRAY))
+        val pct = "%.0f".format(getDamageReduction() * 100)
+        tooltip.add(Text.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(Formatting.GRAY))
     }
 }

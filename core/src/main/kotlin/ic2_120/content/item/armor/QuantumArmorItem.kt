@@ -19,9 +19,9 @@ import net.minecraft.item.ArmorMaterial
  * ## 减伤比例
  *
  * - 头盔：15%
- * - 胸甲：44%
+ * - 胸甲：45%
  * - 护腿：30%
- * - 靴子：11%
+ * - 靴子：10%
  * - **总计：100%**（全套穿戴时完全免疫伤害）
  *
  * ## 能量消耗
@@ -61,9 +61,9 @@ abstract class QuantumArmorItem(
      */
     override fun getDamageReduction(): Float = when (this) {
         is QuantumHelmet -> 0.15f      // 15%
-        is QuantumChestplate -> 0.44f  // 44%
+        is QuantumChestplate -> 0.45f  // 45%
         is QuantumLeggings -> 0.30f    // 30%
-        is QuantumBoots -> 0.11f       // 11%
+        is QuantumBoots -> 0.10f       // 10%
         else -> 0f
     }
 }

@@ -29,7 +29,7 @@ import java.util.function.Consumer
  *
  * - 载电量：1,000,000 EU（1 MEU）
  * - 能量等级：3
- * - 减伤比例：33.85%
+ * - 减伤比例：36%   （量子 45% × 0.8）
  *
  * ## 能量消耗
  *
@@ -61,6 +61,7 @@ class NanoChestplate : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Typ
 
     override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
-        tooltip.add(Text.literal("减伤: 33.85%").formatted(Formatting.GRAY))
+                val pct = "%.2f".format(getDamageReduction() * 100).trimEnd('0').trimEnd('.')
+        tooltip.add(Text.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(Formatting.GRAY))
     }
 }

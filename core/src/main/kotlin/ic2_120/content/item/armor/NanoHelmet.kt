@@ -37,7 +37,7 @@ import java.util.function.Consumer
  *
  * - 载电量：1,000,000 EU（1 MEU）
  * - 能量等级：3
- * - 减伤比例：11.54%
+ * - 减伤比例：12%   （量子 15% × 0.8）
  *
  * ## 夜视功能
  *
@@ -159,9 +159,11 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
             "${remainingSeconds.toInt()}秒"
         }
 
-        tooltip.add(Text.literal("夜视: ").append(
-            Text.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
-        ).append(Text.literal(" | 剩余: $timeText")).formatted(Formatting.GRAY))
-        tooltip.add(Text.literal("减伤: 11.54%").formatted(Formatting.GRAY))
+                tooltip.add(Text.translatable("tooltip.ic2_120.nano_helmet.night_vision",
+            Text.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off"),
+            timeText
+        ).formatted(Formatting.GRAY))
+        val pct = "%.2f".format(getDamageReduction() * 100).trimEnd('0').trimEnd('.')
+        tooltip.add(Text.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(Formatting.GRAY))
     }
 }

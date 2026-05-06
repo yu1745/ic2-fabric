@@ -16,11 +16,11 @@ import net.minecraft.item.ArmorMaterial
  *
  * ## 减伤比例
  *
- * - 头盔：11.54%
- * - 胸甲：33.85%
- * - 护腿：23.07%
- * - 靴子：11.54%
- * - **总计：80%**（全套穿戴时）
+ * - 头盔：12%   （量子 15% × 0.8）
+ * - 胸甲：36%   （量子 45% × 0.8）
+ * - 护腿：24%   （量子 30% × 0.8）
+ * - 靴子：8%    （量子 10% × 0.8）
+ * - **总计：80% = 量子 × 0.8**（全套穿戴时）
  *
  * ## 能量消耗
  *
@@ -49,10 +49,10 @@ abstract class NanoArmorItem(
      * 四件装备总减伤为 80%。
      */
     override fun getDamageReduction(): Float = when (this) {
-        is NanoHelmet -> 0.1154f      // 11.54%
-        is NanoChestplate -> 0.3385f  // 33.85%
-        is NanoLeggings -> 0.2307f    // 23.07%
-        is NanoBoots -> 0.1154f       // 11.54%
+        is NanoHelmet -> 0.12f        // 12%   = 量子 15% × 0.8
+        is NanoChestplate -> 0.36f    // 36%   = 量子 45% × 0.8
+        is NanoLeggings -> 0.24f      // 24%   = 量子 30% × 0.8
+        is NanoBoots -> 0.08f         // 8%    = 量子 10% × 0.8
         else -> 0f
     }
 }

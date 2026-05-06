@@ -987,5 +987,29 @@
   "ic2_120.jade.teleporter.check.entity": "范围内有实体",
   "ic2_120.jade.teleporter.check.charging": "充能中",
   "ic2_120.jade.teleporter.check.energy_insufficient": "能量不足 (%s)",
-  "ic2_120.jade.teleporter.check.energy_sufficient": "能量充足 (%s)"
+  "ic2_120.jade.teleporter.check.energy_sufficient": "能量充足 (%s)",
+
+  "key.ic2_120.toggle_speed": "神行键",
+  "key.ic2_120.toggle_jump": "大跳键",
+
+  "tooltip.ic2_120.armor.damage_reduction": "减伤: %s%%",
+  "tooltip.ic2_120.quantum_boots.damage_reduction": "减伤: %s%% | 落地免伤",
+  "tooltip.ic2_120.quantum_helmet.features": "减伤: %s%% | 水下呼吸 | 夜视 | 饱食不满自动吃满锡罐",
+  "tooltip.ic2_120.quantum_helmet.full_set": "全套时: 消除debuff",
+
+  "tooltip.ic2_120.quantum_boots.jump": "大跳: %s | 剩余: %s次",
+  "tooltip.ic2_120.quantum_leggings.speed": "神行: %s | 剩余: %s",
+  "tooltip.ic2_120.quantum_chestplate.flight": "飞行: %s | 剩余: %s",
+  "tooltip.ic2_120.quantum_helmet.night_vision": "夜视: %s | 剩余: %s",
+  "tooltip.ic2_120.nano_helmet.night_vision": "夜视: %s | 剩余: %s",
+
+  "tooltip.ic2_120.armor.speed_tier.off": "关",
+  "tooltip.ic2_120.armor.speed_tier.1": "1档",
+  "tooltip.ic2_120.armor.speed_tier.2": "2档",
+
+  "tooltip.ic2_120.armor.key.flight_switch": "飞行开关: ",
+  "tooltip.ic2_120.armor.key.vision": "夜视按键: ",
+  "tooltip.ic2_120.armor.key.flight": "飞行按键: ",
+  "tooltip.ic2_120.armor.key.speed": "神行按键: ",
+  "tooltip.ic2_120.armor.key.jump": "大跳按键: "
 }
