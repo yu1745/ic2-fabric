@@ -16,6 +16,7 @@
 - `docs/guides/machine-implementation-guide.md`
 - `docs/guides/machine-composition-reuse.md`
 - `docs/guides/item-implemented.md`
+- `docs/guides/recall-scroll.md`
 
 ### systems（子系统设计）
 

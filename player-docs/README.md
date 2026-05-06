@@ -24,6 +24,7 @@
 - [作物系统玩家指南](guides/crop-player-guide.md)
 - [机器升级系统](guides/upgrades.md)
 - [采矿镭射枪](guides/mining-laser.md)
+- [传送卷轴](guides/recall-scroll.md)
 
 ### 核心系统 (systems/)
 

@@ -1012,5 +1012,6 @@
   "tooltip.ic2_120.armor.key.vision": "夜视按键: ",
   "tooltip.ic2_120.armor.key.flight": "飞行按键: ",
   "tooltip.ic2_120.armor.key.speed": "神行按键: ",
-  "tooltip.ic2_120.armor.key.jump": "大跳按键: "
+  "tooltip.ic2_120.armor.key.jump": "大跳按键: ",
+  "item.ic2_120.recall_scroll": "传送卷轴"
 }

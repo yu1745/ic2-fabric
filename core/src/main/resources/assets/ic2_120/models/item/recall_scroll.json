@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "minecraft:item/map"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "ic2_120:bound": 1.0
+      },
+      "model": "ic2_120:item/recall_scroll_bound"
+    }
+  ]
+}

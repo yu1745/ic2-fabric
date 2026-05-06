@@ -1018,5 +1018,6 @@
   "tooltip.ic2_120.armor.key.vision": "Night Vision: ",
   "tooltip.ic2_120.armor.key.flight": "Flight: ",
   "tooltip.ic2_120.armor.key.speed": "Speed: ",
-  "tooltip.ic2_120.armor.key.jump": "Jump Boost: "
+  "tooltip.ic2_120.armor.key.jump": "Jump Boost: ",
+  "item.ic2_120.recall_scroll": "Teleport Scroll"
 }

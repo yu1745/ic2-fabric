@@ -4,6 +4,7 @@ import ic2_120.content.block.cables.GlassFibreCableBlock
 import ic2_120.content.block.machines.TeleporterBlockEntity
 import ic2_120.content.item.AdvancedCircuit
 import ic2_120.content.item.FrequencyTransmitter
+import ic2_120.content.item.RecallScrollItem
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.instance
@@ -56,7 +57,7 @@ class TeleporterBlock : MachineBlock() {
 
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         val stack = player.mainHandStack
-        if (stack.item is FrequencyTransmitter) {
+        if (stack.item is FrequencyTransmitter || stack.item is RecallScrollItem) {
             return ActionResult.PASS
         }
 

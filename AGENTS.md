@@ -10,6 +10,7 @@
 - 新机器实现：`docs/guides/machine-implementation-guide.md`
 - 机器组合复用：`docs/guides/machine-composition-reuse.md`（减少 container/slot/sync 重复代码）
 - 新物品实现：`docs/guides/item-implemented.md`
+- 传送卷轴：`docs/guides/recall-scroll.md`
 - 注解注册系统：`docs/registry/CLASS_BASED_REGISTRY.md`
 
 ## 2. 硬性约束
@@ -93,6 +94,7 @@
 - `markDirty()` 仅标记区块需要落盘保存，**不会**触发网络包同步到客户端。同步到客户端需要调用 `world.updateListeners(pos, state, state, NOTIFY_LISTENERS)` + `chunkManager.markForUpdate(pos)`（参考 `markDirtyAndSync()` 模式）。
 
 若只改文档，可跳过编译；若改 Kotlin/资源/注册链路，不可跳过。
+- **涉及配方（`@RecipeProvider` / `generateRecipes`）修改时**，必须先执行 `./gradlew :core:runDatagen` 重新生成 data json，再 `./gradlew build`。否则配方变更不会生效。
 
 - 若遇到 Gradle lock（如 `gradle-*.zip.lck`）导致构建或 datagen 失败，直接删除对应 `.lck` 文件后重试：
   - Linux: `rm -f ~/.gradle/wrapper/dists/gradle-*.zip.lck`
