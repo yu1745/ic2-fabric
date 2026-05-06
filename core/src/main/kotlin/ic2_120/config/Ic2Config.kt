@@ -44,7 +44,9 @@ data class GeneralConfig(
     @field:ConfigComment("是否启用更新检查。", "true")
     val checkForUpdates: Boolean = true,
     @field:ConfigComment("电网不发生能量流动时是否仍会电人。设为 false 则无能量时不漏电。", "false")
-    val shockWhenNoEnergyFlow: Boolean = false
+    val shockWhenNoEnergyFlow: Boolean = false,
+    @field:ConfigComment("电网不发生能量流动时是否仍会超压爆炸。设为 false 则无能量时不爆炸。", "false")
+    val explodeWhenNoEnergyFlow: Boolean = false
 )
 
 data class RecyclerConfig(
