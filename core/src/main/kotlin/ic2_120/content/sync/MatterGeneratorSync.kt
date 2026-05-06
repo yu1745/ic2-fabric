@@ -20,7 +20,7 @@ class MatterGeneratorSync(
     companion object {
         const val MATTER_GENERATOR_TIER = 3
         const val ENERGY_CAPACITY = 4_000_000L
-        const val MAX_INSERT = 512L
+        const val MAX_INSERT = Long.MAX_VALUE
         const val MAX_EXTRACT = 0L
         const val NBT_ENERGY_STORED = "EnergyStored"
         const val PROGRESS_MAX = 1_954

@@ -6,6 +6,7 @@ import ic2_120.content.block.MatterGeneratorBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.IUpgradeItem
+import ic2_120.content.item.OverclockerUpgrade
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.content.item.setFluidCellVariant
@@ -22,9 +23,7 @@ import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
-import ic2_120.content.upgrade.IOverclockerUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
-import ic2_120.content.upgrade.OverclockerUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
@@ -70,7 +69,7 @@ class MatterGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty = MatterGeneratorBlock.ACTIVE
@@ -78,8 +77,6 @@ class MatterGeneratorBlockEntity(
 
     override fun getInventory(): Inventory = this
 
-    override var speedMultiplier: Float = 1f
-    override var energyMultiplier: Float = 1f
     override var capacityBonus: Long = 0L
     override var voltageTierBonus: Int = 0
 
@@ -279,7 +276,7 @@ class MatterGeneratorBlockEntity(
         SLOT_CONTAINER_INPUT -> !stack.isEmpty && stack.item !is IBatteryItem && matterGenIsFillableContainer(stack)
         SLOT_CONTAINER_OUTPUT -> false
         SLOT_DISCHARGING -> !stack.isEmpty && stack.item is IBatteryItem
-        else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
+        else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem && stack.item !is OverclockerUpgrade
     }
 
     override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
@@ -306,7 +303,7 @@ class MatterGeneratorBlockEntity(
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(MatterGeneratorSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
-        sync.progress = nbt.getInt(NBT_PROGRESS).coerceIn(0, MatterGeneratorSync.PROGRESS_MAX)
+        sync.progress = nbt.getInt(NBT_PROGRESS).coerceAtLeast(0)
         tankInternal.setStoredAmount(nbt.getLong(NBT_TANK_AMOUNT))
         sync.fluidCapacityMb = MatterGeneratorSync.TANK_CAPACITY_MB
         sync.mode = resolveDisplayedMode()
@@ -325,7 +322,6 @@ class MatterGeneratorBlockEntity(
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
-        OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
@@ -363,11 +359,13 @@ class MatterGeneratorBlockEntity(
         val hasScrap = isScrap(getStack(SLOT_SCRAP))
         val euPerMb = if (hasScrap) MatterGeneratorSync.SCRAP_EU_PER_MB else MatterGeneratorSync.BASE_EU_PER_MB
 
-        // Cap at producing 1mb per tick
-        val progressIncrement = minOf(speedMultiplier.toInt().coerceAtLeast(1), MatterGeneratorSync.PROGRESS_MAX)
+        // Consume as much energy as available, up to 1mb worth per tick
+        val energyBudget = minOf(sync.amount, euPerMb)
+        val rawProgress = (energyBudget * MatterGeneratorSync.PROGRESS_MAX / euPerMb).toInt().coerceAtLeast(1)
+        val progressIncrement = minOf(rawProgress, MatterGeneratorSync.PROGRESS_MAX - sync.progress)
 
         val energyNeeded = ceil(
-            euPerMb.toDouble() * progressIncrement / MatterGeneratorSync.PROGRESS_MAX * energyMultiplier.toDouble()
+            euPerMb.toDouble() * progressIncrement / MatterGeneratorSync.PROGRESS_MAX
         ).toLong().coerceAtLeast(1L)
 
         if (sync.amount >= energyNeeded) {
