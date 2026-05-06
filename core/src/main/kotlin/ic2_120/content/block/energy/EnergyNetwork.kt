@@ -2,6 +2,7 @@ package ic2_120.content.block.energy
 
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
+import ic2_120.content.block.machines.TransformerBlockEntity
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.item.energy.ITiered
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
@@ -389,6 +390,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         val checked = mutableSetOf<Long>()
         var explodedCount = 0
         var skippedGeneratorCount = 0
+        var skippedTransformerCount = 0
         var skippedTierOkCount = 0
         var skippedNotMachineCount = 0
 
@@ -404,6 +406,13 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
                     log.debug("[超压检测]   → 跳过：是发电机 (IGenerator)")
                 }
                 skippedGeneratorCount++
+                continue
+            }
+            if (be is TransformerBlockEntity) {
+                if (ENABLE_OVERVOLTAGE_LOG) {
+                    log.debug("[超压检测]   → 跳过：是变压器 (TransformerBlockEntity)")
+                }
+                skippedTransformerCount++
                 continue
             }
             if (be !is ITieredMachine) {
@@ -457,7 +466,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         }
 
         if (ENABLE_OVERVOLTAGE_LOG) {
-            log.debug("[超压检测] 检查完成 - 爆炸=$explodedCount, 跳过发电机=$skippedGeneratorCount, 跳过耐压足够=$skippedTierOkCount, 跳过非机器=$skippedNotMachineCount")
+            log.debug("[超压检测] 检查完成 - 爆炸=$explodedCount, 跳过发电机=$skippedGeneratorCount, 跳过变压器=$skippedTransformerCount, 跳过耐压足够=$skippedTierOkCount, 跳过非机器=$skippedNotMachineCount")
         }
     }
 
