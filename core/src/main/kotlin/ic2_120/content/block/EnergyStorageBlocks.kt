@@ -189,7 +189,7 @@ abstract class ChargepadBlock(config: EnergyStorageConfig) : EnergyStorageBlock(
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         super.appendProperties(builder)
-        builder.add(EnergyStorageBlock.ACTIVE)
+        // ACTIVE 已在 EnergyStorageBlock.appendProperties 中添加
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
