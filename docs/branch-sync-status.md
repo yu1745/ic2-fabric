@@ -8,14 +8,13 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **57 个 commit**，**57 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **58 个 commit**，**57 个已同步，1 个待同步**。
 （归档 1-37 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
 
 | # | Commit | 说明 | 在 1.21.1？ | 备注 |
 |---|--------|------|:-----------:|------|
-| 38 | `8863ece` | fix: 拴绳动能发生机拴住的生物坐上矿车时不再断开拴绳 | ✅ | cherry-pick `3a05b8c` + 1.21.1 适配 `getLeashHolder()` (`ef63e23`) + datagen 刷新 (`1146b57`) |
 | 39 | `df4c5ed` | fix: 删除压缩机中 4 青金石→1 青金石块的刷物品配方 | ✅ | cherry-pick + 适配 1.21.1 单数 recipe/ 路径 |
 | 40 | `d4de777` | fix: 铁炉和焦窑无扳手拆卸不再掉落机器外壳（防刷物品） | ✅ | 无冲突直接 cherry-pick |
 | 41 | `95e6339` | fix: 徒手/镐子挖储罐不再掉落流体（防止刷流体） | ✅ | cherry-pick + 适配 1.21.1 `onBreak` 返回 `BlockState` |
@@ -35,6 +34,7 @@
 | 55 | `f9f399fc` | feat: 合成表调整 & 量子太阳能发电机添加4充电槽 | ✅ | cherry-pick + 适配 1.21.1 API（getScreenOpeningData、RegistryWrapper、validateTicker、RecipeExporter）+ datagen 刷新 |
 | 56 | `54beaf9f` | feat: 采矿镭射枪配置化+扳手支持变压器六面朝向 | ✅ | |
 | 57 | `48bbc126` | feat: 扫描仪GUI范围控制+能耗按体积动态计算+4列网格结果展示 | ✅ | |
+| 58 | `10a8b66d` | feat: 核反应堆布局锁定与漏斗堆叠绕过修复 | ❌ | |
 
 ## 同步历史
 
