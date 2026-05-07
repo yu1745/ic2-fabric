@@ -1,5 +1,6 @@
 package ic2_120.content.item
 
+import ic2_120.config.Ic2Config
 import ic2_120.content.entity.LaserMode
 import ic2_120.content.entity.LaserProjectileEntity
 import ic2_120.content.entity.ModEntities
@@ -94,7 +95,7 @@ class MiningLaserItem : Item(
     // ========== IElectricTool 实现 ==========
 
     override val tier = 3
-    override val maxCapacity = 200_000L
+    override val maxCapacity: Long get() = Ic2Config.current.miningLaser.maxEnergy
 
     override fun getEnergy(stack: ItemStack): Long = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)

@@ -190,6 +190,16 @@ data class RubberBootsConfig(
  * 设计原则：一次发射越多弹体，射程越短；单发模式射程最远。
  */
 data class MiningLaserConfig(
+    @field:ConfigComment("采矿镭射枪最大能量（EU）。", "200000")
+    val maxEnergy: Long = 200_000L,
+    @field:ConfigComment("弹体渲染视觉长度（blocks）。", "1.2")
+    val visualLength: Double = 1.2,
+    @field:ConfigComment("弹体最大渲染距离（blocks）。", "256")
+    val renderDistance: Double = 256.0,
+    @field:ConfigComment("弹体最大存活 tick 数（安全上限）。", "200")
+    val maxLife: Int = 200,
+    @field:ConfigComment("弹体截面半径（blocks）。", "0.04")
+    val bulletRadius: Double = 0.04,
     @field:ConfigComment("采矿模式配置。基础远程挖矿，击穿一段距离，距离与被挖掘方块硬度有关。")
     val mining: LaserModeConfig = LaserModeConfig(
         energyCost = 2_000L,
@@ -242,7 +252,7 @@ data class MiningLaserConfig(
         explosionPower = 0f,
         color = 0xFFFF44FF.toInt(),
         scatterCount = 25,
-        scatterSpread = 50.0,
+        scatterSpread = 2.5,
         entityDamage = 2f
     ),
     @field:ConfigComment("爆破模式配置。约TNT当量，穿甲效果。")
@@ -264,7 +274,7 @@ data class MiningLaserConfig(
         explosionPower = 0f,
         color = 0xFF00CCFF.toInt(),
         scatterCount = 9,
-        scatterSpread = 18.0,
+        scatterSpread = 3.0,
         entityDamage = 2f
     )
 )
