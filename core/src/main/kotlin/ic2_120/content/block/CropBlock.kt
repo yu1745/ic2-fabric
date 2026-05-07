@@ -90,6 +90,15 @@ class CropBlock : BlockWithEntity(
                 .with(AGE, age.coerceIn(0, 7))
     }
 
+    init {
+        defaultState = stateManager.defaultState.with(CROP_TYPE, CropType.WEED).with(AGE, 0)
+    }
+
+    override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
+        super.appendProperties(builder)
+        builder.add(CROP_TYPE, AGE)
+    }
+
     override fun getCodec(): MapCodec<out BlockWithEntity> = CROP_CODEC
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =

@@ -33,6 +33,7 @@ abstract class EnergyStorageBlock(
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         super.appendProperties(builder)
+        builder.add(ACTIVE)
     }
 
     abstract override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity?

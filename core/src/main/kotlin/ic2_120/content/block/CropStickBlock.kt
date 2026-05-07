@@ -119,7 +119,6 @@ class CropStickBlock : BlockWithEntity(
         if (world.isClient) return ItemActionResult.SUCCESS
         val isCreative = player.abilities.creativeMode
 
-        // 放置第二根作物架：变为杂交底座
         if (!state.get(CROSSING_BASE) && stack.item == this.asItem()) {
             if (!isCreative) stack.decrement(1)
             world.setBlockState(pos, state.with(CROSSING_BASE, true), Block.NOTIFY_ALL)
@@ -127,7 +126,6 @@ class CropStickBlock : BlockWithEntity(
         }
 
         if (!state.get(CROSSING_BASE)) {
-            // 种子袋种植
             if (stack.item is CropSeedBagItem) {
                 val cropType = CropSeedData.readType(stack)
                 if (cropType != null) {
@@ -135,7 +133,7 @@ class CropStickBlock : BlockWithEntity(
                     val cropState = CropBlock.defaultCropState(cropType, 0)
                     world.setBlockState(pos, cropState, Block.NOTIFY_ALL)
                     val be = world.getBlockEntity(pos) as? CropBlockEntity
-                    be?.stats = stats
+                    be?.stats = CropStats(1, 1, 1)
                     be?.scanLevel = CropSeedData.readScanLevel(stack)
                     be?.markDirty()
                     if (!isCreative) stack.decrement(1)
@@ -143,7 +141,6 @@ class CropStickBlock : BlockWithEntity(
                 }
             }
 
-            // 基础种子种植
             val cropType = CropSystem.baseSeed(stack.item)
             if (cropType != null) {
                 val cropState = CropBlock.defaultCropState(cropType, 0)
