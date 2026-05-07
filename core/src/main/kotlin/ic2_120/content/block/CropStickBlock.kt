@@ -37,7 +37,10 @@ import net.minecraft.nbt.NbtCompound
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
+import net.minecraft.util.Hand
+import net.minecraft.util.ItemActionResult
 import net.minecraft.util.ItemScatterer
+import net.minecraft.item.ItemStack
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -104,18 +107,27 @@ class CropStickBlock : BlockWithEntity(
         return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
     }
 
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.mainHandStack
+    override fun onUseWithItem(
+        stack: ItemStack,
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ItemActionResult {
+        if (world.isClient) return ItemActionResult.SUCCESS
         val isCreative = player.abilities.creativeMode
 
+        // 放置第二根作物架：变为杂交底座
         if (!state.get(CROSSING_BASE) && stack.item == this.asItem()) {
             if (!isCreative) stack.decrement(1)
             world.setBlockState(pos, state.with(CROSSING_BASE, true), Block.NOTIFY_ALL)
-            return ActionResult.SUCCESS
+            return ItemActionResult.SUCCESS
         }
 
         if (!state.get(CROSSING_BASE)) {
+            // 种子袋种植
             if (stack.item is CropSeedBagItem) {
                 val cropType = CropSeedData.readType(stack)
                 if (cropType != null) {
@@ -127,10 +139,11 @@ class CropStickBlock : BlockWithEntity(
                     be?.scanLevel = CropSeedData.readScanLevel(stack)
                     be?.markDirty()
                     if (!isCreative) stack.decrement(1)
-                    return ActionResult.SUCCESS
+                    return ItemActionResult.SUCCESS
                 }
             }
 
+            // 基础种子种植
             val cropType = CropSystem.baseSeed(stack.item)
             if (cropType != null) {
                 val cropState = CropBlock.defaultCropState(cropType, 0)
@@ -140,10 +153,18 @@ class CropStickBlock : BlockWithEntity(
                 be?.scanLevel = 0
                 be?.markDirty()
                 if (!isCreative) stack.decrement(1)
-                return ActionResult.SUCCESS
+                return ItemActionResult.SUCCESS
             }
         }
 
+        return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+        if (world.isClient) return ActionResult.SUCCESS
+        val stack = player.mainHandStack
+
+        // 空手拆除杂交底座
         if (state.get(CROSSING_BASE) && stack.isEmpty) {
             world.setBlockState(pos, state.with(CROSSING_BASE, false), Block.NOTIFY_ALL)
             ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), this.asItem().defaultStack)

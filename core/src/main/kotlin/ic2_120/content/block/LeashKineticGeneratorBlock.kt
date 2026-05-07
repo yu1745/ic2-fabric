@@ -29,7 +29,10 @@ import net.minecraft.state.property.BooleanProperty
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
+import net.minecraft.util.Hand
+import net.minecraft.util.ItemActionResult
 import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.world.World
@@ -78,72 +81,73 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
             (be as LeashKineticGeneratorBlockEntity).tick(w, p, s)
         }
 
-    override fun onUse(
+    override fun onUseWithItem(
+        stack: ItemStack,
         state: BlockState,
         world: World,
         pos: BlockPos,
         player: PlayerEntity,
+        hand: Hand,
         hit: BlockHitResult
-    ): ActionResult {
-        val be = world.getBlockEntity(pos) as? LeashKineticGeneratorBlockEntity ?: return ActionResult.PASS
+    ): ItemActionResult {
+        val be = world.getBlockEntity(pos) as? LeashKineticGeneratorBlockEntity ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
 
-        val heldStack = player.mainHandStack
+        if (stack.item !== Items.LEAD) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        if (world.isClient) return ItemActionResult.SUCCESS
 
-        if (heldStack.item === Items.LEAD) {
-            if (world.isClient) return ActionResult.SUCCESS
-
-            if (be.hasLeashedMob()) {
-                // Unleash: detach mob, kill anchor, return lead
-                val mob = be.findLeashedMob()
-                val knot = be.findKnot()
-                mob?.detachLeash(true, true)
-                knot?.kill()
-                knot?.remove(Entity.RemovalReason.DISCARDED)
-                be.setLeashedMob(null, "")
-                if (!player.isCreative) {
-                    player.giveItemStack(Items.LEAD.defaultStack)
-                }
-                player.sendMessage(Text.translatable("message.ic2_120.leash_kinetic.detached"), true)
-                return ActionResult.SUCCESS
+        if (be.hasLeashedMob()) {
+            // Unleash: detach mob, kill anchor, return lead
+            val mob = be.findLeashedMob()
+            val knot = be.findKnot()
+            mob?.detachLeash(true, true)
+            knot?.kill()
+            knot?.remove(Entity.RemovalReason.DISCARDED)
+            be.setLeashedMob(null, "")
+            if (!player.isCreative) {
+                player.giveItemStack(Items.LEAD.defaultStack)
             }
-
-            // Find mobs leashed to the player
-            val nearbyMobs = world.getEntitiesByClass(
-                MobEntity::class.java,
-                Box(pos).expand(10.0)
-            ) { mob ->
-                mob.isAlive && mob.leashHolder === player
-            }
-
-            val mob = nearbyMobs.firstOrNull()
-            if (mob != null) {
-                mob.detachLeash(true, false)
-                val serverWorld = world as? ServerWorld
-                if (serverWorld != null) {
-                    val anchor = EntityType.ARMOR_STAND.create(serverWorld)
-                    if (anchor != null) {
-                        // Armor stand getLeashPos adds eyeHeight*0.7 offset (~1.24),
-                        // compensate so the leash visually ends at the knot position (y+1.4)
-                        anchor.setPos(pos.x + 0.5, pos.y + 0.16, pos.z + 0.5)
-                        anchor.isInvisible = true
-                        anchor.setNoGravity(true)
-                        serverWorld.spawnEntity(anchor)
-                        mob.attachLeash(anchor, true)
-                        be.setLeashedMob(mob.uuid, mob.name.string, anchor.uuid)
-                    }
-                }
-                heldStack.decrement(1)
-                player.sendMessage(
-                    Text.translatable("message.ic2_120.leash_kinetic.attached", mob.name),
-                    true
-                )
-            } else {
-                player.sendMessage(Text.translatable("message.ic2_120.leash_kinetic.no_mob"), true)
-            }
-            return ActionResult.SUCCESS
+            player.sendMessage(Text.translatable("message.ic2_120.leash_kinetic.detached"), true)
+            return ItemActionResult.SUCCESS
         }
 
+        // Find mobs leashed to the player
+        val nearbyMobs = world.getEntitiesByClass(
+            MobEntity::class.java,
+            Box(pos).expand(10.0)
+        ) { mob ->
+            mob.isAlive && mob.leashHolder === player
+        }
+
+        val mob = nearbyMobs.firstOrNull()
+        if (mob != null) {
+            mob.detachLeash(true, false)
+            val serverWorld = world as? ServerWorld
+            if (serverWorld != null) {
+                val anchor = EntityType.ARMOR_STAND.create(serverWorld)
+                if (anchor != null) {
+                    anchor.setPos(pos.x + 0.5, pos.y + 0.16, pos.z + 0.5)
+                    anchor.isInvisible = true
+                    anchor.setNoGravity(true)
+                    serverWorld.spawnEntity(anchor)
+                    mob.attachLeash(anchor, true)
+                    be.setLeashedMob(mob.uuid, mob.name.string, anchor.uuid)
+                }
+            }
+            stack.decrement(1)
+            player.sendMessage(
+                Text.translatable("message.ic2_120.leash_kinetic.attached", mob.name),
+                true
+            )
+        } else {
+            player.sendMessage(Text.translatable("message.ic2_120.leash_kinetic.no_mob"), true)
+        }
+        return ItemActionResult.SUCCESS
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+        // GUI opening for non-item interactions
         if (!world.isClient) {
+            val be = world.getBlockEntity(pos) as? LeashKineticGeneratorBlockEntity
             val factory = be as? NamedScreenHandlerFactory
             if (factory != null) {
                 player.openHandledScreen(factory)

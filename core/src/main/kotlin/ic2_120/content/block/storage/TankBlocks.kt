@@ -41,6 +41,7 @@ import net.minecraft.registry.tag.ItemTags
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
+import net.minecraft.util.ItemActionResult
 import net.minecraft.util.Identifier
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
@@ -65,28 +66,38 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
 
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
 
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
+    override fun onUseWithItem(
+        stack: ItemStack,
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ItemActionResult {
+        if (world.isClient) return ItemActionResult.SUCCESS
 
-        val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return ActionResult.PASS
-        val held = player.mainHandStack
+        val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
 
-        if (held.isEmpty) return ActionResult.PASS
-
-        val heldItem = held.item
+        val heldItem = stack.item
         val modId = "ic2_120"
         val emptyCell = Registries.ITEM.get(Identifier.of(modId, "empty_cell"))
         val fluidCellItem = Registries.ITEM.get(Identifier.of(modId, "fluid_cell"))
 
-        if (heldItem === emptyCell || (heldItem === fluidCellItem && held.getFluidCellVariant() == null)) {
-            return extractFromTank(world, be, player, Hand.MAIN_HAND, held)
+        if (heldItem === emptyCell || (heldItem === fluidCellItem && stack.getFluidCellVariant() == null)) {
+            return extractFromTank(world, be, player, hand, stack)
         }
 
         if (heldItem === fluidCellItem || heldItem is ModFluidCell) {
-            return insertIntoTank(world, be, player, Hand.MAIN_HAND, held)
+            return insertIntoTank(world, be, player, hand, stack)
         }
 
-        return interactWithBucket(world, pos, be, player, Hand.MAIN_HAND, held)
+        return interactWithBucket(world, pos, be, player, hand, stack)
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+        if (world.isClient) return ActionResult.SUCCESS
+        return ActionResult.PASS
     }
 
     /**
@@ -98,10 +109,10 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         player: PlayerEntity,
         hand: Hand,
         held: ItemStack
-    ): ActionResult {
+    ): ItemActionResult {
         val current = be.fluidVariant
         if (current.isBlank || be.fluidAmount < FluidConstants.BUCKET) {
-            return ActionResult.PASS
+            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         }
 
         val fluid = current.fluid
@@ -109,7 +120,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
             val extracted = be.fluidTank.extract(current, FluidConstants.BUCKET, tx)
             if (extracted < FluidConstants.BUCKET) {
                 tx.abort()
-                return ActionResult.PASS
+                return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
             }
 
             val filled = fluidToFilledCellStack(fluid)
@@ -126,7 +137,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
             tx.commit()
             be.markDirty()
         }
-        return ActionResult.SUCCESS
+        return ItemActionResult.SUCCESS
     }
 
     /**
@@ -138,14 +149,14 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         player: PlayerEntity,
         hand: Hand,
         held: ItemStack
-    ): ActionResult {
+    ): ItemActionResult {
         // 获取单元内的流体：fluid_cell 用 NBT，ModFluidCell 用 getFluid()
         val cellFluidVariant = when (val item = held.item) {
             is ModFluidCell -> FluidVariant.of(item.getFluid())
             else -> held.getFluidCellVariant()
         }
         if (cellFluidVariant == null || cellFluidVariant.isBlank) {
-            return ActionResult.PASS
+            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         }
 
         val tankVariant = be.fluidVariant
@@ -154,12 +165,12 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
 
         // 已有不同流体，拒绝放入
         if (!tankVariant.isBlank && !tankVariant.equals(cellFluidVariant)) {
-            return ActionResult.PASS
+            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         }
 
         // 没有空间
         if (tankAmount >= tankCapacity) {
-            return ActionResult.PASS
+            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         }
 
         // 只能插入 1 桶
@@ -169,7 +180,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
             val inserted = be.fluidTank.insert(cellFluidVariant, canAccept, tx)
             if (inserted <= 0) {
                 tx.abort()
-                return ActionResult.PASS
+                return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
             }
 
             // 消耗 1 桶流体：变为空单元
@@ -186,7 +197,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
             tx.commit()
             be.markDirty()
         }
-        return ActionResult.SUCCESS
+        return ItemActionResult.SUCCESS
     }
 
     /**
@@ -201,7 +212,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         player: PlayerEntity,
         hand: Hand,
         held: ItemStack
-    ): ActionResult {
+    ): ItemActionResult {
         val bucketItem = held.item
 
         // 空桶：取出流体
@@ -223,9 +234,9 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         player: PlayerEntity,
         hand: Hand,
         held: ItemStack
-    ): ActionResult {
+    ): ItemActionResult {
         if (be.fluidAmount < FluidConstants.BUCKET) {
-            return ActionResult.PASS
+            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         }
 
         val current = be.fluidVariant
@@ -233,7 +244,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
             val extracted = be.fluidTank.extract(current, FluidConstants.BUCKET, tx)
             if (extracted < FluidConstants.BUCKET) {
                 tx.abort()
-                return ActionResult.PASS
+                return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
             }
 
             if (!player.abilities.creativeMode) {
@@ -249,7 +260,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
             tx.commit()
             be.markDirty()
         }
-        return ActionResult.SUCCESS
+        return ItemActionResult.SUCCESS
     }
 
     /**
@@ -264,13 +275,13 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         player: PlayerEntity,
         hand: Hand,
         held: ItemStack
-    ): ActionResult {
+    ): ItemActionResult {
         // 通过 FluidStorage.ITEM 获取桶内流体
         val bucketStorage = try {
             FluidStorage.ITEM.find(held, null)
         } catch (_: NullPointerException) {
             null
-        } ?: return ActionResult.PASS
+        } ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
 
         var bucketFluid: FluidVariant? = null
         var bucketAmount: Long = 0
@@ -283,7 +294,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         }
 
         if (bucketFluid == null || bucketFluid.isBlank || bucketAmount < FluidConstants.BUCKET) {
-            return ActionResult.PASS
+            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         }
 
         val tankVariant = be.fluidVariant
@@ -292,12 +303,12 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
 
         // 检查：已有不同流体，拒绝放入
         if (!tankVariant.isBlank && !tankVariant.equals(bucketFluid)) {
-            return ActionResult.PASS
+            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         }
 
         // 检查：没有空间
         if (tankAmount >= tankCapacity) {
-            return ActionResult.PASS
+            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         }
 
         // 计算可放入量
@@ -307,7 +318,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
             val inserted = be.fluidTank.insert(bucketFluid, canAccept, tx)
             if (inserted <= 0) {
                 tx.abort()
-                return ActionResult.PASS
+                return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
             }
 
             // 消耗 1 桶流体：等效替换为空桶
@@ -324,7 +335,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
             tx.commit()
             be.markDirty()
         }
-        return ActionResult.SUCCESS
+        return ItemActionResult.SUCCESS
     }
 
     /**

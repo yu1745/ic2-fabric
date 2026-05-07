@@ -34,7 +34,9 @@ import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
+import net.minecraft.util.ItemActionResult
 import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.random.Random
 import net.minecraft.registry.tag.ItemTags
@@ -146,16 +148,27 @@ class FoamBlock : Block(
         world.setBlockState(pos, wall, Block.NOTIFY_ALL)
     }
 
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.mainHandStack
-        if (!stack.isOf(Items.SAND)) return ActionResult.PASS
+    override fun onUseWithItem(
+        stack: ItemStack,
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ItemActionResult {
+        if (world.isClient) return ItemActionResult.SUCCESS
+        if (!stack.isOf(Items.SAND)) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         val wall = LightGrayWallBlock::class.instance().defaultState
         world.setBlockState(pos, wall, Block.NOTIFY_ALL)
         world.playSound(null, pos, SoundEvents.BLOCK_SAND_PLACE, SoundCategory.BLOCKS, 0.85f, 0.9f)
         world.syncWorldEvent(2001, pos, Block.getRawIdFromState(state))
         if (!player.abilities.creativeMode) stack.decrement(1)
-        return ActionResult.CONSUME
+        return ItemActionResult.SUCCESS
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+        return ActionResult.PASS
     }
 
     companion object {
@@ -203,16 +216,27 @@ class ReinforcedFoamBlock : Block(
         world.setBlockState(pos, stone, Block.NOTIFY_ALL)
     }
 
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.mainHandStack
-        if (!stack.isOf(Items.SAND)) return ActionResult.PASS
+    override fun onUseWithItem(
+        stack: ItemStack,
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ItemActionResult {
+        if (world.isClient) return ItemActionResult.SUCCESS
+        if (!stack.isOf(Items.SAND)) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         val stone = ReinforcedStoneBlock::class.instance().defaultState
         world.setBlockState(pos, stone, Block.NOTIFY_ALL)
         world.playSound(null, pos, SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS, 0.85f, 0.85f)
         world.syncWorldEvent(2001, pos, Block.getRawIdFromState(state))
         if (!player.abilities.creativeMode) stack.decrement(1)
-        return ActionResult.CONSUME
+        return ItemActionResult.SUCCESS
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+        return ActionResult.PASS
     }
 
     companion object {
@@ -477,14 +501,25 @@ class BlackWallBlock : Block(AbstractBlock.Settings.copy(Blocks.BLACK_CONCRETE).
 class WoodenScaffoldBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_PLANKS).strength(1.0f).nonOpaque()
 ) : PillarBlock(settings) {
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.mainHandStack
-        if (!stack.isOf(Items.STICK) || stack.count <= 2) return ActionResult.PASS
+    override fun onUseWithItem(
+        stack: ItemStack,
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ItemActionResult {
+        if (world.isClient) return ItemActionResult.SUCCESS
+        if (!stack.isOf(Items.STICK) || stack.count <= 2) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         world.setBlockState(pos, ReinforcedWoodenScaffoldBlock::class.instance().defaultState.with(AXIS, state.get(AXIS)), Block.NOTIFY_ALL)
         world.playSound(null, pos, SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.BLOCKS, 1.0f, 1.0f)
         if (!player.abilities.creativeMode) stack.decrement(2)
-        return ActionResult.CONSUME
+        return ItemActionResult.SUCCESS
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+        return ActionResult.PASS
     }
 
     companion object {
@@ -523,14 +558,25 @@ class ReinforcedWoodenScaffoldBlock(
 class IronScaffoldBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(3.0f).nonOpaque()
 ) : PillarBlock(settings) {
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
-        if (world.isClient) return ActionResult.SUCCESS
-        val stack = player.mainHandStack
-        if (!stack.isOf(IronFenceBlock::class.item())) return ActionResult.PASS
+    override fun onUseWithItem(
+        stack: ItemStack,
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ItemActionResult {
+        if (world.isClient) return ItemActionResult.SUCCESS
+        if (!stack.isOf(IronFenceBlock::class.item())) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
         world.setBlockState(pos, ReinforcedIronScaffoldBlock::class.instance().defaultState.with(AXIS, state.get(AXIS)), Block.NOTIFY_ALL)
         world.playSound(null, pos, SoundEvents.BLOCK_METAL_PLACE, SoundCategory.BLOCKS, 1.0f, 1.0f)
         if (!player.abilities.creativeMode) stack.decrement(1)
-        return ActionResult.CONSUME
+        return ItemActionResult.SUCCESS
+    }
+
+    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
+        return ActionResult.PASS
     }
 
     companion object {
