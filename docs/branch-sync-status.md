@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **58 个 commit**，**57 个已同步，1 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **58 个 commit**，**58 个已同步，0 个待同步**。
 （归档 1-37 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -34,7 +34,7 @@
 | 55 | `f9f399fc` | feat: 合成表调整 & 量子太阳能发电机添加4充电槽 | ✅ | cherry-pick + 适配 1.21.1 API（getScreenOpeningData、RegistryWrapper、validateTicker、RecipeExporter）+ datagen 刷新 |
 | 56 | `54beaf9f` | feat: 采矿镭射枪配置化+扳手支持变压器六面朝向 | ✅ | |
 | 57 | `48bbc126` | feat: 扫描仪GUI范围控制+能耗按体积动态计算+4列网格结果展示 | ✅ | |
-| 58 | `10a8b66d` | feat: 核反应堆布局锁定与漏斗堆叠绕过修复 | ❌ | |
+| 58 | `10a8b66d` | feat: 核反应堆布局锁定与漏斗堆叠绕过修复 | ✅ | |
 
 ## 同步历史
 
