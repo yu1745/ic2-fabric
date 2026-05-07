@@ -14,15 +14,19 @@ import net.minecraft.item.ItemStack
  */
 object ReactorItemStorageProvider {
 
-    fun getStorage(reactor: NuclearReactorBlockEntity): Storage<ItemVariant> = ReactorItemStorage(reactor)
+    fun getStorage(reactor: NuclearReactorBlockEntity): Storage<ItemVariant> {
+        return ReactorItemStorage(reactor)
+    }
 
     fun getStorageForChamber(be: ReactorChamberBlockEntity): Storage<ItemVariant>? {
-        val reactor = be.findAdjacentReactorPublic() ?: return null
+        val reactor = be.findAdjacentReactorPublic()
+        if (reactor == null) return null
         return ReactorItemStorage(reactor)
     }
 
     fun getStorageForAccessHatch(be: ReactorAccessHatchBlockEntity): Storage<ItemVariant>? {
-        val reactor = be.getCentralReactorPublic() ?: return null
+        val reactor = be.getCentralReactorPublic()
+        if (reactor == null) return null
         return ReactorItemStorage(reactor)
     }
 }
@@ -55,6 +59,14 @@ private class ReactorItemStorage(
             if (movedTotal >= maxAmount) break
             if (!reactor.isValid(slot, probe)) continue
             if (!reactor.getStack(slot).isEmpty) continue
+
+            // 布局锁定：空槽不允许插入，只允许与锁定类型匹配的物品
+            if (reactor.layoutLocked) {
+                val lockedItem = reactor.getLockedItemForSlot(slot)
+                if (lockedItem == null) continue
+                if (probe.item !== lockedItem) continue
+            }
+
             updateSnapshots(transaction)
             reactor.setStack(slot, probe.copy())
             movedTotal += 1L

@@ -3,6 +3,8 @@ package ic2_120.content
 import ic2_120.Ic2_120
 import ic2_120.content.block.DirectionalMachineBlock
 import ic2_120.content.block.MachineBlock
+import ic2_120.content.block.PatternStorageBlock
+import ic2_120.content.block.machines.PatternStorageBlockEntity
 import ic2_120.content.block.pipes.BasePipeBlock
 import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.pipes.PipeNetworkManager
@@ -175,6 +177,41 @@ object WrenchHandler {
                         )
                         itemEntity.setToDefaultPickupDelay()
                         world.spawnEntity(itemEntity)
+                    }
+                    didBreak
+                } else if (block is PatternStorageBlock) {
+                    val patternBe = world.getBlockEntity(pos) as? PatternStorageBlockEntity
+                    // 水晶要爆出来，不保存在 NBT 里
+                    val crystalStack = patternBe?.removeStack(PatternStorageBlockEntity.SLOT_CRYSTAL, 64)
+                    val nbt = patternBe?.createNbt()
+                    world.removeBlockEntity(pos)
+                    val didBreak = world.breakBlock(pos, false, player)
+                    if (didBreak && nbt != null) {
+                        val dropped = ItemStack(block.asItem())
+                        if (!nbt.isEmpty) {
+                            dropped.orCreateNbt.put("BlockEntityTag", nbt)
+                        }
+                        val patternEntity = net.minecraft.entity.ItemEntity(
+                            world,
+                            pos.x.toDouble() + 0.5,
+                            pos.y.toDouble() + 0.5,
+                            pos.z.toDouble() + 0.5,
+                            dropped
+                        )
+                        patternEntity.setToDefaultPickupDelay()
+                        world.spawnEntity(patternEntity)
+                        // 水晶单独掉落
+                        if (crystalStack != null && !crystalStack.isEmpty) {
+                            val crystalEntity = net.minecraft.entity.ItemEntity(
+                                world,
+                                pos.x.toDouble() + 0.5,
+                                pos.y.toDouble() + 0.5,
+                                pos.z.toDouble() + 0.5,
+                                crystalStack
+                            )
+                            crystalEntity.setToDefaultPickupDelay()
+                            world.spawnEntity(crystalEntity)
+                        }
                     }
                     didBreak
                 } else {

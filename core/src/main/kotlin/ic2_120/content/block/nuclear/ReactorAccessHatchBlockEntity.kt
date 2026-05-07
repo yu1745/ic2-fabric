@@ -29,6 +29,8 @@ class ReactorAccessHatchBlockEntity(
 
     fun getCentralReactorPublic(): NuclearReactorBlockEntity? = getCentralReactor()
 
+    override fun getMaxCountPerStack(): Int = 1
+
     private fun getCentralReactor(): NuclearReactorBlockEntity? {
         val w = world ?: return null
         for (dx in -2..2) {
@@ -57,6 +59,9 @@ class ReactorAccessHatchBlockEntity(
     }
     override fun canPlayerUse(player: PlayerEntity): Boolean =
         getCentralReactor()?.canPlayerUse(player) ?: false
+
+    override fun isValid(slot: Int, stack: ItemStack): Boolean =
+        getCentralReactor()?.isValid(slot, stack) ?: true
 
     companion object {
         fun tick(world: World, pos: BlockPos, state: BlockState, be: ReactorAccessHatchBlockEntity) {

@@ -29,7 +29,8 @@ object NetworkManager {
     private val REACTOR_HEAT_INFO_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_heat_info")
     private val WIND_ROTOR_STATE_PACKET = Identifier(Ic2_120.MOD_ID, "wind_rotor_state")
     private val WATER_ROTOR_STATE_PACKET = Identifier(Ic2_120.MOD_ID, "water_rotor_state")
-    
+    private val REACTOR_LAYOUT_LOCK_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_layout_lock")
+
     private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
     val TOGGLE_NIGHT_VISION_GOGGLES_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_night_vision_goggles")
     val TOGGLE_NANO_VISION_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_nano_vision")
@@ -209,6 +210,12 @@ object NetworkManager {
         val buf = PacketByteBuf(Unpooled.buffer())
         ReactorHeatInfoPacket.write(packet, buf)
         ServerPlayNetworking.send(player, REACTOR_HEAT_INFO_PACKET, buf)
+    }
+
+    fun sendToClient(player: ServerPlayerEntity, packet: ReactorLayoutLockPacket) {
+        val buf = PacketByteBuf(Unpooled.buffer())
+        ReactorLayoutLockPacket.write(packet, buf)
+        ServerPlayNetworking.send(player, REACTOR_LAYOUT_LOCK_PACKET, buf)
     }
 
     // 发送风力发电机转子状态到附近玩家

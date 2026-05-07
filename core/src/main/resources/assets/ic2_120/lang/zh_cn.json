@@ -940,6 +940,8 @@
   "gui.ic2_120.nuclear_reactor.actual_dissipate": "实际散热 %s HU/t",
   "gui.ic2_120.nuclear_reactor.coolant_input": "冷液 %1$s/%2$s",
   "gui.ic2_120.nuclear_reactor.hot_coolant": "热液 %1$s/%2$s",
+  "gui.ic2_120.nuclear_reactor.lock": "锁定布局",
+  "gui.ic2_120.nuclear_reactor.unlock": "解锁布局",
   "gui.ic2_120.solar_distiller.distill_progress": "蒸馏进度",
   "gui.ic2_120.solar_distiller.input_water": "输入 %s mB",
   "gui.ic2_120.solar_distiller.output_distilled": "输出 %s mB",
