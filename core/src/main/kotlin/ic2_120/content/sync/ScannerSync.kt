@@ -12,19 +12,31 @@ class ScannerSync(schema: SyncSchema) {
         const val PROPERTY_ENERGY_CAPACITY = 1
         const val PROPERTY_USES_REMAINING = 2
         const val PROPERTY_MAX_USES = 3
-        const val PROPERTY_COUNT = 4
+        const val PROPERTY_RANGE_X = 4
+        const val PROPERTY_RANGE_Y = 6
+        const val PROPERTY_RANGE_Z = 8
+        const val PROPERTY_COUNT = 10
     }
 
     var energy by schema.int("Energy")
     var energyCapacity by schema.int("EnergyCapacity")
     var usesRemaining by schema.int("UsesRemaining")
     var maxUses by schema.int("MaxUses")
+    var rangeX by schema.int("RangeX")
+    var rangeY by schema.int("RangeY")
+    var rangeZ by schema.int("RangeZ")
 
     fun init(energy: Int, energyCapacity: Int, usesRemaining: Int, maxUses: Int) {
         this.energy = energy
         this.energyCapacity = energyCapacity
         this.usesRemaining = usesRemaining
         this.maxUses = maxUses
+    }
+
+    fun initRanges(defaultRange: Int) {
+        rangeX = defaultRange
+        rangeY = defaultRange
+        rangeZ = defaultRange
     }
 
     fun consumeEnergy(amount: Int): Boolean {
