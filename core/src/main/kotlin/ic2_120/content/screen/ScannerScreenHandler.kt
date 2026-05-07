@@ -19,6 +19,7 @@ import net.minecraft.util.Identifier
 
 import ic2_120.content.item.AdvancedScannerItem
 import ic2_120.content.item.OdScannerItem
+import ic2_120.content.item.ScannerType
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.network.OreScanEntry
 import ic2_120.content.network.ScannerResultPacket
@@ -54,6 +55,7 @@ class ScannerScreenHandler(
         val energy = IElectricTool.getEnergy(stack).toInt().coerceIn(0, Int.MAX_VALUE)
         val uses = OdScannerItem.getUsesRemaining(stack)
         sync.init(energy, type.energyCapacity.toInt().coerceIn(0, Int.MAX_VALUE), uses, type.maxUses)
+        sync.initRanges(type.scanRadius)
     }
 
     /** 获取当前手持的扫描仪物品 */
@@ -67,14 +69,29 @@ class ScannerScreenHandler(
     }
 
     override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
-        if (id != BUTTON_ID_SCAN) return false
-
         val stack = player.mainHandStack
         if (stack.item !is OdScannerItem && stack.item !is AdvancedScannerItem) return false
         val type = OdScannerItem.getScannerType(stack)
 
+        // 范围控制按钮（快速响应，不消耗能量）
+        when (id) {
+            BUTTON_RANGE_X_DEC -> { sync.rangeX = maxOf(1, sync.rangeX - 1); return true }
+            BUTTON_RANGE_X_INC -> { sync.rangeX = minOf(type.scanRadius, sync.rangeX + 1); return true }
+            BUTTON_RANGE_Y_DEC -> { sync.rangeY = maxOf(1, sync.rangeY - 1); return true }
+            BUTTON_RANGE_Y_INC -> { sync.rangeY += 1; return true }
+            BUTTON_RANGE_Y_DEC_10 -> { sync.rangeY = maxOf(1, sync.rangeY - 10); return true }
+            BUTTON_RANGE_Y_INC_10 -> { sync.rangeY += 10; return true }
+            BUTTON_RANGE_Z_DEC -> { sync.rangeZ = maxOf(1, sync.rangeZ - 1); return true }
+            BUTTON_RANGE_Z_INC -> { sync.rangeZ = minOf(type.scanRadius, sync.rangeZ + 1); return true }
+        }
+
+        if (id != BUTTON_ID_SCAN) return false
+
+        // 根据扫描盒子体积动态计算能量消耗
+        val energyCost = computeEnergyCost(type, sync.rangeX, sync.rangeY, sync.rangeZ)
+
         // 扣能量
-        if (!sync.consumeEnergy(type.energyPerScan)) {
+        if (!sync.consumeEnergy(energyCost)) {
             player.sendMessage(
                 net.minecraft.text.Text.translatable("message.ic2_120.scanner.no_energy")
                     .formatted(net.minecraft.util.Formatting.RED),
@@ -98,7 +115,7 @@ class ScannerScreenHandler(
         OdScannerItem.setUsesRemaining(stack, sync.usesRemaining)
 
         // 执行扫描
-        val results = performScan(player, type.scanRadius)
+        val results = performScan(player)
         player.world.playSound(
             null,
             player.blockPos,
@@ -127,19 +144,23 @@ class ScannerScreenHandler(
         return true
     }
 
-    private fun performScan(player: PlayerEntity, radius: Int): List<OreScanEntry> {
+    private fun performScan(player: PlayerEntity): List<OreScanEntry> {
         val world = player.world
         if (world.isClient) return emptyList()
 
         val center = player.blockPos
         val oreCounts = mutableMapOf<Identifier, Int>()
 
-        val minY = world.bottomY
-        val topY = world.topY
+        val rangeX = sync.rangeX.coerceAtLeast(1)
+        val rangeZ = sync.rangeZ.coerceAtLeast(1)
+        val rangeY = sync.rangeY.coerceAtLeast(1)
 
-        for (dx in -radius..radius) {
-            for (dz in -radius..radius) {
-                for (y in minY until topY) {
+        val minY = (center.y - rangeY).coerceAtLeast(world.bottomY)
+        val maxY = (center.y + rangeY).coerceAtMost(world.topY - 1)
+
+        for (dx in -rangeX..rangeX) {
+            for (dz in -rangeZ..rangeZ) {
+                for (y in minY..maxY) {
                     val pos = center.add(dx, 0, dz).withY(y)
                     val state = world.getBlockState(pos)
                     if (state.isAir) continue
@@ -148,7 +169,6 @@ class ScannerScreenHandler(
                 }
             }
         }
-
 
         return oreCounts
             .filter { (id, _) ->
@@ -164,6 +184,28 @@ class ScannerScreenHandler(
 
     companion object {
         const val BUTTON_ID_SCAN = 0
+
+        /**
+         * 根据扫描盒子体积计算实际能量消耗。
+         * - V >= V0（默认体积）→ 1 倍消耗
+         * - V < V0 → 线性插值，最大 10 倍（1×1×1 时 10 倍消耗）
+         */
+        @JvmStatic
+        fun computeEnergyCost(type: ScannerType, rangeX: Int, rangeY: Int, rangeZ: Int): Int {
+            val v = (rangeX * 2 + 1).toDouble() * (rangeY * 2 + 1) * (rangeZ * 2 + 1)
+            val side = type.scanRadius * 2 + 1
+            val v0 = (side * side * side).toDouble()
+            val multiplier = if (v >= v0) 1.0 else 10.0 - 9.0 * (v / v0)
+            return (type.energyPerScan * multiplier).toInt().coerceAtLeast(1)
+        }
+        const val BUTTON_RANGE_X_DEC = 1
+        const val BUTTON_RANGE_X_INC = 2
+        const val BUTTON_RANGE_Y_DEC = 3
+        const val BUTTON_RANGE_Y_INC = 4
+        const val BUTTON_RANGE_Y_DEC_10 = 5
+        const val BUTTON_RANGE_Y_INC_10 = 6
+        const val BUTTON_RANGE_Z_DEC = 7
+        const val BUTTON_RANGE_Z_INC = 8
 
         const val PANEL_WIDTH = 256
         const val PANEL_HEIGHT = 256
