@@ -94,13 +94,14 @@ class HybridSolarPanelBlock : MachineBlock() {
 
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, HybridSolarPanelBlock::class.item(), 1)
                 .pattern("CLC")
-                .pattern("RAA")
-                .pattern("CEC")
+                .pattern("RAR")
+                .pattern("BEB")
                 .input('C', carbonPlate)
                 .input('L', Items.LAPIS_BLOCK)
                 .input('R', reinforcedPlate)
                 .input('A', advancedSolar)
                 .input('E', enrichedSunnarium)
+                .input('B', circuit)
                 .criterion(hasItem(advancedSolar), conditionsFromItem(advancedSolar))
                 .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("hybrid_solar_panel"))
         }

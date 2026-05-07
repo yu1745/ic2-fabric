@@ -2,22 +2,22 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
+    "A": {
+      "item": "ic2_120_advanced_solar_addon:advanced_solar_panel"
+    },
     "C": {
       "item": "ic2_120:coal_chunk"
     },
     "L": {
       "item": "minecraft:lapis_block"
     },
-    "M": {
-      "item": "ic2_120_advanced_solar_addon:mt_core"
-    },
     "S": {
-      "item": "ic2_120_advanced_solar_addon:enriched_sunnarium_alloy"
+      "item": "ic2_120_advanced_solar_addon:enriched_sunnarium"
     }
   },
   "pattern": [
     " L ",
-    "CMC",
+    "CAC",
     "SCS"
   ],
   "result": {

@@ -63,7 +63,9 @@ abstract class SolarPanelBlockEntity(
 
     override fun getInventory(): Inventory? = null
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    protected open fun getChargeSlotCount(): Int = 0
+
+    open fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         if (ticker++ % tickRate == 0) {
@@ -152,6 +154,8 @@ abstract class SolarPanelBlockEntity(
     override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        buf.writeVarInt(0) // charge slot count (overridden in subclasses)
+        buf.writeVarInt(tier) // charge tier
     }
 
     protected open fun getBlockName(): String = "advanced_solar_panel"

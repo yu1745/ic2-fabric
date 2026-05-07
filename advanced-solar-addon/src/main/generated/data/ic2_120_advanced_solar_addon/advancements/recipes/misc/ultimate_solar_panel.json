@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_mt_core": {
+    "has_advanced_solar_panel": {
       "conditions": {
         "items": [
           {
             "items": [
-              "ic2_120_advanced_solar_addon:mt_core"
+              "ic2_120_advanced_solar_addon:advanced_solar_panel"
             ]
           }
         ]
@@ -22,7 +22,7 @@
   },
   "requirements": [
     [
-      "has_mt_core",
+      "has_advanced_solar_panel",
       "has_the_recipe"
     ]
   ],
