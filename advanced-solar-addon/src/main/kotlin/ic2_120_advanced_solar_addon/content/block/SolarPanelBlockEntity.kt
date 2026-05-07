@@ -65,7 +65,9 @@ abstract class SolarPanelBlockEntity(
 
     override fun getInventory(): Inventory? = null
 
-    fun tick(world: World, pos: BlockPos, state: BlockState) {
+    protected open fun getChargeSlotCount(): Int = 0
+
+    open fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
         if (ticker++ % tickRate == 0) {
@@ -155,6 +157,8 @@ abstract class SolarPanelBlockEntity(
         val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        buf.writeVarInt(0) // charge slot count (overridden in subclasses)
+        buf.writeVarInt(tier) // charge tier
         return buf
     }
 

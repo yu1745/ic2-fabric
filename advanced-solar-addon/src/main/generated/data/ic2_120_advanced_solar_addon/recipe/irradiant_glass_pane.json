@@ -7,15 +7,18 @@
     },
     "I": {
       "item": "ic2_120_advanced_solar_addon:irradiant_uranium"
+    },
+    "X": {
+      "item": "minecraft:glowstone_dust"
     }
   },
   "pattern": [
     "GGG",
-    "GIG",
+    "IXI",
     "GGG"
   ],
   "result": {
-    "count": 1,
+    "count": 6,
     "id": "ic2_120_advanced_solar_addon:irradiant_glass_pane"
   }
 }

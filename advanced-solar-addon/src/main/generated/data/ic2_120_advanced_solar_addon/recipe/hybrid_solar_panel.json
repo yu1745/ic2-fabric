@@ -5,6 +5,9 @@
     "A": {
       "item": "ic2_120_advanced_solar_addon:advanced_solar_panel"
     },
+    "B": {
+      "item": "ic2_120:advanced_circuit"
+    },
     "C": {
       "item": "ic2_120:carbon_plate"
     },
@@ -20,8 +23,8 @@
   },
   "pattern": [
     "CLC",
-    "RAA",
-    "CEC"
+    "RAR",
+    "BEB"
   ],
   "result": {
     "count": 1,

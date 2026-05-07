@@ -28,7 +28,7 @@ class MatterGeneratorScreen(
     init {
         backgroundWidth = GUI_SIZE.width
         backgroundHeight = GUI_SIZE.height
-        titleY = 4
+        titleY = -1000
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {

@@ -1,7 +1,9 @@
 package ic2_120_advanced_solar_addon.content.block
 
 import ic2_120_advanced_solar_addon.content.item.QuantumCore
+import ic2_120_advanced_solar_addon.content.screen.SolarPanelScreenHandler
 import ic2_120.content.block.MachineBlock
+import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
@@ -18,13 +20,25 @@ import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.inventory.Inventories
+import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
+import net.minecraft.nbt.NbtCompound
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.registry.RegistryWrapper
+import io.netty.buffer.Unpooled
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.screen.NamedScreenHandlerFactory
+import net.minecraft.screen.ScreenHandler
+import net.minecraft.screen.ScreenHandlerContext
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
+import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -91,7 +105,86 @@ class QuantumSolarPanelBlock : MachineBlock() {
 
 @ModBlockEntity(block = QuantumSolarPanelBlock::class)
 class QuantumSolarPanelBlockEntity(pos: BlockPos, state: BlockState) :
-    SolarPanelBlockEntity(QuantumSolarPanelBlockEntity::class.type(), pos, state, dayPower = 4096, nightPower = 2048, maxStorage = 10000000, tier = 5, activeProperty = QuantumSolarPanelBlock.ACTIVE) {
+    SolarPanelBlockEntity(QuantumSolarPanelBlockEntity::class.type(), pos, state, dayPower = 4096, nightPower = 2048, maxStorage = 10000000, tier = 5, activeProperty = QuantumSolarPanelBlock.ACTIVE),
+    Inventory {
+
+    companion object {
+        private const val CHARGE_SLOTS = 4
+        private const val INVENTORY_NBT_KEY = "charge_inventory"
+    }
+
+    private val inventory = DefaultedList.ofSize(CHARGE_SLOTS, ItemStack.EMPTY)
+
+    private val chargerComponents = (0 until CHARGE_SLOTS).map { slot ->
+        BatteryChargerComponent(
+            inventory = this,
+            batterySlot = slot,
+            machineTierProvider = { tier },
+            machineEnergyProvider = { sync.amount },
+            extractEnergy = { requested -> sync.extractEnergy(requested) },
+            canChargeNow = { true }
+        )
+    }
+
+    override fun getChargeSlotCount(): Int = CHARGE_SLOTS
+
+    override fun getInventory(): Inventory? = if (getChargeSlotCount() > 0) this else null
 
     override fun getBlockName(): String = "quantum_solar_panel"
+
+    // ====== Tick ======
+
+    override fun tick(world: World, pos: BlockPos, state: BlockState) {
+        super.tick(world, pos, state)
+
+        for (charger in chargerComponents) {
+            charger.tick()
+        }
+    }
+
+    // ====== Inventory ======
+
+    override fun size(): Int = CHARGE_SLOTS
+    override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun setStack(slot: Int, stack: ItemStack) {
+        inventory[slot] = stack
+        markDirty()
+    }
+    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
+    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+    override fun clear() = inventory.clear()
+    override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
+    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+
+    // ====== NBT ======
+
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt.getCompound(INVENTORY_NBT_KEY), inventory, lookup)
+    }
+
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        nbt.put(INVENTORY_NBT_KEY, Inventories.writeNbt(NbtCompound(), inventory, lookup))
+    }
+
+    // ====== Screen ======
+
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
+        buf.writeBlockPos(pos)
+        buf.writeVarInt(syncedData.size())
+        buf.writeVarInt(CHARGE_SLOTS)
+        buf.writeVarInt(tier)
+        return buf
+    }
+
+    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
+        return SolarPanelScreenHandler(
+            syncId, playerInventory,
+            ScreenHandlerContext.create(world!!, pos),
+            syncedData,
+            this, CHARGE_SLOTS, tier
+        )
+    }
 }

@@ -155,12 +155,13 @@ class IrradiantGlassPane : Item(Item.Settings()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IrradiantGlassPane::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IrradiantGlassPane::class.instance(), 6)
                 .pattern("GGG")
-                .pattern("GIG")
+                .pattern("IXI")
                 .pattern("GGG")
                 .input('G', ReinforcedGlassBlock::class.instance())
                 .input('I', IrradiantUranium::class.instance())
+                .input('X', Items.GLOWSTONE_DUST)
                 .criterion(hasItem(ReinforcedGlassBlock::class.instance()), conditionsFromItem(ReinforcedGlassBlock::class.instance()))
                 .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("irradiant_glass_pane"))
         }

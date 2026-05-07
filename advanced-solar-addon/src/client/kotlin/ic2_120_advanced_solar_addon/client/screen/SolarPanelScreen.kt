@@ -54,6 +54,8 @@ class SolarPanelScreen(
             else -> Text.translatable("gui.ic2_120_advanced_solar_addon.solar_state.unknown").string
         }
 
+        val chargeLabel = Text.translatable("ic2_120.gui.charge_slots")
+
         val content: UiScope.() -> Unit = {
             Column(
                 x = left + 8,
@@ -78,12 +80,29 @@ class SolarPanelScreen(
                     Text(Text.translatable("gui.ic2_120_advanced_solar_addon.night").string + ": ", color = 0xAAAAAA)
                     Text("${EnergyFormatUtils.formatEu(nightPower.toLong())} EU/t", color = 0xFFFFFF)
                 }
+
+                if (handler.machineSlotCount > 0) {
+                    Flex(
+                        direction = FlexDirection.ROW,
+                        alignItems = AlignItems.CENTER,
+                        gap = 4
+                    ) {
+                        Text(chargeLabel.string, color = 0xAAAAAA, shadow = false)
+                        for (i in 0 until handler.machineSlotCount) {
+                            SlotAnchor(
+                                id = slotAnchorId(i),
+                                width = 18,
+                                height = 18
+                            )
+                        }
+                    }
+                }
             }
 
             playerInventoryAndHotbarSlotAnchors(
                 left = left,
                 top = top,
-                playerInvStart = SolarPanelScreenHandler.PLAYER_INV_START,
+                playerInvStart = handler.machineSlotCount,
                 playerInvY = GUI_SIZE.playerInvY,
                 hotbarY = GUI_SIZE.hotbarY
             )
