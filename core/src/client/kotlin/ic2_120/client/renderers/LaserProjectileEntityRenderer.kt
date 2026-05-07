@@ -1,5 +1,6 @@
 package ic2_120.client.renderers
 
+import ic2_120.config.Ic2Config
 import ic2_120.content.entity.LaserProjectileEntity
 import net.minecraft.client.render.LightmapTextureManager
 import net.minecraft.client.render.OverlayTexture
@@ -27,7 +28,7 @@ class LaserProjectileEntityRenderer(
         private val WHITE_TEXTURE = Identifier("textures/misc/white.png")
 
         /** 弹体截面半径 */
-        private const val RADIUS = 0.04f
+        private val RADIUS: Float get() = Ic2Config.current.miningLaser.bulletRadius.toFloat()
         /** 截面边数 */
         private const val SIDES = 6
 

@@ -1,6 +1,7 @@
 package ic2_120.content
 
 import ic2_120.Ic2_120
+import ic2_120.content.block.DirectionalMachineBlock
 import ic2_120.content.block.MachineBlock
 import ic2_120.content.block.pipes.BasePipeBlock
 import ic2_120.content.block.pipes.PipeBlockEntity
@@ -92,11 +93,25 @@ object WrenchHandler {
                 return@register ActionResult.SUCCESS
             }
 
-            if (block !is MachineBlock) return@register ActionResult.PASS
+            if (block !is MachineBlock && block !is DirectionalMachineBlock) return@register ActionResult.PASS
 
             if (!world.isClient) {
-                val target = if (player.isSneaking) player.horizontalFacing else player.horizontalFacing.opposite
-                world.setBlockState(pos, state.with(Properties.HORIZONTAL_FACING, target))
+                when (block) {
+                    is DirectionalMachineBlock -> {
+                        // 变压器等六面朝向机器：根据玩家视角计算朝向
+                        val fullFacing = when {
+                            player.pitch < -45f -> Direction.UP
+                            player.pitch > 45f -> Direction.DOWN
+                            else -> player.horizontalFacing
+                        }
+                        val target = if (player.isSneaking) fullFacing else fullFacing.opposite
+                        world.setBlockState(pos, state.with(Properties.FACING, target))
+                    }
+                    is MachineBlock -> {
+                        val target = if (player.isSneaking) player.horizontalFacing else player.horizontalFacing.opposite
+                        world.setBlockState(pos, state.with(Properties.HORIZONTAL_FACING, target))
+                    }
+                }
                 world.playSound(null, pos, WRENCH_USE_SOUND, SoundCategory.BLOCKS, 1.0f, 1.0f)
             }
             ActionResult.SUCCESS

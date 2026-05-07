@@ -1,5 +1,6 @@
 package ic2_120.content.entity
 
+import ic2_120.config.Ic2Config
 import net.minecraft.block.AbstractFireBlock
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
@@ -40,9 +41,9 @@ class LaserProjectileEntity(
 
     companion object {
         /** 视觉长度 (blocks)，渲染时使用 */
-        const val VISUAL_LENGTH = 1.2
+        val VISUAL_LENGTH: Double get() = Ic2Config.current.miningLaser.visualLength
         /** 最大存活 tick 数 */
-        private const val MAX_LIFE = 200
+        private val MAX_LIFE: Int get() = Ic2Config.current.miningLaser.maxLife
 
         private val LASER_HIT_SOUND: SoundEvent = SoundEvent.of(Identifier("ic2", "item.laser.hit"))
 
@@ -216,7 +217,6 @@ class LaserProjectileEntity(
             val hardness = state.block.hardness.coerceAtLeast(0.1f)
             remainingRange -= hardness.toDouble()
             world.breakBlock(pos, true, owner)
-            tryRandomIgniteAfterBreak(pos)
             world.playSound(null, pos, LASER_HIT_SOUND, SoundCategory.PLAYERS, 0.8f, 1.2f)
             if (remainingRange > 0) {
                 nudgePastBlock(hitResult)
@@ -229,7 +229,6 @@ class LaserProjectileEntity(
         // 其他模式：破坏方块
         if (canBreak(state) && !ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, pos, owner)) {
             world.breakBlock(pos, true, owner)
-            tryRandomIgniteAfterBreak(pos)
             world.playSound(null, pos, LASER_HIT_SOUND, SoundCategory.PLAYERS, 0.8f, 1.2f)
         }
 
@@ -356,7 +355,8 @@ class LaserProjectileEntity(
         val dy = y - cameraY
         val dz = z - cameraZ
         val distSq = dx * dx + dy * dy + dz * dz
-        // 碰撞箱 0.1×0.1 导致默认渲染距离 ~10 格，覆盖为匹配追踪距离
-        return distSq < 256.0 * 256.0
+        // 碰撞箱 0.1×0.1 导致默认渲染距离 ~10 格，覆盖为匹配配置的渲染距离
+        val maxDist = Ic2Config.current.miningLaser.renderDistance
+        return distSq < maxDist * maxDist
     }
 }
