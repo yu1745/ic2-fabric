@@ -178,6 +178,20 @@
 
 产物在 `.gradle/loom-cache/minecraftMaven/net/minecraft/` 下，或参考 `../mc_source_{minecraft_version}/` 的副本。
 
+### Yarn 反混淆表
+
+用于将崩溃报告中的 `class_XXXX` / `method_XXXXX` 翻译为可读类名/方法名：
+
+```bash
+# 两个版本都在 loom-cache 下，替换 {version} 为具体版本号
+ls ~/.gradle/caches/fabric-loom/{version}/net.fabricmc.yarn.*/mappings.jar
+
+# 用法：从 jar 提取并查找
+jar tf /path/to/mappings.jar                  # 列出内容
+grep $'\tclass_XXXX\t' mappings/mappings.tiny # 查类名
+grep $'\tmethod_XXXXX\t' mappings/mappings.tiny # 查方法名
+```
+
 ### Fabric API 源码
 
 ```bash
