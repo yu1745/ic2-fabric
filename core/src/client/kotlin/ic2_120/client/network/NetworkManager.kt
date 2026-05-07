@@ -4,6 +4,7 @@ import ic2_120.content.network.BandwidthHudPacket
 import ic2_120.content.network.ConfigSyncPacket
 import ic2_120.content.network.ConfigSyncReceiver
 import ic2_120.content.network.ReactorHeatInfoPacket
+import ic2_120.content.network.ReactorLayoutLockPacket
 import ic2_120.content.network.ScannerResultPacket
 import ic2_120.content.network.TeleporterVisualStatePacket
 import ic2_120.content.network.WaterRotorStatePacket
@@ -22,10 +23,9 @@ import net.minecraft.util.Identifier
 
 object NetworkManager {
     private val REACTOR_HEAT_INFO_PACKET = Identifier.of(Ic2_120.MOD_ID, "reactor_heat_info")
-    private val BANDWIDTH_HUD_PACKET = BandwidthHudPacket.ID
     private val WIND_ROTOR_STATE_PACKET = WindRotorStatePacket.ID
     private val WATER_ROTOR_STATE_PACKET = WaterRotorStatePacket.ID
-    
+
     private val SCANNER_RESULT_PACKET = ScannerResultPacket.ID
     private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
     private val CONFIG_SYNC_PACKET = ConfigSyncPacket.ID
@@ -35,6 +35,17 @@ object NetworkManager {
             if (blockEntity is NuclearReactorBlockEntity) {
                 blockEntity.slotHeatInfo.clear()
                 blockEntity.slotHeatInfo.putAll(payload.slotHeatInfo)
+            }
+        }
+
+        ClientPlayNetworking.registerGlobalReceiver(ReactorLayoutLockPacket.ID) { payload, _ ->
+            val client = MinecraftClient.getInstance()
+            client.execute {
+                val be = client.world?.getBlockEntity(payload.pos)
+                if (be is ic2_120.content.block.nuclear.NuclearReactorBlockEntity) {
+                    be.lockedSlots.clear()
+                    be.lockedSlots.putAll(payload.lockedSlots)
+                }
             }
         }
 

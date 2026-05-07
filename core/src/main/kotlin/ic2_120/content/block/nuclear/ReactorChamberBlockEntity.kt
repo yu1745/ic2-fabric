@@ -34,6 +34,8 @@ class ReactorChamberBlockEntity(
         state
     )
 
+    override fun getMaxCountPerStack(): Int = 1
+
     fun findAdjacentReactorPublic(): NuclearReactorBlockEntity? = findAdjacentReactor()
 
     private fun findAdjacentReactor(): NuclearReactorBlockEntity? {
@@ -68,6 +70,8 @@ class ReactorChamberBlockEntity(
         findAdjacentReactor()?.markDirty()
         super.markDirty()
     }
+    override fun isValid(slot: Int, stack: ItemStack): Boolean =
+        findAdjacentReactor()?.isValid(slot, stack) ?: true
     override fun canPlayerUse(player: PlayerEntity): Boolean =
         findAdjacentReactor()?.canPlayerUse(player) ?: false
 

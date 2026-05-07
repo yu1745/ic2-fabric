@@ -12,6 +12,7 @@ import ic2_120.content.item.armor.QuantumChestplate
 import ic2_120.content.item.armor.QuantumHelmet
 import ic2_120.content.item.armor.QuantumLeggings
 import ic2_120.content.item.armor.QuantumBoots
+import ic2_120.Ic2_120
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.entity.EquipmentSlot
@@ -162,6 +163,10 @@ object NetworkManager {
         ServerPlayNetworking.send(player, packet)
     }
 
+    fun sendToClient(player: ServerPlayerEntity, packet: ReactorLayoutLockPacket) {
+        ServerPlayNetworking.send(player, packet)
+    }
+
     fun sendWindRotorStateToNearby(world: net.minecraft.world.World, pos: net.minecraft.util.math.BlockPos, isStuck: Boolean, stuckAngle: Float) {
         if (world.isClient) return
         val serverWorld = world as net.minecraft.server.world.ServerWorld
@@ -227,6 +232,7 @@ object NetworkManager {
         PayloadTypeRegistry.playS2C().register(TeleporterVisualStatePacket.ID, TeleporterVisualStatePacket.CODEC)
         PayloadTypeRegistry.playS2C().register(ConfigSyncPacket.ID, ConfigSyncPacket.CODEC)
         PayloadTypeRegistry.playS2C().register(SemifluidGeneratorFuelStatePacket.ID, SemifluidGeneratorFuelStatePacket.CODEC)
+        PayloadTypeRegistry.playS2C().register(ReactorLayoutLockPacket.ID, ReactorLayoutLockPacket.CODEC)
     }
 
     fun sendSemifluidGeneratorFuelState(world: ServerWorld, pos: BlockPos, fuelColorArgb: Int) {

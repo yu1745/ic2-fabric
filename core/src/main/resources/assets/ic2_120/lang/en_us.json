@@ -946,6 +946,8 @@
   "gui.ic2_120.nuclear_reactor.actual_dissipate": "Actual Cooling %s HU/t",
   "gui.ic2_120.nuclear_reactor.coolant_input": "Coolant %1$s/%2$s",
   "gui.ic2_120.nuclear_reactor.hot_coolant": "Hot Coolant %1$s/%2$s",
+  "gui.ic2_120.nuclear_reactor.lock": "Lock Layout",
+  "gui.ic2_120.nuclear_reactor.unlock": "Unlock Layout",
   "gui.ic2_120.solar_distiller.distill_progress": "Distillation Progress",
   "gui.ic2_120.solar_distiller.input_water": "Input %s mB",
   "gui.ic2_120.solar_distiller.output_distilled": "Output %s mB",

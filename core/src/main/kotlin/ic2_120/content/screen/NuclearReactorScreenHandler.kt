@@ -6,6 +6,8 @@ import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.FluidCellItem
 import ic2_120.content.item.getFluidCellVariant
 import ic2_120.content.item.isFluidCellEmpty
+import ic2_120.content.network.NetworkManager
+import ic2_120.content.network.ReactorLayoutLockPacket
 import ic2_120.content.reactor.IBaseReactorComponent
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
@@ -19,6 +21,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 
@@ -29,6 +32,7 @@ import net.minecraft.screen.ScreenHandler
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
+import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Identifier
 import ic2_120.registry.annotation.ScreenFactory
 
@@ -69,7 +73,20 @@ class NuclearReactorScreenHandler(
 
         // 槽位竖排：3 列→9 列，每列 9 行。index: col = i/9, row = i%9（几何由客户端 Compose 布局）
         for (index in 0 until reactorSlotCount) {
-            addSlot(PredicateSlot(blockInventory, index, 0, 0, REACTOR_SLOT_SPEC))
+            val slotIndex = index
+            addSlot(object : PredicateSlot(blockInventory, index, 0, 0, REACTOR_SLOT_SPEC) {
+                override fun canInsert(stack: ItemStack): Boolean {
+                    // 布局锁定：空槽不允许插入，只允许与锁定类型匹配的物品
+                    if (reactor?.layoutLocked == true) {
+                        val lockedItem = reactor.getLockedItemForSlot(slotIndex)
+                        if (lockedItem == null) return false
+                        if (stack.item !== lockedItem) return false
+                    }
+                    // 基础校验：IBaseReactorComponent
+                    if (!super.canInsert(stack)) return false
+                    return true
+                }
+            })
         }
 
         // 热模式：4 个流体槽（GUI 位置由客户端 Compose 布局）
@@ -140,6 +157,18 @@ class NuclearReactorScreenHandler(
             ) <= 64.0
         }, true)
 
+    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+        if (id != BUTTON_ID_TOGGLE_LOCK) return false
+        context.get({ world, pos ->
+            val be = world.getBlockEntity(pos) as? NuclearReactorBlockEntity ?: return@get
+            be.toggleLayoutLock()
+            // 发送锁数据同步包到客户端
+            val packet = ReactorLayoutLockPacket(pos, be.lockedSlots.toMap())
+            NetworkManager.sendToClient(player as ServerPlayerEntity, packet)
+        })
+        return true
+    }
+
     /** 反应堆槽位列数（3–9） */
     val reactorCols: Int get() = (reactorSlotCount + 8) / 9
 
@@ -150,6 +179,7 @@ class NuclearReactorScreenHandler(
     val hotbarY: Int get() = playerInvY + 58
 
     companion object {
+        const val BUTTON_ID_TOGGLE_LOCK = 100
         const val GRID_ROWS = 9
         /** 槽位区域居中：(FRAME_WIDTH - 能量条 - 间距 - 9*SLOT_SIZE - 间距 - 温度条) / 2 = 9 */
         const val SLOT_GRID_X = 31
@@ -197,9 +227,23 @@ class NuclearReactorScreenHandler(
             val propertyCount = buf.readVarInt()
             val capacity = buf.readVarInt().coerceIn(NuclearReactorSync.BASE_SLOTS, NuclearReactorBlockEntity.MAX_SLOTS)
             val isThermal = buf.readBoolean()
+            val layoutLocked = buf.readBoolean()
+            val lockSize = buf.readVarInt()
+            val lockedSlots = mutableMapOf<Int, Item>()
+            for (i in 0 until lockSize) {
+                val slot = buf.readVarInt()
+                val item = Registries.ITEM.get(buf.readIdentifier())
+                lockedSlots[slot] = item
+            }
             val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
             val blockInv = SimpleInventory(NuclearReactorBlockEntity.INVENTORY_SIZE)
             val reactor = playerInventory.player.world.getBlockEntity(pos) as? NuclearReactorBlockEntity
+            // 将锁数据写入 client BE，供槽位 canInsert 和 Screen 虚影渲染使用
+            reactor?.let {
+                it.layoutLocked = layoutLocked
+                it.lockedSlots.clear()
+                it.lockedSlots.putAll(lockedSlots)
+            }
             return NuclearReactorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount), capacity, reactor, isThermal)
         }
     }

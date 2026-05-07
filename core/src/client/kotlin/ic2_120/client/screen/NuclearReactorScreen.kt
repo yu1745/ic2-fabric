@@ -11,6 +11,8 @@ import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.item.ItemStack
+import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.text.Text
 
 @ModScreen(block = NuclearReactorBlock::class)
@@ -125,6 +127,22 @@ class NuclearReactorScreen(
             barWidth,
             9 * slotSize
         )
+
+        // 布局锁定时，为空槽绘制虚影
+        if (handler.sync.layoutLocked == 1) {
+            val reactor = handler.reactor
+            for (i in 0 until handler.reactorSlotCount) {
+                val slot = handler.slots[i]
+                if (slot.hasStack()) continue // 有实物不画虚影
+                val lockedItem = reactor?.getLockedItemForSlot(i) ?: continue
+                val ghostStack = ItemStack(lockedItem)
+                val sx = x + slot.x
+                val sy = y + slot.y
+                context.drawItem(ghostStack, sx, sy)
+                // 覆盖半透明黑色遮罩，产生虚影效果
+                context.fill(sx, sy, sx + 16, sy + 16, 0x90000000.toInt())
+            }
+        }
     }
 
     private fun drawVerticalEnergyBar(context: DrawContext, barX: Int, barY: Int, w: Int, h: Int) {
@@ -211,9 +229,32 @@ class NuclearReactorScreen(
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         val left = x
         val top = y
+
+        // 布局锁定按钮位置（左侧状态文本区域）
+        val isLocked = handler.sync.layoutLocked == 1
+        val lockButtonText = if (isLocked) "§c§l${t("gui.ic2_120.nuclear_reactor.unlock")}" else t("gui.ic2_120.nuclear_reactor.lock")
+        val lockTextWidth = textRenderer.getWidth(lockButtonText)
+        val thermalOffset = if (isThermalLayout()) thermalExtraWidth else 0
+        val lockBtnX = left - lockTextWidth - leftTextMargin - thermalOffset - 8
+        val lockBtnY = top + 24
+
         val content: UiScope.() -> Unit = {
             val h = NuclearReactorScreenHandler
             val sz = h.SLOT_SIZE
+
+            // 布局锁定按钮（左侧状态文本区域顶部）
+            Button(
+                text = lockButtonText,
+                x = lockBtnX,
+                y = lockBtnY,
+                absolute = true,
+                onClick = {
+                    client?.player?.networkHandler?.sendPacket(
+                        ButtonClickC2SPacket(handler.syncId, NuclearReactorScreenHandler.BUTTON_ID_TOGGLE_LOCK)
+                    )
+                }
+            )
+
             Column(
                 x = left + h.SLOT_GRID_X,
                 y = top + h.SLOT_GRID_Y,

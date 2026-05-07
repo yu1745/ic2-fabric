@@ -68,6 +68,10 @@ class NuclearReactorSync(
     /** 热模式实际热输出（已成功转换为热冷却液的 HU/周期） */
     var thermalHeatOutput by schema.int("ThermalHeatOutput", default = 0)
 
+    // 布局锁定
+    /** 布局是否已锁定（0 = false, 1 = true） */
+    var layoutLocked by schema.int("LayoutLocked", default = 0)
+
     // 热模式相关同步数据
     /** 是否为热模式（0 = false, 1 = true） */
     var isThermalMode by schema.int("IsThermalMode", default = 0)

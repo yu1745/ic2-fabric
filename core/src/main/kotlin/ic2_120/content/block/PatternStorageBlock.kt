@@ -21,7 +21,6 @@ import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
 import net.minecraft.item.ItemPlacementContext
@@ -29,13 +28,15 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.recipe.book.RecipeCategory
-import net.minecraft.server.world.ServerWorld
 import net.minecraft.state.StateManager
 import net.minecraft.text.Text
+import net.minecraft.inventory.Inventory
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.ItemScatterer
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
@@ -84,30 +85,6 @@ class PatternStorageBlock : MachineBlock() {
         tooltip.add(Text.literal("模板数量: $templateCount").formatted(Formatting.GRAY))
     }
 
-    override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        if (!world.isClient && !state.isOf(newState.block) && !moved) {
-            val blockEntity = world.getBlockEntity(pos) as? PatternStorageBlockEntity
-            if (blockEntity != null) {
-                val stack = ItemStack(asItem())
-                val lookup = world.registryManager
-                val nbt = blockEntity.createNbt(lookup)
-                if (!nbt.isEmpty) {
-                    stack.editCustomData { it.put("BlockEntityTag", nbt) }
-                }
-                val itemEntity = ItemEntity(
-                    world,
-                    pos.x + 0.5,
-                    pos.y + 0.5,
-                    pos.z + 0.5,
-                    stack
-                )
-                itemEntity.setToDefaultPickupDelay()
-                world.spawnEntity(itemEntity)
-            }
-            world.removeBlockEntity(pos)
-        }
-    }
-
     override fun getPickStack(world: WorldView, pos: BlockPos, state: BlockState): ItemStack {
         val itemStack = super.getPickStack(world, pos, state)
         val blockEntity = (world as BlockView).getBlockEntity(pos) as? PatternStorageBlockEntity ?: return itemStack
@@ -120,7 +97,9 @@ class PatternStorageBlock : MachineBlock() {
     }
 
     override fun onStacksDropped(state: BlockState, world: ServerWorld, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
-        // 已在 onStateReplaced 中自定义掉落带 NBT 的方块物品，这里不再执行默认掉落逻辑。
+        super.onStacksDropped(state, world, pos, tool, dropExperience)
+        val be = world.getBlockEntity(pos) as? Inventory ?: return
+        ItemScatterer.spawn(world, pos, be)
     }
 
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =

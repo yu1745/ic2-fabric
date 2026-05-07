@@ -52,11 +52,12 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ArmorItem
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtOps
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
@@ -70,7 +71,6 @@ import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-import net.minecraft.network.PacketByteBuf
 import io.netty.buffer.Unpooled
 
 /**
@@ -99,6 +99,9 @@ class NuclearReactorBlockEntity(
 
     private var emitHeatBuffer: Int = 0
 
+    /** tick 处理中标志，用于区分内部调用和外部插入 */
+    private var processingTick: Boolean = false
+
     private var outputAccumulator: Float = 0f
 
     private var pendingEnergyOutput: Long = 0L
@@ -124,6 +127,41 @@ class NuclearReactorBlockEntity(
     private var totalHeatDissipated: Int = 0
 
     val slotHeatInfo = mutableMapOf<Int, SlotHeatEnergyInfo>()
+
+    // 布局锁定相关字段
+    /** 布局是否已锁定 */
+    var layoutLocked: Boolean = false
+        set(value) {
+            field = value
+            sync.layoutLocked = if (value) 1 else 0
+        }
+    /** 锁定状态下各槽位的物品种类（slot → Item），空槽不记录 */
+    val lockedSlots: MutableMap<Int, Item> = mutableMapOf()
+
+    /** 获取指定槽位的锁定物品类型，未锁定返回 null */
+    fun getLockedItemForSlot(slot: Int): Item? = lockedSlots[slot]
+
+    /** 切换锁定状态 */
+    fun toggleLayoutLock() {
+        layoutLocked = !layoutLocked
+        if (layoutLocked) {
+            captureLockState()
+        } else {
+            lockedSlots.clear()
+        }
+        markDirty()
+    }
+
+    /** 锁定：快照当前布局到 lockedSlots */
+    private fun captureLockState() {
+        lockedSlots.clear()
+        for (slot in 0 until currentCapacity()) {
+            val stack = getStack(slot)
+            if (!stack.isEmpty) {
+                lockedSlots[slot] = stack.item
+            }
+        }
+    }
 
     // 热模式相关字段
     private var thermalModeCache: Boolean = false
@@ -244,8 +282,13 @@ class NuclearReactorBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
+    override fun getMaxCountPerStack(): Int = 1
+
     override fun setStack(slot: Int, stack: ItemStack) {
         val oldStack = getStack(slot).copy()
+        if (!stack.isEmpty && stack.count > 1 && slot < MAX_SLOTS) {
+            LOG.info("[setStack-堆叠] slot={} count={} item={}", slot, stack.count, Registries.ITEM.getId(stack.item))
+        }
         if (!stack.isEmpty) {
             if (slot < MAX_SLOTS) {
                 if (stack.item !is IBaseReactorComponent) return
@@ -255,10 +298,17 @@ class NuclearReactorBlockEntity(
                     )
                 ) return
                 if (slot >= currentCapacity()) return
+                // 布局锁定：非内部 tick 处理时禁止所有插入操作
+                if (!processingTick && layoutLocked) {
+                    val lockedItem = getLockedItemForSlot(slot)
+                    if (lockedItem == null) return
+                    if (stack.item !== lockedItem) return
+                }
             }
         }
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
+        // 反应堆组件不可堆叠，强制封顶为 1
+        if (stack.count > 1) stack.count = 1
         if (slot < MAX_SLOTS && !ItemStack.areItemsAndComponentsEqual(oldStack, stack)) {
             inventoryChangedSinceLastCycle = true
             val oldId = Registries.ITEM.getId(oldStack.item)
@@ -288,6 +338,14 @@ class NuclearReactorBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return true
+        // 槽位已有物品时拒绝插入：防止漏斗 merge 路径直接 increment() 绕过 setStack
+        if (slot < INVENTORY_SIZE && !getStack(slot).isEmpty) return false
+        // 布局锁定：空槽不允许插入，只允许与锁定类型匹配的物品
+        if (layoutLocked) {
+            val lockedItem = getLockedItemForSlot(slot)
+            if (lockedItem == null) return false
+            if (stack.item !== lockedItem) return false
+        }
         if (slot < MAX_SLOTS) {
             if (stack.item !is IBaseReactorComponent) return false
             if (!(stack.item as IBaseReactorComponent).canBePlacedIn(stack, this)) return false
@@ -302,6 +360,13 @@ class NuclearReactorBlockEntity(
         buf.writeVarInt(syncedData.size())
         buf.writeVarInt(currentCapacity())
         buf.writeBoolean(isThermalMode())
+        // 布局锁定数据
+        buf.writeBoolean(layoutLocked)
+        buf.writeVarInt(lockedSlots.size)
+        for ((slot, item) in lockedSlots) {
+            buf.writeVarInt(slot)
+            buf.writeIdentifier(Registries.ITEM.getId(item))
+        }
         return buf
     }
 
@@ -322,6 +387,14 @@ class NuclearReactorBlockEntity(
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
         Inventories.readNbt(nbt, inventory, lookup)
+        // 从 NBT 加载后强制封顶：防止旧数据遗留下来的堆叠 > 1
+        for (i in 0 until minOf(inventory.size, MAX_SLOTS)) {
+            val st = inventory[i]
+            if (!st.isEmpty && st.count > 1) {
+                LOG.info("[readNbt-封顶] slot={} count={} item={}", i, st.count, Registries.ITEM.getId(st.item))
+                st.count = 1
+            }
+        }
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(NuclearReactorSync.NBT_ENERGY_STORED).coerceIn(0L, NuclearReactorSync.ENERGY_CAPACITY)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
@@ -345,6 +418,18 @@ class NuclearReactorBlockEntity(
         }
         outputTank.amount = nbt.getLong("OutputHotCoolantAmount")
         ownerUuid = if (nbt.containsUuid("OwnerUUID")) nbt.getUuid("OwnerUUID") else null
+
+        // 读取布局锁定数据
+        layoutLocked = nbt.getBoolean("LayoutLocked")
+        lockedSlots.clear()
+        if (nbt.contains("LockedSlots")) {
+            val tag = nbt.getCompound("LockedSlots")
+            for (key in tag.keys) {
+                val slot = key.toInt()
+                val item = Registries.ITEM.get(Identifier.of(tag.getString(key)))
+                lockedSlots[slot] = item
+            }
+        }
     }
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
@@ -367,6 +452,16 @@ class NuclearReactorBlockEntity(
         nbt.put("OutputHotCoolant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, outputTank.variant).result().orElse(NbtCompound()))
         nbt.putLong("OutputHotCoolantAmount", outputTank.amount)
         ownerUuid?.let { nbt.putUuid("OwnerUUID", it) }
+
+        // 写入布局锁定数据
+        nbt.putBoolean("LayoutLocked", layoutLocked)
+        val lockTag = NbtCompound()
+        for ((slot, item) in lockedSlots) {
+            lockTag.putString(slot.toString(), Registries.ITEM.getId(item).toString())
+        }
+        if (!lockTag.isEmpty) {
+            nbt.put("LockedSlots", lockTag)
+        }
     }
 
     private fun currentCapacity(): Int {
@@ -831,6 +926,17 @@ class NuclearReactorBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
+        // 定期扫描：检测反应堆槽位中是否有堆叠 > 1 的异常情况
+        if (world.time % 100 == 0L) {
+            for (i in 0 until currentCapacity()) {
+                val st = inventory.getOrElse(i) { ItemStack.EMPTY }
+                if (!st.isEmpty && st.count > 1) {
+                    LOG.warn("[tick-异常堆叠] slot={} count={} item={} pos={}",
+                        i, st.count, Registries.ITEM.getId(st.item), pos)
+                }
+            }
+        }
+
         // 清理不再存在的红石接口状态
         redstonePortStates.keys.removeIf { portPos ->
             val blockAtPos = world.getBlockState(portPos).block
@@ -864,6 +970,7 @@ class NuclearReactorBlockEntity(
         }
         fuelActive = redstoneAllowsRun
         if (shouldTick) {
+            processingTick = true
             dropAllUnfittingStuff(world, pos)
             cycleStartHeatSnapshot = sync.temperature
             cycleAddHeatTotal = 0
@@ -878,7 +985,24 @@ class NuclearReactorBlockEntity(
             ventDissipatedHeat = 0  // 重置散失热量
             slotHeatInfo.clear()
 
+            // 处理前快照，用于检测堆叠异常
+            val preCounts = mutableMapOf<Int, Int>()
+            for (i in 0 until currentCapacity()) {
+                val st = inventory.getOrElse(i) { ItemStack.EMPTY }
+                if (!st.isEmpty) preCounts[i] = st.count
+            }
             processChambers()
+            // 处理后对比，检测是否有 count 增长
+            for (i in 0 until currentCapacity()) {
+                val st = inventory.getOrElse(i) { ItemStack.EMPTY }
+                if (!st.isEmpty) {
+                    val prev = preCounts[i] ?: 0
+                    if (st.count > prev) {
+                        LOG.warn("[处理后堆叠增长] slot={} item={} 之前={} 之后={} stackHash={}",
+                            i, Registries.ITEM.getId(st.item), prev, st.count, System.identityHashCode(st))
+                    }
+                }
+            }
 
             // 应用最终热量到堆温（无论电/热模式）
             sync.temperature = (sync.temperature + emitHeatBuffer).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
@@ -1026,7 +1150,11 @@ class NuclearReactorBlockEntity(
                 NetworkManager.sendToClient(player as net.minecraft.server.network.ServerPlayerEntity, packet)
             }
 
-            if (calculateHeatEffects(world, pos)) return
+            if (calculateHeatEffects(world, pos)) {
+                processingTick = false
+                return
+            }
+            processingTick = false
         }
 
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
