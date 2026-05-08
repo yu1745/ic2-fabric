@@ -42,3 +42,4 @@
 | 36 | `f03e79f` | feat: 拴绳动能发生机合成配方改为中间机器外壳上方拴绳的3x3配方 | ✅ | cherry-pick `127fa4c` + 适配 1.21.1 recipe JSON 格式 + datagen 刷新 |
 | 37 | `d41976e` | feat: 核反应堆无红石信号时仅停止燃料棒，散热片/热交换器等器件继续工作 | ✅ | 无冲突直接 cherry-pick `8c9ce6d` |
 | 38 | `8863ece` | fix: 拴绳动能发生机拴住的生物坐上矿车时不再断开拴绳 | ✅ | cherry-pick `3a05b8c` + 1.21.1 适配 `getLeashHolder()` (`ef63e23`) + datagen 刷新 (`1146b57`) |
+| 39 | `df4c5ed` | fix: 删除压缩机中 4 青金石→1 青金石块的刷物品配方 | ✅ | cherry-pick + 适配 1.21.1 单数 recipe/ 路径 |
