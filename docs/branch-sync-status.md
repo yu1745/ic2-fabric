@@ -1,6 +1,6 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-05-08
+最后更新：2026-05-09
 
 分叉点：`c5e247c`
 
@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **63 个 commit**，**63 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **65 个 commit**，**63 个已同步，2 个待同步**。
 （归档 1-37 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -36,6 +36,8 @@
 | 61 | `964989b` | fix: FTB Chunks 领地保护检查始终失效——Protection 是接口不是枚举 | ✅ | 无冲突直接 cherry-pick |
 | 62 | `9673112a` | feat: ModMenu + Cloth Config GUI 配置编辑界面 | ✅ | cherry-pick + 适配 1.21.1 版本号（Cloth Config 15.0.140, ModMenu 11.0.4）|
 | 63 | `84e84c79` | fix: 变压器升压/降压文本互换+ScreenHandler六面朝向修复 | ✅ | 无冲突直接 cherry-pick |
+| 64 | `207f0c3d` | feat: 新增 AdjacentEnergyTransferComponent 统一贴脸能量传输 | ❌ | 待同步到 1.21.1 |
+| 65 | `9cfc66eb` | feat: 全量迁移剩余 26 个机器到 AdjacentEnergyTransferComponent | ❌ | 待同步到 1.21.1 |
 
 ## 同步历史
 
