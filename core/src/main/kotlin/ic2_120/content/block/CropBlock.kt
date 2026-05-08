@@ -101,6 +101,8 @@ class CropBlock : BlockWithEntity(
 
     override fun getCodec(): MapCodec<out BlockWithEntity> = CROP_CODEC
 
+    override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
+
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         CropBlockEntity(pos, state)
 
