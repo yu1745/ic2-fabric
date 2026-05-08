@@ -1,6 +1,6 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-05-07
+最后更新：2026-05-08
 
 分叉点：`c5e247c`
 
@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **58 个 commit**，**58 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **59 个 commit**，**59 个已同步，0 个待同步**。
 （归档 1-37 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -35,6 +35,7 @@
 | 56 | `54beaf9f` | feat: 采矿镭射枪配置化+扳手支持变压器六面朝向 | ✅ | |
 | 57 | `48bbc126` | feat: 扫描仪GUI范围控制+能耗按体积动态计算+4列网格结果展示 | ✅ | |
 | 58 | `10a8b66d` | feat: 核反应堆布局锁定与漏斗堆叠绕过修复 | ✅ | |
+| 59 | `3508fb3b` | feat: 扳手支持拆解储物箱——左键瞬间拆解保留物品 | ✅ | 无冲突直接 cherry-pick |
 
 ## 同步历史
 
@@ -61,4 +62,5 @@
 - 2026-05-05：同步 commits 39-43——配方删除、铁炉/焦窑防刷、储罐防刷流体、量子护腿神行+量子靴子大跳+胸甲飞行修复、JEI 缺失保护，适配 1.21.1 Payload 网络/DataComponent NBT/appendTooltip 签名
 - 2026-05-05：同步 commit 44——datagen 改用 `fabric-api.datagen.modid` 过滤，附属运行 datagen 不再触发本体 entrypoint；同时运行附属 datagen 首次生成高级太阳能合成表 JSON；移除本体已废弃的 `skip.ic2_120.datagen` 代码
 - 2026-05-06：批量同步 commits 47-52——护甲减伤/explodeWhenNoEnergyFlow/半流体燃料颜色同步/物质生成机移除超频/传送卷轴/泡沫枪独立键位，适配 1.21.1 API（DataComponent NBT、CustomPayload 网络、TooltipType、Identifier.of、RecipeExporter）+ datagen 刷新
-- 2026-05-06：同步 commit 53——提取公共 config sync 分包组包逻辑到 core（ChunkedConfigReceiver），附属删除 AddonConfigSyncReceiver，保留 AddonConfigSyncPacket（1.21.1 需要 CustomPayload.Id），主要变化为 refactor 无 API 适配 |
+- 2026-05-06：同步 commit 53——提取公共 config sync 分包组包逻辑到 core（ChunkedConfigReceiver），附属删除 AddonConfigSyncReceiver，保留 AddonConfigSyncPacket（1.21.1 需要 CustomPayload.Id），主要变化为 refactor 无 API 适配
+- 2026-05-08：同步 commit 59——扳手支持拆解储物箱，无冲突直接 cherry-pick |
