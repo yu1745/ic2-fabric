@@ -72,9 +72,9 @@ public abstract class TransformerTooltipMixin {
         var mode = transformerBE.getSyncedMode();
         Text modeText;
         if (mode == TransformerSync.Mode.STEP_UP) {
-            modeText = Text.literal("升压模式 (低→高)").formatted(Formatting.GREEN);
-        } else {
             modeText = Text.literal("降压模式 (高→低)").formatted(Formatting.RED);
+        } else {
+            modeText = Text.literal("升压模式 (低→高)").formatted(Formatting.GREEN);
         }
 
         // 在屏幕上方绘制模式文本

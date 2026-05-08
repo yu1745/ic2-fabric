@@ -38,7 +38,7 @@ class TransformerScreenHandler(
 
     private fun getFacingDirection(): Direction {
         return context.get({ world, pos ->
-            world.getBlockState(pos).get(Properties.HORIZONTAL_FACING)
+            world.getBlockState(pos).get(Properties.FACING)
         }, Direction.NORTH)
     }
 
