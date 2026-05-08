@@ -8,16 +8,13 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **61 个 commit**，**61 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **62 个 commit**，**61 个已同步，1 个待同步**。
 （归档 1-37 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
 
 | # | Commit | 说明 | 在 1.21.1？ | 备注 |
 |---|--------|------|:-----------:|------|
-| 40 | `d4de777` | fix: 铁炉和焦窑无扳手拆卸不再掉落机器外壳（防刷物品） | ✅ | 无冲突直接 cherry-pick |
-| 41 | `95e6339` | fix: 徒手/镐子挖储罐不再掉落流体（防止刷流体） | ✅ | cherry-pick + 适配 1.21.1 `onBreak` 返回 `BlockState` |
-| 42 | `5286bae` | feat: 量子护腿神行+量子靴子大跳，修复量子胸甲飞行条件 | ✅ | cherry-pick + 适配 1.21.1 Payload 网络/DataComponent NBT/appendTooltip 签名 |
 | 43 | `9964f3b` | fix: JEI 缺失时 ConfigSyncReceiver 不再崩溃 | ✅ | 无冲突直接 cherry-pick |
 | 44 | `2595b3f0` | fix: datagen 使用 modid 过滤避免附属触发本体缓存冲突 | ✅ | cherry-pick + datagen 刷新 |
 | 45 | `cc03769b` | fix: 传送机移除内部缓存改为直接抽取相邻MFE，新增Jade诊断面板 | ✅ | cherry-pick + 适配 1.21.1 API（冲突解决）+ datagen 刷新 |
@@ -37,6 +34,7 @@
 | 59 | `3508fb3b` | feat: 扳手支持拆解储物箱——左键瞬间拆解保留物品 | ✅ | 无冲突直接 cherry-pick |
 | 60 | `20d2b0c7` | fix: 采矿镭射枪贴脸使用时发射弹射体而非执行实体交互 | ✅ | 无冲突直接 cherry-pick |
 | 61 | `964989b` | fix: FTB Chunks 领地保护检查始终失效——Protection 是接口不是枚举 | ✅ | 无冲突直接 cherry-pick |
+| 62 | `9673112a` | feat: ModMenu + Cloth Config GUI 配置编辑界面 | ❌ | |
 
 ## 同步历史
 
