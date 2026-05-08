@@ -2,6 +2,7 @@ package ic2_120.content.block.nuclear
 
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.IOwned
 import ic2_120.content.block.ITieredMachine
@@ -272,6 +273,7 @@ class NuclearReactorBlockEntity(
         getFacing = { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     constructor(pos: BlockPos, state: BlockState) : this(
         NuclearReactorBlockEntity::class.type(),
@@ -1181,6 +1183,8 @@ class NuclearReactorBlockEntity(
             }
             markDirty()
         }
+
+        adjacentEnergyTransfer.tick()
 
         val hasFuel = (0 until newCapacity).any { !getStack(it).isEmpty }
         val active = hasFuel && redstoneAllowsRun

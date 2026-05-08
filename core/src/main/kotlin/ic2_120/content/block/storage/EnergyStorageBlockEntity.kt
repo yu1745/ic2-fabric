@@ -1,7 +1,7 @@
 package ic2_120.content.block.storage
 
 import ic2_120.content.block.*
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.sync.EnergyStorageSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.energy.charge.BatteryChargerComponent
@@ -58,6 +58,7 @@ abstract class EnergyStorageBlockEntity(
         config.tier,
         config.capacity
     )
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     private val chargerComponents = mutableListOf<BatteryChargerComponent>()
 
@@ -134,9 +135,7 @@ abstract class EnergyStorageBlockEntity(
 
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
-        val facing = state.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH
-        // 接触取电：与其余机器一致从邻块拉电；正面为输出面，不向正面一侧邻块取电
-        pullEnergyFromNeighbors(world, pos, sync, excludeDirections = setOf(facing))
+        adjacentEnergyTransfer.tick()
 
         var chargedThisTick = 0L
         for (charger in chargerComponents) {
