@@ -32,8 +32,7 @@ class ClaimProtectionImpl {
 
     private fun parseProtection(type: String): Protection? {
         return try {
-            val constants = Protection::class.java.enumConstants
-            constants.firstOrNull { (it as Enum<*>).name == type }
+            Protection::class.java.getDeclaredField(type).get(null) as? Protection
         } catch (_: Exception) {
             null
         }
