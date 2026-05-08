@@ -439,6 +439,11 @@ object Ic2Config {
         logLoaded("reloaded")
     }
 
+    fun save(newConfig: Ic2MainConfig) {
+        current = newConfig
+        Files.writeString(configPath, encodeConfigWithComments(newConfig), StandardCharsets.UTF_8)
+    }
+
     fun prettyCurrentConfig(): String {
         return mapper.writeValueAsString(current)
     }

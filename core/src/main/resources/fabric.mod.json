@@ -4,7 +4,7 @@
 	"accessWidener": "ic2_120.accesswidener",
 	"version": "${version}",
 	"name": "ic2_1.20",
-	"description": "IndustrialCraft 2 Experimental 的 Minecraft 1.20.1 Fabric 移植版本，使用 Kotlin 编写，基于逆向工程实现，支持信雅互联，可以被forge加载",
+	"description": "IndustrialCraft 2 Experimental \u7684 Minecraft 1.20.1 Fabric \u79fb\u690d\u7248\u672c\uff0c\u4f7f\u7528 Kotlin \u7f16\u5199\uff0c\u57fa\u4e8e\u9006\u5411\u5de5\u7a0b\u5b9e\u73b0\uff0c\u652f\u6301\u4fe1\u96c5\u4e92\u8054\uff0c\u53ef\u4ee5\u88abforge\u52a0\u8f7d",
 	"authors": [
 		"JoyTech"
 	],
@@ -45,6 +45,12 @@
 				"value": "ic2_120.Ic2_120DataGenerator",
 				"adapter": "kotlin"
 			}
+		],
+		"modmenu": [
+			{
+				"value": "ic2_120.integration.modmenu.ModMenuIntegration",
+				"adapter": "kotlin"
+			}
 		]
 	},
 	"mixins": [
@@ -63,6 +69,8 @@
 	"suggests": {
 		"jade": ">=11.0",
 		"jei": ">=15.0",
-		"ftbchunks": ">=2001.3.0"
+		"ftbchunks": ">=2001.3.0",
+		"modmenu": ">=7.0",
+		"cloth-config2": ">=11.0"
 	}
 }
