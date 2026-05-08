@@ -11,7 +11,7 @@ import ic2_120.content.item.ModFluidCell
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.ReplicatorScreenHandler
 import ic2_120.content.sync.ReplicatorSync
 import ic2_120.content.syncs.SyncedData
@@ -149,6 +149,7 @@ class ReplicatorBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(ReplicatorSync.REPLICATOR_TIER + voltageTierBonus) }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val tankInternal = object : SingleVariantStorage<FluidVariant>() {
         private val tankCapacity = FluidConstants.BUCKET * ReplicatorSync.TANK_CAPACITY_MB / 1000L
 
@@ -293,7 +294,7 @@ class ReplicatorBlockEntity(
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
         fillTankFromContainers()
 

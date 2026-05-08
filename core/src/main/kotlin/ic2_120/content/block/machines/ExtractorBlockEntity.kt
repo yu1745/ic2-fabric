@@ -3,7 +3,7 @@ package ic2_120.content.block.machines
 import ic2_120.content.block.ExtractorBlock
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.ITieredMachine
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.recipes.extractor.ExtractorRecipe
 import ic2_120.content.screen.ExtractorScreenHandler
 import ic2_120.content.sync.ExtractorSync
@@ -115,6 +115,7 @@ class ExtractorBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(EXTRACTOR_TIER + voltageTierBonus) }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -193,7 +194,7 @@ class ExtractorBlockEntity(
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
 
         // 从放电槽提取能量
         extractFromDischargingSlot()

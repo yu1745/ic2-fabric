@@ -3,7 +3,7 @@ package ic2_120.content.block.machines
 import ic2_120.content.block.ChunkLoaderBlock
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.energy.charge.BatteryDischargerComponent
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.ChunkLoaderScreenHandler
 import ic2_120.content.sync.ChunkLoaderSync
 import ic2_120.content.syncs.SyncedData
@@ -77,6 +77,7 @@ class ChunkLoaderBlockEntity(
     @RegisterEnergy
     val sync = ChunkLoaderSync(syncedData) { world?.time }
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -177,7 +178,7 @@ class ChunkLoaderBlockEntity(
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
         val chunkCount = sync.getChunkCount()

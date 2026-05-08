@@ -4,7 +4,7 @@ import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.IronFenceBlock
 import ic2_120.content.block.MagnetizerBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.MagnetizerScreenHandler
 import ic2_120.content.sync.MagnetizerSync
 import ic2_120.content.syncs.SyncedData
@@ -109,6 +109,7 @@ class MagnetizerBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(tier + voltageTierBonus) }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -193,7 +194,7 @@ class MagnetizerBlockEntity(
 
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
         val overclockerCount = OverclockerUpgradeComponent.countOverclockers(this, SLOT_UPGRADE_INDICES)

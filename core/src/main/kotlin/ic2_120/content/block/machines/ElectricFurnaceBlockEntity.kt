@@ -1,7 +1,7 @@
 package ic2_120.content.block.machines
 
 import ic2_120.content.sync.ElectricFurnaceSync
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.ElectricFurnaceBlock
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.ITieredMachine
@@ -119,6 +119,7 @@ class ElectricFurnaceBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(tier + voltageTierBonus) }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -204,7 +205,7 @@ class ElectricFurnaceBlockEntity(
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         sync.experienceDisplay = (storedExperience * 10).toInt()
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
 
         // 从放电槽提取能量
         extractFromDischargingSlot()

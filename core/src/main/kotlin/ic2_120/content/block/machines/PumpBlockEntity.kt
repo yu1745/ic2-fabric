@@ -4,7 +4,7 @@ import ic2_120.Ic2_120
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.PumpBlock
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.FluidCellItem
 import ic2_120.content.item.fluidToFilledCellStack
@@ -156,6 +156,7 @@ class PumpBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(PUMP_TIER + voltageTierBonus) }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -275,7 +276,7 @@ class PumpBlockEntity(
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
         fillFluidCellFromTank()
 

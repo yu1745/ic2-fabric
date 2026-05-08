@@ -3,7 +3,7 @@ package ic2_120.content.block.machines
 import ic2_120.content.block.AnimalSlaughtererBlock
 import ic2_120.content.entity.AnimalFoodMapping
 import ic2_120.content.energy.charge.BatteryDischargerComponent
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.AnimalSlaughtererScreenHandler
 import ic2_120.content.sync.AnimalSlaughtererSync
 import ic2_120.content.syncs.SyncedData
@@ -87,6 +87,7 @@ class AnimalSlaughtererBlockEntity(
         { capacityBonus },
         { TransformerUpgradeComponent.maxInsertForTier(ANIMAL_SLAUGHTERER_TIER + voltageTierBonus) }
     )
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -165,7 +166,7 @@ class AnimalSlaughtererBlockEntity(
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_CONTENT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
         var active = false

@@ -14,7 +14,7 @@ import ic2_120.content.upgrade.IOverclockerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.TransformerUpgradeComponent
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.MetalFormerBlock
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.storage.ItemInsertRoute
@@ -106,6 +106,7 @@ class MetalFormerBlockEntity(
         { capacityBonus },
         { TransformerUpgradeComponent.maxInsertForTier(METAL_FORMER_TIER + voltageTierBonus) }
     )
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -206,8 +207,7 @@ class MetalFormerBlockEntity(
 //        println("voltageTierBonus: $voltageTierBonus")
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
-        // 从相邻方块或导线提取能量（maxPull 随高压升级提高）
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
 
         // 从放电槽提取能量
         extractFromDischargingSlot()
