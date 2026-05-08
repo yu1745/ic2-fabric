@@ -5,6 +5,7 @@ import ic2_120.content.block.GeneratorBlock
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.screen.GeneratorScreenHandler
 import ic2_120.content.syncs.SyncedData
@@ -83,6 +84,7 @@ class GeneratorBlockEntity(
         { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: net.minecraft.util.math.Direction.NORTH },
         { world?.time }
     )
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryCharger = BatteryChargerComponent(
         inventory = this,
         batterySlot = BATTERY_SLOT,
@@ -209,6 +211,7 @@ class GeneratorBlockEntity(
         }
 
         batteryCharger.tick()
+        adjacentEnergyTransfer.tick()
 
         val active = sync.burnTime > 0
         setActiveState(world, pos, state, active)
@@ -227,4 +230,3 @@ class GeneratorBlockEntity(
         return (furnaceTicks / GeneratorSync.BURN_TICKS_DIVISOR).coerceAtLeast(1)
     }
 }
-

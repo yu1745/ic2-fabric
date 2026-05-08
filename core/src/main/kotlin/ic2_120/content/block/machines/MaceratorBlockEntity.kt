@@ -11,7 +11,7 @@ import ic2_120.content.upgrade.IOverclockerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.TransformerUpgradeComponent
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.MaceratorBlock
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.ITieredMachine
@@ -111,6 +111,7 @@ class MaceratorBlockEntity(
         { capacityBonus },
         { TransformerUpgradeComponent.maxInsertForTier(MACERATOR_TIER + voltageTierBonus) }
     )
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -186,8 +187,7 @@ class MaceratorBlockEntity(
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
-        // 从相邻方块或导线提取能量（maxPull 随高压升级提高）
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
 
         // 从放电槽提取能量
         extractFromDischargingSlot()
@@ -266,5 +266,4 @@ class MaceratorBlockEntity(
         return currentWorld.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), recipeInventory, currentWorld).isPresent
     }
 }
-
 

@@ -1,5 +1,7 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.content.AdjacentEnergyTransferComponent
+import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.registry.annotation.ModBlockEntity
@@ -24,9 +26,11 @@ class ReactorChamberBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, ITieredMachine {
+) : BlockEntity(type, pos, state), Inventory, IGenerator, ITieredMachine {
 
     override val tier: Int = CHAMBER_TIER
+    private var adjacentEnergyTransfer: AdjacentEnergyTransferComponent? = null
+    private var adjacentEnergyTransferReactorPos: BlockPos? = null
 
     constructor(pos: BlockPos, state: BlockState) : this(
         ReactorChamberBlockEntity::class.type(),
@@ -57,6 +61,19 @@ class ReactorChamberBlockEntity(
         return reactor.sync.getSideStorage(side)
     }
 
+    private fun tickAdjacentEnergyTransfer() {
+        val reactor = findAdjacentReactor() ?: run {
+            adjacentEnergyTransfer = null
+            adjacentEnergyTransferReactorPos = null
+            return
+        }
+        if (adjacentEnergyTransfer == null || adjacentEnergyTransferReactorPos != reactor.pos) {
+            adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, reactor.sync)
+            adjacentEnergyTransferReactorPos = reactor.pos
+        }
+        adjacentEnergyTransfer?.tick()
+    }
+
     // ========== Inventory 委托到中心反应堆 ==========
     override fun size(): Int = findAdjacentReactor()?.size() ?: 0
     override fun getStack(slot: Int): ItemStack = findAdjacentReactor()?.getStack(slot) ?: ItemStack.EMPTY
@@ -79,7 +96,7 @@ class ReactorChamberBlockEntity(
         const val CHAMBER_TIER = 5
 
         fun tick(world: World, pos: BlockPos, state: BlockState, be: ReactorChamberBlockEntity) {
-            // 不需要额外的 tick 逻辑，所有逻辑都由中心反应堆处理
+            be.tickAdjacentEnergyTransfer()
         }
     }
 }

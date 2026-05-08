@@ -1,5 +1,6 @@
 package ic2_120.content.block.machines
 
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.sync.TransformerSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.block.ITieredMachine
@@ -41,9 +42,9 @@ import org.slf4j.LoggerFactory
  * - EV变压器 (4级): 低级 2048 EU/t <-> 高级 8192 EU/t (5级)
  *
  * 工作模式（通过UI切换）：
- * - 升压 (STEP_UP): 正面接收低级能量，其他五面输出高级能量
+ * - 升压 (STEP_UP): 其他五面接收低级能量，正面输出高级能量
  *   - 例：4 tick × 32 EU/t = 128 EU → 1 tick × 128 EU/t
- * - 降压 (STEP_DOWN): 其他五面接收高级能量，正面输出低级能量
+ * - 降压 (STEP_DOWN): 正面接收高级能量，其他五面输出低级能量
  *   - 例：1 tick × 128 EU/t = 128 EU → 4 tick × 32 EU/t
  * - EU 总量始终守恒
  *
@@ -71,11 +72,12 @@ open class TransformerBlockEntity(
         { world?.time },
         transformerTier
     )
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     /**
      * 实现分面电压等级。
      * 变压器不同面的电压等级不同：
-     * - 正面为低级（tier），其他面为高级（tier+1）
+     * - 正面（五点面）为高级（tier+1），其他面（一个点面）为低级（tier）
      *
      * 注意：这个方法返回各面的物理电压等级，用于过压检测和电网输出等级计算。
      * 电网会通过检查 supportsInsertion() 来区分真正的输出面（机器向电网输出能量的面）。
@@ -89,8 +91,8 @@ open class TransformerBlockEntity(
         val facing = world?.getBlockState(pos)?.get(Properties.FACING) ?: return tier
         val isFront = (side == facing)
 
-        // 正面是低级，其他面都是高级
-        return if (isFront) tier else tier + 1
+        // 正面是高级，其他面都是低级
+        return if (isFront) tier + 1 else tier
     }
 
     // 注意：默认构造函数由具体子类提供，需要指定 BlockEntityType
@@ -157,6 +159,7 @@ open class TransformerBlockEntity(
 
         // 更新同步能量值
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        adjacentEnergyTransfer.tick()
 
         // 在 tick 结束时同步当前 tick 的实际输入/输出
         sync.syncCurrentTickFlow()
@@ -241,5 +244,3 @@ object TransformerUtils {
         else -> 32 * (1 shl (tier - 1).coerceIn(0, 4))
     }
 }
-
-

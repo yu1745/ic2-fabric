@@ -11,10 +11,10 @@ import net.minecraft.util.math.Direction
  * 变压器只改变电压等级（EU/t 速率），不改变 EU 总量。
  *
  * 变压器模式：
- * - STEP_UP (升压): 正面接收低级能量，其他五面输出高级能量
+ * - STEP_UP (升压): 其他五面接收低级能量，正面输出高级能量
  *   - 例：LV变压器接收 32 EU/t，累积后以 128 EU/t 输出
  *   - 能量守恒：4 tick × 32 EU = 1 tick × 128 EU = 128 EU
- * - STEP_DOWN (降压): 其他五面接收高级能量，正面输出低级能量
+ * - STEP_DOWN (降压): 正面接收高级能量，其他五面输出低级能量
  *   - 例：LV变压器接收 128 EU/t，以 32 EU/t 输出
  *   - 能量守恒：1 tick × 128 EU = 4 tick × 32 EU = 128 EU
  *
@@ -40,8 +40,8 @@ class TransformerSync(
      * 变压器工作模式
      */
     enum class Mode(val id: Int, val translationKey: String) {
-        STEP_UP(0, "mode.step_up"),      // 升压模式：正面输入低级能量，其他面输出高级能量
-        STEP_DOWN(1, "mode.step_down");  // 降压模式：其他面输入高级能量，正面输出低级能量
+        STEP_UP(0, "mode.step_up"),      // 升压模式：其他面输入低级能量，正面输出高级能量
+        STEP_DOWN(1, "mode.step_down");  // 降压模式：正面输入高级能量，其他面输出低级能量
 
         companion object {
             fun fromId(id: Int): Mode = entries.firstOrNull { it.id == id } ?: STEP_UP
@@ -85,10 +85,10 @@ class TransformerSync(
     val highTier: Int
         get() = tier + 1
 
-    /** 获取输入侧的能量等级（低级） */
+    /** 获取低压侧的能量等级。 */
     fun getInputTierValue(): Int = lowTier
 
-    /** 获取输出侧的能量等级（高级） */
+    /** 获取高压侧的能量等级。 */
     fun getOutputTierValue(): Int = highTier
 
     /** 获取低级能量的每 tick 速率 */
@@ -112,8 +112,8 @@ class TransformerSync(
 
     /**
      * 根据当前模式和方向决定该面是否可输入
-     * - 升压模式：只有正面可以输入（低级能量）
-     * - 降压模式：除正面外的其他面可以输入（高级能量）
+     * - 升压模式：除正面外的其他面可以输入（低级能量）
+     * - 降压模式：只有正面可以输入（高级能量）
      */
     override fun getSideMaxInsert(side: Direction?): Long {
         if (side == null) return 0L
@@ -123,20 +123,20 @@ class TransformerSync(
 
         return when (currentMode) {
             Mode.STEP_UP -> {
-                // 升压：只有正面接收低级能量
-                if (isFront) getLowEuPerTick() else 0L
+                // 升压：其他面接收低级能量
+                if (!isFront) getLowEuPerTick() else 0L
             }
             Mode.STEP_DOWN -> {
-                // 降压：其他面接收高级能量
-                if (!isFront) getHighEuPerTick() else 0L
+                // 降压：正面接收高级能量
+                if (isFront) getHighEuPerTick() else 0L
             }
         }
     }
 
     /**
      * 根据当前模式和方向决定该面是否可输出
-     * - 升压模式：除正面外的其他面可以输出（高级能量），但需积累足够量后才输出
-     * - 降压模式：只有正面可以输出（低级能量）
+     * - 升压模式：只有正面可以输出（高级能量），但需积累足够量后才输出
+     * - 降压模式：除正面外的其他面可以输出（低级能量）
      */
     override fun getSideMaxExtract(side: Direction?): Long {
         if (side == null) return 0L
@@ -146,8 +146,8 @@ class TransformerSync(
 
         return when (currentMode) {
             Mode.STEP_UP -> {
-                // 升压：其他面输出高级能量，但需积累到高级电压单次输出量后才输出
-                if (!isFront) {
+                // 升压：正面输出高级能量，但需积累到高级电压单次输出量后才输出
+                if (isFront) {
                     val highEuPerTick = getHighEuPerTick()
                     // 只有积累到高级电压单次输出量后才输出，减少线损
                     return if (amount >= highEuPerTick) highEuPerTick else 0L
@@ -156,8 +156,8 @@ class TransformerSync(
                 }
             }
             Mode.STEP_DOWN -> {
-                // 降压：只有正面输出低级能量，保持原行为（立即输出）
-                if (isFront) getLowEuPerTick() else 0L
+                // 降压：其他面输出低级能量，保持原行为（立即输出）
+                if (!isFront) getLowEuPerTick() else 0L
             }
         }
     }
@@ -181,4 +181,3 @@ class TransformerSync(
     /** 获取同步的滤波后输出量（EU/t） */
     fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
 }
-
