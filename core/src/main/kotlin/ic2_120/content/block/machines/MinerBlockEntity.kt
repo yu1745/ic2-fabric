@@ -18,7 +18,7 @@ import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.MinerScreenHandler
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.sync.MinerSync
@@ -209,6 +209,7 @@ abstract class BaseMinerBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(baseTier + voltageTierBonus) }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val discharger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -358,7 +359,7 @@ abstract class BaseMinerBlockEntity(
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
         chargeScanner()
 

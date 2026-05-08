@@ -2,7 +2,7 @@ package ic2_120.content.block.machines
 
 import ic2_120.content.recipes.compressor.CompressorRecipe
 import ic2_120.content.sync.CompressorSync
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.CompressorBlock
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.ITieredMachine
@@ -112,6 +112,7 @@ class CompressorBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(COMPRESSOR_TIER + voltageTierBonus) }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -188,7 +189,7 @@ class CompressorBlockEntity(
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
 
         // 从放电槽提取能量
         extractFromDischargingSlot()

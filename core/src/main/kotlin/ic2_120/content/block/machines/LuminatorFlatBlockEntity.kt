@@ -2,7 +2,7 @@ package ic2_120.content.block.machines
 
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.LuminatorFlatBlock
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.sync.LuminatorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
@@ -32,6 +32,8 @@ class LuminatorFlatBlockEntity(
     @RegisterEnergy
     val sync = LuminatorSync(syncedData) { world?.time }
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
+
     /** 每 CYCLE_TICKS 消耗 1 EU 的计数 */
     private var cycleTicks = 0
 
@@ -59,7 +61,7 @@ class LuminatorFlatBlockEntity(
         if (world.isClient) return
 
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
 
         cycleTicks++
         if (cycleTicks >= LuminatorSync.CYCLE_TICKS) {

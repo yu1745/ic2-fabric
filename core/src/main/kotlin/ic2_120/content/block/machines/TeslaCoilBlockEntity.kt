@@ -2,7 +2,7 @@ package ic2_120.content.block.machines
 
 import ic2_120.content.block.TeslaCoilBlock
 import ic2_120.content.block.ITieredMachine
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.TeslaCoilScreenHandler
 import ic2_120.content.sync.TeslaCoilSync
 import ic2_120.content.syncs.SyncedData
@@ -52,6 +52,8 @@ class TeslaCoilBlockEntity(
     @RegisterEnergy
     val sync = TeslaCoilSync(syncedData) { world?.time }
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
+
     /** 距离下次放电的 tick 计数 */
     private var shotCooldown = 0
 
@@ -96,7 +98,7 @@ class TeslaCoilBlockEntity(
         if (world.isClient) return
 
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
 
         val powered = state.get(Properties.POWERED)
         if (!powered) {

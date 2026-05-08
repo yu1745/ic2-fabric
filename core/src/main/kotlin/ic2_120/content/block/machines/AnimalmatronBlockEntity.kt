@@ -12,7 +12,7 @@ import ic2_120.content.item.getFluidCellVariant
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.AnimalmatronScreenHandler
 import ic2_120.content.sync.AnimalmatronSync
 import ic2_120.content.syncs.SyncedData
@@ -106,6 +106,8 @@ class AnimalmatronBlockEntity(
         { capacityBonus },
         { TransformerUpgradeComponent.maxInsertForTier(ANIMALMATRON_TIER + voltageTierBonus) }
     )
+
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     // 动物数据追踪
     private val animalDataMap = mutableMapOf<java.util.UUID, AnimalGrowthData>()
@@ -259,7 +261,7 @@ class AnimalmatronBlockEntity(
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
         processWaterInputContainer()
         processWeedExInputContainer()

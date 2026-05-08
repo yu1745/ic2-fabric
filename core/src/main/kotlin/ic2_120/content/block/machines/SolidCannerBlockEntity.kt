@@ -3,7 +3,7 @@ package ic2_120.content.block.machines
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.SolidCannerBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.recipes.getRecipeType
 import ic2_120.content.recipes.solidcanner.SolidCannerRecipe
 import ic2_120.content.recipes.solidcanner.SolidCannerRecipeSerializer
@@ -117,6 +117,7 @@ class SolidCannerBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(SOLID_CANNER_TIER + voltageTierBonus) }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -191,7 +192,7 @@ class SolidCannerBlockEntity(
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
         val tinCan = getStack(SLOT_TIN_CAN)

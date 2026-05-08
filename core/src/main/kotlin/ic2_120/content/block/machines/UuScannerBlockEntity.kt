@@ -4,7 +4,7 @@ import ic2_120.config.Ic2Config
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.UuScannerBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.UuScannerScreenHandler
 import ic2_120.content.sync.UuScannerSync
 import ic2_120.content.syncs.SyncedData
@@ -97,6 +97,7 @@ class UuScannerBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(UuScannerSync.UU_SCANNER_TIER + voltageTierBonus) }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -173,7 +174,7 @@ class UuScannerBlockEntity(
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
         val storage = findUniqueAdjacentPatternStorage(world, pos)

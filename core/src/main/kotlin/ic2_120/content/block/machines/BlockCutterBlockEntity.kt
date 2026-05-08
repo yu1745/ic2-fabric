@@ -9,7 +9,7 @@ import ic2_120.content.recipes.blockcutter.BlockCutterRecipe
 import ic2_120.content.recipes.blockcutter.BlockCutterRecipeSerializer
 import ic2_120.content.recipes.getRecipeType
 import ic2_120.content.sync.BlockCutterSync
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.BlockCutterBlock
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.screen.BlockCutterScreenHandler
@@ -108,6 +108,7 @@ class BlockCutterBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(BLOCK_CUTTER_TIER + voltageTierBonus) }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -252,7 +253,7 @@ class BlockCutterBlockEntity(
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
         sync.bladeTooWeak = if (isBladeTooWeak()) 1 else 0

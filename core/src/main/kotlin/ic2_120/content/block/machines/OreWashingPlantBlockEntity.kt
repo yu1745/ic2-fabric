@@ -8,7 +8,7 @@ import ic2_120.content.item.WaterCell
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.recipes.getRecipeType
 import ic2_120.content.recipes.orewashing.OreWashingRecipe
 import ic2_120.content.recipes.orewashing.OreWashingRecipeSerializer
@@ -163,6 +163,8 @@ class OreWashingPlantBlockEntity(
         { capacityBonus },
         { TransformerUpgradeComponent.maxInsertForTier(ORE_WASHING_PLANT_TIER + voltageTierBonus) }
     )
+
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     // 水储罐（8桶容量）
     private val waterTankInternal = object : SingleVariantStorage<FluidVariant>() {
@@ -325,7 +327,7 @@ class OreWashingPlantBlockEntity(
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         // 从相邻方块或导线提取能量
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
 
         // 从放电槽提取能量
         extractFromDischargingSlot()

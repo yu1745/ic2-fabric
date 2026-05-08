@@ -3,7 +3,7 @@ package ic2_120.content.block.machines
 import ic2_120.content.block.ElectricHeatGeneratorBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.energy.IBatteryItem
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.sync.ElectricHeatGeneratorSync
 import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.syncs.SyncedData
@@ -77,6 +77,8 @@ class ElectricHeatGeneratorBlockEntity(
         currentTickProvider = { world?.time },
         heatFlow = heatFlow
     )
+
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     constructor(pos: BlockPos, state: BlockState) : this(
         ElectricHeatGeneratorBlockEntity::class.type(),
@@ -156,7 +158,7 @@ class ElectricHeatGeneratorBlockEntity(
 
     override fun preGenerate(world: World, pos: BlockPos, state: BlockState) {
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }

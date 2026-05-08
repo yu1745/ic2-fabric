@@ -6,7 +6,7 @@ import ic2_120.content.block.CropHarvesterBlock
 import ic2_120.content.block.CropStickBlock
 import ic2_120.content.crop.CropSystem
 import ic2_120.content.energy.charge.BatteryDischargerComponent
-import ic2_120.content.pullEnergyFromNeighbors
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.CropHarvesterScreenHandler
 import ic2_120.content.sync.CropHarvesterSync
 import ic2_120.content.syncs.SyncedData
@@ -83,6 +83,7 @@ class CropHarvesterBlockEntity(
         { capacityBonus },
         { TransformerUpgradeComponent.maxInsertForTier(CROP_HARVESTER_TIER + voltageTierBonus) }
     )
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -173,7 +174,7 @@ class CropHarvesterBlockEntity(
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_CONTENT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
-        pullEnergyFromNeighbors(world, pos, sync)
+        adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
         var active = false

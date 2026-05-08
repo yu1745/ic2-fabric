@@ -255,8 +255,8 @@ fun tick(world: World, pos: BlockPos, state: BlockState) {
     TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
     sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
-    // 2. 从相邻导线或电池槽提取能量
-    pullEnergyFromNeighbors(world, pos, sync)
+    // 2. 从相邻方块贴脸传输、从电池槽提取能量
+    adjacentEnergyTransfer.tick()
     extractFromDischargingSlot()
 
     // 3. 检查输入物品
