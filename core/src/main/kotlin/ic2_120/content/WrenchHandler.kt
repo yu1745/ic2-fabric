@@ -10,6 +10,7 @@ import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.pipes.PipeNetworkManager
 import ic2_120.content.block.storage.EnergyStorageBlock
 import ic2_120.content.block.storage.EnergyStorageBlockEntity
+import ic2_120.content.block.storage.StorageBoxBlock
 import ic2_120.content.block.storage.TankBlock
 import ic2_120.content.block.storage.TankBlockEntity
 import ic2_120.content.item.energy.IElectricTool
@@ -140,7 +141,7 @@ object WrenchHandler {
                 // fall through to normal break
             }
 
-            if (block !is MachineBlock && block !is TankBlock) return@register ActionResult.PASS
+            if (block !is MachineBlock && block !is TankBlock && block !is StorageBoxBlock) return@register ActionResult.PASS
 
             // 电动扳手：电量不足 1000 EU 则不允许拆卸
             if (isElectricWrench(stack)) {
@@ -217,6 +218,9 @@ object WrenchHandler {
                         }
                     }
                     didBreak
+                } else if (block is StorageBoxBlock) {
+                    world.breakBlock(pos, false, player)
+                    true
                 } else {
                     val stateBefore = state
                     val be = if (stateBefore.hasBlockEntity()) world.getBlockEntity(pos) else null
