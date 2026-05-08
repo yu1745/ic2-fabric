@@ -5,6 +5,7 @@
 	"version": "${version}",
 	"name": "ic2_1.21",
 	"description": "IndustrialCraft 2 Experimental 的 Minecraft 1.21.1 Fabric 移植版本，使用 Kotlin 编写，基于逆向工程实现，支持信雅互联，可以被forge加载",
+
 	"authors": [
 		"JoyTech"
 	],
@@ -45,6 +46,12 @@
 				"value": "ic2_120.Ic2_120DataGenerator",
 				"adapter": "kotlin"
 			}
+		],
+		"modmenu": [
+			{
+				"value": "ic2_120.integration.modmenu.ModMenuIntegration",
+				"adapter": "kotlin"
+			}
 		]
 	},
 	"mixins": [
@@ -64,6 +71,8 @@
 	"suggests": {
 		"jade": ">=11.0",
 		"jei": ">=15.0",
-		"ftbchunks": ">=2001.3.0"
+		"ftbchunks": ">=2001.3.0",
+		"modmenu": ">=11.0",
+		"cloth-config2": ">=15.0"
 	}
 }
