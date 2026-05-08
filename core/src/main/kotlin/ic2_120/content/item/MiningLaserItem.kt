@@ -122,8 +122,14 @@ class MiningLaserItem : Item(
     // ========== 使用逻辑 ==========
 
     /**
-     * 禁止与方块/实体交互，始终返回 PASS。
-     * 这样游戏会跳过方块的 onUse 逻辑，直接调用 [use] 方法发射激光。
+     * 右键点击实体时不执行实体交互，仍发射激光。
+     */
+    override fun useOnEntity(stack: ItemStack, user: PlayerEntity, entity: LivingEntity, hand: Hand): ActionResult {
+        return use(user.world, user, hand).result
+    }
+
+    /**
+     * 右键点击方块时不触发方块交互，仍发射激光。
      */
     override fun useOnBlock(context: ItemUsageContext): ActionResult {
         return ActionResult.PASS
