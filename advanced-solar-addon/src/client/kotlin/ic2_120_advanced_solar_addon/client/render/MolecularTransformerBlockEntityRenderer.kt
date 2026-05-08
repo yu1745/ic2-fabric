@@ -2,7 +2,6 @@ package ic2_120_advanced_solar_addon.client.render
 
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlock
 import ic2_120_advanced_solar_addon.content.block.MolecularTransformerBlockEntity
-import net.minecraft.client.render.LightmapTextureManager
 import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexConsumer
@@ -58,29 +57,28 @@ class MolecularTransformerBlockEntityRenderer(
         if (state.block !is MolecularTransformerBlock) return
 
         val isActive = try { state.get(MolecularTransformerBlock.ACTIVE) } catch (_: Exception) { false }
-        val fullLight = LightmapTextureManager.MAX_LIGHT_COORDINATE
         val ov = overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV
 
         val vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(TEXTURE))
 
         matrices.push()
 
-        // Static model parts (no rotation)
-        renderBox(vc, matrices, fullLight, ov, CORE_BOTTOM, 0, 0, 10, 3, 10)
-        renderBox(vc, matrices, fullLight, ov, CORE_TOP_ELECTR, 25, 44, 3, 2, 3)
-        renderBox(vc, matrices, fullLight, ov, CORE_TOP_PLATE, 0, 30, 9, 3, 9)
+        // Static model parts (use actual block light)
+        renderBox(vc, matrices, light, ov, CORE_BOTTOM, 0, 0, 10, 3, 10)
+        renderBox(vc, matrices, light, ov, CORE_TOP_ELECTR, 25, 44, 3, 2, 3)
+        renderBox(vc, matrices, light, ov, CORE_TOP_PLATE, 0, 30, 9, 3, 9)
 
         // First electrode (no rotation)
-        renderBox(vc, matrices, fullLight, ov, EL_TOP, 20, 16, 4, 3, 10)
-        renderBox(vc, matrices, fullLight, ov, EL_BOTTOM, 49, 16, 3, 5, 6)
+        renderBox(vc, matrices, light, ov, EL_TOP, 20, 16, 4, 3, 10)
+        renderBox(vc, matrices, light, ov, EL_BOTTOM, 49, 16, 3, 5, 6)
 
         // Second electrode: Y rotation -120°
         matrices.push()
         matrices.translate(0.5, 0.5, 0.5)
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-120f))
         matrices.translate(-0.5, -0.5, -0.5)
-        renderBox(vc, matrices, fullLight, ov, EL_TOP, 20, 16, 4, 3, 10)
-        renderBox(vc, matrices, fullLight, ov, EL_BOTTOM, 49, 16, 3, 5, 6)
+        renderBox(vc, matrices, light, ov, EL_TOP, 20, 16, 4, 3, 10)
+        renderBox(vc, matrices, light, ov, EL_BOTTOM, 49, 16, 3, 5, 6)
         matrices.pop()
 
         // Third electrode: Y rotation +120°
@@ -88,19 +86,19 @@ class MolecularTransformerBlockEntityRenderer(
         matrices.translate(0.5, 0.5, 0.5)
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(120f))
         matrices.translate(-0.5, -0.5, -0.5)
-        renderBox(vc, matrices, fullLight, ov, EL_TOP, 20, 16, 4, 3, 10)
-        renderBox(vc, matrices, fullLight, ov, EL_BOTTOM, 49, 16, 3, 5, 6)
+        renderBox(vc, matrices, light, ov, EL_TOP, 20, 16, 4, 3, 10)
+        renderBox(vc, matrices, light, ov, EL_BOTTOM, 49, 16, 3, 5, 6)
         matrices.pop()
 
         // Translucent coreWorkZone
         val vcTrans = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(TEXTURE))
-        renderBox(vcTrans, matrices, fullLight, ov, CORE_WORK_ZONE, 0, 44, 6, 9, 6)
+        renderBox(vcTrans, matrices, light, ov, CORE_WORK_ZONE, 0, 44, 6, 9, 6)
 
         matrices.pop()
 
         // Active core effect
         if (isActive) {
-            renderActiveCore(matrices, vertexConsumers, fullLight, ov)
+            renderActiveCore(matrices, vertexConsumers, light, ov)
         }
     }
 
