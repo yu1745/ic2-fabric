@@ -74,12 +74,12 @@ class TransformerScreen(
         }
 
         val modeText = when (currentMode) {
-            TransformerSync.Mode.STEP_UP -> t("gui.ic2_120.transformer.step_up_full")
-            TransformerSync.Mode.STEP_DOWN -> t("gui.ic2_120.transformer.step_down_full")
+            TransformerSync.Mode.STEP_UP -> t("gui.ic2_120.transformer.step_down_full")
+            TransformerSync.Mode.STEP_DOWN -> t("gui.ic2_120.transformer.step_up_full")
         }
         val modeColor = when (currentMode) {
-            TransformerSync.Mode.STEP_UP -> 0xAAFFAA
-            TransformerSync.Mode.STEP_DOWN -> 0xFFAAAA
+            TransformerSync.Mode.STEP_UP -> 0xFFAAAA
+            TransformerSync.Mode.STEP_DOWN -> 0xAAFFAA
         }
 
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(filteredInputRate))
@@ -128,18 +128,18 @@ class TransformerScreen(
 
                 val (inputDesc, outputDesc) = when (currentMode) {
                     TransformerSync.Mode.STEP_UP -> {
-                        val inputTier = handler.sync.lowTier
-                        val outputTier = handler.sync.highTier
-                        val inputEu = handler.sync.getLowEuPerTick()
-                        val outputEu = handler.sync.getHighEuPerTick()
-                        t("gui.ic2_120.transformer.face_receive", "$inputEu EU/t", inputTier) to t("gui.ic2_120.transformer.other_output", "$outputEu EU/t", outputTier)
-                    }
-                    TransformerSync.Mode.STEP_DOWN -> {
                         val inputTier = handler.sync.highTier
                         val outputTier = handler.sync.lowTier
                         val inputEu = handler.sync.getHighEuPerTick()
                         val outputEu = handler.sync.getLowEuPerTick()
                         t("gui.ic2_120.transformer.other_receive", "$inputEu EU/t", inputTier) to t("gui.ic2_120.transformer.face_output", "$outputEu EU/t", outputTier)
+                    }
+                    TransformerSync.Mode.STEP_DOWN -> {
+                        val inputTier = handler.sync.lowTier
+                        val outputTier = handler.sync.highTier
+                        val inputEu = handler.sync.getLowEuPerTick()
+                        val outputEu = handler.sync.getHighEuPerTick()
+                        t("gui.ic2_120.transformer.face_receive", "$inputEu EU/t", inputTier) to t("gui.ic2_120.transformer.other_output", "$outputEu EU/t", outputTier)
                     }
                 }
                 Text(inputDesc, color = 0x999999, shadow = false)
