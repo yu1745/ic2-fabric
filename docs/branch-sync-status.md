@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **60 个 commit**，**60 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **61 个 commit**，**61 个已同步，0 个待同步**。
 （归档 1-37 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -36,6 +36,7 @@
 | 58 | `10a8b66d` | feat: 核反应堆布局锁定与漏斗堆叠绕过修复 | ✅ | |
 | 59 | `3508fb3b` | feat: 扳手支持拆解储物箱——左键瞬间拆解保留物品 | ✅ | 无冲突直接 cherry-pick |
 | 60 | `20d2b0c7` | fix: 采矿镭射枪贴脸使用时发射弹射体而非执行实体交互 | ✅ | 无冲突直接 cherry-pick |
+| 61 | `964989b` | fix: FTB Chunks 领地保护检查始终失效——Protection 是接口不是枚举 | ✅ | 无冲突直接 cherry-pick |
 
 ## 同步历史
 
