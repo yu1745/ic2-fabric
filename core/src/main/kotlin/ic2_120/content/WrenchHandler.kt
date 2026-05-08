@@ -15,6 +15,8 @@ import ic2_120.content.block.storage.TankBlock
 import ic2_120.content.block.storage.TankBlockEntity
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.editCustomData
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.NbtComponent
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
@@ -169,7 +171,7 @@ object WrenchHandler {
                                 ic2_120.content.sync.EnergyStorageSync.NBT_ENERGY_STORED,
                                 retained
                             )
-                            dropped.editCustomData { it.put(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG, blockEntityTag) }
+                            dropped.set(DataComponentTypes.BLOCK_ENTITY_DATA, NbtComponent.of(blockEntityTag))
                         }
                         val itemEntity = net.minecraft.entity.ItemEntity(
                             world,

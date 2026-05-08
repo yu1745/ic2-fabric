@@ -9,6 +9,8 @@ import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.CropSeedData
 import com.mojang.serialization.MapCodec
 import ic2_120.content.item.CropnalyzerItem
+import ic2_120.content.item.Fertilizer
+import ic2_120.content.item.Weed
 import ic2_120.content.item.WeedEx
 import ic2_120.content.item.WeedingSpade
 import ic2_120.content.item.Resin
@@ -53,6 +55,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
+import net.minecraft.util.ItemActionResult
 import net.minecraft.util.ItemScatterer
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
@@ -75,6 +78,13 @@ class CropBlock : BlockWithEntity(
     AbstractBlock.Settings.copy(Blocks.WHEAT)
         .breakInstantly()
         .noCollision()
+        .nonOpaque()
+        .luminance { state ->
+            if (state.contains(CROP_TYPE) && state.contains(AGE) &&
+                state.get(CROP_TYPE) == CropType.RED_WHEAT &&
+                state.get(AGE) >= CropSystem.maxAge(CropType.RED_WHEAT)
+            ) 7 else 0
+        }
         .ticksRandomly()
 ) {
     companion object {
@@ -103,6 +113,19 @@ class CropBlock : BlockWithEntity(
 
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
 
+    override fun emitsRedstonePower(state: BlockState): Boolean =
+        state.get(CROP_TYPE) == CropType.RED_WHEAT
+
+    override fun getWeakRedstonePower(
+        state: BlockState,
+        world: net.minecraft.world.BlockView,
+        pos: BlockPos,
+        direction: Direction
+    ): Int {
+        if (state.get(CROP_TYPE) != CropType.RED_WHEAT) return 0
+        return if (state.get(AGE) >= CropSystem.maxAge(CropType.RED_WHEAT)) 15 else 0
+    }
+
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         CropBlockEntity(pos, state)
 
@@ -115,6 +138,102 @@ class CropBlock : BlockWithEntity(
         else validateTicker(type, CropBlockEntity::class.type()) { w, p, s, be ->
             (be as CropBlockEntity).tick(w, p, s)
         }
+
+    override fun onUse(
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hit: BlockHitResult
+    ): ActionResult {
+        // 1.21.1: onUse 仅为空手交互
+        if (world.isClient) return ActionResult.SUCCESS
+        val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return ActionResult.PASS
+
+        if (!be.canBeHarvested(state)) return ActionResult.PASS
+
+        val result = be.performHarvest(state) ?: return ActionResult.PASS
+        result.drops.forEach { ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), it) }
+        if (result.ageAfterHarvest != null) {
+            world.setBlockState(
+                pos,
+                state.with(CropBlock.AGE, result.ageAfterHarvest.coerceIn(0, 7)),
+                net.minecraft.block.Block.NOTIFY_ALL
+            )
+        } else {
+            world.setBlockState(pos, CropStickBlock.defaultStickState(), net.minecraft.block.Block.NOTIFY_ALL)
+        }
+        return ActionResult.SUCCESS
+    }
+
+    override fun onUseWithItem(
+        stack: ItemStack,
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: PlayerEntity,
+        hand: Hand,
+        hit: BlockHitResult
+    ): ItemActionResult {
+        // 这些物品有自己的 useOnBlock，交由物品处理
+        if (stack.item is CropnalyzerItem || stack.item == WeedingSpade::class.instance() || stack.item == WeedEx::class.instance()) {
+            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        }
+
+        if (world.isClient) return ItemActionResult.SUCCESS
+        val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        val isCreative = player.abilities.creativeMode
+
+        if (stack.item == Fertilizer::class.instance()) {
+            if (be.applyFertilizerDirect(simulate = false)) {
+                if (!isCreative) stack.decrement(1)
+                return ItemActionResult.SUCCESS
+            }
+        }
+
+        // 手持其他物品时也可以收获
+        if (!be.canBeHarvested(state)) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+
+        val result = be.performHarvest(state) ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        result.drops.forEach { ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), it) }
+        if (result.ageAfterHarvest != null) {
+            world.setBlockState(
+                pos,
+                state.with(CropBlock.AGE, result.ageAfterHarvest.coerceIn(0, 7)),
+                net.minecraft.block.Block.NOTIFY_ALL
+            )
+        } else {
+            world.setBlockState(pos, CropStickBlock.defaultStickState(), net.minecraft.block.Block.NOTIFY_ALL)
+        }
+        return ItemActionResult.SUCCESS
+    }
+
+    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity): BlockState {
+        if (world is ServerWorld && !player.isCreative) {
+            val be = world.getBlockEntity(pos) as? CropBlockEntity
+            if (be != null) {
+                val cropType = state.get(CROP_TYPE)
+                if (cropType == CropType.WEED) {
+                    ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), Weed::class.instance().defaultStack)
+                } else {
+                    val seedBag = CropSeedBagItem.createStack(cropType, be.stats, scanLevel = be.scanLevel)
+                    ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), seedBag)
+                }
+                ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), CropStickBlock::class.instance().asItem().defaultStack)
+            }
+        }
+        return super.onBreak(world, pos, state, player)
+    }
+
+    override fun onStacksDropped(
+        state: BlockState,
+        world: ServerWorld,
+        pos: BlockPos,
+        tool: ItemStack,
+        dropExperience: Boolean
+    ) {
+        // 不掉落默认战利品表项；种子袋与作物架由 [onBreak] 处理
+    }
 }
 
 @ModBlockEntity(block = CropBlock::class)

@@ -133,7 +133,7 @@ class CropStickBlock : BlockWithEntity(
                     val cropState = CropBlock.defaultCropState(cropType, 0)
                     world.setBlockState(pos, cropState, Block.NOTIFY_ALL)
                     val be = world.getBlockEntity(pos) as? CropBlockEntity
-                    be?.stats = CropStats(1, 1, 1)
+                    be?.stats = stats
                     be?.scanLevel = CropSeedData.readScanLevel(stack)
                     be?.markDirty()
                     if (!isCreative) stack.decrement(1)
