@@ -26,15 +26,29 @@ object FlightManager {
         val chestStack = player.getEquippedStack(EquipmentSlot.CHEST)
 
         if (chestStack.item is JetpackItem) {
+            // 从量子胸甲切换到喷气背包时，清理残留的量子飞行状态
+            if (!player.isCreative && !player.isSpectator
+                && player.abilities.allowFlying && !jetpackGrantedPlayers.contains(player.uuid)) {
+                disableQuantumFlight(player)
+            }
             handleJetpackFlight(player, chestStack)
             return
         }
         if (chestStack.item is ElectricJetpack) {
+            if (!player.isCreative && !player.isSpectator
+                && player.abilities.allowFlying && !jetpackGrantedPlayers.contains(player.uuid)) {
+                disableQuantumFlight(player)
+            }
             handleElectricJetpackFlight(player, chestStack)
             return
         }
         disableJetpackFlight(player, null)
         handleQuantumFlight(player, chestStack)
+        // 不穿量子胸甲时清理残留的量子飞行状态（非创造/旁观模式）
+        if (chestStack.item !is QuantumChestplate
+            && !player.isCreative && !player.isSpectator) {
+            disableQuantumFlight(player)
+        }
     }
 
     private fun handleJetpackFlight(player: PlayerEntity, jetpackStack: ItemStack) {
@@ -42,12 +56,15 @@ object FlightManager {
             disableJetpackFlight(player, jetpackStack)
             return
         }
-        if (player.isOnGround || player.isTouchingWater || player.isClimbing) {
+        if (player.isOnGround || player.isTouchingWater || player.isClimbing
+            || (jetpackGrantedPlayers.contains(player.uuid) && !player.abilities.flying)) {
+            JetpackItem.setFlightEnabled(jetpackStack, false)
             disableJetpackFlight(player, jetpackStack)
             return
         }
 
         if (!JetpackItem.consumeFuelPerTick(jetpackStack)) {
+            JetpackItem.setFlightEnabled(jetpackStack, false)
             disableJetpackFlight(player, jetpackStack)
             return
         }
@@ -61,11 +78,14 @@ object FlightManager {
             disableJetpackFlight(player, jetpackStack)
             return
         }
-        if (player.isOnGround || player.isTouchingWater || player.isClimbing) {
+        if (player.isOnGround || player.isTouchingWater || player.isClimbing
+            || (jetpackGrantedPlayers.contains(player.uuid) && !player.abilities.flying)) {
+            jetpack.setFlightEnabled(jetpackStack, false)
             disableJetpackFlight(player, jetpackStack)
             return
         }
         if (!jetpack.consumeFlightEnergyPerTick(jetpackStack)) {
+            jetpack.setFlightEnabled(jetpackStack, false)
             disableJetpackFlight(player, jetpackStack)
             return
         }
@@ -133,12 +153,16 @@ object FlightManager {
 
         val currentEnergy = chestplate.getEnergy(chestStack)
         if (currentEnergy <= 0) {
-            chestStack.editCustomData { it.putBoolean("QuantumFlightEnabled", false) }
+            QuantumChestplate.setFlightEnabled(chestStack, false)
             disableQuantumFlight(player)
             return
         }
 
-        if (player.isOnGround || player.isTouchingWater || player.isClimbing) {
+        // 落地/入水/攀爬时自动关闭飞行。
+        // 同时检测 flying 状态被游戏自动关闭的情况（飞行模式下落地时 isOnGround 可能滞后）。
+        if (player.isOnGround || player.isTouchingWater || player.isClimbing
+            || (isActive && !player.abilities.flying)) {
+            QuantumChestplate.setFlightEnabled(chestStack, false)
             if (isActive) {
                 disableQuantumFlight(player)
             }
@@ -146,7 +170,7 @@ object FlightManager {
         }
 
         if (!QuantumChestplate.consumeFlightEnergyPerTick(chestStack)) {
-            chestStack.editCustomData { it.putBoolean("QuantumFlightEnabled", false) }
+            QuantumChestplate.setFlightEnabled(chestStack, false)
             disableQuantumFlight(player)
             return
         }

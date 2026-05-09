@@ -18,9 +18,9 @@ import net.minecraft.util.Formatting
 /**
  * 护甲 Tooltip 客户端处理器
  *
- * 量子套/纳米套使用 Alt+N(夜视)、Alt+F(飞行)；
+ * 量子套/纳米套使用 Alt+N(夜视)；
  * 夜视仪使用 Alt+N；
- * 喷气背包使用 Alt+M(飞行开关)。
+ * 飞行（量子胸甲/喷气背包）使用双击空格触发。
  */
 @Environment(EnvType.CLIENT)
 object ArmorTooltipHandler {
@@ -29,13 +29,9 @@ object ArmorTooltipHandler {
         ItemTooltipCallback.EVENT.register { stack, context, type, tooltip ->
             val item = stack.item
 
-            // 喷气背包：M 键
+            // 喷气背包：双击空格
             if (item is JetpackItem || item is ElectricJetpack) {
-                val key = ModeKeybinds.getModeKey()
-                val name = key.boundKeyLocalizedText.string
-                tooltip.add(Text.translatable("tooltip.ic2_120.armor.key.flight_switch").formatted(Formatting.GRAY)
-                    .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
-                    .append(Text.literal(name).formatted(Formatting.YELLOW)))
+                tooltip.add(Text.translatable("tooltip.ic2_120.armor.key.flight_double_tap").formatted(Formatting.GRAY))
             }
 
             // 夜视仪、纳米/量子头盔：N 键
@@ -47,13 +43,9 @@ object ArmorTooltipHandler {
                     .append(Text.literal(name).formatted(Formatting.YELLOW)))
             }
 
-            // 量子胸甲：F 键
+            // 量子胸甲：双击空格
             if (item is QuantumChestplate) {
-                val key = ArmorKeybinds.getFlightKey()
-                val name = key.boundKeyLocalizedText.string
-                tooltip.add(Text.translatable("tooltip.ic2_120.armor.key.flight").formatted(Formatting.GRAY)
-                    .append(Text.literal("Alt + ").formatted(Formatting.YELLOW))
-                    .append(Text.literal(name).formatted(Formatting.YELLOW)))
+                tooltip.add(Text.translatable("tooltip.ic2_120.armor.key.flight_double_tap").formatted(Formatting.GRAY))
             }
 
             // 量子护腿：L 键

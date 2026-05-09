@@ -88,6 +88,10 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
         fun isFlightEnabled(stack: ItemStack): Boolean =
             stack.getCustomData()?.getBoolean(FLIGHT_KEY) ?: false
 
+        fun setFlightEnabled(stack: ItemStack, enabled: Boolean) {
+            stack.editCustomData { it.putBoolean(FLIGHT_KEY, enabled) }
+        }
+
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             val alloy = Alloy::class.instance()
