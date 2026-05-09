@@ -1,5 +1,6 @@
 package ic2_120.content.block.machines
 
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.StirlingGeneratorBlock
 import ic2_120.content.block.IGenerator
 import ic2_120.content.energy.charge.BatteryChargerComponent
@@ -79,6 +80,8 @@ class StirlingGeneratorBlockEntity(
         { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
         { world?.time }
     )
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
+
     private val batteryCharger = BatteryChargerComponent(
         inventory = this,
         batterySlot = BATTERY_SLOT,
@@ -165,6 +168,7 @@ class StirlingGeneratorBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+        adjacentEnergyTransfer.tick()
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
         sync.heatBuffered = heatBuffered.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
 

@@ -1,6 +1,7 @@
 package ic2_120.content.block.machines
 
 import ic2_120.content.block.GeoGeneratorBlock
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.energy.charge.BatteryChargerComponent
@@ -139,6 +140,8 @@ class GeoGeneratorBlockEntity(
         getFacing = { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
+
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     private val lavaTankInternal = object : SingleVariantStorage<FluidVariant>() {
         private val tankCapacity: Long = FluidConstants.BUCKET * 8
@@ -324,6 +327,8 @@ class GeoGeneratorBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+
+        adjacentEnergyTransfer.tick()
 
         // 应用流体管道升级
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)

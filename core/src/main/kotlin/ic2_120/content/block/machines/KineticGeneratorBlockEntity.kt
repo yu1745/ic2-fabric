@@ -1,5 +1,6 @@
 package ic2_120.content.block.machines
 
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.KineticGeneratorBlock
@@ -57,6 +58,8 @@ class KineticGeneratorBlockEntity(
         getFacing = { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
+
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     constructor(pos: BlockPos, state: BlockState) : this(
         KineticGeneratorBlockEntity::class.type(),
@@ -130,6 +133,7 @@ class KineticGeneratorBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+        adjacentEnergyTransfer.tick()
         pullKuFromNeighbors(world, pos, this)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         val hasInputThisTick = lastKuInputTick == world.time
