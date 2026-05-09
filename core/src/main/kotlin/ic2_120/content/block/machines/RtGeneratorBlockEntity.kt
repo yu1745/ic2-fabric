@@ -1,6 +1,7 @@
 package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.RtGeneratorBlock
@@ -80,6 +81,8 @@ class RtGeneratorBlockEntity(
         getFacing = { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
+
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     private val batteryCharger = BatteryChargerComponent(
         inventory = this,
@@ -170,6 +173,7 @@ class RtGeneratorBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+        adjacentEnergyTransfer.tick()
 
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 

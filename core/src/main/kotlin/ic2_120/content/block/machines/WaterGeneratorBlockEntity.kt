@@ -1,6 +1,7 @@
 package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.WaterGeneratorBlock
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.IGenerator
@@ -209,6 +210,8 @@ class WaterGeneratorBlockEntity(
     /** 缓存的周围水方块数量，每 20 tick 更新一次 */
     private var cachedWaterCount: Int = 0
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
+
     private val batteryCharger = BatteryChargerComponent(
         inventory = this,
         batterySlot = BATTERY_SLOT,
@@ -327,6 +330,8 @@ class WaterGeneratorBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+
+        adjacentEnergyTransfer.tick()
 
         // 应用流体管道升级
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)

@@ -2,6 +2,7 @@ package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.SemifluidGeneratorBlock
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.fluid.ModFluids
@@ -145,6 +146,8 @@ class SemifluidGeneratorBlockEntity(
         getFacing = { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
+
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     private val fuelTankInternal = object : SingleVariantStorage<FluidVariant>() {
         private val tankCapacity: Long = FluidConstants.BUCKET * 8
@@ -324,6 +327,8 @@ class SemifluidGeneratorBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+
+        adjacentEnergyTransfer.tick()
 
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
         if (fluidPipeProviderEnabled) {

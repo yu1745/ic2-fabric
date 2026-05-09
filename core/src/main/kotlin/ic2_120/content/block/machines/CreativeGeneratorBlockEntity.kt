@@ -1,5 +1,6 @@
 package ic2_120.content.block.machines
 
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.CreativeGeneratorBlock
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
@@ -62,6 +63,8 @@ class CreativeGeneratorBlockEntity(
         { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: net.minecraft.util.math.Direction.NORTH },
         { world?.time }
     )
+
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     private val batteryCharger = BatteryChargerComponent(
         inventory = this,
@@ -130,6 +133,7 @@ class CreativeGeneratorBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+        adjacentEnergyTransfer.tick()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
         // 创造发电机无限生成能量（32 EU/t）

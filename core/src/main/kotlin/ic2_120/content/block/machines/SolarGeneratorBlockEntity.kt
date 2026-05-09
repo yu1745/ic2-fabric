@@ -1,5 +1,6 @@
 package ic2_120.content.block.machines
 
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.SolarGeneratorBlock
@@ -87,6 +88,8 @@ class SolarGeneratorBlockEntity(
         currentTickProvider = { world?.time }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
+
     private val batteryCharger = BatteryChargerComponent(
         inventory = this,
         batterySlot = BATTERY_SLOT,
@@ -163,6 +166,7 @@ class SolarGeneratorBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
+        adjacentEnergyTransfer.tick()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
         val canGenerate = canGenerate(world, pos)

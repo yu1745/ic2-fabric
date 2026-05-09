@@ -1,5 +1,6 @@
 package ic2_120.content.block.machines
 
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.WindGeneratorBlock
@@ -108,6 +109,8 @@ class WindGeneratorBlockEntity(
     /** 分数 EU 累积（milli EU），满 1000 时产生 1 EU */
     private var euAccum: Int = 0
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
+
     private val batteryCharger = BatteryChargerComponent(
         inventory = this,
         batterySlot = BATTERY_SLOT,
@@ -190,6 +193,7 @@ class WindGeneratorBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
+        adjacentEnergyTransfer.tick()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
         // 每 128 tick 刷新风力强度和发电量（世界时间对齐，所有风力机同步）

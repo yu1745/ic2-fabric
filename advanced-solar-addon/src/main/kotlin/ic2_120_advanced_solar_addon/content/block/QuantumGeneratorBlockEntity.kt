@@ -2,6 +2,7 @@ package ic2_120_advanced_solar_addon.content.block
 
 import ic2_120_advanced_solar_addon.content.sync.QuantumGeneratorSync
 import ic2_120_advanced_solar_addon.content.screen.QuantumGeneratorScreenHandler
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.machines.MachineBlockEntity
@@ -54,6 +55,8 @@ class QuantumGeneratorBlockEntity(
         currentTickProvider = { world?.time }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
+
     var production: Int = PRODUCTION
         private set
 
@@ -64,6 +67,8 @@ class QuantumGeneratorBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+
+        adjacentEnergyTransfer.tick()
 
         var hasRedstoneSignal = false
         for (direction in Direction.entries) {

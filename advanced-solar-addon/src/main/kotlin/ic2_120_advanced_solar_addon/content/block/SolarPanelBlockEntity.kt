@@ -2,6 +2,7 @@ package ic2_120_advanced_solar_addon.content.block
 
 import ic2_120_advanced_solar_addon.content.sync.SolarPanelSync
 import ic2_120_advanced_solar_addon.content.screen.SolarPanelScreenHandler
+import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.machines.MachineBlockEntity
@@ -52,6 +53,8 @@ abstract class SolarPanelBlockEntity(
         currentTickProvider = { world?.time }
     )
 
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
+
     val maxStorage: Long = maxStorage
 
     override val activeProperty: BooleanProperty = activeProperty
@@ -67,6 +70,8 @@ abstract class SolarPanelBlockEntity(
 
     open fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+
+        adjacentEnergyTransfer.tick()
 
         if (ticker++ % tickRate == 0) {
             checkSky()
