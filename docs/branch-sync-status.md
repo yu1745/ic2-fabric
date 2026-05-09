@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **66 个 commit**，**65 个已同步，1 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **66 个 commit**，**66 个已同步，0 个待同步**。
 （归档 1-37 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -38,7 +38,7 @@
 | 63 | `84e84c79` | fix: 变压器升压/降压文本互换+ScreenHandler六面朝向修复 | ✅ | 无冲突直接 cherry-pick |
 | 64 | `207f0c3d` | feat: 新增 AdjacentEnergyTransferComponent 统一贴脸能量传输 | ✅ | 无冲突直接 cherry-pick |
 | 65 | `9cfc66eb` | feat: 全量迁移剩余 26 个机器到 AdjacentEnergyTransferComponent | ✅ | 无冲突直接 cherry-pick |
-| 66 | `7bcc2a27` | feat: 所有发电机添加 AdjacentEnergyTransferComponent 支持贴脸能量传输 | ❌ | |
+| 66 | `7bcc2a27` | feat: 所有发电机添加 AdjacentEnergyTransferComponent 支持贴脸能量传输 | ✅ | 无冲突直接 cherry-pick |
 
 ## 同步历史
 
