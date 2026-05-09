@@ -576,7 +576,6 @@
   "key.ic2_120.toggle_mode": "功能切换键",
   "key.ic2_120.toggle_foam_sprayer_mode": "泡沫喷枪模式切换",
   "key.ic2_120.toggle_vision": "Alt + 夜视键",
-  "key.ic2_120.toggle_flight": "Alt + 飞行键",
   "key.ic2_120.toggle_bandwidth_hud": "切换带宽 HUD",
   "category.ic2_120.ic2": "IC2",
   "message.ic2_120.iridium_drill.silk_touch_on": "铱钻头：精准采集已开启",
@@ -1011,9 +1010,8 @@
   "tooltip.ic2_120.armor.speed_tier.1": "1档",
   "tooltip.ic2_120.armor.speed_tier.2": "2档",
 
-  "tooltip.ic2_120.armor.key.flight_switch": "飞行开关: ",
+  "tooltip.ic2_120.armor.key.flight_double_tap": "双击空格飞行",
   "tooltip.ic2_120.armor.key.vision": "夜视按键: ",
-  "tooltip.ic2_120.armor.key.flight": "飞行按键: ",
   "tooltip.ic2_120.armor.key.speed": "神行按键: ",
   "tooltip.ic2_120.armor.key.jump": "大跳按键: ",
   "item.ic2_120.recall_scroll": "传送卷轴"

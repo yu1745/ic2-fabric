@@ -582,7 +582,6 @@
   "key.ic2_120.toggle_mode": "Feature Toggle",
   "key.ic2_120.toggle_foam_sprayer_mode": "Toggle Foam Sprayer Mode",
   "key.ic2_120.toggle_vision": "Alt + Vision Key",
-  "key.ic2_120.toggle_flight": "Alt + Fly Key",
   "key.ic2_120.toggle_bandwidth_hud": "Toggle Bandwidth HUD",
   "category.ic2_120.ic2": "IC2",
   "message.ic2_120.iridium_drill.silk_touch_on": "Iridium Drill: Silk Touch ON",
@@ -1017,9 +1016,8 @@
   "tooltip.ic2_120.armor.speed_tier.1": "Tier 1",
   "tooltip.ic2_120.armor.speed_tier.2": "Tier 2",
 
-  "tooltip.ic2_120.armor.key.flight_switch": "Flight Toggle: ",
+  "tooltip.ic2_120.armor.key.flight_double_tap": "Double-Tap Space to Fly",
   "tooltip.ic2_120.armor.key.vision": "Night Vision: ",
-  "tooltip.ic2_120.armor.key.flight": "Flight: ",
   "tooltip.ic2_120.armor.key.speed": "Speed: ",
   "tooltip.ic2_120.armor.key.jump": "Jump Boost: ",
   "item.ic2_120.recall_scroll": "Teleport Scroll"

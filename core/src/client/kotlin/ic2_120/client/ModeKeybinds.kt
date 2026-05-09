@@ -1,8 +1,6 @@
 package ic2_120.client
 
 import ic2_120.content.item.FoamSprayerItem
-import ic2_120.content.item.ElectricJetpack
-import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.network.NetworkManager
 import io.netty.buffer.Unpooled
 import net.fabricmc.api.EnvType
@@ -12,17 +10,17 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
-import net.minecraft.entity.EquipmentSlot
 import net.minecraft.network.PacketByteBuf
 import org.lwjgl.glfw.GLFW
 
 /**
  * 通用功能切换键（默认 M，可在控制中改键）。
  *
- * - 喷气背包 / 泡沫喷枪：按住 **Alt** 并**按下**此键（边沿触发）切换（见 [register] 内 ClientTickEvents）。
+ * - 泡沫喷枪：按住 **Alt** 并**按下**此键（边沿触发）切换（见 [register] 内 ClientTickEvents）。
  * - 采矿镭射枪：**按住**此键并**右键**切换模式（见 [MiningLaserModeHandler]）。
  *
- * 注：量子套夜视(Alt+N)、飞行(Alt+F) 使用 ArmorKeybinds，不共用本键。
+ * 飞行（量子胸甲/喷气背包）使用双击空格触发，见 [FlightDoubleTapHandler]。
+ * 量子套夜视(Alt+N) 使用 ArmorKeybinds。
  */
 @Environment(EnvType.CLIENT)
 object ModeKeybinds {
@@ -49,7 +47,7 @@ object ModeKeybinds {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
             val player = client.player ?: return@register
 
-            // 泡沫枪专用键（独立处理，不受其他装备影响）
+            // 泡沫枪专用键
             while (toggleFoamModeKey.wasPressed()) {
                 if (!isAltDown(client)) continue
                 val offHand = player.offHandStack
@@ -57,20 +55,6 @@ object ModeKeybinds {
                 if (mainHand.item is FoamSprayerItem || offHand.item is FoamSprayerItem) {
                     ClientPlayNetworking.send(
                         NetworkManager.TOGGLE_FOAM_SPRAYER_MODE_PACKET,
-                        PacketByteBuf(Unpooled.buffer())
-                    )
-                    return@register
-                }
-            }
-
-            while (toggleModeKey.wasPressed()) {
-                if (!isAltDown(client)) continue
-
-                // 胸甲 → 喷气背包飞行开关
-                val chest = player.getEquippedStack(EquipmentSlot.CHEST)
-                if (chest.item is JetpackItem || chest.item is ElectricJetpack) {
-                    ClientPlayNetworking.send(
-                        NetworkManager.TOGGLE_JETPACK_FLIGHT_PACKET,
                         PacketByteBuf(Unpooled.buffer())
                     )
                     return@register
