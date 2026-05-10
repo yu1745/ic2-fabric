@@ -55,9 +55,9 @@ class SolidCannerScreenHandler(
     private val foodSlotSpec = SlotSpec(
         canInsert = { stack ->
             !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is IUpgradeItem &&
-                context.get({ world, _ ->
+                (context.get({ world, _ ->
                     world.recipeManager.values().any { it is SolidCannerRecipe && it.slot1Ingredient.test(stack) }
-                }, false)
+                }, false) || stack.item.foodComponent != null)
         }
     )
     private val outputSlotSpec = SlotSpec(canInsert = { false }, canTake = { true })
