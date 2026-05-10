@@ -1,6 +1,6 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-05-09
+最后更新：2026-05-10
 
 分叉点：`c5e247c`
 
@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **67 个 commit**，**67 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **68 个 commit**，**67 个已同步，1 个待同步**。
 （归档 1-37 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -36,6 +36,7 @@
 | 65 | `9cfc66eb` | feat: 全量迁移剩余 26 个机器到 AdjacentEnergyTransferComponent | ✅ | 无冲突直接 cherry-pick |
 | 66 | `7bcc2a27` | feat: 所有发电机添加 AdjacentEnergyTransferComponent 支持贴脸能量传输 | ✅ | 无冲突直接 cherry-pick |
 | 67 | `e5be3a10` | feat: 飞行改为双击空格触发，移除独立的 Alt+F / Alt+M 按键开关 | ✅ | cherry-pick + 适配 1.21.1 API（Payload 网络、DataComponent NBT）+ datagen 刷新 |
+| 68 | `c7a3ae42` | fix: 固体装罐机食物无法放入 + JEI 显示与实际消耗数量不匹配 | ❌ | 待同步到 1.21.1 |
 
 ## 同步历史
 
