@@ -319,11 +319,6 @@ class Ic2JeiPlugin : IModPlugin {
         registration.addRecipes(Ic2JeiRecipeTypes.METAL_FORMER_EXTRUDING, extrudingRecipes)
 
         // SolidCanner 配方
-        val tinCanStack = ItemStack(EmptyTinCanItem::class.instance(), 1)
-        val filledCanStack = ItemStack(FilledTinCanItem::class.instance(), 1)
-        val foodStacks = Registries.ITEM.mapNotNull { item ->
-            if (ItemStack(item).get(DataComponentTypes.FOOD) != null) ItemStack(item, 1) else null
-        }
         val solidCannerRecipes = SolidCannerRecipeDatagen.allEntries()
             .map { entry ->
                 SolidCannerJeiRecipe(
@@ -331,7 +326,15 @@ class Ic2JeiPlugin : IModPlugin {
                     slot1 = listOf(ItemStack(entry.slot1Ingredient, entry.slot1Count)),
                     output = ItemStack(entry.outputItem, entry.outputCount)
                 )
-            } + SolidCannerJeiRecipe(tinCanStack, foodStacks, filledCanStack)
+            } + Registries.ITEM.mapNotNull { item ->
+                val food = ItemStack(item).get(DataComponentTypes.FOOD) ?: return@mapNotNull null
+                val canCount = food.nutrition.coerceAtLeast(1)
+                SolidCannerJeiRecipe(
+                    slot0 = ItemStack(EmptyTinCanItem::class.instance(), canCount),
+                    slot1 = listOf(ItemStack(item, 1)),
+                    output = ItemStack(FilledTinCanItem::class.instance(), canCount)
+                )
+            }
         registration.addRecipes(Ic2JeiRecipeTypes.SOLID_CANNER, solidCannerRecipes)
 
         val recyclerScrap = Registries.ITEM.get(Identifier.of("ic2_120", "scrap"))

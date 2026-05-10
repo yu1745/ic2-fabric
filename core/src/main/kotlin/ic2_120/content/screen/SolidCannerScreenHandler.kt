@@ -20,7 +20,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-
+import net.minecraft.component.DataComponentTypes
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -56,9 +56,9 @@ class SolidCannerScreenHandler(
     private val foodSlotSpec = SlotSpec(
         canInsert = { stack ->
             !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is IUpgradeItem &&
-                context.get({ world, _ ->
+                (context.get({ world, _ ->
                     world.recipeManager.values().any { it.value is SolidCannerRecipe && (it.value as SolidCannerRecipe).slot1Ingredient.test(stack) }
-                }, false)
+                }, false) || stack.get(DataComponentTypes.FOOD) != null)
         }
     )
     private val outputSlotSpec = SlotSpec(canInsert = { false }, canTake = { true })
