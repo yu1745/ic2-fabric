@@ -8,15 +8,13 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **68 个 commit**，**67 个已同步，1 个待同步**。
-（归档 1-37 → `branch-sync-archive.md`）
+从分叉点 `c5e247c` 到 main HEAD 共 **68 个 commit**，**68 个已同步，0 个待同步**。
+（归档 1-48 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
 
 | # | Commit | 说明 | 在 1.21.1？ | 备注 |
 |---|--------|------|:-----------:|------|
-| 47 | `1656996e` | fix: 修正量子/纳米护甲减伤值为IC2经典值，工具提示改为可翻译文本 | ✅ | cherry-pick + 适配 1.21.1 appendTooltip 签名 |
-| 48 | `4b692f98` | feat: 添加 explodeWhenNoEnergyFlow 配置项，无能量时不触发超压爆炸 | ✅ | 无冲突直接 cherry-pick |
 | 49 | `b708df3e` | feat: 半流体发电机燃料颜色网络同步 + 流体颜色注册表 | ✅ | cherry-pick + 适配 1.21.1 Payload 网络 |
 | 50 | `0d23511f` | feat: 物质生成机移除超频支持，消耗速度按可用能量比例无上限 | ✅ | cherry-pick + 1.21.1 API 适配（ExtendedScreenHandlerFactory 泛型）|
 | 51 | `cedc65d1` | feat: 传送卷轴+传送机玩家文档+NBT动态模型切换 | ✅ | cherry-pick + 适配 1.21.1（DataComponent NBT、TooltipType、Identifier.of、RecipeExporter）|
@@ -36,7 +34,7 @@
 | 65 | `9cfc66eb` | feat: 全量迁移剩余 26 个机器到 AdjacentEnergyTransferComponent | ✅ | 无冲突直接 cherry-pick |
 | 66 | `7bcc2a27` | feat: 所有发电机添加 AdjacentEnergyTransferComponent 支持贴脸能量传输 | ✅ | 无冲突直接 cherry-pick |
 | 67 | `e5be3a10` | feat: 飞行改为双击空格触发，移除独立的 Alt+F / Alt+M 按键开关 | ✅ | cherry-pick + 适配 1.21.1 API（Payload 网络、DataComponent NBT）+ datagen 刷新 |
-| 68 | `c7a3ae42` | fix: 固体装罐机食物无法放入 + JEI 显示与实际消耗数量不匹配 | ❌ | 待同步到 1.21.1 |
+| 68 | `c7a3ae42` | fix: 固体装罐机食物无法放入 + JEI 显示与实际消耗数量不匹配 | ✅ | cherry-pick + 适配 1.21.1 API（DataComponentTypes.FOOD、nutrition）|
 
 ## 同步历史
 
@@ -66,3 +64,4 @@
 - 2026-05-06：同步 commit 53——提取公共 config sync 分包组包逻辑到 core（ChunkedConfigReceiver），附属删除 AddonConfigSyncReceiver，保留 AddonConfigSyncPacket（1.21.1 需要 CustomPayload.Id），主要变化为 refactor 无 API 适配
 - 2026-05-08：同步 commit 59——扳手支持拆解储物箱，无冲突直接 cherry-pick |
 - 2026-05-09：同步 commit 67——飞行改为双击空格触发，cherry-pick + 适配 1.21.1 API（Payload 网络、DataComponent NBT）+ datagen 刷新 |
+- 2026-05-10：同步 commit 68——固体装罐机食物无法放入修复，cherry-pick + 适配 1.21.1 API（DataComponentTypes.FOOD、nutrition）+ datagen 刷新 |
