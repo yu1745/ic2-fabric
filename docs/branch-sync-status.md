@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **73 个 commit**，**71 个已同步，2 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **73 个 commit**，**73 个已同步，0 个待同步**。
 （归档 1-49 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -37,8 +37,8 @@
 | 69 | `3534ffc5` | fix: 流体热力发电机无限免费燃料——tryInsertFuel 在空间不足 1B 时仍注入 | ✅ | 无冲突直接 cherry-pick |
 | 70 | `10ca9f12` | feat: 高级太阳能附属机器 Screen 左侧添加发电/输出/耗能状态渲染 | ✅ | 已在 1.21.1 存在（`182ac446`） |
 | 71 | `953ba56e` | feat: 添加 enableOvervoltageExplosion 配置项，支持完全关闭超压爆炸 | ✅ | 无冲突直接 cherry-pick |
-| 72 | `dd0b29d9` | fix: 修复平面照明器东西方向碰撞箱互换的问题 | ❌ | |
-| 73 | `66edf7da` | feat: 紫外线灯（UV Lamp）实现——加速作物生长+Jade剩余时间修正 | ❌ | |
+| 72 | `dd0b29d9` | fix: 修复平面照明器东西方向碰撞箱互换的问题 | ✅ | 无冲突直接 cherry-pick |
+| 73 | `66edf7da` | feat: 紫外线灯（UV Lamp）实现——加速作物生长+Jade剩余时间修正 | ✅ | cherry-pick + 适配 1.21.1 API（validateTicker、RecipeExporter、getCodec、getScreenOpeningData、NBT registryLookup、onUse/onUseWithItem 拆分）|
 
 ## 同步历史
 
@@ -70,3 +70,4 @@
 - 2026-05-09：同步 commit 67——飞行改为双击空格触发，cherry-pick + 适配 1.21.1 API（Payload 网络、DataComponent NBT）+ datagen 刷新 |
 - 2026-05-10：同步 commit 68——固体装罐机食物无法放入修复，cherry-pick + 适配 1.21.1 API（DataComponentTypes.FOOD、nutrition）+ datagen 刷新 |
 - 2026-05-12：同步 commit 69——流体热力发电机无限免费燃料修复，无冲突直接 cherry-pick |
+- 2026-05-12：同步 commits 72-73——平面照明器碰撞箱修复（无冲突）+ 紫外线灯（cherry-pick + 适配 1.21.1 API + datagen 刷新）|
