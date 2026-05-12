@@ -155,8 +155,8 @@ class UvLampBlock : BlockWithEntity(
 
         private val SHAPE_NORTH = VoxelShapes.cuboid(0.0, 0.0, 0.0, 1.0, 1.0, THICK)
         private val SHAPE_SOUTH = VoxelShapes.cuboid(0.0, 0.0, 1.0 - THICK, 1.0, 1.0, 1.0)
-        private val SHAPE_EAST = VoxelShapes.cuboid(0.0, 0.0, 0.0, THICK, 1.0, 1.0)
-        private val SHAPE_WEST = VoxelShapes.cuboid(1.0 - THICK, 0.0, 0.0, 1.0, 1.0, 1.0)
+        private val SHAPE_EAST = VoxelShapes.cuboid(1.0 - THICK, 0.0, 0.0, 1.0, 1.0, 1.0)
+        private val SHAPE_WEST = VoxelShapes.cuboid(0.0, 0.0, 0.0, THICK, 1.0, 1.0)
         private val SHAPE_UP = VoxelShapes.cuboid(0.0, 0.0, 0.0, 1.0, THICK, 1.0)
         private val SHAPE_DOWN = VoxelShapes.cuboid(0.0, 1.0 - THICK, 0.0, 1.0, 1.0, 1.0)
 

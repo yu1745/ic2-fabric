@@ -32,19 +32,19 @@
     },
     "facing=up,active=false": {
       "model": "ic2_120:block/uv_lamp",
-      "x": 90
+      "x": -90
     },
     "facing=up,active=true": {
       "model": "ic2_120:block/uv_lamp_active",
-      "x": 90
+      "x": -90
     },
     "facing=down,active=false": {
       "model": "ic2_120:block/uv_lamp",
-      "x": -90
+      "x": 90
     },
     "facing=down,active=true": {
       "model": "ic2_120:block/uv_lamp_active",
-      "x": -90
+      "x": 90
     }
   }
 }
