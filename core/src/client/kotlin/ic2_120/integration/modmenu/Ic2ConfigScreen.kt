@@ -68,8 +68,13 @@ object Ic2ConfigScreen {
         var checkForUpdates = cfg.checkForUpdates
         var shockWhenNoEnergyFlow = cfg.shockWhenNoEnergyFlow
         var explodeWhenNoEnergyFlow = cfg.explodeWhenNoEnergyFlow
+        var enableOvervoltageExplosion = cfg.enableOvervoltageExplosion
 
         val cat = builder.getOrCreateCategory(Text.literal("通用"))
+        cat.addEntry(eb.startBooleanToggle(Text.literal("启用超压爆炸"), enableOvervoltageExplosion)
+            .setDefaultValue(true)
+            .setTooltip(Text.literal("是否启用超压爆炸。设为 false 则完全关闭超压机器爆炸。"))
+            .setSaveConsumer { enableOvervoltageExplosion = it }.build())
         cat.addEntry(eb.startBooleanToggle(Text.literal("启动时打印配置到日志"), logConfigOnLoad)
             .setDefaultValue(true)
             .setTooltip(Text.literal("启动/重载时是否把当前配置打印到日志"))
@@ -91,7 +96,8 @@ object Ic2ConfigScreen {
                 logConfigOnLoad = logConfigOnLoad,
                 checkForUpdates = checkForUpdates,
                 shockWhenNoEnergyFlow = shockWhenNoEnergyFlow,
-                explodeWhenNoEnergyFlow = explodeWhenNoEnergyFlow
+                explodeWhenNoEnergyFlow = explodeWhenNoEnergyFlow,
+                enableOvervoltageExplosion = enableOvervoltageExplosion
             )
         }
     }

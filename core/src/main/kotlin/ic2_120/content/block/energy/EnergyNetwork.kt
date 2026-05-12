@@ -378,6 +378,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     private fun tryMachineOvervoltageExplosion(world: World) {
         if (world.isClient) return
         if ((world.time + damageTickOffset) % damageIntervalTicks != 0L) return
+        if (!ic2_120.config.Ic2Config.current.general.enableOvervoltageExplosion) return
         if (!ic2_120.config.Ic2Config.current.general.explodeWhenNoEnergyFlow && energy <= 0) return
 
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
