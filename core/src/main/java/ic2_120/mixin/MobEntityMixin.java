@@ -52,4 +52,21 @@ public class MobEntityMixin {
         }
         instance.detachLeash(sendPacket, dropItem);
     }
+
+    /**
+     * 区块重新加载时的另一条路径：
+     * readLeashNbt() → attachLeash() → stopRiding()
+     * 原版 attachLeash 在绑定拴绳时会强制让骑乘中的生物下车，
+     * 此处拦截：当持有者是盔甲架（即动能发生机的锚点）时跳过下车。
+     */
+    @Redirect(
+        method = "attachLeash",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/mob/MobEntity;stopRiding()V")
+    )
+    private void keepRidingOnLeashAttach(MobEntity instance) {
+        if (instance.getHoldingEntity() instanceof ArmorStandEntity) {
+            return;
+        }
+        instance.stopRiding();
+    }
 }
