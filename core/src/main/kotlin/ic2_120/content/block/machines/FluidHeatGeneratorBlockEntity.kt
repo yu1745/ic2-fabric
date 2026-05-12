@@ -356,6 +356,10 @@ class FluidHeatGeneratorBlockEntity(
 
     private fun processFuelContainers() {
         val fuelStack = getStack(FUEL_SLOT)
+        // 油箱剩余空间不足 1 桶时跳过，流体单元/桶只能以 1B 为单位离散操作
+        // 否则 tryInsertFuel 会每 tick 注入<1B 而容器不被消耗，造成无限免费燃料
+        val space = 8 * FluidConstants.BUCKET - fuelTankInternal.amount
+        if (space < FluidConstants.BUCKET) return
         when {
             fuelStack.item == Registries.ITEM.get(Identifier.of("ic2_120", "biofuel_bucket")) -> {
                 val emptyBucket = ItemStack(Items.BUCKET)
