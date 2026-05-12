@@ -1,0 +1,6 @@
+{
+	"parent": "ic2:block/machine/misc/luminator_shape_flat",
+	"textures": {
+		"all": "ic2_120:block/uv_lamp_active"
+	}
+}

@@ -208,6 +208,13 @@ class CropBlockEntity(
     var stats = CropStats()
     var scanLevel: Int = 0
     private var growthPoints: Int = 0
+
+    /** 外部生长加速接口（如紫外线灯），注入额外生长点数 */
+    fun addGrowthPoints(points: Int) {
+        growthPoints += points
+        markDirty()
+    }
+
     private var storageNutrients: Int = 0
     private var storageWater: Int = 0
     private var storageWeedEx: Int = 0
@@ -441,7 +448,7 @@ class CropBlockEntity(
         val remainingSeconds: Double?
     )
 
-    fun estimateGrowth(world: World, pos: BlockPos, state: BlockState): GrowthEstimate {
+    fun estimateGrowth(world: World, pos: BlockPos, state: BlockState, uvGrowthBonusPerCycle: Double = 0.0): GrowthEstimate {
         val cropType = state.get(CropBlock.CROP_TYPE)
         val age = state.get(CropBlock.AGE)
         val maxAge = CropSystem.maxAge(cropType)
@@ -508,7 +515,7 @@ class CropBlockEntity(
         }
 
         val specialBonusPerCycle = specialBonusPerCycle(world, pos, cropType, age, maxAge)
-        val effectiveDelta = (expectedDeltaPerCycle + specialBonusPerCycle).coerceAtLeast(0.0001)
+        val effectiveDelta = (expectedDeltaPerCycle + specialBonusPerCycle + uvGrowthBonusPerCycle).coerceAtLeast(0.0001)
         val remainingCycles = remainingPoints / effectiveDelta
         val remainingSeconds = remainingCycles * (TICK_RATE / 20.0)
 
@@ -984,7 +991,7 @@ class CropBlockEntity(
     }
 
     companion object {
-        private const val TICK_RATE = 256
+        const val TICK_RATE = 256
         private val TAG_ORES_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/iron"))
         private val TAG_STORAGE_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/iron"))
         private val TAG_ORES_COPPER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/copper"))
