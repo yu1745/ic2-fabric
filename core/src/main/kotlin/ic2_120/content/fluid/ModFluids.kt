@@ -274,14 +274,14 @@ object ModFluids {
 
         override fun getStill(): Fluid = getStillFluid()
         override fun getFlowing(): Fluid = getFlowingFluid()
-        override fun getBucketItem(): Item = getBucket()
+        override fun getBucketItem(): Item = getIc2Bucket()
         override fun toBlockState(state: FluidState): BlockState =
             getBlock().defaultState.with(FluidBlock.LEVEL, getBlockStateLevel(state))
 
         protected abstract fun getStillFluid(): Fluid
         protected abstract fun getFlowingFluid(): Fluid
         protected abstract fun getBlock(): Block
-        protected abstract fun getBucket(): Item
+        protected abstract fun getIc2Bucket(): Item
 
         override fun matchesType(fluid: Fluid): Boolean = fluid == getStillFluid() || fluid == getFlowingFluid()
         override fun isInfinite(world: World): Boolean = false
@@ -343,7 +343,7 @@ object ModFluids {
                 "creosote" -> CREOSOTE_BLOCK
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
-            override fun getBucket(): Item = when (name) {
+            override fun getIc2Bucket(): Item = when (name) {
                 "coolant" -> COOLANT_BUCKET
                 "hot_coolant" -> HOT_COOLANT_BUCKET
                 "uu_matter" -> UU_MATTER_BUCKET
@@ -404,7 +404,7 @@ object ModFluids {
                 "creosote" -> CREOSOTE_BLOCK
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
-            override fun getBucket(): Item = when (name) {
+            override fun getIc2Bucket(): Item = when (name) {
                 "coolant" -> COOLANT_BUCKET
                 "hot_coolant" -> HOT_COOLANT_BUCKET
                 "uu_matter" -> UU_MATTER_BUCKET

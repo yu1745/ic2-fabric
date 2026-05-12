@@ -61,14 +61,13 @@ object SeedCommand {
         val source = ctx.source
         val types = CropType.entries
         val maxKeyWidth = types.maxOf { it.asString().length }
-        val lines = buildString {
-            appendLine("=== 作物种子类型 (${types.size} 种) ===")
-            types.forEach { type ->
-                val displayName = CropSeedData.displayName(type).string
-                appendLine("  ${type.asString().padEnd(maxKeyWidth)} - $displayName")
-            }
+        val msg = Text.literal("=== 作物种子类型 (${types.size} 种) ===\n")
+        types.forEachIndexed { idx, type ->
+            if (idx > 0) msg.append(Text.literal("\n"))
+            msg.append(Text.literal("  ${type.asString().padEnd(maxKeyWidth)} - "))
+            msg.append(CropSeedData.displayName(type))
         }
-        source.sendFeedback({ Text.literal(lines) }, false)
+        source.sendFeedback({ msg }, false)
         return types.size
     }
 

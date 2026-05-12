@@ -1020,5 +1020,29 @@
   "tooltip.ic2_120.armor.key.vision": "Night Vision: ",
   "tooltip.ic2_120.armor.key.speed": "Speed: ",
   "tooltip.ic2_120.armor.key.jump": "Jump Boost: ",
-  "item.ic2_120.recall_scroll": "Teleport Scroll"
+  "item.ic2_120.recall_scroll": "Teleport Scroll",
+
+  "tooltip.ic2_120.harvest": "§7Harvest: ",
+  "tooltip.ic2_120.harvest.sep": " or ",
+  "tooltip.ic2_120.harvest.qty_n": " ×%d",
+  "tooltip.ic2_120.harvest.qty_age": " ×age",
+  "tooltip.ic2_120.harvest.qty_rng": " ×%d~%d",
+  "tooltip.ic2_120.harvest.chance": " (%d%%)",
+
+  "tooltip.ic2_120.harvest.note.poisonous_5": "5% poisonous potato chance",
+  "tooltip.ic2_120.harvest.note.melon_random": "Random melon or slices",
+  "tooltip.ic2_120.harvest.note.by_age": "Quantity increases with age",
+  "tooltip.ic2_120.harvest.note.sticky_reed": "Resin at max age",
+  "tooltip.ic2_120.harvest.note.venomilia": "Grin Powder at age 4",
+  "tooltip.ic2_120.harvest.note.sapling_apple": "25% extra sapling + 25% apple",
+  "tooltip.ic2_120.harvest.note.sapling_bonus": "25% extra sapling",
+  "tooltip.ic2_120.harvest.note.root_iron": "Needs iron ore/block roots below",
+  "tooltip.ic2_120.harvest.note.root_copper": "Needs copper ore/block roots below",
+  "tooltip.ic2_120.harvest.note.root_tin": "Needs tin ore/block roots below",
+  "tooltip.ic2_120.harvest.note.root_lead": "Needs lead ore/block roots below",
+  "tooltip.ic2_120.harvest.note.root_gold": "Needs gold ore/block roots below",
+  "tooltip.ic2_120.harvest.note.root_silver": "Needs silver ore/block roots below",
+  "tooltip.ic2_120.harvest.note.red_wheat": "Wheat at night, Redstone by day",
+  "tooltip.ic2_120.harvest.note.coffee": "Coffee Beans at age 4 only",
+  "tooltip.ic2_120.harvest.note.attacks": "Attacks nearby mobs"
 }

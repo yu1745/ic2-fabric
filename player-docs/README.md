@@ -40,5 +40,6 @@
 - [材料与矿石](reference/materials-ores.md)
 - [建筑与装饰](reference/building-decoration.md)
 - [工具与防护装备](reference/tools-armor.md)
+- [作物收获产出参考](reference/crop-harvest.md)
 - [创意栏](reference/creative-tabs.md)
 - [版本与依赖](reference/version-deps.md)
