@@ -6,6 +6,8 @@ import ic2_120.content.block.CropBlock
 import ic2_120.content.block.CropBlockEntity
 import ic2_120.content.block.CropStickBlock
 import ic2_120.content.block.CropStickBlockEntity
+import ic2_120.content.block.UvLampBlock
+import ic2_120.content.block.machines.UvLampBlockEntity
 import ic2_120.content.block.AnimalmatronBlock
 import ic2_120.content.block.machines.AnimalmatronBlockEntity
 import ic2_120.content.block.TeleporterBlock
@@ -279,7 +281,27 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         val be = blockEntity as? CropBlockEntity ?: return
         val state = world.getBlockState(accessor.position)
         if (!state.contains(CropBlock.CROP_TYPE) || !state.contains(CropBlock.AGE)) return
-        val estimate = be.estimateGrowth(world, accessor.position, state)
+
+        // 先扫描紫外线灯加速，以便传入 estimateGrowth
+        var uvGrowthBoost = 0
+        val cropPos = accessor.position
+        for (dx in -3..3) {
+            for (dy in -3..3) {
+                for (dz in -3..3) {
+                    if (dx == 0 && dy == 0 && dz == 0) continue
+                    val lampPos = cropPos.add(dx, dy, dz)
+                    val lampState = world.getBlockState(lampPos)
+                    if (lampState.block is UvLampBlock && lampState.contains(UvLampBlock.ACTIVE) && lampState.get(UvLampBlock.ACTIVE)) {
+                        val lampBe = world.getBlockEntity(lampPos) as? UvLampBlockEntity ?: continue
+                        val oc = lampBe.getOverclockerCount()
+                        if (oc > uvGrowthBoost) uvGrowthBoost = oc
+                    }
+                }
+            }
+        }
+
+        val uvBonusPerCycle = if (uvGrowthBoost > 0) uvGrowthBoost * UvLampBlockEntity.ESTIMATED_BASE_GROWTH.toDouble() else 0.0
+        val estimate = be.estimateGrowth(world, accessor.position, state, uvBonusPerCycle)
         val (nutrients, water, weedEx) = be.storageSnapshot()
         val requirements = be.getGrowthRequirements(world, accessor.position, state, estimate.cropType)
 
@@ -300,6 +322,10 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
                 "${req.key}|$argsStr"
             }.joinToString(";")
             data.putString("requirements", serialized)
+        }
+
+        if (uvGrowthBoost > 0) {
+            data.putInt("uvGrowthBoost", uvGrowthBoost)
         }
     }
 
@@ -371,6 +397,11 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
                 Text.translatable("ic2_120.jade.crop_weedex_no").formatted(Formatting.GRAY)
             }
         )
+
+        if (accessor.serverData.contains("uvGrowthBoost")) {
+            val boost = accessor.serverData.getInt("uvGrowthBoost")
+            tooltip.add(Text.translatable("ic2_120.jade.uv_lamp_boost", boost + 1).formatted(Formatting.LIGHT_PURPLE))
+        }
 
         if (isMature) {
             tooltip.add(Text.translatable("ic2_120.jade.crop_mature").formatted(Formatting.GREEN))

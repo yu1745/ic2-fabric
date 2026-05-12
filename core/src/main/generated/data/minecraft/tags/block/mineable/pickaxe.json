@@ -139,6 +139,7 @@
     "ic2_120:hv_transformer",
     "ic2_120:ev_transformer",
     "ic2_120:uu_scanner",
+    "ic2_120:uv_lamp",
     "ic2_120:water_generator",
     "ic2_120:water_kinetic_generator",
     "ic2_120:wind_generator",
