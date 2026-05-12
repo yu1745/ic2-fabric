@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **71 个 commit**，**71 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **72 个 commit**，**71 个已同步，1 个待同步**。
 （归档 1-49 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -37,6 +37,7 @@
 | 69 | `3534ffc5` | fix: 流体热力发电机无限免费燃料——tryInsertFuel 在空间不足 1B 时仍注入 | ✅ | 无冲突直接 cherry-pick |
 | 70 | `10ca9f12` | feat: 高级太阳能附属机器 Screen 左侧添加发电/输出/耗能状态渲染 | ✅ | 已在 1.21.1 存在（`182ac446`） |
 | 71 | `953ba56e` | feat: 添加 enableOvervoltageExplosion 配置项，支持完全关闭超压爆炸 | ✅ | 无冲突直接 cherry-pick |
+| 72 | `dd0b29d9` | fix: 修复平面照明器东西方向碰撞箱互换的问题 | ❌ | |
 
 ## 同步历史
 
