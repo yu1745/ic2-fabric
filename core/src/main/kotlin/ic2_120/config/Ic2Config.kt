@@ -46,7 +46,9 @@ data class GeneralConfig(
     @field:ConfigComment("电网不发生能量流动时是否仍会电人。设为 false 则无能量时不漏电。", "false")
     val shockWhenNoEnergyFlow: Boolean = false,
     @field:ConfigComment("电网不发生能量流动时是否仍会超压爆炸。设为 false 则无能量时不爆炸。", "false")
-    val explodeWhenNoEnergyFlow: Boolean = false
+    val explodeWhenNoEnergyFlow: Boolean = false,
+    @field:ConfigComment("是否启用超压爆炸。设为 false 则完全关闭超压爆炸。", "true")
+    val enableOvervoltageExplosion: Boolean = true
 )
 
 data class RecyclerConfig(
