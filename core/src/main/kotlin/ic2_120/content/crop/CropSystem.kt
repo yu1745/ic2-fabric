@@ -1,5 +1,7 @@
 package ic2_120.content.crop
 
+import ic2_120.content.item.*
+import ic2_120.registry.instance
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.util.StringIdentifiable
@@ -270,5 +272,85 @@ object CropSystem {
         if (tierDiff > 1) value -= 2 * tierDiff
         if (tierDiff < -3) value -= -tierDiff
         return value.coerceAtLeast(0)
+    }
+
+    // ========== 收获信息（用于种子袋 tooltip） ==========
+
+    data class HItem(
+        val item: Item,
+        val qty: HQt = HQt.One,
+        val chance: Int = 100,
+    )
+
+    sealed interface HQt {
+        data object One : HQt
+        data class N(val n: Int) : HQt
+        data object Age : HQt
+        data class Rng(val min: Int, val max: Int) : HQt
+    }
+
+    fun harvestItems(type: CropType): List<HItem> = when (type) {
+        CropType.WHEAT -> listOf(HItem(Items.WHEAT))
+        CropType.CARROTS -> listOf(HItem(Items.CARROT))
+        CropType.POTATO -> listOf(HItem(Items.POTATO))
+        CropType.BEETROOTS -> listOf(HItem(Items.BEETROOT))
+        CropType.PUMPKIN -> listOf(HItem(Items.PUMPKIN))
+        CropType.MELON -> listOf(
+            HItem(Items.MELON, chance = 33),
+            HItem(Items.MELON_SLICE, HQt.Rng(2, 5), chance = 67),
+        )
+        CropType.DANDELION -> listOf(HItem(Items.YELLOW_DYE))
+        CropType.POPPY -> listOf(HItem(Items.RED_DYE))
+        CropType.BLACKTHORN -> listOf(HItem(Items.BLACK_DYE))
+        CropType.TULIP -> listOf(HItem(Items.PURPLE_DYE))
+        CropType.CYAZINT -> listOf(HItem(Items.BLUE_DYE))
+        CropType.VENOMILIA -> listOf(HItem(Items.PURPLE_DYE))
+        CropType.REED -> listOf(HItem(Items.SUGAR_CANE, HQt.Age))
+        CropType.STICKY_REED -> listOf(HItem(Items.SUGAR_CANE, HQt.Age))
+        CropType.COCOA -> listOf(HItem(Items.COCOA_BEANS))
+        CropType.FLAX -> listOf(HItem(Items.STRING))
+        CropType.RED_MUSHROOM -> listOf(HItem(Items.RED_MUSHROOM))
+        CropType.BROWN_MUSHROOM -> listOf(HItem(Items.BROWN_MUSHROOM))
+        CropType.NETHER_WART -> listOf(HItem(Items.NETHER_WART))
+        CropType.TERRA_WART -> listOf(HItem(TerraWart::class.instance()))
+        CropType.OAK_SAPLING -> listOf(HItem(Items.OAK_SAPLING))
+        CropType.SPRUCE_SAPLING -> listOf(HItem(Items.SPRUCE_SAPLING))
+        CropType.BIRCH_SAPLING -> listOf(HItem(Items.BIRCH_SAPLING))
+        CropType.JUNGLE_SAPLING -> listOf(HItem(Items.JUNGLE_SAPLING))
+        CropType.ACACIA_SAPLING -> listOf(HItem(Items.ACACIA_SAPLING))
+        CropType.DARK_OAK_SAPLING -> listOf(HItem(Items.DARK_OAK_SAPLING))
+        CropType.FERRU -> listOf(HItem(SmallIronDust::class.instance()))
+        CropType.CYPRIUM -> listOf(HItem(SmallCopperDust::class.instance()))
+        CropType.STAGNIUM -> listOf(HItem(SmallTinDust::class.instance()))
+        CropType.PLUMBISCUS -> listOf(HItem(SmallLeadDust::class.instance()))
+        CropType.AURELIA -> listOf(HItem(SmallGoldDust::class.instance()))
+        CropType.SHINING -> listOf(HItem(SmallSilverDust::class.instance()))
+        CropType.RED_WHEAT -> listOf(HItem(Items.WHEAT), HItem(Items.REDSTONE))
+        CropType.COFFEE -> listOf(HItem(CoffeeBeans::class.instance()))
+        CropType.HOPS -> listOf(HItem(Hops::class.instance()))
+        CropType.EATING_PLANT -> listOf(HItem(Items.MELON))
+        CropType.WEED -> emptyList()
+    }
+
+    /** lang key suffixes for harvest notes, joined as "tooltip.ic2_120.harvest.note.{suffix}" */
+    fun harvestNoteKeys(type: CropType): List<String> = when (type) {
+        CropType.POTATO -> listOf("poisonous_5")
+        CropType.MELON -> listOf("melon_random")
+        CropType.REED -> listOf("by_age")
+        CropType.STICKY_REED -> listOf("sticky_reed")
+        CropType.VENOMILIA -> listOf("venomilia")
+        CropType.OAK_SAPLING -> listOf("sapling_apple")
+        CropType.SPRUCE_SAPLING, CropType.BIRCH_SAPLING, CropType.JUNGLE_SAPLING,
+        CropType.ACACIA_SAPLING, CropType.DARK_OAK_SAPLING -> listOf("sapling_bonus")
+        CropType.FERRU -> listOf("root_iron")
+        CropType.CYPRIUM -> listOf("root_copper")
+        CropType.STAGNIUM -> listOf("root_tin")
+        CropType.PLUMBISCUS -> listOf("root_lead")
+        CropType.AURELIA -> listOf("root_gold")
+        CropType.SHINING -> listOf("root_silver")
+        CropType.RED_WHEAT -> listOf("red_wheat")
+        CropType.COFFEE -> listOf("coffee")
+        CropType.EATING_PLANT -> listOf("attacks")
+        else -> emptyList()
     }
 }

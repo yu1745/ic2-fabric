@@ -27,6 +27,7 @@ import net.minecraft.item.tooltip.TooltipType
 
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
+import net.minecraft.util.Formatting
 import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
@@ -98,8 +99,9 @@ class CropSeedBagItem : Item(Item.Settings().maxCount(1)) {
         tooltip.add(
             Text.literal("作物: ")
                 .append(CropSeedData.displayName(cropType))
-                .formatted(net.minecraft.util.Formatting.GRAY)
+                .formatted(Formatting.GRAY)
         )
+        buildHarvestTooltip(cropType)?.let { tooltip.add(it) }
         if (scanLevel >= 2) {
             tooltip.add(
                 Text.literal("属性: ${def.attributes.take(3).joinToString("/")}")
@@ -233,4 +235,29 @@ class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
             }
         }
     }
+}
+
+private fun buildHarvestTooltip(type: CropType): Text? {
+    val items = CropSystem.harvestItems(type)
+    if (items.isEmpty()) return null
+
+    val text = Text.translatable("tooltip.ic2_120.harvest")
+    items.forEachIndexed { i, h ->
+        if (i > 0) text.append(Text.translatable("tooltip.ic2_120.harvest.sep"))
+        text.append(Text.translatable(h.item.translationKey))
+        when (h.qty) {
+            is CropSystem.HQt.N -> text.append(Text.translatable("tooltip.ic2_120.harvest.qty_n", h.qty.n))
+            is CropSystem.HQt.Age -> text.append(Text.translatable("tooltip.ic2_120.harvest.qty_age"))
+            is CropSystem.HQt.Rng -> text.append(Text.translatable("tooltip.ic2_120.harvest.qty_rng", h.qty.min, h.qty.max))
+            is CropSystem.HQt.One -> {}
+        }
+        if (h.chance in 1..99) {
+            text.append(Text.translatable("tooltip.ic2_120.harvest.chance", h.chance))
+        }
+    }
+    for (key in CropSystem.harvestNoteKeys(type)) {
+        text.append(Text.literal(" "))
+        text.append(Text.translatable("tooltip.ic2_120.harvest.note.$key"))
+    }
+    return text.formatted(Formatting.GRAY)
 }
