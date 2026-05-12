@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **68 个 commit**，**68 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **69 个 commit**，**68 个已同步，1 个待同步**。
 （归档 1-48 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -35,6 +35,7 @@
 | 66 | `7bcc2a27` | feat: 所有发电机添加 AdjacentEnergyTransferComponent 支持贴脸能量传输 | ✅ | 无冲突直接 cherry-pick |
 | 67 | `e5be3a10` | feat: 飞行改为双击空格触发，移除独立的 Alt+F / Alt+M 按键开关 | ✅ | cherry-pick + 适配 1.21.1 API（Payload 网络、DataComponent NBT）+ datagen 刷新 |
 | 68 | `c7a3ae42` | fix: 固体装罐机食物无法放入 + JEI 显示与实际消耗数量不匹配 | ✅ | cherry-pick + 适配 1.21.1 API（DataComponentTypes.FOOD、nutrition）|
+| 69 | `3534ffc5` | fix: 流体热力发电机无限免费燃料——tryInsertFuel 在空间不足 1B 时仍注入 | ❌ | |
 
 ## 同步历史
 
