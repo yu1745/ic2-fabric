@@ -63,7 +63,7 @@ public class MobEntityMixin {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/mob/MobEntity;stopRiding()V")
     )
     private void keepRidingOnLeashAttach(MobEntity instance) {
-        if (instance.getHoldingEntity() instanceof ArmorStandEntity) {
+        if (instance.getLeashHolder() instanceof ArmorStandEntity) {
             return;
         }
         instance.stopRiding();
