@@ -2,6 +2,7 @@ package ic2_120_advanced_solar_addon.client.screen
 
 import ic2_120.client.compose.*
 import ic2_120.client.EnergyFormatUtils
+import ic2_120.client.t
 import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.screen.GuiSize
@@ -52,6 +53,11 @@ class MolecularTransformerScreen(
         val remainingTicks = if (consumePerTick > 0 && remainingEnergy > 0) {
             ceil(remainingEnergy.toDouble() / consumePerTick.toDouble()).toLong()
         } else 0L
+
+        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(handler.sync.avgInserted.toLong()))
+        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(handler.sync.avgConsumed.toLong()))
+        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
+        val sideTextX = left - sideTextWidth - 4
 
         val content: UiScope.() -> Unit = {
             Column(
@@ -108,6 +114,8 @@ class MolecularTransformerScreen(
 
         super.render(context, mouseX, mouseY, delta)
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 

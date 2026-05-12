@@ -2,6 +2,7 @@ package ic2_120_advanced_solar_addon.client.screen
 
 import ic2_120.client.compose.*
 import ic2_120.client.EnergyFormatUtils
+import ic2_120.client.t
 import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.screen.GuiSize
@@ -53,6 +54,11 @@ class SolarPanelScreen(
             2 -> Text.translatable("gui.ic2_120_advanced_solar_addon.solar_state.day", EnergyFormatUtils.formatEu(dayPower.toLong())).string
             else -> Text.translatable("gui.ic2_120_advanced_solar_addon.solar_state.unknown").string
         }
+
+        val genText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(handler.sync.avgInserted.toLong()))
+        val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(handler.sync.avgExtracted.toLong()))
+        val sideTextWidth = maxOf(textRenderer.getWidth(genText), textRenderer.getWidth(outputText))
+        val sideTextX = left - sideTextWidth - 4
 
         val chargeLabel = Text.translatable("ic2_120.gui.charge_slots")
 
@@ -113,6 +119,8 @@ class SolarPanelScreen(
 
         super.render(context, mouseX, mouseY, delta)
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        context.drawText(textRenderer, genText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
