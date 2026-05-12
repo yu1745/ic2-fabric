@@ -52,3 +52,4 @@
 | 46 | `1be61024` | fix: 传送机移除能量条，绕过MFE单tick上限直接抽电，能量不足不渲染BER | ✅ | cherry-pick + 移除旧 cherry-pick（冲突 branc-sync-status.md）+ datagen 刷新 |
 | 47 | `1656996e` | fix: 修正量子/纳米护甲减伤值为IC2经典值，工具提示改为可翻译文本 | ✅ | cherry-pick + 适配 1.21.1 appendTooltip 签名 |
 | 48 | `4b692f98` | feat: 添加 explodeWhenNoEnergyFlow 配置项，无能量时不触发超压爆炸 | ✅ | 无冲突直接 cherry-pick |
+| 49 | `b708df3e` | feat: 半流体发电机燃料颜色网络同步 + 流体颜色注册表 | ✅ | cherry-pick + 适配 1.21.1 Payload 网络 |
