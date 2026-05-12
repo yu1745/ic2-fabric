@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **73 个 commit**，**73 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **74 个 commit**，**73 个已同步，1 个待同步**。
 （归档 1-49 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -39,6 +39,7 @@
 | 71 | `953ba56e` | feat: 添加 enableOvervoltageExplosion 配置项，支持完全关闭超压爆炸 | ✅ | 无冲突直接 cherry-pick |
 | 72 | `dd0b29d9` | fix: 修复平面照明器东西方向碰撞箱互换的问题 | ✅ | 无冲突直接 cherry-pick |
 | 73 | `66edf7da` | feat: 紫外线灯（UV Lamp）实现——加速作物生长+Jade剩余时间修正 | ✅ | cherry-pick + 适配 1.21.1 API（validateTicker、RecipeExporter、getCodec、getScreenOpeningData、NBT registryLookup、onUse/onUseWithItem 拆分）|
+| 74 | `c4379ed2` | fix: 修复紫外线灯模型形状——EAST/WEST 碰撞箱互换 + blockstates 上下旋转角度修正 | ❌ | |
 
 ## 同步历史
 
