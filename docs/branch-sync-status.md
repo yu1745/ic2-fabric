@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **79 个 commit**，**78 个已同步，1 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **79 个 commit**，**79 个已同步，0 个待同步**。
 （归档 1-49 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -44,7 +44,7 @@
 | 76 | `c735f845` | fix: 修复紫外线灯上下方向渲染反置——blockstates up/down x-rotation 对齐 ic2_120 日光灯 | ✅ | 无冲突直接 cherry-pick |
 | 77 | `354c59e5` | feat: 剪刀机制 + 监管机额外产物 + 耐久条渲染修复 | ✅ | cherry-pick + 解决冲突（import、tooltip 参数适配、TODO.md）|
 | 78 | `c127a41b` | fix: 修复所有机器 GUI 耐久条被 SlotAnchor 背景覆盖的渲染顺序问题——ui.render 在 super.render 之前执行 | ✅ | 无冲突直接 cherry-pick |
-| 79 | `b246fc9c` | feat: 简化动能发电机配方——不再需要机器外壳 | ❌ | |
+| 79 | `b246fc9c` | feat: 简化动能发电机配方——不再需要机器外壳 | ✅ | 无冲突直接 cherry-pick |
 
 ## 同步历史
 
