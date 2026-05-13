@@ -2,9 +2,6 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "B": {
-      "item": "minecraft:barrier"
-    },
     "C": {
       "item": "ic2_120:circuit"
     },
@@ -22,7 +19,7 @@
     }
   },
   "pattern": [
-    "CBC",
+    "CSC",
     "SMS",
     "PNP"
   ],
