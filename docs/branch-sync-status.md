@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **78 个 commit**，**76 个已同步，2 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **78 个 commit**，**78 个已同步，0 个待同步**。
 （归档 1-49 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -42,8 +42,8 @@
 | 74 | `c4379ed2` | fix: 修复紫外线灯模型形状——EAST/WEST 碰撞箱互换 + blockstates 上下旋转角度修正 | ✅ | cherry-pick + 适配 1.21.1 data 目录单复数变化 |
 | 75 | `07dda56e` | fix: 拦截 attachLeash 中的 stopRiding，防止区块重载时被拴生物从矿车掉出 | ✅ | cherry-pick + 适配 1.21.1（getHoldingEntity → getLeashHolder）|
 | 76 | `c735f845` | fix: 修复紫外线灯上下方向渲染反置——blockstates up/down x-rotation 对齐 ic2_120 日光灯 | ✅ | 无冲突直接 cherry-pick |
-| 77 | `354c59e5` | feat: 剪刀机制 + 监管机额外产物 + 耐久条渲染修复 | ❌ | 待同步 |
-| 78 | `c127a41b` | fix: 修复所有机器 GUI 耐久条被 SlotAnchor 背景覆盖的渲染顺序问题——ui.render 在 super.render 之前执行 | ❌ | 待同步 |
+| 77 | `354c59e5` | feat: 剪刀机制 + 监管机额外产物 + 耐久条渲染修复 | ✅ | cherry-pick + 解决冲突（import、tooltip 参数适配、TODO.md）|
+| 78 | `c127a41b` | fix: 修复所有机器 GUI 耐久条被 SlotAnchor 背景覆盖的渲染顺序问题——ui.render 在 super.render 之前执行 | ✅ | 无冲突直接 cherry-pick |
 
 ## 同步历史
 
@@ -77,3 +77,4 @@
 - 2026-05-12：同步 commit 69——流体热力发电机无限免费燃料修复，无冲突直接 cherry-pick |
 - 2026-05-12：同步 commits 72-73——平面照明器碰撞箱修复（无冲突）+ 紫外线灯（cherry-pick + 适配 1.21.1 API + datagen 刷新）|
 - 2026-05-12：同步 commit 74——紫外线灯模型形状修复（cherry-pick + 适配 1.21.1 data 目录单复数）|
+- 2026-05-13：同步 commits 77-78——剪刀机制 + 监管机额外产物 + 耐久条渲染修复（cherry-pick + 冲突解决）+ 全机器 GUI 耐久条渲染顺序修复 |
