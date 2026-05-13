@@ -18,7 +18,8 @@ data class AnimalGrowthData(
     var canBreed: Boolean = false,
     var lastFeedTick: Long = 0L,
     var foodToday: Int = 0,
-    var currentDay: Int = 0
+    var currentDay: Int = 0,
+    var lastHarvestTick: Long = 0L
 ) {
     /**
      * 将数据序列化为 NBT
@@ -31,6 +32,7 @@ data class AnimalGrowthData(
         nbt.putLong("LastFeedTick", lastFeedTick)
         nbt.putInt("FoodToday", foodToday)
         nbt.putInt("CurrentDay", currentDay)
+        nbt.putLong("LastHarvestTick", lastHarvestTick)
         return nbt
     }
 
@@ -45,7 +47,8 @@ data class AnimalGrowthData(
                 canBreed = nbt.getBoolean("CanBreed"),
                 lastFeedTick = nbt.getLong("LastFeedTick"),
                 foodToday = nbt.getInt("FoodToday"),
-                currentDay = nbt.getInt("CurrentDay")
+                currentDay = nbt.getInt("CurrentDay"),
+                lastHarvestTick = nbt.getLong("LastHarvestTick")
             )
         }
     }

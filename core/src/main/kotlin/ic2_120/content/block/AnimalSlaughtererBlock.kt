@@ -81,11 +81,10 @@ class AnimalSlaughtererBlock : MachineBlock() {
             if (machine == Items.AIR || circuit == Items.AIR || ironPlate == Items.AIR) return
 
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, AnimalSlaughtererBlock::class.item(), 1)
-                .pattern("CBC")
+                .pattern("CSC")
                 .pattern("SMS")
                 .pattern("PNP")
                 .input('C', circuit)
-                .input('B', Items.BARRIER)
                 .input('S', Items.SHEARS)
                 .input('M', machine)
                 .input('P', ironPlate)

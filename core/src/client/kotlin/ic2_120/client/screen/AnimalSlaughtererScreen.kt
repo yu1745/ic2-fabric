@@ -29,10 +29,7 @@ class AnimalSlaughtererScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y, GUI_SIZE.playerInvY, GUI_SIZE.hotbarY, GuiSize.SLOT_SIZE
-        )
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -64,7 +61,7 @@ class AnimalSlaughtererScreen(
                     Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 4) {
                         Text(title.string, color = 0xFFFFFF)
                         EnergyBar(energyFraction, barHeight = 8, modifier = Modifier.EMPTY.fractionWidth(1f))
-                        Text("$energy / $capacity EU", color = 0xFFFFFF, shadow = false)
+                        Text("${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(capacity)} EU", color = 0xFFFFFF, shadow = false)
                     }
 
                     Text(
@@ -88,6 +85,10 @@ class AnimalSlaughtererScreen(
                                 if (row == 2) {
                                     SlotAnchor(
                                         id = slotAnchorId(AnimalSlaughtererScreenHandler.SLOT_DISCHARGING_INDEX),
+                                        modifier = Modifier.EMPTY.padding(left = 4, top = 0, right = 0, bottom = 0)
+                                    )
+                                    SlotAnchor(
+                                        id = slotAnchorId(AnimalSlaughtererScreenHandler.SLOT_SHEARS_INDEX),
                                         modifier = Modifier.EMPTY.padding(left = 4, top = 0, right = 0, bottom = 0)
                                     )
                                 }
@@ -122,13 +123,31 @@ class AnimalSlaughtererScreen(
             slot.y = anchor.y - top
         }
 
-        super.render(context, mouseX, mouseY, delta)
+        // 先绘制面板背景
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context, x, y, GUI_SIZE.playerInvY, GUI_SIZE.hotbarY, GuiSize.SLOT_SIZE
+        )
+
+        // 再绘制 UI（slot 背景、能量条等）
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
 
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputRateText), textRenderer.getWidth(consumeRateText))
+        // 最后绘制物品（包括耐久条），确保物品在顶层
+        super.render(context, mouseX, mouseY, delta)
+
+        val hasShears = handler.getSlot(AnimalSlaughtererScreenHandler.SLOT_SHEARS_INDEX).hasStack()
+        val needShearsText = if (!hasShears) t("gui.ic2_120.animal_slaughterer.need_shears") else ""
+        val sideTextWidth = maxOf(
+            textRenderer.getWidth(inputRateText),
+            textRenderer.getWidth(consumeRateText),
+            if (!hasShears) textRenderer.getWidth(needShearsText) else 0
+        )
         val sideX = left - sideTextWidth - 4
         context.drawText(textRenderer, inputRateText, sideX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, consumeRateText, sideX, top + 20, 0xAAAAAA, false)
+        if (!hasShears) {
+            context.drawText(textRenderer, needShearsText, sideX, top + 32, 0xFF5555, false)
+        }
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }

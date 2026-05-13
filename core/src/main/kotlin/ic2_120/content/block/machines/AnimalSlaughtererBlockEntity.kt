@@ -31,6 +31,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 
 import net.minecraft.registry.Registries
@@ -73,9 +74,10 @@ class AnimalSlaughtererBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1)
+            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
+            ItemInsertRoute(intArrayOf(SLOT_SHEARS), matcher = { !it.isEmpty && it.item == Items.SHEARS }, maxPerSlot = 1)
         ),
-        extractSlots = SLOT_CONTENT_INDICES + SLOT_UPGRADE_INDICES + intArrayOf(SLOT_DISCHARGING),
+        extractSlots = SLOT_CONTENT_INDICES + SLOT_UPGRADE_INDICES + intArrayOf(SLOT_DISCHARGING, SLOT_SHEARS),
         markDirty = { markDirty() }
     )
     val syncedData = SyncedData(this)
@@ -108,7 +110,7 @@ class AnimalSlaughtererBlockEntity(
     override fun markDirty() = super.markDirty()
 
     override fun setStack(slot: Int, stack: ItemStack) {
-        if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
+        if ((slot == SLOT_DISCHARGING || slot == SLOT_SHEARS) && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
@@ -118,6 +120,7 @@ class AnimalSlaughtererBlockEntity(
         stack.isEmpty -> false
         SLOT_CONTENT_INDICES.contains(slot) -> false
         slot == SLOT_DISCHARGING -> stack.item is IBatteryItem
+        slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         SLOT_UPGRADE_INDICES.contains(slot) -> stack.item is IUpgradeItem
         else -> false
     }
@@ -217,6 +220,9 @@ class AnimalSlaughtererBlockEntity(
             // 使用实体类型获取掉落物
             val drops = getDroppedItems(animal)
             if (drops.isEmpty()) continue
+
+            // 消耗剪刀耐久，无剪刀则停止屠宰
+            if (!tryConsumeShearsDurability()) break
 
             // 杀死动物
             animal.discard()
@@ -339,6 +345,20 @@ class AnimalSlaughtererBlockEntity(
         markDirty()
     }
 
+    private fun tryConsumeShearsDurability(): Boolean {
+        val shears = getStack(SLOT_SHEARS)
+        if (shears.isEmpty || shears.item != Items.SHEARS) return false
+
+        val currentDamage = shears.damage
+        if (currentDamage >= shears.maxDamage - 1) {
+            setStack(SLOT_SHEARS, ItemStack.EMPTY)
+        } else {
+            shears.damage = currentDamage + 1
+        }
+        markDirty()
+        return true
+    }
+
     data class ScanReport(
         var checked: Int = 0,
         var slaughtered: Int = 0
@@ -368,6 +388,7 @@ class AnimalSlaughtererBlockEntity(
         const val SLOT_UPGRADE_2 = 17
         const val SLOT_UPGRADE_3 = 18
         const val SLOT_DISCHARGING = 19
+        const val SLOT_SHEARS = 20
 
         val SLOT_CONTENT_INDICES = intArrayOf(
             SLOT_CONTENT_0, SLOT_CONTENT_1, SLOT_CONTENT_2, SLOT_CONTENT_3, SLOT_CONTENT_4,
@@ -376,7 +397,7 @@ class AnimalSlaughtererBlockEntity(
         )
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
 
-        const val INVENTORY_SIZE = 20
+        const val INVENTORY_SIZE = 21
 
         private const val WORK_INTERVAL_TICKS = 20  // 1秒扫描一次
         private const val ENERGY_PER_SCAN = 1  // 每只动物 1 EU
