@@ -569,7 +569,7 @@ class AnimalmatronBlockEntity(
             "minecraft:sheep" -> {
                 if (animal is SheepEntity && !animal.isSheared) {
                     val colorName = animal.color.asString()
-                    val woolItem = Registries.ITEM.get(Identifier("minecraft", "${colorName}_wool"))
+                    val woolItem = Registries.ITEM.get(Identifier.of("minecraft", "${colorName}_wool"))
                     ItemStack(woolItem, 1)
                 } else null
             }
@@ -619,7 +619,7 @@ class AnimalmatronBlockEntity(
         // 放入输出槽
         val out = getStack(SLOT_HARVEST_OUTPUT)
         if (!out.isEmpty) {
-            if (!ItemStack.canCombine(out, product) || out.count >= out.maxCount) return
+            if (!ItemStack.areItemsAndComponentsEqual(out, product) || out.count >= out.maxCount) return
             out.increment(product.count)
         } else {
             setStack(SLOT_HARVEST_OUTPUT, product.copy())
