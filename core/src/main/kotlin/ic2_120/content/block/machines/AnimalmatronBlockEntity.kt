@@ -31,6 +31,7 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.passive.AnimalEntity
+import net.minecraft.entity.passive.SheepEntity
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -84,6 +85,7 @@ class AnimalmatronBlockEntity(
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
+            ItemInsertRoute(intArrayOf(SLOT_SHEARS), matcher = { !it.isEmpty && it.item == Items.SHEARS }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_WATER_INPUT), matcher = { isValid(SLOT_WATER_INPUT, it) }),
             ItemInsertRoute(intArrayOf(SLOT_WEED_EX_INPUT), matcher = { isValid(SLOT_WEED_EX_INPUT, it) }),
             ItemInsertRoute(SLOT_FEED_INDICES, matcher = { isValid(SLOT_FEED_0, it) })
@@ -134,7 +136,7 @@ class AnimalmatronBlockEntity(
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
     override fun setStack(slot: Int, stack: ItemStack) {
-        if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
+        if ((slot == SLOT_DISCHARGING || slot == SLOT_SHEARS) && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
@@ -185,10 +187,11 @@ class AnimalmatronBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
-        slot == SLOT_WATER_OUTPUT || slot == SLOT_WEED_EX_OUTPUT -> false
+        slot == SLOT_WATER_OUTPUT || slot == SLOT_WEED_EX_OUTPUT || slot == SLOT_HARVEST_OUTPUT -> false
         slot == SLOT_WATER_INPUT -> matchesWaterInput(stack)
         slot == SLOT_WEED_EX_INPUT -> matchesWeedExInput(stack)
         slot == SLOT_DISCHARGING -> stack.item is IBatteryItem
+        slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         SLOT_FEED_INDICES.contains(slot) -> matchesFeedInput(stack)
         SLOT_UPGRADE_INDICES.contains(slot) -> stack.item is IUpgradeItem
         else -> false
@@ -309,9 +312,11 @@ class AnimalmatronBlockEntity(
 
             // 获取或创建动物数据
             val animalData = animalDataMap.computeIfAbsent(animal.uuid) {
-                // 如果是成年动物（从外面牵来的），直接标记为已长成且可繁殖
+                // 如果是成年动物（从外面牵来的），直接标记为已长成
                 if (!animal.isBaby) {
-                    AnimalGrowthData(animal.uuid, foodConsumed = FOOD_TO_GROW, canBreed = true)
+                    // 检查原版繁殖冷却，防止通过抱出抱入绕过冷却
+                    val hasCooldown = animal is AnimalEntity && animal.breedingAge > 0
+                    AnimalGrowthData(animal.uuid, foodConsumed = FOOD_TO_GROW, canBreed = !hasCooldown)
                 } else {
                     AnimalGrowthData(animal.uuid)
                 }
@@ -319,14 +324,21 @@ class AnimalmatronBlockEntity(
 
             // 尝试喂食
             tryFeedAnimal(animal, animalData, canGrow, animals.size, report)
-        }
 
-        // 清理不在范围内的动物数据
-        val currentUuids = animals.map { it.uuid }.toSet()
-        animalDataMap.keys.filter { it !in currentUuids }.forEach { animalDataMap.remove(it) }
+            // 尝试收获额外产物
+            tryHarvestExtraProduct(animal, animalData, report)
+        }
 
         if (world is ServerWorld) {
             tryBreedReadyAnimals(world, animals, report)
+        }
+
+        // 只清理已死亡的动物数据，活着的实体（包括离开范围的）保留状态
+        if (world is ServerWorld) {
+            animalDataMap.keys.removeAll { uuid ->
+                val entity = world.getEntity(uuid)
+                entity == null || !entity.isAlive
+            }
         }
 
         return report
@@ -430,7 +442,7 @@ class AnimalmatronBlockEntity(
 
         val readyAnimals = animals
             .filterIsInstance<AnimalEntity>()
-            .filter { it.isAlive && !it.isBaby && animalDataMap[it.uuid]?.canBreed == true }
+            .filter { it.isAlive && !it.isBaby && animalDataMap[it.uuid]?.canBreed == true && it.breedingAge <= 0 }
 
         if (readyAnimals.size < 2) return
 
@@ -542,6 +554,77 @@ class AnimalmatronBlockEntity(
         return false
     }
 
+    /**
+     * 获取动物的额外产物
+     */
+    private fun getExtraProduct(animal: PassiveEntity): ItemStack? {
+        val entityId = Registries.ENTITY_TYPE.getId(animal.type).toString()
+        return when (entityId) {
+            "minecraft:chicken" -> ItemStack(Items.EGG, 1)
+            "minecraft:sheep" -> {
+                if (animal is SheepEntity && !animal.isSheared) {
+                    val colorName = animal.color.asString()
+                    val woolItem = Registries.ITEM.get(Identifier("minecraft", "${colorName}_wool"))
+                    ItemStack(woolItem, 1)
+                } else null
+            }
+            else -> null
+        }
+    }
+
+    /**
+     * 消耗剪刀耐久度
+     */
+    private fun tryConsumeShearsDurability(): Boolean {
+        val shears = getStack(SLOT_SHEARS)
+        if (shears.isEmpty || shears.item != Items.SHEARS) return false
+
+        val currentDamage = shears.damage
+        if (currentDamage >= shears.maxDamage - 1) {
+            // 最后一次使用，剪刀损坏
+            setStack(SLOT_SHEARS, ItemStack.EMPTY)
+        } else {
+            shears.damage = currentDamage + 1
+        }
+        markDirty()
+        return true
+    }
+
+    /**
+     * 尝试收获额外产物
+     */
+    private fun tryHarvestExtraProduct(animal: PassiveEntity, animalData: AnimalGrowthData, report: ScanReport) {
+        val world = world ?: return
+
+        // 检查收获间隔（羊依赖原版吃草恢复，用短间隔；其他产物 10 分钟）
+        val interval = if (animal is SheepEntity) HARVEST_INTERVAL_TICKS else EXTRA_PRODUCT_INTERVAL_TICKS
+        if (world.time - animalData.lastHarvestTick < interval) return
+
+        val product = getExtraProduct(animal) ?: return
+
+        // 鸡蛋不需要剪刀，其他产物需要消耗剪刀耐久
+        val needsShears = product.item != Items.EGG
+        if (needsShears && !tryConsumeShearsDurability()) return
+
+        // 收获后处理（如标记羊已剪毛）
+        if (animal is SheepEntity) {
+            animal.isSheared = true
+        }
+
+        // 放入输出槽
+        val out = getStack(SLOT_HARVEST_OUTPUT)
+        if (!out.isEmpty) {
+            if (!ItemStack.canCombine(out, product) || out.count >= out.maxCount) return
+            out.increment(product.count)
+        } else {
+            setStack(SLOT_HARVEST_OUTPUT, product.copy())
+        }
+
+        animalData.lastHarvestTick = world.time
+        report.harvested++
+        markDirty()
+    }
+
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
         return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
@@ -582,7 +665,8 @@ class AnimalmatronBlockEntity(
         var weedExConsumed: Int = 0,
         var grewUp: Int = 0,
         var canBreedNow: Int = 0,
-        var bred: Int = 0
+        var bred: Int = 0,
+        var harvested: Int = 0
     )
 
     companion object {
@@ -606,6 +690,8 @@ class AnimalmatronBlockEntity(
         const val SLOT_UPGRADE_2 = 13
         const val SLOT_UPGRADE_3 = 14
         const val SLOT_DISCHARGING = 15
+        const val SLOT_SHEARS = 16
+        const val SLOT_HARVEST_OUTPUT = 17
 
         val SLOT_FEED_INDICES = intArrayOf(
             SLOT_FEED_0,
@@ -613,14 +699,15 @@ class AnimalmatronBlockEntity(
             SLOT_FEED_2,
             SLOT_FEED_3,
             SLOT_FEED_4,
-            SLOT_FEED_5,
-            SLOT_FEED_6
+            SLOT_FEED_5
         )
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
 
-        const val INVENTORY_SIZE = 16
+        const val INVENTORY_SIZE = 18
 
         private const val WORK_INTERVAL_TICKS = 20  // 每秒运行一次（20 tick = 1秒）
+        private const val HARVEST_INTERVAL_TICKS = 2400L  // 每2分钟收获一次（羊）
+        private const val EXTRA_PRODUCT_INTERVAL_TICKS = 12000L  // 每10分钟收获一次（其他动物）
         private const val SCAN_RADIUS = 4
         private const val ENERGY_PER_SCAN = 1
         private const val ENERGY_PER_FEED = 10

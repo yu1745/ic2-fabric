@@ -777,6 +777,9 @@
   "item.ic2_120.animalmatron.tooltip": "Hold Shift for details",
   "item.ic2_120.animalmatron.tooltip.food_table": "Managed Animal Food Table:",
   "item.ic2_120.animalmatron.tooltip.breeding_limit": "Stops breeding when exceeding 32 animals",
+  "item.ic2_120.animalmatron.tooltip.extra_products": "Extra Products (egg: 10 min, wool: 2 min):",
+  "item.ic2_120.animalmatron.tooltip.extra_product_auto": "(Auto)",
+  "item.ic2_120.animalmatron.tooltip.extra_product_shears": "(Shears)",
 
   "gui.ic2_120.input_eu": "Input %s EU/t",
   "gui.ic2_120.consume_eu": "Consume %s EU/t",
@@ -1049,5 +1052,7 @@
   "tooltip.ic2_120.harvest.note.root_silver": "Needs silver ore/block roots below",
   "tooltip.ic2_120.harvest.note.red_wheat": "Wheat at night, Redstone by day",
   "tooltip.ic2_120.harvest.note.coffee": "Coffee Beans at age 4 only",
-  "tooltip.ic2_120.harvest.note.attacks": "Attacks nearby mobs"
+  "tooltip.ic2_120.harvest.note.attacks": "Attacks nearby mobs",
+  "gui.ic2_120.animal_slaughterer.need_shears": "Shears required to slaughter animals",
+  "gui.ic2_120.animalmatron.need_shears": "Shears required to harvest extra products"
 }

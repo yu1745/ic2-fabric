@@ -75,6 +75,9 @@ class AnimalmatronScreenHandler(
         }
         addSlot(PredicateSlot(blockInventory, AnimalmatronBlockEntity.SLOT_DISCHARGING, 0, 0, DISCHARGING_SLOT_SPEC))
 
+        addSlot(PredicateSlot(blockInventory, AnimalmatronBlockEntity.SLOT_SHEARS, 0, 0, SHEARS_SLOT_SPEC))
+        addSlot(PredicateSlot(blockInventory, AnimalmatronBlockEntity.SLOT_HARVEST_OUTPUT, 0, 0, OUTPUT_ONLY_SLOT_SPEC))
+
         for (row in 0 until 3) {
             for (col in 0 until 9) {
                 addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
@@ -94,13 +97,13 @@ class AnimalmatronScreenHandler(
         stack = inSlot.copy()
 
         when {
-            index == SLOT_WATER_OUTPUT_INDEX || index == SLOT_WEED_EX_OUTPUT_INDEX || index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
+            index == SLOT_WATER_OUTPUT_INDEX || index == SLOT_WEED_EX_OUTPUT_INDEX || index == SLOT_HARVEST_OUTPUT_INDEX || index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
                 if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
             index in SLOT_FEED_INDEX_START..SLOT_FEED_INDEX_END -> {
                 if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
-            index == SLOT_DISCHARGING_INDEX -> {
+            index == SLOT_SHEARS_INDEX || index == SLOT_DISCHARGING_INDEX -> {
                 if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
             index in PLAYER_INV_START..HOTBAR_END -> {
@@ -115,7 +118,8 @@ class AnimalmatronScreenHandler(
                     listOf(
                         SlotTarget(slots[SLOT_WATER_INPUT_INDEX], WATER_INPUT_SLOT_SPEC),
                         SlotTarget(slots[SLOT_WEED_EX_INPUT_INDEX], WEED_EX_INPUT_SLOT_SPEC),
-                        SlotTarget(slots[SLOT_DISCHARGING_INDEX], DISCHARGING_SLOT_SPEC)
+                        SlotTarget(slots[SLOT_DISCHARGING_INDEX], DISCHARGING_SLOT_SPEC),
+                        SlotTarget(slots[SLOT_SHEARS_INDEX], SHEARS_SLOT_SPEC)
                     ) + feedTargets + upgradeTargets
                 )
                 if (!moved) return ItemStack.EMPTY
@@ -144,14 +148,16 @@ class AnimalmatronScreenHandler(
         const val SLOT_WEED_EX_OUTPUT_INDEX = 3
 
         const val SLOT_FEED_INDEX_START = 4
-        const val SLOT_FEED_INDEX_END = 10
+        const val SLOT_FEED_INDEX_END = 9
 
-        const val SLOT_UPGRADE_INDEX_START = 11
-        const val SLOT_UPGRADE_INDEX_END = 14
-        const val SLOT_DISCHARGING_INDEX = 15
+        const val SLOT_UPGRADE_INDEX_START = 10
+        const val SLOT_UPGRADE_INDEX_END = 13
+        const val SLOT_DISCHARGING_INDEX = 14
+        const val SLOT_SHEARS_INDEX = 15
+        const val SLOT_HARVEST_OUTPUT_INDEX = 16
 
-        const val PLAYER_INV_START = 16
-        const val HOTBAR_END = 51
+        const val PLAYER_INV_START = 17
+        const val HOTBAR_END = 52
 
         private val fluidCellId = Identifier(Ic2_120.MOD_ID, "fluid_cell")
         private val waterCellId = Identifier(Ic2_120.MOD_ID, "water_cell")
@@ -194,6 +200,12 @@ class AnimalmatronScreenHandler(
 
         private val DISCHARGING_SLOT_SPEC = SlotSpec(
             canInsert = { stack -> stack.item is IBatteryItem },
+            maxItemCount = 1
+        )
+
+        private val SHEARS_SLOT_SPEC = SlotSpec(
+            canInsert = { stack -> stack.item == Items.SHEARS },
+            canTake = { true },
             maxItemCount = 1
         )
 

@@ -771,6 +771,9 @@
   "item.ic2_120.animalmatron.tooltip": "按住 Shift 查看详情",
   "item.ic2_120.animalmatron.tooltip.food_table": "监管动物食物表：",
   "item.ic2_120.animalmatron.tooltip.breeding_limit": "超过32只后停止繁殖",
+  "item.ic2_120.animalmatron.tooltip.extra_products": "额外产物（蛋每10分钟、羊毛每2分钟）：",
+  "item.ic2_120.animalmatron.tooltip.extra_product_auto": "（自动）",
+  "item.ic2_120.animalmatron.tooltip.extra_product_shears": "（需剪刀）",
 
   "gui.ic2_120.input_eu": "输入 %s EU/t",
   "gui.ic2_120.consume_eu": "耗能 %s EU/t",
@@ -1043,5 +1046,7 @@
   "tooltip.ic2_120.harvest.note.root_silver": "需下方银矿/银块根系",
   "tooltip.ic2_120.harvest.note.red_wheat": "夜晚产小麦，白天产红石",
   "tooltip.ic2_120.harvest.note.coffee": "仅年龄=4时产咖啡豆",
-  "tooltip.ic2_120.harvest.note.attacks": "攻击附近生物"
+  "tooltip.ic2_120.harvest.note.attacks": "攻击附近生物",
+  "gui.ic2_120.animal_slaughterer.need_shears": "需要剪刀才能屠宰动物",
+  "gui.ic2_120.animalmatron.need_shears": "需要剪刀才能收获额外产物"
 }

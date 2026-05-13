@@ -52,7 +52,7 @@ object ModEntities {
             .setDimensions(0.1f, 0.1f)
             .maxTrackingRange(256)
             .trackingTickInterval(1)
-            .build("laser_projectile")
+            .build("minecraft:arrow")
     )
 
     /** 在注解驱动扫描物品前调用，确保所有实体类型已注册（供 @ModItem 物品类引用） */

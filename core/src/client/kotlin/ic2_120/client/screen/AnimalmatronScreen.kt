@@ -31,15 +31,8 @@ class AnimalmatronScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context,
-            x,
-            y,
-            GuiSize.STANDARD_UPGRADE.playerInvY,
-            GuiSize.STANDARD_UPGRADE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行，
+        // 确保物品耐久条绘制在 slot 背景之上。
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -67,7 +60,7 @@ class AnimalmatronScreen(
                     Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 4) {
                         Text(title.string, color = 0xFFFFFF)
                         EnergyBar(energyFraction, barHeight = 8, modifier = Modifier.EMPTY.fractionWidth(1f))
-                        Text("$energy / $capacity EU", color = 0xFFFFFF, shadow = false)
+                        Text("${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(capacity)} EU", color = 0xFFFFFF, shadow = false)
                     }
 
                     Flex(direction = FlexDirection.ROW, justifyContent = JustifyContent.SPACE_BETWEEN, alignItems = AlignItems.END) {
@@ -105,6 +98,8 @@ class AnimalmatronScreen(
 
                     Row(spacing = 2) {
                         SlotAnchor(id = slotAnchorId(AnimalmatronScreenHandler.SLOT_DISCHARGING_INDEX))
+                        SlotAnchor(id = slotAnchorId(AnimalmatronScreenHandler.SLOT_SHEARS_INDEX))
+                        SlotAnchor(id = slotAnchorId(AnimalmatronScreenHandler.SLOT_HARVEST_OUTPUT_INDEX))
                         for (i in AnimalmatronScreenHandler.SLOT_FEED_INDEX_START..AnimalmatronScreenHandler.SLOT_FEED_INDEX_END) {
                             SlotAnchor(id = slotAnchorId(i))
                         }
@@ -137,15 +132,39 @@ class AnimalmatronScreen(
             slot.y = anchor.y - top
         }
 
-        super.render(context, mouseX, mouseY, delta)
+        // 先绘制面板背景
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context,
+            x,
+            y,
+            GuiSize.STANDARD_UPGRADE.playerInvY,
+            GuiSize.STANDARD_UPGRADE.hotbarY,
+            GuiSize.SLOT_SIZE
+        )
+
+        // 再绘制 UI（slot 背景、能量条、流体条等）
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
 
+        // 最后绘制物品（包括耐久条），确保物品在顶层
+        super.render(context, mouseX, mouseY, delta)
+
         val animalCountText = t("gui.ic2_120.animalmatron.monitored_animals", handler.sync.animalCount)
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputRateText), textRenderer.getWidth(consumeRateText), textRenderer.getWidth(animalCountText))
+        val hasShears = handler.getSlot(AnimalmatronScreenHandler.SLOT_SHEARS_INDEX).hasStack()
+        val needShearsText = if (!hasShears) t("gui.ic2_120.animalmatron.need_shears") else ""
+        val sideTextWidth = maxOf(
+            textRenderer.getWidth(inputRateText),
+            textRenderer.getWidth(consumeRateText),
+            textRenderer.getWidth(animalCountText),
+            if (!hasShears) textRenderer.getWidth(needShearsText) else 0
+        )
         val sideX = left - sideTextWidth - 4
         context.drawText(textRenderer, animalCountText, sideX, top + 8, 0x55FF55, false)
         context.drawText(textRenderer, inputRateText, sideX, top + 20, 0xAAAAAA, false)
         context.drawText(textRenderer, consumeRateText, sideX, top + 32, 0xAAAAAA, false)
+        if (!hasShears) {
+            context.drawText(textRenderer, needShearsText, sideX, top + 44, 0xFF5555, false)
+        }
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }

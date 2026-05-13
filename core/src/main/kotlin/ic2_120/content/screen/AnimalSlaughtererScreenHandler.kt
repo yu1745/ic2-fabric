@@ -18,6 +18,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -43,6 +44,10 @@ class AnimalSlaughtererScreenHandler(
         canInsert = { stack -> stack.item is IBatteryItem },
         maxItemCount = 1
     )
+    private val shearsSlotSpec = SlotSpec(
+        canInsert = { stack -> stack.item == Items.SHEARS },
+        maxItemCount = 1
+    )
 
     init {
         checkSize(blockInventory, AnimalSlaughtererBlockEntity.INVENTORY_SIZE)
@@ -55,6 +60,7 @@ class AnimalSlaughtererScreenHandler(
             addSlot(PredicateSlot(blockInventory, slotIndex, 0, 0, upgradeSlotSpec))
         }
         addSlot(PredicateSlot(blockInventory, AnimalSlaughtererBlockEntity.SLOT_DISCHARGING, 0, 0, dischargingSlotSpec))
+        addSlot(PredicateSlot(blockInventory, AnimalSlaughtererBlockEntity.SLOT_SHEARS, 0, 0, shearsSlotSpec))
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -76,7 +82,7 @@ class AnimalSlaughtererScreenHandler(
         when {
             index in SLOT_CONTENT_INDEX_START..SLOT_CONTENT_INDEX_END ||
                 index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END ||
-                index == SLOT_DISCHARGING_INDEX -> {
+                index == SLOT_DISCHARGING_INDEX || index == SLOT_SHEARS_INDEX -> {
                 if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
             index in PLAYER_INV_START..HOTBAR_END -> {
@@ -85,7 +91,10 @@ class AnimalSlaughtererScreenHandler(
                 }
                 val moved = SlotMoveHelper.insertIntoTargets(
                     inSlot,
-                    listOf(SlotTarget(slots[SLOT_DISCHARGING_INDEX], dischargingSlotSpec)) + upgradeTargets
+                    listOf(
+                        SlotTarget(slots[SLOT_DISCHARGING_INDEX], dischargingSlotSpec),
+                        SlotTarget(slots[SLOT_SHEARS_INDEX], shearsSlotSpec)
+                    ) + upgradeTargets
                 )
                 if (!moved) return ItemStack.EMPTY
             }
@@ -112,9 +121,10 @@ class AnimalSlaughtererScreenHandler(
         const val SLOT_UPGRADE_INDEX_START = 15
         const val SLOT_UPGRADE_INDEX_END = 18
         const val SLOT_DISCHARGING_INDEX = 19
+        const val SLOT_SHEARS_INDEX = 20
 
-        const val PLAYER_INV_START = 20
-        const val HOTBAR_END = 55
+        const val PLAYER_INV_START = 21
+        const val HOTBAR_END = 56
 
         private val OUTPUT_ONLY_SLOT_SPEC = SlotSpec(canInsert = { false }, canTake = { true })
 

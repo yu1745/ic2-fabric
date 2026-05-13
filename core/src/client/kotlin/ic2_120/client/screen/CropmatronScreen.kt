@@ -67,7 +67,7 @@ class CropmatronScreen(
                     Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 4) {
                         Text(title.string, color = 0xFFFFFF)
                         EnergyBar(energyFraction, barHeight = 8, modifier = Modifier.EMPTY.fractionWidth(1f))
-                        Text("$energy / $capacity EU", color = 0xFFFFFF, shadow = false)
+                        Text("${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(capacity)} EU", color = 0xFFFFFF, shadow = false)
                     }
 
                     Flex(direction = FlexDirection.ROW, justifyContent = JustifyContent.SPACE_BETWEEN, alignItems = AlignItems.END) {
