@@ -32,13 +32,7 @@ class CreativeGeneratorScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -103,8 +97,20 @@ class CreativeGeneratorScreen(
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)
 
-        super.render(context, mouseX, mouseY, delta)
+        // 先绘制面板背景
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context, x, y,
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
+        )
+
+        // 再绘制 UI（slot 背景、能量条等）
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+
+        // 最后绘制物品（包括耐久条），确保物品在顶层
+        super.render(context, mouseX, mouseY, delta)
         context.drawText(textRenderer, generationText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
         context.drawText(textRenderer, totalText, sideTextX, top + 32, 0xAAAAAA, false)

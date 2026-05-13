@@ -43,7 +43,7 @@ class ScannerScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, gui.width, gui.height)
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -61,8 +61,10 @@ class ScannerScreen(
         val canScan = energy >= energyCost && usesRemaining > 0
         val results = lastResults
 
-        super.render(context, mouseX, mouseY, delta)
+        // 先绘制面板背景
+        GuiBackground.drawVanillaLikePanel(context, x, y, gui.width, gui.height)
 
+        // 再绘制 UI（slot 背景等）
         ui.render(context, textRenderer, mouseX, mouseY) {
             buildUi(
                 x = x + 8,
@@ -81,6 +83,9 @@ class ScannerScreen(
                 rangeZ = rangeZ
             )
         }
+
+        // 最后绘制物品（包括耐久条），确保物品在顶层
+        super.render(context, mouseX, mouseY, delta)
 
         val tooltip = ui.getTooltipAt(mouseX, mouseY)
         if (tooltip != null) {

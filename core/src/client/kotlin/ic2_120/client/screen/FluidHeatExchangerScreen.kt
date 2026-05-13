@@ -33,15 +33,7 @@ class FluidHeatExchangerScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context,
-            x,
-            y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -154,11 +146,22 @@ class FluidHeatExchangerScreen(
             slot.y = anchor.y - top
         }
 
-        // 3) 原生 slot 渲染 + 交互
-        super.render(context, mouseX, mouseY, delta)
+        // 3) 先绘制面板背景
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context,
+            x,
+            y,
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
+        )
 
-        // 4) Compose overlay
+        // 4) 再绘制 UI（slot 背景），确保它们在物品下方
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+
+        // 5) 最后绘制物品（包括耐久条），确保物品在顶层
+        super.render(context, mouseX, mouseY, delta)
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }

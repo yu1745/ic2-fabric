@@ -45,104 +45,7 @@ class NuclearReactorScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        val isThermal = isThermalLayout()
-        val effectiveWidth =
-            if (isThermal) NuclearReactorScreenHandler.FRAME_WIDTH + thermalExtraWidth * 2 else NuclearReactorScreenHandler.FRAME_WIDTH
-        val bgX = if (isThermal) x - thermalExtraWidth else x
-        GuiBackground.drawVanillaLikePanel(context, bgX, y, effectiveWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            handler.playerInvY,
-            handler.hotbarY,
-            NuclearReactorScreenHandler.SLOT_SIZE,
-            playerInvX = NuclearReactorScreenHandler.PLAYER_INV_X
-        )
-        val slotSize = NuclearReactorScreenHandler.SLOT_SIZE
-        val borderOffset = GuiBackground.SLOT_ANCHOR_INSET
-
-        // 反应堆槽位整体 9x9 区域外边框
-        val gridX = x + NuclearReactorScreenHandler.SLOT_GRID_X - borderOffset
-        val gridY = y + NuclearReactorScreenHandler.SLOT_GRID_Y - borderOffset
-        val gridW = 9 * slotSize + borderOffset * 2
-        val gridH = 9 * slotSize + borderOffset * 2
-        // context.drawBorder(gridX, gridY, gridW, gridH, borderColor)
-
-        // 为每个反应堆槽位绘制外边框（参考 GeneratorScreen），让用户清楚实际有多少 slot
-        for (i in 0 until handler.reactorSlotCount) {
-            val slot = handler.slots[i]
-            GuiBackground.drawVanillaLikeSlot(
-                context,
-                x + slot.x - borderOffset,
-                y + slot.y - borderOffset,
-                slotSize,
-                slotSize
-            )
-        }
-
-        // 热模式：为 4 个流体槽绘制边框
-        if (isThermal) {
-            for (i in handler.reactorSlotCount until handler.reactorSlotCount + 4) {
-                val slot = handler.slots[i]
-                GuiBackground.drawVanillaLikeSlot(
-                    context,
-                    x + slot.x - borderOffset,
-                    y + slot.y - borderOffset,
-                    slotSize,
-                    slotSize
-                )
-            }
-        }
-
-        // 能量条和温度条位置（固定）
-        val energyBarX = x + 9
-        val tempBarX = x + NuclearReactorScreenHandler.SLOT_GRID_X + 9 * slotSize + 4
-
-        if (isThermal) {
-            // 热模式：流体条+两槽 与能量条垂直对齐（能量条 y=18~180）
-            val fluidBarY = NuclearReactorScreenHandler.SLOT_GRID_Y + slotSize  // 上槽(18-36) + 条(36-162) + 下槽(162-180)
-
-            // 冷却液条（左侧）
-            val inputFraction = handler.sync.inputCoolantMb.toFloat() / NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
-            val inputX = energyBarX - barWidth - 4
-            drawVerticalFluidBar(
-                context, inputX, y + fluidBarY,
-                barWidth, fluidBarHeight, 0xFF00CCFF.toInt(), inputFraction
-            )
-
-            // 热冷却液条（右侧）
-            val outputFraction = handler.sync.outputHotCoolantMb.toFloat() / NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
-            val outputX = tempBarX + barWidth + 4
-            drawVerticalFluidBar(
-                context, outputX, y + fluidBarY,
-                barWidth, fluidBarHeight, 0xFFFF6600.toInt(), outputFraction
-            )
-        }
-
-        // 绘制能量和温度条（位置不变）
-        drawVerticalEnergyBar(context, energyBarX, y + NuclearReactorScreenHandler.SLOT_GRID_Y, barWidth, 9 * slotSize)
-        drawVerticalTemperatureBar(
-            context,
-            tempBarX,
-            y + NuclearReactorScreenHandler.SLOT_GRID_Y,
-            barWidth,
-            9 * slotSize
-        )
-
-        // 布局锁定时，为空槽绘制虚影
-        if (handler.sync.layoutLocked == 1) {
-            val reactor = handler.reactor
-            for (i in 0 until handler.reactorSlotCount) {
-                val slot = handler.slots[i]
-                if (slot.hasStack()) continue // 有实物不画虚影
-                val lockedItem = reactor?.getLockedItemForSlot(i) ?: continue
-                val ghostStack = ItemStack(lockedItem)
-                val sx = x + slot.x
-                val sy = y + slot.y
-                context.drawItem(ghostStack, sx, sy)
-                // 覆盖半透明黑色遮罩，产生虚影效果
-                context.fill(sx, sy, sx + 16, sy + 16, 0x90000000.toInt())
-            }
-        }
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
     private fun drawVerticalEnergyBar(context: DrawContext, barX: Int, barY: Int, w: Int, h: Int) {
@@ -312,8 +215,110 @@ class NuclearReactorScreen(
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)
 
-        super.render(context, mouseX, mouseY, delta)
+        // 先绘制面板背景
+        val isThermal = isThermalLayout()
+        val effectiveWidth =
+            if (isThermal) NuclearReactorScreenHandler.FRAME_WIDTH + thermalExtraWidth * 2 else NuclearReactorScreenHandler.FRAME_WIDTH
+        val bgX = if (isThermal) x - thermalExtraWidth else x
+        GuiBackground.drawVanillaLikePanel(context, bgX, y, effectiveWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context, x, y,
+            handler.playerInvY,
+            handler.hotbarY,
+            NuclearReactorScreenHandler.SLOT_SIZE,
+            playerInvX = NuclearReactorScreenHandler.PLAYER_INV_X
+        )
+        val slotSize = NuclearReactorScreenHandler.SLOT_SIZE
+        val borderOffset = GuiBackground.SLOT_ANCHOR_INSET
+
+        // 反应堆槽位整体 9x9 区域外边框
+        val gridX = x + NuclearReactorScreenHandler.SLOT_GRID_X - borderOffset
+        val gridY = y + NuclearReactorScreenHandler.SLOT_GRID_Y - borderOffset
+        val gridW = 9 * slotSize + borderOffset * 2
+        val gridH = 9 * slotSize + borderOffset * 2
+
+        // 为每个反应堆槽位绘制外边框
+        for (i in 0 until handler.reactorSlotCount) {
+            val slot = handler.slots[i]
+            GuiBackground.drawVanillaLikeSlot(
+                context,
+                x + slot.x - borderOffset,
+                y + slot.y - borderOffset,
+                slotSize,
+                slotSize
+            )
+        }
+
+        // 热模式：为 4 个流体槽绘制边框
+        if (isThermal) {
+            for (i in handler.reactorSlotCount until handler.reactorSlotCount + 4) {
+                val slot = handler.slots[i]
+                GuiBackground.drawVanillaLikeSlot(
+                    context,
+                    x + slot.x - borderOffset,
+                    y + slot.y - borderOffset,
+                    slotSize,
+                    slotSize
+                )
+            }
+        }
+
+        // 能量条和温度条位置（固定）
+        val energyBarX = x + 9
+        val tempBarX = x + NuclearReactorScreenHandler.SLOT_GRID_X + 9 * slotSize + 4
+
+        if (isThermal) {
+            // 热模式：流体条+两槽 与能量条垂直对齐
+            val fluidBarY = NuclearReactorScreenHandler.SLOT_GRID_Y + slotSize
+
+            // 冷却液条（左侧）
+            val inputFraction = handler.sync.inputCoolantMb.toFloat() / NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
+            val inputX = energyBarX - barWidth - 4
+            drawVerticalFluidBar(
+                context, inputX, y + fluidBarY,
+                barWidth, fluidBarHeight, 0xFF00CCFF.toInt(), inputFraction
+            )
+
+            // 热冷却液条（右侧）
+            val outputFraction = handler.sync.outputHotCoolantMb.toFloat() / NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
+            val outputX = tempBarX + barWidth + 4
+            drawVerticalFluidBar(
+                context, outputX, y + fluidBarY,
+                barWidth, fluidBarHeight, 0xFFFF6600.toInt(), outputFraction
+            )
+        }
+
+        // 绘制能量和温度条（位置不变）
+        drawVerticalEnergyBar(context, energyBarX, y + NuclearReactorScreenHandler.SLOT_GRID_Y, barWidth, 9 * slotSize)
+        drawVerticalTemperatureBar(
+            context,
+            tempBarX,
+            y + NuclearReactorScreenHandler.SLOT_GRID_Y,
+            barWidth,
+            9 * slotSize
+        )
+
+        // 布局锁定时，为空槽绘制虚影
+        if (handler.sync.layoutLocked == 1) {
+            val reactor = handler.reactor
+            for (i in 0 until handler.reactorSlotCount) {
+                val slot = handler.slots[i]
+                if (slot.hasStack()) continue
+                val lockedItem = reactor?.getLockedItemForSlot(i) ?: continue
+                val ghostStack = ItemStack(lockedItem)
+                val sx = x + slot.x
+                val sy = y + slot.y
+                context.drawItem(ghostStack, sx, sy)
+                // 覆盖半透明黑色遮罩，产生虚影效果
+                context.fill(sx, sy, sx + 16, sy + 16, 0x90000000.toInt())
+            }
+        }
+
+        // 再绘制 UI（slot 背景等）
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+
+        // 最后绘制物品（包括耐久条），确保物品在顶层
+        super.render(context, mouseX, mouseY, delta)
 
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = NuclearReactorSync.ENERGY_CAPACITY

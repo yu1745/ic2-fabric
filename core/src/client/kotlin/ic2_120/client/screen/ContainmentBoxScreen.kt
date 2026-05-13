@@ -32,25 +32,7 @@ class ContainmentBoxScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        val inset = GuiBackground.SLOT_ANCHOR_INSET
-        val slotSize = GuiSize.SLOT_SIZE
-        for (i in 0 until ContainmentBoxInventory.SIZE) {
-            val slot = handler.slots[i]
-            GuiBackground.drawVanillaLikeSlot(
-                context,
-                x + slot.x - inset,
-                y + slot.y - inset,
-                slotSize,
-                slotSize
-            )
-        }
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            gui.playerInvY,
-            gui.hotbarY,
-            slotSize
-        )
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -86,8 +68,27 @@ class ContainmentBoxScreen(
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)
 
-        super.render(context, mouseX, mouseY, delta)
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        val inset = GuiBackground.SLOT_ANCHOR_INSET
+        val slotSize = GuiSize.SLOT_SIZE
+        for (i in 0 until ContainmentBoxInventory.SIZE) {
+            val slot = handler.slots[i]
+            GuiBackground.drawVanillaLikeSlot(
+                context,
+                x + slot.x - inset,
+                y + slot.y - inset,
+                slotSize,
+                slotSize
+            )
+        }
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context, x, y,
+            gui.playerInvY,
+            gui.hotbarY,
+            slotSize
+        )
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        super.render(context, mouseX, mouseY, delta)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 

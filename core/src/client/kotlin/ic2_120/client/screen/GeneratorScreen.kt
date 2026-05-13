@@ -33,15 +33,7 @@ class GeneratorScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context = context,
-            screenX = x,
-            screenY = y,
-            playerInvY = GuiSize.STANDARD.playerInvY,
-            hotbarY = GuiSize.STANDARD.hotbarY,
-            slotSize = GuiSize.SLOT_SIZE
-        )
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -121,11 +113,22 @@ class GeneratorScreen(
             slot.y = anchor.y - top
         }
 
-        // 3) 原生 slot 渲染 + 交互
-        super.render(context, mouseX, mouseY, delta)
+        // 先绘制面板背景
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context = context,
+            screenX = x,
+            screenY = y,
+            playerInvY = GuiSize.STANDARD.playerInvY,
+            hotbarY = GuiSize.STANDARD.hotbarY,
+            slotSize = GuiSize.SLOT_SIZE
+        )
 
-        // 4) Compose overlay
+        // 再绘制 UI（slot 背景、能量条等），确保在 super.render 之前
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+
+        // 最后绘制物品（包括耐久条），确保物品在顶层
+        super.render(context, mouseX, mouseY, delta)
         context.drawText(textRenderer, statusText1, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, statusText2, sideTextX, top + 20, 0xAAAAAA, false)
 

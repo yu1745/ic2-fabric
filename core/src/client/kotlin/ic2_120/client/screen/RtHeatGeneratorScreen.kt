@@ -27,16 +27,7 @@ class RtHeatGeneratorScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-
-        for (i in 0 until 6) {
-            val slot = handler.slots[i]
-            context.drawBorder(x + slot.x - 1, y + slot.y - 1, SLOT_SIZE, SLOT_SIZE, GuiBackground.BORDER_COLOR)
-        }
-
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y, GUI_SIZE.playerInvY, GUI_SIZE.hotbarY, GuiSize.SLOT_SIZE
-        )
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -71,6 +62,22 @@ class RtHeatGeneratorScreen(
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)
 
+        // 先绘制面板背景与自定义槽位边框
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+
+        for (i in 0 until 6) {
+            val slot = handler.slots[i]
+            context.drawBorder(x + slot.x - 1, y + slot.y - 1, SLOT_SIZE, SLOT_SIZE, GuiBackground.BORDER_COLOR)
+        }
+
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context, x, y, GUI_SIZE.playerInvY, GUI_SIZE.hotbarY, GuiSize.SLOT_SIZE
+        )
+
+        // 再绘制 UI（slot 背景等）
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+
+        // 最后绘制物品（包括耐久条），确保物品在顶层
         super.render(context, mouseX, mouseY, delta)
 
         val generatedRate = handler.sync.getSyncedGeneratedHeat()
@@ -84,7 +91,6 @@ class RtHeatGeneratorScreen(
         context.drawText(textRenderer, generatedText, textX, y + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, outputText, textX, y + 20, 0xAAAAAA, false)
 
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
