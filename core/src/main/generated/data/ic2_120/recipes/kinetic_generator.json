@@ -10,15 +10,10 @@
     },
     "M": {
       "item": "ic2_120:electric_motor"
-    },
-    "X": {
-      "item": "ic2_120:machine"
     }
   },
   "pattern": [
-    "XXX",
-    "GMF",
-    "XXX"
+    "GMF"
   ],
   "result": {
     "item": "ic2_120:kinetic_generator"
