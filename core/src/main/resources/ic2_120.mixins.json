@@ -9,7 +9,8 @@
 		"PassiveEntityMixin",
 		"MerchantEntityMixin",
 		"PathAwareEntityMixin",
-		"MobEntityMixin"
+		"MobEntityMixin",
+		"LeashableMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

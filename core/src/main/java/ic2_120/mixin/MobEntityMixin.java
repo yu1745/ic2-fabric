@@ -1,6 +1,5 @@
 package ic2_120.mixin;
 
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.mob.GhastEntity;
@@ -17,6 +16,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * 末影龙不是 MobEntity，无需额外处理。
  *
  * 同时阻止拴绳动能发生机拴住的生物在骑乘（如坐上矿车）时拴绳断裂。
+ * <p>
+ * 注意：1.21.1 将拴绳逻辑提取到 {@code Leashable} 接口，
+ * {@code attachLeash} 中的 {@code stopRiding()} 拦截已移至 {@link LeashableMixin}。
  */
 @Mixin(MobEntity.class)
 public class MobEntityMixin {
@@ -52,20 +54,4 @@ public class MobEntityMixin {
         instance.detachLeash(sendPacket, dropItem);
     }
 
-    /**
-     * 区块重新加载时的另一条路径：
-     * readLeashNbt() → attachLeash() → stopRiding()
-     * 原版 attachLeash 在绑定拴绳时会强制让骑乘中的生物下车，
-     * 此处拦截：当持有者是盔甲架（即动能发生机的锚点）时跳过下车。
-     */
-    @Redirect(
-        method = "attachLeash",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/mob/MobEntity;stopRiding()V")
-    )
-    private void keepRidingOnLeashAttach(MobEntity instance) {
-        if (instance.getLeashHolder() instanceof ArmorStandEntity) {
-            return;
-        }
-        instance.stopRiding();
-    }
 }
