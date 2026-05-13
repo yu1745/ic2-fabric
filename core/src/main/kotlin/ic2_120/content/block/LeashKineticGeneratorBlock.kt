@@ -129,7 +129,13 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                     anchor.isInvisible = true
                     anchor.setNoGravity(true)
                     serverWorld.spawnEntity(anchor)
+                    // attachLeash 内部会调用 stopRiding() 导致生物下车，
+                    // 保存载具并在拴绳后重新骑乘（startRiding 的 redirect 会阻止 detachLeash）
+                    val vehicle = mob.vehicle
                     mob.attachLeash(anchor, true)
+                    if (vehicle != null) {
+                        mob.startRiding(vehicle)
+                    }
                     be.setLeashedMob(mob.uuid, mob.name.string, anchor.uuid)
                 }
             }
