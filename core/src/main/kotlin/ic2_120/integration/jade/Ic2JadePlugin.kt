@@ -271,7 +271,12 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         if (blockEntity is CropStickBlockEntity) {
             val (nutrients, water, weedEx) = blockEntity.storageSnapshot()
             data.putBoolean("isStick", true)
-            data.putBoolean("crossingBase", accessor.blockState.get(CropStickBlock.CROSSING_BASE))
+            val crossingBase = if (accessor.blockState.block is CropStickBlock) {
+                accessor.blockState.get(CropStickBlock.CROSSING_BASE)
+            } else {
+                false
+            }
+            data.putBoolean("crossingBase", crossingBase)
             data.putInt("nutrients", nutrients)
             data.putInt("water", water)
             data.putInt("weedEx", weedEx)
