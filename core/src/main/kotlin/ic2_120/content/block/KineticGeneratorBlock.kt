@@ -73,15 +73,11 @@ class KineticGeneratorBlock : MachineBlock() {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             val generator = GeneratorBlock::class.item()
-            val casing = MachineCasingBlock::class.instance()
             val motor = ElectricMotor::class.instance()
             val crank = IronCrankHandle::class.instance()
-            if (generator != Items.AIR && casing != Items.AIR && motor != Items.AIR && crank != Items.AIR) {
+            if (generator != Items.AIR && motor != Items.AIR && crank != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, KineticGeneratorBlock::class.item(), 1)
-                    .pattern("XXX")
                     .pattern("GMF")
-                    .pattern("XXX")
-                    .input('X', casing)
                     .input('G', generator)
                     .input('M', motor)
                     .input('F', crank)
