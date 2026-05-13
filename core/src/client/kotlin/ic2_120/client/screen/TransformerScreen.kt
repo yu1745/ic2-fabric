@@ -44,7 +44,7 @@ class TransformerScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -125,8 +125,14 @@ class TransformerScreen(
 
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
 
-        super.render(context, mouseX, mouseY, delta)
+        // 先绘制面板背景
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+
+        // 再绘制 UI（slot 背景等）
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+
+        // 最后绘制物品（包括耐久条），确保物品在顶层
+        super.render(context, mouseX, mouseY, delta)
         context.drawText(textRenderer, inputText, sideTextX, top + 6, 0xFFFFAA, false)
         context.drawText(textRenderer, outputText, sideTextX, top + 18, 0xFFFFAA, false)
         drawMouseoverTooltip(context, mouseX, mouseY)

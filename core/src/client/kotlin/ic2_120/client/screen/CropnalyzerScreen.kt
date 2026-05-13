@@ -31,23 +31,7 @@ class CropnalyzerScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        val inset = GuiBackground.SLOT_ANCHOR_INSET
-        GuiBackground.drawVanillaLikeSlot(
-            context,
-            x + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_SEED].x - inset,
-            y + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_SEED].y - inset,
-            GuiSize.SLOT_SIZE,
-            GuiSize.SLOT_SIZE
-        )
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context,
-            x,
-            y,
-            gui.playerInvY,
-            gui.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -109,8 +93,25 @@ class CropnalyzerScreen(
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)
 
-        super.render(context, mouseX, mouseY, delta)
+        // 先绘制面板背景
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        val inset = GuiBackground.SLOT_ANCHOR_INSET
+        GuiBackground.drawVanillaLikeSlot(
+            context,
+            x + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_SEED].x - inset,
+            y + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_SEED].y - inset,
+            GuiSize.SLOT_SIZE,
+            GuiSize.SLOT_SIZE
+        )
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context, x, y, gui.playerInvY, gui.hotbarY, GuiSize.SLOT_SIZE
+        )
+
+        // 再绘制 UI（slot 背景、能量条等）
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+
+        // 最后绘制物品（包括耐久条），确保物品在顶层
+        super.render(context, mouseX, mouseY, delta)
 
         val tooltip = ui.getTooltipAt(mouseX, mouseY)
         if (tooltip != null) {

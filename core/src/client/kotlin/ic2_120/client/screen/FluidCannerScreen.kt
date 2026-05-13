@@ -34,15 +34,7 @@ class FluidCannerScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context,
-            x,
-            y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
+        // background drawn in render() for correct z-ordering
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -131,11 +123,20 @@ class FluidCannerScreen(
         // 2) 锚点写回 slot 相对坐标
         applyAnchoredSlots(layout, left, top)
 
-        // 3) 原生 slot 渲染 + 交互
-        super.render(context, mouseX, mouseY, delta)
-
-        // 4) Compose overlay
+        // 3) 背景填充 + Compose SlotAnchor 背景
+        GuiBackground.drawVanillaLikePanel(context, left, top, backgroundWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context,
+            left,
+            top,
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
+        )
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+
+        // 4) 原生 slot 渲染 + 交互（在 Compose 之上，保证耐久条可见）
+        super.render(context, mouseX, mouseY, delta)
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 

@@ -35,7 +35,7 @@ class ComposeDebugScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -53,11 +53,14 @@ class ComposeDebugScreen(
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = uiContent)
         applyAnchoredSlots(layout, left, top)
 
-        // 3) 原生渲染（slot+交互）
-        super.render(context, mouseX, mouseY, delta)
+        // 3) 先绘制面板背景
+        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
 
-        // 4) Compose overlay 绘制
+        // 4) 再绘制 UI（slot 背景），确保它们在物品下方
         ui.render(context, textRenderer, mouseX, mouseY, content = uiContent)
+
+        // 5) 最后绘制物品（包括耐久条），确保物品在顶层
+        super.render(context, mouseX, mouseY, delta)
 
         val tooltip = ui.getTooltipAt(mouseX, mouseY)
         if (tooltip != null) {

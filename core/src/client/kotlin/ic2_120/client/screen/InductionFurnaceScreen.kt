@@ -32,97 +32,7 @@ class InductionFurnaceScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context,
-            x,
-            y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
-
-        val baseTicks = InductionFurnaceSync.BASE_TICKS_PER_OPERATION
-        val heat = handler.sync.heat.coerceAtLeast(InductionFurnaceSync.MIN_HEAT_THRESHOLD)
-        val progressNeeded = (baseTicks * InductionFurnaceSync.HEAT_MAX / heat).toInt().coerceAtLeast(baseTicks.toInt())
-
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY) {
-            Column(
-                x = x + 8,
-                y = y + 8,
-                spacing = 6,
-                modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
-            ) {
-                Flex(
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.SPACE_BETWEEN,
-                    alignItems = AlignItems.CENTER,
-                    gap = 8,
-                ) {
-                    Text(title.string, color = 0xFFFFFF)
-                }
-
-                Flex(
-                    direction = FlexDirection.ROW,
-                    alignItems = AlignItems.CENTER,
-                    gap = 4
-                ) {
-                    Column(spacing = 4) {
-                        SlotAnchor(
-                            id = "anchor.input0",
-                            width = InductionFurnaceScreenHandler.SLOT_SIZE,
-                            height = InductionFurnaceScreenHandler.SLOT_SIZE
-                        )
-                        SlotAnchor(
-                            id = "anchor.input1",
-                            width = InductionFurnaceScreenHandler.SLOT_SIZE,
-                            height = InductionFurnaceScreenHandler.SLOT_SIZE
-                        )
-                    }
-                    SlotAnchor(
-                        id = "anchor.progressArea",
-                        width = 40,
-                        height = InductionFurnaceScreenHandler.SLOT_SIZE * 2 + 4
-                    )
-                    Column(spacing = 4) {
-                        SlotAnchor(
-                            id = "anchor.output0",
-                            width = InductionFurnaceScreenHandler.SLOT_SIZE,
-                            height = InductionFurnaceScreenHandler.SLOT_SIZE
-                        )
-                        SlotAnchor(
-                            id = "anchor.output1",
-                            width = InductionFurnaceScreenHandler.SLOT_SIZE,
-                            height = InductionFurnaceScreenHandler.SLOT_SIZE
-                        )
-                    }
-                    SlotAnchor(
-                        id = "anchor.discharging",
-                        width = InductionFurnaceScreenHandler.SLOT_SIZE,
-                        height = InductionFurnaceScreenHandler.SLOT_SIZE
-                    )
-                }
-            }
-        }
-
-        val input0Anchor = layout.anchors["anchor.input0"]
-        val input1Anchor = layout.anchors["anchor.input1"]
-        val progressAnchor = layout.anchors["anchor.progressArea"]
-
-        if (input0Anchor != null && input1Anchor != null && progressAnchor != null) {
-            val barH = 6
-            val barW = progressAnchor.w
-
-            val progress0 = handler.sync.progressSlot0.coerceIn(0, progressNeeded)
-            val progressFrac0 = if (progressNeeded > 0) progress0.toFloat() / progressNeeded else 0f
-            val barY0 = input0Anchor.y + (InductionFurnaceScreenHandler.SLOT_SIZE - barH) / 2
-            ProgressBar.draw(context, progressAnchor.x, barY0, barW, barH, progressFrac0)
-
-            val progress1 = handler.sync.progressSlot1.coerceIn(0, progressNeeded)
-            val progressFrac1 = if (progressNeeded > 0) progress1.toFloat() / progressNeeded else 0f
-            val barY1 = input1Anchor.y + (InductionFurnaceScreenHandler.SLOT_SIZE - barH) / 2
-            ProgressBar.draw(context, progressAnchor.x, barY1, barW, barH, progressFrac1)
-        }
+        // Background drawing is now handled in render() to ensure correct render order.
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -232,8 +142,102 @@ class InductionFurnaceScreen(
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)
 
-        super.render(context, mouseX, mouseY, delta)
+        // Draw background panel and slot borders (was in drawBackground)
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context,
+            x,
+            y,
+            GUI_SIZE.playerInvY,
+            GUI_SIZE.hotbarY,
+            GuiSize.SLOT_SIZE
+        )
+
+        // Draw progress bars using a separate layout (was in drawBackground)
+        val baseTicks = InductionFurnaceSync.BASE_TICKS_PER_OPERATION
+        val heat = handler.sync.heat.coerceAtLeast(InductionFurnaceSync.MIN_HEAT_THRESHOLD)
+        val progressNeeded = (baseTicks * InductionFurnaceSync.HEAT_MAX / heat).toInt().coerceAtLeast(baseTicks.toInt())
+
+        val progressLayout = ui.layout(context, textRenderer, mouseX, mouseY) {
+            Column(
+                x = x + 8,
+                y = y + 8,
+                spacing = 6,
+                modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
+            ) {
+                Flex(
+                    direction = FlexDirection.ROW,
+                    justifyContent = JustifyContent.SPACE_BETWEEN,
+                    alignItems = AlignItems.CENTER,
+                    gap = 8,
+                ) {
+                    Text(title.string, color = 0xFFFFFF)
+                }
+
+                Flex(
+                    direction = FlexDirection.ROW,
+                    alignItems = AlignItems.CENTER,
+                    gap = 4
+                ) {
+                    Column(spacing = 4) {
+                        SlotAnchor(
+                            id = "anchor.input0",
+                            width = InductionFurnaceScreenHandler.SLOT_SIZE,
+                            height = InductionFurnaceScreenHandler.SLOT_SIZE
+                        )
+                        SlotAnchor(
+                            id = "anchor.input1",
+                            width = InductionFurnaceScreenHandler.SLOT_SIZE,
+                            height = InductionFurnaceScreenHandler.SLOT_SIZE
+                        )
+                    }
+                    SlotAnchor(
+                        id = "anchor.progressArea",
+                        width = 40,
+                        height = InductionFurnaceScreenHandler.SLOT_SIZE * 2 + 4
+                    )
+                    Column(spacing = 4) {
+                        SlotAnchor(
+                            id = "anchor.output0",
+                            width = InductionFurnaceScreenHandler.SLOT_SIZE,
+                            height = InductionFurnaceScreenHandler.SLOT_SIZE
+                        )
+                        SlotAnchor(
+                            id = "anchor.output1",
+                            width = InductionFurnaceScreenHandler.SLOT_SIZE,
+                            height = InductionFurnaceScreenHandler.SLOT_SIZE
+                        )
+                    }
+                    SlotAnchor(
+                        id = "anchor.discharging",
+                        width = InductionFurnaceScreenHandler.SLOT_SIZE,
+                        height = InductionFurnaceScreenHandler.SLOT_SIZE
+                    )
+                }
+            }
+        }
+
+        val input0Anchor = progressLayout.anchors["anchor.input0"]
+        val input1Anchor = progressLayout.anchors["anchor.input1"]
+        val progressAnchor = progressLayout.anchors["anchor.progressArea"]
+
+        if (input0Anchor != null && input1Anchor != null && progressAnchor != null) {
+            val barH = 6
+            val barW = progressAnchor.w
+
+            val progress0 = handler.sync.progressSlot0.coerceIn(0, progressNeeded)
+            val progressFrac0 = if (progressNeeded > 0) progress0.toFloat() / progressNeeded else 0f
+            val barY0 = input0Anchor.y + (InductionFurnaceScreenHandler.SLOT_SIZE - barH) / 2
+            ProgressBar.draw(context, progressAnchor.x, barY0, barW, barH, progressFrac0)
+
+            val progress1 = handler.sync.progressSlot1.coerceIn(0, progressNeeded)
+            val progressFrac1 = if (progressNeeded > 0) progress1.toFloat() / progressNeeded else 0f
+            val barY1 = input1Anchor.y + (InductionFurnaceScreenHandler.SLOT_SIZE - barH) / 2
+            ProgressBar.draw(context, progressAnchor.x, barY1, barW, barH, progressFrac1)
+        }
+
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        super.render(context, mouseX, mouseY, delta)
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
         drawMouseoverTooltip(context, mouseX, mouseY)

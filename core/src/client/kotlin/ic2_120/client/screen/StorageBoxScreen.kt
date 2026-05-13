@@ -31,13 +31,7 @@ class StorageBoxScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            PLAYER_INV_Y,
-            HOTBAR_Y,
-            SLOT_SIZE
-        )
+        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -97,8 +91,15 @@ class StorageBoxScreen(
         val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)
 
-        super.render(context, mouseX, mouseY, delta)
+        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawPlayerInventorySlotBorders(
+            context, x, y,
+            PLAYER_INV_Y,
+            HOTBAR_Y,
+            SLOT_SIZE
+        )
         ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        super.render(context, mouseX, mouseY, delta)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
