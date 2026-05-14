@@ -3,13 +3,10 @@ package ic2_120.content.screen
 import ic2_120.content.sync.MaceratorSync
 import ic2_120.content.block.MaceratorBlock
 import ic2_120.content.block.machines.MaceratorBlockEntity
-import ic2_120.content.item.IUpgradeItem
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
-import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
@@ -32,57 +29,28 @@ class MaceratorScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(MaceratorScreenHandler::class.type(), syncId) {
 
     val sync = MaceratorSync(SyncedDataView(propertyDelegate))
 
-    private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
-    }
+    /**
+     * BlockEntity slot index → ScreenHandler slot index 的映射。
+     * 在 init 块中 addSlot 时构建。
+     */
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
         checkSize(blockInventory, MaceratorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        // 机器槽位：Compose 屏幕会在客户端通过 SlotAnchor 回写真实坐标，这里仅放占位坐标。
-        addSlot(
-            PredicateSlot(
-                blockInventory,
-                MaceratorBlockEntity.SLOT_INPUT,
-                0,
-                0,
-                INPUT_SLOT_SPEC
-            )
-        )
-        addSlot(
-            PredicateSlot(
-                blockInventory,
-                MaceratorBlockEntity.SLOT_DISCHARGING,
-                0,
-                0,
-                DISCHARGING_SLOT_SPEC
-            )
-        )
-        addSlot(
-            PredicateSlot(
-                blockInventory,
-                MaceratorBlockEntity.SLOT_OUTPUT,
-                0,
-                0,
-                OUTPUT_SLOT_SPEC
-            )
-        )
-        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
-                PredicateSlot(
-                    blockInventory,
-                    MaceratorBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
-            )
+        // 机器槽位：从 RoutedItemStorage 派生 SlotSpec（单一数据源）
+        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_INPUT)
+        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_DISCHARGING)
+        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_OUTPUT)
+        for (i in MaceratorBlockEntity.SLOT_UPGRADE_INDICES.indices) {
+            addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_UPGRADE_INDICES[i])
         }
 
         // 玩家物品栏
@@ -96,49 +64,52 @@ class MaceratorScreenHandler(
         }
     }
 
+    /**
+     * 添加一个 PredicateSlot 并同时记录 BE slot index → handler slot index 映射。
+     * SlotSpec 从 [itemStorage] 派生（单一数据源）；客户端无 itemStorage 时使用 [fallbackSpecs]。
+     */
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+    }
+
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
-            when (index) {
-                // 输出槽 -> 玩家物品栏
-                SLOT_OUTPUT_INDEX -> {
+
+            // PredicateSlot 的 index 即 BE 的 slot index；玩家槽不是 PredicateSlot，返回 -1
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
+
+            when {
+                // 机器内部槽位（输出/放电/升级/输入）→ 玩家物品栏
+                beSlot >= 0 -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                // 放电槽 -> 玩家物品栏
-                SLOT_DISCHARGING_INDEX -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                // 玩家物品栏 → 机器（通过 RoutedItemStorage 路由）
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage
+                    if (storage == null) return ItemStack.EMPTY // 客户端不应走到这里
+                    val moved = SlotMoveHelper.insertFromRoutes(
+                        stackInSlot,
+                        storage,
+                        storage.insertRoutes,
+                        beSlotToHandlerIndex,
+                        slots
+                    )
+                    if (!moved) return ItemStack.EMPTY
                 }
-                // 升级槽 -> 玩家物品栏
-                in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
-                }
+                // 快捷栏 ↔ 主背包互换
                 else -> {
-                    if (index in PLAYER_INV_START..HOTBAR_END) {
-                        // 玩家物品栏 -> 机器（放电 -> 输入 -> 升级槽）
-                        val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                            SlotTarget(slots[it], upgradeSlotSpec)
-                        }
-                        val moved = SlotMoveHelper.insertIntoTargets(
-                            stackInSlot,
-                            listOf(
-                                SlotTarget(slots[SLOT_DISCHARGING_INDEX], DISCHARGING_SLOT_SPEC),
-                                SlotTarget(slots[SLOT_INPUT_INDEX], INPUT_SLOT_SPEC)
-                            ) + upgradeTargets
-                        )
-                        if (!moved) {
-                            return ItemStack.EMPTY
-                        }
-                    } else if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) {
-                        return ItemStack.EMPTY
-                    }
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
+
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
@@ -156,20 +127,9 @@ class MaceratorScreenHandler(
 
     companion object {
         const val SLOT_SIZE = 18
-        private val INPUT_SLOT_SPEC = SlotSpec(
-            // 避免电池被误放入加工输入槽，优先进入放电槽。
-            canInsert = { stack -> stack.item !is IBatteryItem }
-        )
-        private val DISCHARGING_SLOT_SPEC = SlotSpec(
-            maxItemCount = 1,
-            canInsert = { stack -> stack.item is IBatteryItem }
-        )
-        private val OUTPUT_SLOT_SPEC = SlotSpec(
-            canInsert = { false },
-            canTake = { true }
-        )
+        private val DEFAULT_SLOT_SPEC = SlotSpec() // 客户端 fallback（宽松默认）
 
-        // 槽位索引常量
+        // 槽位索引常量（客户端 Screen 的 SlotHost 需要）
         const val SLOT_INPUT_INDEX = 0
         const val SLOT_DISCHARGING_INDEX = 1
         const val SLOT_OUTPUT_INDEX = 2
