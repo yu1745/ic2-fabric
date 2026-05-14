@@ -13,10 +13,10 @@ import net.minecraft.util.Identifier
 @Environment(EnvType.CLIENT)
 object PeatOreTooltipHandler {
 
-    private val PEAT_ORE_ID = Identifier("ic2_120", "peat_ore")
+    private val PEAT_ORE_ID = Identifier.of("ic2_120", "peat_ore")
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, _, lines ->
+        ItemTooltipCallback.EVENT.register { stack, _, _, lines ->
             val itemId = Registries.ITEM.getId(stack.item)
             if (itemId != PEAT_ORE_ID) return@register
 

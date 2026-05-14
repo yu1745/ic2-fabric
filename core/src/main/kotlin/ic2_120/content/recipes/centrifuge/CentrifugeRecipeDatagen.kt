@@ -1,5 +1,6 @@
 package ic2_120.content.recipes.centrifuge
 
+import ic2_120.content.block.PeatOreBlock
 import ic2_120.content.item.*
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
@@ -272,7 +273,7 @@ object CentrifugeRecipeDatagen {
         // 泥炭矿 200 -> 煤炭 + 糠
         Entry(
             "peat_ore",
-            Registries.ITEM.get(Identifier("ic2_120", "peat_ore")), 1, 200,
+            PeatOreBlock::class.item(), 1, 200,
             listOf(
                 OutputEntry(Items.COAL, 1),
                 OutputEntry(BioChaff::class.instance(), 1)

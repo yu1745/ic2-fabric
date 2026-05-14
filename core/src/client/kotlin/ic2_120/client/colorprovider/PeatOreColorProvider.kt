@@ -17,8 +17,8 @@ object PeatOreColorProvider {
     private const val PEAT_COLOR = 0x4A3728
 
     fun register() {
-        val block = Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "peat_ore"))
-        val item = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "peat_ore"))
+        val block = Registries.BLOCK.get(Identifier.of(Ic2_120.MOD_ID, "peat_ore"))
+        val item = Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "peat_ore"))
 
         ColorProviderRegistry.BLOCK.register({ _, _, _, _ ->
             PEAT_COLOR

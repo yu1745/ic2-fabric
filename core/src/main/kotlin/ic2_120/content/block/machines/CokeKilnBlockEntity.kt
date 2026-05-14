@@ -67,7 +67,7 @@ class CokeKilnBlockEntity(
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
-    private val peatOreItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "peat_ore")) }
+    private val peatOreItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "peat_ore")) }
 
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
