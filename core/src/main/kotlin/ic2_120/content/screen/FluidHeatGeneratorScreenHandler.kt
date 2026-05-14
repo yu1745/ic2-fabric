@@ -129,7 +129,7 @@ class FluidHeatGeneratorScreenHandler(
         const val SLOT_UPGRADE_START = 2
         const val SLOT_UPGRADE_END = 5
         const val UPGRADE_END = 5
-        const val HOTBAR_END = 43
+        const val HOTBAR_END = 41
 
         private val FUEL_SLOT_SPEC = SlotSpec(canInsert = { stack ->
             !stack.isEmpty && (
