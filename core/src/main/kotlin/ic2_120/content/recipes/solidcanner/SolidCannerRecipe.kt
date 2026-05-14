@@ -33,7 +33,7 @@ class SolidCannerRecipe(
             slot1Cache?.let { return it }
             val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
             val result: Set<Ingredient> = if (recipeType == null) emptySet()
-            else world.recipeManager.listAllOfType(recipeType).mapTo(mutableSetOf()) { it.slot1Ingredient }
+            else world.recipeManager.listAllOfType(recipeType).mapTo(mutableSetOf()) { (it as SolidCannerRecipe).slot1Ingredient }
             slot1Cache = result
             return result
         }

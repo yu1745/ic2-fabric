@@ -27,7 +27,6 @@ import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.registry.tag.ItemTags
 import net.fabricmc.api.Environment
 import net.fabricmc.api.EnvType
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -85,10 +84,12 @@ abstract class FluidFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
 
         // 打开配置 GUI
         if (user is ServerPlayerEntity) {
-            user.openHandledScreen(object : ExtendedScreenHandlerFactory {
+            user.openHandledScreen(object : ExtendedScreenHandlerFactory<PacketByteBuf> {
                 override fun getDisplayName(): Text = Text.translatable("gui.ic2_120.fluid_upgrade.title")
-                override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+                override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+                    val buf = PacketByteBuf(io.netty.buffer.Unpooled.buffer())
                     buf.writeEnumConstant(hand)
+                    return buf
                 }
                 override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler {
                     return FluidUpgradeScreenHandler(syncId, playerInventory, hand)
@@ -142,10 +143,12 @@ abstract class ItemFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
 
         // 打开配置 GUI
         if (user is ServerPlayerEntity) {
-            user.openHandledScreen(object : ExtendedScreenHandlerFactory {
+            user.openHandledScreen(object : ExtendedScreenHandlerFactory<PacketByteBuf> {
                 override fun getDisplayName(): Text = Text.translatable("gui.ic2_120.item_upgrade.title")
-                override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+                override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+                    val buf = PacketByteBuf(io.netty.buffer.Unpooled.buffer())
                     buf.writeEnumConstant(hand)
+                    return buf
                 }
                 override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler {
                     return ItemUpgradeScreenHandler(syncId, playerInventory, hand)
