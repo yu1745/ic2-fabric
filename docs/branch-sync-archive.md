@@ -66,3 +66,4 @@
 | 60 | `20d2b0c7` | fix: 采矿镭射枪贴脸使用时发射弹射体而非执行实体交互 | ✅ | 无冲突直接 cherry-pick |
 | 61 | `964989b` | fix: FTB Chunks 领地保护检查始终失效——Protection 是接口不是枚举 | ✅ | 无冲突直接 cherry-pick |
 | 62 | `9673112a` | feat: ModMenu + Cloth Config GUI 配置编辑界面 | ✅ | cherry-pick + 适配 1.21.1 版本号（Cloth Config 15.0.140, ModMenu 11.0.4）|
+| 63 | `84e84c79` | fix: 变压器升压/降压文本互换+ScreenHandler六面朝向修复 | ✅ | 无冲突直接 cherry-pick |
