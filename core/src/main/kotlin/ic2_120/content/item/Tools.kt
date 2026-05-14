@@ -1067,6 +1067,27 @@ class NanoSaber : SwordItem(
         private const val DAMAGE_INACTIVE_TOTAL = 5.0
         private const val DAMAGE_ACTIVE_TOTAL = 21.0
 
+        private val DEFAULT_MODIFIERS = AttributeModifiersComponent.builder()
+            .add(
+                EntityAttributes.GENERIC_ATTACK_DAMAGE,
+                EntityAttributeModifier(
+                    ATTACK_DAMAGE_MODIFIER_ID,
+                    DAMAGE_INACTIVE_TOTAL - 1.0,
+                    EntityAttributeModifier.Operation.ADD_VALUE
+                ),
+                AttributeModifierSlot.MAINHAND
+            )
+            .add(
+                EntityAttributes.GENERIC_ATTACK_SPEED,
+                EntityAttributeModifier(
+                    ATTACK_SPEED_MODIFIER_ID,
+                    -2.4,
+                    EntityAttributeModifier.Operation.ADD_VALUE
+                ),
+                AttributeModifierSlot.MAINHAND
+            )
+            .build()
+
         fun isActive(stack: ItemStack): Boolean = stack.getCustomData()?.getBoolean(NBT_ACTIVE) ?: false
 
         fun toggleActive(stack: ItemStack): Boolean {
@@ -1111,7 +1132,14 @@ class NanoSaber : SwordItem(
         return total - 1.0
     }
 
-    override fun getAttributeModifiers(stack: ItemStack): AttributeModifiersComponent {
+    override fun getAttributeModifiers(): AttributeModifiersComponent = DEFAULT_MODIFIERS
+
+    override fun onCraft(stack: ItemStack, world: World) {
+        super.onCraft(stack, world)
+        updateAttributeModifiers(stack)
+    }
+
+    private fun buildAttributeModifiers(stack: ItemStack): AttributeModifiersComponent {
         return AttributeModifiersComponent.builder()
             .add(
                 EntityAttributes.GENERIC_ATTACK_DAMAGE,
@@ -1134,6 +1162,10 @@ class NanoSaber : SwordItem(
             .build()
     }
 
+    private fun updateAttributeModifiers(stack: ItemStack) {
+        stack.set(DataComponentTypes.ATTRIBUTE_MODIFIERS, buildAttributeModifiers(stack))
+    }
+
     override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
         val stack = user.getStackInHand(hand)
         if (!world.isClient) {
@@ -1142,6 +1174,7 @@ class NanoSaber : SwordItem(
                 Text.translatable(if (on) "message.ic2_120.nano_saber.active_on" else "message.ic2_120.nano_saber.active_off"),
                 true
             )
+            updateAttributeModifiers(stack)
         }
         return TypedActionResult.success(stack)
     }
@@ -1149,6 +1182,7 @@ class NanoSaber : SwordItem(
     override fun postHit(stack: ItemStack, target: LivingEntity, attacker: LivingEntity): Boolean {
         if (!attacker.world.isClient && isActive(stack) && getEnergy(stack) >= ENERGY_PER_HIT) {
             setEnergy(stack, getEnergy(stack) - ENERGY_PER_HIT)
+            updateAttributeModifiers(stack)
         }
         return true
     }
