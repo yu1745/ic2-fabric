@@ -1,14 +1,18 @@
 package ic2_120.content.upgrade
 
+import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.FluidEjectorUpgrade
 import ic2_120.content.item.FluidPullingUpgrade
+import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.fluid.Fluid
+import net.minecraft.fluid.Fluids
 import net.minecraft.inventory.Inventory
+import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
@@ -146,6 +150,32 @@ object FluidPipeUpgradeComponent {
             Direction.SOUTH -> Direction.WEST
             Direction.WEST -> Direction.EAST
             Direction.EAST -> null
+        }
+    }
+
+    /**
+     * 从物品堆中读取其所含的流体类型。
+     * 用于升级 GUI 中检测容器内的流体。
+     *
+     * 检测优先级：
+     * 1. Fabric Transfer API（流体单元、模组容器等）
+     * 2. 原版桶硬编码映射（水桶、熔岩桶）
+     * 3. 本模组桶硬编码映射（[ModFluids.Ic2BucketItem]）
+     */
+    fun readFluidFromItemStack(stack: ItemStack): Fluid? {
+        if (stack.isEmpty) return null
+
+        // 1. Fabric Transfer API
+        val storage = FluidStorage.ITEM.find(stack, ContainerItemContext.withConstant(stack))
+        val view = storage?.iterator()?.asSequence()?.firstOrNull { !it.resource.isBlank && it.amount > 0L }
+        val fabricFluid = view?.resource?.fluid
+        if (fabricFluid != null && fabricFluid != Fluids.EMPTY) return fabricFluid
+
+        // 2. 原版桶 → 3. 本模组桶
+        return when (val item = stack.item) {
+            Items.WATER_BUCKET -> Fluids.WATER
+            Items.LAVA_BUCKET -> Fluids.LAVA
+            else -> ModFluids.getFluidFromModBucket(item)
         }
     }
 }
