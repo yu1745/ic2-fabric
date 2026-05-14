@@ -2,16 +2,17 @@ package ic2_120.mixin;
 
 import ic2_120.content.block.AnimalmatronBlock;
 import net.minecraft.block.BlockState;
-import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.passive.ChickenEntity;
-import net.minecraft.item.ItemConvertible;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * 鸡实体 Mixin
@@ -20,23 +21,22 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * 1. 阻止牲畜监管机范围内的鸡自然下蛋（蛋由监管机统一收集）
  */
 @Mixin(ChickenEntity.class)
-public class ChickenEntityMixin {
+public abstract class ChickenEntityMixin {
 
 	/**
-	 * 拦截鸡下蛋的 dropItem 调用。
-	 * 若鸡处于牲畜监管机范围内，阻止蛋自然掉落（由监管机收集）。
-	 * eggLayTime 计时器仍正常重置，不影响鸡的产蛋周期。
+	 * 在 tickMovement 开头注入检查。
+	 * 若鸡处于牲畜监管机范围内且即将下蛋（eggLayTime <= 1），
+	 * 重置 eggLayTime 阻止蛋自然掉落，蛋由监管机统一收集。
 	 */
-	@Redirect(
+	@Inject(
 		method = "tickMovement",
-		at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;dropItem(Lnet/minecraft/item/ItemConvertible;)Lnet/minecraft/entity/ItemEntity;")
+		at = @At("HEAD")
 	)
-	private ItemEntity ic2_120$preventEggLay(net.minecraft.entity.Entity instance, ItemConvertible item) {
+	private void ic2_120$preventEggLay(CallbackInfo ci) {
 		ChickenEntity chicken = (ChickenEntity) (Object) this;
-		if (ic2_120$isInsideAnimalmatronRange(chicken)) {
-			return null;
+		if (chicken.eggLayTime <= 1 && ic2_120$isInsideAnimalmatronRange(chicken)) {
+			chicken.eggLayTime = ThreadLocalRandom.current().nextInt(6000) + 6000;
 		}
-		return instance.dropItem(item);
 	}
 
 	@Unique
