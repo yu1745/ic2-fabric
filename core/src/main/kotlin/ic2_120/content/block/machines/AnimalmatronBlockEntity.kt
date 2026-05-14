@@ -17,17 +17,28 @@ import ic2_120.content.screen.AnimalmatronScreenHandler
 import ic2_120.content.sync.AnimalmatronSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
+import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
+import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.instance
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage
+import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.BlockState
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.passive.AnimalEntity
@@ -48,11 +59,13 @@ import net.minecraft.registry.Registries
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.random.Random
 import net.minecraft.world.World
 
@@ -66,10 +79,18 @@ class AnimalmatronBlockEntity(
     IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport,
+    IFluidPipeUpgradeSupport,
     ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = AnimalmatronBlock.ACTIVE
     override val tier: Int = ANIMALMATRON_TIER
+
+    override var fluidPipeProviderEnabled: Boolean = false
+    override var fluidPipeReceiverEnabled: Boolean = false
+    override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
+    override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
+    override var fluidPipeProviderSide: Direction? = null
+    override var fluidPipeReceiverSide: Direction? = null
 
     override var speedMultiplier: Float = 1f
     override var energyMultiplier: Float = 1f
@@ -114,8 +135,142 @@ class AnimalmatronBlockEntity(
     // 动物数据追踪
     private val animalDataMap = mutableMapOf<java.util.UUID, AnimalGrowthData>()
 
-    private var waterAmountMb: Int = 0
-    private var weedExAmountMb: Int = 0
+    private val waterTankCapacity = mbToDroplets(AnimalmatronSync.WATER_TANK_CAPACITY_MB)
+    private val weedExTankCapacity = mbToDroplets(AnimalmatronSync.WEED_EX_TANK_CAPACITY_MB)
+
+    private val waterTankInternal = object : SingleVariantStorage<FluidVariant>() {
+        override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
+        override fun getCapacity(variant: FluidVariant): Long = waterTankCapacity
+        override fun canInsert(variant: FluidVariant): Boolean = isWater(variant.fluid)
+        override fun canExtract(variant: FluidVariant): Boolean = false
+
+        override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+            if (insertedVariant.isBlank) return 0L
+            return super.insert(insertedVariant, maxAmount, transaction)
+        }
+
+        override fun onFinalCommit() {
+            sync.waterAmountMb = toMilliBuckets(amount)
+            markDirty()
+        }
+
+        fun setStoredFluid(newAmount: Long) {
+            amount = newAmount.coerceIn(0L, waterTankCapacity)
+            variant = if (amount > 0L) FluidVariant.of(Fluids.WATER) else FluidVariant.blank()
+            sync.waterAmountMb = toMilliBuckets(amount)
+        }
+
+        fun insertInternal(toInsert: Long): Long {
+            if (toInsert <= 0L) return 0L
+            val space = waterTankCapacity - amount
+            val actual = minOf(toInsert, space)
+            if (actual <= 0L) return 0L
+            amount += actual
+            if (variant.isBlank) variant = FluidVariant.of(Fluids.WATER)
+            sync.waterAmountMb = toMilliBuckets(amount)
+            markDirty()
+            return actual
+        }
+
+        fun consumeInternal(toConsume: Long): Long {
+            if (toConsume <= 0L || variant.isBlank) return 0L
+            val actual = minOf(toConsume, amount)
+            if (actual <= 0L) return 0L
+            amount -= actual
+            if (amount <= 0L) variant = FluidVariant.blank()
+            sync.waterAmountMb = toMilliBuckets(amount)
+            markDirty()
+            return actual
+        }
+
+        fun getWaterMb(): Int = toMilliBuckets(amount)
+    }
+
+    private val weedExTankInternal = object : SingleVariantStorage<FluidVariant>() {
+        override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
+        override fun getCapacity(variant: FluidVariant): Long = weedExTankCapacity
+        override fun canInsert(variant: FluidVariant): Boolean = isWeedEx(variant.fluid)
+        override fun canExtract(variant: FluidVariant): Boolean = false
+
+        override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+            if (insertedVariant.isBlank) return 0L
+            return super.insert(insertedVariant, maxAmount, transaction)
+        }
+
+        override fun onFinalCommit() {
+            sync.weedExAmountMb = toMilliBuckets(amount)
+            markDirty()
+        }
+
+        fun setStoredFluid(newAmount: Long) {
+            amount = newAmount.coerceIn(0L, weedExTankCapacity)
+            variant = if (amount > 0L) FluidVariant.of(ModFluids.WEED_EX_STILL) else FluidVariant.blank()
+            sync.weedExAmountMb = toMilliBuckets(amount)
+        }
+
+        fun insertInternal(toInsert: Long): Long {
+            if (toInsert <= 0L) return 0L
+            val space = weedExTankCapacity - amount
+            val actual = minOf(toInsert, space)
+            if (actual <= 0L) return 0L
+            amount += actual
+            if (variant.isBlank) variant = FluidVariant.of(ModFluids.WEED_EX_STILL)
+            sync.weedExAmountMb = toMilliBuckets(amount)
+            markDirty()
+            return actual
+        }
+
+        fun consumeInternal(toConsume: Long): Long {
+            if (toConsume <= 0L || variant.isBlank) return 0L
+            val actual = minOf(toConsume, amount)
+            if (actual <= 0L) return 0L
+            amount -= actual
+            if (amount <= 0L) variant = FluidVariant.blank()
+            sync.weedExAmountMb = toMilliBuckets(amount)
+            markDirty()
+            return actual
+        }
+
+        fun getWeedExMb(): Int = toMilliBuckets(amount)
+    }
+
+    private val ioStorage = object : Storage<FluidVariant> {
+        override fun supportsInsertion(): Boolean = true
+        override fun supportsExtraction(): Boolean = true
+
+        override fun insert(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+            StoragePreconditions.notBlankNotNegative(resource, maxAmount)
+            if (isWater(resource.fluid)) return waterTankInternal.insert(resource, maxAmount, transaction)
+            if (isWeedEx(resource.fluid)) return weedExTankInternal.insert(resource, maxAmount, transaction)
+            return 0L
+        }
+
+        override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long = 0L
+
+        override fun iterator(): MutableIterator<StorageView<FluidVariant>> {
+            val views = mutableListOf<StorageView<FluidVariant>>()
+            if (!waterTankInternal.variant.isBlank && waterTankInternal.amount > 0L) {
+                views.add(object : StorageView<FluidVariant> {
+                    override fun getResource(): FluidVariant = waterTankInternal.variant
+                    override fun getAmount(): Long = waterTankInternal.amount
+                    override fun getCapacity(): Long = waterTankCapacity
+                    override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long = 0L
+                    override fun isResourceBlank(): Boolean = false
+                })
+            }
+            if (!weedExTankInternal.variant.isBlank && weedExTankInternal.amount > 0L) {
+                views.add(object : StorageView<FluidVariant> {
+                    override fun getResource(): FluidVariant = weedExTankInternal.variant
+                    override fun getAmount(): Long = weedExTankInternal.amount
+                    override fun getCapacity(): Long = weedExTankCapacity
+                    override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long = 0L
+                    override fun isResourceBlank(): Boolean = false
+                })
+            }
+            return views.iterator()
+        }
+    }
+
     private var workOffset: Int = random.nextBetween(0, WORK_INTERVAL_TICKS - 1)
 
     private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
@@ -221,11 +376,9 @@ class AnimalmatronBlockEntity(
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
-        waterAmountMb = nbt.getInt(NBT_WATER_MB).coerceIn(0, AnimalmatronSync.WATER_TANK_CAPACITY_MB)
-        weedExAmountMb = nbt.getInt(NBT_WEED_EX_MB).coerceIn(0, AnimalmatronSync.WEED_EX_TANK_CAPACITY_MB)
+        waterTankInternal.setStoredFluid(mbToDroplets(nbt.getInt(NBT_WATER_MB).coerceIn(0, AnimalmatronSync.WATER_TANK_CAPACITY_MB)))
+        weedExTankInternal.setStoredFluid(mbToDroplets(nbt.getInt(NBT_WEED_EX_MB).coerceIn(0, AnimalmatronSync.WEED_EX_TANK_CAPACITY_MB)))
         workOffset = nbt.getInt(NBT_WORK_OFFSET).coerceIn(0, WORK_INTERVAL_TICKS - 1)
-        sync.waterAmountMb = waterAmountMb
-        sync.weedExAmountMb = weedExAmountMb
 
         // 读取动物数据
         val animalDataList = nbt.getList(NBT_ANIMAL_DATA, 10) // 10 = NbtCompound type
@@ -242,12 +395,12 @@ class AnimalmatronBlockEntity(
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(AnimalmatronSync.NBT_ENERGY_STORED, sync.amount)
-        nbt.putInt(NBT_WATER_MB, waterAmountMb)
-        nbt.putInt(NBT_WEED_EX_MB, weedExAmountMb)
+        nbt.putInt(NBT_WATER_MB, waterTankInternal.getWaterMb())
+        nbt.putInt(NBT_WEED_EX_MB, weedExTankInternal.getWeedExMb())
         nbt.putInt(NBT_WORK_OFFSET, workOffset)
 
         // 写入动物数据
-        val animalDataList = net.minecraft.nbt.NbtList()
+        val animalDataList = NbtList()
         animalDataMap.values.forEach { data ->
             animalDataList.add(data.toNbt())
         }
@@ -265,6 +418,7 @@ class AnimalmatronBlockEntity(
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         adjacentEnergyTransfer.tick()
+        FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
         extractFromDischargingSlot()
         processWaterInputContainer()
         processWeedExInputContainer()
@@ -290,8 +444,8 @@ class AnimalmatronBlockEntity(
             active = report.touched > 0
         }
 
-        sync.waterAmountMb = waterAmountMb
-        sync.weedExAmountMb = weedExAmountMb
+        sync.waterAmountMb = waterTankInternal.getWaterMb()
+        sync.weedExAmountMb = weedExTankInternal.getWeedExMb()
         setActiveState(world, pos, state, active)
         sync.syncCurrentTickFlow()
     }
@@ -329,7 +483,7 @@ class AnimalmatronBlockEntity(
             tryHarvestExtraProduct(animal, animalData, report)
 
             // 无水时缓慢伤害动物（不致死，保留 50% 血量）
-            if (waterAmountMb <= 0 && animal.health > animal.maxHealth * WATER_DAMAGE_HEALTH_FRACTION) {
+            if (waterTankInternal.amount <= 0L && animal.health > animal.maxHealth * WATER_DAMAGE_HEALTH_FRACTION) {
                 animal.health = (animal.health - WATER_DAMAGE_PER_TICK)
                     .coerceAtLeast(animal.maxHealth * WATER_DAMAGE_HEALTH_FRACTION)
                 report.waterDamaged++
@@ -392,11 +546,10 @@ class AnimalmatronBlockEntity(
                 consumeWater(report)
 
                 // 每日杀虫剂消耗（每只动物每天固定 100mb）
-                if (!animalData.insecticidePaidToday && weedExAmountMb >= INSECTICIDE_PER_DAY) {
-                    weedExAmountMb -= INSECTICIDE_PER_DAY
+                if (!animalData.insecticidePaidToday && weedExTankInternal.getWeedExMb() >= INSECTICIDE_PER_DAY) {
+                    weedExTankInternal.consumeInternal(mbToDroplets(INSECTICIDE_PER_DAY))
                     animalData.insecticidePaidToday = true
                     report.weedExConsumed += INSECTICIDE_PER_DAY
-                    markDirty()
                 }
 
                 // 检查是否达到成长/繁殖条件
@@ -411,12 +564,12 @@ class AnimalmatronBlockEntity(
      * 消耗水（加快生长速度——缩短喂食间隔）
      */
     private fun consumeWater(report: ScanReport) {
-        if (waterAmountMb <= 0) return
-        val toConsume = minOf(waterAmountMb, WATER_PER_CARE)
+        val waterMb = waterTankInternal.getWaterMb()
+        if (waterMb <= 0) return
+        val toConsume = minOf(waterMb, WATER_PER_CARE)
         if (toConsume <= 0) return
-        waterAmountMb -= toConsume
+        waterTankInternal.consumeInternal(mbToDroplets(toConsume))
         report.waterConsumed += toConsume
-        markDirty()
     }
 
     private fun checkGrowthAndBreeding(
@@ -497,7 +650,7 @@ class AnimalmatronBlockEntity(
     }
 
     private fun processWaterInputContainer() {
-        if (waterAmountMb > AnimalmatronSync.WATER_TANK_CAPACITY_MB - 1000) return
+        if (waterTankInternal.getWaterMb() > AnimalmatronSync.WATER_TANK_CAPACITY_MB - 1000) return
 
         val input = getStack(SLOT_WATER_INPUT)
         if (input.isEmpty) return
@@ -518,7 +671,7 @@ class AnimalmatronBlockEntity(
         val out = getStack(SLOT_WATER_OUTPUT)
         if (!canMergeIntoSlot(out, emptyRemainder)) return
 
-        waterAmountMb = (waterAmountMb + 1000).coerceAtMost(AnimalmatronSync.WATER_TANK_CAPACITY_MB)
+        waterTankInternal.insertInternal(FluidConstants.BUCKET)
         input.decrement(1)
         if (input.isEmpty) setStack(SLOT_WATER_INPUT, ItemStack.EMPTY)
         if (out.isEmpty) setStack(SLOT_WATER_OUTPUT, emptyRemainder.copy()) else out.increment(1)
@@ -526,7 +679,7 @@ class AnimalmatronBlockEntity(
     }
 
     private fun processWeedExInputContainer() {
-        if (weedExAmountMb > AnimalmatronSync.WEED_EX_TANK_CAPACITY_MB - 1000) return
+        if (weedExTankInternal.getWeedExMb() > AnimalmatronSync.WEED_EX_TANK_CAPACITY_MB - 1000) return
 
         val input = getStack(SLOT_WEED_EX_INPUT)
         if (input.isEmpty) return
@@ -546,7 +699,7 @@ class AnimalmatronBlockEntity(
         val out = getStack(SLOT_WEED_EX_OUTPUT)
         if (!canMergeIntoSlot(out, emptyRemainder)) return
 
-        weedExAmountMb = (weedExAmountMb + 1000).coerceAtMost(AnimalmatronSync.WEED_EX_TANK_CAPACITY_MB)
+        weedExTankInternal.insertInternal(FluidConstants.BUCKET)
         input.decrement(1)
         if (input.isEmpty) setStack(SLOT_WEED_EX_INPUT, ItemStack.EMPTY)
         if (out.isEmpty) setStack(SLOT_WEED_EX_OUTPUT, emptyRemainder.copy()) else out.increment(1)
@@ -653,6 +806,26 @@ class AnimalmatronBlockEntity(
         markDirty()
     }
 
+    private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
+        if (side == getFrontFacing()) return null
+        return ioStorage
+    }
+
+    private fun getFrontFacing(): Direction =
+        world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH
+
+    private fun isWater(fluid: net.minecraft.fluid.Fluid): Boolean =
+        fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER ||
+            fluid == ModFluids.DISTILLED_WATER_STILL || fluid == ModFluids.DISTILLED_WATER_FLOWING
+
+    private fun isWeedEx(fluid: net.minecraft.fluid.Fluid): Boolean =
+        fluid == ModFluids.WEED_EX_STILL || fluid == ModFluids.WEED_EX_FLOWING
+
+    private fun toMilliBuckets(amount: Long): Int =
+        (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+
+    private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
+
     /**
      * 获取指定动物的喂食进度数据（供 JADE 使用）
      * @return Pair(累计喂食数量, 今天已喂食数量) 或 null
@@ -741,5 +914,16 @@ class AnimalmatronBlockEntity(
         private const val NBT_ANIMAL_DATA = "AnimalData"
 
         private val random: Random = Random.create()
+
+        @Volatile
+        private var fluidLookupRegistered = false
+
+        @RegisterFluidStorage
+        fun registerFluidStorageLookup() {
+            if (fluidLookupRegistered) return
+            val type = AnimalmatronBlockEntity::class.type()
+            FluidStorage.SIDED.registerForBlockEntity({ be, side -> be.getFluidStorageForSide(side) }, type)
+            fluidLookupRegistered = true
+        }
     }
 }
