@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **86 个 commit**，**86 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **87 个 commit**，**86 个已同步，1 个待同步**。
 （归档 1-49, 50-62 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -38,6 +38,7 @@
 | 70 | `717ebaae` | feat: 焦炉——窑口添加朝向、screen显示剩余时间、blockstate旋转修正 | ✅ | cherry-pick + 解决 CokeKilnBlocks.kt import 冲突 + datagen 刷新 |
 | 71 | `0c935b69` | fix: 发酵机UI溢出容器修复，半流质发电机UI高度调整 | ✅ | 无冲突直接 cherry-pick + datagen 刷新 |
 | 72 | `9186d55c` | feat: 添加泥炭矿及其处理配方、tooltip、世界生成与着色器 | ✅ | cherry-pick + 适配 1.21.1 API（Identifier.of、ItemTooltipCallback 4参数、PeatOreBlock::class.item()）+ datagen 刷新 |
+| 87 | `223a745e` | fix: ModMenu 配置界面添加泥炭矿世界生成配置项 | ❌ | 补上遗漏的 peatOreConfig UI，cherry-pick 无冲突 |
 
 ## 同步历史
 
