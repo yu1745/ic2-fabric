@@ -428,7 +428,7 @@ object ModFluids {
      * - 与某些 mod 的 Storage 实现交互时，可能因事务管理冲突导致崩溃
      * - 解决方案：直接使用 Fabric Transfer API 进行流体传输，绕过可能有问题的高级 API
      */
-    private open class Ic2BucketItem(
+    open class Ic2BucketItem(
         internal val bucketFluid: FlowableFluid, // 改名为 bucketFluid 避免与父类冲突
         private val placeFluidOverride: FlowableFluid? = null,
         settings: Item.Settings
@@ -555,5 +555,13 @@ object ModFluids {
             // 桶已经满了，不能插入
             return 0
         }
+    }
+
+    /**
+     * 从 [Ic2BucketItem] 中提取流体。
+     * 作为 [FluidStorage.ITEM] 的硬编码后备方案，用于升级 GUI 中检测容器流体。
+     */
+    fun getFluidFromModBucket(item: Item): FlowableFluid? {
+        return (item as? Ic2BucketItem)?.bucketFluid
     }
 }

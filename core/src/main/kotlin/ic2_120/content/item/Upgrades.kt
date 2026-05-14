@@ -7,6 +7,8 @@ import ic2_120.content.item.energy.ReBatteryItem
 import ic2_120.content.recipes.crafting.ConsumeTreetapShapedRecipeDatagen
 import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
+import ic2_120.content.screen.FluidUpgradeScreenHandler
+import ic2_120.content.screen.ItemUpgradeScreenHandler
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -25,7 +27,12 @@ import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.registry.tag.ItemTags
 import net.fabricmc.api.Environment
 import net.fabricmc.api.EnvType
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.screen.ScreenHandler
 import net.minecraft.item.Item
 import net.minecraft.item.tooltip.TooltipType
 import net.minecraft.item.ItemStack
@@ -76,21 +83,17 @@ abstract class FluidFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
             return TypedActionResult.success(stack)
         }
 
-        val offhand = user.getStackInHand(if (hand == Hand.MAIN_HAND) Hand.OFF_HAND else Hand.MAIN_HAND)
-        val storage = FluidStorage.ITEM.find(offhand, net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext.withConstant(offhand))
-        val view = storage?.iterator()?.asSequence()?.firstOrNull { !it.resource.isBlank && it.amount > 0L }
-        val fluid = view?.resource?.fluid
-
-        if (fluid == null) {
-            if (user is ServerPlayerEntity) {
-                user.sendMessage(Text.literal("副手放入含流体容器后右键设置过滤；潜行右键清除"), true)
-            }
-            return TypedActionResult.fail(stack)
-        }
-
-        FluidPipeUpgradeComponent.writeFilter(stack, fluid)
+        // 打开配置 GUI
         if (user is ServerPlayerEntity) {
-            user.sendMessage(Text.literal("已设置过滤流体: ${fluid.defaultState.blockState.block.name.string}"), true)
+            user.openHandledScreen(object : ExtendedScreenHandlerFactory {
+                override fun getDisplayName(): Text = Text.translatable("gui.ic2_120.fluid_upgrade.title")
+                override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+                    buf.writeEnumConstant(hand)
+                }
+                override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler {
+                    return FluidUpgradeScreenHandler(syncId, playerInventory, hand)
+                }
+            })
         }
         return TypedActionResult.success(stack)
     }
@@ -137,18 +140,17 @@ abstract class ItemFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
             return TypedActionResult.success(stack)
         }
 
-        val offhand = user.getStackInHand(if (hand == Hand.MAIN_HAND) Hand.OFF_HAND else Hand.MAIN_HAND)
-        if (offhand.isEmpty) {
-            EjectorUpgradeComponent.writeFilter(stack, null)
-            if (user is ServerPlayerEntity) {
-                user.sendMessage(Text.literal("已清除物品过滤（当前为全部物品）"), true)
-            }
-            return TypedActionResult.success(stack)
-        }
-
-        EjectorUpgradeComponent.writeFilter(stack, offhand.item)
+        // 打开配置 GUI
         if (user is ServerPlayerEntity) {
-            user.sendMessage(Text.literal("已设置过滤物品: ${offhand.name.string}"), true)
+            user.openHandledScreen(object : ExtendedScreenHandlerFactory {
+                override fun getDisplayName(): Text = Text.translatable("gui.ic2_120.item_upgrade.title")
+                override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+                    buf.writeEnumConstant(hand)
+                }
+                override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler {
+                    return ItemUpgradeScreenHandler(syncId, playerInventory, hand)
+                }
+            })
         }
         return TypedActionResult.success(stack)
     }
