@@ -45,6 +45,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.CombinedStorage
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
@@ -215,6 +216,26 @@ class CannerBlockEntity(
 
     val fluidTank: Storage<FluidVariant> = CombinedStorage(listOf(leftTankInternal, rightTankInternal))
 
+    /** 对外（管道网络）只允许输入的左槽包装。 */
+    private val leftTankInputOnly = object : Storage<FluidVariant> {
+        override fun insert(variant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long =
+            leftTankInternal.insert(variant, maxAmount, transaction)
+        override fun extract(variant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long = 0L
+        override fun supportsInsertion(): Boolean = true
+        override fun supportsExtraction(): Boolean = false
+        override fun iterator(): MutableIterator<StorageView<FluidVariant>> = mutableListOf<StorageView<FluidVariant>>().iterator()
+    }
+
+    /** 对外（管道网络）只允许输出的右槽包装。 */
+    private val rightTankOutputOnly = object : Storage<FluidVariant> {
+        override fun insert(variant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long = 0L
+        override fun extract(variant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long =
+            rightTankInternal.extract(variant, maxAmount, transaction)
+        override fun supportsInsertion(): Boolean = false
+        override fun supportsExtraction(): Boolean = true
+        override fun iterator(): MutableIterator<StorageView<FluidVariant>> = rightTankInternal.iterator()
+    }
+
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
         batterySlot = SLOT_DISCHARGING,
@@ -319,9 +340,9 @@ class CannerBlockEntity(
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
-        // val facing = world?.getBlockState(pos)?.get(net.minecraft.state.property.Properties.HORIZONTAL_FACING) ?: Direction.NORTH
-        // if (side == facing) return null
-        return fluidTank
+        // 左槽仅输入，右槽仅输出——外部管道网络通过此 API 访问时受限制，
+        // 机器内部（completeMixing 等）直接操作 leftTankInternal/rightTankInternal 不受影响。
+        return CombinedStorage(listOf(leftTankInputOnly, rightTankOutputOnly))
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
