@@ -16,7 +16,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 
 /**
- * 日光灯方块实体。无 GUI，仅消耗 EU 发光。
+ * 日光灯方块实体。无 GUI，100 EU 缓存，仅消耗 EU 发光。
  * 电压等级 5（不限制电压），有电时发光等级 15。
  */
 @ModBlockEntity(block = LuminatorFlatBlock::class)
