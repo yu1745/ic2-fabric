@@ -293,6 +293,6 @@ class SolidCannerBlockEntity(
 
     private fun isFoodInput(stack: ItemStack): Boolean =
         !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is IUpgradeItem &&
-            (world?.recipeManager?.values()?.any { it is SolidCannerRecipe && it.slot1Ingredient.test(stack) } == true
+            (world?.let { SolidCannerRecipe.slot1Ingredients(it).any { ing -> ing.test(stack) } } == true
              || stack.item.foodComponent != null)
 }

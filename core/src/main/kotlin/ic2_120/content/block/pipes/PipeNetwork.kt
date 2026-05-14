@@ -25,6 +25,10 @@ class PipeNetwork {
     var primaryFluidId: String? = null
         private set
 
+    /** Fluid IDs of conflicting providers when stalled. Empty when not stalled. */
+    var conflictingFluidIds: List<String> = emptyList()
+        private set
+
     /** Cross-tick path cache: (start, end) -> path. Invalidated on topology change. */
     private val pathCache = mutableMapOf<PathCacheKey, List<Long>>()
 
@@ -117,6 +121,14 @@ class PipeNetwork {
         val fluidKinds = providers.map { it.variant.fluid }.toSet()
         stalledByMixedProviders = fluidKinds.size > 1
         primaryFluidId = providers.firstOrNull()?.variant?.fluid?.let { Registries.FLUID.getId(it).toString() }
+
+        if (stalledByMixedProviders) {
+            conflictingFluidIds = fluidKinds.map { Registries.FLUID.getId(it).toString() }
+            syncPipeLoad(world, topology.pipeRates, remaining)
+            return
+        } else {
+            conflictingFluidIds = emptyList()
+        }
 
         if (providers.isEmpty() || receivers.isEmpty()) {
             syncPipeLoad(world, topology.pipeRates, remaining)

@@ -634,6 +634,8 @@
   "ic2_120.jade.cable_load_label": "负载: ",
   "ic2_120.jade.fluid_name": "流体: %s",
   "ic2_120.jade.stalled": "停滞: 流体种类冲突",
+  "ic2_120.jade.stalled_header": "停滞: 检测到 %s 种流体冲突",
+  "ic2_120.jade.stalled_fluid_entry": "  - %s",
   "ic2_120.jade.pump": "泵附件",
   "ic2_120.jade.crop_progress": "生长进度: %s/%s (%s%%)",
   "ic2_120.jade.crop_fertilized_yes": "施肥: 已施肥（营养 %s）",

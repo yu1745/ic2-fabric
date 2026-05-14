@@ -26,6 +26,19 @@ class SolidCannerRecipe(
     val output: ItemStack
 ) : Recipe<SimpleInventory> {
 
+    companion object {
+        private var slot1Cache: Set<Ingredient>? = null
+
+        fun slot1Ingredients(world: net.minecraft.world.World): Set<Ingredient> {
+            slot1Cache?.let { return it }
+            val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
+            val result: Set<Ingredient> = if (recipeType == null) emptySet()
+            else world.recipeManager.listAllOfType(recipeType).mapTo(mutableSetOf()) { it.slot1Ingredient }
+            slot1Cache = result
+            return result
+        }
+    }
+
     override fun matches(inventory: SimpleInventory, world: World): Boolean {
         if (inventory.size() < 2) return false
         val slot0 = inventory.getStack(0)
