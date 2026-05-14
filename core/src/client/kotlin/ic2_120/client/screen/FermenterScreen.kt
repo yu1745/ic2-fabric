@@ -47,76 +47,80 @@ class FermenterScreen(
                 spacing = 8,
                 modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
             ) {
-                // 左侧：生物质组
-                Column(
-                    spacing = 4,
-                    modifier = Modifier.EMPTY.padding(0, 8, 0, 0)
-                ) {
-                    Text(t("gui.ic2_120.fermenter.biomass"), color = 0xAAAAAA)
-                    SlotAnchor(
-                        id = slotAnchorId(FermenterScreenHandler.SLOT_INPUT_FILLED_CONTAINER_INDEX),
-                        width = FermenterScreenHandler.SLOT_SIZE,
-                        height = FermenterScreenHandler.SLOT_SIZE
-                    )
-                    SlotAnchor(
-                        id = slotAnchorId(FermenterScreenHandler.SLOT_INPUT_EMPTY_CONTAINER_INDEX),
-                        width = FermenterScreenHandler.SLOT_SIZE,
-                        height = FermenterScreenHandler.SLOT_SIZE
-                    )
-                }
-
-                // 中间：热量 + 进度条
-                Column(spacing = 6) {
-                    Text(title.string, color = 0xFFFFFF)
-                    Text(
-                        if (handler.sync.isWorking != 0) t("gui.ic2_120.status_working") else t("gui.ic2_120.status_stopped"),
-                        color = 0xAAAAAA,
-                        shadow = false
-                    )
-                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                        Text(t("gui.ic2_120.heat"), color = 0xAAAAAA)
-                        HeatProgressBar(
-                            heatFraction,
-                            barWidth = 0,
-                            barHeight = 8,
-                            startColor = 0xFF663300.toInt(),
-                            endColor = 0xFFCC6600.toInt(),
-                            gradient = true,
-                            modifier = Modifier.EMPTY.fractionWidth(1.0f)
+                Flex(gap = 8,
+                justifyContent = JustifyContent.SPACE_BETWEEN,
+                modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)) {
+                    // 左侧：生物质组
+                    Column(
+                        spacing = 4,
+                        modifier = Modifier.EMPTY.padding(0, 8, 0, 0)
+                    ) {
+                        Text(t("gui.ic2_120.fermenter.biomass"), color = 0xAAAAAA)
+                        SlotAnchor(
+                            id = slotAnchorId(FermenterScreenHandler.SLOT_INPUT_FILLED_CONTAINER_INDEX),
+                            width = FermenterScreenHandler.SLOT_SIZE,
+                            height = FermenterScreenHandler.SLOT_SIZE
                         )
-                        Text("${handler.sync.bufferedHeat} HU", color = 0xFFFFFF, shadow = false)
-                    }
-                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                        Text(t("gui.ic2_120.progress"), color = 0xAAAAAA)
-                        HeatProgressBar(
-                            progressFraction,
-                            barWidth = 0,
-                            barHeight = 8,
-                            startColor = 0xFF336633.toInt(),
-                            endColor = 0xFF55AA55.toInt(),
-                            gradient = true,
-                            modifier = Modifier.EMPTY.fractionWidth(1.0f)
+                        SlotAnchor(
+                            id = slotAnchorId(FermenterScreenHandler.SLOT_INPUT_EMPTY_CONTAINER_INDEX),
+                            width = FermenterScreenHandler.SLOT_SIZE,
+                            height = FermenterScreenHandler.SLOT_SIZE
                         )
-                        Text("${handler.sync.progress}/${FermenterSync.PROCESS_INTERVAL_TICKS}", color = 0xFFFFFF, shadow = false)
                     }
-                }
 
-                // 右侧：沼气组
-                Column(
-                    spacing = 4,
-                    modifier = Modifier.EMPTY.padding(0, 8, 0, 0)
-                ) {
-                    Text(t("gui.ic2_120.fermenter.biogas"), color = 0xAAAAAA)
-                    SlotAnchor(
-                        id = slotAnchorId(FermenterScreenHandler.SLOT_OUTPUT_EMPTY_CONTAINER_INDEX),
-                        width = FermenterScreenHandler.SLOT_SIZE,
-                        height = FermenterScreenHandler.SLOT_SIZE
-                    )
-                    SlotAnchor(
-                        id = slotAnchorId(FermenterScreenHandler.SLOT_OUTPUT_FILLED_CONTAINER_INDEX),
-                        width = FermenterScreenHandler.SLOT_SIZE,
-                        height = FermenterScreenHandler.SLOT_SIZE
-                    )
+                    // 中间：热量 + 进度条
+                    Column(spacing = 6, modifier = Modifier.EMPTY.fractionWidth(1.0f)) {
+                        Text(title.string, color = 0xFFFFFF)
+                        Text(
+                            if (handler.sync.isWorking != 0) t("gui.ic2_120.status_working") else t("gui.ic2_120.status_stopped"),
+                            color = 0xAAAAAA,
+                            shadow = false
+                        )
+                        Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
+                            Text(t("gui.ic2_120.heat"), color = 0xAAAAAA)
+                            HeatProgressBar(
+                                heatFraction,
+                                barWidth = 0,
+                                barHeight = 8,
+                                startColor = 0xFF663300.toInt(),
+                                endColor = 0xFFCC6600.toInt(),
+                                gradient = true,
+                                modifier = Modifier.EMPTY.fractionWidth(1.0f)
+                            )
+                            Text("${handler.sync.bufferedHeat} HU", color = 0xFFFFFF, shadow = false)
+                        }
+                        Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
+                            Text(t("gui.ic2_120.progress"), color = 0xAAAAAA)
+                            HeatProgressBar(
+                                progressFraction,
+                                barWidth = 0,
+                                barHeight = 8,
+                                startColor = 0xFF336633.toInt(),
+                                endColor = 0xFF55AA55.toInt(),
+                                gradient = true,
+                                modifier = Modifier.EMPTY.fractionWidth(1.0f)
+                            )
+                            Text("${handler.sync.progress}/${FermenterSync.PROCESS_INTERVAL_TICKS}", color = 0xFFFFFF, shadow = false)
+                        }
+                    }
+
+                    // 右侧：沼气组
+                    Column(
+                        spacing = 4,
+                        modifier = Modifier.EMPTY.padding(0, 8, 0, 0)
+                    ) {
+                        Text(t("gui.ic2_120.fermenter.biogas"), color = 0xAAAAAA)
+                        SlotAnchor(
+                            id = slotAnchorId(FermenterScreenHandler.SLOT_OUTPUT_EMPTY_CONTAINER_INDEX),
+                            width = FermenterScreenHandler.SLOT_SIZE,
+                            height = FermenterScreenHandler.SLOT_SIZE
+                        )
+                        SlotAnchor(
+                            id = slotAnchorId(FermenterScreenHandler.SLOT_OUTPUT_FILLED_CONTAINER_INDEX),
+                            width = FermenterScreenHandler.SLOT_SIZE,
+                            height = FermenterScreenHandler.SLOT_SIZE
+                        )
+                    }
                 }
 
                 // 升级列
