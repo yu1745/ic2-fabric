@@ -6,6 +6,7 @@
 		"PlayerEntityMixin",
 		"LivingEntityJumpMixin",
 		"ServerPlayNetworkHandlerMixin",
+		"ChickenEntityMixin",
 		"PassiveEntityMixin",
 		"MerchantEntityMixin",
 		"PathAwareEntityMixin",
