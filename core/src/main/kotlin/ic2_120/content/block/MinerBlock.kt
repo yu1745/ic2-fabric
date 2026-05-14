@@ -137,7 +137,7 @@ class MinerBlock : BaseMinerBlock() {
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, MinerBlockEntity::class.type()) { w, p, s, be ->
-            (be as MinerBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     companion object {
@@ -173,7 +173,7 @@ class AdvancedMinerBlock : BaseMinerBlock() {
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, AdvancedMinerBlockEntity::class.type()) { w, p, s, be ->
-            (be as AdvancedMinerBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     companion object {

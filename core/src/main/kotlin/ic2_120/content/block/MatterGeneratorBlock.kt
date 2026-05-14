@@ -46,7 +46,7 @@ class MatterGeneratorBlock : MachineBlock() {
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, MatterGeneratorBlockEntity::class.type()) { w, p, s, be ->
-            (be as MatterGeneratorBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun createScreenHandlerFactory(

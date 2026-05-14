@@ -40,7 +40,7 @@ class ReactorRedstonePortBlock(settings: AbstractBlock.Settings = AbstractBlock.
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, ReactorRedstonePortBlockEntity::class.type()) { w, p, s, be ->
-            (be as ReactorRedstonePortBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     companion object {

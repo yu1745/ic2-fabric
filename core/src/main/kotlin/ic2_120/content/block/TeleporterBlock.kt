@@ -48,7 +48,7 @@ class TeleporterBlock : MachineBlock() {
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, TeleporterBlockEntity::class.type()) { w, p, s, be ->
-            (be as TeleporterBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {

@@ -62,7 +62,7 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, RubberLogBlockEntity::class.type()) { w, p, s, be -> RubberLogBlockEntity.tick(w, p, s, be as RubberLogBlockEntity) }
+        else checkType(type, RubberLogBlockEntity::class.type()) { w, p, s, be -> RubberLogBlockEntity.tick(w, p, s, be) }
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         super.appendProperties(builder)

@@ -81,7 +81,7 @@ class LuminatorFlatBlock : BlockWithEntity(
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, LuminatorFlatBlockEntity::class.type()) { w, p, s, be ->
-            (be as LuminatorFlatBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL

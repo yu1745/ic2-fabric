@@ -79,7 +79,7 @@ class UvLampBlock : BlockWithEntity(
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, UvLampBlockEntity::class.type()) { w, p, s, be ->
-            (be as UvLampBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL

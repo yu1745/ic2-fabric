@@ -103,7 +103,7 @@ abstract class TransformerBlock : DirectionalMachineBlock() {
                 else -> return null
             }
             checkType(type, beType) { world1, pos, state, be ->
-                (be as ic2_120.content.block.machines.TransformerBlockEntity).tick(world1, pos, state)
+                be.tick(world1, pos, state)
             }
         }
 

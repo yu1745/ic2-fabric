@@ -44,7 +44,7 @@ class SolidHeatGeneratorBlock : MachineBlock() {
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, SolidHeatGeneratorBlockEntity::class.type()) { w, p, s, be ->
-            (be as SolidHeatGeneratorBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {

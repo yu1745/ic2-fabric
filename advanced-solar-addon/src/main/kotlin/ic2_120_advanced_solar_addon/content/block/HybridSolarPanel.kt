@@ -50,7 +50,7 @@ class HybridSolarPanelBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, HybridSolarPanelBlockEntity::class.type()) { w, p, s, be -> (be as HybridSolarPanelBlockEntity).tick(w, p, s) }
+        else checkType(type, HybridSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)

@@ -71,7 +71,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         checkType(type, ManualKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
-            (be as ManualKineticGeneratorBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun onUse(

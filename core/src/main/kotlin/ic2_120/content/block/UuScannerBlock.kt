@@ -47,7 +47,7 @@ class UuScannerBlock : MachineBlock() {
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, UuScannerBlockEntity::class.type()) { w, p, s, be ->
-            (be as UuScannerBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun createScreenHandlerFactory(

@@ -49,7 +49,7 @@ class CannerBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, CannerBlockEntity::class.type()) { w, p, s, be -> (be as CannerBlockEntity).tick(w, p, s) }
+        else checkType(type, CannerBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)

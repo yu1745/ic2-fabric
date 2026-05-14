@@ -161,7 +161,7 @@ abstract class BaseTransmissionBlock(
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else checkType(type, TransmissionBlockEntity.TYPE) { w, _, _, be ->
-            (be as TransmissionBlockEntity).tick(w)
+            be.tick(w)
         }
 }
 
