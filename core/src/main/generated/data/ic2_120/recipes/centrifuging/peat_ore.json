@@ -1,0 +1,18 @@
+{
+  "type": "ic2_120:centrifuging",
+  "ingredient": {
+    "item": "ic2_120:peat_ore"
+  },
+  "input_count": 1,
+  "min_heat": 200,
+  "results": [
+    {
+      "count": 1,
+      "item": "minecraft:coal"
+    },
+    {
+      "count": 1,
+      "item": "ic2_120:bio_chaff"
+    }
+  ]
+}

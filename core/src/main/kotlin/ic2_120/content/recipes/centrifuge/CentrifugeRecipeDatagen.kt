@@ -269,6 +269,16 @@ object CentrifugeRecipeDatagen {
             "clay_dust_to_silicon_dioxide",
             ClayDust::class.instance(), 4, 250,
             listOf(OutputEntry(SiliconDioxideDust::class.instance(), 1))
+        ),
+
+        // 泥炭矿 200 -> 煤炭 + 糠
+        Entry(
+            "peat_ore",
+            Registries.ITEM.get(Identifier("ic2_120", "peat_ore")), 1, 200,
+            listOf(
+                OutputEntry(Items.COAL, 1),
+                OutputEntry(BioChaff::class.instance(), 1)
+            )
         )
     )
 

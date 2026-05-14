@@ -21,6 +21,12 @@ class TinOreBlock : Block(
     AbstractBlock.Settings.copy(Blocks.IRON_ORE)
 )
 
+/** 泥炭矿 */
+@ModBlock(name = "peat_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS)
+class PeatOreBlock : Block(
+    AbstractBlock.Settings.copy(Blocks.IRON_ORE)
+)
+
 /** 铀矿石（生成参数照搬原版钻石矿：Y -64~16，稀有） */
 @ModBlock(name = "uranium_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS, materialTags = ["ores/uranium"])
 class UraniumOreBlock : Block(

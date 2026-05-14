@@ -25,7 +25,9 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.ItemTags
+import net.minecraft.util.Identifier
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
@@ -63,6 +65,8 @@ class CokeKilnBlockEntity(
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val peatOreItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "peat_ore")) }
+
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -160,6 +164,7 @@ class CokeKilnBlockEntity(
         if (input.isEmpty) return null
         if (input.isIn(ItemTags.LOGS)) return Recipe(ItemStack(Items.CHARCOAL), 250)
         if (input.isOf(Items.COAL)) return Recipe(ItemStack(Coke::class.instance()), 500)
+        if (input.isOf(peatOreItem)) return Recipe(ItemStack(Items.COAL), 125)
         return null
     }
 
