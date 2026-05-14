@@ -103,6 +103,7 @@ object MaceratorRecipeDatagen {
         Entry("carrot_to_bio_chaff", Items.CARROT, BioChaff::class.instance(), 1, 8),
         Entry("potato_to_bio_chaff", Items.POTATO, BioChaff::class.instance(), 1, 8),
         Entry("poisonous_potato_to_grin_powder", Items.POISONOUS_POTATO, GrinPowder::class.instance(), 1),
+        Entry("spider_eye_to_grin_powder", Items.SPIDER_EYE, GrinPowder::class.instance(), 1),
         Entry("oak_sapling_to_bio_chaff", Items.OAK_SAPLING, BioChaff::class.instance(), 1, 4),
         Entry("cactus_to_bio_chaff", Items.CACTUS, BioChaff::class.instance(), 1, 8),
         Entry("sugar_cane_to_bio_chaff", Items.SUGAR_CANE, BioChaff::class.instance(), 1, 8),
