@@ -170,7 +170,7 @@
 ./gradlew :core:genSources
 ```
 
-产物在 `.gradle/loom-cache/minecraftMaven/net/minecraft/` 下，或参考 `../mc_source_{minecraft_version}/` 的副本。
+产物在 `./.gradle/loom-cache/minecraftMaven/net/minecraft/` 下，或参考 `../mc_source_{minecraft_version}/` 的副本。
 
 ### Yarn 反混淆表
 

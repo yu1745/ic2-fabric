@@ -28,7 +28,6 @@ import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.world.World
-import kotlin.math.abs
 
 /**
  * 量子护腿 (Quantum Leggings)
@@ -60,6 +59,9 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
     companion object {
         private const val SPEED_TIER_KEY = "SpeedTier"
         private const val SPEED_REMAINDER_KEY = "QuantumLeggingsSpeedRemainder"
+        private const val LAST_X_KEY = "LastTickX"
+        private const val LAST_Y_KEY = "LastTickY"
+        private const val LAST_Z_KEY = "LastTickZ"
 
         val speedBoostDurationSeconds: Int
             get() = Ic2Config.current.armor.quantumLeggings.speedBoostDurationSeconds
@@ -119,11 +121,18 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
         val tier = nbt.getInt(SPEED_TIER_KEY)
         if (tier <= 0) return
 
-        // 检测玩家是否在移动
-        val isMoving = abs(player.velocity.x) > 0.001 ||
-                       abs(player.velocity.z) > 0.001
+        // 用坐标变化判断玩家是否在移动（inventoryTick 跑在 travel() 之前，
+        // velocity 和 forwardSpeed 都是上一 tick 末尾被清零后的残留值，不可靠）
+        val pos = player.blockPos
+        val lastX = nbt.getInt(LAST_X_KEY)
+        val lastY = nbt.getInt(LAST_Y_KEY)
+        val lastZ = nbt.getInt(LAST_Z_KEY)
+        val isMoving = pos.x != lastX || pos.y != lastY || pos.z != lastZ
+        nbt.putInt(LAST_X_KEY, pos.x)
+        nbt.putInt(LAST_Y_KEY, pos.y)
+        nbt.putInt(LAST_Z_KEY, pos.z)
+
         if (!isMoving) {
-            // 不动时不消耗能量，但保持 buff
             applySpeedEffect(player, tier)
             return
         }

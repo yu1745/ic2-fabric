@@ -158,9 +158,9 @@ object FlightManager {
             return
         }
 
-        // 落地/入水/攀爬时自动关闭飞行。
+        // 落地/攀爬时自动关闭飞行。入水不关闭，允许从水里起飞。
         // 同时检测 flying 状态被游戏自动关闭的情况（飞行模式下落地时 isOnGround 可能滞后）。
-        if (player.isOnGround || player.isTouchingWater || player.isClimbing
+        if (player.isOnGround || player.isClimbing
             || (isActive && !player.abilities.flying)) {
             QuantumChestplate.setFlightEnabled(chestStack, false)
             if (isActive) {
