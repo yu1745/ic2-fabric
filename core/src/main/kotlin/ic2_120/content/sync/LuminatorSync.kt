@@ -6,7 +6,7 @@ import ic2_120.content.energy.EnergyTier
 import ic2_120.content.syncs.SyncSchema
 
 /**
- * 日光灯的能量缓冲。无容量、不可充电，仅从电缆取电，断电即关。
+ * 日光灯的能量缓冲。缓存 100 EU、不可充电，仅从电缆取电，断电即关。
  * 电压等级 5（不限制电压），5 EU/s 消耗（每 4 tick 消耗 1 EU）。
  * 最小缓冲 1 EU，确保断电后 4 tick 内熄灭。
  */
@@ -17,7 +17,7 @@ class LuminatorSync(
 
     companion object {
         /** 最小缓冲，无储能，断电即关 */
-        const val ENERGY_CAPACITY = 1L
+        const val ENERGY_CAPACITY = 100L
         /** 电压等级 5：8192 EU/t 输入上限 */
         val MAX_INSERT: Long = EnergyTier.euPerTickFromTier(5)
         const val MAX_EXTRACT = 0L
