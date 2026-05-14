@@ -77,7 +77,7 @@ class MolecularTransformerBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(type, MolecularTransformerBlockEntity::class.type()) { w: World, p: BlockPos, s: BlockState, be -> (be as MolecularTransformerBlockEntity).tick(w, p, s) }
+        else validateTicker(type, MolecularTransformerBlockEntity::class.type()) { w: World, p: BlockPos, s: BlockState, be -> be.tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)

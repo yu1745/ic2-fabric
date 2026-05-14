@@ -46,7 +46,7 @@ class FermenterBlock : MachineBlock() {
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, FermenterBlockEntity::class.type()){ w, p, s, be ->
-            (be as FermenterBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {

@@ -47,7 +47,7 @@ class CreativeGeneratorBlock : MachineBlock(
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, CreativeGeneratorBlockEntity::class.type()){ w, p, s, be ->
-            (be as CreativeGeneratorBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {

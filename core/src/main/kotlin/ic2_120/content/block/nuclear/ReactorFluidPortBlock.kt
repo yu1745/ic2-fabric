@@ -45,7 +45,7 @@ class ReactorFluidPortBlock(settings: AbstractBlock.Settings = AbstractBlock.Set
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, ReactorFluidPortBlockEntity::class.type()){ w, p, s, be ->
-            (be as ReactorFluidPortBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun createScreenHandlerFactory(

@@ -54,7 +54,7 @@ class RtGeneratorBlock : MachineBlock() {
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, RtGeneratorBlockEntity::class.type()){ w, p, s, be ->
-            (be as RtGeneratorBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {

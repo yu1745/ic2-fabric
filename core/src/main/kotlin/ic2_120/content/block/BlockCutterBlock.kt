@@ -48,7 +48,7 @@ class BlockCutterBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(type, BlockCutterBlockEntity::class.type()){ w, p, s, be -> (be as BlockCutterBlockEntity).tick(w, p, s) }
+        else validateTicker(type, BlockCutterBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)

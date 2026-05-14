@@ -45,7 +45,7 @@ class ElectricFurnaceBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(type, ElectricFurnaceBlockEntity::class.type()){ world1, pos, state, be -> (be as ElectricFurnaceBlockEntity).tick(world1, pos, state) }
+        else validateTicker(type, ElectricFurnaceBlockEntity::class.type()){ world1, pos, state, be -> be.tick(world1, pos, state) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)

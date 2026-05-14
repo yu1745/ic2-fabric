@@ -67,7 +67,7 @@ class NuclearReactorBlock(settings: AbstractBlock.Settings = AbstractBlock.Setti
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, NuclearReactorBlockEntity::class.type()){ w, p, s, be ->
-            (be as NuclearReactorBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {

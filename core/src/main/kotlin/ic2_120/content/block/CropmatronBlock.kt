@@ -43,7 +43,7 @@ class CropmatronBlock : MachineBlock() {
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, CropmatronBlockEntity::class.type()){ w, p, s, be ->
-            (be as CropmatronBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {

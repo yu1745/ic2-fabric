@@ -136,7 +136,7 @@ class CropBlock : BlockWithEntity(
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, CropBlockEntity::class.type()) { w, p, s, be ->
-            (be as CropBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun onUse(

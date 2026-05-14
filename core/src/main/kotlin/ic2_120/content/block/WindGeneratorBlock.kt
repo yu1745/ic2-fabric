@@ -50,7 +50,7 @@ class WindGeneratorBlock : MachineBlock() {
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, WindGeneratorBlockEntity::class.type()){ w, p, s, be ->
-            (be as WindGeneratorBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {

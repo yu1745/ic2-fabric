@@ -43,7 +43,7 @@ class MagnetizerBlock : MachineBlock() {
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, MagnetizerBlockEntity::class.type()){ w, p, s, be ->
-            (be as MagnetizerBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {

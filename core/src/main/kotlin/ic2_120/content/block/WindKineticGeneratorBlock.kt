@@ -68,7 +68,7 @@ class WindKineticGeneratorBlock : MachineBlock() {
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
         else validateTicker(type, WindKineticGeneratorBlockEntity::class.type()){ w, p, s, be ->
-            (be as WindKineticGeneratorBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {

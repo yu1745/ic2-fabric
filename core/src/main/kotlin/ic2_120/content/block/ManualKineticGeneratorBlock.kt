@@ -69,7 +69,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         validateTicker(type, ManualKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
-            (be as ManualKineticGeneratorBlockEntity).tick(w, p, s)
+            be.tick(w, p, s)
         }
 
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {

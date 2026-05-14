@@ -51,7 +51,7 @@ class CentrifugeBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(type, CentrifugeBlockEntity::class.type()){ w, p, s, be -> (be as CentrifugeBlockEntity).tick(w, p, s) }
+        else validateTicker(type, CentrifugeBlockEntity::class.type()){ w, p, s, be -> be.tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
