@@ -1111,13 +1111,13 @@ class NanoSaber : SwordItem(
         return total - 1.0
     }
 
-    override fun getAttributeModifiers(): AttributeModifiersComponent {
+    override fun getAttributeModifiers(stack: ItemStack): AttributeModifiersComponent {
         return AttributeModifiersComponent.builder()
             .add(
                 EntityAttributes.GENERIC_ATTACK_DAMAGE,
                 EntityAttributeModifier(
                     ATTACK_DAMAGE_MODIFIER_ID,
-                    DAMAGE_ACTIVE_TOTAL - 1.0,
+                    weaponAttackModifier(stack),
                     EntityAttributeModifier.Operation.ADD_VALUE
                 ),
                 AttributeModifierSlot.MAINHAND
