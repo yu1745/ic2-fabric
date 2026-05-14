@@ -20,6 +20,8 @@ import ic2_120.client.colorprovider.RubberLeavesColorProvider
 import ic2_120.client.RubberLogModelPlugin
 import ic2_120.client.colorprovider.StorageBoxColorProvider
 import ic2_120.client.colorprovider.PipeColorProvider
+import ic2_120.client.PeatOreTooltipHandler
+import ic2_120.client.colorprovider.PeatOreColorProvider
 import ic2_120.client.ClientBlockEntityRenderers
 import ic2_120.client.JetpackSoundController
 import ic2_120.client.MachineLoopSoundController
@@ -53,6 +55,7 @@ object Ic2_120Client : ClientModInitializer {
 		MiningLaserModeHandler.register()
 		FoamSprayerTooltipHandler.register()
 		MiningLaserTooltipHandler.register()
+		PeatOreTooltipHandler.register()
 		UpdateNotifier.register()
 		SodiumCompatibilityWarning.register()
 		JetpackSoundController.register()
@@ -68,5 +71,7 @@ object Ic2_120Client : ClientModInitializer {
 		RubberLogModelPlugin.register()
 		// 注册管道着色器（青铜和碳纤维材质）
 		PipeColorProvider.register()
+		// 注册泥炭矿着色器（复用锡矿石纹理，tint 为深褐色）
+		PeatOreColorProvider.register()
 	}
 }

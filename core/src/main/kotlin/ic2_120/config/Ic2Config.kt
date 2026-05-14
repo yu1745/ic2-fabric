@@ -317,9 +317,18 @@ private val DEFAULT_RUBBER_TREE_BIOMES = listOf(
     "minecraft:swamp"
 )
 
+private val DEFAULT_PEAT_ORE_BIOMES = listOf(
+    "minecraft:jungle",
+    "minecraft:sparse_jungle",
+    "minecraft:bamboo_jungle",
+    "minecraft:mushroom_fields"
+)
+
 data class WorldgenConfig(
     @field:ConfigComment("橡胶树世界生成配置。enabled/biomes 变更后需要重启；其余多数参数 /ic2config reload 后影响未来生成。")
-    val rubberTree: RubberTreeWorldgenConfig = RubberTreeWorldgenConfig()
+    val rubberTree: RubberTreeWorldgenConfig = RubberTreeWorldgenConfig(),
+    @field:ConfigComment("泥炭矿世界生成配置。变更后需要重启生效。")
+    val peatOre: PeatOreWorldgenConfig = PeatOreWorldgenConfig()
 )
 
 data class RubberTreeWorldgenConfig(
@@ -392,6 +401,32 @@ data class RubberTreeWorldgenConfig(
         zeroHoleWeight = zeroHoleWeight.coerceAtLeast(0),
         singleHoleWeight = singleHoleWeight.coerceAtLeast(0),
         doubleHoleWeight = doubleHoleWeight.coerceAtLeast(0)
+    )
+}
+
+data class PeatOreWorldgenConfig(
+    @field:ConfigComment("是否允许自然生成泥炭矿。", "true")
+    val enabled: Boolean = true,
+    @field:ConfigComment(
+        "允许生成泥炭矿的生物群系列表。填写 biome id，例如 minecraft:jungle。",
+        "[\"minecraft:jungle\", \"minecraft:sparse_jungle\", \"minecraft:bamboo_jungle\", \"minecraft:mushroom_fields\"]"
+    )
+    val biomes: List<String> = DEFAULT_PEAT_ORE_BIOMES,
+    @field:ConfigComment("每个区块矿脉数量。", "24")
+    val veinsPerChunk: Int = 24,
+    @field:ConfigComment("每条矿脉最大方块数。", "24")
+    val veinSize: Int = 24,
+    @field:ConfigComment("最低生成高度（Y）。", "-16")
+    val minY: Int = -16,
+    @field:ConfigComment("最高生成高度（Y）。", "64")
+    val maxY: Int = 64
+) {
+    fun normalized(): PeatOreWorldgenConfig = copy(
+        biomes = biomes.map(String::trim).filter(String::isNotEmpty).distinct(),
+        veinsPerChunk = veinsPerChunk.coerceIn(0, 256),
+        veinSize = veinSize.coerceIn(1, 64),
+        minY = minY.coerceIn(-64, 320),
+        maxY = maxY.coerceIn(-64, 320)
     )
 }
 

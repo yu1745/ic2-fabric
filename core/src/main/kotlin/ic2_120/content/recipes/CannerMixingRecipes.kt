@@ -34,6 +34,7 @@ object CannerMixingRecipes {
     private val bioChaff by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "bio_chaff")) }
     private val cfPowder by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "cf_powder")) }
     private val grinPowder by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "grin_powder")) }
+    private val peatOre by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "peat_ore")) }
 
     private val recipes: List<Recipe> by lazy {
         listOf(
@@ -46,7 +47,9 @@ object CannerMixingRecipes {
             Recipe(Fluids.WATER, cfPowder, 1, ModFluids.CONSTRUCTION_FOAM_STILL),
             Recipe(Fluids.FLOWING_WATER, cfPowder, 1, ModFluids.CONSTRUCTION_FOAM_STILL),
             Recipe(Fluids.WATER, grinPowder, 1, ModFluids.WEED_EX_STILL),
-            Recipe(Fluids.FLOWING_WATER, grinPowder, 1, ModFluids.WEED_EX_STILL)
+            Recipe(Fluids.FLOWING_WATER, grinPowder, 1, ModFluids.WEED_EX_STILL),
+            Recipe(Fluids.WATER, peatOre, 1, ModFluids.BIOMASS_STILL),
+            Recipe(Fluids.FLOWING_WATER, peatOre, 1, ModFluids.BIOMASS_STILL)
         )
     }
 
