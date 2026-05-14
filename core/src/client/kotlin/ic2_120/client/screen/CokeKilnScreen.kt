@@ -2,7 +2,6 @@ package ic2_120.client.screen
 
 import ic2_120.client.compose.*
 import ic2_120.client.t
-import ic2_120.client.ui.EnergyBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.CokeKilnBlock
 import ic2_120.content.screen.CokeKilnScreenHandler
@@ -35,9 +34,10 @@ class CokeKilnScreen(
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         val left = x
         val top = y
-        val progressFrac = if (CokeKilnSync.PROGRESS_MAX > 0) {
-            (handler.sync.progress.coerceIn(0, CokeKilnSync.PROGRESS_MAX).toFloat() / CokeKilnSync.PROGRESS_MAX).coerceIn(0f, 1f)
-        } else 0f
+        val remainingSecs = if (handler.sync.progress < CokeKilnSync.PROGRESS_MAX) {
+            (CokeKilnSync.PROGRESS_MAX - handler.sync.progress) / 20
+        } else 0
+        val timeText = t("gui.ic2_120.coke_kiln.time_remaining", remainingSecs)
         val structureText = if (handler.sync.structureValid > 0) t("gui.ic2_120.coke_kiln.structure_valid") else t("gui.ic2_120.coke_kiln.structure_invalid")
 
         val content: UiScope.() -> Unit = {
@@ -49,8 +49,8 @@ class CokeKilnScreen(
             ) {
                 Text(title.string, color = 0xFFFFFF)
                 Text(structureText, color = 0xAAAAAA, shadow = false)
-                EnergyBar(progressFrac, barHeight = 10)
-                Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 6) {
+                Text(timeText, color = 0xAAAAAA, shadow = false)
+                Flex(direction = FlexDirection.ROW, justifyContent = JustifyContent.SPACE_BETWEEN, alignItems = AlignItems.CENTER) {
                     SlotAnchor(id = slotAnchorId(CokeKilnScreenHandler.SLOT_INPUT), width = CokeKilnScreenHandler.SLOT_SIZE, height = CokeKilnScreenHandler.SLOT_SIZE)
                     Text("->", color = 0xFFFFFF)
                     SlotAnchor(id = slotAnchorId(CokeKilnScreenHandler.SLOT_OUTPUT), width = CokeKilnScreenHandler.SLOT_SIZE, height = CokeKilnScreenHandler.SLOT_SIZE)
