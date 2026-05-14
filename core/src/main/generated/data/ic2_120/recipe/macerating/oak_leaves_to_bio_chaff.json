@@ -3,6 +3,7 @@
   "ingredient": {
     "item": "minecraft:oak_leaves"
   },
+  "inputCount": 8,
   "result": {
     "count": 1,
     "id": "ic2_120:bio_chaff"

@@ -140,7 +140,8 @@ object MaceratorRecipeDatagen {
             val recipe = MaceratorRecipe(
                 id = id,
                 ingredient = Ingredient.ofItems(entry.input),
-                output = ItemStack(entry.output, entry.count)
+                output = ItemStack(entry.output, entry.count),
+                inputCount = entry.inputCount
             )
             exporter.accept(id, recipe, null)
         }
