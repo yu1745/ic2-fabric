@@ -59,10 +59,11 @@ import io.netty.buffer.Unpooled
 
 /**
  * 发酵机：
- * - 消耗热量和生物质，产出生物燃料（沼气）
+ * - 消耗热量和生物质，产出生物燃料 + 肥料
  * - 每 2 秒（40 ticks）处理 1 次
  * - 每次消耗：4000 HU + 20 mB 生物质
  * - 每次产出：400 mB 生物燃料
+ * - 每 1000 mB（1桶）生物质消耗累计产出 1 个肥料
  */
 @ModBlockEntity(block = FermenterBlock::class)
 class FermenterBlockEntity(
@@ -86,14 +87,15 @@ class FermenterBlockEntity(
         const val SLOT_INPUT_EMPTY_CONTAINER = 1
         const val SLOT_OUTPUT_EMPTY_CONTAINER = 2
         const val SLOT_OUTPUT_FILLED_CONTAINER = 3
-        const val SLOT_UPGRADE_0 = 4
-        const val SLOT_UPGRADE_1 = 5
-        const val SLOT_UPGRADE_2 = 6
-        const val SLOT_UPGRADE_3 = 7
+        const val SLOT_OUTPUT_FERTILIZER = 4
+        const val SLOT_UPGRADE_0 = 5
+        const val SLOT_UPGRADE_1 = 6
+        const val SLOT_UPGRADE_2 = 7
+        const val SLOT_UPGRADE_3 = 8
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
-        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_FILLED_CONTAINER)
+        val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_FILLED_CONTAINER, SLOT_OUTPUT_FERTILIZER)
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_INPUT_FILLED_CONTAINER)
-        const val INVENTORY_SIZE = 8
+        const val INVENTORY_SIZE = 9
 
         private const val NBT_INPUT_TANK = "InputTank"
         private const val NBT_OUTPUT_TANK = "OutputTank"
@@ -134,6 +136,7 @@ class FermenterBlockEntity(
     private val emptyCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "empty_cell")) }
     private val fluidCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fluid_cell")) }
     private val biomassCellItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "biomass_cell")) }
+    private val fertilizerItem by lazy { Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "fertilizer")) }
 
     private val inputPerCycle = mbToDroplets(FermenterSync.INPUT_MB_PER_CYCLE)
     private val outputPerCycle = mbToDroplets(FermenterSync.OUTPUT_MB_PER_CYCLE)
@@ -311,6 +314,7 @@ class FermenterBlockEntity(
         SLOT_INPUT_EMPTY_CONTAINER -> false
         SLOT_OUTPUT_EMPTY_CONTAINER -> isEmptyContainerForFermenter(stack)
         SLOT_OUTPUT_FILLED_CONTAINER -> false
+        SLOT_OUTPUT_FERTILIZER -> false
         in SLOT_UPGRADE_0..SLOT_UPGRADE_3 -> stack.item is IUpgradeItem
         else -> false
     }
@@ -404,6 +408,10 @@ class FermenterBlockEntity(
                 if (consumedInput >= inputPerCycle) {
                     heatBuffer = (heatBuffer - FermenterSync.HEAT_PER_CYCLE).coerceAtLeast(0L)
                     outputTankInternal.insertInternal(outputPerCycle)
+                    sync.fertilizerProgress += FermenterSync.INPUT_MB_PER_CYCLE
+                    if (sync.fertilizerProgress >= FermenterSync.FERTILIZER_PER_BIOMASS_BUCKET_MB) {
+                        tryProduceFertilizer()
+                    }
                     sync.heatConsumePerTick = FermenterSync.HEAT_PER_CYCLE
                     sync.bufferedHeat = heatBuffer.toInt().coerceIn(0, Int.MAX_VALUE)
                 }
@@ -477,6 +485,16 @@ class FermenterBlockEntity(
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
         if (side == getFrontFacing()) return null
         return ioStorage
+    }
+
+    private fun tryProduceFertilizer() {
+        val fertilizerStack = ItemStack(fertilizerItem, 1)
+        val currentOutput = getStack(SLOT_OUTPUT_FERTILIZER)
+        if (!canMergeIntoSlot(currentOutput, fertilizerStack)) return
+        sync.fertilizerProgress -= FermenterSync.FERTILIZER_PER_BIOMASS_BUCKET_MB
+        if (currentOutput.isEmpty) setStack(SLOT_OUTPUT_FERTILIZER, fertilizerStack.copy())
+        else currentOutput.increment(1)
+        markDirty()
     }
 
     private fun getFrontFacing(): Direction =

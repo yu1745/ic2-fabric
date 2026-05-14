@@ -17,12 +17,14 @@ class FermenterSync(
         const val NBT_IS_WORKING = "IsWorking"
         const val NBT_HEAT_INPUT_PER_TICK = "HeatInputPerTick"
         const val NBT_HEAT_CONSUME_PER_TICK = "HeatConsumePerTick"
+        const val NBT_FERTILIZER_PROGRESS = "FertilizerProgress"
 
         const val TANK_CAPACITY_MB = 10_000
         const val PROCESS_INTERVAL_TICKS = 40
         const val INPUT_MB_PER_CYCLE = 20
         const val OUTPUT_MB_PER_CYCLE = 400
         const val HEAT_PER_CYCLE = 4_000
+        const val FERTILIZER_PER_BIOMASS_BUCKET_MB = 1_000
     }
 
     var inputBiomassMb by schema.int(NBT_INPUT_BIOMASS)
@@ -32,4 +34,5 @@ class FermenterSync(
     var isWorking by schema.int(NBT_IS_WORKING)
     var heatInputPerTick by schema.int(NBT_HEAT_INPUT_PER_TICK)
     var heatConsumePerTick by schema.int(NBT_HEAT_CONSUME_PER_TICK)
+    var fertilizerProgress by schema.int(NBT_FERTILIZER_PROGRESS)
 }

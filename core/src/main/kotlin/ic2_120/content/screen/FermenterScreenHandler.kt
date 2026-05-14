@@ -55,6 +55,7 @@ class FermenterScreenHandler(
         addSlot(PredicateSlot(blockInventory, FermenterBlockEntity.SLOT_INPUT_EMPTY_CONTAINER, 0, 0, OUTPUT_ONLY_SLOT_SPEC))
         addSlot(PredicateSlot(blockInventory, FermenterBlockEntity.SLOT_OUTPUT_EMPTY_CONTAINER, 0, 0, OUTPUT_EMPTY_CONTAINER_SLOT_SPEC))
         addSlot(PredicateSlot(blockInventory, FermenterBlockEntity.SLOT_OUTPUT_FILLED_CONTAINER, 0, 0, OUTPUT_ONLY_SLOT_SPEC))
+        addSlot(PredicateSlot(blockInventory, FermenterBlockEntity.SLOT_OUTPUT_FERTILIZER, 0, 0, OUTPUT_ONLY_SLOT_SPEC))
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
             addSlot(
@@ -88,6 +89,7 @@ class FermenterScreenHandler(
         when (index) {
             SLOT_INPUT_EMPTY_CONTAINER_INDEX,
             SLOT_OUTPUT_FILLED_CONTAINER_INDEX,
+            SLOT_OUTPUT_FERTILIZER_INDEX,
             in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
                 if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
@@ -124,10 +126,11 @@ class FermenterScreenHandler(
         const val SLOT_INPUT_EMPTY_CONTAINER_INDEX = 1
         const val SLOT_OUTPUT_EMPTY_CONTAINER_INDEX = 2
         const val SLOT_OUTPUT_FILLED_CONTAINER_INDEX = 3
-        const val SLOT_UPGRADE_INDEX_START = 4
-        const val SLOT_UPGRADE_INDEX_END = 7
-        const val PLAYER_INV_START = 8
-        const val HOTBAR_END = 43
+        const val SLOT_OUTPUT_FERTILIZER_INDEX = 4
+        const val SLOT_UPGRADE_INDEX_START = 5
+        const val SLOT_UPGRADE_INDEX_END = 8
+        const val PLAYER_INV_START = 9
+        const val HOTBAR_END = 44
 
         private val biomassCellId = Identifier.of("ic2_120", "biomass_cell")
         private val emptyCellId = Identifier.of("ic2_120", "empty_cell")

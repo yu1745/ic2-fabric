@@ -108,12 +108,12 @@ class FermenterScreen(
                         }
                     }
 
-                    // 右侧：沼气组
+                    // 右侧：生物燃料 + 肥料组
                     Column(
                         spacing = 4,
                         modifier = Modifier.EMPTY.padding(0, 8, 0, 0)
                     ) {
-                        Text(t("gui.ic2_120.fermenter.biogas"), color = 0xAAAAAA)
+                        Text(t("gui.ic2_120.fermenter.biofuel"), color = 0xAAAAAA)
                         SlotAnchor(
                             id = slotAnchorId(FermenterScreenHandler.SLOT_OUTPUT_EMPTY_CONTAINER_INDEX),
                             width = FermenterScreenHandler.SLOT_SIZE,
@@ -121,6 +121,12 @@ class FermenterScreen(
                         )
                         SlotAnchor(
                             id = slotAnchorId(FermenterScreenHandler.SLOT_OUTPUT_FILLED_CONTAINER_INDEX),
+                            width = FermenterScreenHandler.SLOT_SIZE,
+                            height = FermenterScreenHandler.SLOT_SIZE
+                        )
+                        Text(t("gui.ic2_120.fermenter.fertilizer"), color = 0xAAAAAA)
+                        SlotAnchor(
+                            id = slotAnchorId(FermenterScreenHandler.SLOT_OUTPUT_FERTILIZER_INDEX),
                             width = FermenterScreenHandler.SLOT_SIZE,
                             height = FermenterScreenHandler.SLOT_SIZE
                         )
