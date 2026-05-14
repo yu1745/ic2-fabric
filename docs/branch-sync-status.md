@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **89 个 commit**，**89 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **92 个 commit**，**89 个已同步，3 个待同步**。
 （归档 1-49, 50-62 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -41,6 +41,9 @@
 | 87 | `223a745e` | fix: ModMenu 配置界面添加泥炭矿世界生成配置项 | ✅ | 补上遗漏的 peatOreConfig UI，cherry-pick 无冲突 |
 | 88 | `9380770c` | fix: 移除 getTicker 中不必要的 `as XxxBlockEntity` 强转 | ✅ | 65 文件 66 处，直接文本替换到 1.21.1（`validateTicker` 版本）|
 | 89 | `cc0571c4` | fix: 修正 FluidHeatGenerator HOTBAR_END 越界错误（43→41） | ✅ | 无冲突直接 cherry-pick |
+| 90 | `a38fcc62` | feat: 为物品/流体抽入弹出升级添加 GUI 配置界面 | ❌ | |
+| 91 | `6a15c3c3` | feat: CannerBlockEntity 左右储罐对外暴露分离为只输入/只输出 | ❌ | |
+| 92 | `3f20436e` | feat: 优化固体装罐机配方检测性能 + 管道 Jade 停滞显示冲突流体 | ❌ | |
 
 ## 同步历史
 
