@@ -85,6 +85,7 @@ class AnimalmatronScreen(
                                 barWidth = 10,
                                 barHeight = 40,
                                 vertical = true,
+                                fullColor = 0xFF113117.toInt(),
                                 modifier = Modifier.EMPTY.width(10).height(40)
                             )
                             Text("${handler.sync.weedExAmountMb} mB", color = 0xFFFFFF, shadow = false)

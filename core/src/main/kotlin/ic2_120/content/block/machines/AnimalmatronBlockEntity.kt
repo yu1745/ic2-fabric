@@ -269,6 +269,12 @@ class AnimalmatronBlockEntity(
         processWaterInputContainer()
         processWeedExInputContainer()
 
+        // 按监管动物数量持续耗电（每只 1 EU/t）
+        val drain = sync.animalCount.toLong()
+        if (drain > 0) {
+            sync.consumeEnergy(drain)
+        }
+
         var active = false
         val interval = (WORK_INTERVAL_TICKS.toFloat() / speedMultiplier).toInt().coerceAtLeast(1)
         if ((world.time + workOffset) % interval.toLong() == 0L) {
@@ -292,7 +298,6 @@ class AnimalmatronBlockEntity(
 
     private fun runScan(world: World): ScanReport {
         val report = ScanReport()
-        val scanEnergyCost = (ENERGY_PER_SCAN * energyMultiplier).toLong().coerceAtLeast(1L)
 
         // 获取范围内的动物实体（仅包含白名单中的动物）
         val box = Box(pos).expand(SCAN_RADIUS.toDouble())
@@ -301,12 +306,7 @@ class AnimalmatronBlockEntity(
             box
         ) { it.isAlive && AnimalFoodMapping.isManagedAnimal(it) }
 
-        // 检查水和除草剂是否充足
-        val canGrow = waterAmountMb > 0 && weedExAmountMb > 0
-
         for (animal in animals) {
-            if (sync.amount < scanEnergyCost) return report
-            sync.consumeEnergy(scanEnergyCost)
 
             report.touched++
 
@@ -323,10 +323,17 @@ class AnimalmatronBlockEntity(
             }
 
             // 尝试喂食
-            tryFeedAnimal(animal, animalData, canGrow, animals.size, report)
+            tryFeedAnimal(animal, animalData, animals.size, report)
 
             // 尝试收获额外产物
             tryHarvestExtraProduct(animal, animalData, report)
+
+            // 无水时缓慢伤害动物（不致死，保留 50% 血量）
+            if (waterAmountMb <= 0 && animal.health > animal.maxHealth * WATER_DAMAGE_HEALTH_FRACTION) {
+                animal.health = (animal.health - WATER_DAMAGE_PER_TICK)
+                    .coerceAtLeast(animal.maxHealth * WATER_DAMAGE_HEALTH_FRACTION)
+                report.waterDamaged++
+            }
         }
 
         if (world is ServerWorld) {
@@ -347,7 +354,6 @@ class AnimalmatronBlockEntity(
     private fun tryFeedAnimal(
         animal: PassiveEntity,
         animalData: AnimalGrowthData,
-        canGrow: Boolean,
         totalAnimals: Int,
         report: ScanReport
     ) {
@@ -357,17 +363,17 @@ class AnimalmatronBlockEntity(
         val world = world ?: return
         val currentDay = (world.time / TICKS_PER_DAY).toInt()
 
-        // 检查是否是新的一天，重置今日喂食计数
+        // 检查是否是新的一天，重置今日数据
         if (currentDay > animalData.currentDay) {
             animalData.foodToday = 0
             animalData.currentDay = currentDay
+            animalData.insecticidePaidToday = false
         }
 
         // 检查今天是否已经喂够了5个
         if (animalData.foodToday >= FOOD_PER_DAY) return
 
-        // 计算喂食间隔：将5个食物平均分配到整个MC天
-        // 12000 tick / 5 = 2400 tick = 2分钟喂1个
+        // 计算喂食间隔：12000 tick / 5 = 2400 tick = 2分钟喂1个
         val feedingInterval = TICKS_PER_DAY / FOOD_PER_DAY
 
         // 检查是否到了该喂食的时间
@@ -382,8 +388,16 @@ class AnimalmatronBlockEntity(
                 animalData.lastFeedTick = world.time
                 report.foodConsumed++
 
-                // 消耗水和除草剂
-                consumeFluids(canGrow, report)
+                // 消耗水
+                consumeWater(report)
+
+                // 每日杀虫剂消耗（每只动物每天固定 100mb）
+                if (!animalData.insecticidePaidToday && weedExAmountMb >= INSECTICIDE_PER_DAY) {
+                    weedExAmountMb -= INSECTICIDE_PER_DAY
+                    animalData.insecticidePaidToday = true
+                    report.weedExConsumed += INSECTICIDE_PER_DAY
+                    markDirty()
+                }
 
                 // 检查是否达到成长/繁殖条件
                 checkGrowthAndBreeding(animal, animalData, totalAnimals, report)
@@ -393,21 +407,16 @@ class AnimalmatronBlockEntity(
         }
     }
 
-    private fun consumeFluids(canGrow: Boolean, report: ScanReport) {
-        if (canGrow) {
-            val waterToConsume = minOf(waterAmountMb, WATER_PER_CARE)
-            if (waterToConsume > 0) {
-                waterAmountMb -= waterToConsume
-                report.waterConsumed += waterToConsume
-            }
-
-            val weedExToConsume = minOf(weedExAmountMb, WEED_EX_PER_CARE)
-            if (weedExToConsume > 0) {
-                weedExAmountMb -= weedExToConsume
-                report.weedExConsumed += weedExToConsume
-            }
-            markDirty()
-        }
+    /**
+     * 消耗水（加快生长速度——缩短喂食间隔）
+     */
+    private fun consumeWater(report: ScanReport) {
+        if (waterAmountMb <= 0) return
+        val toConsume = minOf(waterAmountMb, WATER_PER_CARE)
+        if (toConsume <= 0) return
+        waterAmountMb -= toConsume
+        report.waterConsumed += toConsume
+        markDirty()
     }
 
     private fun checkGrowthAndBreeding(
@@ -424,10 +433,13 @@ class AnimalmatronBlockEntity(
                 report.grewUp++
             }
 
-            // 检查是否可以繁殖
+            // 检查是否可以繁殖（需要当日已支付杀虫剂）
             if (totalAnimals < MAX_ANIMALS_FOR_BREEDING && !animalData.canBreed) {
-                animalData.canBreed = true
-                report.canBreedNow++
+                if (animalData.insecticidePaidToday) {
+                    animalData.canBreed = true
+                    report.canBreedNow++
+                }
+                // 没有杀虫剂则无法繁殖，但动物仍可正常长大
             }
         }
     }
@@ -666,7 +678,8 @@ class AnimalmatronBlockEntity(
         var grewUp: Int = 0,
         var canBreedNow: Int = 0,
         var bred: Int = 0,
-        var harvested: Int = 0
+        var harvested: Int = 0,
+        var waterDamaged: Int = 0
     )
 
     companion object {
@@ -698,8 +711,7 @@ class AnimalmatronBlockEntity(
             SLOT_FEED_1,
             SLOT_FEED_2,
             SLOT_FEED_3,
-            SLOT_FEED_4,
-            SLOT_FEED_5
+            SLOT_FEED_4
         )
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
 
@@ -709,8 +721,6 @@ class AnimalmatronBlockEntity(
         private const val HARVEST_INTERVAL_TICKS = 2400L  // 每2分钟收获一次（羊）
         private const val EXTRA_PRODUCT_INTERVAL_TICKS = 12000L  // 每10分钟收获一次（其他动物）
         private const val SCAN_RADIUS = 4
-        private const val ENERGY_PER_SCAN = 1
-        private const val ENERGY_PER_FEED = 10
 
         // 游戏机制常量
         const val FOOD_PER_DAY = 5
@@ -719,9 +729,11 @@ class AnimalmatronBlockEntity(
         const val MAX_ANIMALS_FOR_BREEDING = 32
         const val TICKS_PER_DAY = 12000L
 
-        // 流体消耗（参考作物监管机）
-        const val WATER_PER_CARE = 100 // mB
-        const val WEED_EX_PER_CARE = 50 // mB
+        // 流体消耗
+        const val WATER_PER_CARE = 100 // mB，每次喂食消耗
+        const val INSECTICIDE_PER_DAY = 100 // mB，每只动物每天消耗
+        const val WATER_DAMAGE_HEALTH_FRACTION = 0.5f // 无水时伤害下限（50%血量）
+        const val WATER_DAMAGE_PER_TICK = 0.5f // 每次扫描造成的伤害值
 
         private const val NBT_WATER_MB = "WaterMb"
         private const val NBT_WEED_EX_MB = "WeedExMb"

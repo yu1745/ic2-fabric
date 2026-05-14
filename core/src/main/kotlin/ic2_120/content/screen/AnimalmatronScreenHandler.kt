@@ -148,16 +148,16 @@ class AnimalmatronScreenHandler(
         const val SLOT_WEED_EX_OUTPUT_INDEX = 3
 
         const val SLOT_FEED_INDEX_START = 4
-        const val SLOT_FEED_INDEX_END = 9
+        const val SLOT_FEED_INDEX_END = 8
 
-        const val SLOT_UPGRADE_INDEX_START = 10
-        const val SLOT_UPGRADE_INDEX_END = 13
-        const val SLOT_DISCHARGING_INDEX = 14
-        const val SLOT_SHEARS_INDEX = 15
-        const val SLOT_HARVEST_OUTPUT_INDEX = 16
+        const val SLOT_UPGRADE_INDEX_START = 9
+        const val SLOT_UPGRADE_INDEX_END = 12
+        const val SLOT_DISCHARGING_INDEX = 13
+        const val SLOT_SHEARS_INDEX = 14
+        const val SLOT_HARVEST_OUTPUT_INDEX = 15
 
-        const val PLAYER_INV_START = 17
-        const val HOTBAR_END = 52
+        const val PLAYER_INV_START = 16
+        const val HOTBAR_END = 51
 
         private val fluidCellId = Identifier(Ic2_120.MOD_ID, "fluid_cell")
         private val waterCellId = Identifier(Ic2_120.MOD_ID, "water_cell")

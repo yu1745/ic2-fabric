@@ -250,12 +250,19 @@ class AnimalSlaughtererBlockEntity(
                 // 2-3 猪排
                 drops.add(ItemStack(net.minecraft.item.Items.PORKCHOP, 2 + rand.nextInt(2)))
             }
-            "minecraft:cow", "minecraft:mooshroom" -> {
+            "minecraft:cow" -> {
                 // 2-3 牛肉 + 0-2 皮革
                 drops.add(ItemStack(net.minecraft.item.Items.BEEF, 2 + rand.nextInt(2)))
                 if (rand.nextFloat() < 0.5f) {
                     drops.add(ItemStack(net.minecraft.item.Items.LEATHER, 1 + rand.nextInt(2)))
                 }
+            }
+            "minecraft:mooshroom" -> {
+                // 2-3 牛肉 + 红蘑菇/棕蘑菇（不掉皮革）
+                drops.add(ItemStack(net.minecraft.item.Items.BEEF, 2 + rand.nextInt(2)))
+                val mushroom = if (rand.nextBoolean())
+                    net.minecraft.item.Items.RED_MUSHROOM else net.minecraft.item.Items.BROWN_MUSHROOM
+                drops.add(ItemStack(mushroom, 1 + rand.nextInt(2)))
             }
             "minecraft:sheep" -> {
                 // 1-2 羊肉 + 1 羊毛（羊被击杀时如果没剪毛就掉羊毛）
@@ -270,10 +277,13 @@ class AnimalSlaughtererBlockEntity(
                 drops.add(ItemStack(net.minecraft.item.Items.FEATHER, rand.nextInt(3)))
             }
             "minecraft:rabbit" -> {
-                // 1 兔肉 + 0-1 兔子皮
+                // 1 兔肉 + 0-1 兔子皮 + 10% 兔子脚
                 drops.add(ItemStack(net.minecraft.item.Items.RABBIT, 1))
                 if (rand.nextFloat() < 0.5f) {
                     drops.add(ItemStack(net.minecraft.item.Items.RABBIT_HIDE, 1))
+                }
+                if (rand.nextFloat() < 0.1f) {
+                    drops.add(ItemStack(net.minecraft.item.Items.RABBIT_FOOT, 1))
                 }
             }
             "minecraft:horse", "minecraft:donkey", "minecraft:mule" -> {

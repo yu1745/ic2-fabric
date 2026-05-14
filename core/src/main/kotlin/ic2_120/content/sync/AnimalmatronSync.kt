@@ -27,8 +27,8 @@ class AnimalmatronSync(
         const val MAX_EXTRACT = 0L
         const val NBT_ENERGY_STORED = "EnergyStored"
 
-        const val WATER_TANK_CAPACITY_MB = 2_000
-        const val WEED_EX_TANK_CAPACITY_MB = 2_000
+        const val WATER_TANK_CAPACITY_MB = 8_000
+        const val WEED_EX_TANK_CAPACITY_MB = 8_000
     }
 
     var energy by schema.int("Energy")

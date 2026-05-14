@@ -19,7 +19,8 @@ data class AnimalGrowthData(
     var lastFeedTick: Long = 0L,
     var foodToday: Int = 0,
     var currentDay: Int = 0,
-    var lastHarvestTick: Long = 0L
+    var lastHarvestTick: Long = 0L,
+    var insecticidePaidToday: Boolean = false  // 是否已支付当日杀虫剂（每天重置）
 ) {
     /**
      * 将数据序列化为 NBT
