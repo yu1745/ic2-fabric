@@ -67,3 +67,13 @@
 | 61 | `964989b` | fix: FTB Chunks 领地保护检查始终失效——Protection 是接口不是枚举 | ✅ | 无冲突直接 cherry-pick |
 | 62 | `9673112a` | feat: ModMenu + Cloth Config GUI 配置编辑界面 | ✅ | cherry-pick + 适配 1.21.1 版本号（Cloth Config 15.0.140, ModMenu 11.0.4）|
 | 63 | `84e84c79` | fix: 变压器升压/降压文本互换+ScreenHandler六面朝向修复 | ✅ | 无冲突直接 cherry-pick |
+| 64 | `354c59e5` | feat: 剪刀机制 + 监管机额外产物 + 耐久条渲染修复 | ✅ | cherry-pick + 解决冲突（import、tooltip 参数适配、TODO.md）|
+| 65 | `c127a41b` | fix: 修复所有机器 GUI 耐久条被 SlotAnchor 背景覆盖的渲染顺序问题——ui.render 在 super.render 之前执行 | ✅ | 无冲突直接 cherry-pick |
+| 66 | `b246fc9c` | feat: 简化动能发电机配方——不再需要机器外壳 | ✅ | 无冲突直接 cherry-pick |
+| 67 | `bd94c51d` | feat: 牲畜监管机机制重做 + 屠宰机掉落补充 | ✅ | 无冲突直接 cherry-pick |
+| 68 | `5f1ffaa3` | chore: 更新TODO + 日光灯缓存改为100EU防频闪 | ✅ | 无冲突直接 cherry-pick |
+| 69 | `da2bc1b1` | fix: 量子护腿神行移动检测改用 blockPos 坐标对比 + 量子胸甲入水不取消飞行 | ✅ | cherry-pick + 解决冲突（TODO.md release350 保留、QuantumLeggings.kt velocity→blockPos）|
+| 70 | `ae483fd2` | fix: 打粉机 inputCount 未生效——一律按1个消耗，改为按配方数量消耗 | ✅ | cherry-pick + 适配 1.21.1 API（codec/packetCodec、RecipeInput、datagen inputCount 写入）+ datagen 刷新 |
+| 71 | `717ebaae` | feat: 焦炉——窑口添加朝向、screen显示剩余时间、blockstate旋转修正 | ✅ | cherry-pick + 解决 CokeKilnBlocks.kt import 冲突 + datagen 刷新 |
+| 72 | `0c935b69` | fix: 发酵机UI溢出容器修复，半流质发电机UI高度调整 | ✅ | 无冲突直接 cherry-pick + datagen 刷新 |
+| 73 | `9186d55c` | feat: 添加泥炭矿及其处理配方、tooltip、世界生成与着色器 | ✅ | cherry-pick + 适配 1.21.1 API（Identifier.of、ItemTooltipCallback 4参数、PeatOreBlock::class.item()）+ datagen 刷新 |
