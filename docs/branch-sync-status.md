@@ -1,6 +1,6 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-05-13
+最后更新：2026-05-14
 
 分叉点：`c5e247c`
 
@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **79 个 commit**，**79 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **82 个 commit**，**79 个已同步，3 个待同步**。
 （归档 1-49 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -45,6 +45,9 @@
 | 77 | `354c59e5` | feat: 剪刀机制 + 监管机额外产物 + 耐久条渲染修复 | ✅ | cherry-pick + 解决冲突（import、tooltip 参数适配、TODO.md）|
 | 78 | `c127a41b` | fix: 修复所有机器 GUI 耐久条被 SlotAnchor 背景覆盖的渲染顺序问题——ui.render 在 super.render 之前执行 | ✅ | 无冲突直接 cherry-pick |
 | 79 | `b246fc9c` | feat: 简化动能发电机配方——不再需要机器外壳 | ✅ | 无冲突直接 cherry-pick |
+| 80 | `bd94c51d` | feat: 牲畜监管机机制重做 + 屠宰机掉落补充 | ❌ | |
+| 81 | `5f1ffaa3` | chore: 更新TODO + 日光灯缓存改为100EU防频闪 | ❌ | |
+| 82 | `da2bc1b1` | fix: 量子护腿神行移动检测改用 blockPos 坐标对比 + 量子胸甲入水不取消飞行 | ❌ | |
 
 ## 同步历史
 
