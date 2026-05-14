@@ -131,6 +131,7 @@ class CannerBlockEntity(
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT)
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_CONTAINER, SLOT_MATERIAL)
         const val INVENTORY_SIZE = 10
+
         private const val NBT_LEFT_FLUID_AMOUNT = "LeftFluidAmount"
         private const val NBT_LEFT_FLUID_VARIANT = "LeftFluidVariant"
         private const val NBT_RIGHT_FLUID_AMOUNT = "RightFluidAmount"
@@ -284,7 +285,7 @@ class CannerBlockEntity(
             cannerIsFilledFluidContainer(stack) || stack.item == tinCanItem || stack.item is EmptyFuelRodItem
             )
         SLOT_MATERIAL -> !stack.isEmpty && stack.item !is IBatteryItem && (
-            (world?.recipeManager?.values()?.any { it.value is SolidCannerRecipe && (it.value as SolidCannerRecipe).slot1Ingredient.test(stack) } == true) ||
+            (world?.let { SolidCannerRecipe.slot1Ingredients(it).any { ing -> ing.test(stack) } } == true) ||
                 CannerMixingRecipes.isMixingMaterial(stack.item) ||
                 (sync.getMode() == CannerSync.Mode.BOTTLE_LIQUID && stack.item is FoamSprayerItem &&
                     FoamSprayerItem.getFluidAmount(stack) < FoamSprayerItem.CAPACITY_DROPLETS)

@@ -143,6 +143,15 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
             if (fluidId != null) {
                 data.putString("fluidName", fluidId)
             }
+            val conflicts = network.conflictingFluidIds
+            if (conflicts.isNotEmpty()) {
+                data.putInt("conflictCount", conflicts.size)
+                val nbtList = net.minecraft.nbt.NbtList()
+                for (id in conflicts) {
+                    nbtList.add(net.minecraft.nbt.NbtString.of(id))
+                }
+                data.put("conflictFluids", nbtList)
+            }
         }
     }
 
@@ -170,7 +179,16 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
             tooltip.add(Text.translatable("ic2_120.jade.fluid_name", fluidText))
         }
         if (accessor.serverData.getBoolean("stalled")) {
-            tooltip.add(Text.translatable("ic2_120.jade.stalled"))
+            val count = accessor.serverData.getInt("conflictCount")
+            tooltip.add(Text.translatable("ic2_120.jade.stalled_header", count).setStyle(Style.EMPTY.withColor(Formatting.RED)))
+            val nbtList = accessor.serverData.getList("conflictFluids", 8) // 8 = NbtString
+            for (i in 0 until nbtList.size) {
+                val fluidId = nbtList.getString(i)
+                val id = Identifier.tryParse(fluidId) ?: continue
+                val fluid = Registries.FLUID.get(id)
+                val fluidText = Registries.FLUID.getId(fluid).toTranslationKey().let { Text.translatable("block.$it") }
+                tooltip.add(Text.translatable("ic2_120.jade.stalled_fluid_entry", fluidText).setStyle(Style.EMPTY.withColor(Formatting.YELLOW)))
+            }
         }
         if (accessor.serverData.getBoolean("isPump")) {
             tooltip.add(Text.translatable("ic2_120.jade.pump"))
