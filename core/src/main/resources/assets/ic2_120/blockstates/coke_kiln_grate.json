@@ -1,10 +1,10 @@
 {
   "variants": {
-    "facing=down": { "model": "ic2:block/machine/steam/coke_kiln_grate" },
-    "facing=up": { "model": "ic2:block/machine/steam/coke_kiln_grate" },
+    "facing=down": { "model": "ic2:block/machine/steam/coke_kiln_grate", "x": 90 },
+    "facing=up": { "model": "ic2:block/machine/steam/coke_kiln_grate", "x": 270 },
     "facing=north": { "model": "ic2:block/machine/steam/coke_kiln_grate" },
-    "facing=south": { "model": "ic2:block/machine/steam/coke_kiln_grate" },
-    "facing=west": { "model": "ic2:block/machine/steam/coke_kiln_grate" },
-    "facing=east": { "model": "ic2:block/machine/steam/coke_kiln_grate" }
+    "facing=south": { "model": "ic2:block/machine/steam/coke_kiln_grate", "y": 180 },
+    "facing=west": { "model": "ic2:block/machine/steam/coke_kiln_grate", "y": 270 },
+    "facing=east": { "model": "ic2:block/machine/steam/coke_kiln_grate", "y": 90 }
   }
 }

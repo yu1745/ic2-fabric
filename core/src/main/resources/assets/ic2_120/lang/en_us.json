@@ -944,6 +944,7 @@
   "gui.ic2_120.blast_furnace.air_usage": "Air: %1$s/%2$s cells/cycle",
   "gui.ic2_120.coke_kiln.structure_valid": "Structure: Valid",
   "gui.ic2_120.coke_kiln.structure_invalid": "Structure: Invalid",
+  "gui.ic2_120.coke_kiln.time_remaining": "%d s remaining",
   "gui.ic2_120.fermenter.biomass": "Biomass",
   "gui.ic2_120.fermenter.biogas": "Biogas",
   "gui.ic2_120.crop_harvester.scan_cursor": "Scan Cursor: (%1$s, %2$s, %3$s)",

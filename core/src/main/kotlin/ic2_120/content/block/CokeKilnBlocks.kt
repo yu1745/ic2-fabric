@@ -15,8 +15,8 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
-import net.minecraft.block.BlockState
 import net.minecraft.block.BlockRenderType
+import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -190,6 +190,17 @@ class CokeKilnGrateBlock : net.minecraft.block.BlockWithEntity(AbstractBlock.Set
 @ModBlock(name = "coke_kiln_hatch", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "steam")
 /** 焦炉窑口（Coke Kiln Hatch） */
 class CokeKilnHatchBlock : Block(AbstractBlock.Settings.copy(Blocks.BRICKS).strength(3.0f, 10.0f)) {
+    override fun getPlacementState(ctx: ItemPlacementContext): BlockState = defaultState.with(FACING, Direction.UP)
+
+    init {
+        defaultState = stateManager.defaultState.with(FACING, Direction.UP)
+    }
+
+    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+        super.appendProperties(builder)
+        builder.add(FACING)
+    }
+
     override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
         super.onBlockAdded(state, world, pos, oldState, notify)
         if (!world.isClient) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
@@ -219,6 +230,8 @@ class CokeKilnHatchBlock : Block(AbstractBlock.Settings.copy(Blocks.BRICKS).stre
     }
 
     companion object {
+        val FACING: DirectionProperty = DirectionProperty.of("facing")
+
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val refractory = RefractoryBricksBlock::class.item()
