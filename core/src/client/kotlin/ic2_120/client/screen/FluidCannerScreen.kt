@@ -33,6 +33,10 @@ class FluidCannerScreen(
         titleY = 4
     }
 
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         // background drawn in render() for correct z-ordering
     }
@@ -133,10 +137,8 @@ class FluidCannerScreen(
             GUI_SIZE.hotbarY,
             GuiSize.SLOT_SIZE
         )
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 4) 原生 slot 渲染 + 交互（在 Compose 之上，保证耐久条可见）
         super.render(context, mouseX, mouseY, delta)
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 

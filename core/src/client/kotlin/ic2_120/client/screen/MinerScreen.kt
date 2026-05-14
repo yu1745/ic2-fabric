@@ -27,6 +27,10 @@ class MinerScreen(
         titleY = 4
     }
 
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
@@ -167,11 +171,11 @@ class MinerScreen(
             context, x, y, GUI_SIZE.playerInvY, GUI_SIZE.hotbarY, GuiSize.SLOT_SIZE
         )
 
-        // 再绘制 UI（slot 背景等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
         // 最后绘制物品（包括耐久条），确保物品在顶层
         super.render(context, mouseX, mouseY, delta)
+
+        // 再绘制 UI（slot 背景等）
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
         drawMouseoverTooltip(context, mouseX, mouseY)

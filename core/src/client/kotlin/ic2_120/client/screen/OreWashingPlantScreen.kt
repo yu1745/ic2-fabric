@@ -30,6 +30,10 @@ class OreWashingPlantScreen(
         titleY = 4
     }
 
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         // Background drawing is now handled in render() to ensure correct render order.
     }
@@ -132,8 +136,8 @@ class OreWashingPlantScreen(
             GuiSize.SLOT_SIZE
         )
 
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         super.render(context, mouseX, mouseY, delta)
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 

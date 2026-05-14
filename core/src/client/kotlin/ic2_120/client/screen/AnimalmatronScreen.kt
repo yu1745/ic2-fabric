@@ -30,6 +30,10 @@ class AnimalmatronScreen(
         backgroundHeight = GuiSize.STANDARD_UPGRADE.height
     }
 
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行，
         // 确保物品耐久条绘制在 slot 背景之上。
@@ -145,10 +149,10 @@ class AnimalmatronScreen(
         )
 
         // 再绘制 UI（slot 背景、能量条、流体条等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        super.render(context, mouseX, mouseY, delta)
 
         // 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
 
         val animalCountText = t("gui.ic2_120.animalmatron.monitored_animals", handler.sync.animalCount)
         val hasShears = handler.getSlot(AnimalmatronScreenHandler.SLOT_SHEARS_INDEX).hasStack()

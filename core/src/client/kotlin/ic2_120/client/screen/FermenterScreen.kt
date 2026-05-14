@@ -29,6 +29,10 @@ class FermenterScreen(
         titleY = 4
     }
 
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         // background drawn in render() for correct z-ordering
     }
@@ -165,8 +169,8 @@ class FermenterScreen(
             GUI_SIZE.hotbarY,
             GuiSize.SLOT_SIZE
         )
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         super.render(context, mouseX, mouseY, delta)
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
 
         val inputText = t("gui.ic2_120.transfer_hu", handler.sync.heatInputPerTick)
         val consumeText = t("gui.ic2_120.consume_hu", handler.sync.heatConsumePerTick)

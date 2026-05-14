@@ -27,6 +27,10 @@ class CokeKilnScreen(
         backgroundHeight = GUI_SIZE.height
     }
 
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
@@ -81,8 +85,8 @@ class CokeKilnScreen(
             hotbarY = GUI_SIZE.hotbarY,
             slotSize = GuiSize.SLOT_SIZE
         )
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         super.render(context, mouseX, mouseY, delta)
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 

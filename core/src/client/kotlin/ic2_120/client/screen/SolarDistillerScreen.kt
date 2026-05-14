@@ -31,6 +31,10 @@ class SolarDistillerScreen(
         titleY = 4
     }
 
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
@@ -171,11 +175,9 @@ class SolarDistillerScreen(
             GuiSize.SLOT_SIZE
         )
 
-        // 再绘制 UI（slot 背景、流体条等），确保它们在物品下方
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 最后绘制物品（包括耐久条），确保物品在顶层
         super.render(context, mouseX, mouseY, delta)
+
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }

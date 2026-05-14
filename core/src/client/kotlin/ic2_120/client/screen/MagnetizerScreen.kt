@@ -28,6 +28,10 @@ class MagnetizerScreen(
         backgroundHeight = GUI_SIZE.height
     }
 
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
     }
@@ -91,11 +95,11 @@ class MagnetizerScreen(
             GuiSize.SLOT_SIZE
         )
 
-        // 再绘制 UI（slot 背景、能量条等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
         // 最后绘制物品（包括耐久条），确保物品在顶层
         super.render(context, mouseX, mouseY, delta)
+
+        // 再绘制 UI（slot 背景、能量条等）
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
 
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
         val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(consumeRate))

@@ -29,6 +29,10 @@ class BlastFurnaceScreen(
         backgroundHeight = GUI_SIZE.height
     }
 
+    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    }
+
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         // Background drawing is now handled in render() to ensure correct render order.
     }
@@ -149,8 +153,8 @@ class BlastFurnaceScreen(
             GuiSize.SLOT_SIZE
         )
 
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         super.render(context, mouseX, mouseY, delta)
+        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
