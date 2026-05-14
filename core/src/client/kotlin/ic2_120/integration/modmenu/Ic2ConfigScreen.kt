@@ -448,8 +448,9 @@ object Ic2ConfigScreen {
         builder: ConfigBuilder, eb: ConfigEntryBuilder, cfg: WorldgenConfig
     ): () -> WorldgenConfig {
         val rubberTreeReader = rubberTreeConfig(eb, builder, cfg.rubberTree)
+        val peatOreReader = peatOreConfig(eb, builder, cfg.peatOre)
 
-        return { WorldgenConfig(rubberTree = rubberTreeReader()) }
+        return { WorldgenConfig(rubberTree = rubberTreeReader(), peatOre = peatOreReader()) }
     }
 
     private fun rubberTreeConfig(
@@ -533,10 +534,61 @@ object Ic2ConfigScreen {
         }
     }
 
+    private fun peatOreConfig(
+        eb: ConfigEntryBuilder, builder: ConfigBuilder, cfg: PeatOreWorldgenConfig
+    ): () -> PeatOreWorldgenConfig {
+        val cat = builder.getOrCreateCategory(Text.literal("世界生成 • 泥炭矿"))
+        var enabled = cfg.enabled
+        var biomes = cfg.biomes.toMutableList()
+        var veinsPerChunk = cfg.veinsPerChunk
+        var veinSize = cfg.veinSize
+        var minY = cfg.minY
+        var maxY = cfg.maxY
+
+        cat.addEntry(eb.startBooleanToggle(Text.literal("启用自然生成"), enabled)
+            .setDefaultValue(true)
+            .setTooltip(Text.literal("是否允许自然生成泥炭矿。变更后需要重启。"))
+            .setSaveConsumer { enabled = it }.build())
+        cat.addEntry(eb.startStrList(Text.literal("允许生成的生物群系"), biomes)
+            .setDefaultValue(DEFAULT_PEAT_BIOMES)
+            .setTooltip(Text.literal("生物群系列表，填写 biome id。变更后需要重启。"))
+            .setSaveConsumer { biomes = it.toMutableList() }.build())
+        cat.addEntry(eb.startIntField(Text.literal("每区块矿脉数量"), veinsPerChunk)
+            .setDefaultValue(24)
+            .setTooltip(Text.literal("每个区块内生成多少条矿脉。"))
+            .setSaveConsumer { veinsPerChunk = it }.build())
+        cat.addEntry(eb.startIntField(Text.literal("矿脉大小"), veinSize)
+            .setDefaultValue(24)
+            .setTooltip(Text.literal("每条矿脉最大包含的方块数。"))
+            .setSaveConsumer { veinSize = it }.build())
+        cat.addEntry(eb.startIntField(Text.literal("最低生成高度（Y）"), minY)
+            .setDefaultValue(-16)
+            .setSaveConsumer { minY = it }.build())
+        cat.addEntry(eb.startIntField(Text.literal("最高生成高度（Y）"), maxY)
+            .setDefaultValue(64)
+            .setSaveConsumer { maxY = it }.build())
+
+        return {
+            PeatOreWorldgenConfig(
+                enabled = enabled,
+                biomes = biomes.toList(),
+                veinsPerChunk = veinsPerChunk,
+                veinSize = veinSize,
+                minY = minY,
+                maxY = maxY
+            )
+        }
+    }
+
     private val DEFAULT_RUBBER_BIOMES = listOf(
         "minecraft:forest", "minecraft:flower_forest", "minecraft:birch_forest",
         "minecraft:dark_forest", "minecraft:taiga", "minecraft:old_growth_pine_taiga",
         "minecraft:old_growth_spruce_taiga", "minecraft:jungle", "minecraft:sparse_jungle",
         "minecraft:bamboo_jungle", "minecraft:swamp"
+    )
+
+    private val DEFAULT_PEAT_BIOMES = listOf(
+        "minecraft:jungle", "minecraft:sparse_jungle",
+        "minecraft:bamboo_jungle", "minecraft:mushroom_fields"
     )
 }
