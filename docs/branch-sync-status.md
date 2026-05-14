@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **86 个 commit**，**83 个已同步，3 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **86 个 commit**，**86 个已同步，0 个待同步**。
 （归档 1-49, 50-62 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -35,9 +35,9 @@
 | 67 | `5f1ffaa3` | chore: 更新TODO + 日光灯缓存改为100EU防频闪 | ✅ | 无冲突直接 cherry-pick |
 | 68 | `da2bc1b1` | fix: 量子护腿神行移动检测改用 blockPos 坐标对比 + 量子胸甲入水不取消飞行 | ✅ | cherry-pick + 解决冲突（TODO.md release350 保留、QuantumLeggings.kt velocity→blockPos）|
 | 69 | `ae483fd2` | fix: 打粉机 inputCount 未生效——一律按1个消耗，改为按配方数量消耗 | ✅ | cherry-pick + 适配 1.21.1 API（codec/packetCodec、RecipeInput、datagen inputCount 写入）+ datagen 刷新 |
-| 70 | `717ebaae` | feat: 焦炉——窑口添加朝向、screen显示剩余时间、blockstate旋转修正 | ❌ | |
-| 71 | `0c935b69` | fix: 发酵机UI溢出容器修复，半流质发电机UI高度调整 | ❌ | |
-| 72 | `9186d55c` | feat: 添加泥炭矿及其处理配方、tooltip、世界生成与着色器 | ❌ | |
+| 70 | `717ebaae` | feat: 焦炉——窑口添加朝向、screen显示剩余时间、blockstate旋转修正 | ✅ | cherry-pick + 解决 CokeKilnBlocks.kt import 冲突 + datagen 刷新 |
+| 71 | `0c935b69` | fix: 发酵机UI溢出容器修复，半流质发电机UI高度调整 | ✅ | 无冲突直接 cherry-pick + datagen 刷新 |
+| 72 | `9186d55c` | feat: 添加泥炭矿及其处理配方、tooltip、世界生成与着色器 | ✅ | cherry-pick + 适配 1.21.1 API（Identifier.of、ItemTooltipCallback 4参数、PeatOreBlock::class.item()）+ datagen 刷新 |
 
 ## 同步历史
 
@@ -74,3 +74,4 @@
 - 2026-05-13：同步 commits 77-78——剪刀机制 + 监管机额外产物 + 耐久条渲染修复（cherry-pick + 冲突解决）+ 全机器 GUI 耐久条渲染顺序修复 |
 - 2026-05-14：同步 commits 80-82——牲畜监管机重做 + TODO/日光灯缓存 + 量子护腿 blockPos 移动检测（cherry-pick + 解决 QuantumLeggings.kt 冲突）|
 - 2026-05-14：同步 commit 83——打粉机 inputCount 修复（cherry-pick + 适配 1.21.1 API + datagen 刷新）|
+- 2026-05-14：同步 commits 84-86（70-72）——焦炉窑口 + 发酵机UI + 泥炭矿（cherry-pick + 适配 1.21.1 API Identifier.of/ItemTooltipCallback + datagen 刷新）|
