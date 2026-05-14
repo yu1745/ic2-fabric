@@ -14,7 +14,8 @@ import net.minecraft.world.World
 class MaceratorRecipe(
     private val id: Identifier,
     val ingredient: Ingredient,
-    val output: ItemStack
+    val output: ItemStack,
+    val inputCount: Int = 1
 ) : Recipe<SimpleInventory> {
     override fun matches(inventory: SimpleInventory, world: World): Boolean {
         return ingredient.test(inventory.getStack(0))

@@ -31,17 +31,19 @@ object MaceratorRecipeSerializer : RecipeSerializer<MaceratorRecipe> {
         val resultItemId = Identifier(JsonHelper.getString(result, "item"))
         val resultItem = Registries.ITEM.get(resultItemId)
         val resultCount = JsonHelper.getInt(result, "count", 1)
-        return MaceratorRecipe(id, ingredient, ItemStack(resultItem, resultCount))
+        return MaceratorRecipe(id, ingredient, ItemStack(resultItem, resultCount), count)
     }
 
     override fun read(id: Identifier, buf: PacketByteBuf): MaceratorRecipe {
         val ingredient = Ingredient.fromPacket(buf)
         val output = buf.readItemStack()
-        return MaceratorRecipe(id, ingredient, output)
+        val inputCount = buf.readVarInt()
+        return MaceratorRecipe(id, ingredient, output, inputCount)
     }
 
     override fun write(buf: PacketByteBuf, recipe: MaceratorRecipe) {
         recipe.ingredient.write(buf)
         buf.writeItemStack(recipe.output.copy())
+        buf.writeVarInt(recipe.inputCount)
     }
 }

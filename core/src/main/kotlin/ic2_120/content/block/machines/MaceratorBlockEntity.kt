@@ -207,19 +207,20 @@ class MaceratorBlockEntity(
             return
         }
         val result = match.get().output.copy()
+        val inputCount = match.get().inputCount
         val outputSlot = getStack(SLOT_OUTPUT)
         val maxStack = result.maxCount
         val canAccept = outputSlot.isEmpty() ||
             (ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= maxStack)
 
-        if (!canAccept) {
+        if (input.count < inputCount || !canAccept) {
             if (sync.progress != 0) sync.progress = 0
             sync.syncCurrentTickFlow()
             return
         }
 
         if (sync.progress >= MaceratorSync.PROGRESS_MAX) {
-            input.decrement(1)
+            input.decrement(inputCount)
             if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result.copy())
             else outputSlot.increment(result.count)
             sync.progress = 0
