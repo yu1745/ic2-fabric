@@ -31,6 +31,10 @@ fabricApi {
     }
 }
 
+tasks.named('runDatagen') {
+    jvmArgs '-Dfabric-api.datagen.modid=ic2_120_advanced_weapons_addon'
+}
+
 dependencies {
     implementation project(path: ":core", configuration: "namedElements")
 }
