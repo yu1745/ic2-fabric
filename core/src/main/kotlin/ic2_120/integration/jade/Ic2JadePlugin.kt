@@ -669,7 +669,7 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
         val hasWater = accessor.serverData.getBoolean("hasWater")
         val hasWeedEx = accessor.serverData.getBoolean("hasWeedEx")
 
-        // 显示水状态
+        // 显示水状态 / 干渴
         tooltip.add(
             if (hasWater) {
                 Text.translatable("ic2_120.jade.animal_water_ok").formatted(Formatting.AQUA)
@@ -677,8 +677,11 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
                 Text.translatable("ic2_120.jade.animal_water_low").formatted(Formatting.RED)
             }
         )
+        if (!hasWater) {
+            tooltip.add(Text.translatable("ic2_120.jade.animal_thirsty").formatted(Formatting.RED))
+        }
 
-        // 显示除草剂状态
+        // 显示杀虫剂状态 / 生病
         tooltip.add(
             if (hasWeedEx) {
                 Text.translatable("ic2_120.jade.animal_weedex_ok").formatted(Formatting.GREEN)
@@ -686,6 +689,9 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
                 Text.translatable("ic2_120.jade.animal_weedex_low").formatted(Formatting.RED)
             }
         )
+        if (!hasWeedEx) {
+            tooltip.add(Text.translatable("ic2_120.jade.animal_sick").formatted(Formatting.RED))
+        }
 
         // 显示喂食进度
         if (accessor.serverData.contains("canBreed")) {
