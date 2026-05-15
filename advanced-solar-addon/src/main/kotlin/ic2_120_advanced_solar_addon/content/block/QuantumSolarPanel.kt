@@ -4,10 +4,15 @@ import ic2_120_advanced_solar_addon.content.item.QuantumCore
 import ic2_120_advanced_solar_addon.content.screen.SolarPanelScreenHandler
 import ic2_120.content.block.MachineBlock
 import ic2_120.content.energy.charge.BatteryChargerComponent
+import ic2_120.content.item.energy.IBatteryItem
+import ic2_120.content.item.energy.IElectricTool
+import ic2_120.content.storage.ItemInsertRoute
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RecipeProvider
+import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
@@ -121,6 +126,29 @@ class QuantumSolarPanelBlockEntity(pos: BlockPos, state: BlockState) :
 
     private val inventory = DefaultedList.ofSize(CHARGE_SLOTS, ItemStack.EMPTY)
 
+    private val chargeSlotMatcher: (ItemStack) -> Boolean = { stack ->
+        val item = stack.item
+        (item is IBatteryItem && item.canCharge && item.tier <= tier) || (item is IElectricTool && item.tier <= tier)
+    }
+
+    private val chargeSlotIndices = IntArray(CHARGE_SLOTS) { it }
+
+    @RegisterItemStorage
+    val itemStorage = RoutedItemStorage(
+        inventory = inventory,
+        maxCountPerStackProvider = { 1 },
+        slotValidator = { _, stack -> chargeSlotMatcher(stack) },
+        insertRoutes = listOf(
+            ItemInsertRoute(
+                slotIndices = chargeSlotIndices,
+                matcher = chargeSlotMatcher,
+                maxPerSlot = 1
+            )
+        ),
+        extractSlots = chargeSlotIndices,
+        markDirty = { markDirty() }
+    )
+
     private val chargerComponents = (0 until CHARGE_SLOTS).map { slot ->
         BatteryChargerComponent(
             inventory = this,
@@ -188,7 +216,8 @@ class QuantumSolarPanelBlockEntity(pos: BlockPos, state: BlockState) :
             syncId, playerInventory,
             ScreenHandlerContext.create(world!!, pos),
             syncedData,
-            this, CHARGE_SLOTS, tier
+            this, CHARGE_SLOTS, tier,
+            itemStorage
         )
     }
 }

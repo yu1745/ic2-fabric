@@ -5,7 +5,6 @@ import ic2_120.content.block.machines.UuScannerBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotMoveHelper
-import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.UuScannerSync
@@ -95,15 +94,13 @@ class UuScannerScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 }
                 index in PLAYER_INV_START..HOTBAR_END -> {
-                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                        SlotTarget(slots[it], upgradeSlotSpec)
-                    }
-                    val moved = SlotMoveHelper.insertIntoTargets(
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
                         stackInSlot,
-                        listOf(
-                            SlotTarget(slots[SLOT_INPUT_INDEX], deriveSpec(UuScannerBlockEntity.SLOT_INPUT)),
-                            SlotTarget(slots[SLOT_BATTERY_INDEX], deriveSpec(UuScannerBlockEntity.SLOT_DISCHARGING))
-                        ) + upgradeTargets
+                        storage,
+                        storage.insertRoutes,
+                        beSlotToHandlerIndex,
+                        slots
                     )
                     if (!moved) return ItemStack.EMPTY
                 }

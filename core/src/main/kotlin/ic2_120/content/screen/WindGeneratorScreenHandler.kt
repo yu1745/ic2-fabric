@@ -6,7 +6,6 @@ import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.WindGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
@@ -76,14 +75,8 @@ class WindGeneratorScreenHandler(
             when {
                 index == SLOT_BATTERY_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 index in PLAYER_INV_START..HOTBAR_END -> {
-                    val moved = if (itemStorage != null) {
-                        SlotMoveHelper.insertFromRoutes(stackInSlot, itemStorage, itemStorage.insertRoutes, beSlotToHandlerIndex, slots)
-                    } else {
-                        SlotMoveHelper.insertIntoTargets(
-                            stackInSlot,
-                            listOf(SlotTarget(slots[SLOT_BATTERY_INDEX], SLOT_SPEC_FALLBACK_BATTERY))
-                        )
-                    }
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY

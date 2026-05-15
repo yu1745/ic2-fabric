@@ -5,7 +5,6 @@ import ic2_120.content.block.machines.CannerBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.CannerSync
@@ -143,8 +142,8 @@ class CannerScreenHandler(
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START..HOTBAR_END -> {
-                    val targets = buildRouteTargets()
-                    val moved = SlotMoveHelper.insertIntoTargets(stackInSlot, targets)
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
@@ -163,24 +162,6 @@ class CannerScreenHandler(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)
-
-    /**
-     * Build ordered slot targets from itemStorage insert routes, falling back to empty
-     * when itemStorage is null (client side).
-     */
-    private fun buildRouteTargets(): List<SlotTarget> {
-        if (itemStorage == null) return emptyList()
-        val routes = itemStorage.insertRoutes
-        val targets = mutableListOf<SlotTarget>()
-        for (route in routes) {
-            for (beSlot in route.slotIndices) {
-                val handlerIdx = beSlotToHandlerIndex[beSlot] ?: continue
-                val spec = itemStorage.deriveSlotSpec(beSlot)
-                targets.add(SlotTarget(slots[handlerIdx], spec))
-            }
-        }
-        return targets
-    }
 
     companion object {
         const val SLOT_SIZE = 18

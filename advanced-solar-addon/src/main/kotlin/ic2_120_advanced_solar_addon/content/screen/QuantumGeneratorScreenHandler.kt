@@ -44,7 +44,29 @@ class QuantumGeneratorScreenHandler(
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
-        return ItemStack.EMPTY
+        var stack = ItemStack.EMPTY
+        val slot = slots[index]
+        if (slot.hasStack()) {
+            val stackInSlot = slot.stack
+            stack = stackInSlot.copy()
+
+            when {
+                // Player main inventory -> hotbar
+                index in PLAYER_INV_START until HOTBAR_START -> {
+                    if (!insertItem(stackInSlot, HOTBAR_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                }
+                // Hotbar -> player main inventory
+                index in HOTBAR_START until HOTBAR_END -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_START, false)) return ItemStack.EMPTY
+                }
+            }
+
+            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            else slot.markDirty()
+            if (stackInSlot.count == stack.count) return ItemStack.EMPTY
+            slot.onTakeItem(player, stackInSlot)
+        }
+        return stack
     }
 
     override fun canUse(player: PlayerEntity): Boolean =
@@ -55,6 +77,8 @@ class QuantumGeneratorScreenHandler(
     companion object {
         const val SLOT_SIZE = 18
         const val PLAYER_INV_START = 0
+        const val HOTBAR_START = 27
+        const val HOTBAR_END = 36
 
         @ScreenFactory
         @JvmStatic

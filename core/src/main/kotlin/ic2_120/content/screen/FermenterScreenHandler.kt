@@ -9,7 +9,6 @@ import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.FermenterSync
@@ -104,15 +103,13 @@ class FermenterScreenHandler(
                 if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
             in PLAYER_INV_START..HOTBAR_END -> {
-                val inputFilledSpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_INPUT_FILLED_CONTAINER) ?: INPUT_FILLED_CONTAINER_SLOT_SPEC
-                val outputEmptySpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_OUTPUT_EMPTY_CONTAINER) ?: OUTPUT_EMPTY_CONTAINER_SLOT_SPEC
-                val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map { SlotTarget(slots[it], upgradeSlotSpec) }
-                val moved = SlotMoveHelper.insertIntoTargets(
+                val storage = itemStorage ?: return ItemStack.EMPTY
+                val moved = SlotMoveHelper.insertFromRoutes(
                     inSlot,
-                    listOf(
-                        SlotTarget(slots[SLOT_INPUT_FILLED_CONTAINER_INDEX], inputFilledSpec),
-                        SlotTarget(slots[SLOT_OUTPUT_EMPTY_CONTAINER_INDEX], outputEmptySpec)
-                    ) + upgradeTargets
+                    storage,
+                    storage.insertRoutes,
+                    beSlotToHandlerIndex,
+                    slots
                 )
                 if (!moved) return ItemStack.EMPTY
             }
