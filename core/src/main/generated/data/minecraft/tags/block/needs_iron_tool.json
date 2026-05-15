@@ -1,6 +1,7 @@
 {
   "values": [
     "ic2_120:animal_slaughterer",
+    "ic2_120:animalmatron",
     "ic2_120:blast_furnace",
     "ic2_120:block_cutter",
     "ic2_120:canner",
@@ -9,6 +10,7 @@
     "ic2_120:coke_kiln",
     "ic2_120:compressor",
     "ic2_120:crop_harvester",
+    "ic2_120:cropmatron",
     "ic2_120:electric_furnace",
     "ic2_120:electric_heat_generator",
     "ic2_120:batbox",
@@ -80,8 +82,6 @@
     "ic2_120:bronze_tank",
     "ic2_120:iron_tank",
     "ic2_120:steel_tank",
-    "ic2_120:iridium_tank",
-    "ic2_120:animalmatron",
-    "ic2_120:cropmatron"
+    "ic2_120:iridium_tank"
   ]
 }
