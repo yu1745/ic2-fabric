@@ -85,8 +85,10 @@ class ModBlockTagProvider(
             if (id.namespace != Ic2_120.MOD_ID) continue
 
             when {
-                id.path == "rubber_leaves" ->
+                id.path == "rubber_leaves" -> {
                     hoeBuilder.add(block)
+                    getOrCreateTagBuilder(BlockTags.LEAVES).add(block)
+                }
 
                 id.path == "reinforced_door" -> {
                     pickaxeBuilder.add(block)
