@@ -7,7 +7,7 @@ import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.FurnaceOutputSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
@@ -22,8 +22,6 @@ import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import net.fabricmc.fabric.api.registry.FuelRegistry
-import net.minecraft.recipe.RecipeType
 import ic2_120.registry.annotation.ScreenFactory
 
 @ModScreenHandler(block = IronFurnaceBlock::class)
@@ -32,23 +30,34 @@ class IronFurnaceScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(IronFurnaceScreenHandler::class.type(), syncId) {
 
     val sync = IronFurnaceSync(SyncedDataView(propertyDelegate))
+
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
+    private fun addTrackedSlot(inventory: Inventory, beSlot: Int, spec: SlotSpec) {
+        val handlerIndex = slots.size
+        addSlot(PredicateSlot(inventory, beSlot, 0, 0, spec))
+        beSlotToHandlerIndex[beSlot] = handlerIndex
+    }
 
     init {
         checkSize(blockInventory, 3)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, IronFurnaceBlockEntity.SLOT_INPUT, 0, 0, INPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, IronFurnaceBlockEntity.SLOT_FUEL, 0, 0, FUEL_SLOT_SPEC))
+        addTrackedSlot(blockInventory, IronFurnaceBlockEntity.SLOT_INPUT, DEFAULT_SLOT_SPEC)
         addSlot(FurnaceOutputSlot(blockInventory, IronFurnaceBlockEntity.SLOT_OUTPUT, 0, 0, OUTPUT_SLOT_SPEC) {
             context.get({ world, pos ->
                 val be = world.getBlockEntity(pos)
                 if (be is IronFurnaceBlockEntity) be.dropStoredExperience()
             })
         })
+        // 输出槽也需要记录映射（用于 quickMove 判断）
+        beSlotToHandlerIndex[IronFurnaceBlockEntity.SLOT_OUTPUT] = slots.size - 1
+        addTrackedSlot(blockInventory, IronFurnaceBlockEntity.SLOT_FUEL, DEFAULT_SLOT_SPEC)
 
         // 玩家物品栏
         for (row in 0 until 3) {
@@ -67,38 +76,18 @@ class IronFurnaceScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
-                // 输出槽 -> 玩家物品栏
-                index == IronFurnaceBlockEntity.SLOT_OUTPUT -> {
-                    if (!insertItem(stackInSlot, 3, 39, true)) return ItemStack.EMPTY
+                beSlot >= 0 -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                // 燃料槽 -> 玩家物品栏
-                index == IronFurnaceBlockEntity.SLOT_FUEL -> {
-                    if (!insertItem(stackInSlot, 3, 39, true)) return ItemStack.EMPTY
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
+                    if (!moved) return ItemStack.EMPTY
                 }
-                // 输入槽 -> 玩家物品栏
-                index == IronFurnaceBlockEntity.SLOT_INPUT -> {
-                    if (!insertItem(stackInSlot, 3, 39, true)) return ItemStack.EMPTY
-                }
-                // 玩家物品栏 -> 机器槽位
-                index in 3..38 -> {
-                    // 优先输出槽，然后输入槽，最后燃料槽
-                    val movedToOutput = insertItem(stackInSlot, IronFurnaceBlockEntity.SLOT_OUTPUT, IronFurnaceBlockEntity.SLOT_OUTPUT + 1, false)
-                    if (!movedToOutput) {
-                        val moved = SlotMoveHelper.insertIntoTargets(
-                            stackInSlot,
-                            listOf(
-                                SlotTarget(slots[IronFurnaceBlockEntity.SLOT_INPUT], INPUT_SLOT_SPEC),
-                                SlotTarget(slots[IronFurnaceBlockEntity.SLOT_FUEL], FUEL_SLOT_SPEC)
-                            )
-                        )
-                        if (!moved) {
-                            return ItemStack.EMPTY
-                        }
-                    }
-                }
-                else -> if (!insertItem(stackInSlot, 3, 39, false)) return ItemStack.EMPTY
+                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
@@ -117,27 +106,11 @@ class IronFurnaceScreenHandler(
 
     companion object {
         const val PLAYER_INV_START = 3
+        const val HOTBAR_END = 38
         const val SLOT_SIZE = 18
 
-        private val INPUT_SLOT_SPEC = SlotSpec(
-            canInsert = { stack ->
-                // 输入槽：检查是否有烧制配方
-                // 注意：这里在客户端无法检查，简单允许所有物品
-                // 实际的验证会在服务器端的 canPlaceInSlot 中进行
-                !stack.isEmpty
-            }
-        )
-
-        private val FUEL_SLOT_SPEC = SlotSpec(
-            canInsert = { stack ->
-                !stack.isEmpty && ((FuelRegistry.INSTANCE.get(stack.item) ?: 0) > 0 ||
-                    stack.item == net.minecraft.item.Items.LAVA_BUCKET)
-            }
-        )
-
-        private val OUTPUT_SLOT_SPEC = SlotSpec(
-            canInsert = { stack -> false }  // 输出槽不能手动插入
-        )
+        private val DEFAULT_SLOT_SPEC = SlotSpec()
+        private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false }, canTake = { true })
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): IronFurnaceScreenHandler {

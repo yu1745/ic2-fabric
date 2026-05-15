@@ -5,7 +5,7 @@ import ic2_120.content.block.machines.CokeKilnBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.CokeKilnSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -29,17 +29,26 @@ class CokeKilnScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(CokeKilnScreenHandler::class.type(), syncId) {
 
     val sync = CokeKilnSync(SyncedDataView(propertyDelegate))
+
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
+    private fun addTrackedSlot(inventory: Inventory, beSlot: Int, spec: SlotSpec) {
+        val handlerIndex = slots.size
+        addSlot(PredicateSlot(inventory, beSlot, 0, 0, spec))
+        beSlotToHandlerIndex[beSlot] = handlerIndex
+    }
 
     init {
         checkSize(blockInventory, 2)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, SLOT_INPUT, 0, 0, INPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, SLOT_OUTPUT, 0, 0, OUTPUT_SLOT_SPEC))
+        addTrackedSlot(blockInventory, SLOT_INPUT, DEFAULT_SLOT_SPEC)
+        addTrackedSlot(blockInventory, SLOT_OUTPUT, OUTPUT_SLOT_SPEC)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -57,14 +66,15 @@ class CokeKilnScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
-                index == SLOT_OUTPUT -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
-                index == SLOT_INPUT -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
+                beSlot >= 0 -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
+                    slot.onQuickTransfer(stackInSlot, stack)
+                }
                 index in PLAYER_INV_START..HOTBAR_END -> {
-                    val moved = SlotMoveHelper.insertIntoTargets(
-                        stackInSlot,
-                        listOf(SlotTarget(slots[SLOT_INPUT], INPUT_SLOT_SPEC))
-                    )
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END + 1, false)) return ItemStack.EMPTY
@@ -90,8 +100,8 @@ class CokeKilnScreenHandler(
         const val HOTBAR_END = 37
         const val SLOT_SIZE = 18
 
-        private val INPUT_SLOT_SPEC = SlotSpec(canInsert = { !it.isEmpty })
-        private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false })
+        private val DEFAULT_SLOT_SPEC = SlotSpec()
+        private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false }, canTake = { true })
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): CokeKilnScreenHandler {

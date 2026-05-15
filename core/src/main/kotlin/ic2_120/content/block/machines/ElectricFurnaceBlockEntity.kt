@@ -167,7 +167,7 @@ class ElectricFurnaceBlockEntity(
         Text.translatable("block.ic2_120.electric_furnace")
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        ElectricFurnaceScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
+        ElectricFurnaceScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
