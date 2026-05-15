@@ -387,7 +387,8 @@ class SolarDistillerBlockEntity(
             playerInventory,
             this,
             net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
-            syncedData
+            syncedData,
+            itemStorage
         )
 
     // NBT 数据读写

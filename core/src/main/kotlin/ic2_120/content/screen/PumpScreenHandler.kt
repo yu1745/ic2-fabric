@@ -2,33 +2,27 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.PumpBlock
 import ic2_120.content.block.machines.PumpBlockEntity
-import ic2_120.content.item.FluidCellItem
-import ic2_120.content.item.IUpgradeItem
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
-import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.PumpSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-
-import net.minecraft.registry.Registries
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import net.minecraft.util.Identifier
-import ic2_120.registry.annotation.ScreenFactory
 
 @ModScreenHandler(block = PumpBlock::class)
 class PumpScreenHandler(
@@ -36,32 +30,28 @@ class PumpScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(PumpScreenHandler::class.type(), syncId) {
 
     val sync = PumpSync(SyncedDataView(propertyDelegate))
 
-    private val upgradeSlotSpec by lazy {
+    private val upgradeSlotSpec: ic2_120.content.screen.slot.SlotSpec by lazy {
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
-    private val inputSlotSpec = SlotSpec(canInsert = { stack ->
-        val emptyCell = Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell"))
-        stack.item == emptyCell || stack.item is FluidCellItem
-    })
-    private val outputSlotSpec = SlotSpec(canInsert = { false }, canTake = { true })
-    private val dischargingSlotSpec = SlotSpec(canInsert = { stack -> stack.item is IBatteryItem }, maxItemCount = 1)
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
         checkSize(blockInventory, PumpBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, PumpBlockEntity.SLOT_INPUT, 0, 0, inputSlotSpec))
-        addSlot(PredicateSlot(blockInventory, PumpBlockEntity.SLOT_OUTPUT, 0, 0, outputSlotSpec))
-        addSlot(PredicateSlot(blockInventory, PumpBlockEntity.SLOT_DISCHARGING, 0, 0, dischargingSlotSpec))
+        addTrackedSlot(PredicateSlot(blockInventory, PumpBlockEntity.SLOT_INPUT, 0, 0, deriveSpec(PumpBlockEntity.SLOT_INPUT)))
+        addTrackedSlot(PredicateSlot(blockInventory, PumpBlockEntity.SLOT_OUTPUT, 0, 0, deriveSpec(PumpBlockEntity.SLOT_OUTPUT)))
+        addTrackedSlot(PredicateSlot(blockInventory, PumpBlockEntity.SLOT_DISCHARGING, 0, 0, deriveSpec(PumpBlockEntity.SLOT_DISCHARGING)))
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
+            addTrackedSlot(
                 PredicateSlot(
                     blockInventory,
                     PumpBlockEntity.SLOT_UPGRADE_INDICES[i],
@@ -81,6 +71,15 @@ class PumpScreenHandler(
             addSlot(Slot(playerInventory, col, 0, 0))
         }
     }
+
+    private fun addTrackedSlot(slot: PredicateSlot): PredicateSlot {
+        beSlotToHandlerIndex[slot.index] = slots.size
+        addSlot(slot)
+        return slot
+    }
+
+    private fun deriveSpec(beSlot: Int) =
+        itemStorage?.deriveSlotSpec(beSlot) ?: SlotTarget.NOP_SPEC
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
@@ -104,8 +103,8 @@ class PumpScreenHandler(
                     val moved = SlotMoveHelper.insertIntoTargets(
                         stackInSlot,
                         listOf(
-                            SlotTarget(slots[SLOT_INPUT_INDEX], inputSlotSpec),
-                            SlotTarget(slots[SLOT_DISCHARGING_INDEX], dischargingSlotSpec)
+                            SlotTarget(slots[SLOT_INPUT_INDEX], deriveSpec(PumpBlockEntity.SLOT_INPUT)),
+                            SlotTarget(slots[SLOT_DISCHARGING_INDEX], deriveSpec(PumpBlockEntity.SLOT_DISCHARGING))
                         ) + upgradeTargets
                     )
                     if (!moved) return ItemStack.EMPTY
@@ -147,4 +146,3 @@ class PumpScreenHandler(
         }
     }
 }
-

@@ -215,4 +215,9 @@ object SlotMoveHelper {
 data class SlotTarget(
     val slot: Slot,
     val spec: SlotSpec
-)
+) {
+    companion object {
+        /** Fallback spec used on the client side where [RoutedItemStorage] is unavailable. */
+        val NOP_SPEC = SlotSpec()
+    }
+}

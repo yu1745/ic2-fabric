@@ -2,12 +2,11 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.UuScannerBlock
 import ic2_120.content.block.machines.UuScannerBlockEntity
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
-import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.UuScannerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -32,7 +31,8 @@ class UuScannerScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    propertyDelegate: PropertyDelegate
+    propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(UuScannerScreenHandler::class.type(), syncId) {
 
     val sync = UuScannerSync(
@@ -41,19 +41,21 @@ class UuScannerScreenHandler(
         { UuScannerSync.ENERGY_CAPACITY }
     )
 
-    private val upgradeSlotSpec: SlotSpec by lazy {
+    private val upgradeSlotSpec: ic2_120.content.screen.slot.SlotSpec by lazy {
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
+
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
         checkSize(blockInventory, UuScannerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, UuScannerBlockEntity.SLOT_INPUT, 0, 0, INPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, UuScannerBlockEntity.SLOT_DISCHARGING, 0, 0, BATTERY_SLOT_SPEC))
+        addTrackedSlot(PredicateSlot(blockInventory, UuScannerBlockEntity.SLOT_INPUT, 0, 0, deriveSpec(UuScannerBlockEntity.SLOT_INPUT)))
+        addTrackedSlot(PredicateSlot(blockInventory, UuScannerBlockEntity.SLOT_DISCHARGING, 0, 0, deriveSpec(UuScannerBlockEntity.SLOT_DISCHARGING)))
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
+            addTrackedSlot(
                 PredicateSlot(
                     blockInventory,
                     UuScannerBlockEntity.SLOT_UPGRADE_INDICES[i],
@@ -73,6 +75,15 @@ class UuScannerScreenHandler(
         }
     }
 
+    private fun addTrackedSlot(slot: PredicateSlot): PredicateSlot {
+        beSlotToHandlerIndex[slot.index] = slots.size
+        addSlot(slot)
+        return slot
+    }
+
+    private fun deriveSpec(beSlot: Int) =
+        itemStorage?.deriveSlotSpec(beSlot) ?: SlotTarget.NOP_SPEC
+
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
@@ -84,14 +95,15 @@ class UuScannerScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 }
                 index in PLAYER_INV_START..HOTBAR_END -> {
+                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
+                        SlotTarget(slots[it], upgradeSlotSpec)
+                    }
                     val moved = SlotMoveHelper.insertIntoTargets(
                         stackInSlot,
                         listOf(
-                            SlotTarget(slots[SLOT_INPUT_INDEX], INPUT_SLOT_SPEC),
-                            SlotTarget(slots[SLOT_BATTERY_INDEX], BATTERY_SLOT_SPEC)
-                        ) + (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                            SlotTarget(slots[it], upgradeSlotSpec)
-                        }
+                            SlotTarget(slots[SLOT_INPUT_INDEX], deriveSpec(UuScannerBlockEntity.SLOT_INPUT)),
+                            SlotTarget(slots[SLOT_BATTERY_INDEX], deriveSpec(UuScannerBlockEntity.SLOT_DISCHARGING))
+                        ) + upgradeTargets
                     )
                     if (!moved) return ItemStack.EMPTY
                 }
@@ -111,18 +123,6 @@ class UuScannerScreenHandler(
         }, true)
 
     companion object {
-        /** 此 Handler 使用的 GUI 尺寸 */
-        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
-
-        private val INPUT_SLOT_SPEC = SlotSpec(
-            maxItemCount = 1,
-            canInsert = { stack -> !stack.isEmpty && stack.item !is IBatteryItem }
-        )
-        private val BATTERY_SLOT_SPEC = SlotSpec(
-            maxItemCount = 1,
-            canInsert = { stack -> stack.item is IBatteryItem }
-        )
-
         const val SLOT_INPUT_INDEX = 0
         const val SLOT_BATTERY_INDEX = 1
         const val SLOT_UPGRADE_INDEX_START = 2
