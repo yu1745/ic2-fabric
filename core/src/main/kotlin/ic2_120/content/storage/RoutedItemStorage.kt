@@ -18,8 +18,8 @@ class RoutedItemStorage(
     private val inventory: MutableList<ItemStack>,
     private val maxCountPerStackProvider: () -> Int,
     private val slotValidator: (Int, ItemStack) -> Boolean,
-    private val insertRoutes: List<ItemInsertRoute>,
-    private val extractSlots: IntArray,
+    val insertRoutes: List<ItemInsertRoute>,
+    val extractSlots: IntArray,
     private val markDirty: () -> Unit
 ) : SnapshotParticipant<MutableList<ItemStack>>(), Storage<ItemVariant> {
 
@@ -149,6 +149,43 @@ class RoutedItemStorage(
             })
         }
         return views.iterator()
+    }
+
+    /**
+     * 从路由规则派生指定 BE slot 的 [ic2_120.content.screen.slot.SlotSpec]。
+     *
+     * - canInsert: slotValidator AND 至少一条 route 的 matcher 通过
+     * - maxItemCount: 所有覆盖该 slot 的 route 的 maxPerSlot 中的最小值；无 route 则 64
+     * - canTake: slot 在 extractSlots 中，或 slot 在某条 insertRoute 的 slotIndices 中（玩家应能取回放入的物品）
+     */
+    fun deriveSlotSpec(beSlotIndex: Int): ic2_120.content.screen.slot.SlotSpec {
+        val routesForSlot = insertRoutes.filter { beSlotIndex in it.slotIndices }
+        val isInsertable = routesForSlot.isNotEmpty()
+        val isExtractable = beSlotIndex in extractSlots || isInsertable
+
+        val canInsert: (ItemStack) -> Boolean = if (isInsertable) {
+            { stack -> slotValidator(beSlotIndex, stack) && routesForSlot.any { it.matcher(stack) } }
+        } else {
+            { false }
+        }
+
+        val maxItemCount = if (routesForSlot.isEmpty()) {
+            64
+        } else {
+            routesForSlot.mapNotNull { it.maxPerSlot }.minOrNull() ?: 64
+        }
+
+        val canTake: (net.minecraft.entity.player.PlayerEntity) -> Boolean = if (isExtractable) {
+            { true }
+        } else {
+            { false }
+        }
+
+        return ic2_120.content.screen.slot.SlotSpec(
+            maxItemCount = maxItemCount,
+            canInsert = canInsert,
+            canTake = canTake
+        )
     }
 
     private fun isSlotAvailableForInsert(slot: Int, stack: ItemStack): Boolean {
