@@ -4,6 +4,8 @@ import ic2_120.content.block.ElectricHeatGeneratorBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.AdjacentEnergyTransferComponent
+import ic2_120.content.storage.ItemInsertRoute
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.ElectricHeatGeneratorSync
 import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.syncs.SyncedData
@@ -13,6 +15,7 @@ import ic2_120.content.screen.ElectricHeatGeneratorScreenHandler
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
@@ -23,9 +26,8 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryWrapper
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
@@ -33,8 +35,6 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 /**
  * 电力加热机：
@@ -49,7 +49,7 @@ class ElectricHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRedstoneControlSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRedstoneControlSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = ElectricHeatGeneratorBlock.ACTIVE
 
@@ -63,7 +63,19 @@ class ElectricHeatGeneratorBlockEntity(
     override var redstoneInverted: Boolean = false
 
     private val inventory = DefaultedList.ofSize(SLOT_COUNT, ItemStack.EMPTY)
-    private val coilItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "coil")) }
+    @RegisterItemStorage
+    val itemStorage = RoutedItemStorage(
+        inventory = inventory,
+        maxCountPerStackProvider = { maxCountPerStack },
+        slotValidator = { slot, stack -> isValid(slot, stack) },
+        insertRoutes = listOf(
+            ItemInsertRoute((0 until SLOT_DISCHARGING).toList().toIntArray(), matcher = { !it.isEmpty && it.item == coilItem }, maxPerSlot = 1),
+            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1)
+        ),
+        extractSlots = IntArray(SLOT_COUNT) { it },
+        markDirty = { markDirty() }
+    )
+    private val coilItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "coil")) }
 
     private val batteryDischarger = BatteryDischargerComponent(
         inventory = this,
@@ -89,11 +101,9 @@ class ElectricHeatGeneratorBlockEntity(
         state
     )
 
-    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
+    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
-        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.electric_heat_generator")
@@ -143,9 +153,9 @@ class ElectricHeatGeneratorBlockEntity(
         markDirty()
     }
 
-    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.readNbt(nbt, lookup)
-        Inventories.readNbt(nbt, inventory, lookup)
+    override fun readNbt(nbt: NbtCompound) {
+        super.readNbt(nbt)
+        Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ElectricHeatGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, ElectricHeatGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -153,9 +163,9 @@ class ElectricHeatGeneratorBlockEntity(
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
-    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
-        super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+    override fun writeNbt(nbt: NbtCompound) {
+        super.writeNbt(nbt)
+        Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(ElectricHeatGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)

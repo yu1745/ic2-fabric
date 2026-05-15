@@ -8,10 +8,13 @@ import ic2_120.content.energy.EnergyTier
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.OverclockerUpgrade
 import ic2_120.content.screen.UvLampScreenHandler
+import ic2_120.content.storage.ItemInsertRoute
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.UvLampSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
@@ -49,6 +52,17 @@ class UvLampBlockEntity(
 ) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    @RegisterItemStorage
+    val itemStorage = RoutedItemStorage(
+        inventory = inventory,
+        maxCountPerStackProvider = { maxCountPerStack },
+        slotValidator = { slot, stack -> isValid(slot, stack) },
+        insertRoutes = listOf(
+            ItemInsertRoute(intArrayOf(SLOT_UPGRADE), matcher = { it.item is IUpgradeItem }, maxPerSlot = MAX_OVERCLOCKERS)
+        ),
+        extractSlots = intArrayOf(SLOT_UPGRADE),
+        markDirty = { markDirty() }
+    )
     val syncedData = SyncedData(this)
 
     @RegisterEnergy

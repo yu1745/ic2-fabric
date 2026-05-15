@@ -2,8 +2,12 @@ package ic2_120.content.block.nuclear
 
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
+import ic2_120.content.item.IUpgradeItem
+import ic2_120.content.storage.ItemInsertRoute
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
+import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -90,6 +94,17 @@ class ReactorFluidPortBlockEntity(
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    @RegisterItemStorage
+    val itemStorage = RoutedItemStorage(
+        inventory = inventory,
+        maxCountPerStackProvider = { maxCountPerStack },
+        slotValidator = { _, stack -> stack.item is IUpgradeItem },
+        insertRoutes = listOf(
+            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem })
+        ),
+        extractSlots = SLOT_UPGRADE_INDICES,
+        markDirty = { markDirty() }
+    )
 
     // Inventory 实现
     override fun size(): Int = INVENTORY_SIZE
