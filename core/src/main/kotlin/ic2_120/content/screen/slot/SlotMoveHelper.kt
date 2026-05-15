@@ -9,6 +9,56 @@ import net.minecraft.screen.slot.Slot
  * 基于槽位规则的通用移动工具，用于 quickMove 复用。
  */
 object SlotMoveHelper {
+
+    /**
+     * 基于 [RoutedItemStorage.insertRoutes] 的路由顺序，
+     * 按优先级将 [stack] 插入机器槽位。
+     * 使用 [beSlotToHandlerIndex] 将 BE 槽位索引映射到 handler slot index。
+     * 返回是否至少移动了 1 个物品。
+     */
+    fun insertFromRoutes(
+        stack: ItemStack,
+        storage: RoutedItemStorage,
+        routes: List<ItemInsertRoute>,
+        beSlotToHandlerIndex: Map<Int, Int>,
+        slots: List<Slot>
+    ): Boolean {
+        if (stack.isEmpty) return false
+        var movedAny = false
+        for (route in routes) {
+            if (stack.isEmpty) break
+            if (!route.matcher(stack)) continue
+            for (beSlot in route.slotIndices) {
+                if (stack.isEmpty) break
+                val handlerIndex = beSlotToHandlerIndex[beSlot] ?: continue
+                val slot = slots[handlerIndex]
+                if (!slot.canInsert(stack)) continue
+                val slotStack = slot.stack
+                val slotLimit = minOf(route.maxPerSlot ?: slot.maxItemCount, slot.maxItemCount, stack.maxCount)
+                if (slotLimit <= 0) continue
+                if (slotStack.isEmpty) {
+                    val moveCount = minOf(slotLimit, stack.count)
+                    if (moveCount <= 0) continue
+                    val moved = stack.copy()
+                    moved.count = moveCount
+                    slot.stack = moved
+                    stack.decrement(moveCount)
+                    slot.markDirty()
+                    movedAny = true
+                } else if (ItemStack.canCombine(slotStack, stack)) {
+                    val space = (slotLimit - slotStack.count).coerceAtLeast(0)
+                    if (space <= 0) continue
+                    val moveCount = minOf(space, stack.count)
+                    if (moveCount <= 0) continue
+                    slotStack.increment(moveCount)
+                    stack.decrement(moveCount)
+                    slot.markDirty()
+                    movedAny = true
+                }
+            }
+        }
+        return movedAny
+    }
     /**
      * 按给定顺序尝试把 [stack] 放入目标槽位列表。
      * 返回是否至少移动了 1 个物品。

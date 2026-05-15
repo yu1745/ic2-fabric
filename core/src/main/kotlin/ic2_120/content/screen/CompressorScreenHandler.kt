@@ -3,13 +3,10 @@ package ic2_120.content.screen
 import ic2_120.content.sync.CompressorSync
 import ic2_120.content.block.CompressorBlock
 import ic2_120.content.block.machines.CompressorBlockEntity
-import ic2_120.content.item.IUpgradeItem
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
-import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
@@ -33,39 +30,29 @@ class CompressorScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(CompressorScreenHandler::class.type(), syncId) {
 
     val sync = CompressorSync(SyncedDataView(propertyDelegate))
 
-    private val upgradeSlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
-    }
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private val inputSlotSpec = SlotSpec(canInsert = { stack -> stack.item !is IBatteryItem && stack.item !is IUpgradeItem })
-    private val outputSlotSpec = SlotSpec(canInsert = { false }, canTake = { true })
-    private val dischargingSlotSpec = SlotSpec(
-        canInsert = { stack -> stack.item is IBatteryItem },
-        maxItemCount = 1
-    )
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+    }
 
     init {
         checkSize(blockInventory, CompressorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
-        addSlot(PredicateSlot(blockInventory, CompressorBlockEntity.SLOT_INPUT, 0, 0, inputSlotSpec))
-        addSlot(PredicateSlot(blockInventory, CompressorBlockEntity.SLOT_OUTPUT, 0, 0, outputSlotSpec))
-        addSlot(PredicateSlot(blockInventory, CompressorBlockEntity.SLOT_DISCHARGING, 0, 0, dischargingSlotSpec))
-        // 升级槽（右侧纵向）
-        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
-                PredicateSlot(
-                    blockInventory,
-                    CompressorBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
-            )
+        addTrackedSlot(blockInventory, CompressorBlockEntity.SLOT_INPUT)
+        addTrackedSlot(blockInventory, CompressorBlockEntity.SLOT_OUTPUT)
+        addTrackedSlot(blockInventory, CompressorBlockEntity.SLOT_DISCHARGING)
+        for (i in 0 until CompressorBlockEntity.SLOT_UPGRADE_INDICES.size) {
+            addTrackedSlot(blockInventory, CompressorBlockEntity.SLOT_UPGRADE_INDICES[i])
         }
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -83,31 +70,23 @@ class CompressorScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
-                index == SLOT_OUTPUT_INDEX -> {
+                beSlot >= 0 -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                index == SLOT_DISCHARGING_INDEX -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
-                }
-                index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
-                }
-                index in PLAYER_INV_START until HOTBAR_END -> {
-                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                        SlotTarget(slots[it], upgradeSlotSpec)
-                    }
-                    val dischargingTarget = SlotTarget(slots[SLOT_DISCHARGING_INDEX], dischargingSlotSpec)
-                    val moved = SlotMoveHelper.insertIntoTargets(
-                        stackInSlot,
-                        listOf(SlotTarget(slots[SLOT_INPUT_INDEX], inputSlotSpec), dischargingTarget) + upgradeTargets
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage
+                    if (storage == null) return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
                     )
                     if (!moved) return ItemStack.EMPTY
                 }
-                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                else -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
@@ -126,6 +105,7 @@ class CompressorScreenHandler(
 
     companion object {
         const val SLOT_SIZE = 18
+        private val DEFAULT_SLOT_SPEC = SlotSpec()
 
         const val SLOT_INPUT_INDEX = 0
         const val SLOT_OUTPUT_INDEX = 1
