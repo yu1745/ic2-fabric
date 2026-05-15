@@ -5,9 +5,14 @@ import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.sync.EnergyStorageSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.energy.charge.BatteryChargerComponent
+import ic2_120.content.item.energy.IBatteryItem
+import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.item.energy.chargePlayerInventoryPerItemLimit
+import ic2_120.content.storage.ItemInsertRoute
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.Block
@@ -45,6 +50,29 @@ abstract class EnergyStorageBlockEntity(
     override val tier: Int get() = config.tier
 
     private val inventory = DefaultedList.ofSize(config.slotCount, ItemStack.EMPTY)
+    @RegisterItemStorage
+    val itemStorage = RoutedItemStorage(
+        inventory = inventory,
+        maxCountPerStackProvider = { maxCountPerStack },
+        slotValidator = { slot, stack -> isValid(slot, stack) },
+        insertRoutes = if (config.useEquipmentSlots) {
+            listOf(
+                ItemInsertRoute(intArrayOf(0, 1, 2, 3, 4), matcher = { stack ->
+                    val item = stack.item
+                    (item is IBatteryItem || item is IElectricTool) && item.tier <= config.tier
+                }, maxPerSlot = 1)
+            )
+        } else {
+            listOf(
+                ItemInsertRoute(intArrayOf(0), matcher = { stack ->
+                    val item = stack.item
+                    (item is IBatteryItem || item is IElectricTool) && item.tier <= config.tier
+                }, maxPerSlot = 1)
+            )
+        },
+        extractSlots = IntArray(config.slotCount) { it },
+        markDirty = { markDirty() }
+    )
 
     val syncedData = SyncedData(this)
     @RegisterEnergy
@@ -86,6 +114,12 @@ abstract class EnergyStorageBlockEntity(
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun markDirty() { super.markDirty() }
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+
+    override fun isValid(slot: Int, stack: ItemStack): Boolean {
+        if (stack.isEmpty) return false
+        val item = stack.item
+        return (item is IBatteryItem || item is IElectricTool) && item.tier <= config.tier
+    }
 
     override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
         buf.writeBlockPos(pos)
