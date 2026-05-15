@@ -2,12 +2,10 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.CentrifugeBlock
 import ic2_120.content.block.machines.CentrifugeBlockEntity
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
-import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.CentrifugeSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -31,36 +29,33 @@ class CentrifugeScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(CentrifugeScreenHandler::class.type(), syncId) {
 
     val sync = CentrifugeSync(SyncedDataView(propertyDelegate))
 
-    private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
     }
 
     init {
         checkSize(blockInventory, CentrifugeBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, CentrifugeBlockEntity.SLOT_INPUT, 0, 0, INPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, CentrifugeBlockEntity.SLOT_OUTPUT_1, 0, 0, OUTPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, CentrifugeBlockEntity.SLOT_OUTPUT_2, 0, 0, OUTPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, CentrifugeBlockEntity.SLOT_OUTPUT_3, 0, 0, OUTPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, CentrifugeBlockEntity.SLOT_DISCHARGING, 0, 0, DISCHARGING_SLOT_SPEC))
+        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_INPUT)
+        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_OUTPUT_1)
+        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_OUTPUT_2)
+        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_OUTPUT_3)
+        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_DISCHARGING)
 
-        // 4 个升级槽
-        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
-                PredicateSlot(
-                    blockInventory,
-                    CentrifugeBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
-            )
+        for (i in 0 until CentrifugeBlockEntity.SLOT_UPGRADE_INDICES.size) {
+            addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_UPGRADE_INDICES[i])
         }
 
         // 玩家物品栏
@@ -80,35 +75,22 @@ class CentrifugeScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
-            when (index) {
-                in SLOT_OUTPUT_1_INDEX..SLOT_OUTPUT_3_INDEX -> {
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
+            when {
+                beSlot >= 0 -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                SLOT_DISCHARGING_INDEX -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
-                }
-                in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage
+                    if (storage == null) return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
+                    )
+                    if (!moved) return ItemStack.EMPTY
                 }
                 else -> {
-                    if (index in PLAYER_INV_START..HOTBAR_END) {
-                        val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                            SlotTarget(slots[it], upgradeSlotSpec)
-                        }
-                        val moved = SlotMoveHelper.insertIntoTargets(
-                            stackInSlot,
-                            listOf(
-                                SlotTarget(slots[SLOT_DISCHARGING_INDEX], DISCHARGING_SLOT_SPEC),
-                                SlotTarget(slots[SLOT_INPUT_INDEX], INPUT_SLOT_SPEC)
-                            ) + upgradeTargets
-                        )
-                        if (!moved) return ItemStack.EMPTY
-                    } else if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) {
-                        return ItemStack.EMPTY
-                    }
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
@@ -128,13 +110,7 @@ class CentrifugeScreenHandler(
 
     companion object {
         const val SLOT_SIZE = 18
-
-        private val INPUT_SLOT_SPEC = SlotSpec(canInsert = { stack -> stack.item !is IBatteryItem })
-        private val DISCHARGING_SLOT_SPEC = SlotSpec(
-            maxItemCount = 1,
-            canInsert = { stack -> stack.item is IBatteryItem }
-        )
-        private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false }, canTake = { true })
+        private val DEFAULT_SLOT_SPEC = SlotSpec()
 
         const val SLOT_INPUT_INDEX = 0
         const val SLOT_OUTPUT_1_INDEX = 1
