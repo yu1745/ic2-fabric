@@ -2,16 +2,16 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.GeoGeneratorBlock
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
-import ic2_120.content.block.machines.MachineBlockEntity
+import ic2_120.content.item.isLavaFuel
+import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.screen.slot.PredicateSlot
-import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.GeoGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
-import ic2_120.content.item.isLavaFuel
-import ic2_120.content.item.energy.canBeCharged
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
@@ -34,7 +34,8 @@ class GeoGeneratorScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(GeoGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = GeoGeneratorSync(
@@ -47,24 +48,40 @@ class GeoGeneratorScreenHandler(
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
+    private fun addTrackedSlot(slot: Slot, beSlotIndex: Int) {
+        beSlotToHandlerIndex[beSlotIndex] = slots.size
+        addSlot(slot)
+    }
+
     init {
         checkSize(blockInventory, GeoGeneratorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.FUEL_SLOT, 0, 0, FUEL_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 0, 0, EMPTY_CONTAINER_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.BATTERY_SLOT, 0, 0, BATTERY_SLOT_SPEC))
+        // 机器槽位（规则由 RoutedItemStorage 路由推导）
+        val fuelSlotSpec = itemStorage?.deriveSlotSpec(GeoGeneratorBlockEntity.FUEL_SLOT)
+            ?: SLOT_SPEC_FALLBACK_FUEL
+        val emptyContainerSlotSpec = itemStorage?.deriveSlotSpec(GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT)
+            ?: SLOT_SPEC_FALLBACK_EMPTY_CONTAINER
+        val batterySlotSpec = itemStorage?.deriveSlotSpec(GeoGeneratorBlockEntity.BATTERY_SLOT)
+            ?: SLOT_SPEC_FALLBACK_BATTERY
+
+        addTrackedSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.FUEL_SLOT, 0, 0, fuelSlotSpec), GeoGeneratorBlockEntity.FUEL_SLOT)
+        addTrackedSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 0, 0, emptyContainerSlotSpec), GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT)
+        addTrackedSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.BATTERY_SLOT, 0, 0, batterySlotSpec), GeoGeneratorBlockEntity.BATTERY_SLOT)
 
         // 4 个升级槽
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
+            addTrackedSlot(
                 PredicateSlot(
                     blockInventory,
                     GeoGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i],
                     0,
                     0,
                     upgradeSlotSpec
-                )
+                ),
+                GeoGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i]
             )
         }
 
@@ -85,27 +102,30 @@ class GeoGeneratorScreenHandler(
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
-                index == GeoGeneratorBlockEntity.FUEL_SLOT -> if (!insertItem(stackInSlot, 3, 39, true)) return ItemStack.EMPTY
-                index == GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT -> if (!insertItem(stackInSlot, 3, 39, true)) return ItemStack.EMPTY
-                index == GeoGeneratorBlockEntity.BATTERY_SLOT -> if (!insertItem(stackInSlot, 3, 39, true)) return ItemStack.EMPTY
+                index == SLOT_FUEL_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                index == SLOT_EMPTY_CONTAINER_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                index == SLOT_BATTERY_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START..HOTBAR_END -> {
-                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                        SlotTarget(slots[it], upgradeSlotSpec)
+                    val moved = if (itemStorage != null) {
+                        SlotMoveHelper.insertFromRoutes(stackInSlot, itemStorage, beSlotToHandlerIndex, slots)
+                    } else {
+                        SlotMoveHelper.insertIntoTargets(
+                            stackInSlot,
+                            listOf(
+                                SlotTarget(slots[SLOT_FUEL_INDEX], SLOT_SPEC_FALLBACK_FUEL),
+                                SlotTarget(slots[SLOT_BATTERY_INDEX], SLOT_SPEC_FALLBACK_BATTERY)
+                            ) + (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
+                                SlotTarget(slots[it], upgradeSlotSpec)
+                            }
+                        )
                     }
-                    val moved = SlotMoveHelper.insertIntoTargets(
-                        stackInSlot,
-                        listOf(
-                            SlotTarget(slots[GeoGeneratorBlockEntity.FUEL_SLOT], FUEL_SLOT_SPEC),
-                            SlotTarget(slots[GeoGeneratorBlockEntity.BATTERY_SLOT], BATTERY_SLOT_SPEC)
-                        ) + upgradeTargets
-                    )
                     if (!moved) return ItemStack.EMPTY
                 }
-                else -> if (!insertItem(stackInSlot, 3, 39, false)) return ItemStack.EMPTY
+                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
@@ -124,24 +144,26 @@ class GeoGeneratorScreenHandler(
 
     companion object {
         const val SLOT_SIZE = 18
-        private val FUEL_SLOT_SPEC = SlotSpec(
-            maxItemCount = 64,
-            canInsert = { stack -> stack.isLavaFuel() }
-        )
-        private val EMPTY_CONTAINER_SLOT_SPEC = SlotSpec(
-            maxItemCount = 64,
-            canInsert = { false }  // 仅机器输出，玩家不可放入
-        )
-        private val BATTERY_SLOT_SPEC = SlotSpec(
-            maxItemCount = 1,
-            canInsert = { stack -> stack.canBeCharged() }
-        )
-
-        // 槽位索引
+        const val SLOT_FUEL_INDEX = 0
+        const val SLOT_EMPTY_CONTAINER_INDEX = 1
+        const val SLOT_BATTERY_INDEX = 2
         const val SLOT_UPGRADE_INDEX_START = 3
         const val SLOT_UPGRADE_INDEX_END = 6
         const val PLAYER_INV_START = 7
         const val HOTBAR_END = 43
+
+        private val SLOT_SPEC_FALLBACK_FUEL = SlotSpec(
+            maxItemCount = 64,
+            canInsert = { stack -> stack.isLavaFuel() }
+        )
+        private val SLOT_SPEC_FALLBACK_EMPTY_CONTAINER = SlotSpec(
+            maxItemCount = 64,
+            canInsert = { false }
+        )
+        private val SLOT_SPEC_FALLBACK_BATTERY = SlotSpec(
+            maxItemCount = 1,
+            canInsert = { stack -> stack.canBeCharged() }
+        )
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): GeoGeneratorScreenHandler {
