@@ -5,7 +5,6 @@ import ic2_120.content.block.machines.RtHeatGeneratorBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.sync.RtHeatGeneratorSync
@@ -88,11 +87,8 @@ class RtHeatGeneratorScreenHandler(
                 }
                 // 玩家物品栏 -> 机器槽
                 index in PLAYER_INV_START..HOTBAR_END -> {
-                    val fuelSpec = itemStorage?.deriveSlotSpec(0) ?: FUEL_SLOT_SPEC
-                    val targets = (0 until RtHeatGeneratorBlockEntity.INVENTORY_SIZE).map {
-                        SlotTarget(slots[it], fuelSpec)
-                    }
-                    val moved = SlotMoveHelper.insertIntoTargets(stackInSlot, targets)
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END + 1, false)) return ItemStack.EMPTY

@@ -5,7 +5,6 @@ import ic2_120.content.block.BaseMinerBlock
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotMoveHelper
-import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.MinerSync
@@ -121,20 +120,13 @@ class MinerScreenHandler(
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START..HOTBAR_END -> {
-                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                        SlotTarget(slots[it], upgradeSlotSpec)
-                    }
-                    val filterTargets = (SLOT_FILTER_INDEX_START..SLOT_FILTER_INDEX_END).map {
-                        SlotTarget(slots[it], deriveSpec(BaseMinerBlockEntity.SLOT_FILTER_START + it - SLOT_FILTER_INDEX_START))
-                    }
-                    val moved = SlotMoveHelper.insertIntoTargets(
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
                         stackInSlot,
-                        listOf(
-                            SlotTarget(slots[SLOT_SCANNER_INDEX], deriveSpec(BaseMinerBlockEntity.SLOT_SCANNER)),
-                            SlotTarget(slots[SLOT_DRILL_INDEX], deriveSpec(BaseMinerBlockEntity.SLOT_DRILL)),
-                            SlotTarget(slots[SLOT_BATTERY_INDEX], deriveSpec(BaseMinerBlockEntity.SLOT_DISCHARGING)),
-                            SlotTarget(slots[SLOT_PIPE_INDEX], deriveSpec(BaseMinerBlockEntity.SLOT_PIPE))
-                        ) + upgradeTargets + filterTargets
+                        storage,
+                        storage.insertRoutes,
+                        beSlotToHandlerIndex,
+                        slots
                     )
                     if (!moved) return ItemStack.EMPTY
                 }

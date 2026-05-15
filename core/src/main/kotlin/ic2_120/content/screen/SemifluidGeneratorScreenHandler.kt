@@ -7,7 +7,6 @@ import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.SemifluidGeneratorSync
@@ -110,18 +109,8 @@ class SemifluidGeneratorScreenHandler(
                 else -> {
                     if (index in PLAYER_INV_START..HOTBAR_END) {
                         // 玩家物品栏 -> 机器
-                        val fuelSpec = itemStorage?.deriveSlotSpec(SemifluidGeneratorBlockEntity.FUEL_SLOT) ?: FUEL_SLOT_SPEC
-                        val batterySpec = itemStorage?.deriveSlotSpec(SemifluidGeneratorBlockEntity.BATTERY_SLOT) ?: BATTERY_SLOT_SPEC
-                        val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                            SlotTarget(slots[it], upgradeSlotSpec)
-                        }
-                        val moved = SlotMoveHelper.insertIntoTargets(
-                            stackInSlot,
-                            listOf(
-                                SlotTarget(slots[SLOT_FUEL_INDEX], fuelSpec),
-                                SlotTarget(slots[SLOT_BATTERY_INDEX], batterySpec)
-                            ) + upgradeTargets
-                        )
+                        val storage = itemStorage ?: return ItemStack.EMPTY
+                        val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                         if (!moved) {
                             return ItemStack.EMPTY
                         }

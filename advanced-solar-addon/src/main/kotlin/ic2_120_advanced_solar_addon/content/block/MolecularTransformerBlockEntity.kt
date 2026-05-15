@@ -28,6 +28,9 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.annotation.RegisterItemStorage
+import ic2_120.content.storage.ItemInsertRoute
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
@@ -60,6 +63,21 @@ class MolecularTransformerBlockEntity(
 
     val inventory: DefaultedList<ItemStack> = DefaultedList.ofSize(MolecularTransformerBlock.INVENTORY_SIZE, ItemStack.EMPTY)
 
+    @RegisterItemStorage
+    val itemStorage = RoutedItemStorage(
+        inventory = inventory,
+        maxCountPerStackProvider = { 64 },
+        slotValidator = { slot, stack -> isValidForSlot(slot, stack) },
+        insertRoutes = listOf(
+            ItemInsertRoute(
+                slotIndices = intArrayOf(MolecularTransformerBlock.INPUT_SLOT),
+                matcher = { stack -> MTRecipes.findRecipe(stack) != null }
+            )
+        ),
+        extractSlots = intArrayOf(MolecularTransformerBlock.OUTPUT_SLOT),
+        markDirty = { markDirty() }
+    )
+
     private var energyUsed: Long = 0
     private var currentRecipe: MTRecipes.MTRecipe? = null
 
@@ -77,6 +95,11 @@ class MolecularTransformerBlockEntity(
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
+
+    private fun isValidForSlot(slot: Int, stack: ItemStack): Boolean = when (slot) {
+        MolecularTransformerBlock.INPUT_SLOT -> MTRecipes.findRecipe(stack) != null
+        else -> false
+    }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
@@ -155,7 +178,8 @@ class MolecularTransformerBlockEntity(
         MolecularTransformerScreenHandler(
             syncId, playerInventory, this,
             ScreenHandlerContext.create(world!!, pos),
-            syncedData
+            syncedData,
+            itemStorage
         )
 
     override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {

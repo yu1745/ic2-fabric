@@ -5,7 +5,6 @@ import ic2_120.content.block.machines.PatternStorageBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotMoveHelper
-import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
@@ -85,9 +84,13 @@ class PatternStorageScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 }
                 in PLAYER_INV_START..HOTBAR_END -> {
-                    val moved = SlotMoveHelper.insertIntoTargets(
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
                         stackInSlot,
-                        listOf(SlotTarget(slots[SLOT_CRYSTAL_INDEX], deriveSpec(PatternStorageBlockEntity.SLOT_CRYSTAL)))
+                        storage,
+                        storage.insertRoutes,
+                        beSlotToHandlerIndex,
+                        slots
                     )
                     if (!moved) return ItemStack.EMPTY
                 }
