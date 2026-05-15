@@ -2,38 +2,27 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.CannerBlock
 import ic2_120.content.block.machines.CannerBlockEntity
-import ic2_120.content.item.EmptyFuelRodItem
-import ic2_120.content.item.CfPack
-import ic2_120.content.item.FoamSprayerItem
-import ic2_120.content.item.energy.IBatteryItem
-import ic2_120.content.recipes.CannerMixingRecipes
-import ic2_120.content.recipes.solidcanner.SolidCannerRecipe
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.CannerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
-import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import net.minecraft.util.Identifier
 import net.minecraft.text.Text
 import ic2_120.registry.annotation.ScreenFactory
 
@@ -43,7 +32,8 @@ class CannerScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(CannerScreenHandler::class.type(), syncId) {
 
     val sync = CannerSync(SyncedDataView(propertyDelegate))
@@ -52,72 +42,41 @@ class CannerScreenHandler(
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
-    private val tinCanItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "tin_can")) }
+    /** Maps BE slot index -> handler slot index for quickMove routing. */
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private val containerSlotSpec = SlotSpec(
-        canInsert = { stack ->
-            stack.item !is IBatteryItem && stack.item !is FoamSprayerItem && stack.item !is CfPack && (
-                isFilledFluidContainer(stack) ||
-                stack.item == tinCanItem ||
-                stack.item is EmptyFuelRodItem
-            )
-        }
-    )
-    private val materialSlotSpec = SlotSpec(
-        canInsert = { stack ->
-            !stack.isEmpty && stack.item !is IBatteryItem && (
-                context.get({ world, _ ->
-                    world.recipeManager.values().any { it is SolidCannerRecipe && it.slot1Ingredient.test(stack) }
-                }, false) ||
-                CannerMixingRecipes.isMixingMaterial(stack.item) ||
-                (sync.getMode() == CannerSync.Mode.BOTTLE_LIQUID && stack.item is FoamSprayerItem &&
-                    FoamSprayerItem.getFluidAmount(stack) < FoamSprayerItem.CAPACITY_DROPLETS) ||
-                (sync.getMode() == CannerSync.Mode.BOTTLE_LIQUID && stack.item is CfPack &&
-                    CfPack.getFluidAmount(stack) < CfPack.CAPACITY_DROPLETS)
-            )
-        }
-    )
-    private val outputSlotSpec = SlotSpec(
-        canInsert = { false },
-        canTake = { true }
-    )
-    private val leftEmptySlotSpec = SlotSpec(
-        canInsert = { false },
-        canTake = { true }
-    )
-    private val rightInputSlotSpec = SlotSpec(
-        canInsert = { stack ->
-            !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is FoamSprayerItem && stack.item !is CfPack && isEmptyFluidContainer(stack)
-        }
-    )
-    private val dischargingSlotSpec = SlotSpec(
-        maxItemCount = 1,
-        canInsert = { stack -> !stack.isEmpty && stack.item is IBatteryItem }
-    )
+    /**
+     * Add a tracked slot: registers it with the handler and records the BE->handler mapping.
+     */
+    private fun addTrackedSlot(slot: Slot, beSlotIndex: Int) {
+        beSlotToHandlerIndex[beSlotIndex] = slots.size
+        addSlot(slot)
+    }
 
     init {
         checkSize(blockInventory, CannerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_CONTAINER, 0, 0, containerSlotSpec))
-        addSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_MATERIAL, 0, 0, materialSlotSpec))
-        addSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_OUTPUT, 0, 0, outputSlotSpec))
-        addSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_DISCHARGING, 0, 0, dischargingSlotSpec))
+        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_CONTAINER, 0, 0, itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_CONTAINER) ?: SlotSpec()), CannerBlockEntity.SLOT_CONTAINER)
+        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_MATERIAL, 0, 0, itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_MATERIAL) ?: SlotSpec()), CannerBlockEntity.SLOT_MATERIAL)
+        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_OUTPUT, 0, 0, itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_OUTPUT) ?: SlotSpec(canInsert = { false }, canTake = { true })), CannerBlockEntity.SLOT_OUTPUT)
+        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_DISCHARGING, 0, 0, itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_DISCHARGING) ?: SlotSpec()), CannerBlockEntity.SLOT_DISCHARGING)
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
+            addTrackedSlot(
                 PredicateSlot(
                     blockInventory,
                     CannerBlockEntity.SLOT_UPGRADE_INDICES[i],
                     0,
                     0,
                     upgradeSlotSpec
-                )
+                ),
+                CannerBlockEntity.SLOT_UPGRADE_INDICES[i]
             )
         }
 
-        addSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_LEFT_EMPTY, 0, 0, leftEmptySlotSpec))
-        addSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_RIGHT_INPUT, 0, 0, rightInputSlotSpec))
+        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_LEFT_EMPTY, 0, 0, itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_LEFT_EMPTY) ?: SlotSpec(canInsert = { false }, canTake = { true })), CannerBlockEntity.SLOT_LEFT_EMPTY)
+        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_RIGHT_INPUT, 0, 0, itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_RIGHT_INPUT) ?: SlotSpec()), CannerBlockEntity.SLOT_RIGHT_INPUT)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -170,38 +129,25 @@ class CannerScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
-            when (index) {
-                SLOT_OUTPUT_INDEX, SLOT_LEFT_EMPTY_INDEX -> {
+            when {
+                index == SLOT_OUTPUT_INDEX || index == SLOT_LEFT_EMPTY_INDEX -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                SLOT_DISCHARGING_INDEX -> {
+                index == SLOT_DISCHARGING_INDEX -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
+                index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                else -> {
-                    if (index in PLAYER_INV_START..HOTBAR_END) {
-                        val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                            SlotTarget(slots[it], upgradeSlotSpec)
-                        }
-                        val moved = SlotMoveHelper.insertIntoTargets(
-                            stackInSlot,
-                            listOf(
-                                SlotTarget(slots[SLOT_DISCHARGING_INDEX], dischargingSlotSpec),
-                                SlotTarget(slots[SLOT_CONTAINER_INDEX], containerSlotSpec),
-                                SlotTarget(slots[SLOT_RIGHT_INPUT_INDEX], rightInputSlotSpec),
-                                SlotTarget(slots[SLOT_MATERIAL_INDEX], materialSlotSpec)
-                            ) + upgradeTargets
-                        )
-                        if (!moved) return ItemStack.EMPTY
-                    } else if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) {
-                        return ItemStack.EMPTY
-                    }
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val targets = buildRouteTargets()
+                    val moved = SlotMoveHelper.insertIntoTargets(stackInSlot, targets)
+                    if (!moved) return ItemStack.EMPTY
                 }
+                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
@@ -218,6 +164,24 @@ class CannerScreenHandler(
             ) <= 64.0
         }, true)
 
+    /**
+     * Build ordered slot targets from itemStorage insert routes, falling back to empty
+     * when itemStorage is null (client side).
+     */
+    private fun buildRouteTargets(): List<SlotTarget> {
+        if (itemStorage == null) return emptyList()
+        val routes = itemStorage.insertFromRoutes()
+        val targets = mutableListOf<SlotTarget>()
+        for (route in routes) {
+            for (beSlot in route.slotIndices) {
+                val handlerIdx = beSlotToHandlerIndex[beSlot] ?: continue
+                val spec = itemStorage.deriveSlotSpec(beSlot)
+                targets.add(SlotTarget(slots[handlerIdx], spec))
+            }
+        }
+        return targets
+    }
+
     companion object {
         const val SLOT_SIZE = 18
 
@@ -233,25 +197,6 @@ class CannerScreenHandler(
         const val HOTBAR_END = 46
         const val BUTTON_ID_MODE_CYCLE = 0
         const val BUTTON_ID_SWAP_TANKS = 1
-
-        private fun isFilledFluidContainer(stack: ItemStack): Boolean {
-            if (stack.isEmpty) return false
-            if (stack.item == Items.WATER_BUCKET || stack.item == Items.LAVA_BUCKET) return true
-            val ctx = ContainerItemContext.withConstant(stack)
-            val storage = ctx.find(FluidStorage.ITEM) ?: return false
-            for (view in storage) {
-                if (view.amount >= FluidConstants.BUCKET && !view.resource.isBlank) return true
-            }
-            return false
-        }
-
-        private fun isEmptyFluidContainer(stack: ItemStack): Boolean {
-            if (stack.isEmpty) return false
-            if (stack.item == Items.BUCKET) return true
-            val ctx = ContainerItemContext.withConstant(stack)
-            val storage = ctx.find(FluidStorage.ITEM) ?: return false
-            return storage.supportsInsertion()
-        }
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): CannerScreenHandler {
