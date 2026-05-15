@@ -7,8 +7,8 @@ import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.SemifluidGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -30,9 +30,10 @@ import ic2_120.registry.annotation.ScreenFactory
 class SemifluidGeneratorScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
-    blockInventory: Inventory,
+    private val blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(SemifluidGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = SemifluidGeneratorSync(
@@ -45,23 +46,33 @@ class SemifluidGeneratorScreenHandler(
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
+    /** BE 槽位索引 -> handler 槽位索引 */
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
+    private fun addTrackedSlot(beSlot: Int, x: Int, y: Int, spec: SlotSpec) {
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlot] = handlerIndex
+        addSlot(PredicateSlot(blockInventory, beSlot, x, y, spec))
+    }
+
     init {
         checkSize(blockInventory, SemifluidGeneratorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, SemifluidGeneratorBlockEntity.FUEL_SLOT, 0, 0, FUEL_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, SemifluidGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 0, 0, EMPTY_CONTAINER_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, SemifluidGeneratorBlockEntity.BATTERY_SLOT, 0, 0, BATTERY_SLOT_SPEC))
+        val fuelSlotSpec = itemStorage?.deriveSlotSpec(SemifluidGeneratorBlockEntity.FUEL_SLOT) ?: FUEL_SLOT_SPEC
+        val emptyContainerSlotSpec = itemStorage?.deriveSlotSpec(SemifluidGeneratorBlockEntity.EMPTY_CONTAINER_SLOT) ?: EMPTY_CONTAINER_SLOT_SPEC
+        val batterySlotSpec = itemStorage?.deriveSlotSpec(SemifluidGeneratorBlockEntity.BATTERY_SLOT) ?: BATTERY_SLOT_SPEC
+
+        addTrackedSlot(SemifluidGeneratorBlockEntity.FUEL_SLOT, 0, 0, fuelSlotSpec)
+        addTrackedSlot(SemifluidGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 0, 0, emptyContainerSlotSpec)
+        addTrackedSlot(SemifluidGeneratorBlockEntity.BATTERY_SLOT, 0, 0, batterySlotSpec)
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
-                PredicateSlot(
-                    blockInventory,
-                    SemifluidGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
+            addTrackedSlot(
+                SemifluidGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i],
+                0,
+                0,
+                upgradeSlotSpec
             )
         }
 
@@ -81,28 +92,31 @@ class SemifluidGeneratorScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
-            when {
-                index == SemifluidGeneratorBlockEntity.FUEL_SLOT -> if (!insertItem(stackInSlot, 3, 39, true)) return ItemStack.EMPTY
-                index == SemifluidGeneratorBlockEntity.EMPTY_CONTAINER_SLOT -> if (!insertItem(stackInSlot, 3, 39, true)) return ItemStack.EMPTY
-                index == SemifluidGeneratorBlockEntity.BATTERY_SLOT -> if (!insertItem(stackInSlot, 3, 39, true)) return ItemStack.EMPTY
-                index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
+            when (index) {
+                // 输出槽 / 放电槽 -> 玩家物品栏
+                SLOT_FUEL_INDEX,
+                SLOT_EMPTY_CONTAINER_INDEX,
+                SLOT_BATTERY_INDEX -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                index in PLAYER_INV_START..HOTBAR_END -> {
-                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                        SlotTarget(slots[it], upgradeSlotSpec)
-                    }
-                    val moved = SlotMoveHelper.insertIntoTargets(
-                        stackInSlot,
-                        listOf(
-                            SlotTarget(slots[SemifluidGeneratorBlockEntity.FUEL_SLOT], FUEL_SLOT_SPEC),
-                            SlotTarget(slots[SemifluidGeneratorBlockEntity.BATTERY_SLOT], BATTERY_SLOT_SPEC)
-                        ) + upgradeTargets
-                    )
-                    if (!moved) return ItemStack.EMPTY
+                // 升级槽 -> 玩家物品栏
+                in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    slot.onQuickTransfer(stackInSlot, stack)
                 }
-                else -> if (!insertItem(stackInSlot, 3, 39, false)) return ItemStack.EMPTY
+                else -> {
+                    if (index in PLAYER_INV_START..HOTBAR_END) {
+                        // 玩家物品栏 -> 机器
+                        val storage = itemStorage ?: return ItemStack.EMPTY
+                        val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
+                        if (!moved) {
+                            return ItemStack.EMPTY
+                        }
+                    } else if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) {
+                        return ItemStack.EMPTY
+                    }
+                }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
@@ -135,17 +149,22 @@ class SemifluidGeneratorScreenHandler(
     companion object {
         const val SLOT_SIZE = 18
 
+        // 槽位索引常量（客户端 Screen 引用）
+        const val SLOT_FUEL_INDEX = 0
+        const val SLOT_EMPTY_CONTAINER_INDEX = 1
+        const val SLOT_BATTERY_INDEX = 2
+        const val SLOT_UPGRADE_INDEX_START = 3
+        const val SLOT_UPGRADE_INDEX_END = 6
+        const val PLAYER_INV_START = 7
+        const val HOTBAR_END = 43
+
+        // 客户端 fallback SlotSpec（itemStorage 为 null 时使用）
         private val FUEL_SLOT_SPEC = SlotSpec(
             maxItemCount = 64,
             canInsert = { stack -> stack.isSemifluidFuel() }
         )
         private val EMPTY_CONTAINER_SLOT_SPEC = SlotSpec(maxItemCount = 64, canInsert = { false })
         private val BATTERY_SLOT_SPEC = SlotSpec(maxItemCount = 1, canInsert = { stack -> stack.canBeCharged() })
-
-        const val SLOT_UPGRADE_INDEX_START = 3
-        const val SLOT_UPGRADE_INDEX_END = 6
-        const val PLAYER_INV_START = 7
-        const val HOTBAR_END = 43
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SemifluidGeneratorScreenHandler {

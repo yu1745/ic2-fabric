@@ -2,11 +2,10 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.RtGeneratorBlock
 import ic2_120.content.block.machines.RtGeneratorBlockEntity
-import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.RtGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -30,7 +29,8 @@ class RtGeneratorScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(RtGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = RtGeneratorSync(
@@ -39,14 +39,16 @@ class RtGeneratorScreenHandler(
         currentTickProvider = { null }
     )
 
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
     init {
         checkSize(blockInventory, 7)
         addProperties(propertyDelegate)
 
         repeat(6) { index ->
-            addSlot(PredicateSlot(blockInventory, index, 0, 0, FUEL_SLOT_SPEC))
+            addTrackedSlot(blockInventory, index)
         }
-        addSlot(PredicateSlot(blockInventory, RtGeneratorBlockEntity.BATTERY_SLOT, 0, 0, BATTERY_SLOT_SPEC))
+        addTrackedSlot(blockInventory, RtGeneratorBlockEntity.BATTERY_SLOT)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -58,26 +60,36 @@ class RtGeneratorScreenHandler(
         }
     }
 
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+    }
+
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
-                // 机器槽 -> 玩家物品栏
-                index in 0..6 -> if (!insertItem(stackInSlot, 7, 43, true)) return ItemStack.EMPTY
-                // 玩家物品栏 -> 机器槽
-                index in 7..42 -> {
-                    val fuelTargets = (0..5).map { SlotTarget(slots[it], FUEL_SLOT_SPEC) }
-                    val batteryTarget = SlotTarget(slots[RtGeneratorBlockEntity.BATTERY_SLOT], BATTERY_SLOT_SPEC)
-                    val moved = SlotMoveHelper.insertIntoTargets(
-                        stackInSlot,
-                        fuelTargets + batteryTarget
+                beSlot >= 0 -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    slot.onQuickTransfer(stackInSlot, stack)
+                }
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage
+                    if (storage == null) return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
                     )
                     if (!moved) return ItemStack.EMPTY
                 }
-                else -> if (!insertItem(stackInSlot, 7, 43, false)) return ItemStack.EMPTY
+                else -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
@@ -96,16 +108,8 @@ class RtGeneratorScreenHandler(
 
     companion object {
         const val PLAYER_INV_START = 7
+        const val HOTBAR_END = 43
         const val SLOT_SIZE = 18
-
-        private val FUEL_SLOT_SPEC = SlotSpec(
-            maxItemCount = 1,
-            canInsert = { stack -> RtGeneratorBlockEntity.isRtgPellet(stack) }
-        )
-        private val BATTERY_SLOT_SPEC = SlotSpec(
-            maxItemCount = 1,
-            canInsert = { stack -> stack.canBeCharged() }
-        )
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): RtGeneratorScreenHandler {

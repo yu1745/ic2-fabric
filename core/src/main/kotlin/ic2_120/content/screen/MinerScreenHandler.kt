@@ -1,19 +1,12 @@
 package ic2_120.content.screen
 
-import ic2_120.content.block.machines.AdvancedMinerBlockEntity
 import ic2_120.content.block.machines.BaseMinerBlockEntity
 import ic2_120.content.block.BaseMinerBlock
-import ic2_120.content.item.AdvancedScannerItem
-import ic2_120.content.item.DiamondDrill
-import ic2_120.content.item.Drill
-import ic2_120.content.item.IridiumDrill
-import ic2_120.content.item.OdScannerItem
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
-import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.MinerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -29,9 +22,7 @@ import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import ic2_120.content.block.MiningPipeBlock
 import ic2_120.registry.annotation.ScreenFactory
-import ic2_120.registry.item
 
 @ModScreenHandler(names = ["miner", "advanced_miner"])
 class MinerScreenHandler(
@@ -40,6 +31,7 @@ class MinerScreenHandler(
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null,
     val isAdvanced: Boolean = false
 ) : ScreenHandler(MinerScreenHandler::class.type(), syncId) {
 
@@ -49,44 +41,28 @@ class MinerScreenHandler(
         { MinerSync.BASE_ENERGY_CAPACITY }
     )
 
-    private val upgradeSlotSpec: SlotSpec by lazy {
+    private val upgradeSlotSpec: ic2_120.content.screen.slot.SlotSpec by lazy {
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
-    private val scannerSlotSpec = SlotSpec(canInsert = { stack ->
-        when (stack.item) {
-            is OdScannerItem -> true
-            is AdvancedScannerItem -> context.get({ world, pos -> world.getBlockEntity(pos) is AdvancedMinerBlockEntity }, false)
-            else -> false
-        }
-    }, maxItemCount = 1)
-
-    private val drillSlotSpec = SlotSpec(canInsert = { stack ->
-        stack.item is Drill || stack.item is DiamondDrill || stack.item is IridiumDrill
-    }, maxItemCount = 1)
-
-    private val batterySlotSpec = SlotSpec(canInsert = { stack -> stack.item is IBatteryItem }, maxItemCount = 1)
-    private val pipeSlotSpec = SlotSpec(canInsert = { stack -> stack.item === MiningPipeBlock::class.item() }, maxItemCount = 1024)
-    private val filterSlotSpec = SlotSpec(canInsert = { stack ->
-        stack.item !== MiningPipeBlock::class.item()
-    })
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
         checkSize(blockInventory, BaseMinerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_SCANNER, 0, 0, scannerSlotSpec))
-        addSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_DRILL, 0, 0, drillSlotSpec))
-        addSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_DISCHARGING, 0, 0, batterySlotSpec))
-        addSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_PIPE, 0, 0, pipeSlotSpec))
+        addTrackedSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_SCANNER, 0, 0, deriveSpec(BaseMinerBlockEntity.SLOT_SCANNER)))
+        addTrackedSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_DRILL, 0, 0, deriveSpec(BaseMinerBlockEntity.SLOT_DRILL)))
+        addTrackedSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_DISCHARGING, 0, 0, deriveSpec(BaseMinerBlockEntity.SLOT_DISCHARGING)))
+        addTrackedSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_PIPE, 0, 0, deriveSpec(BaseMinerBlockEntity.SLOT_PIPE)))
 
         var idx = BaseMinerBlockEntity.SLOT_FILTER_START
         repeat(BaseMinerBlockEntity.FILTER_SLOT_COUNT) {
-            addSlot(PredicateSlot(blockInventory, idx++, 0, 0, filterSlotSpec))
+            addTrackedSlot(PredicateSlot(blockInventory, idx++, 0, 0, deriveSpec(idx - 1)))
         }
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
+            addTrackedSlot(
                 PredicateSlot(
                     blockInventory,
                     BaseMinerBlockEntity.SLOT_UPGRADE_INDICES[i],
@@ -106,6 +82,15 @@ class MinerScreenHandler(
             addSlot(Slot(playerInventory, col, 0, 0))
         }
     }
+
+    private fun addTrackedSlot(slot: PredicateSlot): PredicateSlot {
+        beSlotToHandlerIndex[slot.index] = slots.size
+        addSlot(slot)
+        return slot
+    }
+
+    private fun deriveSpec(beSlot: Int) =
+        itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
 
     override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
         context.get({ world, pos ->
@@ -134,20 +119,13 @@ class MinerScreenHandler(
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START..HOTBAR_END -> {
-                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                        SlotTarget(slots[it], upgradeSlotSpec)
-                    }
-                    val filterTargets = (SLOT_FILTER_INDEX_START..SLOT_FILTER_INDEX_END).map {
-                        SlotTarget(slots[it], filterSlotSpec)
-                    }
-                    val moved = SlotMoveHelper.insertIntoTargets(
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
                         stackInSlot,
-                        listOf(
-                            SlotTarget(slots[SLOT_SCANNER_INDEX], scannerSlotSpec),
-                            SlotTarget(slots[SLOT_DRILL_INDEX], drillSlotSpec),
-                            SlotTarget(slots[SLOT_BATTERY_INDEX], batterySlotSpec),
-                            SlotTarget(slots[SLOT_PIPE_INDEX], pipeSlotSpec)
-                        ) + upgradeTargets + filterTargets
+                        storage,
+                        storage.insertRoutes,
+                        beSlotToHandlerIndex,
+                        slots
                     )
                     if (!moved) return ItemStack.EMPTY
                 }
@@ -195,7 +173,7 @@ class MinerScreenHandler(
             val isAdvanced = buf.readBoolean()
             val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
             val blockInv = SimpleInventory(BaseMinerBlockEntity.INVENTORY_SIZE)
-            return MinerScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount), isAdvanced)
+            return MinerScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount), isAdvanced = isAdvanced)
         }
     }
 }

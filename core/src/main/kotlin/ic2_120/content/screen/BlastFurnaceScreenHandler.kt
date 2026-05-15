@@ -2,12 +2,10 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.BlastFurnaceBlock
 import ic2_120.content.block.machines.BlastFurnaceBlockEntity
-import ic2_120.content.item.AirCell
 import ic2_120.content.screen.slot.PredicateSlot
-import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.BlastFurnaceSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -31,33 +29,32 @@ class BlastFurnaceScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(BlastFurnaceScreenHandler::class.type(), syncId) {
 
     val sync = BlastFurnaceSync(SyncedDataView(propertyDelegate))
 
-    private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
+    private fun addTrackedSlot(inventory: Inventory, beSlot: Int, spec: SlotSpec) {
+        val handlerIndex = slots.size
+        addSlot(PredicateSlot(inventory, beSlot, 0, 0, spec))
+        beSlotToHandlerIndex[beSlot] = handlerIndex
     }
 
     init {
         checkSize(blockInventory, BlastFurnaceBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, BlastFurnaceBlockEntity.SLOT_INPUT, 0, 0, INPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, BlastFurnaceBlockEntity.SLOT_AIR_INPUT, 0, 0, AIR_INPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, BlastFurnaceBlockEntity.SLOT_OUTPUT_STEEL, 0, 0, OUTPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, BlastFurnaceBlockEntity.SLOT_OUTPUT_SLAG, 0, 0, OUTPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, BlastFurnaceBlockEntity.SLOT_OUTPUT_EMPTY, 0, 0, EMPTY_OUTPUT_SLOT_SPEC))
+        addTrackedSlot(blockInventory, BlastFurnaceBlockEntity.SLOT_INPUT, DEFAULT_SLOT_SPEC)
+        addTrackedSlot(blockInventory, BlastFurnaceBlockEntity.SLOT_AIR_INPUT, DEFAULT_SLOT_SPEC)
+        addTrackedSlot(blockInventory, BlastFurnaceBlockEntity.SLOT_OUTPUT_STEEL, OUTPUT_SLOT_SPEC)
+        addTrackedSlot(blockInventory, BlastFurnaceBlockEntity.SLOT_OUTPUT_SLAG, OUTPUT_SLOT_SPEC)
+        addTrackedSlot(blockInventory, BlastFurnaceBlockEntity.SLOT_OUTPUT_EMPTY, OUTPUT_SLOT_SPEC)
 
-        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(PredicateSlot(
-                blockInventory,
-                BlastFurnaceBlockEntity.SLOT_UPGRADE_INDICES[i],
-                0,
-                0,
-                upgradeSlotSpec
-            ))
+        for (i in 0 until BlastFurnaceBlockEntity.SLOT_UPGRADE_INDICES.size) {
+            addTrackedSlot(blockInventory, BlastFurnaceBlockEntity.SLOT_UPGRADE_INDICES[i], DEFAULT_SLOT_SPEC)
         }
 
         for (row in 0 until 3) {
@@ -76,32 +73,18 @@ class BlastFurnaceScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
-            when (index) {
-                in SLOT_OUTPUT_STEEL_INDEX..SLOT_OUTPUT_EMPTY_INDEX -> {
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
+            when {
+                beSlot >= 0 -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
+                    if (!moved) return ItemStack.EMPTY
                 }
-                else -> {
-                    if (index in PLAYER_INV_START..HOTBAR_END) {
-                        val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                            SlotTarget(slots[it], upgradeSlotSpec)
-                        }
-                        val moved = SlotMoveHelper.insertIntoTargets(
-                            stackInSlot,
-                            listOf(
-                                SlotTarget(slots[SLOT_AIR_INPUT_INDEX], AIR_INPUT_SLOT_SPEC),
-                                SlotTarget(slots[SLOT_INPUT_INDEX], INPUT_SLOT_SPEC)
-                            ) + upgradeTargets
-                        )
-                        if (!moved) return ItemStack.EMPTY
-                    } else if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) {
-                        return ItemStack.EMPTY
-                    }
-                }
+                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
@@ -121,14 +104,8 @@ class BlastFurnaceScreenHandler(
     companion object {
         const val SLOT_SIZE = 18
 
-        private val INPUT_SLOT_SPEC = SlotSpec(
-            canInsert = { stack -> !stack.isEmpty }
-        )
-        private val AIR_INPUT_SLOT_SPEC = SlotSpec(
-            canInsert = { stack -> stack.item is AirCell }
-        )
+        private val DEFAULT_SLOT_SPEC = SlotSpec()
         private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false }, canTake = { true })
-        private val EMPTY_OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false }, canTake = { true })
 
         const val SLOT_INPUT_INDEX = 0
         const val SLOT_AIR_INPUT_INDEX = 1

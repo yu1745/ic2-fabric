@@ -439,7 +439,8 @@ class FluidHeatExchangerBlockEntity(
             playerInventory,
             this,
             ScreenHandlerContext.create(world!!, pos),
-            syncedData
+            syncedData,
+            itemStorage
         )
 
     override fun readNbt(nbt: NbtCompound) {

@@ -2,12 +2,10 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.FluidHeatGeneratorBlock
 import ic2_120.content.block.machines.FluidHeatGeneratorBlockEntity
-import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
-import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.FluidHeatGeneratorSync
 import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.syncs.SyncedDataView
@@ -18,7 +16,6 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -33,7 +30,8 @@ class FluidHeatGeneratorScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(FluidHeatGeneratorScreenHandler::class.type(), syncId) {
 
     private val syncedView = SyncedDataView(propertyDelegate)
@@ -46,28 +44,18 @@ class FluidHeatGeneratorScreenHandler(
     )
     val sync = FluidHeatGeneratorSync(syncedView, heatFlow)
 
-    private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
-    }
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
         checkSize(blockInventory, FluidHeatGeneratorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
         // 燃料容器槽
-        addSlot(PredicateSlot(blockInventory, FluidHeatGeneratorBlockEntity.FUEL_SLOT, 0, 0, FUEL_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, FluidHeatGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 0, 0, EMPTY_CONTAINER_SLOT_SPEC))
+        addTrackedSlot(blockInventory, FluidHeatGeneratorBlockEntity.FUEL_SLOT)
+        addTrackedSlot(blockInventory, FluidHeatGeneratorBlockEntity.EMPTY_CONTAINER_SLOT)
 
-        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
-                PredicateSlot(
-                    blockInventory,
-                    FluidHeatGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
-            )
+        for (i in FluidHeatGeneratorBlockEntity.SLOT_UPGRADE_INDICES.indices) {
+            addTrackedSlot(blockInventory, FluidHeatGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i])
         }
 
         for (row in 0 until 3) {
@@ -80,35 +68,39 @@ class FluidHeatGeneratorScreenHandler(
         }
     }
 
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+    }
+
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
-                index == FluidHeatGeneratorBlockEntity.FUEL_SLOT -> {
-                    if (!insertItem(stackInSlot, UPGRADE_END + 1, HOTBAR_END + 1, true)) return ItemStack.EMPTY
+                beSlot >= 0 -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    slot.onQuickTransfer(stackInSlot, stack)
                 }
-                index == FluidHeatGeneratorBlockEntity.EMPTY_CONTAINER_SLOT -> {
-                    if (!insertItem(stackInSlot, UPGRADE_END + 1, HOTBAR_END + 1, true)) return ItemStack.EMPTY
-                }
-                index in SLOT_UPGRADE_START..SLOT_UPGRADE_END -> {
-                    if (!insertItem(stackInSlot, UPGRADE_END + 1, HOTBAR_END + 1, true)) return ItemStack.EMPTY
-                }
-                index in (UPGRADE_END + 1)..HOTBAR_END -> {
-                    val upgradeTargets = (SLOT_UPGRADE_START..SLOT_UPGRADE_END).map { SlotTarget(slots[it], upgradeSlotSpec) }
-                    val moved = SlotMoveHelper.insertIntoTargets(
-                        stackInSlot,
-                        listOf(
-                            SlotTarget(slots[FluidHeatGeneratorBlockEntity.FUEL_SLOT], FUEL_SLOT_SPEC)
-                        ) + upgradeTargets
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage
+                    if (storage == null) return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
                     )
                     if (!moved) return ItemStack.EMPTY
                 }
-                else -> if (!insertItem(stackInSlot, UPGRADE_END + 1, HOTBAR_END + 1, false)) return ItemStack.EMPTY
+                else -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
+            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            else slot.markDirty()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTakeItem(player, stackInSlot)
         }
@@ -130,17 +122,6 @@ class FluidHeatGeneratorScreenHandler(
         const val UPGRADE_END = 5
         const val HOTBAR_END = 41
 
-        private val FUEL_SLOT_SPEC = SlotSpec(canInsert = { stack ->
-            !stack.isEmpty && (
-                stack.item == Items.LAVA_BUCKET ||
-                stack.item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier("ic2_120", "biofuel_bucket")) ||
-                stack.item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier("ic2_120", "biofuel_cell")) ||
-                stack.item == net.minecraft.registry.Registries.ITEM.get(net.minecraft.util.Identifier("ic2_120", "fluid_cell"))
-            )
-        })
-
-        private val EMPTY_CONTAINER_SLOT_SPEC = SlotSpec(canInsert = { false })
-
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): FluidHeatGeneratorScreenHandler {
             val pos = buf.readBlockPos()
@@ -156,4 +137,3 @@ class FluidHeatGeneratorScreenHandler(
         }
     }
 }
-

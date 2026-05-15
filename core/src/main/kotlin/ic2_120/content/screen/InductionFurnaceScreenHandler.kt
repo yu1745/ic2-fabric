@@ -4,13 +4,10 @@ import ic2_120.content.sync.InductionFurnaceSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.content.block.InductionFurnaceBlock
 import ic2_120.content.block.machines.InductionFurnaceBlockEntity
-import ic2_120.content.item.IUpgradeItem
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
-import ic2_120.content.upgrade.UpgradeItemRegistry
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
@@ -32,52 +29,32 @@ class InductionFurnaceScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(InductionFurnaceScreenHandler::class.type(), syncId) {
 
     val sync = InductionFurnaceSync(SyncedDataView(propertyDelegate))
 
-    private val inputSlotSpec0 = SlotSpec(canInsert = { stack -> stack.item !is IBatteryItem })
-    private val inputSlotSpec1 = SlotSpec(canInsert = { stack -> stack.item !is IBatteryItem })
-    private val outputSlotSpec0 = SlotSpec(canInsert = { false }, canTake = { true })
-    private val outputSlotSpec1 = SlotSpec(canInsert = { false }, canTake = { true })
-    private val dischargingSlotSpec = SlotSpec(
-        canInsert = { stack -> stack.item is IBatteryItem },
-        maxItemCount = 1
-    )
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private val upgradeSlotSpec: SlotSpec by lazy {
-        SlotSpec(
-            canInsert = { stack ->
-                if (stack.isEmpty || stack.item !is IUpgradeItem) return@SlotSpec false
-                UpgradeItemRegistry.canAccept(
-                    context.get({ world, pos -> world.getBlockEntity(pos) }, null),
-                    stack.item
-                )
-            }
-        )
+    private fun addTrackedSlot(inventory: Inventory, beSlot: Int, spec: SlotSpec) {
+        val handlerIndex = slots.size
+        addSlot(PredicateSlot(inventory, beSlot, 0, 0, spec))
+        beSlotToHandlerIndex[beSlot] = handlerIndex
     }
 
     init {
         checkSize(blockInventory, InductionFurnaceBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_INPUT_0, 0, 0, inputSlotSpec0))
-        addSlot(PredicateSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_INPUT_1, 0, 0, inputSlotSpec1))
-        addSlot(PredicateSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_OUTPUT_0, 0, 0, outputSlotSpec0))
-        addSlot(PredicateSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_OUTPUT_1, 0, 0, outputSlotSpec1))
-        addSlot(PredicateSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_DISCHARGING, 0, 0, dischargingSlotSpec))
+        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_INPUT_0, DEFAULT_SLOT_SPEC)
+        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_INPUT_1, DEFAULT_SLOT_SPEC)
+        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_OUTPUT_0, OUTPUT_SLOT_SPEC)
+        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_OUTPUT_1, OUTPUT_SLOT_SPEC)
+        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_DISCHARGING, DEFAULT_SLOT_SPEC)
 
         for (i in 0 until UPGRADE_SLOT_COUNT) {
-            addSlot(
-                PredicateSlot(
-                    blockInventory,
-                    InductionFurnaceBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
-            )
+            addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_UPGRADE_INDICES[i], DEFAULT_SLOT_SPEC)
         }
 
         for (row in 0 until 3) {
@@ -96,34 +73,16 @@ class InductionFurnaceScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
-                index == SLOT_OUTPUT_0_INDEX || index == SLOT_OUTPUT_1_INDEX -> {
+                beSlot >= 0 -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                index == SLOT_DISCHARGING_INDEX -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
-                }
-                index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
-                }
-                index in PLAYER_INV_START until HOTBAR_END -> {
-                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                        SlotTarget(slots[it], upgradeSlotSpec)
-                    }
-                    val moved = SlotMoveHelper.insertIntoTargets(
-                        stackInSlot,
-                        listOf(
-                            SlotTarget(slots[SLOT_DISCHARGING_INDEX], dischargingSlotSpec),
-                            SlotTarget(slots[SLOT_INPUT_0_INDEX], inputSlotSpec0),
-                            SlotTarget(slots[SLOT_INPUT_1_INDEX], inputSlotSpec1)
-                        ) + upgradeTargets
-                    )
-                    if (!moved) {
-                        return ItemStack.EMPTY
-                    }
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
+                    if (!moved) return ItemStack.EMPTY
                 }
                 else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
             }
@@ -147,6 +106,9 @@ class InductionFurnaceScreenHandler(
     companion object {
         private const val UPGRADE_SLOT_COUNT = 4
         const val SLOT_SIZE = 18
+
+        private val DEFAULT_SLOT_SPEC = SlotSpec()
+        private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false }, canTake = { true })
 
         const val SLOT_INPUT_0_INDEX = 0
         const val SLOT_INPUT_1_INDEX = 1

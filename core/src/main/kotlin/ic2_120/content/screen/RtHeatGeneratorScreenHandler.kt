@@ -5,7 +5,7 @@ import ic2_120.content.block.machines.RtHeatGeneratorBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.sync.RtHeatGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
@@ -28,9 +28,10 @@ import ic2_120.registry.annotation.ScreenFactory
 class RtHeatGeneratorScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
-    blockInventory: Inventory,
+    private val blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(RtHeatGeneratorScreenHandler::class.type(), syncId) {
 
     private val syncedView = SyncedDataView(propertyDelegate)
@@ -43,12 +44,22 @@ class RtHeatGeneratorScreenHandler(
     )
     val sync = RtHeatGeneratorSync(syncedView, heatFlow)
 
+    /** BE 槽位索引 -> handler 槽位索引 */
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
+    private fun addTrackedSlot(beSlot: Int, x: Int, y: Int, spec: SlotSpec) {
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlot] = handlerIndex
+        addSlot(PredicateSlot(blockInventory, beSlot, x, y, spec))
+    }
+
     init {
         checkSize(blockInventory, RtHeatGeneratorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
         repeat(RtHeatGeneratorBlockEntity.INVENTORY_SIZE) { index ->
-            addSlot(PredicateSlot(blockInventory, index, 0, 0, FUEL_SLOT_SPEC))
+            val spec = itemStorage?.deriveSlotSpec(index) ?: FUEL_SLOT_SPEC
+            addTrackedSlot(index, 0, 0, spec)
         }
 
         for (row in 0 until 3) {
@@ -71,13 +82,12 @@ class RtHeatGeneratorScreenHandler(
                 // 机器槽 -> 玩家物品栏
                 index in 0 until RtHeatGeneratorBlockEntity.INVENTORY_SIZE -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
+                    slot.onQuickTransfer(stackInSlot, stack)
                 }
                 // 玩家物品栏 -> 机器槽
                 index in PLAYER_INV_START..HOTBAR_END -> {
-                    val targets = (0 until RtHeatGeneratorBlockEntity.INVENTORY_SIZE).map {
-                        SlotTarget(slots[it], FUEL_SLOT_SPEC)
-                    }
-                    val moved = SlotMoveHelper.insertIntoTargets(stackInSlot, targets)
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END + 1, false)) return ItemStack.EMPTY
@@ -100,6 +110,7 @@ class RtHeatGeneratorScreenHandler(
         const val PLAYER_INV_START = 6
         const val HOTBAR_END = 41
 
+        // 客户端 fallback SlotSpec
         private val FUEL_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack -> RtHeatGeneratorBlockEntity.isRtgPellet(stack) }

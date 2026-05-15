@@ -1,12 +1,11 @@
 package ic2_120.content.screen
 
-import ic2_120.Ic2_120
 import ic2_120.content.block.PatternStorageBlock
 import ic2_120.content.block.machines.PatternStorageBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
-import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.screen.slot.SlotMoveHelper
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
@@ -16,11 +15,9 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 
 @ModScreenHandler(block = PatternStorageBlock::class)
@@ -29,14 +26,17 @@ class PatternStorageScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     val blockPos: BlockPos,
-    private val context: ScreenHandlerContext
+    private val context: ScreenHandlerContext,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(PatternStorageScreenHandler::class.type(), syncId) {
+
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
         checkSize(blockInventory, PatternStorageBlockEntity.INVENTORY_SIZE)
 
         // All slot coordinates are anchored by the client screen at render time.
-        addSlot(PredicateSlot(blockInventory, PatternStorageBlockEntity.SLOT_CRYSTAL, 0, 0, CRYSTAL_SLOT_SPEC))
+        addTrackedSlot(PredicateSlot(blockInventory, PatternStorageBlockEntity.SLOT_CRYSTAL, 0, 0, deriveSpec(PatternStorageBlockEntity.SLOT_CRYSTAL)))
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -47,6 +47,15 @@ class PatternStorageScreenHandler(
             addSlot(Slot(playerInventory, col, 0, 0))
         }
     }
+
+    private fun addTrackedSlot(slot: PredicateSlot): PredicateSlot {
+        beSlotToHandlerIndex[slot.index] = slots.size
+        addSlot(slot)
+        return slot
+    }
+
+    private fun deriveSpec(beSlot: Int) =
+        itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
 
     fun getPatternStorage(world: net.minecraft.world.World): PatternStorageBlockEntity? =
         world.getBlockEntity(blockPos) as? PatternStorageBlockEntity
@@ -75,9 +84,13 @@ class PatternStorageScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 }
                 in PLAYER_INV_START..HOTBAR_END -> {
-                    val moved = SlotMoveHelper.insertIntoTargets(
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
                         stackInSlot,
-                        listOf(SlotTarget(slots[SLOT_CRYSTAL_INDEX], CRYSTAL_SLOT_SPEC))
+                        storage,
+                        storage.insertRoutes,
+                        beSlotToHandlerIndex,
+                        slots
                     )
                     if (!moved) return ItemStack.EMPTY
                 }
@@ -97,13 +110,6 @@ class PatternStorageScreenHandler(
         }, true)
 
     companion object {
-        private val CRYSTAL_MEMORY_ID = Identifier(Ic2_120.MOD_ID, "crystal_memory")
-
-        private val CRYSTAL_SLOT_SPEC = SlotSpec(
-            maxItemCount = 1,
-            canInsert = { stack -> !stack.isEmpty && Registries.ITEM.getId(stack.item) == CRYSTAL_MEMORY_ID }
-        )
-
         const val SLOT_CRYSTAL_INDEX = 0
         const val PLAYER_INV_START = 1
         const val HOTBAR_END = 37

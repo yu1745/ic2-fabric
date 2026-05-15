@@ -4,6 +4,8 @@ import ic2_120.content.block.ElectricHeatGeneratorBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.AdjacentEnergyTransferComponent
+import ic2_120.content.storage.ItemInsertRoute
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.ElectricHeatGeneratorSync
 import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.syncs.SyncedData
@@ -13,6 +15,7 @@ import ic2_120.content.screen.ElectricHeatGeneratorScreenHandler
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
@@ -60,6 +63,18 @@ class ElectricHeatGeneratorBlockEntity(
     override var redstoneInverted: Boolean = false
 
     private val inventory = DefaultedList.ofSize(SLOT_COUNT, ItemStack.EMPTY)
+    @RegisterItemStorage
+    val itemStorage = RoutedItemStorage(
+        inventory = inventory,
+        maxCountPerStackProvider = { maxCountPerStack },
+        slotValidator = { slot, stack -> isValid(slot, stack) },
+        insertRoutes = listOf(
+            ItemInsertRoute((0 until SLOT_DISCHARGING).toList().toIntArray(), matcher = { !it.isEmpty && it.item == coilItem }, maxPerSlot = 1),
+            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1)
+        ),
+        extractSlots = IntArray(SLOT_COUNT) { it },
+        markDirty = { markDirty() }
+    )
     private val coilItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "coil")) }
 
     private val batteryDischarger = BatteryDischargerComponent(
@@ -99,7 +114,8 @@ class ElectricHeatGeneratorBlockEntity(
             playerInventory,
             this,
             net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
-            syncedData
+            syncedData,
+            itemStorage
         )
 
     override fun getInventory(): Inventory = this

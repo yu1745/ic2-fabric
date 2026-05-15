@@ -6,7 +6,7 @@ import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
@@ -32,7 +32,8 @@ class SolarPanelScreenHandler(
     private val propertyDelegate: PropertyDelegate,
     private val chargeInventory: Inventory? = null,
     private val chargeSlotCount: Int = 0,
-    private val chargeTier: Int = 1
+    private val chargeTier: Int = 1,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(SolarPanelScreenHandler::class.type(), syncId) {
 
     val sync = SolarPanelSync(
@@ -45,6 +46,14 @@ class SolarPanelScreenHandler(
 
     val machineSlotCount: Int get() = chargeSlotCount
 
+    /**
+     * BlockEntity slot index -> ScreenHandler slot index mapping.
+     */
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
+    /** End index (exclusive) of the hotbar in handler slot indices. */
+    private val hotbarEnd: Int get() = machineSlotCount + 36
+
     init {
         addProperties(propertyDelegate)
 
@@ -52,7 +61,7 @@ class SolarPanelScreenHandler(
         if (chargeInventory != null && chargeSlotCount > 0) {
             checkSize(chargeInventory, chargeSlotCount)
             for (i in 0 until chargeSlotCount) {
-                addSlot(PredicateSlot(chargeInventory, i, 0, 0, chargeSlotSpec(chargeTier)))
+                addTrackedSlot(chargeInventory, i)
             }
         }
 
@@ -67,6 +76,17 @@ class SolarPanelScreenHandler(
         }
     }
 
+    /**
+     * Adds a PredicateSlot and records BE slot index -> handler slot index mapping.
+     * SlotSpec is derived from [itemStorage] when available; falls back to tier-based spec on client.
+     */
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: chargeSlotSpec(chargeTier)
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+    }
+
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         if (index !in slots.indices) return ItemStack.EMPTY
 
@@ -75,36 +95,44 @@ class SolarPanelScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
-            val movedFromMachine = index in 0 until machineSlotCount
-            val moved = when {
-                movedFromMachine -> {
-                    if (!insertItem(stackInSlot, machineSlotCount, machineSlotCount + 36, true)) {
-                        false
+
+            // PredicateSlot index is the BE slot index; player slots are not PredicateSlot, return -1
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
+
+            when {
+                // Machine charge slots -> player inventory
+                beSlot >= 0 -> {
+                    if (!insertItem(stackInSlot, machineSlotCount, hotbarEnd, true)) return ItemStack.EMPTY
+                    slot.onQuickTransfer(stackInSlot, stack)
+                }
+                // Player inventory -> machine (via RoutedItemStorage routes)
+                index in machineSlotCount until hotbarEnd -> {
+                    val storage = itemStorage
+                    if (storage != null) {
+                        val moved = SlotMoveHelper.insertFromRoutes(
+                            stackInSlot,
+                            storage,
+                            storage.insertRoutes,
+                            beSlotToHandlerIndex,
+                            slots
+                        )
+                        if (!moved) return ItemStack.EMPTY
                     } else {
-                        slot.onQuickTransfer(stackInSlot, stack)
-                        true
+                        return ItemStack.EMPTY
                     }
                 }
-                index >= machineSlotCount -> {
-                    SlotMoveHelper.insertIntoTargets(stackInSlot, machineSlotTargets())
+                // Hotbar <-> main inventory swap
+                else -> {
+                    if (!insertItem(stackInSlot, machineSlotCount, hotbarEnd, false)) return ItemStack.EMPTY
                 }
-                else -> false
             }
 
-            if (!moved) return ItemStack.EMPTY
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTakeItem(player, stackInSlot)
         }
         return stack
-    }
-
-    private fun machineSlotTargets(): List<SlotTarget> {
-        if (chargeSlotCount == 0) return emptyList()
-        return (0 until chargeSlotCount).map { i ->
-            SlotTarget(slots[i], chargeSlotSpec(chargeTier))
-        }
     }
 
     override fun canUse(player: PlayerEntity): Boolean =

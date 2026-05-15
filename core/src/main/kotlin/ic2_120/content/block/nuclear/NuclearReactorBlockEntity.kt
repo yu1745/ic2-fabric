@@ -22,6 +22,8 @@ import ic2_120.content.network.NetworkManager
 import ic2_120.content.network.ReactorHeatInfoPacket
 import ic2_120.content.network.SlotHeatEnergyInfo
 import ic2_120.content.screen.NuclearReactorScreenHandler
+import ic2_120.content.storage.ItemInsertRoute
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.IRedstoneControlSupport
@@ -29,6 +31,7 @@ import ic2_120.content.upgrade.RedstoneControlComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import org.slf4j.LoggerFactory
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
@@ -92,6 +95,17 @@ class NuclearReactorBlockEntity(
     override var ownerUuid: java.util.UUID? = null
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    @RegisterItemStorage
+    val itemStorage = RoutedItemStorage(
+        inventory = inventory,
+        maxCountPerStackProvider = { maxCountPerStack },
+        slotValidator = { slot, stack -> isValid(slot, stack) },
+        insertRoutes = listOf(
+            ItemInsertRoute((0 until MAX_SLOTS).toList().toIntArray(), matcher = { !it.isEmpty && it.item is IBaseReactorComponent }, maxPerSlot = 1)
+        ),
+        extractSlots = IntArray(INVENTORY_SIZE) { it },
+        markDirty = { markDirty() }
+    )
 
     private var tickOffset: Int = 0
 
@@ -378,7 +392,8 @@ class NuclearReactorBlockEntity(
             syncedData,
             currentCapacity(),
             this,
-            isThermalMode()
+            isThermalMode(),
+            itemStorage
         )
 
     override fun readNbt(nbt: NbtCompound) {

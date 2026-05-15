@@ -8,11 +8,14 @@ import ic2_120.content.block.RtGeneratorBlock
 import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.screen.RtGeneratorScreenHandler
+import ic2_120.content.storage.ItemInsertRoute
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.RtGeneratorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
@@ -72,6 +75,18 @@ class RtGeneratorBlockEntity(
     override val tier: Int = GENERATOR_TIER
 
     private val inventory = DefaultedList.ofSize(7, ItemStack.EMPTY)  // 6 燃料槽 + 1 电池槽
+    @RegisterItemStorage
+    val itemStorage = RoutedItemStorage(
+        inventory = inventory,
+        maxCountPerStackProvider = { maxCountPerStack },
+        slotValidator = { slot, stack -> canPlaceInSlot(slot, stack) },
+        insertRoutes = listOf(
+            ItemInsertRoute((FUEL_SLOT_START..FUEL_SLOT_END).toList().toIntArray(), matcher = { isRtgPellet(it) }, maxPerSlot = 1),
+            ItemInsertRoute(intArrayOf(BATTERY_SLOT), matcher = { !it.isEmpty && it.canBeCharged() }, maxPerSlot = 1)
+        ),
+        extractSlots = IntArray(7) { it },
+        markDirty = { markDirty() }
+    )
 
     val syncedData = SyncedData(this)
 
@@ -152,7 +167,8 @@ class RtGeneratorBlockEntity(
             playerInventory,
             this,
             net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
-            syncedData
+            syncedData,
+            itemStorage
         )
 
     override fun readNbt(nbt: NbtCompound) {

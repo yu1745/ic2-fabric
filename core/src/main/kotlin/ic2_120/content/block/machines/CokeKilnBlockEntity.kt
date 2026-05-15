@@ -123,7 +123,7 @@ class CokeKilnBlockEntity(
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.coke_kiln")
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        CokeKilnScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
+        CokeKilnScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
     fun tryInteractItem(player: PlayerEntity, hand: Hand): ActionResult {
         val handStack = player.getStackInHand(hand)

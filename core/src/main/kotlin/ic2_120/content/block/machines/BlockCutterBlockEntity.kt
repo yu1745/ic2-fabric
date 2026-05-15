@@ -156,7 +156,7 @@ class BlockCutterBlockEntity(
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.block_cutter")
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        BlockCutterScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
+        BlockCutterScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)

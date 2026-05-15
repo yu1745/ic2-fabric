@@ -151,7 +151,7 @@ class BlastFurnaceBlockEntity(
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         BlastFurnaceScreenHandler(syncId, playerInventory, this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
+            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)

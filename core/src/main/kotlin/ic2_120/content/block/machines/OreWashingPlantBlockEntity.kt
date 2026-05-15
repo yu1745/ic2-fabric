@@ -266,7 +266,7 @@ class OreWashingPlantBlockEntity(
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
         OreWashingPlantScreenHandler(syncId, playerInventory, this,
-            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
+            net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)

@@ -161,7 +161,7 @@ class PatternStorageBlockEntity(
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.pattern_storage")
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        PatternStorageScreenHandler(syncId, playerInventory, this, pos, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos))
+        PatternStorageScreenHandler(syncId, playerInventory, this, pos, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), itemStorage)
 
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
