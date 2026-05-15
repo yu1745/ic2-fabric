@@ -2,34 +2,27 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.SolarDistillerBlock
 import ic2_120.content.block.machines.SolarDistillerBlockEntity
-import ic2_120.content.item.FluidCellItem
-import ic2_120.content.item.WaterCell
-import ic2_120.content.item.isFluidCellEmpty
-import ic2_120.content.item.isWaterFuel
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
-import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.SolarDistillerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.network.PacketByteBuf
-import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import net.minecraft.util.Identifier
-import ic2_120.registry.annotation.ScreenFactory
 
 @ModScreenHandler(block = SolarDistillerBlock::class)
 class SolarDistillerScreenHandler(
@@ -37,26 +30,29 @@ class SolarDistillerScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(SolarDistillerScreenHandler::class.type(), syncId) {
 
     val sync = SolarDistillerSync(SyncedDataView(propertyDelegate))
 
-    private val upgradeSlotSpec: SlotSpec by lazy {
+    private val upgradeSlotSpec: ic2_120.content.screen.slot.SlotSpec by lazy {
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
+
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
         checkSize(blockInventory, SolarDistillerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, SolarDistillerBlockEntity.SLOT_INPUT_WATER, 0, 0, INPUT_WATER_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, SolarDistillerBlockEntity.SLOT_OUTPUT_EMPTY, 0, 0, OUTPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, SolarDistillerBlockEntity.SLOT_INPUT_CELL, 0, 0, INPUT_CELL_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, SolarDistillerBlockEntity.SLOT_OUTPUT_CELL, 0, 0, OUTPUT_SLOT_SPEC))
+        addTrackedSlot(PredicateSlot(blockInventory, SolarDistillerBlockEntity.SLOT_INPUT_WATER, 0, 0, deriveSpec(SolarDistillerBlockEntity.SLOT_INPUT_WATER)))
+        addTrackedSlot(PredicateSlot(blockInventory, SolarDistillerBlockEntity.SLOT_OUTPUT_EMPTY, 0, 0, deriveSpec(SolarDistillerBlockEntity.SLOT_OUTPUT_EMPTY)))
+        addTrackedSlot(PredicateSlot(blockInventory, SolarDistillerBlockEntity.SLOT_INPUT_CELL, 0, 0, deriveSpec(SolarDistillerBlockEntity.SLOT_INPUT_CELL)))
+        addTrackedSlot(PredicateSlot(blockInventory, SolarDistillerBlockEntity.SLOT_OUTPUT_CELL, 0, 0, deriveSpec(SolarDistillerBlockEntity.SLOT_OUTPUT_CELL)))
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
+            addTrackedSlot(
                 PredicateSlot(
                     blockInventory,
                     SolarDistillerBlockEntity.SLOT_UPGRADE_INDICES[i],
@@ -77,6 +73,15 @@ class SolarDistillerScreenHandler(
         }
     }
 
+    private fun addTrackedSlot(slot: PredicateSlot): PredicateSlot {
+        beSlotToHandlerIndex[slot.index] = slots.size
+        addSlot(slot)
+        return slot
+    }
+
+    private fun deriveSpec(beSlot: Int) =
+        itemStorage?.deriveSlotSpec(beSlot) ?: SlotTarget.NOP_SPEC
+
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
@@ -96,8 +101,8 @@ class SolarDistillerScreenHandler(
                 val moved = SlotMoveHelper.insertIntoTargets(
                     inSlot,
                     listOf(
-                        SlotTarget(slots[SLOT_INPUT_WATER_INDEX], INPUT_WATER_SLOT_SPEC),
-                        SlotTarget(slots[SLOT_INPUT_CELL_INDEX], INPUT_CELL_SLOT_SPEC)
+                        SlotTarget(slots[SLOT_INPUT_WATER_INDEX], deriveSpec(SolarDistillerBlockEntity.SLOT_INPUT_WATER)),
+                        SlotTarget(slots[SLOT_INPUT_CELL_INDEX], deriveSpec(SolarDistillerBlockEntity.SLOT_INPUT_CELL))
                     ) + upgradeTargets
                 )
                 if (!moved) return ItemStack.EMPTY
@@ -128,25 +133,6 @@ class SolarDistillerScreenHandler(
         const val SLOT_UPGRADE_END = 7
         const val PLAYER_INV_START = 8
         const val HOTBAR_END = 43
-
-        private val INPUT_WATER_SLOT_SPEC = SlotSpec(
-            canInsert = { stack ->
-                stack.item == Items.WATER_BUCKET || stack.item is WaterCell ||
-                    (stack.item is FluidCellItem && stack.isWaterFuel())
-            }
-        )
-
-        private val INPUT_CELL_SLOT_SPEC = SlotSpec(
-            canInsert = { stack ->
-                val emptyCell = Registries.ITEM.get(Identifier("ic2_120", "empty_cell"))
-                stack.item == emptyCell || (stack.item is FluidCellItem && stack.isFluidCellEmpty())
-            }
-        )
-
-        private val OUTPUT_SLOT_SPEC = SlotSpec(
-            canInsert = { false },
-            canTake = { true }
-        )
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SolarDistillerScreenHandler {
