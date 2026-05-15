@@ -76,7 +76,7 @@ object SlotMoveHelper {
             return true
         }
 
-        if (!ItemStack.canCombine(slotStack, stack)) return false
+        if (!ItemStack.areEqual(slotStack, stack)) return false
 
         val space = (slotLimit - slotStack.count).coerceAtLeast(0)
         if (space <= 0) return false

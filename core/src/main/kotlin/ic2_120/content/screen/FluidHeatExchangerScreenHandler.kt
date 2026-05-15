@@ -177,7 +177,7 @@ class FluidHeatExchangerScreenHandler(
         private val EXCHANGER_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack ->
-                !stack.isEmpty && net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier("ic2_120", "heat_conductor")
+                !stack.isEmpty && net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier.of("ic2_120", "heat_conductor")
             }
         )
 
@@ -186,8 +186,8 @@ class FluidHeatExchangerScreenHandler(
                 when {
                     stack.item == net.minecraft.item.Items.LAVA_BUCKET -> true
                     stack.item == ic2_120.content.fluid.ModFluids.HOT_COOLANT_BUCKET -> true
-                    net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier("ic2_120", "lava_cell") -> true
-                    net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier("ic2_120", "hot_coolant_cell") -> true
+                    net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier.of("ic2_120", "lava_cell") -> true
+                    net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier.of("ic2_120", "hot_coolant_cell") -> true
                     stack.item is ic2_120.content.item.FluidCellItem -> {
                         val fluid = stack.getFluidCellVariant()?.fluid
                         fluid == net.minecraft.fluid.Fluids.LAVA ||
@@ -203,7 +203,7 @@ class FluidHeatExchangerScreenHandler(
         private val OUTPUT_EMPTY_CONTAINER_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->
                 stack.item == net.minecraft.item.Items.BUCKET ||
-                    net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier("ic2_120", "empty_cell") ||
+                    net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier.of("ic2_120", "empty_cell") ||
                     (stack.item is ic2_120.content.item.FluidCellItem && stack.isFluidCellEmpty())
             }
         )

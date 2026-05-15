@@ -9,7 +9,6 @@ import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.FermenterSync
@@ -65,11 +64,13 @@ class FermenterScreenHandler(
         val inputEmptySpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_INPUT_EMPTY_CONTAINER) ?: OUTPUT_ONLY_SLOT_SPEC
         val outputEmptySpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_OUTPUT_EMPTY_CONTAINER) ?: OUTPUT_EMPTY_CONTAINER_SLOT_SPEC
         val outputFilledSpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_OUTPUT_FILLED_CONTAINER) ?: OUTPUT_ONLY_SLOT_SPEC
+        val outputFertilizerSpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_OUTPUT_FERTILIZER) ?: OUTPUT_ONLY_SLOT_SPEC
 
         addTrackedSlot(FermenterBlockEntity.SLOT_INPUT_FILLED_CONTAINER, 0, 0, inputFilledSpec)
         addTrackedSlot(FermenterBlockEntity.SLOT_INPUT_EMPTY_CONTAINER, 0, 0, inputEmptySpec)
         addTrackedSlot(FermenterBlockEntity.SLOT_OUTPUT_EMPTY_CONTAINER, 0, 0, outputEmptySpec)
         addTrackedSlot(FermenterBlockEntity.SLOT_OUTPUT_FILLED_CONTAINER, 0, 0, outputFilledSpec)
+        addTrackedSlot(FermenterBlockEntity.SLOT_OUTPUT_FERTILIZER, 0, 0, outputFertilizerSpec)
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
             addTrackedSlot(
@@ -100,19 +101,18 @@ class FermenterScreenHandler(
         when (index) {
             SLOT_INPUT_EMPTY_CONTAINER_INDEX,
             SLOT_OUTPUT_FILLED_CONTAINER_INDEX,
+            SLOT_OUTPUT_FERTILIZER_INDEX,
             in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
                 if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
             in PLAYER_INV_START..HOTBAR_END -> {
-                val inputFilledSpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_INPUT_FILLED_CONTAINER) ?: INPUT_FILLED_CONTAINER_SLOT_SPEC
-                val outputEmptySpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_OUTPUT_EMPTY_CONTAINER) ?: OUTPUT_EMPTY_CONTAINER_SLOT_SPEC
-                val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map { SlotTarget(slots[it], upgradeSlotSpec) }
-                val moved = SlotMoveHelper.insertIntoTargets(
+                val storage = itemStorage ?: return ItemStack.EMPTY
+                val moved = SlotMoveHelper.insertFromRoutes(
                     inSlot,
-                    listOf(
-                        SlotTarget(slots[SLOT_INPUT_FILLED_CONTAINER_INDEX], inputFilledSpec),
-                        SlotTarget(slots[SLOT_OUTPUT_EMPTY_CONTAINER_INDEX], outputEmptySpec)
-                    ) + upgradeTargets
+                    storage,
+                    storage.insertRoutes,
+                    beSlotToHandlerIndex,
+                    slots
                 )
                 if (!moved) return ItemStack.EMPTY
             }
@@ -138,14 +138,15 @@ class FermenterScreenHandler(
         const val SLOT_INPUT_EMPTY_CONTAINER_INDEX = 1
         const val SLOT_OUTPUT_EMPTY_CONTAINER_INDEX = 2
         const val SLOT_OUTPUT_FILLED_CONTAINER_INDEX = 3
-        const val SLOT_UPGRADE_INDEX_START = 4
-        const val SLOT_UPGRADE_INDEX_END = 7
-        const val PLAYER_INV_START = 8
-        const val HOTBAR_END = 43
+        const val SLOT_OUTPUT_FERTILIZER_INDEX = 4
+        const val SLOT_UPGRADE_INDEX_START = 5
+        const val SLOT_UPGRADE_INDEX_END = 8
+        const val PLAYER_INV_START = 9
+        const val HOTBAR_END = 44
 
         // 客户端 fallback SlotSpec
-        private val biomassCellId = Identifier("ic2_120", "biomass_cell")
-        private val emptyCellId = Identifier("ic2_120", "empty_cell")
+        private val biomassCellId = Identifier.of("ic2_120", "biomass_cell")
+        private val emptyCellId = Identifier.of("ic2_120", "empty_cell")
 
         private val INPUT_FILLED_CONTAINER_SLOT_SPEC = SlotSpec(
             canInsert = { stack ->

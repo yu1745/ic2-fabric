@@ -133,7 +133,7 @@ class SolidCannerScreenHandler(
         val routes = itemStorage.insertRoutes
         val targets = mutableListOf<SlotTarget>()
         for (route in routes) {
-            for (beSlot in beSlotIndices) {
+            for (beSlot in route.slotIndices) {
                 val handlerIdx = beSlotToHandlerIndex[beSlot] ?: continue
                 val spec = itemStorage.deriveSlotSpec(beSlot)
                 targets.add(SlotTarget(slots[handlerIdx], spec))

@@ -31,6 +31,7 @@ import net.minecraft.state.property.Properties
 import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -45,7 +46,7 @@ abstract class EnergyStorageBlockEntity(
     pos: BlockPos,
     state: BlockState,
     val config: EnergyStorageConfig
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory, ITieredMachine {
+) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf>, ITieredMachine {
 
     override val tier: Int get() = config.tier
 
@@ -121,11 +122,13 @@ abstract class EnergyStorageBlockEntity(
         return (item is IBatteryItem || item is IElectricTool) && item.tier <= config.tier
     }
 
-    override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(io.netty.buffer.Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
         buf.writeVarInt(config.slotCount)
         buf.writeBoolean(config.useEquipmentSlots)
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable(containerTranslationKey)
@@ -134,7 +137,7 @@ abstract class EnergyStorageBlockEntity(
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
         val blockId = Registries.BLOCK.getId(world!!.getBlockState(pos).block)
-        val screenHandlerType = Registries.SCREEN_HANDLER.get(Identifier(blockId.namespace, blockId.path))
+        val screenHandlerType = Registries.SCREEN_HANDLER.get(Identifier.of(blockId.namespace, blockId.path))
             ?: error("ScreenHandler type not found for $blockId")
         @Suppress("UNCHECKED_CAST")
         return ic2_120.content.screen.EnergyStorageScreenHandler(
@@ -143,18 +146,18 @@ abstract class EnergyStorageBlockEntity(
         )
     }
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+    override fun readNbt(nbt: NbtCompound, registryLookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, registryLookup)
+        Inventories.readNbt(nbt, inventory, registryLookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(EnergyStorageSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+    override fun writeNbt(nbt: NbtCompound, registryLookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, registryLookup)
+        Inventories.writeNbt(nbt, inventory, registryLookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(EnergyStorageSync.NBT_ENERGY_STORED, sync.amount)
     }
