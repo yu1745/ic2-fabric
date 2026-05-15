@@ -112,7 +112,8 @@ class RtHeatGeneratorBlockEntity(
             playerInventory,
             this,
             net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
-            syncedData
+            syncedData,
+            itemStorage
         )
 
     override fun getInventory(): Inventory = this
