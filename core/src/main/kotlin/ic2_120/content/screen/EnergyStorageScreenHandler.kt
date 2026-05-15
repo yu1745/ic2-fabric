@@ -4,14 +4,11 @@ import ic2_120.content.block.storage.EnergyStorageBlockEntity
 import ic2_120.content.block.storage.EnergyStorageConfig
 import ic2_120.content.sync.EnergyStorageSync
 import ic2_120.content.syncs.SyncedDataView
-import ic2_120.content.item.energy.IBatteryItem
-import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModScreenHandler
-import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -45,17 +42,11 @@ class EnergyStorageScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     val context: ScreenHandlerContext,
-    propertyDelegate: PropertyDelegate
+    propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(screenHandlerType, syncId) {
     private val config = resolveConfig()
     private val machineSlotCount: Int = if (config.useEquipmentSlots) 5 else 1
-    private val chargeSlotSpec = chargeSlotSpec(config.tier)
-    private val equipmentSlotSpecs = listOf(
-        equipmentSlotSpec(EquipmentSlot.HEAD, config.tier),
-        equipmentSlotSpec(EquipmentSlot.CHEST, config.tier),
-        equipmentSlotSpec(EquipmentSlot.LEGS, config.tier),
-        equipmentSlotSpec(EquipmentSlot.FEET, config.tier)
-    )
     val sync = EnergyStorageSync(
         schema = SyncedDataView(propertyDelegate),
         getFacing = { Direction.NORTH },
@@ -65,6 +56,8 @@ class EnergyStorageScreenHandler(
 
     val useEquipmentSlots: Boolean get() = config.useEquipmentSlots
 
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
     private fun resolveConfig(): EnergyStorageConfig {
         return context.get({ world, pos ->
             val block = world.getBlockState(pos).block
@@ -73,39 +66,20 @@ class EnergyStorageScreenHandler(
         }, EnergyStorageConfig.BATBOX)
     }
 
-    private fun chargeSlotSpec(maxTier: Int): SlotSpec = SlotSpec(
-        canInsert = { stack ->
-            val item = stack.item
-            (item is IBatteryItem || item is IElectricTool) && item.tier <= maxTier
-        },
-        maxItemCount = 1
-    )
-
-    private fun equipmentSlotSpec(slotType: EquipmentSlot, maxTier: Int): SlotSpec = SlotSpec(
-        canInsert = { stack ->
-            val item = stack.item
-            (item is IBatteryItem || item is IElectricTool) &&
-                item.tier <= maxTier &&
-                stack.item is net.minecraft.item.ArmorItem &&
-                (stack.item as net.minecraft.item.ArmorItem).slotType == slotType
-        },
-        maxItemCount = 1
-    )
-
     init {
         checkSize(blockInventory, machineSlotCount)
         addProperties(propertyDelegate)
 
         // 4 个装备槽（左侧，slot 1-4），MFE/MFSU 专用
         if (config.useEquipmentSlots) {
-            addSlot(PredicateSlot(blockInventory, 1, 0, 0, equipmentSlotSpecs[0]))
-            addSlot(PredicateSlot(blockInventory, 2, 0, 0, equipmentSlotSpecs[1]))
-            addSlot(PredicateSlot(blockInventory, 3, 0, 0, equipmentSlotSpecs[2]))
-            addSlot(PredicateSlot(blockInventory, 4, 0, 0, equipmentSlotSpecs[3]))
+            addTrackedSlot(blockInventory, 1)
+            addTrackedSlot(blockInventory, 2)
+            addTrackedSlot(blockInventory, 3)
+            addTrackedSlot(blockInventory, 4)
         }
 
         // 1 个充电槽（右侧，slot 0），所有等级都有
-        addSlot(PredicateSlot(blockInventory, 0, 0, 0, chargeSlotSpec))
+        addTrackedSlot(blockInventory, 0)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -117,6 +91,13 @@ class EnergyStorageScreenHandler(
         }
     }
 
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+    }
+
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         if (index !in slots.indices) return ItemStack.EMPTY
 
@@ -125,23 +106,24 @@ class EnergyStorageScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
-            val movedFromMachine = index in machineSlotIndices()
-            val moved = when {
-                movedFromMachine -> {
-                    if (!insertItem(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, true)) {
-                        false
-                    } else {
-                        slot.onQuickTransfer(stackInSlot, stack)
-                        true
-                    }
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
+            when {
+                beSlot >= 0 -> {
+                    if (!insertItem(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, true)) return ItemStack.EMPTY
+                    slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in playerInventorySlotStart..hotbarEnd -> {
-                    SlotMoveHelper.insertIntoTargets(stackInSlot, machineSlotTargets())
+                    val storage = itemStorage
+                    if (storage == null) return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
+                    )
+                    if (!moved) return ItemStack.EMPTY
                 }
-                else -> false
+                else -> {
+                    if (!insertItem(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, false)) return ItemStack.EMPTY
+                }
             }
-
-            if (!moved) return ItemStack.EMPTY
 
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
@@ -149,24 +131,6 @@ class EnergyStorageScreenHandler(
             slot.onTakeItem(player, stackInSlot)
         }
         return stack
-    }
-
-    private fun machineSlotIndices(): IntArray {
-        return if (config.useEquipmentSlots) intArrayOf(0, 1, 2, 3, 4) else intArrayOf(0)
-    }
-
-    private fun machineSlotTargets(): List<SlotTarget> {
-        val targets = mutableListOf<SlotTarget>()
-        if (config.useEquipmentSlots) {
-            targets += SlotTarget(slots[0], equipmentSlotSpecs[0])
-            targets += SlotTarget(slots[1], equipmentSlotSpecs[1])
-            targets += SlotTarget(slots[2], equipmentSlotSpecs[2])
-            targets += SlotTarget(slots[3], equipmentSlotSpecs[3])
-            targets += SlotTarget(slots[4], chargeSlotSpec)
-        } else {
-            targets += SlotTarget(slots[0], chargeSlotSpec)
-        }
-        return targets
     }
 
     val playerInventorySlotStart: Int get() = machineSlotCount

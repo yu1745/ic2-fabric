@@ -78,7 +78,7 @@ class SolarGeneratorScreenHandler(
                 index == SLOT_BATTERY_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 index in PLAYER_INV_START..HOTBAR_END -> {
                     val moved = if (itemStorage != null) {
-                        SlotMoveHelper.insertFromRoutes(stackInSlot, itemStorage, beSlotToHandlerIndex, slots)
+                        SlotMoveHelper.insertFromRoutes(stackInSlot, itemStorage, itemStorage.insertRoutes, beSlotToHandlerIndex, slots)
                     } else {
                         SlotMoveHelper.insertIntoTargets(
                             stackInSlot,

@@ -397,7 +397,8 @@ class NuclearReactorBlockEntity(
             syncedData,
             currentCapacity(),
             this,
-            isThermalMode()
+            isThermalMode(),
+            itemStorage
         )
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {

@@ -130,7 +130,7 @@ class SolidCannerScreenHandler(
      */
     private fun buildRouteTargets(): List<SlotTarget> {
         if (itemStorage == null) return emptyList()
-        val routes = itemStorage.insertFromRoutes()
+        val routes = itemStorage.insertRoutes
         val targets = mutableListOf<SlotTarget>()
         for (route in routes) {
             for (beSlot in beSlotIndices) {

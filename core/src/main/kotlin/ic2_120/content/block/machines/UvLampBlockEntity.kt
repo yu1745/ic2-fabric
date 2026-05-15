@@ -111,7 +111,8 @@ class UvLampBlockEntity(
             playerInventory,
             this,
             net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
-            syncedData
+            syncedData,
+            itemStorage
         )
 
     // ========== NBT ==========

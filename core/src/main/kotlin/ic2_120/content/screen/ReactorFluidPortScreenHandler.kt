@@ -5,8 +5,7 @@ import ic2_120.content.block.nuclear.ReactorFluidPortBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
-import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
@@ -21,7 +20,6 @@ import net.minecraft.screen.ScreenHandler
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import net.minecraft.util.Identifier
 import ic2_120.registry.annotation.ScreenFactory
 
 /**
@@ -34,27 +32,18 @@ class ReactorFluidPortScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(ReactorFluidPortScreenHandler::class.type(), syncId) {
 
-    private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
-    }
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
         checkSize(blockInventory, ReactorFluidPortBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
         // 升级槽（只有 1 个）
-        addSlot(
-            PredicateSlot(
-                blockInventory,
-                ReactorFluidPortBlockEntity.SLOT_UPGRADE_INDICES[0],
-                0,
-                0,
-                upgradeSlotSpec
-            )
-        )
+        addTrackedSlot(blockInventory, ReactorFluidPortBlockEntity.SLOT_UPGRADE_INDICES[0])
 
         // 玩家物品栏
         for (row in 0 until 3) {
@@ -69,31 +58,42 @@ class ReactorFluidPortScreenHandler(
         }
     }
 
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+    }
+
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (!slot.hasStack()) return stack
-
-        val inSlot = slot.stack
-        stack = inSlot.copy()
-
-        when (index) {
-            UPGRADE_SLOT_INDEX -> {
-                if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
+        if (slot.hasStack()) {
+            val stackInSlot = slot.stack
+            stack = stackInSlot.copy()
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
+            when {
+                beSlot >= 0 -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    slot.onQuickTransfer(stackInSlot, stack)
+                }
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage
+                    if (storage == null) return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
+                    )
+                    if (!moved) return ItemStack.EMPTY
+                }
+                else -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                }
             }
-
-            in PLAYER_INV_START..HOTBAR_END -> {
-                val upgradeTarget = SlotTarget(slots[UPGRADE_SLOT_INDEX], upgradeSlotSpec)
-                val moved = SlotMoveHelper.insertIntoTargets(inSlot, listOf(upgradeTarget))
-                if (!moved) return ItemStack.EMPTY
-            }
-
-            else -> if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, false)) return ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            else slot.markDirty()
+            if (stackInSlot.count == stack.count) return ItemStack.EMPTY
+            slot.onTakeItem(player, stackInSlot)
         }
-
-        if (inSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
-        if (inSlot.count == stack.count) return ItemStack.EMPTY
-        slot.onTakeItem(player, inSlot)
         return stack
     }
 

@@ -11,55 +11,6 @@ import net.minecraft.screen.slot.Slot
 object SlotMoveHelper {
 
     /**
-     * 基于 [RoutedItemStorage.insertRoutes] 的路由顺序，
-     * 按优先级将 [stack] 插入机器槽位。
-     * 使用 [beSlotToHandlerIndex] 将 BE 槽位索引映射到 handler slot index。
-     * 返回是否至少移动了 1 个物品。
-     */
-    fun insertFromRoutes(
-        stack: ItemStack,
-        storage: RoutedItemStorage,
-        routes: List<ItemInsertRoute>,
-        beSlotToHandlerIndex: Map<Int, Int>,
-        slots: List<Slot>
-    ): Boolean {
-        if (stack.isEmpty) return false
-        var movedAny = false
-        for (route in routes) {
-            if (stack.isEmpty) break
-            if (!route.matcher(stack)) continue
-            for (beSlot in route.slotIndices) {
-                if (stack.isEmpty) break
-                val handlerIndex = beSlotToHandlerIndex[beSlot] ?: continue
-                val slot = slots[handlerIndex]
-                if (!slot.canInsert(stack)) continue
-                val slotStack = slot.stack
-                val slotLimit = minOf(route.maxPerSlot ?: slot.maxItemCount, slot.maxItemCount, stack.maxCount)
-                if (slotLimit <= 0) continue
-                if (slotStack.isEmpty) {
-                    val moveCount = minOf(slotLimit, stack.count)
-                    if (moveCount <= 0) continue
-                    val moved = stack.copy()
-                    moved.count = moveCount
-                    slot.stack = moved
-                    stack.decrement(moveCount)
-                    slot.markDirty()
-                    movedAny = true
-                } else if (ItemStack.canCombine(slotStack, stack)) {
-                    val space = (slotLimit - slotStack.count).coerceAtLeast(0)
-                    if (space <= 0) continue
-                    val moveCount = minOf(space, stack.count)
-                    if (moveCount <= 0) continue
-                    slotStack.increment(moveCount)
-                    stack.decrement(moveCount)
-                    slot.markDirty()
-                    movedAny = true
-                }
-            }
-        }
-        return movedAny
-    }
-    /**
      * 按给定顺序尝试把 [stack] 放入目标槽位列表。
      * 返回是否至少移动了 1 个物品。
      */
@@ -108,23 +59,8 @@ object SlotMoveHelper {
         return movedAny
     }
 
-    /**
-     * 从 [RoutedItemStorage] 的 extractSlots 中提取 slot index 映射，
-     * 用于判断哪些 handler slot 是输出/不可插入的。
-     */
-    fun isExtractOnlySlot(
-        beSlotIndex: Int,
-        itemStorage: RoutedItemStorage
-    ): Boolean {
-        // 如果一个 slot 只在 extractSlots 中、不在任何 insertRoute 中，则是只输出槽
-        val inExtract = itemStorage.extractSlots.contains(beSlotIndex)
-        val inInsert = itemStorage.insertRoutes.any { beSlotIndex in it.slotIndices }
-        return inExtract && !inInsert
-    }
-
     private fun insertFromRoute(stack: ItemStack, slot: Slot, maxPerSlot: Int?): Boolean {
         val slotStack = slot.stack
-        // 直接用 route 的 maxPerSlot，不再依赖 SlotSpec
         val effectiveLimit = maxPerSlot ?: slot.maxItemCount
         val slotLimit = minOf(effectiveLimit, stack.maxCount)
         if (slotLimit <= 0) return false
@@ -186,38 +122,7 @@ object SlotMoveHelper {
     }
 }
 
-    /**
-     * 基于 [RoutedItemStorage] 的路由规则，将 [stack] 按 insertRoute 顺序放入机器槽位。
-     * [beSlotToHandlerIndex] 将 BlockEntity 槽位索引映射为 handler 中 addSlot 的顺序索引。
-     * 返回是否至少移动了 1 个物品。
-     */
-    fun insertFromRoutes(
-        stack: ItemStack,
-        itemStorage: ic2_120.content.storage.RoutedItemStorage,
-        beSlotToHandlerIndex: Map<Int, Int>,
-        handlerSlots: List<Slot>
-    ): Boolean {
-        if (stack.isEmpty) return false
-        val targets = mutableListOf<SlotTarget>()
-        for (route in itemStorage.insertRoutes) {
-            for (beSlot in route.slotIndices) {
-                val handlerIndex = beSlotToHandlerIndex[beSlot] ?: continue
-                if (handlerIndex >= handlerSlots.size) continue
-                val slot = handlerSlots[handlerIndex]
-                val spec = itemStorage.deriveSlotSpec(beSlot)
-                targets.add(SlotTarget(slot, spec))
-            }
-        }
-        return insertIntoTargets(stack, targets)
-    }
-}
-
 data class SlotTarget(
     val slot: Slot,
     val spec: SlotSpec
-) {
-    companion object {
-        /** Fallback spec used on the client side where [RoutedItemStorage] is unavailable. */
-        val NOP_SPEC = SlotSpec()
-    }
-}
+)

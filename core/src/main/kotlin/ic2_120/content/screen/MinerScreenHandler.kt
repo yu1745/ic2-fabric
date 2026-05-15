@@ -3,6 +3,7 @@ package ic2_120.content.screen
 import ic2_120.content.block.machines.BaseMinerBlockEntity
 import ic2_120.content.block.BaseMinerBlock
 import ic2_120.content.screen.slot.PredicateSlot
+import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
@@ -91,7 +92,7 @@ class MinerScreenHandler(
     }
 
     private fun deriveSpec(beSlot: Int) =
-        itemStorage?.deriveSlotSpec(beSlot) ?: SlotTarget.NOP_SPEC
+        itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
 
     override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
         context.get({ world, pos ->

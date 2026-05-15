@@ -2,17 +2,13 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.nuclear.NuclearReactorBlock
 import ic2_120.content.block.nuclear.NuclearReactorBlockEntity
-import ic2_120.content.fluid.ModFluids
-import ic2_120.content.item.FluidCellItem
-import ic2_120.content.item.getFluidCellVariant
-import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.content.network.NetworkManager
 import ic2_120.content.network.ReactorLayoutLockPacket
 import ic2_120.content.reactor.IBaseReactorComponent
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -23,13 +19,11 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 import net.minecraft.server.network.ServerPlayerEntity
@@ -57,7 +51,8 @@ class NuclearReactorScreenHandler(
     /** 核反应堆方块实体 */
     val reactor: NuclearReactorBlockEntity? = null,
     /** 是否为热模式（热模式时显示 4 个流体槽） */
-    val isThermalMode: Boolean = false
+    val isThermalMode: Boolean = false,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(NuclearReactorScreenHandler::class.type(), syncId) {
 
     val sync = NuclearReactorSync(
@@ -66,19 +61,24 @@ class NuclearReactorScreenHandler(
         currentTickProvider = { null }
     )
 
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
     init {
         val invSize = if (isThermalMode) NuclearReactorBlockEntity.INVENTORY_SIZE else reactorSlotCount
         checkSize(blockInventory, invSize)
         addProperties(propertyDelegate)
 
         // 槽位竖排：3 列→9 列，每列 9 行。index: col = i/9, row = i%9（几何由客户端 Compose 布局）
+        // 反应堆槽位需要自定义 canInsert（布局锁定检查），手动添加
         for (index in 0 until reactorSlotCount) {
-            val slotIndex = index
-            addSlot(object : PredicateSlot(blockInventory, index, 0, 0, REACTOR_SLOT_SPEC) {
+            val spec = itemStorage?.deriveSlotSpec(index) ?: REACTOR_SLOT_SPEC
+            val handlerIndex = slots.size
+            beSlotToHandlerIndex[index] = handlerIndex
+            addSlot(object : PredicateSlot(blockInventory, index, 0, 0, spec) {
                 override fun canInsert(stack: ItemStack): Boolean {
                     // 布局锁定：空槽不允许插入，只允许与锁定类型匹配的物品
                     if (reactor?.layoutLocked == true) {
-                        val lockedItem = reactor.getLockedItemForSlot(slotIndex)
+                        val lockedItem = reactor.getLockedItemForSlot(index)
                         if (lockedItem == null) return false
                         if (stack.item !== lockedItem) return false
                     }
@@ -91,10 +91,10 @@ class NuclearReactorScreenHandler(
 
         // 热模式：4 个流体槽（GUI 位置由客户端 Compose 布局）
         if (isThermalMode) {
-            addSlot(PredicateSlot(blockInventory, NuclearReactorBlockEntity.SLOT_COOLANT_INPUT, 0, 0, COOLANT_INPUT_SPEC))
-            addSlot(PredicateSlot(blockInventory, NuclearReactorBlockEntity.SLOT_COOLANT_OUTPUT, 0, 0, OUTPUT_ONLY_SPEC))
-            addSlot(PredicateSlot(blockInventory, NuclearReactorBlockEntity.SLOT_HOT_COOLANT_INPUT, 0, 0, HOT_COOLANT_INPUT_SPEC))
-            addSlot(PredicateSlot(blockInventory, NuclearReactorBlockEntity.SLOT_HOT_COOLANT_OUTPUT, 0, 0, OUTPUT_ONLY_SPEC))
+            addTrackedSlot(blockInventory, NuclearReactorBlockEntity.SLOT_COOLANT_INPUT)
+            addTrackedSlot(blockInventory, NuclearReactorBlockEntity.SLOT_COOLANT_OUTPUT)
+            addTrackedSlot(blockInventory, NuclearReactorBlockEntity.SLOT_HOT_COOLANT_INPUT)
+            addTrackedSlot(blockInventory, NuclearReactorBlockEntity.SLOT_HOT_COOLANT_OUTPUT)
         }
 
         for (row in 0 until 3) {
@@ -116,37 +116,42 @@ class NuclearReactorScreenHandler(
 
     private val playerInvStart: Int get() = playerInventorySlotStart
 
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+    }
+
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (!slot.hasStack()) return stack
-
-        val stackInSlot = slot.stack
-        stack = stackInSlot.copy()
-
-        when {
-            index < reactorSlotCount -> {
-                if (!insertItem(stackInSlot, playerInvStart, slots.size, true)) return ItemStack.EMPTY
-                slot.onQuickTransfer(stackInSlot, stack)
+        if (slot.hasStack()) {
+            val stackInSlot = slot.stack
+            stack = stackInSlot.copy()
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
+            when {
+                beSlot >= 0 -> {
+                    if (!insertItem(stackInSlot, playerInvStart, slots.size, true)) return ItemStack.EMPTY
+                    slot.onQuickTransfer(stackInSlot, stack)
+                }
+                index in playerInvStart until slots.size -> {
+                    val storage = itemStorage
+                    if (storage == null) return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
+                    )
+                    if (!moved) return ItemStack.EMPTY
+                }
+                else -> {
+                    if (!insertItem(stackInSlot, playerInvStart, slots.size, false)) return ItemStack.EMPTY
+                }
             }
-            index in fluidSlotStart until fluidSlotEnd -> {
-                if (!insertItem(stackInSlot, playerInvStart, slots.size, true)) return ItemStack.EMPTY
-                slot.onQuickTransfer(stackInSlot, stack)
-            }
-            else -> {
-                val reactorTargets = (0 until reactorSlotCount).map { SlotTarget(slots[it], REACTOR_SLOT_SPEC) }
-                val fluidTargets = if (isThermalMode) listOf(
-                    SlotTarget(slots[fluidSlotStart], COOLANT_INPUT_SPEC),
-                    SlotTarget(slots[fluidSlotStart + 2], HOT_COOLANT_INPUT_SPEC)
-                ) else emptyList()
-                val moved = SlotMoveHelper.insertIntoTargets(stackInSlot, reactorTargets + fluidTargets)
-                if (!moved) return ItemStack.EMPTY
-            }
+            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            else slot.markDirty()
+            if (stackInSlot.count == stack.count) return ItemStack.EMPTY
+            slot.onTakeItem(player, stackInSlot)
         }
-
-        if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
-        if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-        slot.onTakeItem(player, stackInSlot)
         return stack
     }
 
@@ -188,37 +193,11 @@ class NuclearReactorScreenHandler(
         /** 固定界面框宽度（不随容量变化） */
         const val FRAME_WIDTH = 220
         /** 玩家背包 X 偏移（居中于 FRAME_WIDTH） */
-        val PLAYER_INV_X = (FRAME_WIDTH - 9 * SLOT_SIZE) / 2 
+        val PLAYER_INV_X = (FRAME_WIDTH - 9 * SLOT_SIZE) / 2
 
         private val REACTOR_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack -> !stack.isEmpty && stack.item is IBaseReactorComponent }
-        )
-
-        /** 冷却液输入：仅接受满冷却液容器（桶、冷却液单元、通用流体单元） */
-        private val COOLANT_INPUT_SPEC = SlotSpec(
-            canInsert = { stack ->
-                stack.item == ModFluids.COOLANT_BUCKET ||
-                    Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "coolant_cell") ||
-                    (stack.item is FluidCellItem && stack.getFluidCellVariant()?.fluid?.let {
-                        it == ModFluids.COOLANT_STILL || it == ModFluids.COOLANT_FLOWING
-                    } == true)
-            }
-        )
-
-        /** 热冷却液输入：仅接受空容器（用于提取热冷却液） */
-        private val HOT_COOLANT_INPUT_SPEC = SlotSpec(
-            canInsert = { stack ->
-                stack.item == Items.BUCKET ||
-                    Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "empty_cell") ||
-                    (stack.item is FluidCellItem && stack.isFluidCellEmpty())
-            }
-        )
-
-        /** 仅输出槽（空容器/满容器返回，不可放入） */
-        private val OUTPUT_ONLY_SPEC = SlotSpec(
-            canInsert = { false },
-            canTake = { true }
         )
 
         @ScreenFactory
