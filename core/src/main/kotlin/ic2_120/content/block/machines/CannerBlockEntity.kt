@@ -281,18 +281,20 @@ class CannerBlockEntity(
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
-        SLOT_CONTAINER -> !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is FoamSprayerItem && (
+        SLOT_CONTAINER -> !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is FoamSprayerItem && stack.item !is CfPack && (
             cannerIsFilledFluidContainer(stack) || stack.item == tinCanItem || stack.item is EmptyFuelRodItem
             )
         SLOT_MATERIAL -> !stack.isEmpty && stack.item !is IBatteryItem && (
             (world?.let { SolidCannerRecipe.slot1Ingredients(it).any { ing -> ing.test(stack) } } == true) ||
                 CannerMixingRecipes.isMixingMaterial(stack.item) ||
                 (sync.getMode() == CannerSync.Mode.BOTTLE_LIQUID && stack.item is FoamSprayerItem &&
-                    FoamSprayerItem.getFluidAmount(stack) < FoamSprayerItem.CAPACITY_DROPLETS)
+                    FoamSprayerItem.getFluidAmount(stack) < FoamSprayerItem.CAPACITY_DROPLETS) ||
+                (sync.getMode() == CannerSync.Mode.BOTTLE_LIQUID && stack.item is CfPack &&
+                    CfPack.getFluidAmount(stack) < CfPack.CAPACITY_DROPLETS)
             )
         SLOT_OUTPUT -> false  // 纯输出槽，不接受插入
         SLOT_LEFT_EMPTY -> false  // 纯输出槽，不接受插入
-        SLOT_RIGHT_INPUT -> !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is FoamSprayerItem &&
+        SLOT_RIGHT_INPUT -> !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is FoamSprayerItem && stack.item !is CfPack &&
             cannerIsEmptyFluidContainer(stack)
         SLOT_DISCHARGING -> !stack.isEmpty && stack.item is IBatteryItem
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
@@ -308,7 +310,7 @@ class CannerBlockEntity(
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.canner")
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        CannerScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
+        CannerScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)

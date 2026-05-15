@@ -2,15 +2,12 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.SolidCannerBlock
 import ic2_120.content.block.machines.SolidCannerBlockEntity
-import ic2_120.content.item.EmptyFuelRodItem
-import ic2_120.content.item.IUpgradeItem
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
-import ic2_120.content.recipes.solidcanner.SolidCannerRecipe
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.SolidCannerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -20,15 +17,12 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.registry.Registries
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import net.minecraft.util.Identifier
 import ic2_120.registry.annotation.ScreenFactory
 
 @ModScreenHandler(block = SolidCannerBlock::class)
@@ -37,54 +31,48 @@ class SolidCannerScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(SolidCannerScreenHandler::class.type(), syncId) {
 
     val sync = SolidCannerSync(SyncedDataView(propertyDelegate))
 
-    private val upgradeSlotSpec by lazy {
+    private val upgradeSlotSpec: SlotSpec by lazy {
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
-    private val tinCanItem by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "tin_can")) }
+    /** Maps BE slot index -> handler slot index for quickMove routing. */
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private val containerSlotSpec = SlotSpec(
-        canInsert = { stack ->
-            !stack.isEmpty && (stack.item == tinCanItem || stack.item is EmptyFuelRodItem)
-        }
-    )
-    private val foodSlotSpec = SlotSpec(
-        canInsert = { stack ->
-            !stack.isEmpty && stack.item !is IBatteryItem && stack.item !is IUpgradeItem &&
-                (context.get({ world, _ ->
-                    world.recipeManager.values().any { it.value is SolidCannerRecipe && (it.value as SolidCannerRecipe).slot1Ingredient.test(stack) }
-                }, false) || stack.get(DataComponentTypes.FOOD) != null)
-        }
-    )
-    private val outputSlotSpec = SlotSpec(canInsert = { false }, canTake = { true })
-    private val dischargingSlotSpec = SlotSpec(
-        canInsert = { stack -> stack.item is IBatteryItem },
-        maxItemCount = 1
-    )
+    /**
+     * Add a tracked slot: registers it with the handler and records the BE->handler mapping.
+     */
+    private fun addTrackedSlot(slot: Slot, beSlotIndex: Int) {
+        beSlotToHandlerIndex[beSlotIndex] = slots.size
+        addSlot(slot)
+    }
 
     init {
         checkSize(blockInventory, SolidCannerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
-        addSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_TIN_CAN, 0, 0, containerSlotSpec))
-        addSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_FOOD, 0, 0, foodSlotSpec))
-        addSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_OUTPUT, 0, 0, outputSlotSpec))
-        addSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_DISCHARGING, 0, 0, dischargingSlotSpec))
+
+        addTrackedSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_TIN_CAN, 0, 0, itemStorage?.deriveSlotSpec(SolidCannerBlockEntity.SLOT_TIN_CAN) ?: SlotSpec()), SolidCannerBlockEntity.SLOT_TIN_CAN)
+        addTrackedSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_FOOD, 0, 0, itemStorage?.deriveSlotSpec(SolidCannerBlockEntity.SLOT_FOOD) ?: SlotSpec()), SolidCannerBlockEntity.SLOT_FOOD)
+        addTrackedSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_OUTPUT, 0, 0, itemStorage?.deriveSlotSpec(SolidCannerBlockEntity.SLOT_OUTPUT) ?: SlotSpec(canInsert = { false }, canTake = { true })), SolidCannerBlockEntity.SLOT_OUTPUT)
+        addTrackedSlot(PredicateSlot(blockInventory, SolidCannerBlockEntity.SLOT_DISCHARGING, 0, 0, itemStorage?.deriveSlotSpec(SolidCannerBlockEntity.SLOT_DISCHARGING) ?: SlotSpec()), SolidCannerBlockEntity.SLOT_DISCHARGING)
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
+            addTrackedSlot(
                 PredicateSlot(
                     blockInventory,
                     SolidCannerBlockEntity.SLOT_UPGRADE_INDICES[i],
                     0,
                     0,
                     upgradeSlotSpec
-                )
+                ),
+                SolidCannerBlockEntity.SLOT_UPGRADE_INDICES[i]
             )
         }
+
         for (row in 0 until 3) {
             for (col in 0 until 9) {
                 addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
@@ -115,16 +103,8 @@ class SolidCannerScreenHandler(
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
-                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                        SlotTarget(slots[it], upgradeSlotSpec)
-                    }
-                    val dischargingTarget = SlotTarget(slots[SLOT_DISCHARGING_INDEX], dischargingSlotSpec)
-                    val containerTarget = SlotTarget(slots[SLOT_TIN_CAN_INDEX], containerSlotSpec)
-                    val foodTarget = SlotTarget(slots[SLOT_FOOD_INDEX], foodSlotSpec)
-                    val moved = SlotMoveHelper.insertIntoTargets(
-                        stackInSlot,
-                        listOf(containerTarget, foodTarget, dischargingTarget) + upgradeTargets
-                    )
+                    val targets = buildRouteTargets()
+                    val moved = SlotMoveHelper.insertIntoTargets(stackInSlot, targets)
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
@@ -143,6 +123,24 @@ class SolidCannerScreenHandler(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)
+
+    /**
+     * Build ordered slot targets from itemStorage insert routes.
+     * Returns empty list on client side (itemStorage is null).
+     */
+    private fun buildRouteTargets(): List<SlotTarget> {
+        if (itemStorage == null) return emptyList()
+        val routes = itemStorage.insertFromRoutes()
+        val targets = mutableListOf<SlotTarget>()
+        for (route in routes) {
+            for (beSlot in beSlotIndices) {
+                val handlerIdx = beSlotToHandlerIndex[beSlot] ?: continue
+                val spec = itemStorage.deriveSlotSpec(beSlot)
+                targets.add(SlotTarget(slots[handlerIdx], spec))
+            }
+        }
+        return targets
+    }
 
     companion object {
         const val SLOT_SIZE = 18
