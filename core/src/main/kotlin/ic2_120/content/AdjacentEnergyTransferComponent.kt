@@ -90,6 +90,7 @@ class AdjacentEnergyTransferComponent(
         consumerVoltage: Int,
         consumer: ITieredMachine
     ): Boolean {
+        if (!ic2_120.config.Ic2Config.current.general.enableOvervoltageExplosion) return false
         if (consumer is IGenerator) return false
         if (consumer is TransformerBlockEntity) return false
         return providerVoltage > consumerVoltage
