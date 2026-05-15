@@ -11,6 +11,7 @@ import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.FermenterSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -35,9 +36,10 @@ import ic2_120.registry.annotation.ScreenFactory
 class FermenterScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
-    blockInventory: Inventory,
+    private val blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(FermenterScreenHandler::class.type(), syncId) {
 
     val sync = FermenterSync(SyncedDataView(propertyDelegate))
@@ -46,24 +48,35 @@ class FermenterScreenHandler(
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
+    /** BE 槽位索引 -> handler 槽位索引 */
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
+    private fun addTrackedSlot(beSlot: Int, x: Int, y: Int, spec: SlotSpec) {
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlot] = handlerIndex
+        addSlot(PredicateSlot(blockInventory, beSlot, x, y, spec))
+    }
+
     init {
         checkSize(blockInventory, FermenterBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, FermenterBlockEntity.SLOT_INPUT_FILLED_CONTAINER, 0, 0, INPUT_FILLED_CONTAINER_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, FermenterBlockEntity.SLOT_INPUT_EMPTY_CONTAINER, 0, 0, OUTPUT_ONLY_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, FermenterBlockEntity.SLOT_OUTPUT_EMPTY_CONTAINER, 0, 0, OUTPUT_EMPTY_CONTAINER_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, FermenterBlockEntity.SLOT_OUTPUT_FILLED_CONTAINER, 0, 0, OUTPUT_ONLY_SLOT_SPEC))
+        val inputFilledSpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_INPUT_FILLED_CONTAINER) ?: INPUT_FILLED_CONTAINER_SLOT_SPEC
+        val inputEmptySpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_INPUT_EMPTY_CONTAINER) ?: OUTPUT_ONLY_SLOT_SPEC
+        val outputEmptySpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_OUTPUT_EMPTY_CONTAINER) ?: OUTPUT_EMPTY_CONTAINER_SLOT_SPEC
+        val outputFilledSpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_OUTPUT_FILLED_CONTAINER) ?: OUTPUT_ONLY_SLOT_SPEC
+
+        addTrackedSlot(FermenterBlockEntity.SLOT_INPUT_FILLED_CONTAINER, 0, 0, inputFilledSpec)
+        addTrackedSlot(FermenterBlockEntity.SLOT_INPUT_EMPTY_CONTAINER, 0, 0, inputEmptySpec)
+        addTrackedSlot(FermenterBlockEntity.SLOT_OUTPUT_EMPTY_CONTAINER, 0, 0, outputEmptySpec)
+        addTrackedSlot(FermenterBlockEntity.SLOT_OUTPUT_FILLED_CONTAINER, 0, 0, outputFilledSpec)
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
-                PredicateSlot(
-                    blockInventory,
-                    FermenterBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
+            addTrackedSlot(
+                FermenterBlockEntity.SLOT_UPGRADE_INDICES[i],
+                0,
+                0,
+                upgradeSlotSpec
             )
         }
 
@@ -91,12 +104,14 @@ class FermenterScreenHandler(
                 if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
             in PLAYER_INV_START..HOTBAR_END -> {
+                val inputFilledSpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_INPUT_FILLED_CONTAINER) ?: INPUT_FILLED_CONTAINER_SLOT_SPEC
+                val outputEmptySpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_OUTPUT_EMPTY_CONTAINER) ?: OUTPUT_EMPTY_CONTAINER_SLOT_SPEC
                 val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map { SlotTarget(slots[it], upgradeSlotSpec) }
                 val moved = SlotMoveHelper.insertIntoTargets(
                     inSlot,
                     listOf(
-                        SlotTarget(slots[SLOT_INPUT_FILLED_CONTAINER_INDEX], INPUT_FILLED_CONTAINER_SLOT_SPEC),
-                        SlotTarget(slots[SLOT_OUTPUT_EMPTY_CONTAINER_INDEX], OUTPUT_EMPTY_CONTAINER_SLOT_SPEC)
+                        SlotTarget(slots[SLOT_INPUT_FILLED_CONTAINER_INDEX], inputFilledSpec),
+                        SlotTarget(slots[SLOT_OUTPUT_EMPTY_CONTAINER_INDEX], outputEmptySpec)
                     ) + upgradeTargets
                 )
                 if (!moved) return ItemStack.EMPTY
@@ -128,6 +143,7 @@ class FermenterScreenHandler(
         const val PLAYER_INV_START = 8
         const val HOTBAR_END = 43
 
+        // 客户端 fallback SlotSpec
         private val biomassCellId = Identifier("ic2_120", "biomass_cell")
         private val emptyCellId = Identifier("ic2_120", "empty_cell")
 
@@ -168,4 +184,3 @@ class FermenterScreenHandler(
         }
     }
 }
-
