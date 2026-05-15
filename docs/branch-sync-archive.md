@@ -77,3 +77,9 @@
 | 71 | `717ebaae` | feat: 焦炉——窑口添加朝向、screen显示剩余时间、blockstate旋转修正 | ✅ | cherry-pick + 解决 CokeKilnBlocks.kt import 冲突 + datagen 刷新 |
 | 72 | `0c935b69` | fix: 发酵机UI溢出容器修复，半流质发电机UI高度调整 | ✅ | 无冲突直接 cherry-pick + datagen 刷新 |
 | 73 | `9186d55c` | feat: 添加泥炭矿及其处理配方、tooltip、世界生成与着色器 | ✅ | cherry-pick + 适配 1.21.1 API（Identifier.of、ItemTooltipCallback 4参数、PeatOreBlock::class.item()）+ datagen 刷新 |
+| 87 | `223a745e` | fix: ModMenu 配置界面添加泥炭矿世界生成配置项 | ✅ | 补上遗漏的 peatOreConfig UI，cherry-pick 无冲突 |
+| 88 | `9380770c` | fix: 移除 getTicker 中不必要的 `as XxxBlockEntity` 强转 | ✅ | 65 文件 66 处，直接文本替换到 1.21.1（`validateTicker` 版本）|
+| 89 | `cc0571c4` | fix: 修正 FluidHeatGenerator HOTBAR_END 越界错误（43→41） | ✅ | 无冲突直接 cherry-pick |
+| 90 | `a38fcc62` | feat: 为物品/流体抽入弹出升级添加 GUI 配置界面 | ✅ | cherry-pick + 适配 1.21.1 API（ExtendedScreenHandlerFactory<PacketByteBuf>、getScreenOpeningData）+ datagen 刷新 |
+| 91 | `6a15c3c3` | feat: CannerBlockEntity 左右储罐对外暴露分离为只输入/只输出 | ✅ | 无冲突直接 cherry-pick |
+| 92 | `3f20436e` | feat: 优化固体装罐机配方检测性能 + 管道 Jade 停滞显示冲突流体 | ✅ | cherry-pick + 适配 1.21.1 API（RecipeInput 签名）+ 解决冲突 |

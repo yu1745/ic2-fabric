@@ -8,24 +8,33 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **97 个 commit**，**97 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **112 个 commit**，**97 个已同步，15 个待同步**。
 （归档 1-72 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
 
 | # | Commit | 说明 | 在 1.21.1？ | 备注 |
 |---|--------|------|:-----------:|------|
-| 87 | `223a745e` | fix: ModMenu 配置界面添加泥炭矿世界生成配置项 | ✅ | 补上遗漏的 peatOreConfig UI，cherry-pick 无冲突 |
-| 88 | `9380770c` | fix: 移除 getTicker 中不必要的 `as XxxBlockEntity` 强转 | ✅ | 65 文件 66 处，直接文本替换到 1.21.1（`validateTicker` 版本）|
-| 89 | `cc0571c4` | fix: 修正 FluidHeatGenerator HOTBAR_END 越界错误（43→41） | ✅ | 无冲突直接 cherry-pick |
-| 90 | `a38fcc62` | feat: 为物品/流体抽入弹出升级添加 GUI 配置界面 | ✅ | cherry-pick + 适配 1.21.1 API（ExtendedScreenHandlerFactory<PacketByteBuf>、getScreenOpeningData）+ datagen 刷新 |
-| 91 | `6a15c3c3` | feat: CannerBlockEntity 左右储罐对外暴露分离为只输入/只输出 | ✅ | 无冲突直接 cherry-pick |
-| 92 | `3f20436e` | feat: 优化固体装罐机配方检测性能 + 管道 Jade 停滞显示冲突流体 | ✅ | cherry-pick + 适配 1.21.1 API（RecipeInput 签名）+ 解决冲突 |
 | 93 | `2a9e3207` | feat: 发酵机添加肥料产出——每消耗 1000 mB 生物质产出 1 个肥料 | ✅ | cherry-pick + 适配 1.21.1 API（Identifier.of）+ datagen 刷新 |
 | 94 | `3c7d41c7` | fix: 添加蜘蛛眼→蛤蛤粉打粉机配方 | ✅ | cherry-pick + 适配 1.21.1 路径（recipe/ 单数）+ datagen 刷新 |
 | 95 | `da72f80d` | feat: 作物/牲畜监管机 Int mB → SingleVariantStorage 重构 + FluidStorage 暴露 + 流体抽入升级 | ✅ | cherry-pick + 适配 1.21.1 API（ExtendedScreenHandlerFactory<PacketByteBuf>）+ datagen 刷新 |
 | 96 | `32f04999` | feat: 阻止牲畜监管机范围内的鸡自然下蛋 | ✅ | cherry-pick + 改用 @Inject 替代 @Redirect（1.21.1 无 refMap）+ datagen 刷新 |
 | 97 | `38f1af75` | fix: 贴脸传输超压爆炸也受 enableOvervoltageExplosion 配置开关控制 | ✅ | cherry-pick 无冲突 |
+| 98 | `deacc818` | refactor: POC — Macerator ScreenHandler 使用 RoutedItemStorage 驱动 quickMove | ❌ | |
+| 99 | `59b1c863` | merge: Unit 1 — 基础加工机A (Compressor, Extractor, Centrifuge, Recycler, MetalFormer) | ❌ | |
+| 100 | `a6f98f6d` | merge: refactor: 熔炉家族迁移到 RoutedItemStorage 驱动 quickMove | ❌ | |
+| 101 | `69f48a00` | merge: refactor: 装罐机家族迁移到 RoutedItemStorage 驱动 quickMove | ❌ | |
+| 102 | `64611492` | merge: refactor: 发电机A迁移到 RoutedItemStorage 驱动 quickMove | ❌ | |
+| 103 | `c161afb2` | merge: refactor: 发电机B+热能迁移到 RoutedItemStorage 驱动 quickMove | ❌ | |
+| 104 | `8a9d1142` | merge: refactor: 特殊机器A迁移到 RoutedItemStorage 驱动 quickMove | ❌ | |
+| 105 | `260a09d2` | merge: refactor: 特殊机器B迁移到 RoutedItemStorage 驱动 quickMove | ❌ | |
+| 106 | `da4bb903` | merge: Unit 8 BE — 为缺少 RoutedItemStorage 的 BlockEntity 新增存储 | ❌ | |
+| 107 | `c136631b` | refactor: 完成所有机器的 ScreenHandler 迁移到 RoutedItemStorage 驱动 | ❌ | |
+| 108 | `20b714a5` | refactor: 清除旧 API，迁移附属机器到 RoutedItemStorage | ❌ | |
+| 109 | `cd5e7cdc` | merge: 全机器 RoutedItemStorage 驱动 quickMove 迁移完成 | ❌ | |
+| 110 | `3bbfa45b` | fix: 洗矿机输入槽改用配方表查询，修复沙砾无法放入 | ❌ | |
+| 111 | `44865f50` | feat: 流体热交换机 UI 三栏布局优化，增加 MetalFormer ScreenFactory | ❌ | |
+| 112 | `83305a9c` | fix: 橡胶树叶加入 minecraft:leaves tag | ❌ | |
 
 ## 同步历史
 
