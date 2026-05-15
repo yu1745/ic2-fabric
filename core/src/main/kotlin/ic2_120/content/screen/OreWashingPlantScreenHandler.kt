@@ -2,14 +2,11 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.OreWashingPlantBlock
 import ic2_120.content.block.machines.OreWashingPlantBlockEntity
-import ic2_120.content.item.IUpgradeItem
-import ic2_120.content.item.energy.IBatteryItem
-import ic2_120.content.item.WaterCell
 import ic2_120.content.screen.slot.PredicateSlot
-import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.OreWashingPlantSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -19,7 +16,6 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -34,10 +30,13 @@ class OreWashingPlantScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(OreWashingPlantScreenHandler::class.type(), syncId) {
 
     val sync = OreWashingPlantSync(SyncedDataView(propertyDelegate))
+
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     private val upgradeSlotSpec: SlotSpec by lazy {
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
@@ -47,25 +46,17 @@ class OreWashingPlantScreenHandler(
         checkSize(blockInventory, OreWashingPlantBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_INPUT_ORE, 0, 0, INPUT_ORE_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_INPUT_WATER, 0, 0, INPUT_WATER_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_1, 0, 0, OUTPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_2, 0, 0, OUTPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_3, 0, 0, OUTPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_EMPTY, 0, 0, EMPTY_OUTPUT_SLOT_SPEC))
-        addSlot(PredicateSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_DISCHARGING, 0, 0, DISCHARGING_SLOT_SPEC))
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_INPUT_ORE)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_INPUT_WATER)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_1)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_2)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_3)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_EMPTY)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_DISCHARGING)
 
         // 4 个升级槽
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
-                PredicateSlot(
-                    blockInventory,
-                    OreWashingPlantBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
-            )
+            addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_UPGRADE_INDICES[i], upgradeSlotSpec)
         }
 
         // 玩家物品栏
@@ -81,42 +72,35 @@ class OreWashingPlantScreenHandler(
         }
     }
 
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+    }
+
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
-            when (index) {
-                in SLOT_OUTPUT_1_INDEX..SLOT_OUTPUT_3_INDEX, SLOT_OUTPUT_EMPTY_INDEX -> {
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
+            when {
+                beSlot >= 0 -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                SLOT_DISCHARGING_INDEX -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
-                }
-                in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage
+                    if (storage == null) return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
+                    )
+                    if (!moved) return ItemStack.EMPTY
                 }
                 else -> {
-                    if (index in PLAYER_INV_START..HOTBAR_END) {
-                        val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                            SlotTarget(slots[it], upgradeSlotSpec)
-                        }
-                        val moved = SlotMoveHelper.insertIntoTargets(
-                            stackInSlot,
-                            listOf(
-                                SlotTarget(slots[SLOT_DISCHARGING_INDEX], DISCHARGING_SLOT_SPEC),
-                                SlotTarget(slots[SLOT_INPUT_WATER_INDEX], INPUT_WATER_SLOT_SPEC),
-                                SlotTarget(slots[SLOT_INPUT_ORE_INDEX], INPUT_ORE_SLOT_SPEC)
-                            ) + upgradeTargets
-                        )
-                        if (!moved) return ItemStack.EMPTY
-                    } else if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) {
-                        return ItemStack.EMPTY
-                    }
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
@@ -136,35 +120,7 @@ class OreWashingPlantScreenHandler(
 
     companion object {
         const val SLOT_SIZE = 18
-
-        // 槽位规则
-        private val INPUT_ORE_SLOT_SPEC = SlotSpec(
-            canInsert = { stack ->
-                val item = stack.item
-                // 不允许电池进入输入槽
-                item !is IBatteryItem &&
-                // 允许粉碎矿石（根据物品ID判断）
-                (item.toString().contains("crushed") ||
-                 net.minecraft.registry.Registries.ITEM.getId(item).path.contains("crushed"))
-            }
-        )
-        private val INPUT_WATER_SLOT_SPEC = SlotSpec(
-            canInsert = { stack ->
-                stack.item == Items.WATER_BUCKET || stack.item is WaterCell
-            }
-        )
-        private val DISCHARGING_SLOT_SPEC = SlotSpec(
-            maxItemCount = 1,
-            canInsert = { stack -> stack.item is IBatteryItem }
-        )
-        private val OUTPUT_SLOT_SPEC = SlotSpec(
-            canInsert = { false },
-            canTake = { true }
-        )
-        private val EMPTY_OUTPUT_SLOT_SPEC = SlotSpec(
-            canInsert = { false },
-            canTake = { true }
-        )
+        private val DEFAULT_SLOT_SPEC = SlotSpec()
 
         // 槽位索引
         const val SLOT_INPUT_ORE_INDEX = 0

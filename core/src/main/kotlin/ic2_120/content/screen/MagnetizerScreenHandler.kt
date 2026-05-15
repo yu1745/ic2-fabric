@@ -2,12 +2,11 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.MagnetizerBlock
 import ic2_120.content.block.machines.MagnetizerBlockEntity
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.MagnetizerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -31,10 +30,13 @@ class MagnetizerScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    propertyDelegate: PropertyDelegate
+    propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(MagnetizerScreenHandler::class.type(), syncId) {
 
     val sync = MagnetizerSync(SyncedDataView(propertyDelegate))
+
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     private val upgradeSlotSpec: SlotSpec by lazy {
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
@@ -44,18 +46,10 @@ class MagnetizerScreenHandler(
         checkSize(blockInventory, MagnetizerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, MagnetizerBlockEntity.SLOT_DISCHARGING, 0, 0, DISCHARGING_SLOT_SPEC))
+        addTrackedSlot(blockInventory, MagnetizerBlockEntity.SLOT_DISCHARGING)
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
-                PredicateSlot(
-                    blockInventory,
-                    MagnetizerBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
-            )
+            addTrackedSlot(blockInventory, MagnetizerBlockEntity.SLOT_UPGRADE_INDICES[i], upgradeSlotSpec)
         }
 
         for (row in 0 until 3) {
@@ -69,30 +63,35 @@ class MagnetizerScreenHandler(
         }
     }
 
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+    }
+
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
-            when (index) {
-                SLOT_DISCHARGING_INDEX, in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
+            when {
+                beSlot >= 0 -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage
+                    if (storage == null) return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
+                    )
+                    if (!moved) return ItemStack.EMPTY
+                }
                 else -> {
-                    if (index in PLAYER_INV_START..HOTBAR_END) {
-                        val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                            SlotTarget(slots[it], upgradeSlotSpec)
-                        }
-                        val moved = SlotMoveHelper.insertIntoTargets(
-                            stackInSlot,
-                            listOf(SlotTarget(slots[SLOT_DISCHARGING_INDEX], DISCHARGING_SLOT_SPEC)) + upgradeTargets
-                        )
-                        if (!moved) return ItemStack.EMPTY
-                    } else if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) {
-                        return ItemStack.EMPTY
-                    }
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
@@ -111,11 +110,7 @@ class MagnetizerScreenHandler(
 
     companion object {
         const val SLOT_SIZE = 18
-
-        private val DISCHARGING_SLOT_SPEC = SlotSpec(
-            maxItemCount = 1,
-            canInsert = { stack -> stack.item is IBatteryItem }
-        )
+        private val DEFAULT_SLOT_SPEC = SlotSpec()
 
         const val SLOT_DISCHARGING_INDEX = 0
         const val SLOT_UPGRADE_INDEX_START = 1
