@@ -3,6 +3,7 @@ package ic2_120.content.screen
 import ic2_120.content.block.PatternStorageBlock
 import ic2_120.content.block.machines.PatternStorageBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
+import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.storage.RoutedItemStorage
@@ -55,7 +56,7 @@ class PatternStorageScreenHandler(
     }
 
     private fun deriveSpec(beSlot: Int) =
-        itemStorage?.deriveSlotSpec(beSlot) ?: SlotTarget.NOP_SPEC
+        itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
 
     fun getPatternStorage(world: net.minecraft.world.World): PatternStorageBlockEntity? =
         world.getBlockEntity(blockPos) as? PatternStorageBlockEntity

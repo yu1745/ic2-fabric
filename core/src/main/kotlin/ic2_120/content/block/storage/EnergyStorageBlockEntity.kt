@@ -139,7 +139,7 @@ abstract class EnergyStorageBlockEntity(
         @Suppress("UNCHECKED_CAST")
         return ic2_120.content.screen.EnergyStorageScreenHandler(
             screenHandlerType as net.minecraft.screen.ScreenHandlerType<net.minecraft.screen.ScreenHandler>,
-            syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData
+            syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage
         )
     }
 

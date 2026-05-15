@@ -85,7 +85,7 @@ class GeneratorScreenHandler(
                 // 玩家物品栏 -> 机器（路由驱动）
                 index in PLAYER_INV_START..HOTBAR_END -> {
                     val moved = if (itemStorage != null) {
-                        SlotMoveHelper.insertFromRoutes(stackInSlot, itemStorage, beSlotToHandlerIndex, slots)
+                        SlotMoveHelper.insertFromRoutes(stackInSlot, itemStorage, itemStorage.insertRoutes, beSlotToHandlerIndex, slots)
                     } else {
                         SlotMoveHelper.insertIntoTargets(
                             stackInSlot,

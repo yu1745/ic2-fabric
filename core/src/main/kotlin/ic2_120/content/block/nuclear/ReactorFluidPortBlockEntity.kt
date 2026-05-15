@@ -151,7 +151,8 @@ class ReactorFluidPortBlockEntity(
             playerInventory,
             this,
             ScreenHandlerContext.create(world ?: return null, pos),
-            propertyDelegate
+            propertyDelegate,
+            itemStorage
         )
     }
 
