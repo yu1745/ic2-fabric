@@ -123,7 +123,7 @@ class IronFurnaceBlockEntity(
         Text.translatable("block.ic2_120.iron_furnace")
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        IronFurnaceScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
+        IronFurnaceScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)

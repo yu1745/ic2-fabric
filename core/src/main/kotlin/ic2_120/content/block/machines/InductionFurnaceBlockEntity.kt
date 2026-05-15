@@ -170,7 +170,8 @@ class InductionFurnaceBlockEntity(
             playerInventory,
             this,
             net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
-            syncedData
+            syncedData,
+            itemStorage
         )
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {

@@ -4,12 +4,11 @@ import ic2_120.content.sync.ElectricFurnaceSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.content.block.ElectricFurnaceBlock
 import ic2_120.content.block.machines.ElectricFurnaceBlockEntity
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.FurnaceOutputSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
@@ -36,54 +35,38 @@ class ElectricFurnaceScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(ElectricFurnaceScreenHandler::class.type(), syncId) {
 
     val sync = ElectricFurnaceSync(SyncedDataView(propertyDelegate))
 
-    private val inputSlotSpec = SlotSpec(canInsert = { stack -> stack.item !is IBatteryItem })
-    private val outputSlotSpec = SlotSpec(canInsert = { false })
-    private val dischargingSlotSpec = SlotSpec(
-        canInsert = { stack -> stack.item is IBatteryItem },
-        maxItemCount = 1
-    )
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private val upgradeSlotSpec: SlotSpec by lazy {
-        SlotSpec(
-            canInsert = { stack ->
-                if (stack.isEmpty || stack.item !is ic2_120.content.item.IUpgradeItem) return@SlotSpec false
-                ic2_120.content.upgrade.UpgradeItemRegistry.canAccept(
-                    context.get({ world, pos -> world.getBlockEntity(pos) }, null),
-                    stack.item
-                )
-            }
-        )
+    private fun addTrackedSlot(inventory: Inventory, beSlot: Int, spec: SlotSpec) {
+        val handlerIndex = slots.size
+        addSlot(PredicateSlot(inventory, beSlot, 0, 0, spec))
+        beSlotToHandlerIndex[beSlot] = handlerIndex
     }
 
     init {
         checkSize(blockInventory, ElectricFurnaceBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
         // 输入槽（左侧）、输出槽（右侧），同一行，留出上方给标题与能量条
-        addSlot(PredicateSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_INPUT, 0, 0, inputSlotSpec))
-        addSlot(FurnaceOutputSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_OUTPUT, 0, 0, outputSlotSpec) {
+        addTrackedSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_INPUT, DEFAULT_SLOT_SPEC)
+        addSlot(FurnaceOutputSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_OUTPUT, 0, 0, OUTPUT_SLOT_SPEC) {
             context.get({ world, pos ->
                 val be = world.getBlockEntity(pos)
                 if (be is ElectricFurnaceBlockEntity) be.dropStoredExperience()
             })
         })
-        addSlot(PredicateSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_DISCHARGING, 0, 0, dischargingSlotSpec))
+        // 输出槽也需要记录映射（用于 quickMove 判断）
+        beSlotToHandlerIndex[ElectricFurnaceBlockEntity.SLOT_OUTPUT] = slots.size - 1
+        addTrackedSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_DISCHARGING, DEFAULT_SLOT_SPEC)
 
         // 升级槽
         for (i in 0 until UPGRADE_SLOT_COUNT) {
-            addSlot(
-                PredicateSlot(
-                    blockInventory,
-                    ElectricFurnaceBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
-            )
+            addTrackedSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_UPGRADE_INDICES[i], DEFAULT_SLOT_SPEC)
         }
 
         // 玩家背包
@@ -103,37 +86,20 @@ class ElectricFurnaceScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
-                index == SLOT_OUTPUT_INDEX -> {
+                beSlot >= 0 -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                index == SLOT_DISCHARGING_INDEX -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
-                }
-                index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
-                }
-                index in PLAYER_INV_START until HOTBAR_END -> {
-                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                        SlotTarget(slots[it], upgradeSlotSpec)
-                    }
-                    val moved = SlotMoveHelper.insertIntoTargets(
-                        stackInSlot,
-                        listOf(
-                            SlotTarget(slots[SLOT_DISCHARGING_INDEX], dischargingSlotSpec),
-                            SlotTarget(slots[SLOT_INPUT_INDEX], inputSlotSpec)
-                        ) + upgradeTargets
-                    )
-                    if (!moved) {
-                        return ItemStack.EMPTY
-                    }
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
+                    if (!moved) return ItemStack.EMPTY
                 }
                 else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
             }
-            if (stackInSlot.isEmpty()) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTakeItem(player, stackInSlot)
@@ -154,6 +120,10 @@ class ElectricFurnaceScreenHandler(
         private const val UPGRADE_SLOT_COUNT = 4
         const val SLOT_SIZE = 18
 
+        private val DEFAULT_SLOT_SPEC = SlotSpec()
+        private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false }, canTake = { true })
+
+        // 槽位索引常量
         const val SLOT_INPUT_INDEX = 0
         const val SLOT_OUTPUT_INDEX = 1
         const val SLOT_DISCHARGING_INDEX = 2
