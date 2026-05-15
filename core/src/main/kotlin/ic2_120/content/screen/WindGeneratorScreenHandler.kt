@@ -3,12 +3,13 @@ package ic2_120.content.screen
 import ic2_120.content.block.WindGeneratorBlock
 import ic2_120.content.block.machines.WindGeneratorBlockEntity
 import ic2_120.content.item.energy.canBeCharged
-import ic2_120.content.sync.WindGeneratorSync
-import ic2_120.content.syncs.SyncedDataView
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotTarget
+import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.sync.WindGeneratorSync
+import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
@@ -30,7 +31,8 @@ class WindGeneratorScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(WindGeneratorScreenHandler::class.type(), syncId) {
 
     val sync = WindGeneratorSync(
@@ -39,11 +41,21 @@ class WindGeneratorScreenHandler(
         currentTickProvider = { null }
     )
 
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
+
+    private fun addTrackedSlot(slot: Slot, beSlotIndex: Int) {
+        beSlotToHandlerIndex[beSlotIndex] = slots.size
+        addSlot(slot)
+    }
+
     init {
         checkSize(blockInventory, 1)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, WindGeneratorBlockEntity.BATTERY_SLOT, 0, 0, BATTERY_SLOT_SPEC))
+        val batterySlotSpec = itemStorage?.deriveSlotSpec(WindGeneratorBlockEntity.BATTERY_SLOT)
+            ?: SLOT_SPEC_FALLBACK_BATTERY
+
+        addTrackedSlot(PredicateSlot(blockInventory, WindGeneratorBlockEntity.BATTERY_SLOT, 0, 0, batterySlotSpec), WindGeneratorBlockEntity.BATTERY_SLOT)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -62,15 +74,19 @@ class WindGeneratorScreenHandler(
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
-                index == WindGeneratorBlockEntity.BATTERY_SLOT -> if (!insertItem(stackInSlot, 1, 38, true)) return ItemStack.EMPTY
-                index in 1..37 -> {
-                    val moved = SlotMoveHelper.insertIntoTargets(
-                        stackInSlot,
-                        listOf(SlotTarget(slots[WindGeneratorBlockEntity.BATTERY_SLOT], BATTERY_SLOT_SPEC))
-                    )
+                index == SLOT_BATTERY_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val moved = if (itemStorage != null) {
+                        SlotMoveHelper.insertFromRoutes(stackInSlot, itemStorage, beSlotToHandlerIndex, slots)
+                    } else {
+                        SlotMoveHelper.insertIntoTargets(
+                            stackInSlot,
+                            listOf(SlotTarget(slots[SLOT_BATTERY_INDEX], SLOT_SPEC_FALLBACK_BATTERY))
+                        )
+                    }
                     if (!moved) return ItemStack.EMPTY
                 }
-                else -> if (!insertItem(stackInSlot, 1, 38, false)) return ItemStack.EMPTY
+                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
@@ -88,9 +104,12 @@ class WindGeneratorScreenHandler(
         }, true)
 
     companion object {
+        const val SLOT_BATTERY_INDEX = 0
         const val PLAYER_INV_START = 1
+        const val HOTBAR_END = 37
         const val SLOT_SIZE = 18
-        private val BATTERY_SLOT_SPEC = SlotSpec(
+
+        private val SLOT_SPEC_FALLBACK_BATTERY = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack -> stack.canBeCharged() }
         )

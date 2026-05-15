@@ -198,6 +198,33 @@ class RoutedItemStorage(
         return minOf(maxCountPerStackProvider(), stack.maxCount)
     }
 
+    /**
+     * 根据路由规则为指定 BlockEntity 槽位推导 [SlotSpec]。
+     * - 若该槽位出现在某条 insertRoute 中，则 canInsert 使用该 route 的 matcher，
+     *   maxItemCount 取该 route 的 maxPerSlot（未设置则默认 64）。
+     * - 若该槽位不在任何 insertRoute 中，则 canInsert 返回 false（纯输出槽）。
+     * - canTake 始终为 true。
+     */
+    fun deriveSlotSpec(beSlotIndex: Int): ic2_120.content.screen.slot.SlotSpec {
+        val matchingRoutes = insertRoutes.filter { beSlotIndex in it.slotIndices }
+        if (matchingRoutes.isEmpty()) {
+            // 纯输出/不可插入槽位
+            return ic2_120.content.screen.slot.SlotSpec(
+                canInsert = { false },
+                canTake = { true }
+            )
+        }
+        val combinedMatcher: (ItemStack) -> Boolean = { stack ->
+            matchingRoutes.any { it.matcher(stack) }
+        }
+        val maxPerSlot = matchingRoutes.mapNotNull { it.maxPerSlot }.minOrNull() ?: 64
+        return ic2_120.content.screen.slot.SlotSpec(
+            maxItemCount = maxPerSlot,
+            canInsert = combinedMatcher,
+            canTake = { true }
+        )
+    }
+
     private fun slotLimitForView(slot: Int, stack: ItemStack): Int {
         var maxRouteLimit: Int? = null
         for (route in insertRoutes) {

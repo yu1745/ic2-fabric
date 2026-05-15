@@ -186,6 +186,32 @@ object SlotMoveHelper {
     }
 }
 
+    /**
+     * 基于 [RoutedItemStorage] 的路由规则，将 [stack] 按 insertRoute 顺序放入机器槽位。
+     * [beSlotToHandlerIndex] 将 BlockEntity 槽位索引映射为 handler 中 addSlot 的顺序索引。
+     * 返回是否至少移动了 1 个物品。
+     */
+    fun insertFromRoutes(
+        stack: ItemStack,
+        itemStorage: ic2_120.content.storage.RoutedItemStorage,
+        beSlotToHandlerIndex: Map<Int, Int>,
+        handlerSlots: List<Slot>
+    ): Boolean {
+        if (stack.isEmpty) return false
+        val targets = mutableListOf<SlotTarget>()
+        for (route in itemStorage.insertRoutes) {
+            for (beSlot in route.slotIndices) {
+                val handlerIndex = beSlotToHandlerIndex[beSlot] ?: continue
+                if (handlerIndex >= handlerSlots.size) continue
+                val slot = handlerSlots[handlerIndex]
+                val spec = itemStorage.deriveSlotSpec(beSlot)
+                targets.add(SlotTarget(slot, spec))
+            }
+        }
+        return insertIntoTargets(stack, targets)
+    }
+}
+
 data class SlotTarget(
     val slot: Slot,
     val spec: SlotSpec
