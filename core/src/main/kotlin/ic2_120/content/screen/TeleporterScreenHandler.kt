@@ -2,13 +2,11 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.TeleporterBlock
 import ic2_120.content.block.machines.TeleporterBlockEntity
-import ic2_120.content.item.IUpgradeItem
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.SlotTarget
 import ic2_120.content.screen.slot.UpgradeSlotLayout
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.TeleporterSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
@@ -33,36 +31,25 @@ class TeleporterScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate
+    private val propertyDelegate: PropertyDelegate,
+    private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(TeleporterScreenHandler::class.type(), syncId) {
 
     val sync = TeleporterSync(SyncedDataView(propertyDelegate))
 
-    private val dischargingSlotSpec = SlotSpec(
-        canInsert = { stack -> stack.item is IBatteryItem },
-        maxItemCount = 1
-    )
+    private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private val upgradeSlotSpec = SlotSpec(
-        canInsert = { stack -> stack.item is IUpgradeItem },
-        maxItemCount = 1
-    )
+    private val upgradeSlotSpec: SlotSpec by lazy {
+        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
+    }
 
     init {
         checkSize(blockInventory, TeleporterBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, TeleporterBlockEntity.SLOT_DISCHARGING, 0, 0, dischargingSlotSpec))
+        addTrackedSlot(blockInventory, TeleporterBlockEntity.SLOT_DISCHARGING)
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addSlot(
-                PredicateSlot(
-                    blockInventory,
-                    TeleporterBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
-            )
+            addTrackedSlot(blockInventory, TeleporterBlockEntity.SLOT_UPGRADE_INDICES[i], upgradeSlotSpec)
         }
 
         for (row in 0 until 3) {
@@ -73,6 +60,13 @@ class TeleporterScreenHandler(
         for (col in 0 until 9) {
             addSlot(Slot(playerInventory, col, 0, 0))
         }
+    }
+
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
     }
 
     override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
@@ -95,24 +89,24 @@ class TeleporterScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
-                index in 0..SLOT_UPGRADE_INDEX_END -> {
+                beSlot >= 0 -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                index in PLAYER_INV_START until HOTBAR_END -> {
-                    val upgradeTargets = (SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END).map {
-                        SlotTarget(slots[it], upgradeSlotSpec)
-                    }
-                    val moved = SlotMoveHelper.insertIntoTargets(
-                        stackInSlot,
-                        listOf(SlotTarget(slots[SLOT_DISCHARGING_INDEX], dischargingSlotSpec)) + upgradeTargets
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    val storage = itemStorage
+                    if (storage == null) return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
                     )
                     if (!moved) return ItemStack.EMPTY
                 }
-                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                else -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                }
             }
-
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTakeItem(player, stackInSlot)
@@ -130,6 +124,8 @@ class TeleporterScreenHandler(
         }, true)
 
     companion object {
+        private val DEFAULT_SLOT_SPEC = SlotSpec()
+
         const val SLOT_DISCHARGING_INDEX = 0
         const val SLOT_UPGRADE_INDEX_START = 1
         const val SLOT_UPGRADE_INDEX_END = 4
