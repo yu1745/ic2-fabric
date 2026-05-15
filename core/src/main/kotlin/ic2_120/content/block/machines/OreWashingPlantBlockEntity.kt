@@ -502,9 +502,7 @@ class OreWashingPlantBlockEntity(
 
     private fun isCrushedOreInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || stack.item is IBatteryItem) return false
-        val item = stack.item
-        return item.toString().contains("crushed") ||
-            Registries.ITEM.getId(item).path.contains("crushed")
+        return getRecipeForInput(stack) != null
     }
 
     private fun isWaterInput(stack: ItemStack): Boolean =
