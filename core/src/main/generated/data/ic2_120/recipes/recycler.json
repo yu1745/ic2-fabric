@@ -6,7 +6,7 @@
       "item": "ic2_120:compressor"
     },
     "D": {
-      "item": "minecraft:dirt"
+      "tag": "minecraft:dirt"
     },
     "G": {
       "item": "minecraft:glowstone_dust"

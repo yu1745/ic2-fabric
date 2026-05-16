@@ -42,6 +42,7 @@ import net.minecraft.world.RaycastContext
 import net.minecraft.world.World
 import net.minecraft.world.event.GameEvent
 import net.minecraft.item.Items
+import net.minecraft.registry.tag.ItemTags
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.minecraft.client.item.TooltipContext
@@ -619,7 +620,7 @@ class CfPowder : Item(FabricItemSettings()){
                 .pattern("dcd")
                 .pattern("dsd")
                 .input('d', StoneDust::class.instance())
-                .input('s', Items.SAND)
+                .input('s', ItemTags.SAND)
                 .input('c', Items.CLAY_BALL)
                 .criterion(hasItem(StoneDust::class.instance()), conditionsFromItem(StoneDust::class.instance()))
                 .criterion(hasItem(Items.SAND), conditionsFromItem(Items.SAND))

@@ -22,6 +22,7 @@ import ic2_120.content.recipes.ModTags
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.id
+import ic2_120.registry.recipeId
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -200,6 +201,17 @@ class InsulatedCopperCableBlock(settings: AbstractBlock.Settings = defaultSettin
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(CopperCableBlock::class.item()), conditionsFromItem(CopperCableBlock::class.item()))
                 .offerTo(exporter, InsulatedCopperCableBlock::class.id())
+            // 剪刀剥离绝缘层
+            DamageToolShapelessRecipeDatagen.offer(
+                exporter = exporter,
+                recipeId = InsulatedCopperCableBlock::class.recipeId("strip"),
+                result = CopperCableBlock::class.item(),
+                resultCount = 1,
+                ingredients = listOf(
+                    DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
+                    Ingredient.ofItems(InsulatedCopperCableBlock::class.item())
+                )
+            )
         }
     }
 }
@@ -224,6 +236,17 @@ class InsulatedTinCableBlock(settings: AbstractBlock.Settings = defaultSettings(
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(TinCableBlock::class.item()), conditionsFromItem(TinCableBlock::class.item()))
                 .offerTo(exporter, InsulatedTinCableBlock::class.id())
+            // 剪刀剥离绝缘层
+            DamageToolShapelessRecipeDatagen.offer(
+                exporter = exporter,
+                recipeId = InsulatedTinCableBlock::class.recipeId("strip"),
+                result = TinCableBlock::class.item(),
+                resultCount = 1,
+                ingredients = listOf(
+                    DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
+                    Ingredient.ofItems(InsulatedTinCableBlock::class.item())
+                )
+            )
         }
     }
 }
@@ -251,6 +274,17 @@ class InsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSettings
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(GoldCableBlock::class.item()), conditionsFromItem(GoldCableBlock::class.item()))
                 .offerTo(exporter, InsulatedGoldCableBlock::class.id())
+            // 剪刀剥离绝缘层
+            DamageToolShapelessRecipeDatagen.offer(
+                exporter = exporter,
+                recipeId = InsulatedGoldCableBlock::class.recipeId("strip"),
+                result = GoldCableBlock::class.item(),
+                resultCount = 1,
+                ingredients = listOf(
+                    DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
+                    Ingredient.ofItems(InsulatedGoldCableBlock::class.item())
+                )
+            )
         }
     }
 }
@@ -273,12 +307,33 @@ class DoubleInsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSe
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+            // 直接合成：金导线 + 2 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
                 .input(GoldCableBlock::class.item())
                 .input(RubberItem::class.instance())
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(GoldCableBlock::class.item()), conditionsFromItem(GoldCableBlock::class.item()))
                 .offerTo(exporter, DoubleInsulatedGoldCableBlock::class.id())
+            // 递进合成：1x 绝缘金导线 + 1 橡胶
+            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
+                .input(InsulatedGoldCableBlock::class.item())
+                .input(RubberItem::class.instance())
+                .criterion(
+                    hasItem(InsulatedGoldCableBlock::class.item()),
+                    conditionsFromItem(InsulatedGoldCableBlock::class.item())
+                )
+                .offerTo(exporter, DoubleInsulatedGoldCableBlock::class.recipeId("from_insulated"))
+            // 剪刀剥离绝缘层：2x → 1x
+            DamageToolShapelessRecipeDatagen.offer(
+                exporter = exporter,
+                recipeId = DoubleInsulatedGoldCableBlock::class.recipeId("strip"),
+                result = InsulatedGoldCableBlock::class.item(),
+                resultCount = 1,
+                ingredients = listOf(
+                    DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
+                    Ingredient.ofItems(DoubleInsulatedGoldCableBlock::class.item())
+                )
+            )
         }
     }
 }
@@ -306,6 +361,17 @@ class InsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSettings
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(IronCableBlock::class.item()), conditionsFromItem(IronCableBlock::class.item()))
                 .offerTo(exporter, InsulatedIronCableBlock::class.id())
+            // 剪刀剥离绝缘层
+            DamageToolShapelessRecipeDatagen.offer(
+                exporter = exporter,
+                recipeId = InsulatedIronCableBlock::class.recipeId("strip"),
+                result = IronCableBlock::class.item(),
+                resultCount = 1,
+                ingredients = listOf(
+                    DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
+                    Ingredient.ofItems(InsulatedIronCableBlock::class.item())
+                )
+            )
         }
     }
 }
@@ -328,12 +394,33 @@ class DoubleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+            // 直接合成：高压导线 + 2 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
                 .input(RubberItem::class.instance())
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(IronCableBlock::class.item()), conditionsFromItem(IronCableBlock::class.item()))
                 .offerTo(exporter, DoubleInsulatedIronCableBlock::class.id())
+            // 递进合成：1x 绝缘高压导线 + 1 橡胶
+            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
+                .input(InsulatedIronCableBlock::class.item())
+                .input(RubberItem::class.instance())
+                .criterion(
+                    hasItem(InsulatedIronCableBlock::class.item()),
+                    conditionsFromItem(InsulatedIronCableBlock::class.item())
+                )
+                .offerTo(exporter, DoubleInsulatedIronCableBlock::class.recipeId("from_insulated"))
+            // 剪刀剥离绝缘层：2x → 1x
+            DamageToolShapelessRecipeDatagen.offer(
+                exporter = exporter,
+                recipeId = DoubleInsulatedIronCableBlock::class.recipeId("strip"),
+                result = InsulatedIronCableBlock::class.item(),
+                resultCount = 1,
+                ingredients = listOf(
+                    DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
+                    Ingredient.ofItems(DoubleInsulatedIronCableBlock::class.item())
+                )
+            )
         }
     }
 }
@@ -356,6 +443,7 @@ class TripleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+            // 直接合成：高压导线 + 3 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
                 .input(RubberItem::class.instance())
@@ -363,6 +451,26 @@ class TripleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
                 .input(RubberItem::class.instance())
                 .criterion(hasItem(IronCableBlock::class.item()), conditionsFromItem(IronCableBlock::class.item()))
                 .offerTo(exporter, TripleInsulatedIronCableBlock::class.id())
+            // 递进合成：2x 绝缘高压导线 + 1 橡胶
+            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
+                .input(DoubleInsulatedIronCableBlock::class.item())
+                .input(RubberItem::class.instance())
+                .criterion(
+                    hasItem(DoubleInsulatedIronCableBlock::class.item()),
+                    conditionsFromItem(DoubleInsulatedIronCableBlock::class.item())
+                )
+                .offerTo(exporter, TripleInsulatedIronCableBlock::class.recipeId("from_double_insulated"))
+            // 剪刀剥离绝缘层：3x → 2x
+            DamageToolShapelessRecipeDatagen.offer(
+                exporter = exporter,
+                recipeId = TripleInsulatedIronCableBlock::class.recipeId("strip"),
+                result = DoubleInsulatedIronCableBlock::class.item(),
+                resultCount = 1,
+                ingredients = listOf(
+                    DamageToolShapelessRecipeDatagen.toolIngredient(Cutter::class.instance()),
+                    Ingredient.ofItems(TripleInsulatedIronCableBlock::class.item())
+                )
+            )
         }
     }
 }

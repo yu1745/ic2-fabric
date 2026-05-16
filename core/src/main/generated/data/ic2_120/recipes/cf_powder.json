@@ -9,7 +9,7 @@
       "item": "ic2_120:stone_dust"
     },
     "s": {
-      "item": "minecraft:sand"
+      "tag": "minecraft:sand"
     }
   },
   "pattern": [

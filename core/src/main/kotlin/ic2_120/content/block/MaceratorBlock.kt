@@ -15,6 +15,7 @@ import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.registry.tag.ItemTags
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -91,7 +92,7 @@ class MaceratorBlock : MachineBlock() {
                     .pattern("XMX")
                     .pattern(" c ")
                     .input('F', Items.FLINT)
-                    .input('X', Items.COBBLESTONE)
+                    .input('X', ItemTags.STONE_CRAFTING_MATERIALS)
                     .input('M', machine)
                     .input('c', circuit)
                     .criterion(hasItem(machine), conditionsFromItem(machine))

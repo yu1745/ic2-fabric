@@ -396,6 +396,8 @@
   "tooltip.ic2_120.wrench.energy_required": "电量不足 1000 EU 时无法拆卸",
   "tooltip.ic2_120.transformer.format": "五个点的面 %s EU/t | 一个点的面 %s EU/t",
   "tooltip.ic2_120.voltage_tier": "电压等级: %s",
+  "tooltip.ic2_120.cable_insulation": "耐压: %s EU",
+  "tooltip.ic2_120.cable_insulation_max": "耐压: 最高绝缘，绝不漏电",
   "tooltip.ic2_120.kinetic_capacity": "动能承载: %s KU/t",
   "tooltip.ic2_120.kinetic_loss": "动能损耗: %s KU/格",
   "tooltip.ic2_120.kinetic_source": "动能源: 输出到前方传动节点",

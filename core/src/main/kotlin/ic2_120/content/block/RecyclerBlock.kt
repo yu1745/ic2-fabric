@@ -18,6 +18,7 @@ import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.registry.tag.ItemTags
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
@@ -86,7 +87,7 @@ class RecyclerBlock : MachineBlock() {
                     .pattern("DCD")
                     .pattern("IDI")
                     .input('G', Items.GLOWSTONE_DUST)
-                    .input('D', Items.DIRT)
+                    .input('D', ItemTags.DIRT)
                     .input('C', compressor)
                     .input('I', Items.IRON_INGOT)
                     .criterion(hasItem(compressor), conditionsFromItem(compressor))
