@@ -5,9 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "minecraft:piston"
-            ]
+            "items": "minecraft:piston"
           }
         ]
       },
@@ -22,14 +20,13 @@
   },
   "requirements": [
     [
-      "has_piston",
-      "has_the_recipe"
+      "has_the_recipe",
+      "has_piston"
     ]
   ],
   "rewards": {
     "recipes": [
       "ic2_120:resin_sticky_piston"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }

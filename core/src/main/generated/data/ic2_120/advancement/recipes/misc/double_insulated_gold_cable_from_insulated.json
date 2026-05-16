@@ -5,9 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "ic2_120:insulated_gold_cable"
-            ]
+            "items": "ic2_120:insulated_gold_cable"
           }
         ]
       },
@@ -22,14 +20,13 @@
   },
   "requirements": [
     [
-      "has_insulated_gold_cable",
-      "has_the_recipe"
+      "has_the_recipe",
+      "has_insulated_gold_cable"
     ]
   ],
   "rewards": {
     "recipes": [
       "ic2_120:double_insulated_gold_cable_from_insulated"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }

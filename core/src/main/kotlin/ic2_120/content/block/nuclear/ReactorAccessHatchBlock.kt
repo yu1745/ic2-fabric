@@ -23,6 +23,7 @@ import net.minecraft.world.World
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
+import net.minecraft.registry.tag.ItemTags
 import net.minecraft.recipe.book.RecipeCategory
 
 /**

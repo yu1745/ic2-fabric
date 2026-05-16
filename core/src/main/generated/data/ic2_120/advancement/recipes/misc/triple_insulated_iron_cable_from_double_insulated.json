@@ -5,9 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "ic2_120:double_insulated_iron_cable"
-            ]
+            "items": "ic2_120:double_insulated_iron_cable"
           }
         ]
       },
@@ -22,14 +20,13 @@
   },
   "requirements": [
     [
-      "has_double_insulated_iron_cable",
-      "has_the_recipe"
+      "has_the_recipe",
+      "has_double_insulated_iron_cable"
     ]
   ],
   "rewards": {
     "recipes": [
       "ic2_120:triple_insulated_iron_cable_from_double_insulated"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }

@@ -4,17 +4,15 @@ import ic2_120.client.compose.*
 import ic2_120.client.t
 import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.PatternStorageBlock
-import ic2_120.content.network.NetworkManager
+import ic2_120.content.network.SelectTemplatePayload
 import ic2_120.content.screen.PatternStorageScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.uu.UuTemplateEntry
 import ic2_120.registry.annotation.ModScreen
-import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
@@ -130,10 +128,7 @@ class PatternStorageScreen(
                                                 template.displayName().copy(), Text.literal("${template.uuCostUb} uB")
                                             ),
                                             onClick = {
-                                                val buf = PacketByteBuf(Unpooled.buffer())
-                                                buf.writeBlockPos(handler.blockPos)
-                                                buf.writeVarInt(index)
-                                                ClientPlayNetworking.send(NetworkManager.SELECT_TEMPLATE_PACKET, buf)
+                                                ClientPlayNetworking.send(SelectTemplatePayload(handler.blockPos, index))
                                             })
                                     }
                                 }

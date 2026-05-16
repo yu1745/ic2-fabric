@@ -35,7 +35,6 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.nbt.NbtCompound
@@ -203,8 +202,7 @@ class BlockCutterBlockEntity(
     private fun getRecipeForInput(input: ItemStack): BlockCutterRecipe? {
         if (input.isEmpty) return null
         val w = world ?: return null
-        val inv = SimpleInventory(input)
-        return w.recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), inv, w).orElse(null)
+        return w.recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), SingleStackRecipeInput(input), w).orElse(null)?.value
     }
 
     /**
@@ -337,7 +335,6 @@ class BlockCutterBlockEntity(
     private fun isRecipeInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || isBatteryItem(stack) || stack.item is IUpgradeItem || stack.item is IBlockCuttingBlade) return false
         val w = world ?: return true
-        val inv = SimpleInventory(stack.copyWithCount(stack.maxCount))
-        return w.recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), inv, w).isPresent
+        return w.recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), SingleStackRecipeInput(stack.copyWithCount(stack.maxCount)), w).isPresent
     }
 }

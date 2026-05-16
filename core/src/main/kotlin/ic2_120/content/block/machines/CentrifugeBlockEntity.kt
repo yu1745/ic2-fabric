@@ -35,7 +35,6 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.nbt.NbtCompound
@@ -327,7 +326,6 @@ class CentrifugeBlockEntity(
     private fun isRecipeInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || isBatteryItem(stack)) return false
         val w = world ?: return true
-        val inv = SimpleInventory(stack.copyWithCount(stack.maxCount))
-        return w.recipeManager.getFirstMatch(getRecipeType<CentrifugeRecipe>(), inv, w).isPresent
+        return w.recipeManager.getFirstMatch(getRecipeType<CentrifugeRecipe>(), SingleStackRecipeInput(stack.copyWithCount(stack.maxCount)), w).isPresent
     }
 }
