@@ -64,10 +64,11 @@ object EnergyNetworkManager {
                 }
             }
 
-            network.addCable(current, block.getTransferRate(), block.getEnergyLoss())
+            val be = world.getBlockEntity(current) as? CableBlockEntity
+            val rate = be?.effectiveTransferRate ?: block.getTransferRate()
+            network.addCable(current, rate, block.getEnergyLoss())
             posToNetwork[current.asLong()] = network
 
-            val be = world.getBlockEntity(current) as? CableBlockEntity
             if (be != null) {
                 network.energy += be.localEnergy
                 be.localEnergy = 0

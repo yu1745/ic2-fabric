@@ -157,6 +157,8 @@
     "ic2_120:insulated_iron_cable",
     "ic2_120:double_insulated_iron_cable",
     "ic2_120:triple_insulated_iron_cable",
+    "ic2_120:splitter_cable",
+    "ic2_120:limiter_cable",
     "ic2_120:nuclear_reactor",
     "ic2_120:reactor_access_hatch",
     "ic2_120:reactor_chamber",

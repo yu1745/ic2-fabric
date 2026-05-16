@@ -35,6 +35,17 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     /** 本地暂存能量，仅用于 NBT 存取和电网重建时的中转。 */
     var localEnergy: Long = 0
 
+    /** 限流值，-1 表示不限流。由限流导线 GUI 设置。 */
+    var configuredLimit: Long = -1
+
+    /** 有效传输速率，受限于 [configuredLimit]。 */
+    val effectiveTransferRate: Long
+        get() {
+            val block = cachedState.block as? BaseCableBlock ?: return 0
+            val base = block.getTransferRate()
+            return if (configuredLimit > 0) minOf(base, configuredLimit) else base
+        }
+
     /** 导线当前负载（本 tick 内已传输的能量），仅用于 Jade 显示。不影响实际能量传输逻辑。 */
     var cableLoad: Long by FilteredValue(20)
 
@@ -65,16 +76,15 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
         localEnergy = nbt.getLong(NBT_ENERGY)
-        // println("readNbt load: ${nbt.getLong(NBT_LOAD)}")
-        // repeat(20) {
-        //     cableLoad = nbt.getLong(NBT_LOAD)
-        // }
+        configuredLimit = if (nbt.contains(NBT_LIMIT)) nbt.getLong(NBT_LIMIT) else -1
     }
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
         nbt.putLong(NBT_ENERGY, network?.getEnergySharePerCable() ?: localEnergy)
-        // nbt.putLong(NBT_LOAD, cableLoad)
+        if (configuredLimit >= 0) {
+            nbt.putLong(NBT_LIMIT, configuredLimit)
+        }
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -86,6 +96,7 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     companion object {
         private val logger = LoggerFactory.getLogger("ic2_120/CableBlockEntity")
         private const val NBT_ENERGY = "CableEnergy"
+        private const val NBT_LIMIT = "ConfiguredLimit"
         // private const val NBT_LOAD = "CableLoad"
 
         lateinit var TYPE: BlockEntityType<CableBlockEntity>

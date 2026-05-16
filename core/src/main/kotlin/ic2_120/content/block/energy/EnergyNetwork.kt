@@ -4,6 +4,7 @@ import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.machines.TransformerBlockEntity
 import ic2_120.content.block.cables.BaseCableBlock
+import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.item.energy.ITiered
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
@@ -759,7 +760,8 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             val cablePos = BlockPos.fromLong(cablePosLong)
             val state = world.getBlockState(cablePos)
             val block = state.block as? BaseCableBlock ?: continue
-            cableRates[cablePosLong] = block.getTransferRate()
+            val be = world.getBlockEntity(cablePos) as? CableBlockEntity
+            cableRates[cablePosLong] = be?.effectiveTransferRate ?: block.getTransferRate()
             val adjacent = neighbors.getOrPut(cablePosLong) { mutableListOf() }
             for (dir in Direction.values()) {
                 if (!state.get(BaseCableBlock.propertyFor(dir))) continue

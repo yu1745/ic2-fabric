@@ -112,7 +112,7 @@ abstract class BaseCableBlock(settings: AbstractBlock.Settings = defaultSettings
     override fun tryDrainFluid(player: net.minecraft.entity.player.PlayerEntity?, world: WorldAccess, pos: BlockPos, state: BlockState): ItemStack =
         ItemStack.EMPTY
 
-    private fun canConnect(world: WorldAccess, pos: BlockPos, direction: Direction): Boolean {
+    protected fun canConnect(world: WorldAccess, pos: BlockPos, direction: Direction): Boolean {
         val neighborPos = pos.offset(direction)
         val neighborBlock = world.getBlockState(neighborPos).block
         if (neighborBlock is BaseCableBlock) return true

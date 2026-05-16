@@ -5,18 +5,42 @@ import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.content.recipes.crafting.DamageToolShapelessRecipeDatagen
+import ic2_120.content.block.energy.EnergyNetworkManager
 import net.minecraft.block.AbstractBlock
+import net.minecraft.block.Block
+import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.item.Item
+import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.recipe.Ingredient
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.state.StateManager
+import net.minecraft.state.property.BooleanProperty
+import net.minecraft.state.property.Properties
+import net.minecraft.fluid.Fluids
 import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
+import net.minecraft.world.World
+import net.minecraft.world.WorldAccess
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.screen.ScreenHandler
+import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.text.Text
+import net.minecraft.util.ActionResult
+import net.minecraft.util.Hand
+import net.minecraft.util.hit.BlockHitResult
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import ic2_120.Ic2_120
 import ic2_120.content.item.*
+import ic2_120.content.screen.LimiterCableScreenHandler
 import ic2_120.content.recipes.ModTags
 import ic2_120.registry.instance
 import ic2_120.registry.item
@@ -471,5 +495,149 @@ class TripleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
                 )
             )
         }
+    }
+}
+
+/**
+ * EU分流导线。受红石控制：高电平时断开所有连接，低电平时正常连接。
+ * Tier 5（8192 EU/t），损耗 0.5 EU/格。
+ */
+@ModBlock(name = "splitter_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
+class SplitterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), ITiered {
+
+    companion object {
+        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+
+        @RecipeProvider
+        fun generateRecipes(exporter: RecipeExporter) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SplitterCableBlock::class.item(), 1)
+                .pattern("RCR")
+                .pattern("LRL")
+                .pattern("RCR")
+                .input('R', Items.REDSTONE)
+                .input('C', Circuit::class.instance())
+                .input('L', Items.LEVER)
+                .criterion(hasItem(Circuit::class.instance()), conditionsFromItem(Circuit::class.instance()))
+                .offerTo(exporter)
+        }
+    }
+
+    override val tier: Int = 5
+    override fun getTransferRate(): Long = nominalEuPerTick()
+    override fun getEnergyLoss(): Long = 500L
+
+    override fun getCableMin(): Double = 4.0 / 16.0
+    override fun getCableMax(): Double = 12.0 / 16.0
+
+    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+        super.appendProperties(builder)
+        builder.add(ACTIVE)
+    }
+
+    override fun getPlacementState(ctx: ItemPlacementContext): BlockState {
+        val powered = ctx.world.isReceivingRedstonePower(ctx.blockPos)
+        val superState = super.getPlacementState(ctx)
+        return if (powered) {
+            var state = superState.with(ACTIVE, true)
+            for (dir in Direction.values()) {
+                state = state.with(propertyFor(dir), false)
+            }
+            state
+        } else {
+            superState.with(ACTIVE, false)
+        }
+    }
+
+    override fun neighborUpdate(
+        state: BlockState, world: World, pos: BlockPos,
+        block: Block, sourcePos: BlockPos, notify: Boolean
+    ) {
+        if (world.isClient) {
+            super.neighborUpdate(state, world, pos, block, sourcePos, notify)
+            return
+        }
+        val powered = world.isReceivingRedstonePower(pos)
+        val currentlyActive = state.get(ACTIVE)
+        if (powered != currentlyActive) {
+            var newState = state.with(ACTIVE, powered)
+            if (powered) {
+                for (dir in Direction.values()) {
+                    newState = newState.with(propertyFor(dir), false)
+                }
+            } else {
+                for (dir in Direction.values()) {
+                    newState = newState.with(propertyFor(dir), canConnect(world, pos, dir))
+                }
+            }
+            world.setBlockState(pos, newState)
+            EnergyNetworkManager.invalidateAt(world, pos)
+        }
+        super.neighborUpdate(state, world, pos, block, sourcePos, notify)
+    }
+
+    override fun getStateForNeighborUpdate(
+        state: BlockState, direction: Direction, neighborState: BlockState,
+        world: WorldAccess, pos: BlockPos, neighborPos: BlockPos
+    ): BlockState {
+        if (state.get(ACTIVE)) {
+            if (state.get(Properties.WATERLOGGED)) {
+                world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            }
+            return state.with(propertyFor(direction), false)
+        }
+        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
+    }
+}
+
+/**
+ * EU限流导线。右键打开 GUI 设置限流值，限制经过该导线的最大传输速率。
+ * Tier 5（8192 EU/t），损耗 0.5 EU/格。
+ */
+@ModBlock(name = "limiter_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
+class LimiterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : BaseCableBlock(settings), ITiered {
+
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: RecipeExporter) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LimiterCableBlock::class.item(), 1)
+                .pattern(" C ")
+                .pattern("RGR")
+                .pattern(" C ")
+                .input('C', Circuit::class.instance())
+                .input('R', Items.REDSTONE)
+                .input('G', GoldCableBlock::class.item())
+                .criterion(hasItem(GoldCableBlock::class.item()), conditionsFromItem(GoldCableBlock::class.item()))
+                .offerTo(exporter)
+        }
+    }
+
+    override val tier: Int = 5
+    override fun getTransferRate(): Long = nominalEuPerTick()
+    override fun getEnergyLoss(): Long = 500L
+
+    override fun getCableMin(): Double = 4.0 / 16.0
+    override fun getCableMax(): Double = 12.0 / 16.0
+
+    override fun onUse(
+        state: BlockState, world: World, pos: BlockPos,
+        player: PlayerEntity, hit: BlockHitResult
+    ): ActionResult {
+        if (world.isClient) return ActionResult.SUCCESS
+        val be = world.getBlockEntity(pos) as? CableBlockEntity ?: return ActionResult.PASS
+        player.openHandledScreen(object : ExtendedScreenHandlerFactory<PacketByteBuf> {
+            override fun getDisplayName(): Text = Text.translatable("block.ic2_120.limiter_cable")
+            override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+                val buf = PacketByteBuf(io.netty.buffer.Unpooled.buffer())
+                buf.writeBlockPos(pos)
+                buf.writeLong(be.configuredLimit)
+                return buf
+            }
+            override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler {
+                val handler = LimiterCableScreenHandler(syncId, playerInventory, pos)
+                handler.limit = be.configuredLimit
+                return handler
+            }
+        })
+        return ActionResult.SUCCESS
     }
 }
