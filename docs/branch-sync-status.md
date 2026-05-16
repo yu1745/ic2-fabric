@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **112 个 commit**，**112 个已同步，0 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **119 个 commit**，**112 个已同步，7 个待同步**。
 （归档 1-72 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -35,6 +35,11 @@
 | 110 | `3bbfa45b` | fix: 洗矿机输入槽改用配方表查询，修复沙砾无法放入 | ✅ | cherry-pick 无冲突 |
 | 111 | `44865f50` | feat: 流体热交换机 UI 三栏布局优化，增加 MetalFormer ScreenFactory | ✅ | cherry-pick 无冲突 |
 | 112 | `83305a9c` | fix: 橡胶树叶加入 minecraft:leaves tag | ✅ | cherry-pick + 适配 1.21.1 tags/block/ 路径 |
+| 113 | `c35cb357` | fix: 修正能量水晶粉合成配方为4钻石粉+5红石粉 | ❌ | |
+| 114 | `ec799f6e` | fix: 复制机/模板存储模板选择按钮因 ButtonClickC2SPacket byte 溢出失效 | ❌ | |
+| 115 | `1c4cddfc` | fix: 修复压缩机/离心机/切石机输入槽无法放入需要多个原料的配方物品 | ❌ | |
+| 116 | `f7b604d9` | feat: 绝缘导线递进合成/剪刀剥离配方，添加耐压等级 tooltip | ❌ | |
+| 117 | `d80abc0d` | feat: 电路板合成改用铁板，粘性树脂+活塞合成粘性活塞 | ❌ | |
 
 ## 同步历史
 
