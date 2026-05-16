@@ -170,6 +170,11 @@ class BlastFurnaceBlockEntity(
 
     override fun receiveHeatInternal(hu: Long): Long {
         if (hu <= 0L) return 0L
+
+        // 无有效材料或输出满时不接收热量，避免浪费热源燃料
+        val input = getStack(SLOT_INPUT)
+        if (input.isEmpty || !canAcceptOutput(getStack(SLOT_OUTPUT_STEEL), getStack(SLOT_OUTPUT_SLAG))) return 0L
+
         heatReceivedLastTick = true  // 有热量输入即视为维持（即使已满无法再接收）
         val space = BlastFurnaceSync.PREHEAT_MAX.toLong() - preheat
         if (space <= 0L) return 0L

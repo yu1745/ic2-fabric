@@ -202,9 +202,11 @@ class InductionFurnaceBlockEntity(
 
         if (isRedstonePowered) {
             if (currentHeat < InductionFurnaceSync.HEAT_MAX) {
-                sync.heat = (currentHeat + InductionFurnaceSync.HEAT_CHANGE_PER_TICK)
-                    .coerceAtMost(InductionFurnaceSync.HEAT_MAX)
-                sync.consumeEnergy(InductionFurnaceSync.MAX_HEAT_ENERGY_PER_TICK)
+                // 只有消耗了能量才升温，避免无电时红石信号凭空加热
+                if (sync.consumeEnergy(InductionFurnaceSync.MAX_HEAT_ENERGY_PER_TICK) > 0L) {
+                    sync.heat = (currentHeat + InductionFurnaceSync.HEAT_CHANGE_PER_TICK)
+                        .coerceAtMost(InductionFurnaceSync.HEAT_MAX)
+                }
             }
         } else {
             if (currentHeat > 0) {
