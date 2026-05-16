@@ -1,5 +1,8 @@
 package ic2_120.content.network
 
+import ic2_120.Ic2_120
+import ic2_120.content.block.machines.PatternStorageBlockEntity
+import ic2_120.content.block.machines.ReplicatorBlockEntity
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.IridiumDrill
 import ic2_120.content.item.MiningLaserItem
@@ -26,6 +29,23 @@ import net.minecraft.network.PacketByteBuf
 import io.netty.buffer.Unpooled
 
 object NetworkManager {
+    private val REACTOR_HEAT_INFO_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_heat_info")
+    private val WIND_ROTOR_STATE_PACKET = Identifier(Ic2_120.MOD_ID, "wind_rotor_state")
+    private val WATER_ROTOR_STATE_PACKET = Identifier(Ic2_120.MOD_ID, "water_rotor_state")
+    private val REACTOR_LAYOUT_LOCK_PACKET = Identifier(Ic2_120.MOD_ID, "reactor_layout_lock")
+
+    private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
+    val TOGGLE_NIGHT_VISION_GOGGLES_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_night_vision_goggles")
+    val TOGGLE_NANO_VISION_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_nano_vision")
+    val TOGGLE_QUANTUM_FLIGHT_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_flight")
+    val TOGGLE_IRIDIUM_SILK_TOUCH_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_iridium_silk_touch")
+    val TOGGLE_JETPACK_FLIGHT_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_jetpack_flight")
+    val TOGGLE_FOAM_SPRAYER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
+    val TOGGLE_MINING_LASER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
+    val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
+    val TOGGLE_QUANTUM_BOOTS_JUMP_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_boots_jump")
+    val SELECT_TEMPLATE_PACKET = Identifier(Ic2_120.MOD_ID, "select_template")
+
     fun register() {
         registerPayloadTypes()
 
@@ -154,6 +174,19 @@ object NetworkManager {
                         true
                     )
                     return@registerGlobalReceiver
+                }
+            }
+        }
+
+        // 模板选择 C2S 包：绕过 ButtonClickC2SPacket 的 buttonId byte 限制
+        ServerPlayNetworking.registerGlobalReceiver(SELECT_TEMPLATE_PACKET) { server, player, _, buf, _ ->
+            val pos = buf.readBlockPos()
+            val index = buf.readVarInt()
+            server.execute {
+                val be = player.world.getBlockEntity(pos)
+                when (be) {
+                    is ReplicatorBlockEntity -> be.selectTemplate(index)
+                    is PatternStorageBlockEntity -> be.selectTemplate(index)
                 }
             }
         }
