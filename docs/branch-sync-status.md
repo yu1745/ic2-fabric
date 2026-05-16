@@ -1,6 +1,6 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-05-15
+最后更新：2026-05-16
 
 分叉点：`c5e247c`
 
@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **119 个 commit**，**112 个已同步，7 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **119 个 commit**，**119 个已同步，0 个待同步**。
 （归档 1-72 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -35,11 +35,11 @@
 | 110 | `3bbfa45b` | fix: 洗矿机输入槽改用配方表查询，修复沙砾无法放入 | ✅ | cherry-pick 无冲突 |
 | 111 | `44865f50` | feat: 流体热交换机 UI 三栏布局优化，增加 MetalFormer ScreenFactory | ✅ | cherry-pick 无冲突 |
 | 112 | `83305a9c` | fix: 橡胶树叶加入 minecraft:leaves tag | ✅ | cherry-pick + 适配 1.21.1 tags/block/ 路径 |
-| 113 | `1c4cddfc` | fix: 修复压缩机/离心机/切石机输入槽无法放入需要多个原料的配方物品 | ❌ | |
-| 114 | `ec799f6e` | fix: 复制机/模板存储模板选择按钮因 ButtonClickC2SPacket byte 溢出失效 | ❌ | |
-| 115 | `c35cb357` | fix: 修正能量水晶粉合成配方为4钻石粉+5红石粉 | ❌ | |
-| 116 | `f7b604d9` | feat: 绝缘导线递进合成/剪刀剥离配方，添加耐压等级 tooltip | ❌ | |
-| 117 | `d80abc0d` | feat: 电路板合成改用铁板，粘性树脂+活塞合成粘性活塞 | ❌ | |
+| 113 | `1c4cddfc` | fix: 修复压缩机/离心机/切石机输入槽无法放入需要多个原料的配方物品 | ✅ | cherry-pick + 适配 1.21.1 API（RecipeInput→SingleStackRecipeInput）|
+| 114 | `ec799f6e` | fix: 复制机/模板存储模板选择按钮因 ButtonClickC2SPacket byte 溢出失效 | ✅ | cherry-pick + 适配 1.21.1 CustomPayload C2S（SelectTemplatePayload）|
+| 115 | `c35cb357` | fix: 修正能量水晶粉合成配方为4钻石粉+5红石粉 | ✅ | cherry-pick 无冲突 |
+| 116 | `f7b604d9` | feat: 绝缘导线递进合成/剪刀剥离配方，添加耐压等级 tooltip | ✅ | cherry-pick + 适配 1.21.1 API（RecipeExporter、Identifier.of、CustomPayload C2S）+ datagen 刷新 |
+| 117 | `d80abc0d` | feat: 电路板合成改用铁板，粘性树脂+活塞合成粘性活塞 | ✅ | cherry-pick + 适配 1.21.1 路径（recipe/ 单数）+ datagen 刷新 |
 
 ## 同步历史
 
@@ -82,3 +82,4 @@
 - 2026-05-14：同步 commits 93-96——发酵机肥料 + 蜘蛛眼配方 + 监管机 SingleVariantStorage 重构 + 鸡下蛋 Mixin（cherry-pick + 适配 1.21.1 API + Mixin 改用 @Inject + datagen 全量重跑）|
 - 2026-05-14：修复 datagen 串 JSON 问题——core 和 weapons-addon 添加 modid 过滤，全部 generated 删除后逐子项目重跑（main 和 1.21.1 同步修复）|
 - 2026-05-15：同步 commits 98-112——全机器 RoutedItemStorage 驱动 quickMove 迁移 + 洗矿机修复 + 流体热交换机 UI + 橡胶树叶 tag。批量 cherry-pick + 解决多处冲突 + 1.21.1 API 适配（Identifier.of、ExtendedScreenHandlerFactory\<PacketByteBuf\>、getScreenOpeningData、readNbt/writeNbt WrapperLookup、Inventories、ItemStack.areEqual、RecipeInput、DataComponentTypes.FOOD）+ datagen 刷新 |
+- 2026-05-16：同步 commits 113-117——压缩机输入槽修复 + 复制机 CustomPayload 迁移 + 能量水晶粉 + 绝缘导线/耐压 tooltip + 电路板/粘性活塞。cherry-pick + 适配 1.21.1 API（SelectTemplatePayload、SingleStackRecipeInput、RecipeExporter、Identifier.of）+ datagen 刷新 |
