@@ -141,12 +141,12 @@ class EnergiumDust : Item(FabricItemSettings()) {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             // 交叉摆法：4个钻石粉 + 5个红石粉
-            // D R D
             // R D R
             // D R D
+            // R D R
             // D=钻石粉, R=红石粉
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnergiumDust::class.instance(), 9)
-                .pattern("DRD").pattern("RDR").pattern("DRD")
+                .pattern("RDR").pattern("DRD").pattern("RDR")
                 .input('D', Ingredient.fromTag(ModTags.Compat.Items.DUSTS_DIAMOND))
                 .input('R', Ingredient.fromTag(ModTags.Compat.Items.DUSTS_REDSTONE))
                 .criterion(hasItem(DiamondDust::class.instance()), conditionsFromItem(DiamondDust::class.instance()))
