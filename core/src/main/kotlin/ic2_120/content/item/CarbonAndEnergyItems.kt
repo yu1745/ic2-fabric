@@ -248,7 +248,7 @@ class Circuit : Item(FabricItemSettings()) {
                 .pattern("xxx").pattern("rfr").pattern("xxx")
                 .input('x', ic2_120.content.block.cables.InsulatedCopperCableBlock::class.instance())
                 .input('r', Items.REDSTONE)
-                .input('f', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON))
+                .input('f', IronPlate::class.instance())
                 .criterion(hasItem(Items.REDSTONE), conditionsFromItem(Items.REDSTONE))
                 .offerTo(exporter, Circuit::class.id())
         }
@@ -552,6 +552,12 @@ class Resin : Item(FabricItemSettings()) {
                 200
             ).criterion(hasItem(Resin::class.instance()), conditionsFromItem(Resin::class.instance()))
                 .offerTo(exporter, Resin::class.recipeId("to_rubber_smelting"))
+            // 粘性树脂 + 活塞 -> 粘性活塞
+            ShapelessRecipeJsonBuilder.create(RecipeCategory.REDSTONE, Items.STICKY_PISTON, 1)
+                .input(Items.PISTON)
+                .input(Resin::class.instance())
+                .criterion(hasItem(Items.PISTON), conditionsFromItem(Items.PISTON))
+                .offerTo(exporter, Resin::class.recipeId("sticky_piston"))
         }
     }
 }
