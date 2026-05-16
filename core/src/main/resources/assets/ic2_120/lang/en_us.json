@@ -104,6 +104,8 @@
   "block.ic2_120.insulated_iron_cable": "Insulated HV Cable",
   "block.ic2_120.double_insulated_iron_cable": "2x Insulated HV Cable",
   "block.ic2_120.triple_insulated_iron_cable": "3x Insulated HV Cable",
+  "block.ic2_120.splitter_cable": "EU Splitter Cable",
+  "block.ic2_120.limiter_cable": "EU Limiter Cable",
   "block.ic2_120.electric_furnace": "Electric Furnace",
   "block.ic2_120.induction_furnace": "Induction Furnace",
   "block.ic2_120.generator": "Generator",
@@ -1091,5 +1093,7 @@
   "gui.ic2_120.item_upgrade.set_filter": "Set",
   "gui.ic2_120.item_upgrade.clear_filter": "Clear",
   "gui.ic2_120.item_upgrade.filter_display": "Filter: %s",
-  "gui.ic2_120.item_upgrade.no_filter": "All"
+  "gui.ic2_120.item_upgrade.no_filter": "All",
+  "gui.ic2_120.limiter_cable.limit_value": "Limit: %s EU/t",
+  "gui.ic2_120.limiter_cable.limit_unlimited": "Limit: Unlimited"
 }

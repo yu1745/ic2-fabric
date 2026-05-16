@@ -103,6 +103,8 @@
   "block.ic2_120.insulated_iron_cable": "绝缘高压导线",
   "block.ic2_120.double_insulated_iron_cable": "2x绝缘高压导线",
   "block.ic2_120.triple_insulated_iron_cable": "3x绝缘高压导线",
+  "block.ic2_120.splitter_cable": "EU分流导线",
+  "block.ic2_120.limiter_cable": "EU限流导线",
   "block.ic2_120.electric_furnace": "电炉",
   "block.ic2_120.induction_furnace": "感应炉",
   "block.ic2_120.generator": "火力发电机",
@@ -1085,5 +1087,7 @@
   "gui.ic2_120.item_upgrade.set_filter": "设置",
   "gui.ic2_120.item_upgrade.clear_filter": "清除",
   "gui.ic2_120.item_upgrade.filter_display": "过滤: %s",
-  "gui.ic2_120.item_upgrade.no_filter": "全部"
+  "gui.ic2_120.item_upgrade.no_filter": "全部",
+  "gui.ic2_120.limiter_cable.limit_value": "限流值: %s EU/t",
+  "gui.ic2_120.limiter_cable.limit_unlimited": "限流值: 无限制"
 }
