@@ -26,6 +26,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.registry.tag.ItemTags
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.Properties
 import net.minecraft.state.property.BooleanProperty
@@ -135,11 +136,10 @@ class LvTransformerBlock : TransformerBlock() {
         fun generateRecipes(exporter: RecipeExporter) {
             val insulatedTinCable = InsulatedTinCableBlock::class.item()
             val coil = ic2_120.content.item.Coil::class.instance()
-            val planks = Items.OAK_PLANKS
             if (coil != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LvTransformerBlock::class.item(), 1)
                     .pattern("PWP").pattern("PCP").pattern("PWP")
-                    .input('P', planks).input('W', insulatedTinCable).input('C', coil)
+                    .input('P', ItemTags.PLANKS).input('W', insulatedTinCable).input('C', coil)
                     .criterion(hasItem(coil), conditionsFromItem(coil))
                     .offerTo(exporter, LvTransformerBlock::class.id())
             }

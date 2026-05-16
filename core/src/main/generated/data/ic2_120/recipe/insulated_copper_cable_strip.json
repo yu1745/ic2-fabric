@@ -1,0 +1,15 @@
+{
+  "type": "ic2_120:damage_tool_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "ic2_120:cutter"
+    },
+    {
+      "item": "ic2_120:insulated_copper_cable"
+    }
+  ],
+  "result": {
+    "item": "ic2_120:copper_cable"
+  }
+}

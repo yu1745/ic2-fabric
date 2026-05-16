@@ -9,7 +9,7 @@
       "item": "ic2_120:machine"
     },
     "X": {
-      "item": "minecraft:cobblestone"
+      "tag": "minecraft:stone_crafting_materials"
     },
     "c": {
       "item": "ic2_120:circuit"

@@ -73,7 +73,7 @@ class ReactorAccessHatchBlock(settings: AbstractBlock.Settings = AbstractBlock.S
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorAccessHatchBlock::class.item(), 1)
                     .pattern("AAA").pattern("ABA").pattern("AAA")
                     .input('A', vessel)
-                    .input('B', Items.OAK_TRAPDOOR)
+                    .input('B', ItemTags.WOODEN_TRAPDOORS)
                     .criterion(hasItem(vessel), conditionsFromItem(vessel))
                     .offerTo(exporter, ReactorAccessHatchBlock::class.id())
             }

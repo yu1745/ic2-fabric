@@ -397,6 +397,8 @@
   "tooltip.ic2_120.wrench.energy_required": "Dismantle requires at least 1000 EU",
   "tooltip.ic2_120.transformer.format": "5-dot faces %s EU/t | 1-dot face %s EU/t",
   "tooltip.ic2_120.voltage_tier": "Voltage Tier: %s",
+  "tooltip.ic2_120.cable_insulation": "Withstand: %s EU",
+  "tooltip.ic2_120.cable_insulation_max": "Withstand: Fully insulated, no leakage",
   "tooltip.ic2_120.kinetic_capacity": "Kinetic Capacity: %s KU/t",
   "tooltip.ic2_120.kinetic_loss": "Kinetic Loss: %s KU/block",
   "tooltip.ic2_120.kinetic_source": "Kinetic Source: outputs to front transmission node",

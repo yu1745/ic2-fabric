@@ -6,7 +6,7 @@
       "item": "ic2_120:reactor_vessel"
     },
     "B": {
-      "item": "minecraft:oak_trapdoor"
+      "tag": "minecraft:wooden_trapdoors"
     }
   },
   "pattern": [

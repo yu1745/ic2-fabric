@@ -34,6 +34,7 @@ import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.registry.tag.ItemTags
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.Properties
 import net.minecraft.util.math.BlockPos
@@ -54,13 +55,12 @@ class BatBoxBlock : EnergyStorageBlock(EnergyStorageConfig.BATBOX) {
         fun generateRecipes(exporter: RecipeExporter) {
             val tinCable = InsulatedTinCableBlock::class.item()
             val battery = ReBatteryItem::class.instance()
-            val planks = Items.OAK_PLANKS
             if (tinCable != Items.AIR && battery != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BatBoxBlock::class.item(), 1)
                     .pattern("WTW")
                     .pattern("BBB")
                     .pattern("WWW")
-                    .input('W', planks)
+                    .input('W', ItemTags.PLANKS)
                     .input('T', tinCable)
                     .input('B', battery)
                     .criterion(hasItem(battery), conditionsFromItem(battery))

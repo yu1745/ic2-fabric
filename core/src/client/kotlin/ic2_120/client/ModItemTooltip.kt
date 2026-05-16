@@ -7,6 +7,8 @@ import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.block.WaterKineticGeneratorBlock
 import ic2_120.content.block.ManualKineticGeneratorBlock
 import ic2_120.content.block.cables.BaseCableBlock
+import ic2_120.content.block.cables.IInsulatedCable
+import ic2_120.content.block.machines.TransformerUtils
 import ic2_120.content.block.transmission.BevelGearBlock
 import ic2_120.content.block.transmission.CarbonTransmissionShaftBlock
 import ic2_120.content.block.transmission.IronTransmissionShaftBlock
@@ -43,6 +45,15 @@ object ModItemTooltip {
                     val lossStr = if (lossEu == lossEu.toLong().toDouble()) "${lossEu.toLong()}" else "%.3f".format(lossEu).trimEnd('0').trimEnd('.')
                     lines.add(Text.translatable("tooltip.ic2_120.cable_loss", lossStr).formatted(Formatting.GRAY))
                     addVoltageTierTooltip(lines, block.tier)
+                    // 绝缘导线显示耐压等级
+                    if (block is IInsulatedCable) {
+                        val maxSafeEu = TransformerUtils.getEuForTier(block.insulationLevel)
+                        if (block.insulationLevel >= 5) {
+                            lines.add(Text.translatable("tooltip.ic2_120.cable_insulation_max").formatted(Formatting.GRAY))
+                        } else {
+                            lines.add(Text.translatable("tooltip.ic2_120.cable_insulation", maxSafeEu).formatted(Formatting.GRAY))
+                        }
+                    }
                     return@register
                 }
                 when (block) {

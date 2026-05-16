@@ -21,6 +21,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
+import net.minecraft.registry.tag.ItemTags
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
@@ -88,7 +89,7 @@ class WaterGeneratorBlock : MachineBlock() {
                     .pattern("WGW")
                     .pattern("SWS")
                     .input('S', Items.STICK)
-                    .input('W', Items.OAK_PLANKS)
+                    .input('W', ItemTags.PLANKS)
                     .input('G', generator)
                     .criterion(hasItem(generator), conditionsFromItem(generator))
                     .offerTo(exporter, WaterGeneratorBlock::class.id())
