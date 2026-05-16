@@ -10,9 +10,9 @@
     }
   },
   "pattern": [
-    "DRD",
     "RDR",
-    "DRD"
+    "DRD",
+    "RDR"
   ],
   "result": {
     "count": 9,
