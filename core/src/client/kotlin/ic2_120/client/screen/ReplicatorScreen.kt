@@ -8,16 +8,20 @@ import ic2_120.client.ui.FluidBar
 import ic2_120.client.ui.GuiBackground
 import ic2_120.client.ui.HeatProgressBar
 import ic2_120.content.block.ReplicatorBlock
+import ic2_120.content.network.NetworkManager
 import ic2_120.content.screen.ReplicatorScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.ReplicatorSync
 import ic2_120.content.uu.UuTemplateEntry
 import ic2_120.content.uu.findUniqueAdjacentPatternStorage
 import ic2_120.registry.annotation.ModScreen
+import io.netty.buffer.Unpooled
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
@@ -229,12 +233,10 @@ class ReplicatorScreen(
                                                     Text.literal("${template.uuCostUb} uB")
                                                 ),
                                                 onClick = {
-                                                    client?.player?.networkHandler?.sendPacket(
-                                                        ButtonClickC2SPacket(
-                                                            handler.syncId,
-                                                            ReplicatorScreenHandler.BUTTON_SELECT_BASE + index
-                                                        )
-                                                    )
+                                                    val buf = PacketByteBuf(Unpooled.buffer())
+                                                    buf.writeBlockPos(handler.blockPos)
+                                                    buf.writeVarInt(index)
+                                                    ClientPlayNetworking.send(NetworkManager.SELECT_TEMPLATE_PACKET, buf)
                                                 }
                                             )
                                         }

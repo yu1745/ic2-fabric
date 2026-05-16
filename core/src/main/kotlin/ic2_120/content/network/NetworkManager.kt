@@ -1,6 +1,8 @@
 package ic2_120.content.network
 
 import ic2_120.Ic2_120
+import ic2_120.content.block.machines.PatternStorageBlockEntity
+import ic2_120.content.block.machines.ReplicatorBlockEntity
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.IridiumDrill
 import ic2_120.content.item.MiningLaserItem
@@ -41,6 +43,7 @@ object NetworkManager {
     val TOGGLE_MINING_LASER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
     val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
     val TOGGLE_QUANTUM_BOOTS_JUMP_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_boots_jump")
+    val SELECT_TEMPLATE_PACKET = Identifier(Ic2_120.MOD_ID, "select_template")
 
     fun register() {
         // 注册服务端接收处理器（如果需要）
@@ -200,6 +203,19 @@ object NetworkManager {
                         )
                         return@execute
                     }
+                }
+            }
+        }
+
+        // 模板选择 C2S 包：绕过 ButtonClickC2SPacket 的 buttonId byte 限制
+        ServerPlayNetworking.registerGlobalReceiver(SELECT_TEMPLATE_PACKET) { server, player, _, buf, _ ->
+            val pos = buf.readBlockPos()
+            val index = buf.readVarInt()
+            server.execute {
+                val be = player.world.getBlockEntity(pos)
+                when (be) {
+                    is ReplicatorBlockEntity -> be.selectTemplate(index)
+                    is PatternStorageBlockEntity -> be.selectTemplate(index)
                 }
             }
         }
