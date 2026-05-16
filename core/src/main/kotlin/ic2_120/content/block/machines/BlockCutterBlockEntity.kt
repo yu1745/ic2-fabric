@@ -196,23 +196,9 @@ class BlockCutterBlockEntity(
      */
     private fun getRecipeForInput(input: ItemStack): BlockCutterRecipe? {
         if (input.isEmpty) return null
-
+        val w = world ?: return null
         val inv = SimpleInventory(input)
-        val recipeManager = world?.recipeManager ?: return null
-
-        // 获取第一个匹配的配方（优先选择inputCount较大的配方）
-        val recipe = recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), inv, world ?: return null).orElse(null)
-
-        // 对于木板，尝试获取匹配2个输入的配方（木棍配方）
-        if (input.count >= 2) {
-            val inv2 = SimpleInventory(ItemStack(input.item, 2))
-            val recipe2 = recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), inv2, world ?: return null).orElse(null)
-            if (recipe2 != null && recipe2.inputCount == 2) {
-                return recipe2
-            }
-        }
-
-        return recipe
+        return w.recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), inv, w).orElse(null)
     }
 
     /**
@@ -345,6 +331,7 @@ class BlockCutterBlockEntity(
     private fun isRecipeInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || isBatteryItem(stack) || stack.item is IUpgradeItem || stack.item is IBlockCuttingBlade) return false
         val w = world ?: return true
-        return getRecipeForInput(stack) != null
+        val inv = SimpleInventory(stack.copyWithCount(stack.maxCount))
+        return w.recipeManager.getFirstMatch(getRecipeType<BlockCutterRecipe>(), inv, w).isPresent
     }
 }

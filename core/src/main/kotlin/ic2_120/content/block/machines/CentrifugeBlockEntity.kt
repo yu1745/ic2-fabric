@@ -322,7 +322,7 @@ class CentrifugeBlockEntity(
     private fun isRecipeInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || isBatteryItem(stack)) return false
         val w = world ?: return true
-        val inv = SimpleInventory(stack.copyWithCount(1))
+        val inv = SimpleInventory(stack.copyWithCount(stack.maxCount))
         return w.recipeManager.getFirstMatch(getRecipeType<CentrifugeRecipe>(), inv, w).isPresent
     }
 }
