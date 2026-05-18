@@ -3,6 +3,7 @@ package ic2_120
 import ic2_120.content.CreativeGeneratorItemEntityHandler
 import ic2_120.content.RubberTreetapHandler
 import ic2_120.content.WrenchHandler
+import ic2_120.content.block.nuclear.NuclearExplosionManager
 import ic2_120.content.block.nuclear.NuclearReactorBlockEntity
 import ic2_120.content.block.nuclear.ReactorChamberBlock
 import ic2_120.content.block.nuclear.ReactorChamberBlockEntity
@@ -186,6 +187,7 @@ object Ic2_120 : ModInitializer {
             FlightManager.tick(server)
             BandwidthStatsService.onServerTick(server)
             PipeNetworkManager.tickAllWorlds(server)
+            NuclearExplosionManager.tick(server)
         }
 
         // 储电盒自定义 BlockItem（支持满电变体）及创造模式满电物品
