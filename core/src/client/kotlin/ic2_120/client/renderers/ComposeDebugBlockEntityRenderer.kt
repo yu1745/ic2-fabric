@@ -1,7 +1,6 @@
 package ic2_120.client.renderers
 
 import ic2_120.content.block.ComposeDebugBlockEntity
-import net.minecraft.client.render.LightmapTextureManager
 import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexConsumer
@@ -44,13 +43,12 @@ class ComposeDebugBlockEntityRenderer(
         val spinDeg = time * 3.0f
 
         val vc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(WHITE_TEXTURE))
-        val fullLight = LightmapTextureManager.MAX_LIGHT_COORDINATE
 
         matrices.push()
         matrices.translate(0.5, 0.0, 0.5)
 
-        drawHalo(matrices, vc, spinDeg, bob, fullLight, overlay)
-        drawArrow(matrices, vc, spinDeg, bob, fullLight, overlay)
+        drawHalo(matrices, vc, spinDeg, bob, light, overlay)
+        drawArrow(matrices, vc, spinDeg, bob, light, overlay)
 
         matrices.pop()
     }

@@ -3,7 +3,6 @@ package ic2_120.client.renderers
 import ic2_120.content.block.machines.ManualKineticGeneratorBlockEntity
 import ic2_120.content.item.CrankMaterial
 import ic2_120.content.item.CrankHandleItem
-import net.minecraft.client.render.LightmapTextureManager
 import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexConsumer
@@ -62,7 +61,6 @@ class ManualKineticGeneratorBlockEntityRenderer(
         val material = (crankStack.item as? CrankHandleItem)?.material ?: return
         val texture = getTextureForMaterial(material)
         val vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(texture))
-        val fullLight = LightmapTextureManager.MAX_LIGHT_COORDINATE
 
         val angle = entity.clientTurnAngle + if (entity.sync.isTurning) tickDelta * 15f else 0f
 
@@ -74,9 +72,9 @@ class ManualKineticGeneratorBlockEntityRenderer(
         matrices.translate(0.0, 0.5, 0.0)
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(angle))
 
-        drawShaft(matrices, vc, fullLight, overlay)
-        drawArm(matrices, vc, fullLight, overlay)
-        drawHandle(matrices, vc, fullLight, overlay)
+        drawShaft(matrices, vc, light, overlay)
+        drawArm(matrices, vc, light, overlay)
+        drawHandle(matrices, vc, light, overlay)
 
         matrices.pop()
     }

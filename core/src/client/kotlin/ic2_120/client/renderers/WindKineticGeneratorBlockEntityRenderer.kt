@@ -6,7 +6,6 @@ import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.LightmapTextureManager
 import net.minecraft.client.render.block.entity.BlockEntityRenderer
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
 import net.minecraft.client.util.math.MatrixStack
@@ -95,7 +94,6 @@ class WindKineticGeneratorBlockEntityRenderer(
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle))
 
         val vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(rotorTexture))
-        val rotorLight = LightmapTextureManager.MAX_LIGHT_COORDINATE
 
         // 四个扇叶：每片都是薄立方体，沿旋转轴每 90 度排布；绕 X 轴施加螺距角使叶片具有攻角。
         repeat(4) { i ->
@@ -105,7 +103,7 @@ class WindKineticGeneratorBlockEntityRenderer(
             drawCuboid(
                 matrices,
                 vc,
-                rotorLight,
+                light,
                 overlay,
                 minX = -BLADE_HALF_WIDTH, maxX = BLADE_HALF_WIDTH,
                 minY = BLADE_INNER_OFFSET, maxY = getRotorRadius(rotor),
@@ -118,7 +116,7 @@ class WindKineticGeneratorBlockEntityRenderer(
         drawCuboid(
             matrices,
             vc,
-            rotorLight,
+            light,
             overlay,
             minX = -SHAFT_HALF_WIDTH, maxX = SHAFT_HALF_WIDTH,
             minY = -SHAFT_HALF_WIDTH, maxY = SHAFT_HALF_WIDTH,
@@ -129,7 +127,7 @@ class WindKineticGeneratorBlockEntityRenderer(
         drawCuboid(
             matrices,
             vc,
-            rotorLight,
+            light,
             overlay,
             minX = -HUB_HALF_SIZE, maxX = HUB_HALF_SIZE,
             minY = -HUB_HALF_SIZE, maxY = HUB_HALF_SIZE,
