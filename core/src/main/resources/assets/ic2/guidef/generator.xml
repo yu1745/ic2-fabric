@@ -3,8 +3,8 @@
     <text y="6" align="center">%name%</text>
     <slot name="fuel" x="56" y="52"/>
     <slot name="charge" x="56" y="16"/>
-    <energygauge x="100" y="39" style="bar"/>
-    <gauge name="fuel" x="57" y="36" style="fuel"/>
-    <button type="recipe" x="57" y="36" width="13" height="13" event="minecraft.fuel"></button>
-    <playerInventory x="7" y="83"/>
+    <energygauge x="78" y="35" style="bar"/>
+    <gauge name="fuel" x="58" y="38" style="fuel"/>
+    <button type="recipe" x="58" y="38" width="13" height="13" event="minecraft.fuel"></button>
+    <playerInventory x="7" y="78"/>
 </gui>

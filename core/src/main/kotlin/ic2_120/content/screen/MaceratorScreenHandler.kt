@@ -46,22 +46,22 @@ class MaceratorScreenHandler(
         checkSize(blockInventory, MaceratorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        // 机器槽位：从 RoutedItemStorage 派生 SlotSpec（单一数据源）
-        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_INPUT)
-        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_DISCHARGING)
-        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_OUTPUT)
+        // Machine slot positions from guidef/macerator.xml
+        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_INPUT, x = 42, y = 15)
+        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_DISCHARGING, x = 42, y = 54)
+        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_OUTPUT, x = 116, y = 35)
         for (i in MaceratorBlockEntity.SLOT_UPGRADE_INDICES.indices) {
-            addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_UPGRADE_INDICES[i])
+            addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_UPGRADE_INDICES[i], x = 152, y = 5 + i * 20)
         }
 
-        // 玩家物品栏
+        // Player inventory positions matching 176×166 layout (guidef/macerator.xml playerInventory y=83 + 1 inset)
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
     }
 
@@ -69,11 +69,11 @@ class MaceratorScreenHandler(
      * 添加一个 PredicateSlot 并同时记录 BE slot index → handler slot index 映射。
      * SlotSpec 从 [itemStorage] 派生（单一数据源）；客户端无 itemStorage 时使用 [fallbackSpecs]。
      */
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int = 0, y: Int = 0, fallbackSpec: SlotSpec? = null) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {

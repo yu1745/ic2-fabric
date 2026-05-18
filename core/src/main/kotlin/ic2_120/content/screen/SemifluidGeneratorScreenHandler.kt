@@ -64,26 +64,26 @@ class SemifluidGeneratorScreenHandler(
         val emptyContainerSlotSpec = itemStorage?.deriveSlotSpec(SemifluidGeneratorBlockEntity.EMPTY_CONTAINER_SLOT) ?: EMPTY_CONTAINER_SLOT_SPEC
         val batterySlotSpec = itemStorage?.deriveSlotSpec(SemifluidGeneratorBlockEntity.BATTERY_SLOT) ?: BATTERY_SLOT_SPEC
 
-        addTrackedSlot(SemifluidGeneratorBlockEntity.FUEL_SLOT, 0, 0, fuelSlotSpec)
-        addTrackedSlot(SemifluidGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 0, 0, emptyContainerSlotSpec)
-        addTrackedSlot(SemifluidGeneratorBlockEntity.BATTERY_SLOT, 0, 0, batterySlotSpec)
+        addTrackedSlot(SemifluidGeneratorBlockEntity.FUEL_SLOT, 38, 18, fuelSlotSpec)
+        addTrackedSlot(SemifluidGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 38, 57, emptyContainerSlotSpec)
+        addTrackedSlot(SemifluidGeneratorBlockEntity.BATTERY_SLOT, 124, 43, batterySlotSpec)
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
             addTrackedSlot(
                 SemifluidGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i],
-                0,
-                0,
+                152,
+                4 + i * 20,
                 upgradeSlotSpec
             )
         }
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 79 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 137))
         }
     }
 

@@ -153,7 +153,7 @@ class RtHeatGeneratorBlockEntity(
     }
 
     override fun syncAdditionalData() {
-        // 无需同步额外数据
+        sync.heatGenerated = getLastGeneratedHeat().toInt()
     }
 
     override fun shouldActivate(generatedHeat: Long, hasValidConsumer: Boolean): Boolean =

@@ -58,18 +58,21 @@ class RtHeatGeneratorScreenHandler(
         checkSize(blockInventory, RtHeatGeneratorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        repeat(RtHeatGeneratorBlockEntity.INVENTORY_SIZE) { index ->
+        // 燃料靶丸槽 2行×3列，起点 (62, 20)
+        for (index in 0 until RtHeatGeneratorBlockEntity.INVENTORY_SIZE) {
+            val col = index % 3
+            val row = index / 3
             val spec = itemStorage?.deriveSlotSpec(index) ?: FUEL_SLOT_SPEC
-            addTrackedSlot(index, 0, 0, spec)
+            addTrackedSlot(index, 62 + col * 18, 20 + row * 18, spec)
         }
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 79 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 137))
         }
     }
 

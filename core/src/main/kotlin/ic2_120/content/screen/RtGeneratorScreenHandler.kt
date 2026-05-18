@@ -28,7 +28,7 @@ import ic2_120.registry.annotation.ScreenFactory
 class RtGeneratorScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
-    blockInventory: Inventory,
+    private val blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate,
     private val itemStorage: RoutedItemStorage? = null
@@ -42,30 +42,34 @@ class RtGeneratorScreenHandler(
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
+    private fun addTrackedSlot(beSlot: Int, x: Int, y: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlot] = handlerIndex
+        addSlot(PredicateSlot(blockInventory, beSlot, x, y, spec))
+    }
+
     init {
         checkSize(blockInventory, 7)
         addProperties(propertyDelegate)
 
-        repeat(6) { index ->
-            addTrackedSlot(blockInventory, index)
-        }
-        addTrackedSlot(blockInventory, RtGeneratorBlockEntity.BATTERY_SLOT)
+        // 燃料靶丸槽 2行×3列，起点 (31, 25)
+        addTrackedSlot(RtGeneratorBlockEntity.FUEL_SLOT_START + 0, 31, 25)
+        addTrackedSlot(RtGeneratorBlockEntity.FUEL_SLOT_START + 1, 49, 25)
+        addTrackedSlot(RtGeneratorBlockEntity.FUEL_SLOT_START + 2, 67, 25)
+        addTrackedSlot(RtGeneratorBlockEntity.FUEL_SLOT_START + 3, 31, 43)
+        addTrackedSlot(RtGeneratorBlockEntity.FUEL_SLOT_START + 4, 49, 43)
+        addTrackedSlot(RtGeneratorBlockEntity.FUEL_SLOT_START + 5, 67, 43)
+        addTrackedSlot(RtGeneratorBlockEntity.BATTERY_SLOT, 95, 34)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 79 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 137))
         }
-    }
-
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
-        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
-        val handlerIndex = slots.size
-        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
