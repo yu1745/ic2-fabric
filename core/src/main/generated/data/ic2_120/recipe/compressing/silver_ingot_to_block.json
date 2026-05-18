@@ -1,11 +1,12 @@
 {
   "type": "ic2_120:compressing",
+  "container_return": {},
   "ingredient": {
     "item": "ic2_120:silver_ingot"
   },
   "input_count": 9,
   "result": {
     "count": 1,
-    "item": "ic2_120:silver_block"
+    "id": "ic2_120:silver_block"
   }
 }

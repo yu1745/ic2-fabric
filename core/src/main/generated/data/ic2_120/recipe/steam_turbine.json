@@ -10,7 +10,7 @@
     "BBB"
   ],
   "result": {
-    "item": "ic2_120:steam_turbine"
-  },
-  "show_notification": true
+    "count": 1,
+    "id": "ic2_120:steam_turbine"
+  }
 }

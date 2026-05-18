@@ -1,11 +1,12 @@
 {
   "type": "ic2_120:compressing",
+  "container_return": {},
   "ingredient": {
     "item": "ic2_120:small_gold_dust"
   },
   "input_count": 9,
   "result": {
     "count": 1,
-    "item": "ic2_120:gold_dust"
+    "id": "ic2_120:gold_dust"
   }
 }

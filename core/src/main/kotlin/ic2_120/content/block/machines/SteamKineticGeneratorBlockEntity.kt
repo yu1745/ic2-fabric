@@ -36,7 +36,10 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtOps
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.state.property.Properties
@@ -64,7 +67,7 @@ class SteamKineticGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), IKineticMachinePort, Inventory,
-    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SteamKineticGeneratorBlock.ACTIVE
     override val tier: Int = 3
@@ -313,9 +316,11 @@ class SteamKineticGeneratorBlockEntity(
 
     // ==== ScreenHandler ====
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.steam_kinetic_generator")
@@ -331,41 +336,43 @@ class SteamKineticGeneratorBlockEntity(
 
     // ==== NBT ====
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
-        Inventories.readNbt(nbt, inventory)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
+        Inventories.readNbt(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         kuBuffer = nbt.getInt(NBT_KU_BUFFER)
         condensationProgress = nbt.getInt(NBT_CONDENSATION)
 
         if (nbt.contains(NBT_STEAM_TANK)) {
             val tankNbt = nbt.getCompound(NBT_STEAM_TANK)
-            steamTank.variant = FluidVariant.fromNbt(tankNbt.getCompound("variant"))
+            val steamTag = tankNbt.getCompound("variant")
+            steamTank.variant = if (steamTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, steamTag).result().map { it.first }.orElse(FluidVariant.blank())
             steamTank.amount = tankNbt.getLong("amount")
         }
         if (nbt.contains(NBT_WATER_TANK)) {
             val tankNbt = nbt.getCompound(NBT_WATER_TANK)
-            distilledWaterTank.variant = FluidVariant.fromNbt(tankNbt.getCompound("variant"))
+            val waterTag = tankNbt.getCompound("variant")
+            distilledWaterTank.variant = if (waterTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, waterTag).result().map { it.first }.orElse(FluidVariant.blank())
             distilledWaterTank.amount = tankNbt.getLong("amount")
         }
         sync.steamAmount = toMb(steamTank.amount)
         sync.distilledWaterAmount = toMb(distilledWaterTank.amount)
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
-        Inventories.writeNbt(nbt, inventory)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
+        Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putInt(NBT_KU_BUFFER, kuBuffer)
         nbt.putInt(NBT_CONDENSATION, condensationProgress)
 
         val steamTankNbt = NbtCompound()
-        steamTankNbt.put("variant", steamTank.variant.toNbt())
+        steamTankNbt.put("variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, steamTank.variant).result().orElse(NbtCompound()))
         steamTankNbt.putLong("amount", steamTank.amount)
         nbt.put(NBT_STEAM_TANK, steamTankNbt)
 
         val waterTankNbt = NbtCompound()
-        waterTankNbt.put("variant", distilledWaterTank.variant.toNbt())
+        waterTankNbt.put("variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, distilledWaterTank.variant).result().orElse(NbtCompound()))
         waterTankNbt.putLong("amount", distilledWaterTank.amount)
         nbt.put(NBT_WATER_TANK, waterTankNbt)
     }

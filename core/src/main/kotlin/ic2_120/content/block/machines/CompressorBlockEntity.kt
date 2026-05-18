@@ -176,7 +176,7 @@ class CompressorBlockEntity(
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         if (nbt.contains("pending_container_return")) {
-            pendingContainerReturn = ItemStack.fromNbt(nbt.getCompound("pending_container_return"))
+            pendingContainerReturn = ItemStack.fromNbt(lookup, nbt.getCompound("pending_container_return")).orElse(ItemStack.EMPTY)
         }
     }
 
@@ -186,7 +186,7 @@ class CompressorBlockEntity(
         syncedData.writeNbt(nbt)
         nbt.putLong(CompressorSync.NBT_ENERGY_STORED, sync.amount)
         if (!pendingContainerReturn.isEmpty) {
-            nbt.put("pending_container_return", pendingContainerReturn.writeNbt(NbtCompound()))
+            nbt.put("pending_container_return", pendingContainerReturn.encode(lookup))
         }
     }
 

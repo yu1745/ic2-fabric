@@ -130,7 +130,7 @@ class Ic2JeiPlugin : IModPlugin {
         }
 
         // 通用流体单元：按 NBT 中存储的 FluidVariant 区分子类型
-        val fluidCell = Registries.ITEM.get(Identifier("ic2_120", "fluid_cell"))
+        val fluidCell = Registries.ITEM.get(Identifier.of("ic2_120", "fluid_cell"))
         if (fluidCell !== Items.AIR) {
             registration.registerSubtypeInterpreter(fluidCell, FluidCellSubtypeInterpreter())
         }
@@ -200,7 +200,7 @@ class Ic2JeiPlugin : IModPlugin {
         extraStacks += CropSeedBagItem.createInitialSeedStacks()
 
         // 通用流体单元：为所有没有专用单元类的流体注册 NBT 变体
-        val fluidCell = Registries.ITEM.get(Identifier("ic2_120", "fluid_cell"))
+        val fluidCell = Registries.ITEM.get(Identifier.of("ic2_120", "fluid_cell"))
         if (fluidCell !== Items.AIR) {
             val modFluidCells = setOf(
                 Fluids.WATER, Fluids.FLOWING_WATER,

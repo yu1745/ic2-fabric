@@ -1,5 +1,6 @@
 {
   "type": "ic2_120:compressing",
+  "container_return": {},
   "ingredient": {
     "item": "ic2_120:lapis_plate"
   },

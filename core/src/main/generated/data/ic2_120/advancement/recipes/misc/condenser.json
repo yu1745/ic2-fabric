@@ -5,9 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "ic2_120:iron_casing"
-            ]
+            "items": "ic2_120:iron_casing"
           }
         ]
       },
@@ -22,14 +20,13 @@
   },
   "requirements": [
     [
-      "has_iron_casing",
-      "has_the_recipe"
+      "has_the_recipe",
+      "has_iron_casing"
     ]
   ],
   "rewards": {
     "recipes": [
       "ic2_120:condenser"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }

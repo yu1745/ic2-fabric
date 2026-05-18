@@ -37,7 +37,6 @@ class CondenserScreen(
     // ==== 背景纹理 + 标题 — 对齐 ic2_origin drawBackgroundAndTitle ====
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        renderBackground(context)
         // 背景: guicondenser.png (0,0) 到 (176,184)
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, 256, 256)
         // 标题: 居中, 颜色 0x404040 (4210752) — 与 Ic2Gui.drawXCenteredString 一致
@@ -122,8 +121,8 @@ class CondenserScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guicondenser.png")
-        private val COMMON = Identifier("ic2", "textures/gui/common.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicondenser.png")
+        private val COMMON = Identifier.of("ic2", "textures/gui/common.png")
         private const val PROGRESS_WIDTH = 82
         private const val BOLT_HEIGHT = 13
         private const val TANK_FILL_COLOR = 0x993388FF.toInt()

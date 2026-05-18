@@ -41,7 +41,6 @@ class SteamKineticGeneratorScreen(
 
     // ==== 背景 — 先填充再纹理 ====
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        renderBackground(context)
         val left = x; val top = y
         val sync = handler.sync
 
@@ -95,7 +94,7 @@ class SteamKineticGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guisteamkineticgenerator.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guisteamkineticgenerator.png")
         private val WATER_COLOR = 0x993388FF.toInt()
         private const val PLAYER_INV_Y = 84
         private const val HOTBAR_Y = 142

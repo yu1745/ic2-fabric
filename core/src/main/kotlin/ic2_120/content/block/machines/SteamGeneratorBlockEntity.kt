@@ -29,7 +29,10 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.Fluids
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtOps
+import net.minecraft.registry.RegistryWrapper
 import net.minecraft.network.PacketByteBuf
+import io.netty.buffer.Unpooled
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
@@ -61,7 +64,7 @@ class SteamGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), IHeatConsumer, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport,
-    ExtendedScreenHandlerFactory {
+    ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SteamGeneratorBlock.ACTIVE
     override val tier: Int = 2
@@ -163,13 +166,14 @@ class SteamGeneratorBlockEntity(
 
         /** NBT 恢复 */
         fun readFromNbt(nbt: NbtCompound) {
-            variant = FluidVariant.fromNbt(nbt.getCompound("variant"))
+            val fluidTag = nbt.getCompound("variant")
+            variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, fluidTag).result().map { it.first }.orElse(FluidVariant.blank())
             amount = nbt.getLong("amount")
         }
 
         /** NBT 保存 */
         fun writeToNbt(): NbtCompound = NbtCompound().also {
-            it.put("variant", variant.toNbt())
+            it.put("variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, variant).result().orElse(NbtCompound()))
             it.putLong("amount", amount)
         }
     }
@@ -208,13 +212,14 @@ class SteamGeneratorBlockEntity(
 
         /** NBT 恢复 */
         fun readFromNbt(nbt: NbtCompound) {
-            variant = FluidVariant.fromNbt(nbt.getCompound("variant"))
+            val fluidTag = nbt.getCompound("variant")
+            variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, fluidTag).result().map { it.first }.orElse(FluidVariant.blank())
             amount = nbt.getLong("amount")
         }
 
         /** NBT 保存 */
         fun writeToNbt(): NbtCompound = NbtCompound().also {
-            it.put("variant", variant.toNbt())
+            it.put("variant", FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, variant).result().orElse(NbtCompound()))
             it.putLong("amount", amount)
         }
     }
@@ -290,9 +295,11 @@ class SteamGeneratorBlockEntity(
 
     // ==== ScreenHandler ====
 
-    override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
         buf.writeVarInt(syncedData.size())
+        return buf
     }
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.steam_generator")
@@ -308,8 +315,8 @@ class SteamGeneratorBlockEntity(
 
     // ==== NBT ====
 
-    override fun readNbt(nbt: NbtCompound) {
-        super.readNbt(nbt)
+    override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.readNbt(nbt, lookup)
         syncedData.readNbt(nbt)
         systemHeatMilli = nbt.getLong(NBT_SYSTEM_HEAT_MILLI)
         calcification = nbt.getLong(NBT_CALCIFICATION)
@@ -323,8 +330,8 @@ class SteamGeneratorBlockEntity(
         sync.calcification = calcification.coerceIn(0L, SteamGeneratorSync.MAX_CALCIFICATION).toInt()
     }
 
-    override fun writeNbt(nbt: NbtCompound) {
-        super.writeNbt(nbt)
+    override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
+        super.writeNbt(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_SYSTEM_HEAT_MILLI, systemHeatMilli)
         nbt.putLong(NBT_CALCIFICATION, calcification)

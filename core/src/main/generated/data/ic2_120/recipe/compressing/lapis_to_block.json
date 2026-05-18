@@ -1,11 +1,12 @@
 {
   "type": "ic2_120:compressing",
+  "container_return": {},
   "ingredient": {
     "item": "minecraft:lapis_lazuli"
   },
   "input_count": 9,
   "result": {
     "count": 1,
-    "item": "minecraft:lapis_block"
+    "id": "minecraft:lapis_block"
   }
 }

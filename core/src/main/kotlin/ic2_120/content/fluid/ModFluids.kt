@@ -51,9 +51,9 @@ import net.minecraft.util.Hand
 import net.minecraft.util.ActionResult
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
-import net.minecraft.client.item.TooltipContext
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.item.tooltip.TooltipType
 
 /**
  * IC2 模组流体注册。
@@ -370,7 +370,6 @@ object ModFluids {
             fluid: Fluid,
             direction: Direction
         ): Boolean = false
-        override fun getFlowSpeed(world: WorldView): Int = 4
         override fun getLevelDecreasePerBlock(world: WorldView): Int = 1
         override fun getTickRate(world: WorldView): Int = 5
         override fun getBlastResistance(): Float = 100f
@@ -482,6 +481,7 @@ object ModFluids {
         }
 
         class Still(name: String, stillTex: String, flowTex: String, rises: Boolean = false) : Ic2Fluid(name, stillTex, flowTex, rises) {
+            override fun getMaxFlowDistance(world: WorldView): Int = 4
             override fun getLevel(state: FluidState): Int = 8
             override fun isStill(state: FluidState): Boolean = true
             override fun getStillFluid(): Fluid = when (name) {
@@ -547,6 +547,7 @@ object ModFluids {
         }
 
         class Flowing(name: String, stillTex: String, flowTex: String, rises: Boolean = false) : Ic2Fluid(name, stillTex, flowTex, rises) {
+            override fun getMaxFlowDistance(world: WorldView): Int = 4
             override fun appendProperties(builder: StateManager.Builder<Fluid, FluidState>) {
                 super.appendProperties(builder)
                 builder.add(LEVEL)
@@ -638,11 +639,11 @@ object ModFluids {
         @Environment(EnvType.CLIENT)
         override fun appendTooltip(
             stack: ItemStack,
-            world: World?,
+            context: Item.TooltipContext,
             tooltip: MutableList<Text>,
-            context: TooltipContext
+            type: TooltipType
         ) {
-            super.appendTooltip(stack, world, tooltip, context)
+            super.appendTooltip(stack, context, tooltip, type)
             if (placeFluidOverride != null) {
                 tooltip.add(Text.translatable("tooltip.ic2_120.distilled_water_places_water").formatted(Formatting.GRAY))
             }
@@ -660,7 +661,7 @@ object ModFluids {
 
             // FluidFillable：如炼药锅等可注入液体的方块
             if (block is FluidFillable) {
-                if (block.canFillWithFluid(world, pos, state, actualFluid)) {
+                if (block.canFillWithFluid(player, world, pos, state, actualFluid)) {
                     block.tryFillWithFluid(world, pos, state, actualFluid.defaultState)
                     actualFluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
                     world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos)

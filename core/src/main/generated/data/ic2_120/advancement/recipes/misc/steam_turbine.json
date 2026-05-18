@@ -5,9 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "ic2_120:steam_turbine_blade"
-            ]
+            "items": "ic2_120:steam_turbine_blade"
           }
         ]
       },
@@ -22,14 +20,13 @@
   },
   "requirements": [
     [
-      "has_steam_turbine_blade",
-      "has_the_recipe"
+      "has_the_recipe",
+      "has_steam_turbine_blade"
     ]
   ],
   "rewards": {
     "recipes": [
       "ic2_120:steam_turbine"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }

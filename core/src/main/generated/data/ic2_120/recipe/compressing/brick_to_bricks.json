@@ -1,11 +1,12 @@
 {
   "type": "ic2_120:compressing",
+  "container_return": {},
   "ingredient": {
     "item": "minecraft:brick"
   },
   "input_count": 4,
   "result": {
     "count": 1,
-    "item": "minecraft:bricks"
+    "id": "minecraft:bricks"
   }
 }

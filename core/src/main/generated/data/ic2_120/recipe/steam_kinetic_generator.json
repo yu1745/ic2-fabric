@@ -21,7 +21,7 @@
     "CIC"
   ],
   "result": {
-    "item": "ic2_120:steam_kinetic_generator"
-  },
-  "show_notification": true
+    "count": 1,
+    "id": "ic2_120:steam_kinetic_generator"
+  }
 }
