@@ -7,12 +7,14 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
+import ic2_120.registry.recipeId
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.FenceBlock
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
@@ -75,12 +77,18 @@ class RawLeadBlock : Block(AbstractBlock.Settings.copy(Blocks.RAW_IRON_BLOCK).st
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val raw = RawLead::class.instance()
+            val block = RawLeadBlock::class.instance()
             if (raw != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RawLeadBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
                     .input('I', raw)
                     .criterion(hasItem(raw), conditionsFromItem(raw))
                     .offerTo(exporter, RawLeadBlock::class.id())
+
+                ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, raw, 9)
+                    .input(block)
+                    .criterion(hasItem(block), conditionsFromItem(block))
+                    .offerTo(exporter, RawLeadBlock::class.recipeId("to_raw"))
             }
         }
     }
@@ -92,12 +100,18 @@ class RawTinBlock : Block(AbstractBlock.Settings.copy(Blocks.RAW_IRON_BLOCK).str
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val raw = RawTin::class.instance()
+            val block = RawTinBlock::class.instance()
             if (raw != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RawTinBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
                     .input('I', raw)
                     .criterion(hasItem(raw), conditionsFromItem(raw))
                     .offerTo(exporter, RawTinBlock::class.id())
+
+                ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, raw, 9)
+                    .input(block)
+                    .criterion(hasItem(block), conditionsFromItem(block))
+                    .offerTo(exporter, RawTinBlock::class.recipeId("to_raw"))
             }
         }
     }
@@ -109,12 +123,18 @@ class RawUraniumBlock : Block(AbstractBlock.Settings.copy(Blocks.RAW_IRON_BLOCK)
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val raw = RawUranium::class.instance()
+            val block = RawUraniumBlock::class.instance()
             if (raw != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RawUraniumBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
                     .input('I', raw)
                     .criterion(hasItem(raw), conditionsFromItem(raw))
                     .offerTo(exporter, RawUraniumBlock::class.id())
+
+                ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, raw, 9)
+                    .input(block)
+                    .criterion(hasItem(block), conditionsFromItem(block))
+                    .offerTo(exporter, RawUraniumBlock::class.recipeId("to_raw"))
             }
         }
     }
