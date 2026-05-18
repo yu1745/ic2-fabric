@@ -71,6 +71,19 @@ object PipeNetworkManager {
         network.invalidateConnectionCaches()
     }
 
+    fun tickAllWorlds(server: net.minecraft.server.MinecraftServer) {
+        for (world in server.worlds) {
+            val map = worldPosToNetwork[world.registryKey] ?: continue
+            val ticked = mutableSetOf<PipeNetwork>()
+            for (network in map.values) {
+                if (network !in ticked) {
+                    network.tickIfNeeded(world)
+                    ticked.add(network)
+                }
+            }
+        }
+    }
+
     fun onWorldUnload(world: World) {
         worldPosToNetwork.remove(world.registryKey)
     }

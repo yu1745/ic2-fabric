@@ -1082,7 +1082,7 @@
   "gui.ic2_120.direction.west": "West",
   "gui.ic2_120.direction.east": "East",
   "gui.ic2_120.fluid_upgrade.title": "Fluid Upgrade Config",
-  "gui.ic2_120.fluid_upgrade.direction": "Direction: %s",
+  "gui.ic2_120.fluid_upgrade.direction_label": "Dir:",
   "gui.ic2_120.fluid_upgrade.cycle_direction_short": "Cycle",
   "gui.ic2_120.fluid_upgrade.set_filter": "Set",
   "gui.ic2_120.fluid_upgrade.clear_filter": "Clear",

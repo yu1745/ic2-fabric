@@ -70,13 +70,15 @@ class SteamKineticGeneratorBlockEntity(
     override val tier: Int = 3
     override fun getInventory(): net.minecraft.inventory.Inventory? = this
 
-    // IFluidPipeUpgradeSupport — 默认开启，管道可直接输入蒸汽 / 抽出蒸馏水
+    // IFluidPipeUpgradeSupport — 默认开启推拉，无需流体升级
     override var fluidPipeProviderEnabled: Boolean = true
     override var fluidPipeReceiverEnabled: Boolean = true
     override var fluidPipeProviderFilter: Fluid? = null
     override var fluidPipeReceiverFilter: Fluid? = null
-    override var fluidPipeProviderSide: Direction? = null
-    override var fluidPipeReceiverSide: Direction? = null
+    override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeEjectorCount: Int = 1
+    override var fluidPipePullingCount: Int = 1
 
     companion object {
         const val SLOT_TURBINE = 0
@@ -373,12 +375,19 @@ class SteamKineticGeneratorBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
+        // 流体管道输入蒸汽
+        if (fluidPipeReceiverEnabled) {
+            FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, steamTank, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
+        }
+
         val turbineStack = getStack(SLOT_TURBINE)
         val hasTurbine = !turbineStack.isEmpty && turbineStack.item is SteamTurbine
         val isSuperheated = steamTank.isSuperheated()
 
-        // 蒸馏水输出（跳过蒸汽动能发电机，避免蒸馏水弹出阻塞蒸汽链路）
-        ejectDistilledWater(world, pos)
+        // 蒸馏水输出（通过升级系统）
+        if (fluidPipeProviderEnabled) {
+            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, distilledWaterTank, fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
+        }
 
         // 蒸馏水罐已空 → 解除涡轮阻塞
         if (distilledWaterTank.availableSpace() >= FluidConstants.BUCKET / 1000 && isTurbineFilledWithWater) {
@@ -404,13 +413,12 @@ class SteamKineticGeneratorBlockEntity(
 
             // ----
             if (superheated) {
-                // 过热蒸汽 → 输出等量普通蒸汽给下一级
-                outputSteam(world, pos, totalMb, true)
+                // 过热蒸汽 → 输出等量普通蒸汽（通用弹出）
+                outputSteam(world, pos, totalMb)
             } else {
-                // 普通蒸汽 → 10% 冷凝, 90% 输出
-                val condensed = totalMb / 10
-                condensationProgress += condensed
-                outputSteam(world, pos, totalMb - condensed, false)
+                // 普通蒸汽 → 10% 冷凝, 90% 输出给冷凝机（特殊方法，只认冷凝机）
+                condensationProgress += totalMb / 10
+                outputCondenserSteam(world, pos, totalMb - totalMb / 10)
             }
 
             // ---- KU 节流: 蒸馏水罐有水时按比例降低 ----
@@ -453,7 +461,7 @@ class SteamKineticGeneratorBlockEntity(
             steamTank.amount = 0L
             steamTank.variant = FluidVariant.blank()
             sync.steamAmount = 0
-            outputSteam(world, pos, totalMb, steamTank.isSuperheated())
+            outputSteam(world, pos, totalMb)
         }
 
         // 更新同步数据
@@ -473,37 +481,11 @@ class SteamKineticGeneratorBlockEntity(
     }
 
     /**
-     * 弹出蒸馏水到相邻方块，跳过蒸汽动能发电机以避免阻塞蒸汽链路。
+     * 输出蒸汽到相邻方块 — 通用方法。
+     * 推给任意支持插入的 FluidStorage 邻居。
+     * 找不到接收方时 vent（10% 爆炸/tick）。
      */
-    private fun ejectDistilledWater(world: World, pos: BlockPos) {
-        if (distilledWaterTank.amount <= 0L || distilledWaterTank.variant.isBlank) return
-        val resource = distilledWaterTank.variant
-        if (fluidPipeProviderFilter != null && resource.fluid != fluidPipeProviderFilter) return
-        for (dir in Direction.entries) {
-            if (distilledWaterTank.amount <= 0L) break
-            if (fluidPipeProviderSide != null && dir != fluidPipeProviderSide) continue
-            val neighborPos = pos.offset(dir)
-            if (world.getBlockEntity(neighborPos) is SteamKineticGeneratorBlockEntity) continue
-            val storage = FluidStorage.SIDED.find(world, neighborPos, dir.opposite) ?: continue
-            val maxPerTick = minOf(FluidConstants.BUCKET / 4, distilledWaterTank.amount)
-            Transaction.openOuter().use { tx ->
-                val extracted = distilledWaterTank.extract(resource, maxPerTick, tx)
-                if (extracted <= 0L) return@use
-                val accepted = storage.insert(resource, extracted, tx)
-                if (accepted <= 0L) return@use
-                if (accepted < extracted) {
-                    distilledWaterTank.insert(resource, extracted - accepted, tx)
-                }
-                tx.commit()
-            }
-        }
-    }
-
-    /**
-     * 输出蒸汽到相邻方块 — 对齐 ic2_origin outputSteam。
-     * 找不到接收方时直接 vent（10% 爆炸/tick）。
-     */
-    private fun outputSteam(world: World, pos: BlockPos, amountMb: Int, isSuperheatedSource: Boolean) {
+    private fun outputSteam(world: World, pos: BlockPos, amountMb: Int) {
         if (amountMb <= 0) return
         var remaining = amountMb
         val steamVariant = FluidVariant.of(ModFluids.STEAM_STILL)
@@ -511,6 +493,43 @@ class SteamKineticGeneratorBlockEntity(
         for (side in Direction.entries) {
             if (remaining <= 0) break
             val neighborStorage = FluidStorage.SIDED.find(world, pos.offset(side), side.opposite)
+            if (neighborStorage == null || !neighborStorage.supportsInsertion()) continue
+
+            Transaction.openOuter().use { tx ->
+                val accepted = neighborStorage.insert(steamVariant, mbToDroplets(remaining.toLong()), tx)
+                if (accepted > 0) {
+                    tx.commit()
+                    remaining -= toMb(accepted)
+                }
+            }
+        }
+
+        if (remaining > 0) {
+            ventingSteam = true
+            if (world.random.nextInt(10) == 0) {
+                world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
+                    1f, World.ExplosionSourceType.NONE)
+            }
+        } else {
+            ventingSteam = false
+        }
+    }
+
+    /**
+     * 输出 90% 普通蒸汽到相邻冷凝机 — 特殊方法。
+     * 只推给 CondenserBlockEntity，不推给其他方块。
+     * 找不到接收方时 vent（10% 爆炸/tick）。
+     */
+    private fun outputCondenserSteam(world: World, pos: BlockPos, amountMb: Int) {
+        if (amountMb <= 0) return
+        var remaining = amountMb
+        val steamVariant = FluidVariant.of(ModFluids.STEAM_STILL)
+
+        for (side in Direction.entries) {
+            if (remaining <= 0) break
+            val neighborPos = pos.offset(side)
+            if (world.getBlockEntity(neighborPos) !is CondenserBlockEntity) continue
+            val neighborStorage = FluidStorage.SIDED.find(world, neighborPos, side.opposite)
             if (neighborStorage == null || !neighborStorage.supportsInsertion()) continue
 
             Transaction.openOuter().use { tx ->

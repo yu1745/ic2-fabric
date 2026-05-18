@@ -91,8 +91,10 @@ class PumpBlockEntity(
     override var fluidPipeReceiverEnabled: Boolean = false
     override var fluidPipeProviderFilter: Fluid? = null
     override var fluidPipeReceiverFilter: Fluid? = null
-    override var fluidPipeProviderSide: Direction? = null
-    override var fluidPipeReceiverSide: Direction? = null
+    override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeEjectorCount: Int = 0
+    override var fluidPipePullingCount: Int = 0
 
     override val tier: Int = PUMP_TIER
     override var speedMultiplier: Float = 1f
@@ -395,11 +397,9 @@ class PumpBlockEntity(
 
     private fun ejectFluidToNeighbors(world: World, pos: BlockPos, state: BlockState) {
         if (tankInternal.amount <= 0L || tankInternal.variant.isBlank) return
-        val front = state.get(Properties.HORIZONTAL_FACING)
-        val ejectSide = fluidPipeProviderSide
+        val ejectSides = fluidPipeProviderSides
         for (dir in Direction.values()) {
-            if (dir == front) continue
-            if (ejectSide != null && dir != ejectSide) continue
+            if (ejectSides.isNotEmpty() && dir !in ejectSides) continue
             val neighbor = FluidStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
             val resource = tankInternal.variant
             val maxPerTick = minOf(FluidConstants.BUCKET / 4, tankInternal.amount)

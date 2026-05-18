@@ -12,6 +12,8 @@ interface IFluidPipeUpgradeSupport {
     var fluidPipeReceiverEnabled: Boolean
     var fluidPipeProviderFilter: Fluid?
     var fluidPipeReceiverFilter: Fluid?
-    var fluidPipeProviderSide: Direction?
-    var fluidPipeReceiverSide: Direction?
+    var fluidPipeProviderSides: MutableSet<Direction>
+    var fluidPipeReceiverSides: MutableSet<Direction>
+    var fluidPipeEjectorCount: Int
+    var fluidPipePullingCount: Int
 }

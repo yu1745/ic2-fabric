@@ -84,8 +84,10 @@ class SolarDistillerBlockEntity(
     override var fluidPipeReceiverEnabled: Boolean = false  // 是否作为 receiver 从管道接收流体
     override var fluidPipeProviderFilter: Fluid? = null     // provider 流体过滤器（null = 不过滤）
     override var fluidPipeReceiverFilter: Fluid? = null    // receiver 流体过滤器（null = 不过滤）
-    override var fluidPipeProviderSide: Direction? = null   // provider 工作面（null = 任意面）
-    override var fluidPipeReceiverSide: Direction? = null   // receiver 工作面（null = 任意面）
+    override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()   // provider 工作面（null = 任意面）
+    override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()   // receiver 工作面（null = 任意面）
+    override var fluidPipeEjectorCount: Int = 0
+    override var fluidPipePullingCount: Int = 0
 
     companion object {
         // 物品槽位索引定义
@@ -441,7 +443,10 @@ class SolarDistillerBlockEntity(
         // 每 tick 重新从升级槽同步”是否参与流体管网 + 过滤条件”
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
         if (fluidPipeProviderEnabled) {
-            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, outputTankInternal, fluidPipeProviderFilter, fluidPipeProviderSide)
+            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, outputTankInternal, fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
+        }
+        if (fluidPipeReceiverEnabled) {
+            FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, inputTankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)

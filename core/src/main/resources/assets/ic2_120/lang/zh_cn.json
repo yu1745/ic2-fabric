@@ -1076,7 +1076,7 @@
   "gui.ic2_120.direction.west": "西",
   "gui.ic2_120.direction.east": "东",
   "gui.ic2_120.fluid_upgrade.title": "流体升级配置",
-  "gui.ic2_120.fluid_upgrade.direction": "方向: %s",
+  "gui.ic2_120.fluid_upgrade.direction_label": "方向:",
   "gui.ic2_120.fluid_upgrade.cycle_direction_short": "切换",
   "gui.ic2_120.fluid_upgrade.set_filter": "设置",
   "gui.ic2_120.fluid_upgrade.clear_filter": "清除",

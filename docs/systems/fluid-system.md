@@ -25,7 +25,7 @@
 - 机器内部使用 `SingleVariantStorage<FluidVariant>` 作为储罐。
 - 通过 `FluidStorage.SIDED.registerForBlockEntity(...)` 注册分面流体能力。
 
-已接入”流体升级驱动管道参与”的机器：
+已注册 `FluidStorage` 的机器（均可被管道网络自动识别）：
 - `SolarDistillerBlockEntity`
 - `GeoGeneratorBlockEntity`
 - `PumpBlockEntity`
@@ -36,7 +36,7 @@
 - `FluidHeatExchangerBlockEntity`
 - `ReactorFluidPortBlockEntity`
 
-说明：`WaterGenerator` 等其它流体机器可通过自身 `FluidStorage` 交互，但未接入升级驱动的 provider/receiver 参与规则。
+说明：任何暴露 `FluidStorage` 的方块（包括第三方模组）都会被管道网络自动识别为 provider/receiver，通过 simulateInsertion（dry-run transaction）确认实际可提取/可接受的流体。
 
 ---
 
@@ -125,51 +125,37 @@ floor(baseBucketsPerSecond × materialMultiplier × FluidConstants.BUCKET / 20)
 
 ---
 
-## 6. Provider / Receiver 参与规则
+## 6. Provider / Receiver 参与规则（simulateInsertion 模式）
 
 ### 6.1 核心原则
 
-- 管道网络**主动拉取**流体：从 Provider 提取，向 Receiver 插入。
-- 机器/储罐本身无主动推拉行为，仅通过能力接口参与。
+管道网络在 `pushFluids()` 中使用 simulateInsertion 模式自动识别端点：
 
-### 6.2 Provider（流体提供方）
+- **Provider** — 遍历边界，对每个邻居检查 `storage.supportsExtraction()`，然后用 dry-run transaction 确认可提取的流体种类。
+- **Receiver** — 遍历边界，跳过泵正面连接，检查 `storage.supportsInsertion()`，然后用 simulateInsertion（dry-run `insert(variant, 1, tx)`）确认能接受当前网络的流体。
 
-满足以下**任一**条件即可作为 Provider：
+不需要机器预先安装升级或声明接口。任何实现了 Fabric `FluidStorage.SIDED` 的方块都会被自动识别。
 
-| 来源 | 条件 |
+### 6.2 Provider
+
+| 途径 | 说明 |
 |------|------|
-| **泵附件强制** | 泵附件正面朝向该方块，且 `storage.supportsExtraction()` |
-| **升级驱动** | 方块为 MachineBlock，安装 `fluid_ejector_upgrade`，且 `storage.supportsExtraction()` |
+| **自动识别** | 邻居方块的 `FluidStorage.supportsExtraction()` 为 true，且 dry-run 能提取到流体 |
+| **泵附件** | 泵附件正面朝向的方块，检查 `supportsExtraction()`，额外应用泵的过滤配置 |
 
-泵附件可强制**任意** FluidStorage 容器（如 AE2 储罐、第三方储罐）作为 Provider，无需在容器上安装升级。
+Provider 的过滤仅在泵附件场景生效。普通机器的 FluidStorage 自身控制哪些流体可被提取。
 
-### 6.3 Receiver（流体接收方）
+### 6.3 Receiver
 
-满足以下**任一**条件即可作为 Receiver：
-
-| 来源 | 条件 |
+| 途径 | 说明 |
 |------|------|
-| **非 MachineBlock** | 方块不是 MachineBlock，且 `storage.supportsInsertion()` |
-| **升级驱动** | 方块为 MachineBlock，安装 `fluid_pulling_upgrade`，且 `storage.supportsInsertion()` |
+| **自动识别** | 邻居方块的 `FluidStorage.supportsInsertion()` 为 true，且 simulateInsertion 确认能接受当前网络的流体 |
 
-非 MachineBlock（如 AE2 储罐、原版储罐）只要有 `supportsInsertion()` 即可作为 Receiver，无需安装升级。  
-MachineBlock 必须安装 `fluid_pulling_upgrade` 才能作为 Receiver。
+不再区分 MachineBlock 与非 MachineBlock。
 
-### 6.4 过滤规则
+### 6.4 方向
 
-- **泵附件**：过滤存储在 BlockEntity NBT，通过 GUI 配置。
-- **升级**：过滤存储在升级物品 NBT，每个升级独立。
-- 已设置过滤：仅匹配该流体。
-- 未设置过滤：视为可匹配任意流体。
-
-### 6.5 方向规则（仅升级驱动）
-
-- 方向存储在升级物品 NBT。
-- 已设置方向：仅该方向连接面参与。
-- 未设置方向：视为任意面参与。
-- 若 provider/receiver 一方设置方向、另一方未设置，则“未设置”的一方自动排除已设置方向（避免同一面既入又出）。
-
-当前高级流体升级（`advanced_*`）尚未纳入实际生效逻辑。
+由 `FluidStorage.SIDED` 的分面注册天然解决。机器在特定方向注册不同能力的 Storage，PipeNetwork 无需额外方向判断。
 
 ---
 
@@ -187,7 +173,12 @@ MachineBlock 必须安装 `fluid_pulling_upgrade` 才能作为 Receiver。
 
 ### 8.1 流体升级物品
 
-`fluid_ejector_upgrade` / `fluid_pulling_upgrade` 手持右键配置：
+`fluid_ejector_upgrade` / `fluid_pulling_upgrade` 不再影响管道网络识别，改为控制机器自身主动推/拉行为：
+
+- **`fluid_ejector_upgrade`**：机器主动将输出储罐的流体推送到相邻方块的 `FluidStorage`。
+- **`fluid_pulling_upgrade`**：机器主动从相邻方块的 `FluidStorage` 抽取流体到输入储罐。
+
+手持右键配置（当前为快捷交互，无独立 GUI）：
 - **右键**：尝试从副手流体容器读取流体并写入过滤。
 - **潜行右键**：循环切换方向（`任意 -> 下 -> 上 -> 北 -> 南 -> 西 -> 东 -> 任意`）。
 
@@ -204,13 +195,10 @@ MachineBlock 必须安装 `fluid_pulling_upgrade` 才能作为 Receiver。
 
 **已完成：**
 - 管道系统闭环（普通管道 + 泵附件、网络、流量、混流停机、扳手切面）。
-- Provider：泵附件强制 + 升级驱动。
-- Receiver：非 MachineBlock 自动 + 升级驱动。
-- `SolarDistiller` / `GeoGenerator` / `Pump` / `OreWashingPlant` 接入升级驱动。
+- Provider/Receiver 使用 simulateInsertion 模式自动识别，无需升级。
+- `fluid_ejector_upgrade` / `fluid_pulling_upgrade` 改为控制机器主动推拉。
+- `SteamGenerator` / `SteamKineticGenerator` / `Condenser` 默认不主动拉取，需升级启用。
 - Jade 管道实时流量与停机原因渲染（`Ic2JadePlugin`）。
-
-**待扩展：**
-- 将 `IFluidPipeUpgradeSupport` 扩展到更多流体机器（如 WaterGenerator 等）。
 - 升级配置 GUI（物品界面）替代当前快捷交互。
 
 ---
