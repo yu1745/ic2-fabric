@@ -48,3 +48,5 @@ replay_*.log
 # deploy
 
 deploy/
+r
+.playwright-cli/

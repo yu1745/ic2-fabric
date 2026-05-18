@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "ic2_120:copper_boiler"
+    },
+    "C": {
+      "item": "ic2_120:steel_casing"
+    },
+    "E": {
+      "item": "ic2_120:empty_cell"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "pattern": [
+    "CBC",
+    "IEI",
+    "CIC"
+  ],
+  "result": {
+    "item": "ic2_120:steam_kinetic_generator"
+  },
+  "show_notification": true
+}
