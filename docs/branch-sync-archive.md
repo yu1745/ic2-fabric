@@ -90,3 +90,8 @@
 | 97 | `38f1af75` | fix: 贴脸传输超压爆炸也受 enableOvervoltageExplosion 配置开关控制 | ✅ | cherry-pick 无冲突 |
 | 98 | `deacc818` | refactor: POC — Macerator ScreenHandler 使用 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick 无冲突 |
 | 99 | `59b1c863` | merge: Unit 1 — 基础加工机A (Compressor, Extractor, Centrifuge, Recycler, MetalFormer) | ✅ | cherry-pick 无冲突 |
+| 100 | `a6f98f6d` | merge: refactor: 熔炉家族迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick 无冲突 |
+| 101 | `69f48a00` | merge: refactor: 装罐机家族迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突（Canner/FluidCanner/SolidCanner import + 旧 SlotSpec）|
+| 102 | `64611492` | merge: refactor: 发电机A迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick 无冲突 |
+| 103 | `c161afb2` | merge: refactor: 发电机B+热能迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突 + Identifier.of 适配 |
+| 104 | `8a9d1142` | merge: refactor: 特殊机器A迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突（MatterGenerator/OreWashingPlant）|

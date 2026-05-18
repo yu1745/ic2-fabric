@@ -8,18 +8,14 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **122 个 commit**，**120 个已同步，2 个待同步**。
-（归档 1-72 → `branch-sync-archive.md`）
+从分叉点 `c5e247c` 到 main HEAD 共 **126 个 commit**，**120 个已同步，6 个待同步**。
+（归档 1-104 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
 
 | # | Commit | 说明 | 在 1.21.1？ | 备注 |
 |---|--------|------|:-----------:|------|
-| 100 | `a6f98f6d` | merge: refactor: 熔炉家族迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick 无冲突 |
-| 101 | `69f48a00` | merge: refactor: 装罐机家族迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突（Canner/FluidCanner/SolidCanner import + 旧 SlotSpec）|
-| 102 | `64611492` | merge: refactor: 发电机A迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick 无冲突 |
-| 103 | `c161afb2` | merge: refactor: 发电机B+热能迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突 + Identifier.of 适配 |
-| 104 | `8a9d1142` | merge: refactor: 特殊机器A迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突（MatterGenerator/OreWashingPlant）|
+
 | 105 | `260a09d2` | merge: refactor: 特殊机器B迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突（PatternStorage/Pump/Replicator/SolarDistiller）|
 | 106 | `da4bb903` | merge: Unit 8 BE — 为缺少 RoutedItemStorage 的 BlockEntity 新增存储 | ✅ | cherry-pick + 解决冲突 + 1.21.1 API 适配 |
 | 107 | `c136631b` | refactor: 完成所有机器的 ScreenHandler 迁移到 RoutedItemStorage 驱动 | ✅ | cherry-pick + 解决冲突 + 1.21.1 API 适配 |
@@ -36,6 +32,10 @@
 | 118 | `f82870b4` | feat: EU分流导线（红石开关）+ EU限流导线（GUI限流） | ✅ | cherry-pick + 适配 1.21.1 API（onUse 无 Hand、ExtendedScreenHandlerFactory<PacketByteBuf>/getScreenOpeningData、RecipeExporter）+ data 目录单数 + datagen 刷新 |
 | 119 | `06f74979` | feat: 蒸汽系统——蒸汽/过热蒸汽流体、蒸汽发生器/蒸汽动能发生机/冷凝器 | ❌ | 待同步 |
 | 120 | `37af24e4` | feat: 压缩机配方补全+容器返还支持 | ❌ | 待同步 |
+| 121 | `5f6df96f` | feat: 流体管道系统重构——simulateInsertion + 升级解耦 + 泵附件作唯一 provider | ❌ | 待同步 |
+| 122 | `6f2633f3` | fix: BER 光照硬编码 MAX_LIGHT_COORDINATE，改用环境光照 | ❌ | 待同步 |
+| 123 | `152ca7ab` | feat: 多台机器GUI从ComposeUI改为传统纹理渲染 | ❌ | 待同步 |
+| 124 | `33a52f58` | chore: 移除 .deploy-enabled 引用（文件已删除） | ❌ | 待同步 |
 
 ## 同步历史
 
