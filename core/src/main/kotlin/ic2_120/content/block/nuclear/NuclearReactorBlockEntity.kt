@@ -1388,12 +1388,58 @@ class NuclearReactorBlockEntity(
 
         val sw = w as? ServerWorld
         if (sw != null) {
+            // 解析所有者名称（尝试在线查找，离线时显示 UUID 前 8 位）
+            val ownerName = ownerUuid?.let { uuid ->
+                sw.server.playerManager.getPlayer(uuid)?.name?.string
+                    ?: uuid.toString().take(8)
+            } ?: "???"
+            // 捕获 UUID 供 lambda 使用（避免 mutable property 的 smart cast 问题）
+            val cachedOwnerUuid = ownerUuid
+
+            val posStr = "${pos.x} ${pos.y} ${pos.z}"
+
             val explosionDamageSource = sw.damageSources.explosion(null, null)
             NuclearExplosionManager.startExplosion(
-                sw,
-                cx, cy, cz,
-                boomPower,
-                explosionDamageSource
+                sw, cx, cy, cz, boomPower, explosionDamageSource,
+                onComplete = { explosion ->
+                    // 冷却检查：同一玩家 30 分钟内不重复公告
+                    val cooldownMins = Ic2Config.current.nuclear.reactorExplosionCooldownMinutes
+                    var shouldBroadcast = true
+                    if (cooldownMins > 0 && cachedOwnerUuid != null) {
+                        val now = sw.time
+                        val lastBroadcast = playerExplosionTimestamps[cachedOwnerUuid]
+                        if (lastBroadcast == null) {
+                            // 首次爆炸，直接记录并广播
+                            playerExplosionTimestamps[cachedOwnerUuid] = now
+                        } else {
+                            val elapsedMins = (now - lastBroadcast) / (20L * 60L)
+                            if (elapsedMins < cooldownMins) {
+                                shouldBroadcast = false
+                            } else {
+                                playerExplosionTimestamps[cachedOwnerUuid] = now
+                            }
+                        }
+                    }
+
+                    if (shouldBroadcast) {
+                        val title = Text.translatable("chat.ic2_120.nuclear_explosion.title")
+                        val detail = Text.translatable("chat.ic2_120.nuclear_explosion.detail", ownerName, posStr)
+                        val blocksMsg = Text.translatable("chat.ic2_120.nuclear_explosion.blocks_removed", explosion.destroyedBlockCount)
+                        val safetyRaw = Text.translatable("chat.ic2_120.nuclear_explosion.safety").string
+                        val safetyLines = safetyRaw.split("\n")
+
+                        for (player in sw.server.playerManager.playerList) {
+                            player.sendMessage(title)
+                            player.sendMessage(detail)
+                            player.sendMessage(blocksMsg)
+                            for (line in safetyLines) {
+                                player.sendMessage(Text.literal(line))
+                            }
+                        }
+                    } else {
+                        LOG.info("[核爆炸公告冷却] 玩家 {} 仍在冷却中，跳过公告", cachedOwnerUuid)
+                    }
+                }
             )
         } else {
             w.createExplosion(null, cx, cy, cz, boomPower.coerceAtMost(10f), true, World.ExplosionSourceType.BLOCK)
@@ -1511,6 +1557,9 @@ class NuclearReactorBlockEntity(
 
     companion object {
         private val LOG = LoggerFactory.getLogger("ic2_120/NuclearReactor")
+
+        /** 玩家 UUID → 上次爆炸时的 game time（tick） */
+        val playerExplosionTimestamps = mutableMapOf<java.util.UUID, Long>()
 
         const val MAX_SLOTS = 81
 
