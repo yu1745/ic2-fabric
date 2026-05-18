@@ -1,11 +1,11 @@
 {
   "type": "ic2_120:compressing",
   "ingredient": {
-    "item": "minecraft:clay_ball"
+    "item": "ic2_120:small_gold_dust"
   },
-  "input_count": 4,
+  "input_count": 9,
   "result": {
     "count": 1,
-    "item": "minecraft:brick"
+    "item": "ic2_120:gold_dust"
   }
 }

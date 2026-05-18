@@ -19,19 +19,27 @@ object CompressorRecipeSerializer : RecipeSerializer<CompressorRecipe> {
         val itemId = Identifier(JsonHelper.getString(result, "item"))
         val item = Registries.ITEM.get(itemId)
         val count = JsonHelper.getInt(result, "count", 1)
-        return CompressorRecipe(id, ingredient, inputCount, ItemStack(item, count))
+        val containerReturn = if (json.has("container_return")) {
+            val containerObj = json.getAsJsonObject("container_return")
+            val containerId = Identifier(JsonHelper.getString(containerObj, "item"))
+            val containerCount = JsonHelper.getInt(containerObj, "count", 1)
+            ItemStack(Registries.ITEM.get(containerId), containerCount)
+        } else ItemStack.EMPTY
+        return CompressorRecipe(id, ingredient, inputCount, ItemStack(item, count), containerReturn)
     }
 
     override fun read(id: Identifier, buf: PacketByteBuf): CompressorRecipe {
         val ingredient = Ingredient.fromPacket(buf)
         val inputCount = buf.readVarInt()
         val output = buf.readItemStack()
-        return CompressorRecipe(id, ingredient, inputCount, output)
+        val containerReturn = buf.readItemStack()
+        return CompressorRecipe(id, ingredient, inputCount, output, containerReturn)
     }
 
     override fun write(buf: PacketByteBuf, recipe: CompressorRecipe) {
         recipe.ingredient.write(buf)
         buf.writeVarInt(recipe.inputCount)
         buf.writeItemStack(recipe.output.copy())
+        buf.writeItemStack(recipe.containerReturn.copy())
     }
 }

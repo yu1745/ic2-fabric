@@ -275,7 +275,8 @@ class Ic2JeiPlugin : IModPlugin {
             .map { entry ->
                 CompressorJeiRecipe(
                     ItemStack(entry.input, entry.inputCount),
-                    ItemStack(entry.output, entry.count)
+                    ItemStack(entry.output, entry.count),
+                    entry.containerReturn
                 )
             }
         registration.addRecipes(Ic2JeiRecipeTypes.COMPRESSOR, compressorRecipes)
