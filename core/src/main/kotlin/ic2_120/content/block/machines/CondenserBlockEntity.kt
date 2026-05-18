@@ -71,13 +71,15 @@ class CondenserBlockEntity(
     override val tier: Int = 3
     override fun getInventory(): net.minecraft.inventory.Inventory? = this
 
-    // IFluidPipeUpgradeSupport — 默认开启，无需升级即可输入蒸汽 / 输出蒸馏水
+    // IFluidPipeUpgradeSupport — 默认开启推拉，无需流体升级
     override var fluidPipeProviderEnabled: Boolean = true
     override var fluidPipeReceiverEnabled: Boolean = true
     override var fluidPipeProviderFilter: Fluid? = null
     override var fluidPipeReceiverFilter: Fluid? = null
-    override var fluidPipeProviderSide: Direction? = null
-    override var fluidPipeReceiverSide: Direction? = null
+    override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeEjectorCount: Int = 1
+    override var fluidPipePullingCount: Int = 1
 
     companion object {
         const val SLOT_VENT_0 = 0
@@ -359,7 +361,11 @@ class CondenserBlockEntity(
 
         // 蒸馏水输出
         FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, distilledWaterTank,
-            fluidPipeProviderFilter, fluidPipeProviderSide)
+            fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
+
+        if (fluidPipeReceiverEnabled) {
+            FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, steamTank, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
+        }
 
         // 升级槽 → 更新等级（对齐 ic2_origin updateTier）
         val upgradeStack = getStack(SLOT_UPGRADE)

@@ -321,10 +321,15 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
             return false
         }
 
-        // 后方和四面（除正面外的所有面）只连接管道，不连接机器，避免歧义。
-        if (neighbor !is BasePipeBlock) return false
-        val neighborBe = world.getBlockEntity(neighborPos) as? PipeBlockEntity
-        return neighborBe?.isDisabled(direction.opposite) != true
+        // 后方和四面（除正面外的所有面）可以连接管道，也可以直接连接有流体能力的方块。
+        if (neighbor is BasePipeBlock) {
+            val neighborBe = world.getBlockEntity(neighborPos) as? PipeBlockEntity
+            return neighborBe?.isDisabled(direction.opposite) != true
+        }
+        if (world is World) {
+            return FluidStorage.SIDED.find(world, neighborPos, direction.opposite) != null
+        }
+        return false
     }
 
     override fun pipeShape(state: BlockState): VoxelShape {

@@ -61,8 +61,8 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
-        val net = network ?: PipeNetworkManager.getOrCreateNetwork(world, pos).also { network = it }
-        net.tickIfNeeded(world)
+        // 网络管理（创建/关联）在 end server tick 统一推动 fluid 传输
+        if (network == null) network = PipeNetworkManager.getOrCreateNetwork(world, pos)
     }
 
     fun pumpFilterFluid(): Fluid? {

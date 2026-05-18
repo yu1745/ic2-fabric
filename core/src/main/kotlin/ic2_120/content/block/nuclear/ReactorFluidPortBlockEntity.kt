@@ -60,8 +60,10 @@ class ReactorFluidPortBlockEntity(
     override var fluidPipeReceiverEnabled: Boolean = false
     override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
     override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
-    override var fluidPipeProviderSide: Direction? = null
-    override var fluidPipeReceiverSide: Direction? = null
+    override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeEjectorCount: Int = 0
+    override var fluidPipePullingCount: Int = 0
 
     // 用于同步数据到客户端的PropertyDelegate
     val propertyDelegate = object : PropertyDelegate {

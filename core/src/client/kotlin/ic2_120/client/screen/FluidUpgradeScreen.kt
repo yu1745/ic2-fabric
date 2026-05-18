@@ -33,19 +33,16 @@ class FluidUpgradeScreen(
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
     }
 
+    override fun drawForeground(context: DrawContext, mouseX: Int, mouseY: Int) {
+        // 标题由 ComposeUI 绘制，不调用 super 避免重复
+    }
+
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         val left = x
         val top = y
         val client = client!!
 
         // 当前状态
-        val dirOrdinal = handler.directionOrdinal
-        val dirName = if (dirOrdinal in 0..5) {
-            val dir = Direction.entries[dirOrdinal]
-            t("gui.ic2_120.direction.${dir.name.lowercase()}")
-        } else {
-            t("gui.ic2_120.fluid_upgrade.any_direction")
-        }
         val filterName = if (handler.fluidRawId > 0) {
             val fluid = Registries.FLUID.get(handler.fluidRawId)
             val block = fluid.defaultState.blockState.block
@@ -59,32 +56,64 @@ class FluidUpgradeScreen(
         }
 
         val content: UiScope.() -> Unit = {
-            // 第1行：方向显示 + 切换按钮
+            // 标题
+            Text(
+                x = left + gui.width / 2,
+                y = top + 6,
+                text = title.string,
+                color = 0xFFFFFF,
+                center = true,
+                shadow = false
+            )
+            // 第1行：方向标签 + 前3个方向
             Flex(
                 x = left + 8,
                 y = top + 18,
                 alignItems = AlignItems.CENTER,
-                gap = 8
+                gap = 4
             ) {
-                Text(
-                    t("gui.ic2_120.fluid_upgrade.direction", dirName),
-                    color = 0xFFFFFF
-                )
-                Button(
-                    text = t("gui.ic2_120.fluid_upgrade.cycle_direction_short"),
-                    modifier = Modifier().width(50),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_CYCLE_DIRECTION)
-                        )
-                    }
-                )
+                Text(t("gui.ic2_120.fluid_upgrade.direction_label"), color = 0xFFFFFF)
+                for (i in 0..2) {
+                    val active = handler.isDirectionActive(i)
+                    val dirLabel = t("gui.ic2_120.direction.${Direction.entries[i].name.lowercase()}")
+                    Button(
+                        text = if (active) "[$dirLabel]" else " $dirLabel ",
+                        modifier = Modifier().width(30),
+                        onClick = {
+                            client.networkHandler?.sendPacket(
+                                ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_TOGGLE_DIR + i)
+                            )
+                        }
+                    )
+                }
             }
-
-            // 第2行：槽位 + 两个过滤按钮
+            // 第2行：后3个方向
             Flex(
                 x = left + 8,
-                y = top + 38,
+                y = top + 30,
+                alignItems = AlignItems.CENTER,
+                gap = 4
+            ) {
+                Text("  ", color = 0xFFFFFF) // 占位对齐
+                for (i in 3..5) {
+                    val active = handler.isDirectionActive(i)
+                    val dirLabel = t("gui.ic2_120.direction.${Direction.entries[i].name.lowercase()}")
+                    Button(
+                        text = if (active) "[$dirLabel]" else " $dirLabel ",
+                        modifier = Modifier().width(30),
+                        onClick = {
+                            client.networkHandler?.sendPacket(
+                                ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_TOGGLE_DIR + i)
+                            )
+                        }
+                    )
+                }
+            }
+
+            // 第3行：槽位 + 两个过滤按钮
+            Flex(
+                x = left + 8,
+                y = top + 52,
                 alignItems = AlignItems.CENTER,
                 gap = 4
             ) {
@@ -113,10 +142,10 @@ class FluidUpgradeScreen(
                 )
             }
 
-            // 第3行：当前过滤显示
+            // 第4行：当前过滤显示
             Text(
                 x = left + 8,
-                y = top + 62,
+                y = top + 76,
                 text = t("gui.ic2_120.fluid_upgrade.filter_display", filterName),
                 color = if (handler.fluidRawId > 0) 0x55FF55 else 0xAAAAAA,
                 shadow = false

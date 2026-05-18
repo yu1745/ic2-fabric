@@ -106,8 +106,10 @@ class CannerBlockEntity(
     override var fluidPipeReceiverEnabled: Boolean = false
     override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
     override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
-    override var fluidPipeProviderSide: Direction? = null
-    override var fluidPipeReceiverSide: Direction? = null
+    override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeEjectorCount: Int = 0
+    override var fluidPipePullingCount: Int = 0
 
     override val tier: Int = CannerSync.CANNER_TIER
 
@@ -357,7 +359,10 @@ class CannerBlockEntity(
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
         if (fluidPipeProviderEnabled) {
-            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, rightTankInternal, fluidPipeProviderFilter, fluidPipeProviderSide)
+            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, rightTankInternal, fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
+        }
+        if (fluidPipeReceiverEnabled) {
+            FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, leftTankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)

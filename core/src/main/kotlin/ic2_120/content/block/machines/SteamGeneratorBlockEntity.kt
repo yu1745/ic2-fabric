@@ -67,13 +67,15 @@ class SteamGeneratorBlockEntity(
     override val tier: Int = 2
     override fun getInventory(): net.minecraft.inventory.Inventory? = null
 
-    // IFluidPipeUpgradeSupport — 默认开启，管道可直接输入水 / 抽出蒸汽，无需流体升级
+    // IFluidPipeUpgradeSupport — 默认开启推拉，无需流体升级
     override var fluidPipeProviderEnabled: Boolean = true
     override var fluidPipeReceiverEnabled: Boolean = true
     override var fluidPipeProviderFilter: Fluid? = null
     override var fluidPipeReceiverFilter: Fluid? = null
-    override var fluidPipeProviderSide: Direction? = null
-    override var fluidPipeReceiverSide: Direction? = null
+    override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeEjectorCount: Int = 1
+    override var fluidPipePullingCount: Int = 1
 
     companion object {
         private const val NBT_WATER_TANK = "WaterTank"
@@ -344,7 +346,11 @@ class SteamGeneratorBlockEntity(
 
         // 流体管道输出蒸汽 (默认 fluidPipeProviderEnabled=true, 无需升级)
         FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, steamTank,
-            fluidPipeProviderFilter, fluidPipeProviderSide)
+            fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
+
+        if (fluidPipeReceiverEnabled) {
+            FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, waterTank, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
+        }
 
         // 0. 群系温度（对齐 ic2_origin BiomeUtil.getBiomeTemperature）
         val biomeTemp = getBiomeTemperatureMilli(world, pos)
@@ -456,7 +462,7 @@ class SteamGeneratorBlockEntity(
         if (sync.outputMB > 0) {
             // 先尝试排出刚产出的蒸汽
             FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, steamTank,
-                fluidPipeProviderFilter, fluidPipeProviderSide)
+                fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
             val remainingMb = toMb(steamTank.amount)
             if (remainingMb > 0) {
                 if (world.random.nextInt(10) == 0) {

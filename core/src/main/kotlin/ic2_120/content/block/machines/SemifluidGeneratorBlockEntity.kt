@@ -73,8 +73,10 @@ class SemifluidGeneratorBlockEntity(
     override var fluidPipeReceiverEnabled: Boolean = false
     override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
     override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
-    override var fluidPipeProviderSide: Direction? = null
-    override var fluidPipeReceiverSide: Direction? = null
+    override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeEjectorCount: Int = 0
+    override var fluidPipePullingCount: Int = 0
 
     data class FuelProfile(
         val euPerBucket: Long,
@@ -338,7 +340,10 @@ class SemifluidGeneratorBlockEntity(
 
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
         if (fluidPipeProviderEnabled) {
-            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, fuelTankInternal, fluidPipeProviderFilter, fluidPipeProviderSide, state.get(Properties.HORIZONTAL_FACING))
+            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, fuelTankInternal, fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
+        }
+        if (fluidPipeReceiverEnabled) {
+            FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, fuelTankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
 
@@ -429,7 +434,6 @@ class SemifluidGeneratorBlockEntity(
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
-        if (side == getFrontFacing()) return null
         return fuelTank
     }
 

@@ -185,6 +185,7 @@ object Ic2_120 : ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register { server ->
             FlightManager.tick(server)
             BandwidthStatsService.onServerTick(server)
+            PipeNetworkManager.tickAllWorlds(server)
         }
 
         // 储电盒自定义 BlockItem（支持满电变体）及创造模式满电物品

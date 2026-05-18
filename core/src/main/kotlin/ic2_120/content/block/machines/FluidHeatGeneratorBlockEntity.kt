@@ -67,8 +67,10 @@ class FluidHeatGeneratorBlockEntity(
     override var fluidPipeReceiverEnabled: Boolean = false
     override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
     override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
-    override var fluidPipeProviderSide: Direction? = null
-    override var fluidPipeReceiverSide: Direction? = null
+    override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeEjectorCount: Int = 0
+    override var fluidPipePullingCount: Int = 0
 
     enum class FuelType(
         val fluid: net.minecraft.fluid.Fluid,
@@ -352,6 +354,9 @@ class FluidHeatGeneratorBlockEntity(
         if (fluidPipeProviderEnabled) {
             ejectFluidToNeighbors(world, pos, state)
         }
+        if (fluidPipeReceiverEnabled) {
+            FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, fuelTankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
+        }
         tickHeatMachine(world, pos, state)
     }
 
@@ -403,11 +408,9 @@ class FluidHeatGeneratorBlockEntity(
 
     private fun ejectFluidToNeighbors(world: World, pos: BlockPos, state: BlockState) {
         if (fuelTankInternal.amount <= 0L || fuelTankInternal.variant.isBlank) return
-        val front = state.get(Properties.HORIZONTAL_FACING)
-        val ejectSide = fluidPipeProviderSide
+        val ejectSides = fluidPipeProviderSides
         for (dir in Direction.values()) {
-            if (dir == front) continue
-            if (ejectSide != null && dir != ejectSide) continue
+            if (ejectSides.isNotEmpty() && dir !in ejectSides) continue
             val neighbor = FluidStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
             val resource = fuelTankInternal.variant
             val maxPerTick = minOf(FluidConstants.BUCKET / 4, fuelTankInternal.amount)
@@ -426,7 +429,6 @@ class FluidHeatGeneratorBlockEntity(
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
-        if (side == getFrontFacing()) return null
         return fuelTank
     }
 
