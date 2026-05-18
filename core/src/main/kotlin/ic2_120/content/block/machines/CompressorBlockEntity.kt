@@ -92,6 +92,8 @@ class CompressorBlockEntity(
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    /** 待输出的容器返还（输出槽满时缓存，等有空间再放入） */
+    private var pendingContainerReturn: ItemStack = ItemStack.EMPTY
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -173,6 +175,9 @@ class CompressorBlockEntity(
         sync.amount = nbt.getLong(CompressorSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        if (nbt.contains("pending_container_return")) {
+            pendingContainerReturn = ItemStack.fromNbt(nbt.getCompound("pending_container_return"))
+        }
     }
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
@@ -180,6 +185,9 @@ class CompressorBlockEntity(
         Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CompressorSync.NBT_ENERGY_STORED, sync.amount)
+        if (!pendingContainerReturn.isEmpty) {
+            nbt.put("pending_container_return", pendingContainerReturn.writeNbt(NbtCompound()))
+        }
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -198,6 +206,26 @@ class CompressorBlockEntity(
 
         // 从放电槽提取能量
         extractFromDischargingSlot()
+
+        // 先尝试输出缓存的容器返还
+        if (!pendingContainerReturn.isEmpty) {
+            val outputSlot = getStack(SLOT_OUTPUT)
+            if (outputSlot.isEmpty()) {
+                setStack(SLOT_OUTPUT, pendingContainerReturn.copy())
+                pendingContainerReturn = ItemStack.EMPTY
+                markDirty()
+            } else if (ItemStack.areItemsEqual(outputSlot, pendingContainerReturn) && outputSlot.count + pendingContainerReturn.count <= outputSlot.maxCount) {
+                outputSlot.increment(pendingContainerReturn.count)
+                pendingContainerReturn = ItemStack.EMPTY
+                markDirty()
+            } else {
+                // 缓存还没法输出，跳过配方处理
+                if (sync.progress != 0) sync.progress = 0
+                setActiveState(world, pos, state, false)
+                sync.syncCurrentTickFlow()
+                return
+            }
+        }
 
         val input = getStack(SLOT_INPUT)
         val recipe = getRecipe(world, input) ?: run {
@@ -225,6 +253,11 @@ class CompressorBlockEntity(
             input.decrement(inputCount)
             if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result.copy())
             else outputSlot.increment(result.count)
+            // 容器返还：缓存到 pending，等输出槽空了再放入
+            val container = recipe.containerReturn
+            if (!container.isEmpty) {
+                pendingContainerReturn = container.copy()
+            }
             sync.progress = 0
             markDirty()
             setActiveState(world, pos, state, false)

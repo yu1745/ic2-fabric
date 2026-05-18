@@ -17,9 +17,10 @@ object CompressorRecipeSerializer : RecipeSerializer<CompressorRecipe> {
         instance.group(
             Ingredient.ALLOW_EMPTY_CODEC.fieldOf("ingredient").forGetter { it.ingredient },
             Codec.INT.fieldOf("input_count").orElse(1).forGetter { it.inputCount },
-            ItemStack.VALIDATED_CODEC.fieldOf("result").forGetter { it.output }
-        ).apply(instance) { ingredient, inputCount, output ->
-            CompressorRecipe(Identifier.of("ic2_120", "_"), ingredient, inputCount, output)
+            ItemStack.VALIDATED_CODEC.fieldOf("result").forGetter { it.output },
+            ItemStack.OPTIONAL_CODEC.fieldOf("container_return").forGetter { it.containerReturn }
+        ).apply(instance) { ingredient, inputCount, output, containerReturn ->
+            CompressorRecipe(Identifier.of("ic2_120", "_"), ingredient, inputCount, output, containerReturn)
         }
     }
 
@@ -28,12 +29,14 @@ object CompressorRecipeSerializer : RecipeSerializer<CompressorRecipe> {
             Ingredient.PACKET_CODEC.encode(buf, recipe.ingredient)
             buf.writeVarInt(recipe.inputCount)
             ItemStack.PACKET_CODEC.encode(buf, recipe.output.copy())
+            ItemStack.OPTIONAL_PACKET_CODEC.encode(buf, recipe.containerReturn.copy())
         },
         { buf ->
             val ingredient = Ingredient.PACKET_CODEC.decode(buf)
             val inputCount = buf.readVarInt()
             val output = ItemStack.PACKET_CODEC.decode(buf)
-            CompressorRecipe(Identifier.of("ic2_120", "_"), ingredient, inputCount, output)
+            val containerReturn = ItemStack.OPTIONAL_PACKET_CODEC.decode(buf)
+            CompressorRecipe(Identifier.of("ic2_120", "_"), ingredient, inputCount, output, containerReturn)
         }
     )
 }

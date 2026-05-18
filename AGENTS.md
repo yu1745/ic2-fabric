@@ -177,8 +177,12 @@
 用于将崩溃报告中的 `class_XXXX` / `method_XXXXX` 翻译为可读类名/方法名：
 
 ```bash
-# 两个版本都在 loom-cache 下，替换 {version} 为具体版本号
+# 当前项目版本（1.20.1 / 1.21.1）在 loom-cache 下，替换 {version} 为具体版本号
 ls ~/.gradle/caches/fabric-loom/{version}/net.fabricmc.yarn.*/mappings.jar
+
+# 旧版 mappings，替换 {minecraft_version} + {build}
+ls ../yarn-{minecraft_version}+build.{build}-v2.jar
+#   示例: https://maven.fabricmc.net/net/fabricmc/yarn/1.19.2+build.28/yarn-1.19.2+build.28-v2.jar
 
 # 用法：从 jar 提取并查找
 jar tf /path/to/mappings.jar                  # 列出内容

@@ -1,0 +1,15 @@
+{
+  "type": "ic2_120:compressing",
+  "ingredient": {
+    "item": "minecraft:clay_ball"
+  },
+  "input_count": 4,
+  "result": {
+    "count": 1,
+<<<<<<<< HEAD:core/src/main/generated/data/ic2_120/recipe/compressing/clay_ball_to_brick.json
+    "id": "minecraft:brick"
+========
+    "item": "minecraft:clay"
+>>>>>>>> 37af24e4 (feat: 压缩机配方补全+容器返还支持):core/src/main/generated/data/ic2_120/recipe/compressing/clay_ball_to_clay_block.json
+  }
+}

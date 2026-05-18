@@ -15,7 +15,8 @@ class CompressorRecipe(
     private val id: Identifier,
     val ingredient: Ingredient,
     val inputCount: Int,
-    val output: ItemStack
+    val output: ItemStack,
+    val containerReturn: ItemStack = ItemStack.EMPTY
 ) : Recipe<RecipeInput> {
     override fun matches(input: RecipeInput, world: World): Boolean {
         val stack = input.getStackInSlot(0)
