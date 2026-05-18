@@ -1304,7 +1304,7 @@ class WindMeter : Item(Item.Settings().maxCount(1)) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: RecipeExporter) {
             val tinCasing = TinCasing::class.instance()
             val bronzeCasing = BronzeCasing::class.instance()
             val smallPowerUnit = SmallPowerUnitItem::class.instance()
@@ -1318,7 +1318,7 @@ class WindMeter : Item(Item.Settings().maxCount(1)) {
                     'B' to bronzeCasing,
                     'P' to smallPowerUnit
                 ),
-                category = "tools"
+                category = "equipment"
             )
         }
     }

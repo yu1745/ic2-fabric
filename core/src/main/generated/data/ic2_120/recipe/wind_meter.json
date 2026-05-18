@@ -1,6 +1,6 @@
 {
   "type": "ic2_120:battery_energy_shaped",
-  "category": "tools",
+  "category": "equipment",
   "key": {
     "B": {
       "item": "ic2_120:bronze_casing"
@@ -18,7 +18,7 @@
     " TP"
   ],
   "result": {
-    "item": "ic2_120:wind_meter"
-  },
-  "show_notification": true
+    "count": 1,
+    "id": "ic2_120:wind_meter"
+  }
 }

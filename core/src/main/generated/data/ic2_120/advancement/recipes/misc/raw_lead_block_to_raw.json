@@ -5,9 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "ic2_120:raw_lead_block"
-            ]
+            "items": "ic2_120:raw_lead_block"
           }
         ]
       },
@@ -22,14 +20,13 @@
   },
   "requirements": [
     [
-      "has_raw_lead_block",
-      "has_the_recipe"
+      "has_the_recipe",
+      "has_raw_lead_block"
     ]
   ],
   "rewards": {
     "recipes": [
       "ic2_120:raw_lead_block_to_raw"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }
