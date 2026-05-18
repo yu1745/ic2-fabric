@@ -566,8 +566,12 @@ class NuclearReactorBlockEntity(
         }
     }
 
-    override fun getHeatEffectModifier(): Float = 1f
-    override fun setHeatEffectModifier(hem: Float) {}
+    private var _heatEffectModifier: Float = 1f
+
+    override fun getHeatEffectModifier(): Float = _heatEffectModifier
+    override fun setHeatEffectModifier(hem: Float) {
+        _heatEffectModifier = hem
+    }
     override fun getReactorEnergyOutput(): Float = outputAccumulator
     override fun addOutput(energy: Float): Float {
         outputAccumulator += energy
@@ -992,6 +996,7 @@ class NuclearReactorBlockEntity(
             val componentHeatBefore = calculateStoredComponentHeat()
             outputAccumulator = 0f
             emitHeatBuffer = 0
+            _heatEffectModifier = 1f
             totalHeatProduced = 0
             totalHeatDissipated = 0
             ventDissipatedHeat = 0  // 重置散失热量
@@ -1351,7 +1356,16 @@ class NuclearReactorBlockEntity(
                 setItemAt(x, y, null)
             }
         }
-        boomPower *= boomMod
+        // 对齐 IC2 原版：power *= hem * mod
+        boomPower *= _heatEffectModifier * boomMod
+
+        // 可配置威力上限（IC2 原版：ConfigUtil.getFloat("protection/reactorExplosionPowerLimit")）
+        val powerLimit = Ic2Config.current.nuclear.reactorExplosionPowerLimit
+        if (powerLimit > 0f) {
+            boomPower = boomPower.coerceAtMost(powerLimit)
+        }
+        // 安全硬上限，防止威力过高导致服务端卡死
+        boomPower = boomPower.coerceAtMost(100f)
 
         val w = world ?: return
         for (dir in Direction.values()) {
@@ -1364,7 +1378,21 @@ class NuclearReactorBlockEntity(
         val cx = pos.x + 0.5
         val cy = pos.y + 0.5
         val cz = pos.z + 0.5
-        w.createExplosion(null, cx, cy, cz, boomPower.coerceAtMost(20f), true, World.ExplosionSourceType.BLOCK)
+
+        LOG.info("[反应堆爆炸] pos={} power={} (capped={})", pos, boomPower, powerLimit)
+
+        val sw = w as? ServerWorld
+        if (sw != null) {
+            val explosionDamageSource = sw.damageSources.explosion(null, null)
+            NuclearExplosionManager.startExplosion(
+                sw,
+                cx, cy, cz,
+                boomPower,
+                explosionDamageSource
+            )
+        } else {
+            w.createExplosion(null, cx, cy, cz, boomPower.coerceAtMost(10f), true, World.ExplosionSourceType.BLOCK)
+        }
     }
 
     private fun meltdownWithoutExplosion() {

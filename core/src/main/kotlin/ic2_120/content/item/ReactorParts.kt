@@ -232,6 +232,12 @@ class ReactorPlatingItem : AbstractReactorComponent(FabricItemSettings()) {
     }
 
     override fun influenceExplosion(stack: ItemStack, reactor: IReactor): Float = EXPLOSION_MODIFIER
+
+    override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {
+        if (heatRun) {
+            reactor.setHeatEffectModifier(reactor.getHeatEffectModifier() * EXPLOSION_MODIFIER)
+        }
+    }
 }
 
 @ModItem(name = "reactor_heat_plating", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
@@ -255,6 +261,12 @@ class ReactorHeatPlatingItem : AbstractReactorComponent(FabricItemSettings()) {
     }
 
     override fun influenceExplosion(stack: ItemStack, reactor: IReactor): Float = EXPLOSION_MODIFIER
+
+    override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {
+        if (heatRun) {
+            reactor.setHeatEffectModifier(reactor.getHeatEffectModifier() * EXPLOSION_MODIFIER)
+        }
+    }
 }
 
 @ModItem(name = "containment_reactor_plating", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
