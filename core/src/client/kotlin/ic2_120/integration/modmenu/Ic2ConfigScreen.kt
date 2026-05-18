@@ -126,6 +126,7 @@ object Ic2ConfigScreen {
         var enableReactorExplosion = cfg.enableReactorExplosion
         var reactorExplosionPowerLimit = cfg.reactorExplosionPowerLimit
         var explosionBlocksPerTick = cfg.explosionBlocksPerTick
+        var explosionCooldown = cfg.reactorExplosionCooldownMinutes
 
         val cat = builder.getOrCreateCategory(Text.literal("核能"))
         cat.addEntry(eb.startBooleanToggle(Text.literal("反应堆过热爆炸"), enableReactorExplosion)
@@ -140,12 +141,17 @@ object Ic2ConfigScreen {
             .setDefaultValue(2000)
             .setTooltip(Text.literal("核爆炸每 tick 摧毁方块数。越大炸得越快，但可能掉 tps。"))
             .setSaveConsumer { explosionBlocksPerTick = it }.build())
+        cat.addEntry(eb.startIntField(Text.literal("爆炸公告冷却（分钟）"), explosionCooldown)
+            .setDefaultValue(30)
+            .setTooltip(Text.literal("同一玩家两次爆炸公告的最小间隔（分钟），爆炸本身不受影响。0 = 无冷却"))
+            .setSaveConsumer { explosionCooldown = it }.build())
 
         return {
             NuclearConfig(
                 enableReactorExplosion = enableReactorExplosion,
                 reactorExplosionPowerLimit = reactorExplosionPowerLimit,
-                explosionBlocksPerTick = explosionBlocksPerTick
+                explosionBlocksPerTick = explosionBlocksPerTick,
+                reactorExplosionCooldownMinutes = explosionCooldown
             )
         }
     }

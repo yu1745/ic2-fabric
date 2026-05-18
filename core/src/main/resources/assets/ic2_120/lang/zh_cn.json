@@ -1151,5 +1151,9 @@
   "gui.ic2_120.slot.water_output": "已装填的蒸馏水单元/桶由此输出",
   "gui.ic2_120.condenser.no_power_warning": "未安装散热片时可免费被动冷却，安装后必须供电方可运行",
   "death.attack.ic2_120.steam": "%1$s被蒸汽烫死了",
-  "death.attack.ic2_120.steam.player": "%1$s在与%2$s战斗时被蒸汽烫死了"
+  "death.attack.ic2_120.steam.player": "%1$s在与%2$s战斗时被蒸汽烫死了",
+  "chat.ic2_120.nuclear_explosion.title": "§4⚠ §c核反应堆爆炸！",
+  "chat.ic2_120.nuclear_explosion.detail": "§c%1$s §7的核反应堆在 §c%2$s §7爆炸了！",
+  "chat.ic2_120.nuclear_explosion.blocks_removed": "§7共移除 §c%1$d §7个方块。",
+  "chat.ic2_120.nuclear_explosion.safety": "§4【安全生产提醒】\n§e管行业必须管安全、管业务必须管安全、管生产经营必须管安全！\n§6安全第一、预防为主、综合治理！\n§a建立健全全员安全生产责任制，构建风险分级管控和隐患排查治理双重预防机制！\n§c主要负责人是第一责任人——请时刻注意安全生产！"
 }

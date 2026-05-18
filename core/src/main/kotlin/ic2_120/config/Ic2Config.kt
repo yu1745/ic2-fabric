@@ -66,7 +66,10 @@ data class NuclearConfig(
     val reactorExplosionPowerLimit: Float = 0f,
     /** 核爆炸每 tick 摧毁方块数。越大炸得越快，但可能掉 tps。 */
     @field:ConfigComment("核爆炸每 tick 摧毁方块数。越大越快，但可能掉 tps。", "2000")
-    val explosionBlocksPerTick: Int = 2000
+    val explosionBlocksPerTick: Int = 2000,
+    /** 同一玩家两次反应堆爆炸的最小间隔（分钟）。防止故意炸着玩。 */
+    @field:ConfigComment("同一玩家两次反应堆爆炸的最小间隔（分钟）。防止故意炸着玩。", "30")
+    val reactorExplosionCooldownMinutes: Int = 30
 )
 
 data class UuReplicationConfig(
@@ -448,7 +451,8 @@ private val DEFAULT_CONFIG_TEMPLATE = Ic2MainConfig(
     nuclear = NuclearConfig(
         enableReactorExplosion = true,
         reactorExplosionPowerLimit = 0f,
-        explosionBlocksPerTick = 2000
+        explosionBlocksPerTick = 2000,
+        reactorExplosionCooldownMinutes = 30
     ),
     uuReplication = UuReplicationConfig(
         replicationWhitelist = UuReplicationDefaults.defaultWhitelist
