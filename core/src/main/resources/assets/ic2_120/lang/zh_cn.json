@@ -794,6 +794,8 @@
 
   "gui.ic2_120.input_eu": "输入 %s EU/t",
   "gui.ic2_120.consume_eu": "耗能 %s EU/t",
+  "gui.ic2_120.energy_tooltip": "储能: %s / %s EU",
+  "gui.ic2_120.upgrade_slots": "可支持的升级",
   "gui.ic2_120.uv_lamp_upgrade": "升级槽",
   "gui.ic2_120.uv_lamp_growth": "生长加速: %s",
   "gui.ic2_120.uv_lamp_eu_per_tick": "耗电: %s/t",

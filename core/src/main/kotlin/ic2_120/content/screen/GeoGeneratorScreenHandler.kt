@@ -65,9 +65,9 @@ class GeoGeneratorScreenHandler(
         val batterySlotSpec = itemStorage?.deriveSlotSpec(GeoGeneratorBlockEntity.BATTERY_SLOT)
             ?: SLOT_SPEC_FALLBACK_BATTERY
 
-        addTrackedSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.FUEL_SLOT, 0, 0, fuelSlotSpec), GeoGeneratorBlockEntity.FUEL_SLOT)
-        addTrackedSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 0, 0, emptyContainerSlotSpec), GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT)
-        addTrackedSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.BATTERY_SLOT, 0, 0, batterySlotSpec), GeoGeneratorBlockEntity.BATTERY_SLOT)
+        addTrackedSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.FUEL_SLOT, 38, 18, fuelSlotSpec), GeoGeneratorBlockEntity.FUEL_SLOT)
+        addTrackedSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 38, 57, emptyContainerSlotSpec), GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT)
+        addTrackedSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.BATTERY_SLOT, 124, 43, batterySlotSpec), GeoGeneratorBlockEntity.BATTERY_SLOT)
 
         // 4 个升级槽
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
@@ -75,8 +75,8 @@ class GeoGeneratorScreenHandler(
                 PredicateSlot(
                     blockInventory,
                     GeoGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
+                    152,
+                    4 + i * 20,
                     upgradeSlotSpec
                 ),
                 GeoGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i]
@@ -85,11 +85,11 @@ class GeoGeneratorScreenHandler(
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 79 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 137))
         }
     }
 

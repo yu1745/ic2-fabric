@@ -51,22 +51,23 @@ class GeneratorScreenHandler(
         checkSize(blockInventory, 2)
         addProperties(propertyDelegate)
 
-        // 机器槽位（规则由 RoutedItemStorage 路由推导）
+        // Machine slot positions from guidef/generator.xml
         val fuelSlotSpec = itemStorage?.deriveSlotSpec(MachineBlockEntity.FUEL_SLOT)
             ?: SLOT_SPEC_FALLBACK_FUEL
         val batterySlotSpec = itemStorage?.deriveSlotSpec(MachineBlockEntity.BATTERY_SLOT)
             ?: SLOT_SPEC_FALLBACK_BATTERY
 
-        addTrackedSlot(PredicateSlot(blockInventory, MachineBlockEntity.FUEL_SLOT, 0, 0, fuelSlotSpec), MachineBlockEntity.FUEL_SLOT)
-        addTrackedSlot(PredicateSlot(blockInventory, MachineBlockEntity.BATTERY_SLOT, 0, 0, batterySlotSpec), MachineBlockEntity.BATTERY_SLOT)
+        addTrackedSlot(PredicateSlot(blockInventory, MachineBlockEntity.FUEL_SLOT, 56, 53, fuelSlotSpec), MachineBlockEntity.FUEL_SLOT)
+        addTrackedSlot(PredicateSlot(blockInventory, MachineBlockEntity.BATTERY_SLOT, 56, 17, batterySlotSpec), MachineBlockEntity.BATTERY_SLOT)
 
+        // Player inventory positions matching 176×166 layout (guidef/generator.xml playerInventory y=83 + 1 inset)
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 79 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 137))
         }
     }
 

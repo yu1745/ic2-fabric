@@ -800,6 +800,8 @@
 
   "gui.ic2_120.input_eu": "Input %s EU/t",
   "gui.ic2_120.consume_eu": "Consume %s EU/t",
+  "gui.ic2_120.energy_tooltip": "Stored: %s / %s EU",
+  "gui.ic2_120.upgrade_slots": "Upgrades",
   "gui.ic2_120.uv_lamp_upgrade": "Upgrade Slot",
   "gui.ic2_120.uv_lamp_growth": "Growth Boost: %s",
   "gui.ic2_120.uv_lamp_eu_per_tick": "Power: %s/t",

@@ -8,7 +8,7 @@
         <slotgrid name="upgrade" x="151" y="4" cols="1"/>
         <button type="recipe" x="80" y="38" width="21" height="11" event="macerator"></button>
     </environment>
-    <energygauge x="59" y="37"/>
-    <gauge name="progress" x="75" y="38" style="progresscrush"/>
+    <energygauge x="45" y="36"/>
+    <gauge name="progress" x="73" y="37" style="progresscrush"/>
     <playerInventory x="7" y="83"/>
 </gui>

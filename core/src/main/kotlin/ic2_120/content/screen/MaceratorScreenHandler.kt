@@ -46,11 +46,11 @@ class MaceratorScreenHandler(
         addProperties(propertyDelegate)
 
         // Machine slot positions from guidef/macerator.xml
-        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_INPUT, x = 41, y = 14)
-        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_DISCHARGING, x = 41, y = 53)
-        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_OUTPUT, x = 115, y = 34)
+        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_INPUT, x = 42, y = 15)
+        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_DISCHARGING, x = 42, y = 54)
+        addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_OUTPUT, x = 116, y = 35)
         for (i in MaceratorBlockEntity.SLOT_UPGRADE_INDICES.indices) {
-            addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_UPGRADE_INDICES[i], x = 151, y = 4 + i * 20)
+            addTrackedSlot(blockInventory, MaceratorBlockEntity.SLOT_UPGRADE_INDICES[i], x = 152, y = 5 + i * 20)
         }
 
         // Player inventory positions matching 176×166 layout (guidef/macerator.xml playerInventory y=83 + 1 inset)
