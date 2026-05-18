@@ -10,7 +10,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **128 个 commit**，**127 个已同步，1 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **129 个 commit**，**127 个已同步，2 个待同步**。
 （归档 1-104 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -40,6 +40,8 @@
 | 124 | `33a52f58` | chore: 移除 .deploy-enabled 引用（文件已删除） | ✅ | cherry-pick 无冲突 |
 | 125 | `7f74eecc` | feat: 风力计配方+粗矿块反向分解+发电机燃料过滤修复 | ✅ | cherry-pick + 适配 1.21.1 RecipeExporter/CraftingRecipeCategory（tools→equipment）+ datagen 刷新 |
 | 126 | `4ee9b03e` | feat: 核爆炸对齐 IC2 原版——自定义射线投射+分tick方块摧毁 | ❌ | 待同步 |
+| 127 | `88fe5847` | feat: 核爆炸全分tick+严格数值对齐+全服公告+冷却 | ❌ | 待同步 |
+| 128 | `f9841c26` | docs: TODO 添加特斯拉线圈电鱼 | ❌ | 待同步 |
 
 ## 同步历史
 
