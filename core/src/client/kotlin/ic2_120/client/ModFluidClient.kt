@@ -94,6 +94,24 @@ object ModFluidClient {
             rgb(78, 45, 20)
         )
 
+        // Steam（浅灰半透明，纹理动画向上）
+        registerFluid(
+            ModFluids.STEAM_STILL,
+            ModFluids.STEAM_FLOWING,
+            "block/fluid/steam_rise_still",
+            "block/fluid/steam_rise_flow",
+            rgb(208, 208, 208)
+        )
+
+        // Superheated Steam（浅红色半透明，纹理动画向上）
+        registerFluid(
+            ModFluids.SUPERHEATED_STEAM_STILL,
+            ModFluids.SUPERHEATED_STEAM_FLOWING,
+            "block/fluid/steam_rise_still",
+            "block/fluid/steam_rise_flow",
+            rgb(255, 190, 190)
+        )
+
         // 流体方块使用半透明渲染层
         BlockRenderLayerMap.INSTANCE.putFluids(
             RenderLayer.getTranslucent(),
@@ -116,7 +134,11 @@ object ModFluidClient {
             ModFluids.CONSTRUCTION_FOAM_STILL,
             ModFluids.CONSTRUCTION_FOAM_FLOWING,
             ModFluids.CREOSOTE_STILL,
-            ModFluids.CREOSOTE_FLOWING
+            ModFluids.CREOSOTE_FLOWING,
+            ModFluids.STEAM_STILL,
+            ModFluids.STEAM_FLOWING,
+            ModFluids.SUPERHEATED_STEAM_STILL,
+            ModFluids.SUPERHEATED_STEAM_FLOWING
         )
     }
 

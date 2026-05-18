@@ -291,7 +291,15 @@ class PipeNetwork {
             }
             return if (available) filtered else null
         }
-        return storage.iterator().asSequence().firstOrNull { !it.resource.isBlank && it.amount > 0L }?.resource
+        // dry-run extract 确认 view 真的支持提取，避免选中只进不出的储罐
+        for (view in storage) {
+            if (view.isResourceBlank || view.amount <= 0L) continue
+            val resource = view.resource
+            Transaction.openOuter().use { tx ->
+                if (view.extract(resource, 1L, tx) > 0L) return resource
+            }
+        }
+        return null
     }
 
     private fun canReceiverAccept(receiver: Storage<FluidVariant>, variant: FluidVariant): Boolean =

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "ic2_120:steel_ingot"
+    },
+    "P": {
+      "item": "ic2_120:steel_plate"
+    }
+  },
+  "pattern": [
+    "PPP",
+    "PIP",
+    "PPP"
+  ],
+  "result": {
+    "item": "ic2_120:steam_turbine_blade"
+  },
+  "show_notification": true
+}

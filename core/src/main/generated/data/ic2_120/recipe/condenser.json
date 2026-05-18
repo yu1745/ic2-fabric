@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:iron_casing"
+    },
+    "H": {
+      "item": "ic2_120:heat_vent"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "pattern": [
+    "CHC",
+    "CIC",
+    "CCC"
+  ],
+  "result": {
+    "item": "ic2_120:condenser"
+  },
+  "show_notification": true
+}

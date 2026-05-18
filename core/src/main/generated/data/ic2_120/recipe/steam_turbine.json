@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "B": {
+      "item": "ic2_120:steam_turbine_blade"
+    }
+  },
+  "pattern": [
+    "BBB"
+  ],
+  "result": {
+    "item": "ic2_120:steam_turbine"
+  },
+  "show_notification": true
+}
