@@ -8,7 +8,7 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **121 个 commit**，**120 个已同步，1 个待同步**。
+从分叉点 `c5e247c` 到 main HEAD 共 **122 个 commit**，**120 个已同步，2 个待同步**。
 （归档 1-72 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
@@ -35,6 +35,7 @@
 | 117 | `d80abc0d` | feat: 电路板合成改用铁板，粘性树脂+活塞合成粘性活塞 | ✅ | cherry-pick + 适配 1.21.1 路径（recipe/ 单数）+ datagen 刷新 |
 | 118 | `f82870b4` | feat: EU分流导线（红石开关）+ EU限流导线（GUI限流） | ✅ | cherry-pick + 适配 1.21.1 API（onUse 无 Hand、ExtendedScreenHandlerFactory<PacketByteBuf>/getScreenOpeningData、RecipeExporter）+ data 目录单数 + datagen 刷新 |
 | 119 | `06f74979` | feat: 蒸汽系统——蒸汽/过热蒸汽流体、蒸汽发生器/蒸汽动能发生机/冷凝器 | ❌ | 待同步 |
+| 120 | `37af24e4` | feat: 压缩机配方补全+容器返还支持 | ❌ | 待同步 |
 
 ## 同步历史
 
