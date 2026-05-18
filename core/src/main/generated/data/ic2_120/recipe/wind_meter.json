@@ -1,0 +1,24 @@
+{
+  "type": "ic2_120:battery_energy_shaped",
+  "category": "tools",
+  "key": {
+    "B": {
+      "item": "ic2_120:bronze_casing"
+    },
+    "P": {
+      "item": "ic2_120:small_power_unit"
+    },
+    "T": {
+      "item": "ic2_120:tin_casing"
+    }
+  },
+  "pattern": [
+    " T ",
+    "TBT",
+    " TP"
+  ],
+  "result": {
+    "item": "ic2_120:wind_meter"
+  },
+  "show_notification": true
+}

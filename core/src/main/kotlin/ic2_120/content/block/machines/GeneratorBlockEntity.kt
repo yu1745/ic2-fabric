@@ -232,6 +232,7 @@ class GeneratorBlockEntity(
     private fun getFuelTime(stack: ItemStack): Int {
         if (stack.isEmpty) return 0
         val furnaceTicks = FuelRegistry.INSTANCE.get(stack.item) ?: return 0
+        if (furnaceTicks <= 0) return 0
         return (furnaceTicks / GeneratorSync.BURN_TICKS_DIVISOR).coerceAtLeast(1)
     }
 }

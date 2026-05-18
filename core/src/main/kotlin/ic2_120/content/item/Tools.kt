@@ -1301,4 +1301,25 @@ class WindMeter : Item(Item.Settings().maxCount(1)) {
 
         return TypedActionResult.success(stack)
     }
+
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val tinCasing = TinCasing::class.instance()
+            val bronzeCasing = BronzeCasing::class.instance()
+            val smallPowerUnit = SmallPowerUnitItem::class.instance()
+            BatteryEnergyShapedRecipeDatagen.offer(
+                exporter = exporter,
+                recipeId = WindMeter::class.id(),
+                result = WindMeter::class.instance(),
+                pattern = listOf(" T ", "TBT", " TP"),
+                keys = mapOf<Char, Item>(
+                    'T' to tinCasing,
+                    'B' to bronzeCasing,
+                    'P' to smallPowerUnit
+                ),
+                category = "tools"
+            )
+        }
+    }
 }
