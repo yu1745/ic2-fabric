@@ -6,6 +6,8 @@
 
 验证方法：对 main 上每个 commit 的代码改动在 1.21.1 worktree 中逐文件比对。
 
+> 迁移参考：`docs/migration-1.20.1-to-1.21.1.md` — 汇总了全部 125 个 commit 中出现的 API 变化及对应代码示例。
+
 ## 总览
 
 从分叉点 `c5e247c` 到 main HEAD 共 **127 个 commit**，**127 个已同步，0 个待同步**。

@@ -138,6 +138,8 @@
 
 ### 9.3 Cherry-pick 注意事项
 
+> **进行 cherry-pick 前，先阅读 `docs/migration-1.20.1-to-1.21.1.md`**，了解最常见的 API 变化（`Identifier.of`、`validateTicker`、`RecipeExporter`、`onUse` 无 Hand、`CustomPayload` 等），避免编译错误后再逐一排查。
+
 1. 1.21.1 的 data 目录使用单数（`advancement/`、`recipe/`、`loot_table/`），main 使用复数（`advancements/`、`recipes/`、`loot_tables/`）
 2. 1.21.1 API 签名差异：`BlockEntityTicker` 用 `validateTicker`（main 用 `checkType`），`RecipeExporter`（main 用 `Consumer<RecipeJsonProvider>`）
 3. `assets/ic2/**` 为上游引用不可修改；`assets/ic2_120/**` 可修改
