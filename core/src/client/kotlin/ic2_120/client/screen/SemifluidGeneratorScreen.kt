@@ -1,189 +1,90 @@
 package ic2_120.client.screen
 
-import ic2_120.client.t
-import ic2_120.client.compose.*
 import ic2_120.client.EnergyFormatUtils
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.EnergyBarOrientation
-import ic2_120.client.ui.GuiBackground
+import ic2_120.client.t
 import ic2_120.content.block.SemifluidGeneratorBlock
-import ic2_120.content.block.machines.SemifluidGeneratorBlockEntity
 import ic2_120.content.screen.SemifluidGeneratorScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.SemifluidGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.slot.Slot
-import net.minecraft.text.Text as McText
+import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = SemifluidGeneratorBlock::class)
 class SemifluidGeneratorScreen(
     handler: SemifluidGeneratorScreenHandler,
     playerInventory: PlayerInventory,
-    title: McText
+    title: Text
 ) : HandledScreen<SemifluidGeneratorScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        backgroundWidth = 176
+        backgroundHeight = 161
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 161, 256, 256)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val outputRate = handler.sync.getSyncedExtractedAmount()
-        val cap = SemifluidGeneratorSync.ENERGY_CAPACITY
-        val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
+        super.render(context, mouseX, mouseY, delta)
 
-        // 燃料储量
+        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+        val cap = SemifluidGeneratorSync.ENERGY_CAPACITY
+        val energyFrac = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
+
         val fuelMb = handler.sync.fuelAmountMb.coerceAtLeast(0)
         val fuelCapMb = 8 * 1000
         val fuelFrac = if (fuelCapMb > 0) (fuelMb.toFloat() / fuelCapMb).coerceIn(0f, 1f) else 0f
 
-        // 燃料颜色来自网络包 → BE → handler getter
-        val fuelColor = handler.fuelColorArgb
+        val inputRate = handler.sync.getSyncedInsertedAmount()
+        val outputRate = handler.sync.getSyncedExtractedAmount()
 
-        val inputText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
+        // 能量条位于 (118, 19) — 30×17 水平纹理来自 guiheatsourcegenerator.png (178,2)-(207,18)
+        drawEnergyGauge(context, x + 118, y + 19, energyFrac)
+
+        // 燃料储量条位于 (82, 21) — 13×48 垂直，填充颜色来自 BE 同步的燃料颜色
+        drawFuelBar(context, x + 82, y + 21, fuelFrac, handler.fuelColorArgb)
+
+        // 标题文字居中于 y=6
+        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+
+        // EU发电/输出文字显示在左侧
+        val generateText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
         val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(outputText))
-        val sideTextX = left - sideTextWidth - 4
+        val sideTextWidth = maxOf(textRenderer.getWidth(generateText), textRenderer.getWidth(outputText))
+        val sideTextX = x - sideTextWidth - 4
+        context.drawText(textRenderer, generateText, sideTextX, y + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, outputText, sideTextX, y + 20, 0xAAAAAA, false)
 
-        val content: UiScope.() -> Unit = {
-            Row(
-                x = left + 8,
-                y = top + 8,
-                spacing = 8,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Column(
-                    spacing = 6,
-                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
-                ) {
-                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                        Text(title.string, color = 0xFFFFFF)
-                        Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
-                    }
-                    EnergyBar(
-                        energyFraction,
-                        barHeight = 12,
-                    )
-
-                    Text(
-                        t("gui.ic2_120.semifluid_generator.fuel", fuelMb, fuelCapMb),
-                        color = 0xAAAAAA,
-                        shadow = false
-                    )
-
-                    Flex(
-                        direction = FlexDirection.ROW,
-                        justifyContent = JustifyContent.SPACE_AROUND,
-                        alignItems = AlignItems.CENTER,
-                        gap = 4,
-                        modifier = Modifier().height(40)
-                    ) {
-                        Flex(
-                            direction = FlexDirection.COLUMN,
-                            justifyContent = JustifyContent.SPACE_BETWEEN,
-                            alignItems = AlignItems.CENTER,
-                        ) {
-                            SlotAnchor(
-                                id = slotAnchorId(SemifluidGeneratorBlockEntity.FUEL_SLOT),
-                                width = SemifluidGeneratorScreenHandler.SLOT_SIZE,
-                                height = SemifluidGeneratorScreenHandler.SLOT_SIZE
-                            )
-                            SlotAnchor(
-                                id = slotAnchorId(SemifluidGeneratorBlockEntity.EMPTY_CONTAINER_SLOT),
-                                width = SemifluidGeneratorScreenHandler.SLOT_SIZE,
-                                height = SemifluidGeneratorScreenHandler.SLOT_SIZE
-                            )
-                        }
-                        // 燃料储量竖向条
-                        EnergyBar(
-                            fuelFrac,
-                            orientation = EnergyBarOrientation.VERTICAL,
-                            emptyColor = 0xFF333333.toInt(),
-                            fullColor = fuelColor,
-                            modifier = Modifier().height(40)
-                        )
-                        SlotAnchor(
-                            id = slotAnchorId(SemifluidGeneratorBlockEntity.BATTERY_SLOT),
-                            width = SemifluidGeneratorScreenHandler.SLOT_SIZE,
-                            height = SemifluidGeneratorScreenHandler.SLOT_SIZE
-                        )
-                    }
-                }
-
-                Column(
-                    spacing = 4,
-                    modifier = Modifier.EMPTY
-                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
-                        .padding(0, 8, 0, 0)
-                ) {
-                    for (slotIndex in SemifluidGeneratorScreenHandler.SLOT_UPGRADE_INDEX_START..SemifluidGeneratorScreenHandler.SLOT_UPGRADE_INDEX_END) {
-                        SlotAnchor(
-                            id = slotAnchorId(slotIndex),
-                            width = SemifluidGeneratorScreenHandler.SLOT_SIZE,
-                            height = SemifluidGeneratorScreenHandler.SLOT_SIZE
-                        )
-                    }
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = SemifluidGeneratorScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
-            )
-        }
-
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
-
-        // 再绘制 UI（slot 背景、能量条等），确保在 super.render 之前
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
+    private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+        val barW = 30
+        val barH = 17
+        val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
+        if (fillW <= 0) return
+        context.enableScissor(gx, gy, gx + fillW, gy + barH)
+        context.drawTexture(TEXTURE, gx, gy, 178f, 2f, barW, barH, 256, 256)
+        context.disableScissor()
     }
 
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+    private fun drawFuelBar(context: DrawContext, gx: Int, gy: Int, fraction: Float, fuelColor: Int) {
+        val barW = 13
+        val barH = 48
+        // 燃料填充（自下往上）
+        val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
+        if (fillH > 0) {
+            context.fill(gx, gy + barH - fillH, gx + barW, gy + barH, fuelColor)
+        }
+        // 容器标示纹理覆盖 (179,21)-(189,68)
+        context.drawTexture(TEXTURE, gx, gy, 179f, 21f, barW, barH, 256, 256)
+    }
 
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
+        private val TEXTURE = Identifier("ic2", "textures/gui/guiheatsourcegenerator.png")
     }
 }

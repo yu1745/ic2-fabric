@@ -1,22 +1,16 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
 import ic2_120.client.EnergyFormatUtils
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.EnergyBarOrientation
-import ic2_120.client.ui.GuiBackground
 import ic2_120.client.t
 import ic2_120.content.block.GeneratorBlock
-import ic2_120.content.block.machines.MachineBlockEntity
 import ic2_120.content.screen.GeneratorScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.GeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.Text
-import net.minecraft.screen.slot.Slot
+import net.minecraft.util.Identifier
 
 @ModScreen(block = GeneratorBlock::class)
 class GeneratorScreen(
@@ -25,121 +19,69 @@ class GeneratorScreen(
     title: Text
 ) : HandledScreen<GeneratorScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = PANEL_WIDTH
-        backgroundHeight = PANEL_HEIGHT
+        backgroundWidth = 176
+        backgroundHeight = 161
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 161, 256, 256)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
+        super.render(context, mouseX, mouseY, delta)
 
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val outputRate = handler.sync.getSyncedExtractedAmount()
-        val cap = GeneratorSync.ENERGY_CAPACITY
-        val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
-
+        val energyFrac = if (GeneratorSync.ENERGY_CAPACITY > 0) {
+            (energy.toFloat() / GeneratorSync.ENERGY_CAPACITY).coerceIn(0f, 1f)
+        } else 0f
         val totalBurn = handler.sync.totalBurnTime.coerceAtLeast(1)
         val burnTime = handler.sync.burnTime.coerceIn(0, totalBurn)
         val burnFrac = (burnTime.toFloat() / totalBurn).coerceIn(0f, 1f)
-        val energyText = "${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"
-        val statusText1 = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
-        val statusText2 = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
-        val sideTextWidth = maxOf(
-            textRenderer.getWidth(energyText),
-            textRenderer.getWidth(statusText1),
-            textRenderer.getWidth(statusText2)
-        )
-        val sideTextX = left - sideTextWidth - 4
+        val inputRate = handler.sync.getSyncedInsertedAmount()
+        val outputRate = handler.sync.getSyncedExtractedAmount()
 
-        val content: UiScope.() -> Unit = {
-            Column(
-                x = left + 8,
-                y = top + 8,
-                spacing = 6,
-                modifier = Modifier().width(backgroundWidth - 16).height(backgroundHeight - 16),
-            ) {
-                Row(spacing = 8) {
-                    Text(title.string, color = 0xFFFFFF)
-                    Text(energyText, color = 0xFFFFFF)
-                }
-                EnergyBar(energyFraction)
+        // 能量条位于 (78, 35) — 26×17 水平纹理来自 guipowergenerator.png (179,3)-(204,19)
+        drawEnergyGauge(context, x + 78, y + 35, energyFrac)
 
-                // 机器槽（横向排列，SlotAnchor 导出锚点给原生 slot 渲染）
-                Flex(
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.SPACE_AROUND,
-                ) {
-                    Row(spacing = 8) {
-                        SlotAnchor(id = "slot.${MachineBlockEntity.FUEL_SLOT}")
-                        // 燃烧进度（竖向，红→蓝 表示燃料逐渐用尽）
-                        EnergyBar(
-                            burnFrac,
-                            orientation = EnergyBarOrientation.VERTICAL,
-                            shortEdge = 8,
-                            barHeight = 18,
-                            emptyColor = 0xFF0033CC.toInt(),
-                            fullColor = 0xFFCC0000.toInt(),
-                        )
-                    }
-                    SlotAnchor(id = "slot.${MachineBlockEntity.BATTERY_SLOT}")
-                }
+        // 燃料条位于 (58, 38) — 13×13 垂直纹理来自 guipowergenerator.png (179,22)-(191,34)
+        drawFuelGauge(context, x + 58, y + 38, burnFrac)
 
-            }
+        // 标题文字居中于 y=6
+        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = GeneratorScreenHandler.PLAYER_INV_START,
-                playerInvY = GuiSize.STANDARD.playerInvY,
-                hotbarY = GuiSize.STANDARD.hotbarY
-            )
-        }
-
-        // 1) 预布局，不绘制
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 2) 锚点写回 slot 相对坐标
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
-
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context = context,
-            screenX = x,
-            screenY = y,
-            playerInvY = GuiSize.STANDARD.playerInvY,
-            hotbarY = GuiSize.STANDARD.hotbarY,
-            slotSize = GuiSize.SLOT_SIZE
-        )
-
-        // 再绘制 UI（slot 背景、能量条等），确保在 super.render 之前
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
-        context.drawText(textRenderer, statusText1, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, statusText2, sideTextX, top + 20, 0xAAAAAA, false)
+        // EU发电/输出文字显示在左侧
+        val generateText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
+        val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
+        val sideTextWidth = maxOf(textRenderer.getWidth(generateText), textRenderer.getWidth(outputText))
+        val sideTextX = x - sideTextWidth - 4
+        context.drawText(textRenderer, generateText, sideTextX, y + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, outputText, sideTextX, y + 20, 0xAAAAAA, false)
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+    private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+        val barW = 26
+        val barH = 17
+        val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
+        if (fillW <= 0) return
+        context.enableScissor(gx, gy, gx + fillW, gy + barH)
+        context.drawTexture(TEXTURE, gx, gy, 179f, 3f, barW, barH, 256, 256)
+        context.disableScissor()
+    }
+
+    private fun drawFuelGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+        val barW = 13
+        val barH = 13
+        val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
+        if (fillH <= 0) return
+        context.enableScissor(gx, gy + barH - fillH, gx + barW, gy + barH)
+        context.drawTexture(TEXTURE, gx, gy, 179f, 22f, barW, barH, 256, 256)
+        context.disableScissor()
+    }
 
     companion object {
-        private val PANEL_WIDTH = GuiSize.STANDARD.width
-        private val PANEL_HEIGHT = GuiSize.STANDARD.height
+        private val TEXTURE = Identifier("ic2", "textures/gui/guipowergenerator.png")
     }
 }

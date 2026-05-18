@@ -1,115 +1,52 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.t
-import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.RtHeatGeneratorBlock
 import ic2_120.content.screen.RtHeatGeneratorScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text as McText
+import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = RtHeatGeneratorBlock::class)
 class RtHeatGeneratorScreen(
     handler: RtHeatGeneratorScreenHandler,
     playerInventory: PlayerInventory,
-    title: McText
+    title: Text
 ) : HandledScreen<RtHeatGeneratorScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        backgroundWidth = 176
+        backgroundHeight = 161
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 161, 256, 256)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
-        val content: UiScope.() -> Unit = {
-            Column(
-                x = left + 8,
-                y = top + 8,
-                spacing = 6,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Text(title.string, color = 0xFFFFFF)
-                Column(spacing = 0) {
-                    Row(spacing = 0) {
-                        SlotHost(0); SlotHost(1); SlotHost(2)
-                    }
-                    Row(spacing = 0) {
-                        SlotHost(3); SlotHost(4); SlotHost(5)
-                    }
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = RtHeatGeneratorScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
-            )
-        }
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        // 先绘制面板背景与自定义槽位边框
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-
-        for (i in 0 until 6) {
-            val slot = handler.slots[i]
-            context.drawBorder(x + slot.x - 1, y + slot.y - 1, SLOT_SIZE, SLOT_SIZE, GuiBackground.BORDER_COLOR)
-        }
-
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y, GUI_SIZE.playerInvY, GUI_SIZE.hotbarY, GuiSize.SLOT_SIZE
-        )
-
-        // 再绘制 UI（slot 背景等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 最后绘制物品（包括耐久条），确保物品在顶层
         super.render(context, mouseX, mouseY, delta)
 
         val generatedRate = handler.sync.getSyncedGeneratedHeat()
-        val outputRate = handler.sync.getSyncedOutputHeat()
 
-        val generatedText = t("gui.ic2_120.generate_hu", generatedRate)
-        val outputText = t("gui.ic2_120.output_hu", outputRate)
-        val generatedTextWidth = generatedText.length * 6
-        val outputTextWidth = outputText.length * 6
-        val textX = x - maxOf(generatedTextWidth, outputTextWidth) - 4
-        context.drawText(textRenderer, generatedText, textX, y + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, textX, y + 20, 0xAAAAAA, false)
+        // 产热速率文字，显示区域 (48,59)-(128,73)，居中常显，缩小 1px
+        val heatText = "$generatedRate/64 HU/T"
+        val scale = 7f / 8f
+        val textWidth = textRenderer.getWidth(heatText)
+        val textX = x + 48 + (80 - textWidth) / 2
+        val textY = y + 59 + (14 - textRenderer.fontHeight) / 2 + 1
+        context.matrices.push()
+        context.matrices.scale(scale, scale, 1f)
+        val sx = (textX / scale).toInt()
+        val sy = (textY / scale).toInt()
+        context.drawText(textRenderer, heatText, sx, sy, 0xFFADD8E6.toInt(), false)
+        context.matrices.pop()
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun UiScope.SlotHost(slotIndex: Int) {
-        SlotAnchor(id = slotAnchorId(slotIndex), width = SLOT_SIZE, height = SLOT_SIZE)
-    }
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
-    }
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
     companion object {
-        private const val SLOT_SIZE = 18
-        private val GUI_SIZE = GuiSize.STANDARD
+        private val TEXTURE = Identifier("ic2", "textures/gui/guinuclearheat.png")
     }
 }
