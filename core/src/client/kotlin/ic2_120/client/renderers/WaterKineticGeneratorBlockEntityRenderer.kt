@@ -5,7 +5,6 @@ import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.render.VertexConsumerProvider
-import net.minecraft.client.render.LightmapTextureManager
 import net.minecraft.client.render.block.entity.BlockEntityRenderer
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory
 import net.minecraft.client.util.math.MatrixStack
@@ -80,7 +79,6 @@ class WaterKineticGeneratorBlockEntityRenderer(
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(angle))
 
         val vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutoutNoCull(rotorTexture))
-        val rotorLight = LightmapTextureManager.MAX_LIGHT_COORDINATE
 
         repeat(4) { i ->
             matrices.push()
@@ -89,7 +87,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
             drawCuboid(
                 matrices,
                 vc,
-                rotorLight,
+                light,
                 overlay,
                 minX = -BLADE_HALF_WIDTH, maxX = BLADE_HALF_WIDTH,
                 minY = BLADE_INNER_OFFSET, maxY = getRotorRadius(rotor),
@@ -101,7 +99,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
         drawCuboid(
             matrices,
             vc,
-            rotorLight,
+            light,
             overlay,
             minX = -SHAFT_HALF_WIDTH, maxX = SHAFT_HALF_WIDTH,
             minY = -SHAFT_HALF_WIDTH, maxY = SHAFT_HALF_WIDTH,
@@ -111,7 +109,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
         drawCuboid(
             matrices,
             vc,
-            rotorLight,
+            light,
             overlay,
             minX = -HUB_HALF_SIZE, maxX = HUB_HALF_SIZE,
             minY = -HUB_HALF_SIZE, maxY = HUB_HALF_SIZE,
