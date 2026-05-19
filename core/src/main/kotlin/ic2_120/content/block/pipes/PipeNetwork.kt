@@ -1,10 +1,9 @@
 package ic2_120.content.block.pipes
 
-import ic2_120.content.block.MachineBlock
-import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import net.minecraft.fluid.Fluid
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.state.property.Properties
@@ -12,6 +11,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import org.slf4j.LoggerFactory
 
 class PipeNetwork {
     val pipes = mutableSetOf<Long>()
@@ -79,44 +79,8 @@ class PipeNetwork {
 
         currentTouchedPipes.clear()
 
-        val providers = mutableListOf<ProviderEndpoint>()
-        val receivers = mutableListOf<ReceiverEndpoint>()
-
-        for (edge in topology.boundaries) {
-            val neighborPos = BlockPos.fromLong(edge.neighborPosLong)
-            val block = world.getBlockState(neighborPos).block
-            val be = world.getBlockEntity(neighborPos) as? IFluidPipeUpgradeSupport
-            val storage = FluidStorage.SIDED.find(world, neighborPos, edge.lookupFromNeighborSide) ?: continue
-            val machineSide = edge.lookupFromNeighborSide
-            val sourcePipePos = BlockPos.fromLong(edge.cablePosLong)
-            val sourceState = world.getBlockState(sourcePipePos)
-            val sourceBlock = sourceState.block
-            val sourceBe = world.getBlockEntity(sourcePipePos) as? PipeBlockEntity
-
-            val isPumpBlock = sourceBlock is PumpAttachmentBlock
-            val pumpFacingCorrect = isPumpBlock && sourceState.get(Properties.FACING) == machineSide.opposite
-            val forcedByPumpAttachment = isPumpBlock && pumpFacingCorrect && storage.supportsExtraction()
-            val forcedFilter = if (forcedByPumpAttachment) sourceBe?.pumpFilterFluid() else null
-
-            val providerCond = be != null && be.fluidPipeProviderEnabled && allowsProviderOnSide(be, machineSide) && storage.supportsExtraction()
-            val isProvider = providerCond || forcedByPumpAttachment
-            if (isProvider) {
-                val filter = if (forcedByPumpAttachment) forcedFilter else be?.fluidPipeProviderFilter
-                val variant = resolveProviderVariant(storage, filter)
-                if (variant != null) {
-                    providers.add(ProviderEndpoint(storage, edge.cablePosLong, variant))
-                }
-            }
-            if (storage.supportsInsertion() && !forcedByPumpAttachment) {
-                if (block is MachineBlock) {
-                    if (be?.fluidPipeReceiverEnabled == true && allowsReceiverOnSide(be, machineSide)) {
-                        receivers.add(ReceiverEndpoint(storage, edge.cablePosLong, be.fluidPipeReceiverFilter))
-                    }
-                } else {
-                    receivers.add(ReceiverEndpoint(storage, edge.cablePosLong, null))
-                }
-            }
-        }
+        // Find providers via FluidStorage API (dry-run extract), no IFluidPipeUpgradeSupport needed
+        val providers = findProviders(world, topology)
 
         val fluidKinds = providers.map { it.variant.fluid }.toSet()
         stalledByMixedProviders = fluidKinds.size > 1
@@ -130,24 +94,36 @@ class PipeNetwork {
             conflictingFluidIds = emptyList()
         }
 
-        if (providers.isEmpty() || receivers.isEmpty()) {
+        if (providers.isEmpty()) {
             syncPipeLoad(world, topology.pipeRates, remaining)
             return
         }
 
+        // Find receivers via FluidStorage API + simulateInsertion, no IFluidPipeUpgradeSupport needed
+        val primaryFluid = providers.first().variant.fluid
+        val receivers = findReceivers(world, topology, primaryFluid)
+
+        if (receivers.isEmpty()) {
+            syncPipeLoad(world, topology.pipeRates, remaining)
+            return
+        }
+
+        val primaryVariant = FluidVariant.of(primaryFluid)
+
         for (receiver in receivers) {
-            val receiverTarget = receiver.filter
             val failedProviderEntries = mutableSetOf<Long>()
+            // 排除 provider 和 receiver 是同一个 storage 的情况（自环）
+            val filteredProviders = providers.filter { it.storage !== receiver.storage }
 
             while (true) {
-                val best = findBestPath(receiver, providers, failedProviderEntries, receiverTarget, topology.neighbors, remaining)
+                val best = findBestPath(receiver, filteredProviders, failedProviderEntries, topology.neighbors, remaining)
                 if (best == null) break
 
                 val (provider, path, pathCap) = best
-                val moved = transferOnce(provider.storage, receiver.storage, provider.variant, pathCap)
+                val moved = transferOnce(provider.storage, receiver.storage, primaryVariant, pathCap)
                 if (moved <= 0L) {
                     failedProviderEntries.add(provider.entryPipe)
-                    if (failedProviderEntries.size >= providers.size) break
+                    if (failedProviderEntries.size >= filteredProviders.size) break
                     continue
                 }
                 for (pipe in path) {
@@ -169,7 +145,6 @@ class PipeNetwork {
         receiver: ReceiverEndpoint,
         providers: List<ProviderEndpoint>,
         failedProviders: Set<Long>,
-        receiverTarget: net.minecraft.fluid.Fluid?,
         neighbors: Map<Long, List<Long>>,
         remaining: Map<Long, Long>
     ): Triple<ProviderEndpoint, List<Long>, Long>? {
@@ -178,7 +153,6 @@ class PipeNetwork {
 
         for (provider in providers) {
             if (provider.entryPipe in failedProviders) continue
-            if (receiverTarget != null && provider.variant.fluid != receiverTarget) continue
             if (!canReceiverAccept(receiver.storage, provider.variant)) continue
 
             val cachedPath = pathCache[PathCacheKey(provider.entryPipe, receiver.entryPipe)]
@@ -274,10 +248,8 @@ class PipeNetwork {
         var moved = 0L
         Transaction.openOuter().use { tx ->
             val ext = provider.extract(variant, insertable, tx)
-            if (ext <= 0L) return@use
-            val ins = receiver.insert(variant, ext, tx)
-            if (ins <= 0L) return@use
-            moved = minOf(ext, ins)
+            val ins = if (ext > 0L) receiver.insert(variant, ext, tx) else 0L
+            if (ins > 0L) moved = minOf(ext, ins)
             tx.commit()
         }
         return moved
@@ -291,33 +263,71 @@ class PipeNetwork {
             }
             return if (available) filtered else null
         }
-        return storage.iterator().asSequence().firstOrNull { !it.resource.isBlank && it.amount > 0L }?.resource
+        // dry-run extract 确认 view 真的支持提取，避免选中只进不出的储罐
+        for (view in storage) {
+            if (view.isResourceBlank || view.amount <= 0L) continue
+            val resource = view.resource
+            Transaction.openOuter().use { tx ->
+                if (view.extract(resource, 1L, tx) > 0L) return resource
+            }
+        }
+        return null
     }
 
     private fun canReceiverAccept(receiver: Storage<FluidVariant>, variant: FluidVariant): Boolean =
         Transaction.openOuter().use { tx -> receiver.insert(variant, 1L, tx) > 0L }
 
-    // 规则：一方指定方向、另一方任意时，任意方自动排除已指定方向，避免同一面既入又出。
-    private fun allowsProviderOnSide(be: IFluidPipeUpgradeSupport, side: Direction): Boolean {
-        val providerSide = be.fluidPipeProviderSide
-        val receiverSide = be.fluidPipeReceiverSide
-        return when {
-            providerSide != null -> providerSide == side
-            receiverSide != null -> receiverSide != side
-            else -> true
+    private fun findProviders(world: World, topology: TopologyCache): List<ProviderEndpoint> {
+        val providers = mutableListOf<ProviderEndpoint>()
+        for (edge in topology.boundaries) {
+            val sourcePos = BlockPos.fromLong(edge.cablePosLong)
+            val sourceState = world.getBlockState(sourcePos)
+            if (sourceState.block !is PumpAttachmentBlock) continue
+            // 泵附件只能从正面抽取
+            if (sourceState.get(Properties.FACING) != edge.lookupFromNeighborSide.opposite) continue
+            val neighborPos = BlockPos.fromLong(edge.neighborPosLong)
+            val storage = FluidStorage.SIDED.find(world, neighborPos, edge.lookupFromNeighborSide) ?: continue
+            if (!storage.supportsExtraction()) continue
+            val variant = resolveProviderVariant(storage, pumpFilterFor(world, edge))
+            if (variant != null) {
+                providers.add(ProviderEndpoint(storage, edge.cablePosLong, variant))
+            }
         }
+        return providers
     }
 
-    // 规则：一方指定方向、另一方任意时，任意方自动排除已指定方向，避免同一面既入又出。
-    private fun allowsReceiverOnSide(be: IFluidPipeUpgradeSupport, side: Direction): Boolean {
-        val providerSide = be.fluidPipeProviderSide
-        val receiverSide = be.fluidPipeReceiverSide
-        return when {
-            receiverSide != null -> receiverSide == side
-            providerSide != null -> providerSide != side
-            else -> true
+    private fun findReceivers(world: World, topology: TopologyCache, primaryFluid: Fluid): List<ReceiverEndpoint> {
+        val primaryVariant = FluidVariant.of(primaryFluid)
+        val receivers = mutableListOf<ReceiverEndpoint>()
+        for (edge in topology.boundaries) {
+            if (isPumpFrontFace(world, edge)) continue
+            val neighborPos = BlockPos.fromLong(edge.neighborPosLong)
+            val storage = FluidStorage.SIDED.find(world, neighborPos, edge.lookupFromNeighborSide) ?: continue
+            if (!storage.supportsInsertion()) continue
+            if (simulateInsertion(storage, primaryVariant, 1L) > 0L) {
+                receivers.add(ReceiverEndpoint(storage, edge.cablePosLong))
+            }
         }
+        return receivers
     }
+
+    private fun pumpFilterFor(world: World, edge: BoundaryEdge): Fluid? {
+        val sourceState = world.getBlockState(BlockPos.fromLong(edge.cablePosLong))
+        if (sourceState.block !is PumpAttachmentBlock) return null
+        val sourceBe = world.getBlockEntity(BlockPos.fromLong(edge.cablePosLong)) as? PipeBlockEntity ?: return null
+        return sourceBe.pumpFilterFluid()
+    }
+
+    private fun isPumpFrontFace(world: World, edge: BoundaryEdge): Boolean {
+        val sourcePos = BlockPos.fromLong(edge.cablePosLong)
+        val sourceState = world.getBlockState(sourcePos)
+        val block = sourceState.block
+        if (block !is PumpAttachmentBlock) return false
+        return sourceState.get(Properties.FACING) == edge.lookupFromNeighborSide.opposite
+    }
+
+    private fun simulateInsertion(storage: Storage<FluidVariant>, variant: FluidVariant, amount: Long): Long =
+        Transaction.openOuter().use { tx -> storage.insert(variant, amount, tx) }
 
     private fun buildTopology(world: World): TopologyCache {
         val neighbors = mutableMapOf<Long, MutableList<Long>>()
@@ -391,8 +401,7 @@ class PipeNetwork {
 
     private data class ReceiverEndpoint(
         val storage: Storage<FluidVariant>,
-        val entryPipe: Long,
-        val filter: net.minecraft.fluid.Fluid?
+        val entryPipe: Long
     )
 
     private data class BoundaryEdge(

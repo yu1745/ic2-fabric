@@ -6,27 +6,18 @@
 
 验证方法：对 main 上每个 commit 的代码改动在 1.21.1 worktree 中逐文件比对。
 
+> 迁移参考：`docs/migration-1.20.1-to-1.21.1.md` — 汇总了全部 125 个 commit 中出现的 API 变化及对应代码示例。
+
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **120 个 commit**，**120 个已同步，0 个待同步**。
-（归档 1-72 → `branch-sync-archive.md`）
+从分叉点 `c5e247c` 到 main HEAD 共 **129 个 commit**，**127 个已同步，2 个待同步**。
+（归档 1-104 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
 
 | # | Commit | 说明 | 在 1.21.1？ | 备注 |
 |---|--------|------|:-----------:|------|
-| 93 | `2a9e3207` | feat: 发酵机添加肥料产出——每消耗 1000 mB 生物质产出 1 个肥料 | ✅ | cherry-pick + 适配 1.21.1 API（Identifier.of）+ datagen 刷新 |
-| 94 | `3c7d41c7` | fix: 添加蜘蛛眼→蛤蛤粉打粉机配方 | ✅ | cherry-pick + 适配 1.21.1 路径（recipe/ 单数）+ datagen 刷新 |
-| 95 | `da72f80d` | feat: 作物/牲畜监管机 Int mB → SingleVariantStorage 重构 + FluidStorage 暴露 + 流体抽入升级 | ✅ | cherry-pick + 适配 1.21.1 API（ExtendedScreenHandlerFactory<PacketByteBuf>）+ datagen 刷新 |
-| 96 | `32f04999` | feat: 阻止牲畜监管机范围内的鸡自然下蛋 | ✅ | cherry-pick + 改用 @Inject 替代 @Redirect（1.21.1 无 refMap）+ datagen 刷新 |
-| 97 | `38f1af75` | fix: 贴脸传输超压爆炸也受 enableOvervoltageExplosion 配置开关控制 | ✅ | cherry-pick 无冲突 |
-| 98 | `deacc818` | refactor: POC — Macerator ScreenHandler 使用 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick 无冲突 |
-| 99 | `59b1c863` | merge: Unit 1 — 基础加工机A (Compressor, Extractor, Centrifuge, Recycler, MetalFormer) | ✅ | cherry-pick 无冲突 |
-| 100 | `a6f98f6d` | merge: refactor: 熔炉家族迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick 无冲突 |
-| 101 | `69f48a00` | merge: refactor: 装罐机家族迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突（Canner/FluidCanner/SolidCanner import + 旧 SlotSpec）|
-| 102 | `64611492` | merge: refactor: 发电机A迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick 无冲突 |
-| 103 | `c161afb2` | merge: refactor: 发电机B+热能迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突 + Identifier.of 适配 |
-| 104 | `8a9d1142` | merge: refactor: 特殊机器A迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突（MatterGenerator/OreWashingPlant）|
+
 | 105 | `260a09d2` | merge: refactor: 特殊机器B迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突（PatternStorage/Pump/Replicator/SolarDistiller）|
 | 106 | `da4bb903` | merge: Unit 8 BE — 为缺少 RoutedItemStorage 的 BlockEntity 新增存储 | ✅ | cherry-pick + 解决冲突 + 1.21.1 API 适配 |
 | 107 | `c136631b` | refactor: 完成所有机器的 ScreenHandler 迁移到 RoutedItemStorage 驱动 | ✅ | cherry-pick + 解决冲突 + 1.21.1 API 适配 |
@@ -41,6 +32,16 @@
 | 116 | `f7b604d9` | feat: 绝缘导线递进合成/剪刀剥离配方，添加耐压等级 tooltip | ✅ | cherry-pick + 适配 1.21.1 API（RecipeExporter、Identifier.of、CustomPayload C2S）+ datagen 刷新 |
 | 117 | `d80abc0d` | feat: 电路板合成改用铁板，粘性树脂+活塞合成粘性活塞 | ✅ | cherry-pick + 适配 1.21.1 路径（recipe/ 单数）+ datagen 刷新 |
 | 118 | `f82870b4` | feat: EU分流导线（红石开关）+ EU限流导线（GUI限流） | ✅ | cherry-pick + 适配 1.21.1 API（onUse 无 Hand、ExtendedScreenHandlerFactory<PacketByteBuf>/getScreenOpeningData、RecipeExporter）+ data 目录单数 + datagen 刷新 |
+| 119 | `06f74979` | feat: 蒸汽系统——蒸汽/过热蒸汽流体、蒸汽发生器/蒸汽动能发生机/冷凝器 | ✅ | cherry-pick + 解决多处冲突（FluidVariant CODEC、ExtendedScreenHandlerFactory、OnUse 无 Hand、validateTicker）+ 适配 1.21.1 API + datagen 刷新 |
+| 120 | `37af24e4` | feat: 压缩机配方补全+容器返还支持 | ✅ | cherry-pick + 解决冲突（containerReturn 适配 codec/packetCodec）+ 适配 1.21.1 API（ItemStack.fromNbt/encode）+ datagen 刷新 |
+| 121 | `5f6df96f` | feat: 流体管道系统重构——simulateInsertion + 升级解耦 + 泵附件作唯一 provider | ✅ | cherry-pick + 解决冲突（FluidPipeUpgradeComponent DataComponent 适配）|
+| 122 | `6f2633f3` | fix: BER 光照硬编码 MAX_LIGHT_COORDINATE，改用环境光照 | ✅ | cherry-pick 无冲突 |
+| 123 | `152ca7ab` | feat: 多台机器GUI从ComposeUI改为传统纹理渲染 | ✅ | cherry-pick + Screen conflict 解决（取 HEAD 版本）|
+| 124 | `33a52f58` | chore: 移除 .deploy-enabled 引用（文件已删除） | ✅ | cherry-pick 无冲突 |
+| 125 | `7f74eecc` | feat: 风力计配方+粗矿块反向分解+发电机燃料过滤修复 | ✅ | cherry-pick + 适配 1.21.1 RecipeExporter/CraftingRecipeCategory（tools→equipment）+ datagen 刷新 |
+| 126 | `4ee9b03e` | feat: 核爆炸对齐 IC2 原版——自定义射线投射+分tick方块摧毁 | ❌ | 待同步 |
+| 127 | `88fe5847` | feat: 核爆炸全分tick+严格数值对齐+全服公告+冷却 | ❌ | 待同步 |
+| 128 | `f9841c26` | docs: TODO 添加特斯拉线圈电鱼 | ❌ | 待同步 |
 
 ## 同步历史
 
@@ -84,3 +85,4 @@
 - 2026-05-14：修复 datagen 串 JSON 问题——core 和 weapons-addon 添加 modid 过滤，全部 generated 删除后逐子项目重跑（main 和 1.21.1 同步修复）|
 - 2026-05-15：同步 commits 98-112——全机器 RoutedItemStorage 驱动 quickMove 迁移 + 洗矿机修复 + 流体热交换机 UI + 橡胶树叶 tag。批量 cherry-pick + 解决多处冲突 + 1.21.1 API 适配（Identifier.of、ExtendedScreenHandlerFactory\<PacketByteBuf\>、getScreenOpeningData、readNbt/writeNbt WrapperLookup、Inventories、ItemStack.areEqual、RecipeInput、DataComponentTypes.FOOD）+ datagen 刷新 |
 - 2026-05-16：同步 commits 113-117——压缩机输入槽修复 + 复制机 CustomPayload 迁移 + 能量水晶粉 + 绝缘导线/耐压 tooltip + 电路板/粘性活塞。cherry-pick + 适配 1.21.1 API（SelectTemplatePayload、SingleStackRecipeInput、RecipeExporter、Identifier.of）+ datagen 刷新 |
+- 2026-05-18：批量同步 commits 119-124——蒸汽系统 + 压缩机配方容器返还 + 流体管道重构 + BER 光照 + GUI 传统纹理 + 移除 deploy-enabled。cherry-pick + 解决多处冲突 + 适配 1.21.1 API（FluidVariant CODEC、ExtendedScreenHandlerFactory getScreenOpeningData、validateTicker、ItemStack.fromNbt/encode、onUse 无 Hand、appendTooltip TooltipType）+ datagen 刷新 |

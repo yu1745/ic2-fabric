@@ -528,10 +528,47 @@ class ScrapBox : ScrapBoxItem() {
 // ========== 柄与涡轮类 ==========
 
 @ModItem(name = "steam_turbine_blade", tab = CreativeTab.IC2_MATERIALS, group = "rotor_blades")
-class SteamTurbineBlade : Item(FabricItemSettings())
+class SteamTurbineBlade : Item(FabricItemSettings()) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val steelPlate = ic2_120.content.item.SteelPlate::class.instance()
+            val steelIngot = ic2_120.content.item.SteelIngot::class.instance()
+            if (steelPlate != net.minecraft.item.Items.AIR && steelIngot != net.minecraft.item.Items.AIR) {
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteamTurbineBlade::class.instance(), 1)
+                    .pattern("PPP").pattern("PIP").pattern("PPP")
+                    .input('P', steelPlate)
+                    .input('I', steelIngot)
+                    .criterion(hasItem(steelPlate), conditionsFromItem(steelPlate))
+                    .offerTo(exporter, SteamTurbineBlade::class.id())
+            }
+        }
+    }
+}
 
 @ModItem(name = "steam_turbine", tab = CreativeTab.IC2_MATERIALS, group = "rotors")
-class SteamTurbine : Item(FabricItemSettings())
+class SteamTurbine : RotorItem(48) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val blade = SteamTurbineBlade::class.instance()
+            if (blade != net.minecraft.item.Items.AIR) {
+                // 水平排列 3 个叶片
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteamTurbine::class.instance(), 1)
+                    .pattern("BBB")
+                    .input('B', blade)
+                    .criterion(hasItem(blade), conditionsFromItem(blade))
+                    .offerTo(exporter, SteamTurbine::class.id())
+                // 垂直排列 3 个叶片（备用配方）
+                ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteamTurbine::class.instance(), 1)
+                    .pattern("B").pattern("B").pattern("B")
+                    .input('B', blade)
+                    .criterion(hasItem(blade), conditionsFromItem(blade))
+                    .offerTo(exporter, SteamTurbine::class.recipeId("vertical"))
+            }
+        }
+    }
+}
 
 // @ModItem(name = "jetpack_attachment_plate", tab = CreativeTab.IC2_MATERIALS, group = "circuits")
 class JetpackAttachmentPlate : Item(FabricItemSettings())

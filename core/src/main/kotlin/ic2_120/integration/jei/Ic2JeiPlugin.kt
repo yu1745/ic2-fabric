@@ -35,6 +35,10 @@ import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
+import ic2_120.content.item.getFluidCellVariant
+import ic2_120.content.item.setFluidCellVariant
+import ic2_120.content.fluid.ModFluids
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import mezz.jei.api.IModPlugin
 import mezz.jei.api.JeiPlugin
 import mezz.jei.api.ingredients.subtypes.IIngredientSubtypeInterpreter
@@ -44,6 +48,7 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration
 import mezz.jei.api.registration.IRecipeRegistration
 import mezz.jei.api.registration.ISubtypeRegistration
 import mezz.jei.api.runtime.IJeiRuntime
+import net.minecraft.fluid.Fluids
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -120,6 +125,12 @@ class Ic2JeiPlugin : IModPlugin {
                 )
             }
         }
+
+        // 通用流体单元：按 NBT 中存储的 FluidVariant 区分子类型
+        val fluidCell = Registries.ITEM.get(Identifier("ic2_120", "fluid_cell"))
+        if (fluidCell !== Items.AIR) {
+            registration.registerSubtypeInterpreter(fluidCell, FluidCellSubtypeInterpreter())
+        }
     }
 
     override fun registerExtraIngredients(registration: IExtraIngredientRegistration) {
@@ -189,6 +200,38 @@ class Ic2JeiPlugin : IModPlugin {
         // 注册杂交作物初始种子袋（1/1/1）
         extraStacks += CropSeedBagItem.createInitialSeedStacks()
 
+        // 通用流体单元：为所有没有专用单元类的流体注册 NBT 变体
+        val fluidCell = Registries.ITEM.get(Identifier("ic2_120", "fluid_cell"))
+        if (fluidCell !== Items.AIR) {
+            val modFluidCells = setOf(
+                Fluids.WATER, Fluids.FLOWING_WATER,
+                Fluids.LAVA, Fluids.FLOWING_LAVA,
+                ModFluids.DISTILLED_WATER_STILL, ModFluids.DISTILLED_WATER_FLOWING,
+                ModFluids.COOLANT_STILL, ModFluids.COOLANT_FLOWING,
+                ModFluids.HOT_COOLANT_STILL, ModFluids.HOT_COOLANT_FLOWING,
+                ModFluids.UU_MATTER_STILL, ModFluids.UU_MATTER_FLOWING,
+                ModFluids.WEED_EX_STILL, ModFluids.WEED_EX_FLOWING,
+                ModFluids.PAHOEHOE_LAVA_STILL, ModFluids.PAHOEHOE_LAVA_FLOWING,
+                ModFluids.BIOFUEL_STILL, ModFluids.BIOFUEL_FLOWING,
+                ModFluids.BIOMASS_STILL, ModFluids.BIOMASS_FLOWING,
+                ModFluids.CONSTRUCTION_FOAM_STILL, ModFluids.CONSTRUCTION_FOAM_FLOWING,
+                ModFluids.CREOSOTE_STILL, ModFluids.CREOSOTE_FLOWING,
+                ModFluids.STEAM_STILL, ModFluids.STEAM_FLOWING,
+                ModFluids.SUPERHEATED_STEAM_STILL, ModFluids.SUPERHEATED_STEAM_FLOWING
+            )
+            extraStacks += Registries.FLUID
+                .filter { fluid ->
+                    fluid !== Fluids.EMPTY &&
+                    fluid !== Fluids.FLOWING_LAVA &&
+                    fluid !== Fluids.FLOWING_WATER &&
+                    fluid !in modFluidCells
+                }
+                .sortedBy { Registries.FLUID.getId(it).toString() }
+                .map { fluid ->
+                    ItemStack(fluidCell).apply { setFluidCellVariant(FluidVariant.of(fluid)) }
+                }
+        }
+
         if (extraStacks.isNotEmpty()) {
             registration.addExtraItemStacks(extraStacks)
         }
@@ -232,7 +275,8 @@ class Ic2JeiPlugin : IModPlugin {
             .map { entry ->
                 CompressorJeiRecipe(
                     ItemStack(entry.input, entry.inputCount),
-                    ItemStack(entry.output, entry.count)
+                    ItemStack(entry.output, entry.count),
+                    entry.containerReturn
                 )
             }
         registration.addRecipes(Ic2JeiRecipeTypes.COMPRESSOR, compressorRecipes)
@@ -516,6 +560,24 @@ class Ic2JeiPlugin : IModPlugin {
                 amt >= cap -> FULL_TAG
                 else -> "$PARTIAL_TAG:$amt"
             }
+        }
+    }
+
+    /**
+     * 通用流体单元 NBT 子类型解释器。
+     *
+     * 使用 NBT 中 "FluidVariant" 标签来区分不同流体类型的单元。
+     * JEI 会根据此解释器将不同流体的 fluid_cell 识别为独立的物品。
+     */
+    class FluidCellSubtypeInterpreter : IIngredientSubtypeInterpreter<ItemStack> {
+        override fun apply(itemStack: ItemStack, uidContext: mezz.jei.api.ingredients.subtypes.UidContext): String {
+            val variant = itemStack.getFluidCellVariant() ?: return "empty"
+            if (variant.isBlank) return "empty"
+            // 在配方匹配上下文中忽略流体细分，使所有 fluid_cell 类型都能在配方中匹配
+            if (uidContext == mezz.jei.api.ingredients.subtypes.UidContext.Recipe) {
+                return ""
+            }
+            return Registries.FLUID.getId(variant.fluid).toString()
         }
     }
 

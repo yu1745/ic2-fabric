@@ -15,7 +15,8 @@ class CompressorRecipe(
     private val id: Identifier,
     val ingredient: Ingredient,
     val inputCount: Int,
-    val output: ItemStack
+    val output: ItemStack,
+    val containerReturn: ItemStack = ItemStack.EMPTY
 ) : Recipe<SimpleInventory> {
     override fun matches(inventory: SimpleInventory, world: World): Boolean {
         val stack = inventory.getStack(0)

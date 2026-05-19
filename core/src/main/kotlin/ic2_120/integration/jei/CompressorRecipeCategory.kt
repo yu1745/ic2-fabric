@@ -15,7 +15,7 @@ import net.minecraft.util.Identifier
  * 简易 JEI 分类：只表达输入、输出与机器类型。
  */
 class CompressorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<CompressorJeiRecipe> {
-    private val background: IDrawable = guiHelper.createBlankDrawable(140, 54)
+    private val background: IDrawable = guiHelper.createBlankDrawable(140, 62)
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
         ItemStack(Registries.ITEM.get(Identifier("ic2_120", "compressor")))
     )
@@ -40,5 +40,11 @@ class CompressorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Compress
         // 输出槽
         builder.addSlot(RecipeIngredientRole.OUTPUT, 102, 18)
             .addItemStack(recipe.output)
+
+        // 容器返还槽
+        if (!recipe.containerReturn.isEmpty) {
+            builder.addSlot(RecipeIngredientRole.OUTPUT, 102, 36)
+                .addItemStack(recipe.containerReturn)
+        }
     }
 }

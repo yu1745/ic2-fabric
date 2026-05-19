@@ -67,8 +67,8 @@ abstract class FluidFilterUpgradeItem : Item(FabricItemSettings()), IUpgradeItem
         } else {
             tooltip.add(Text.literal("过滤: 未设置").formatted(Formatting.GRAY))
         }
-        val side = FluidPipeUpgradeComponent.readDirection(stack)
-        tooltip.add(Text.literal("方向: ${directionLabel(side)}").formatted(Formatting.GRAY))
+        val sides = FluidPipeUpgradeComponent.readDirections(stack)
+        tooltip.add(Text.literal("方向: ${directionLabel(sides)}").formatted(Formatting.GRAY))
     }
 
     override fun use(world: World, user: net.minecraft.entity.player.PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
@@ -76,8 +76,9 @@ abstract class FluidFilterUpgradeItem : Item(FabricItemSettings()), IUpgradeItem
         if (world.isClient) return TypedActionResult.success(stack)
 
         if (user.isSneaking) {
-            val next = FluidPipeUpgradeComponent.nextDirection(FluidPipeUpgradeComponent.readDirection(stack))
-            FluidPipeUpgradeComponent.writeDirection(stack, next)
+            val current = FluidPipeUpgradeComponent.readDirections(stack)
+            val next = FluidPipeUpgradeComponent.nextDirections(current)
+            FluidPipeUpgradeComponent.writeDirections(stack, next)
             if (user is ServerPlayerEntity) {
                 user.sendMessage(Text.literal("已设置工作方向: ${directionLabel(next)}"), true)
             }
@@ -99,14 +100,17 @@ abstract class FluidFilterUpgradeItem : Item(FabricItemSettings()), IUpgradeItem
         return TypedActionResult.success(stack)
     }
 
-    private fun directionLabel(side: Direction?): String = when (side) {
-        null -> "任意"
-        Direction.DOWN -> "下"
-        Direction.UP -> "上"
-        Direction.NORTH -> "北"
-        Direction.SOUTH -> "南"
-        Direction.WEST -> "西"
-        Direction.EAST -> "东"
+    private fun directionLabel(sides: Set<Direction>): String = if (sides.isEmpty()) {
+        "任意"
+    } else {
+        sides.joinToString(", ") { when (it) {
+            Direction.DOWN -> "下"
+            Direction.UP -> "上"
+            Direction.NORTH -> "北"
+            Direction.SOUTH -> "南"
+            Direction.WEST -> "西"
+            Direction.EAST -> "东"
+        }}
     }
 }
 

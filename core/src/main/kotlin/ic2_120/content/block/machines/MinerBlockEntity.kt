@@ -113,8 +113,10 @@ abstract class BaseMinerBlockEntity(
     override var fluidPipeReceiverEnabled: Boolean = false
     override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
     override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
-    override var fluidPipeProviderSide: Direction? = null
-    override var fluidPipeReceiverSide: Direction? = null
+    override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
+    override var fluidPipeEjectorCount: Int = 0
+    override var fluidPipePullingCount: Int = 0
     private val logger = LoggerFactory.getLogger("ic2_120/MinerCursor")
 
     companion object {
@@ -1259,8 +1261,8 @@ abstract class BaseMinerBlockEntity(
     private fun ejectFluidToNeighbors(world: World, pos: BlockPos, state: BlockState) {
         if (tankInternal.amount <= 0L || tankInternal.variant.isBlank) return
         val front = state.get(Properties.HORIZONTAL_FACING)
-        val configuredSide = fluidPipeProviderSide
-        val dirs = if (configuredSide != null) listOf(configuredSide) else Direction.values().toList()
+        val configuredSides = fluidPipeProviderSides
+        val dirs = if (configuredSides.isNotEmpty()) configuredSides.toList() else Direction.values().toList()
 
         for (dir in dirs) {
             if (dir == front) continue

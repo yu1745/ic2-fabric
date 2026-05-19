@@ -11,6 +11,8 @@ import net.minecraft.block.Blocks
 import net.minecraft.block.FluidBlock
 import net.minecraft.block.FluidFillable
 import net.minecraft.block.AbstractBlock
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.damage.DamageSource
 import net.minecraft.fluid.FlowableFluid
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.FluidState
@@ -24,9 +26,11 @@ import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.sound.SoundEvents
 import net.minecraft.state.StateManager
+import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
@@ -177,19 +181,19 @@ object ModFluids {
         }
     }
 
-    private fun registerFluid(name: String, stillTex: String, flowTex: String, tintArgb: Int? = null) {
+    private fun registerFluid(name: String, stillTex: String, flowTex: String, tintArgb: Int? = null, withBucket: Boolean = true, rises: Boolean = false) {
         val modId = Ic2_120.MOD_ID
 
         // 1. 注册 Still 和 Flowing 流体
         val still = Registry.register(
             Registries.FLUID,
             Identifier(modId, name),
-            Ic2Fluid.Still(name, stillTex, flowTex)
+            Ic2Fluid.Still(name, stillTex, flowTex, rises)
         )
         val flowing = Registry.register(
             Registries.FLUID,
             Identifier(modId, "flowing_$name"),
-            Ic2Fluid.Flowing(name, stillTex, flowTex)
+            Ic2Fluid.Flowing(name, stillTex, flowTex, rises)
         )
 
         // 存储 tint 颜色（服务端安全）
@@ -198,25 +202,40 @@ object ModFluids {
             fluidTintColors[flowing] = tintArgb
         }
 
-        // 2. 注册 FluidBlock
+        // 2. 注册 FluidBlock（蒸汽等上升流体使用 SteamFluidBlock 控制生命周期）
         val block = Registry.register(
             Registries.BLOCK,
             Identifier(modId, name),
-            FluidBlock(still as FlowableFluid, AbstractBlock.Settings.copy(Blocks.WATER).noCollision().dropsNothing())
+            if (rises) {
+                SteamFluidBlock(still as FlowableFluid, AbstractBlock.Settings.copy(Blocks.WATER).noCollision().dropsNothing())
+            } else {
+                FluidBlock(still as FlowableFluid, AbstractBlock.Settings.copy(Blocks.WATER).noCollision().dropsNothing())
+            }
         )
 
-        // 3. 注册 Bucket
-        // 使用自定义 Ic2BucketItem 确保与第三方 Storage 正确交互，避免事务冲突崩溃
-        val bucketItem = Ic2BucketItem(
-            still,
-            if (name == "distilled_water") Fluids.WATER else null, // 蒸馏水放置时转为普通水
-            FabricItemSettings().recipeRemainder(Items.BUCKET).maxCount(1)
-        )
-        val bucket = Registry.register(
-            Registries.ITEM,
-            Identifier(modId, "${name}_bucket"),
-            bucketItem
-        )
+        // 3. 注册 Bucket（可选，蒸汽等不能装桶的流体跳过）
+        val bucket: Item
+        if (withBucket) {
+            // 使用自定义 Ic2BucketItem 确保与第三方 Storage 正确交互，避免事务冲突崩溃
+            val bucketItem = Ic2BucketItem(
+                still,
+                if (name == "distilled_water") Fluids.WATER else null, // 蒸馏水放置时转为普通水
+                FabricItemSettings().recipeRemainder(Items.BUCKET).maxCount(1)
+            )
+            bucket = Registry.register(
+                Registries.ITEM,
+                Identifier(modId, "${name}_bucket"),
+                bucketItem
+            )
+
+            // 添加到创造模式物品栏
+            val ic2MaterialsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(modId, CreativeTab.IC2_MATERIALS.id))
+            ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
+                entries.add(bucket)
+            }
+        } else {
+            bucket = Items.AIR
+        }
 
         // 4. 设置流体类的 block 和 bucket 引用（通过反射或延迟初始化）
         when (name) {
@@ -266,22 +285,38 @@ object ModFluids {
             }
         }
 
-        // 5. 添加到创造模式物品栏
-        val ic2MaterialsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(modId, CreativeTab.IC2_MATERIALS.id))
-        ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
-            entries.add(bucket)
+        override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
+            if (!newState.isOf(this)) {
+                Ic2Fluid.steamSourceTickCounts.remove(pos.asLong())
+                // 级联清除上方所有蒸汽块（排除过热→普通转换，转换由 onScheduledTick 自行处理）
+                if (!world.isClient && newState.block !is SteamFluidBlock) {
+                    var currentPos = pos.up()
+                    while (world.getBlockState(currentPos).block is SteamFluidBlock) {
+                        world.setBlockState(currentPos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+                        currentPos = currentPos.up()
+                    }
+                }
+            }
+            super.onStateReplaced(state, world, pos, newState, moved)
         }
     }
 
     /**
      * IC2 抽象流体基类。
      * 行为类似水：非无限、流动速度 4、每格衰减 1、更新间隔 5 tick。
+     * 当 rises = true，流体向上流动（蒸汽），10 秒后自动消散。
      */
     abstract class Ic2Fluid(
         protected val name: String,
         private val stillTex: String,
-        private val flowTex: String
+        private val flowTex: String,
+        protected val rises: Boolean = false
     ) : FlowableFluid() {
+
+        companion object {
+            /** 蒸汽源计次：BlockPos.asLong() → 已 tick 次数，用于 10 秒自动消散 */
+            val steamSourceTickCounts = mutableMapOf<Long, Int>()
+        }
 
         override fun getStill(): Fluid = getStillFluid()
         override fun getFlowing(): Fluid = getFlowingFluid()
@@ -312,7 +347,113 @@ object ModFluids {
         override fun getTickRate(world: WorldView): Int = 5
         override fun getBlastResistance(): Float = 100f
 
-        class Still(name: String, stillTex: String, flowTex: String) : Ic2Fluid(name, stillTex, flowTex) {
+        // ========== 上升流体（蒸汽）行为 ==========
+
+        override fun getUpdatedState(world: World, pos: BlockPos, state: BlockState): FluidState {
+            if (!rises) return super.getUpdatedState(world, pos, state)
+
+            // 上升流体只从下方获取支持，不检查水平方向
+            val belowFluid = world.getFluidState(pos.down())
+            if (!belowFluid.isEmpty && belowFluid.fluid.matchesType(this)) {
+                val incomingLevel = if (belowFluid.isStill) 8 else belowFluid.level
+                val newLevel = (incomingLevel - getLevelDecreasePerBlock(world)).coerceAtLeast(1)
+                return getFlowing(newLevel, true)
+            }
+
+            // 无下方支持 → 消散
+            return Fluids.EMPTY.defaultState
+        }
+
+        override fun tryFlow(world: World, pos: BlockPos, state: FluidState) {
+            if (state.isEmpty || !rises) {
+                super.tryFlow(world, pos, state)
+                return
+            }
+
+            val blockState = world.getBlockState(pos)
+
+            // 蒸汽只上升，不水平扩散
+            val upPos = pos.up()
+            val upBlockState = world.getBlockState(upPos)
+            val upFluidState = getUpdatedState(world, upPos, upBlockState)
+            val canFlowUp = canFlow(world, pos, blockState, Direction.UP, upPos, upBlockState, world.getFluidState(upPos), upFluidState.fluid)
+
+            if (canFlowUp) {
+                flow(world, upPos, upBlockState, Direction.UP, upFluidState)
+            }
+        }
+
+        override fun onScheduledTick(world: World, pos: BlockPos, state: FluidState) {
+            if (!rises) {
+                super.onScheduledTick(world, pos, state)
+                return
+            }
+
+            // 蒸汽伤害：每秒 2 血
+            applySteamDamage(world, pos)
+
+            if (state.isStill) {
+                // 蒸汽源：每 tick 上升 + 扩散，记录次数，40 次（200 ticks = 10 秒）后自动消散
+                val key = pos.asLong()
+                val count = (steamSourceTickCounts[key] ?: 0) + 1
+                steamSourceTickCounts[key] = count
+
+                if (count >= 40) {
+                    steamSourceTickCounts.remove(key)
+                    if (name == "superheated_steam") {
+                        // 过热蒸汽 → 普通蒸汽（源块 + 上方流动块级联转换）
+                        world.setBlockState(pos, STEAM_BLOCK.defaultState, Block.NOTIFY_ALL)
+                        world.scheduleFluidTick(pos, STEAM_STILL, 5)
+                        // 级联转换上方的过热蒸汽流动块为普通蒸汽
+                        var currentPos = pos.up()
+                        while (true) {
+                            val currentBlockState = world.getBlockState(currentPos)
+                            if (!currentBlockState.isOf(SUPERHEATED_STEAM_BLOCK)) break
+                            val newBlockState = STEAM_BLOCK.defaultState.with(FluidBlock.LEVEL, currentBlockState.get(FluidBlock.LEVEL))
+                            world.setBlockState(currentPos, newBlockState, Block.NOTIFY_ALL)
+                            world.scheduleFluidTick(currentPos, STEAM_FLOWING, 5)
+                            currentPos = currentPos.up()
+                        }
+                    } else {
+                        // 普通蒸汽：消散
+                        world.setBlockState(pos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+                    }
+                    return
+                }
+                world.scheduleFluidTick(pos, this, 5)
+                tryFlow(world, pos, state)
+                return
+            }
+
+            // 流动状态：上升流体需要始终重调度 tick，以便检测源消散
+            val newState = getUpdatedState(world, pos, world.getBlockState(pos))
+            if (newState.isEmpty) {
+                world.setBlockState(pos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+            } else {
+                if (!newState.equals(state)) {
+                    world.setBlockState(pos, newState.blockState, Block.NOTIFY_LISTENERS)
+                    world.updateNeighborsAlways(pos, newState.blockState.block)
+                }
+                // 上升流体的流动块始终重调度，以便在源消散后自行消散
+                world.scheduleFluidTick(pos, newState.fluid, getTickRate(world))
+            }
+            tryFlow(world, pos, world.getFluidState(pos).let { if (it.isEmpty) state else it })
+        }
+
+        /** 蒸汽伤害：每 20 tick（1 秒）对格内生物造成 2 点伤害 */
+        private fun applySteamDamage(world: World, pos: BlockPos) {
+            if (world.isClient) return
+            if (world.time % 20L >= 5L) return
+            val entities = world.getEntitiesByClass(LivingEntity::class.java, Box(pos)) { !it.isSpectator }
+            if (entities.isEmpty()) return
+            val damageKey = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, Identifier(Ic2_120.MOD_ID, "steam"))
+            val source = DamageSource(world.registryManager.get(RegistryKeys.DAMAGE_TYPE).entryOf(damageKey))
+            for (entity in entities) {
+                entity.damage(source, 2.0f)
+            }
+        }
+
+        class Still(name: String, stillTex: String, flowTex: String, rises: Boolean = false) : Ic2Fluid(name, stillTex, flowTex, rises) {
             override fun getLevel(state: FluidState): Int = 8
             override fun isStill(state: FluidState): Boolean = true
             override fun getStillFluid(): Fluid = when (name) {
@@ -373,7 +514,7 @@ object ModFluids {
             }
         }
 
-        class Flowing(name: String, stillTex: String, flowTex: String) : Ic2Fluid(name, stillTex, flowTex) {
+        class Flowing(name: String, stillTex: String, flowTex: String, rises: Boolean = false) : Ic2Fluid(name, stillTex, flowTex, rises) {
             override fun appendProperties(builder: StateManager.Builder<Fluid, FluidState>) {
                 super.appendProperties(builder)
                 builder.add(LEVEL)

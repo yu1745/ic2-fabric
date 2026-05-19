@@ -1,0 +1,15 @@
+{
+  "type": "ic2_120:compressing",
+  "container_return": {
+    "count": 1,
+    "item": "ic2_120:empty_cell"
+  },
+  "ingredient": {
+    "item": "ic2_120:water_cell"
+  },
+  "input_count": 1,
+  "result": {
+    "count": 1,
+    "item": "minecraft:snow_block"
+  }
+}

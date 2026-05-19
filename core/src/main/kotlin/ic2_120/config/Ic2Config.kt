@@ -60,7 +60,16 @@ data class RecyclerConfig(
 data class NuclearConfig(
     /** 是否允许核反应堆在过热时爆炸 */
     @field:ConfigComment("是否允许核反应堆在过热时爆炸。", "true")
-    val enableReactorExplosion: Boolean = true
+    val enableReactorExplosion: Boolean = true,
+    /** 反应堆爆炸威力上限。0 = 不限制。 */
+    @field:ConfigComment("反应堆爆炸威力上限。0 = 不限制（实际最大 100）。", "0.0")
+    val reactorExplosionPowerLimit: Float = 0f,
+    /** 核爆炸每 tick 摧毁方块数。越大炸得越快，但可能掉 tps。 */
+    @field:ConfigComment("核爆炸每 tick 摧毁方块数。越大越快，但可能掉 tps。", "2000")
+    val explosionBlocksPerTick: Int = 2000,
+    /** 同一玩家两次反应堆爆炸的最小间隔（分钟）。防止故意炸着玩。 */
+    @field:ConfigComment("同一玩家两次反应堆爆炸的最小间隔（分钟）。防止故意炸着玩。", "30")
+    val reactorExplosionCooldownMinutes: Int = 30
 )
 
 data class UuReplicationConfig(
@@ -440,7 +449,10 @@ private val DEFAULT_CONFIG_TEMPLATE = Ic2MainConfig(
         blacklist = listOf("minecraft:stick")
     ),
     nuclear = NuclearConfig(
-        enableReactorExplosion = true
+        enableReactorExplosion = true,
+        reactorExplosionPowerLimit = 0f,
+        explosionBlocksPerTick = 2000,
+        reactorExplosionCooldownMinutes = 30
     ),
     uuReplication = UuReplicationConfig(
         replicationWhitelist = UuReplicationDefaults.defaultWhitelist

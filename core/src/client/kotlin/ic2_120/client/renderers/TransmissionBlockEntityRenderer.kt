@@ -10,7 +10,6 @@ import ic2_120.content.block.transmission.KineticConnectionRules
 import ic2_120.content.block.transmission.ShaftMaterial
 import ic2_120.content.block.transmission.TransmissionBlockEntity
 import ic2_120.content.block.transmission.TransmissionShaftBlock
-import net.minecraft.client.render.LightmapTextureManager
 import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexConsumer
@@ -65,8 +64,6 @@ class TransmissionBlockEntityRenderer(
         val isItem = world == null
         val angle = if (isItem) 0.0f
             else ((world!!.time + tickDelta) * degreesPerTickFromKu(entity.currentKu)) % 360.0f
-        val fullLight = LightmapTextureManager.MAX_LIGHT_COORDINATE
-
         when (val block = state.block) {
             is TransmissionShaftBlock -> {
                 val axis = if (isItem) Direction.Axis.Y else state.get(Properties.AXIS)
@@ -75,7 +72,7 @@ class TransmissionBlockEntityRenderer(
                 matrices.push()
                 matrices.translate(0.5, 0.5, 0.5)
                 rotateByAxis(matrices, axis, angle)
-                drawShaftAlongAxis(matrices, vc, fullLight, overlay, axis, materialColor)
+                drawShaftAlongAxis(matrices, vc, light, overlay, axis, materialColor)
                 matrices.pop()
             }
 
@@ -98,13 +95,13 @@ class TransmissionBlockEntityRenderer(
                     matrices.push()
                     translateAlongAxis(matrices, firstAxis, gearOffset)
                     rotateByAxis(matrices, firstAxis, angle)
-                    drawGear8Teeth(matrices, vc, fullLight, overlay, firstAxis, pitchRadius, gearFaceWidthHalf, materialColor)
+                    drawGear8Teeth(matrices, vc, light, overlay, firstAxis, pitchRadius, gearFaceWidthHalf, materialColor)
                     matrices.pop()
 
                     matrices.push()
                     translateAlongAxis(matrices, secondAxis, -gearOffset)
                     rotateByAxis(matrices, secondAxis, angle + MESH_PHASE_OFFSET_DEGREES)
-                    drawGear8Teeth(matrices, vc, fullLight, overlay, secondAxis, pitchRadius, gearFaceWidthHalf, materialColor)
+                    drawGear8Teeth(matrices, vc, light, overlay, secondAxis, pitchRadius, gearFaceWidthHalf, materialColor)
                     matrices.pop()
                 } else {
                     val renderDirs = bevelRenderDirections(world!!, entity.pos)
@@ -118,13 +115,13 @@ class TransmissionBlockEntityRenderer(
                         matrices.push()
                         translateAlongAxis(matrices, firstAxis, gearOffset * firstSideSign)
                         rotateByAxis(matrices, firstAxis, angle)
-                        drawGear8Teeth(matrices, vc, fullLight, overlay, firstAxis, pitchRadius, gearFaceWidthHalf, materialColor)
+                        drawGear8Teeth(matrices, vc, light, overlay, firstAxis, pitchRadius, gearFaceWidthHalf, materialColor)
                         matrices.pop()
 
                         matrices.push()
                         translateAlongAxis(matrices, secondAxis, gearOffset * secondSideSign)
                         rotateByAxis(matrices, secondAxis, angle + MESH_PHASE_OFFSET_DEGREES)
-                        drawGear8Teeth(matrices, vc, fullLight, overlay, secondAxis, pitchRadius, gearFaceWidthHalf, materialColor)
+                        drawGear8Teeth(matrices, vc, light, overlay, secondAxis, pitchRadius, gearFaceWidthHalf, materialColor)
                         matrices.pop()
                     } else {
                         for (i in renderDirs.indices) {
@@ -136,7 +133,7 @@ class TransmissionBlockEntityRenderer(
                             matrices.push()
                             translateAlongAxis(matrices, axis, gearOffset * sideSign)
                             rotateByAxis(matrices, axis, phase)
-                            drawGear8Teeth(matrices, vc, fullLight, overlay, axis, pitchRadius, gearFaceWidthHalf, materialColor)
+                            drawGear8Teeth(matrices, vc, light, overlay, axis, pitchRadius, gearFaceWidthHalf, materialColor)
                             matrices.pop()
                         }
                     }

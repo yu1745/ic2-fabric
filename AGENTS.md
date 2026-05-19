@@ -138,6 +138,8 @@
 
 ### 9.3 Cherry-pick 注意事项
 
+> **进行 cherry-pick 前，先阅读 `docs/migration-1.20.1-to-1.21.1.md`**，了解最常见的 API 变化（`Identifier.of`、`validateTicker`、`RecipeExporter`、`onUse` 无 Hand、`CustomPayload` 等），避免编译错误后再逐一排查。
+
 1. 1.21.1 的 data 目录使用单数（`advancement/`、`recipe/`、`loot_table/`），main 使用复数（`advancements/`、`recipes/`、`loot_tables/`）
 2. 1.21.1 API 签名差异：`BlockEntityTicker` 用 `validateTicker`（main 用 `checkType`），`RecipeExporter`（main 用 `Consumer<RecipeJsonProvider>`）
 3. `assets/ic2/**` 为上游引用不可修改；`assets/ic2_120/**` 可修改
@@ -183,8 +185,12 @@
 用于将崩溃报告中的 `class_XXXX` / `method_XXXXX` 翻译为可读类名/方法名：
 
 ```bash
-# 两个版本都在 loom-cache 下，替换 {version} 为具体版本号
+# 当前项目版本（1.20.1 / 1.21.1）在 loom-cache 下，替换 {version} 为具体版本号
 ls ~/.gradle/caches/fabric-loom/{version}/net.fabricmc.yarn.*/mappings.jar
+
+# 旧版 mappings，替换 {minecraft_version} + {build}
+ls ../yarn-{minecraft_version}+build.{build}-v2.jar
+#   示例: https://maven.fabricmc.net/net/fabricmc/yarn/1.19.2+build.28/yarn-1.19.2+build.28-v2.jar
 
 # 用法：从 jar 提取并查找
 jar tf /path/to/mappings.jar                  # 列出内容

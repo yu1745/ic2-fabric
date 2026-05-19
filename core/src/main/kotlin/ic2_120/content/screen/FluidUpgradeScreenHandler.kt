@@ -17,6 +17,7 @@ import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.slot.Slot
 import net.minecraft.util.Hand
+import net.minecraft.util.math.Direction
 
 /**
  * 流体升级配置 GUI。
@@ -29,11 +30,11 @@ import net.minecraft.util.Hand
  * 按钮：
  * - BUTTON_SET_FILTER (0)：读取容器槽位的流体 → 写入过滤
  * - BUTTON_CLEAR_FILTER (1)：清除过滤
- * - BUTTON_CYCLE_DIRECTION (2)：循环工作方向
+ * - BUTTON_TOGGLE_DIR (10~15)：开关各方向
  *
  * PropertyDelegate：
- * - Index 0：方向序号（0~5=Direction 枚举，6=null/任意）
- * - Index 1：流体原始注册 ID（0=无过滤）
+ * - Index 0~5：6 个方向是否激活（0/1）
+ * - Index 6：流体原始注册 ID（0=无过滤）
  */
 @ModScreenHandler(name = "fluid_upgrade")
 class FluidUpgradeScreenHandler(
@@ -44,10 +45,10 @@ class FluidUpgradeScreenHandler(
     private val propertyDelegate: PropertyDelegate = ArrayPropertyDelegate(PROPERTY_COUNT)
 ) : ScreenHandler(FluidUpgradeScreenHandler::class.type(), syncId) {
 
-    /** 方向序号：0~5 对应 Direction 枚举，6 表示 null/任意 */
-    val directionOrdinal: Int get() = propertyDelegate.get(0)
+    /** 方向是否激活 */
+    fun isDirectionActive(dirIdx: Int): Boolean = propertyDelegate.get(PROP_DIR_BASE + dirIdx) != 0
     /** 流体的原始注册 ID（0=无过滤） */
-    val fluidRawId: Int get() = propertyDelegate.get(1)
+    val fluidRawId: Int get() = propertyDelegate.get(PROP_FLUID)
 
     companion object {
         const val SLOT_CONTAINER = 0
@@ -55,14 +56,11 @@ class FluidUpgradeScreenHandler(
 
         const val BUTTON_SET_FILTER = 0
         const val BUTTON_CLEAR_FILTER = 1
-        const val BUTTON_CYCLE_DIRECTION = 2
+        const val BUTTON_TOGGLE_DIR = 10  // 10-15
 
-        /** 方向序号 → null（任意方向） */
-        private const val DIR_ORDINAL_NULL = 6
-
-        private const val PROPERTY_COUNT = 2
-        private const val PROP_DIRECTION = 0
-        private const val PROP_FLUID = 1
+        private const val PROP_DIR_BASE = 0    // 0-5: 6 directions
+        private const val PROP_FLUID = 6
+        private const val PROPERTY_COUNT = 7
 
         const val PLAYER_INV_START = SLOT_CONTAINER_COUNT
         private const val PLAYER_INV_END = PLAYER_INV_START + 27
@@ -111,10 +109,12 @@ class FluidUpgradeScreenHandler(
             BUTTON_CLEAR_FILTER -> {
                 FluidPipeUpgradeComponent.writeFilter(upgradeStack, null)
             }
-            BUTTON_CYCLE_DIRECTION -> {
-                val current = FluidPipeUpgradeComponent.readDirection(upgradeStack)
-                val next = FluidPipeUpgradeComponent.nextDirection(current)
-                FluidPipeUpgradeComponent.writeDirection(upgradeStack, next)
+            in BUTTON_TOGGLE_DIR until BUTTON_TOGGLE_DIR + 6 -> {
+                val dirIdx = id - BUTTON_TOGGLE_DIR
+                val dir = Direction.entries[dirIdx]
+                val current = FluidPipeUpgradeComponent.readDirections(upgradeStack)
+                val next = if (dir in current) current - setOf(dir) else current + setOf(dir)
+                FluidPipeUpgradeComponent.writeDirections(upgradeStack, next)
             }
             else -> return false
         }
@@ -165,13 +165,15 @@ class FluidUpgradeScreenHandler(
         val player = playerInventory.player
         val upgradeStack = player.getStackInHand(hand)
         if (upgradeStack.item !is FluidFilterUpgradeItem) {
-            propertyDelegate.set(PROP_DIRECTION, DIR_ORDINAL_NULL)
+            for (i in 0..5) propertyDelegate.set(PROP_DIR_BASE + i, 0)
             propertyDelegate.set(PROP_FLUID, 0)
             return
         }
 
-        val dir = FluidPipeUpgradeComponent.readDirection(upgradeStack)
-        propertyDelegate.set(PROP_DIRECTION, dir?.ordinal ?: DIR_ORDINAL_NULL)
+        val dirs = FluidPipeUpgradeComponent.readDirections(upgradeStack)
+        for (i in 0..5) {
+            propertyDelegate.set(PROP_DIR_BASE + i, if (Direction.entries[i] in dirs) 1 else 0)
+        }
 
         val filter = FluidPipeUpgradeComponent.readFilter(upgradeStack)
         propertyDelegate.set(PROP_FLUID, if (filter != null) Registries.FLUID.getRawId(filter) else 0)

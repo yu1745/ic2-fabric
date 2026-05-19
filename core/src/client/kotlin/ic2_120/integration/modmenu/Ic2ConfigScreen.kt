@@ -124,14 +124,36 @@ object Ic2ConfigScreen {
         builder: ConfigBuilder, eb: ConfigEntryBuilder, cfg: NuclearConfig
     ): () -> NuclearConfig {
         var enableReactorExplosion = cfg.enableReactorExplosion
+        var reactorExplosionPowerLimit = cfg.reactorExplosionPowerLimit
+        var explosionBlocksPerTick = cfg.explosionBlocksPerTick
+        var explosionCooldown = cfg.reactorExplosionCooldownMinutes
 
         val cat = builder.getOrCreateCategory(Text.literal("核能"))
         cat.addEntry(eb.startBooleanToggle(Text.literal("反应堆过热爆炸"), enableReactorExplosion)
             .setDefaultValue(true)
             .setTooltip(Text.literal("是否允许核反应堆在过热时爆炸"))
             .setSaveConsumer { enableReactorExplosion = it }.build())
+        cat.addEntry(eb.startFloatField(Text.literal("爆炸威力上限"), reactorExplosionPowerLimit)
+            .setDefaultValue(0f)
+            .setTooltip(Text.literal("反应堆爆炸威力上限。0 = 不限制（实际最大 100）。"))
+            .setSaveConsumer { reactorExplosionPowerLimit = it }.build())
+        cat.addEntry(eb.startIntField(Text.literal("每 tick 摧毁方块数"), explosionBlocksPerTick)
+            .setDefaultValue(2000)
+            .setTooltip(Text.literal("核爆炸每 tick 摧毁方块数。越大炸得越快，但可能掉 tps。"))
+            .setSaveConsumer { explosionBlocksPerTick = it }.build())
+        cat.addEntry(eb.startIntField(Text.literal("爆炸公告冷却（分钟）"), explosionCooldown)
+            .setDefaultValue(30)
+            .setTooltip(Text.literal("同一玩家两次爆炸公告的最小间隔（分钟），爆炸本身不受影响。0 = 无冷却"))
+            .setSaveConsumer { explosionCooldown = it }.build())
 
-        return { NuclearConfig(enableReactorExplosion = enableReactorExplosion) }
+        return {
+            NuclearConfig(
+                enableReactorExplosion = enableReactorExplosion,
+                reactorExplosionPowerLimit = reactorExplosionPowerLimit,
+                explosionBlocksPerTick = explosionBlocksPerTick,
+                reactorExplosionCooldownMinutes = explosionCooldown
+            )
+        }
     }
 
     // ==================== 采矿机 ====================
