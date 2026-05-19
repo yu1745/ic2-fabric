@@ -30,6 +30,7 @@ class MaceratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
         // 升级提示图标位于 (4, 4) — 16×16 纹理来自 uptips.png (1,1) 至结束
@@ -46,7 +47,7 @@ class MaceratorScreen(
         val consumeRate = handler.sync.getSyncedConsumedAmount()
 
         // 能量条位于 (44, 36) — 14×14 纹理来自 scrapboxrecipes.png (178,2)-(191,15)
-        drawEnergyGauge(context, x + 44, y + 36, energyFrac)
+        drawEnergyGauge(context, x + 43, y + 36, energyFrac)
 
         // 进度条位于 (76, 38) — 21×11 纹理来自 scrapboxrecipes.png (178,18)-(198,28)
         drawProgressGauge(context, x + 74, y + 38, progressFrac)
@@ -92,7 +93,7 @@ class MaceratorScreen(
         val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
         if (fillH <= 0) return
         context.enableScissor(gx, gy + barH - fillH, gx + barW, gy + barH)
-        context.drawTexture(TEXTURE, gx, gy, 178f, 2f, barW, barH, 256, 256)
+        context.drawTexture(TEXTURE, gx, gy, 177f, 1f, barW, barH, 256, 256)
         context.disableScissor()
     }
 

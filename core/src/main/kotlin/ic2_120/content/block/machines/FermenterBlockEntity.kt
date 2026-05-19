@@ -16,7 +16,8 @@ import ic2_120.content.upgrade.PullingUpgradeComponent
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
-import ic2_120.content.item.IUpgradeItem
+import ic2_120.content.item.FluidEjectorUpgrade
+import ic2_120.content.item.FluidPullingUpgrade
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.RegisterItemStorage
@@ -87,12 +88,10 @@ class FermenterBlockEntity(
         const val SLOT_OUTPUT_FERTILIZER = 4
         const val SLOT_UPGRADE_0 = 5
         const val SLOT_UPGRADE_1 = 6
-        const val SLOT_UPGRADE_2 = 7
-        const val SLOT_UPGRADE_3 = 8
-        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1)
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_FILLED_CONTAINER, SLOT_OUTPUT_FERTILIZER)
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_INPUT_FILLED_CONTAINER)
-        const val INVENTORY_SIZE = 9
+        const val INVENTORY_SIZE = 7
 
         private const val NBT_INPUT_TANK = "InputTank"
         private const val NBT_OUTPUT_TANK = "OutputTank"
@@ -118,7 +117,7 @@ class FermenterBlockEntity(
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
-            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
+            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is FluidEjectorUpgrade || it.item is FluidPullingUpgrade }),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_FILLED_CONTAINER), matcher = { isBiomassFilledContainer(it) }),
             ItemInsertRoute(intArrayOf(SLOT_OUTPUT_EMPTY_CONTAINER), matcher = { isEmptyContainerForFermenter(it) })
         ),
@@ -312,7 +311,7 @@ class FermenterBlockEntity(
         SLOT_OUTPUT_EMPTY_CONTAINER -> isEmptyContainerForFermenter(stack)
         SLOT_OUTPUT_FILLED_CONTAINER -> false
         SLOT_OUTPUT_FERTILIZER -> false
-        in SLOT_UPGRADE_0..SLOT_UPGRADE_3 -> stack.item is IUpgradeItem
+        in SLOT_UPGRADE_0..SLOT_UPGRADE_1 -> stack.item is FluidEjectorUpgrade || stack.item is FluidPullingUpgrade
         else -> false
     }
 

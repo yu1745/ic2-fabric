@@ -1,124 +1,75 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.t
-import ic2_120.client.ui.GuiBackground
-import ic2_120.client.ui.ProgressBar
 import ic2_120.content.block.SolidHeatGeneratorBlock
 import ic2_120.content.screen.SolidHeatGeneratorScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text as McText
+import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = SolidHeatGeneratorBlock::class)
 class SolidHeatGeneratorScreen(
     handler: SolidHeatGeneratorScreenHandler,
     playerInventory: PlayerInventory,
-    title: McText
+    title: Text
 ) : HandledScreen<SolidHeatGeneratorScreenHandler>(handler, playerInventory, title) {
-    private val ui = ComposeUI()
 
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        backgroundWidth = 176
+        backgroundHeight = 166
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
-        val content: UiScope.() -> Unit = {
-            Column(
-                x = left + 8,
-                y = top + 8,
-                spacing = 6,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Text(title.string, color = 0xFFFFFF)
-                SlotHost(0)
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = SolidHeatGeneratorScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
-            )
-        }
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context,
-            x,
-            y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
-        val fuelSlot = handler.slots[0]
-        context.drawBorder(
-            x + fuelSlot.x - 1,
-            y + fuelSlot.y - 1,
-            SLOT_SIZE,
-            SLOT_SIZE,
-            GuiBackground.BORDER_COLOR
-        )
+        renderBackground(context)
+        super.render(context, mouseX, mouseY, delta)
 
         val total = handler.sync.burnTotal.coerceAtLeast(1)
         val current = handler.sync.burnTime.coerceIn(0, total)
-        val frac = (current.toFloat() / total).coerceIn(0f, 1f)
-        ProgressBar.drawVerticalFuelBar(context, x + fuelSlot.x + 20, y + fuelSlot.y, 6, 18, frac)
+        val burnFrac = (current.toFloat() / total).coerceIn(0f, 1f)
+        val outputRate = handler.sync.getSyncedOutputHeat().coerceAtLeast(0L)
 
-        // 再绘制 UI（slot 背景等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        // 标题居中于 y=6
+        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
-        // 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
+        // 燃烧进度条：纹理 (179,2)-(192,15) = 13×13，渲染区域 (82,29)-(94,41) = 12×12，自底向上填充
+        drawBurnBar(context, x + 82, y + 29, burnFrac)
 
-        val generatedRate = handler.sync.getSyncedGeneratedHeat()
-        val outputRate = handler.sync.getSyncedOutputHeat()
-
-        val generatedText = t("gui.ic2_120.generate_hu", generatedRate)
-        val outputText = t("gui.ic2_120.output_hu", outputRate)
-        val generatedTextWidth = generatedText.length * 6
-        val outputTextWidth = outputText.length * 6
-        val textX = x - maxOf(generatedTextWidth, outputTextWidth) - 4
-        context.drawText(textRenderer, generatedText, textX, y + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, textX, y + 20, 0xAAAAAA, false)
+        // 输出文本：区域 (48,65)-(128,79)，居中常显，7px
+        val infoText = "输出：${outputRate} HU/t"
+        val scale = 7f / textRenderer.fontHeight
+        val scaledWidth = (textRenderer.getWidth(infoText) * scale).toInt()
+        val scaledHeight = (textRenderer.fontHeight * scale).toInt()
+        val textX = x + 48 + (80 - scaledWidth) / 2
+        val textY = y + 65 + (14 - scaledHeight) / 2
+        context.matrices.push()
+        context.matrices.translate(textX.toDouble(), textY.toDouble(), 0.0)
+        context.matrices.scale(scale, scale, 1.0f)
+        context.drawText(textRenderer, infoText, 0, 0, 0xFFADD8E6.toInt(), false)
+        context.matrices.pop()
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun UiScope.SlotHost(slotIndex: Int) {
-        SlotAnchor(
-            id = slotAnchorId(slotIndex),
-            width = SLOT_SIZE,
-            height = SLOT_SIZE
-        )
+    /**
+     * 燃烧进度条自底向上填充，纹理区域 (179,2)-(192,15) = 13×13。
+     */
+    private fun drawBurnBar(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+        val barW = 12
+        val barH = 12
+        val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
+        if (fillH <= 0) return
+        context.enableScissor(gx, gy + barH - fillH, gx + barW, gy + barH)
+        context.drawTexture(TEXTURE, gx, gy, 179f, 2f, barW, barH, 256, 256)
+        context.disableScissor()
     }
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
-    }
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
 
     companion object {
-        private const val SLOT_SIZE = 18
-        private val GUI_SIZE = GuiSize.STANDARD
+        private val TEXTURE = Identifier("ic2", "textures/gui/guisolidheatengine.png")
     }
 }

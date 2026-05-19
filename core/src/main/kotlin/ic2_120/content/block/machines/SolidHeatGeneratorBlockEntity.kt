@@ -44,8 +44,9 @@ class SolidHeatGeneratorBlockEntity(
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SolidHeatGeneratorBlock.ACTIVE
 
     companion object {
-        private const val SLOT_FUEL = 0
-        private const val INVENTORY_SIZE = 1
+        const val SLOT_FUEL = 0
+        const val SLOT_OUTPUT = 1
+        const val INVENTORY_SIZE = 2
         private const val HU_PER_TICK = 20L
         private const val SOLID_HEAT_BURN_DIVISOR = 4 // 1600(煤炭熔炉tick) -> 400(本机tick)
     }
@@ -60,7 +61,7 @@ class SolidHeatGeneratorBlockEntity(
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(SLOT_FUEL), matcher = { isValid(SLOT_FUEL, it) })
         ),
-        extractSlots = intArrayOf(SLOT_FUEL),
+        extractSlots = intArrayOf(SLOT_FUEL, SLOT_OUTPUT),
         markDirty = { markDirty() }
     )
     private var burnTime = 0
@@ -104,8 +105,10 @@ class SolidHeatGeneratorBlockEntity(
         markDirty()
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean =
-        slot == SLOT_FUEL && !stack.isEmpty && getFuelTimeForSolidHeat(stack) > 0
+    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+        SLOT_FUEL -> !stack.isEmpty && getFuelTimeForSolidHeat(stack) > 0
+        else -> false
+    }
 
     override fun readNbt(nbt: NbtCompound) {
         super.readNbt(nbt)
