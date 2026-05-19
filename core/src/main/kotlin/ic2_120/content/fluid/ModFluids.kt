@@ -133,6 +133,18 @@ object ModFluids {
     lateinit var COMPRESSED_AIR_BLOCK: Block
     lateinit var COMPRESSED_AIR_BUCKET: Item
 
+    // Steam - 蒸汽
+    val STEAM_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "steam")) as FlowableFluid }
+    val STEAM_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_steam")) as FlowableFluid }
+    lateinit var STEAM_BLOCK: Block
+    lateinit var STEAM_BUCKET: Item
+
+    // Superheated Steam - 过热蒸汽
+    val SUPERHEATED_STEAM_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "superheated_steam")) as FlowableFluid }
+    val SUPERHEATED_STEAM_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier(Ic2_120.MOD_ID, "flowing_superheated_steam")) as FlowableFluid }
+    lateinit var SUPERHEATED_STEAM_BLOCK: Block
+    lateinit var SUPERHEATED_STEAM_BUCKET: Item
+
     /** 服务端安全的流体 → ARGB 颜色映射。注册时附带颜色，避免硬编码 if-else。 */
     private val fluidTintColors = mutableMapOf<Fluid, Int>()
 
@@ -153,6 +165,9 @@ object ModFluids {
         registerFluid("construction_foam", "fluid_still", "fluid_flow", tintArgb = 0xFFB4B4AF.toInt())
         registerFluid("creosote", "fluid_still", "fluid_flow", tintArgb = 0xFF4E2D14.toInt())
         registerFluid("compressed_air", "fluid_still", "fluid_flow", tintArgb = 0xFFB0D8F0.toInt())
+        // 蒸汽和过热蒸汽不能装在桶里（蒸汽单元/过热蒸汽单元代替）
+        registerFluid("steam", "fluid_still", "fluid_flow", tintArgb = 0xFFD0D0D0.toInt(), withBucket = false, rises = true)
+        registerFluid("superheated_steam", "fluid_still", "fluid_flow", tintArgb = 0xFFFFBEBE.toInt(), withBucket = false, rises = true)
 
         // 注册流体桶的玩家存储查找器，让 AE2 等模组能正确交互
         registerBucketPlayerStorage()
@@ -283,6 +298,30 @@ object ModFluids {
                 COMPRESSED_AIR_BLOCK = block
                 COMPRESSED_AIR_BUCKET = bucket
             }
+            "steam" -> {
+                STEAM_BLOCK = block
+                STEAM_BUCKET = bucket
+            }
+            "superheated_steam" -> {
+                SUPERHEATED_STEAM_BLOCK = block
+                SUPERHEATED_STEAM_BUCKET = bucket
+            }
+        }
+    }
+
+    /**
+     * 蒸汽/上升流体的 FluidBlock 子类。
+     * 覆盖 neighborUpdate 防止邻居变化时自动调度流体 tick，让流体自己控制生命周期。
+     */
+    class SteamFluidBlock(fluid: FlowableFluid, settings: AbstractBlock.Settings) : FluidBlock(fluid, settings) {
+        override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
+            if (oldState.isAir) {
+                world.scheduleFluidTick(pos, fluid, fluid.getTickRate(world))
+            }
+        }
+
+        override fun neighborUpdate(state: BlockState, world: World, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
+            // 蒸汽自己控制 tick，不自发重调度
         }
 
         override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
