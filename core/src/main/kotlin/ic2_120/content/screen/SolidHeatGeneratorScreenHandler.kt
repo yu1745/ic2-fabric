@@ -43,17 +43,18 @@ class SolidHeatGeneratorScreenHandler(
     val sync = SolidHeatGeneratorSync(syncedView, heatFlow)
 
     init {
-        checkSize(blockInventory, 1)
+        checkSize(blockInventory, SolidHeatGeneratorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
-        addSlot(PredicateSlot(blockInventory, 0, 0, 0, FUEL_SLOT_SPEC))
+        addSlot(PredicateSlot(blockInventory, SolidHeatGeneratorBlockEntity.SLOT_FUEL, 80, 44, FUEL_SLOT_SPEC))
+        addSlot(PredicateSlot(blockInventory, SolidHeatGeneratorBlockEntity.SLOT_OUTPUT, 113, 44, OUTPUT_SLOT_SPEC))
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 83 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 141))
         }
     }
 
@@ -64,11 +65,15 @@ class SolidHeatGeneratorScreenHandler(
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
-                index == 0 -> if (!insertItem(stackInSlot, 1, 37, true)) return ItemStack.EMPTY
-                index in 1..36 -> {
-                    if (!FUEL_SLOT_SPEC.canInsert(stackInSlot) || !insertItem(stackInSlot, 0, 1, false)) return ItemStack.EMPTY
+                index == SolidHeatGeneratorBlockEntity.SLOT_FUEL ||
+                index == SolidHeatGeneratorBlockEntity.SLOT_OUTPUT -> {
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 }
-                else -> if (!insertItem(stackInSlot, 1, 37, false)) return ItemStack.EMPTY
+                index in PLAYER_INV_START..HOTBAR_END -> {
+                    if (FUEL_SLOT_SPEC.canInsert(stackInSlot) && insertItem(stackInSlot, 0, 1, false)) return stack
+                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                }
+                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
@@ -84,18 +89,20 @@ class SolidHeatGeneratorScreenHandler(
         }, true)
 
     companion object {
-        const val PLAYER_INV_START = 1
+        const val PLAYER_INV_START = 2
+        const val HOTBAR_END = 37
+
         private val FUEL_SLOT_SPEC = SlotSpec(canInsert = { stack ->
             !stack.isEmpty && (FuelRegistry.INSTANCE.get(stack.item) ?: 0) > 0
         })
+        private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false })
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SolidHeatGeneratorScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            return SolidHeatGeneratorScreenHandler(syncId, playerInventory, SimpleInventory(1), context, ArrayPropertyDelegate(propertyCount))
+            return SolidHeatGeneratorScreenHandler(syncId, playerInventory, SimpleInventory(SolidHeatGeneratorBlockEntity.INVENTORY_SIZE), context, ArrayPropertyDelegate(propertyCount))
         }
     }
 }
-

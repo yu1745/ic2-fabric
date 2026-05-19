@@ -26,21 +26,25 @@ class RtHeatGeneratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
+
+        // 标题居中于 y=6
+        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
         val generatedRate = handler.sync.getSyncedGeneratedHeat()
 
-        // 产热速率文字，显示区域 (48,59)-(128,73)，居中常显，缩小 1px
-        val heatText = "$generatedRate/64 HU/T"
-        val scale = 7f / 8f
-        val textWidth = textRenderer.getWidth(heatText)
-        val textX = x + 48 + (80 - textWidth) / 2
-        val textY = y + 59 + (14 - textRenderer.fontHeight) / 2 + 1
+        // 产热速率文字：区域 (48,59)-(128,73)，居中常显，缩放至 7px
+        val heatText = "输出：${generatedRate}/64 HU/t"
+        val scale = 7f / textRenderer.fontHeight
+        val scaledWidth = (textRenderer.getWidth(heatText) * scale).toInt()
+        val scaledHeight = (textRenderer.fontHeight * scale).toInt()
+        val textX = x + 48 + (80 - scaledWidth) / 2
+        val textY = y + 59 + (14 - scaledHeight) / 2
         context.matrices.push()
-        context.matrices.scale(scale, scale, 1f)
-        val sx = (textX / scale).toInt()
-        val sy = (textY / scale).toInt()
-        context.drawText(textRenderer, heatText, sx, sy, 0xFFADD8E6.toInt(), false)
+        context.matrices.translate(textX.toDouble(), textY.toDouble(), 0.0)
+        context.matrices.scale(scale, scale, 1.0f)
+        context.drawText(textRenderer, heatText, 0, 0, 0xFFADD8E6.toInt(), false)
         context.matrices.pop()
 
         drawMouseoverTooltip(context, mouseX, mouseY)

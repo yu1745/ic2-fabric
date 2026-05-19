@@ -29,6 +29,7 @@ class SemifluidGeneratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
@@ -45,8 +46,8 @@ class SemifluidGeneratorScreen(
         // 能量条位于 (118, 19) — 30×17 水平纹理来自 guiheatsourcegenerator.png (178,2)-(207,18)
         drawEnergyGauge(context, x + 118, y + 19, energyFrac)
 
-        // 燃料储量条位于 (82, 21) — 13×48 垂直，填充颜色来自 BE 同步的燃料颜色
-        drawFuelBar(context, x + 82, y + 21, fuelFrac, handler.fuelColorArgb)
+        // 燃料储量条：区域 (82,23)-(94,69) = 12×46
+        drawFuelBar(context, x + 82, y + 23, fuelFrac, handler.fuelColorArgb)
 
         // 标题文字居中于 y=6
         context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
@@ -73,15 +74,21 @@ class SemifluidGeneratorScreen(
     }
 
     private fun drawFuelBar(context: DrawContext, gx: Int, gy: Int, fraction: Float, fuelColor: Int) {
-        val barW = 13
-        val barH = 48
-        // 燃料填充（自下往上）
+        val barW = 12
+        val barH = 46
+        // 燃料填充（自下往上），scissor 限制不超出区域
         val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
         if (fillH > 0) {
+            context.enableScissor(gx, gy, gx + barW, gy + barH)
             context.fill(gx, gy + barH - fillH, gx + barW, gy + barH, fuelColor)
+            context.disableScissor()
         }
-        // 容器标示纹理覆盖 (179,21)-(189,68)
-        context.drawTexture(TEXTURE, gx, gy, 179f, 21f, barW, barH, 256, 256)
+        // 容器标示纹理覆盖，有流体时才渲染
+        if (fillH > 0) {
+            context.enableScissor(gx, gy, gx + barW, gy + barH)
+            context.drawTexture(TEXTURE, gx + 1, gy, 179f, 23f, barW, barH, 256, 256)
+            context.disableScissor()
+        }
     }
 
     companion object {

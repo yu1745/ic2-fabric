@@ -50,26 +50,30 @@ class ElectricHeatGeneratorScreenHandler(
         checkSize(blockInventory, ElectricHeatGeneratorBlockEntity.SLOT_COUNT)
         addProperties(propertyDelegate)
 
-        repeat(ElectricHeatGeneratorBlockEntity.SLOT_DISCHARGING) { i ->
-            addTrackedSlot(blockInventory, i)
+        // 线圈槽：2行×5列，起始 (44, 26)，间距 18
+        for (row in 0 until 2) {
+            for (col in 0 until 5) {
+                addTrackedSlot(blockInventory, row * 5 + col, 44 + col * 18, 26 + row * 18)
+            }
         }
-        addTrackedSlot(blockInventory, ElectricHeatGeneratorBlockEntity.SLOT_DISCHARGING)
+        // 放电槽
+        addTrackedSlot(blockInventory, ElectricHeatGeneratorBlockEntity.SLOT_DISCHARGING, 8, 61)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 83 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 141))
         }
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int = 0, y: Int = 0) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {

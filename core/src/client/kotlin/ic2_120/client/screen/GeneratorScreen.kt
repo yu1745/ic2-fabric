@@ -29,6 +29,7 @@ class GeneratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
@@ -45,7 +46,7 @@ class GeneratorScreen(
         drawEnergyGauge(context, x + 78, y + 35, energyFrac)
 
         // 燃料条位于 (58, 38) — 13×13 垂直纹理来自 guipowergenerator.png (179,22)-(191,34)
-        drawFuelGauge(context, x + 58, y + 38, burnFrac)
+        drawFuelGauge(context, x + 57, y + 38, burnFrac)
 
         // 标题文字居中于 y=6
         context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
@@ -77,7 +78,7 @@ class GeneratorScreen(
         val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
         if (fillH <= 0) return
         context.enableScissor(gx, gy + barH - fillH, gx + barW, gy + barH)
-        context.drawTexture(TEXTURE, gx, gy, 179f, 22f, barW, barH, 256, 256)
+        context.drawTexture(TEXTURE, gx, gy, 178f, 22f, barW, barH, 256, 256)
         context.disableScissor()
     }
 
