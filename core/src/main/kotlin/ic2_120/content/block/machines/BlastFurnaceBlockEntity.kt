@@ -338,7 +338,7 @@ class BlastFurnaceBlockEntity(
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
         if (fluidPipeProviderEnabled) {
             FluidPipeUpgradeComponent.ejectFluidToNeighbors(
-                world, pos, airTankInternal, fluidPipeProviderFilter, fluidPipeProviderSide,
+                world, pos, airTankInternal, fluidPipeProviderFilter, fluidPipeProviderSides,
                 blockedFace = getHeatTransferFace()
             )
         }
