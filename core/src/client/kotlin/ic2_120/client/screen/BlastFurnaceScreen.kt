@@ -80,6 +80,11 @@ class BlastFurnaceScreen(
             context.drawTexture(TEXTURE, x + 12, y + 11, 181f, 95f, 11, 46, 256, 256)
         }
 
+        // 缺失压缩空气纹理：源 (206,3)-(228,25) 22×22，目标 (109,38)-(131,60)，无空气时渲染
+        if (airAmount <= 0) {
+            context.drawTexture(TEXTURE, x + 109, y + 38, 206f, 3f, 22, 22, 256, 256)
+        }
+
         // 空气表工具提示：区域 (11,11)-(23,58)，仅当空气 > 0 时显示
         if (airAmount > 0 && mouseX in (x + 11) until (x + 23) && mouseY in (y + 11) until (y + 58)) {
             val airTooltip = Text.translatable("gui.ic2_120.blast_furnace.air_tooltip",
