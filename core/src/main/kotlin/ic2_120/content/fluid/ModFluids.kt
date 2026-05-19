@@ -126,6 +126,12 @@ object ModFluids {
     lateinit var CREOSOTE_BLOCK: Block
     lateinit var CREOSOTE_BUCKET: Item
 
+    // Compressed Air - 压缩空气（高炉）
+    val COMPRESSED_AIR_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "compressed_air")) as FlowableFluid }
+    val COMPRESSED_AIR_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "flowing_compressed_air")) as FlowableFluid }
+    lateinit var COMPRESSED_AIR_BLOCK: Block
+    lateinit var COMPRESSED_AIR_BUCKET: Item
+
     // Steam - 蒸汽
     val STEAM_STILL: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "steam")) as FlowableFluid }
     val STEAM_FLOWING: FlowableFluid by lazy { Registries.FLUID.get(Identifier.of(Ic2_120.MOD_ID, "flowing_steam")) as FlowableFluid }
@@ -157,6 +163,7 @@ object ModFluids {
         // 建筑泡沫：客户端渲染复用通用流体贴图 + 着色（见 ModFluidClient）
         registerFluid("construction_foam", "fluid_still", "fluid_flow", tintArgb = 0xFFB4B4AF.toInt())
         registerFluid("creosote", "fluid_still", "fluid_flow", tintArgb = 0xFF4E2D14.toInt())
+        registerFluid("compressed_air", "fluid_still", "fluid_flow", tintArgb = 0xFFB0D8F0.toInt())
         // 蒸汽和过热蒸汽不能装在桶里（蒸汽单元/过热蒸汽单元代替）
         registerFluid("steam", "fluid_still", "fluid_flow", tintArgb = 0xFFD0D0D0.toInt(), withBucket = false, rises = true)
         registerFluid("superheated_steam", "fluid_still", "fluid_flow", tintArgb = 0xFFFFBEBE.toInt(), withBucket = false, rises = true)
@@ -175,7 +182,7 @@ object ModFluids {
         val bucketItems = listOf(
             COOLANT_BUCKET, HOT_COOLANT_BUCKET, UU_MATTER_BUCKET, WEED_EX_BUCKET,
             PAHOEHOE_LAVA_BUCKET, BIOFUEL_BUCKET, BIOMASS_BUCKET, DISTILLED_WATER_BUCKET,
-            CONSTRUCTION_FOAM_BUCKET, CREOSOTE_BUCKET
+            CONSTRUCTION_FOAM_BUCKET, CREOSOTE_BUCKET, COMPRESSED_AIR_BUCKET
             // 注意：STEAM_BUCKET 和 SUPERHEATED_STEAM_BUCKET 不存在（蒸汽不能装桶）
         )
 
@@ -286,6 +293,10 @@ object ModFluids {
             "creosote" -> {
                 CREOSOTE_BLOCK = block
                 CREOSOTE_BUCKET = bucket
+            }
+            "compressed_air" -> {
+                COMPRESSED_AIR_BLOCK = block
+                COMPRESSED_AIR_BUCKET = bucket
             }
             "steam" -> {
                 STEAM_BLOCK = block
@@ -495,6 +506,7 @@ object ModFluids {
                 "distilled_water" -> DISTILLED_WATER_STILL
                 "construction_foam" -> CONSTRUCTION_FOAM_STILL
                 "creosote" -> CREOSOTE_STILL
+                "compressed_air" -> COMPRESSED_AIR_STILL
                 "steam" -> STEAM_STILL
                 "superheated_steam" -> SUPERHEATED_STEAM_STILL
                 else -> throw IllegalStateException("Unknown fluid: $name")
@@ -510,6 +522,7 @@ object ModFluids {
                 "distilled_water" -> DISTILLED_WATER_FLOWING
                 "construction_foam" -> CONSTRUCTION_FOAM_FLOWING
                 "creosote" -> CREOSOTE_FLOWING
+                "compressed_air" -> COMPRESSED_AIR_FLOWING
                 "steam" -> STEAM_FLOWING
                 "superheated_steam" -> SUPERHEATED_STEAM_FLOWING
                 else -> throw IllegalStateException("Unknown fluid: $name")
@@ -525,6 +538,7 @@ object ModFluids {
                 "distilled_water" -> DISTILLED_WATER_BLOCK
                 "construction_foam" -> CONSTRUCTION_FOAM_BLOCK
                 "creosote" -> CREOSOTE_BLOCK
+                "compressed_air" -> COMPRESSED_AIR_BLOCK
                 "steam" -> STEAM_BLOCK
                 "superheated_steam" -> SUPERHEATED_STEAM_BLOCK
                 else -> throw IllegalStateException("Unknown fluid: $name")
@@ -540,6 +554,7 @@ object ModFluids {
                 "distilled_water" -> DISTILLED_WATER_BUCKET
                 "construction_foam" -> CONSTRUCTION_FOAM_BUCKET
                 "creosote" -> CREOSOTE_BUCKET
+                "compressed_air" -> COMPRESSED_AIR_BUCKET
                 "steam" -> STEAM_BUCKET
                 "superheated_steam" -> SUPERHEATED_STEAM_BUCKET
                 else -> throw IllegalStateException("Unknown fluid: $name")
@@ -565,6 +580,7 @@ object ModFluids {
                 "distilled_water" -> DISTILLED_WATER_STILL
                 "construction_foam" -> CONSTRUCTION_FOAM_STILL
                 "creosote" -> CREOSOTE_STILL
+                "compressed_air" -> COMPRESSED_AIR_STILL
                 "steam" -> STEAM_STILL
                 "superheated_steam" -> SUPERHEATED_STEAM_STILL
                 else -> throw IllegalStateException("Unknown fluid: $name")
@@ -580,6 +596,7 @@ object ModFluids {
                 "distilled_water" -> DISTILLED_WATER_FLOWING
                 "construction_foam" -> CONSTRUCTION_FOAM_FLOWING
                 "creosote" -> CREOSOTE_FLOWING
+                "compressed_air" -> COMPRESSED_AIR_FLOWING
                 "steam" -> STEAM_FLOWING
                 "superheated_steam" -> SUPERHEATED_STEAM_FLOWING
                 else -> throw IllegalStateException("Unknown fluid: $name")
@@ -595,6 +612,7 @@ object ModFluids {
                 "distilled_water" -> DISTILLED_WATER_BLOCK
                 "construction_foam" -> CONSTRUCTION_FOAM_BLOCK
                 "creosote" -> CREOSOTE_BLOCK
+                "compressed_air" -> COMPRESSED_AIR_BLOCK
                 "steam" -> STEAM_BLOCK
                 "superheated_steam" -> SUPERHEATED_STEAM_BLOCK
                 else -> throw IllegalStateException("Unknown fluid: $name")
@@ -610,6 +628,7 @@ object ModFluids {
                 "distilled_water" -> DISTILLED_WATER_BUCKET
                 "construction_foam" -> CONSTRUCTION_FOAM_BUCKET
                 "creosote" -> CREOSOTE_BUCKET
+                "compressed_air" -> COMPRESSED_AIR_BUCKET
                 "steam" -> STEAM_BUCKET
                 "superheated_steam" -> SUPERHEATED_STEAM_BUCKET
                 else -> throw IllegalStateException("Unknown fluid: $name")

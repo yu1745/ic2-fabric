@@ -1,153 +1,84 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.t
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.ElectricHeatGeneratorBlock
-import ic2_120.content.block.machines.ElectricHeatGeneratorBlockEntity
 import ic2_120.content.screen.ElectricHeatGeneratorScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.ElectricHeatGeneratorSync
 import ic2_120.registry.annotation.ModScreen
-import ic2_120.registry.type
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.slot.Slot
-import net.minecraft.text.Text as McText
+import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = ElectricHeatGeneratorBlock::class)
 class ElectricHeatGeneratorScreen(
     handler: ElectricHeatGeneratorScreenHandler,
     playerInventory: PlayerInventory,
-    title: McText
+    title: Text
 ) : HandledScreen<ElectricHeatGeneratorScreenHandler>(handler, playerInventory, title) {
-    private val ui = ComposeUI()
 
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
-    }
-
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+        backgroundWidth = 176
+        backgroundHeight = 166
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
+        renderBackground(context)
+        super.render(context, mouseX, mouseY, delta)
 
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = ElectricHeatGeneratorSync.ENERGY_CAPACITY
-        val fraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
-        val coils = (0 until 10).count { handler.slots[it].hasStack() }
-        val generatedRate = handler.sync.getSyncedGeneratedHeat()
-        val outputRate = handler.sync.getSyncedOutputHeat()
+        val energyFrac = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
+        val outputRate = handler.sync.getSyncedOutputHeat().coerceAtLeast(0L)
 
-        val energyText = "$energy / $cap EU"
-        val generatedText = t("gui.ic2_120.generate_hu", generatedRate)
-        val outputText = t("gui.ic2_120.output_hu", outputRate)
-        val sideTextWidth = maxOf(
-            textRenderer.getWidth(energyText),
-            textRenderer.getWidth(generatedText),
-            textRenderer.getWidth(outputText)
-        )
-        val sideTextX = left - sideTextWidth - 4
+        // 标题居中于 y=6
+        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
-        val content: UiScope.() -> Unit = {
-            Column(
-                x = left + 8,
-                y = top + 8,
-                spacing = 6,
-                modifier = Modifier().width(backgroundWidth - 16).height(backgroundHeight - 16),
-            ) {
-                Row(spacing = 8) {
-                    Text(title.string, color = 0xFFFFFF)
-                    Text(energyText, color = 0xFFFFFF)
-                }
-                EnergyBar(fraction)
-                // 10个线圈槽位（2行5列）
-                Column {
-                    repeat(2) { row ->
-                        Flex(
-                            direction = FlexDirection.ROW,
-                            justifyContent = JustifyContent.CENTER,
-                            alignItems = AlignItems.CENTER,
-                        ) {
-                            repeat(5) { col ->
-                                val slotIndex = row * 5 + col
-                                SlotAnchor(
-                                    id = "slot.$slotIndex",
-                                    width = ElectricHeatGeneratorScreenHandler.SLOT_SIZE,
-                                    height = ElectricHeatGeneratorScreenHandler.SLOT_SIZE
-                                )
-                            }
-                        }
-                    }
-                }
-                Flex(
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.CENTER
-                ) {
-                    SlotAnchor(
-                        id = "slot.${ElectricHeatGeneratorScreenHandler.SLOT_DISCHARGING_INDEX}",
-                        width = ElectricHeatGeneratorScreenHandler.SLOT_SIZE,
-                        height = ElectricHeatGeneratorScreenHandler.SLOT_SIZE
-                    )
-                }
-            }
+        // 能量条：纹理区域 (179,3)-(192,16) = 13×13，渲染到 (10,44)，自底向上填充
+        val gaugeX = x + 10
+        val gaugeY = y + 44
+        val gaugeSize = 13
+        drawEnergyGauge(context, gaugeX, gaugeY, energyFrac)
 
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = ElectricHeatGeneratorScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
-            )
+        // 鼠标悬停能量条时显示储能
+        if (mouseX in gaugeX until (gaugeX + gaugeSize) && mouseY in gaugeY until (gaugeY + gaugeSize)) {
+            context.drawTooltip(textRenderer, Text.literal("储能：${energy} / ${cap} EU"), mouseX, mouseY)
         }
 
-        // 1) 预布局，不绘制
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 2) 锚点写回 slot 相对坐标
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors["slot.$index"] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
-
-        // 3) 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context = context,
-            screenX = x,
-            screenY = y,
-            playerInvY = GUI_SIZE.playerInvY,
-            hotbarY = GUI_SIZE.hotbarY,
-            slotSize = GuiSize.SLOT_SIZE
-        )
-
-        // 5) 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
-
-        // 4) 再绘制 UI（slot 背景），确保它们在物品下方
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-        context.drawText(textRenderer, generatedText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
-        context.drawText(textRenderer, t("gui.ic2_120.electric_heat_generator.coils", coils), sideTextX, top + 32, 0xAAAAAA, false)
+        // 输出文本：区域 (29,65)-(149,79)，居中常显，缩放至 7px
+        val infoText = "输出 ${outputRate}/100 HU/t"
+        val scale = 7f / textRenderer.fontHeight
+        val scaledWidth = (textRenderer.getWidth(infoText) * scale).toInt()
+        val scaledHeight = (textRenderer.fontHeight * scale).toInt()
+        val textX = x + 29 + (120 - scaledWidth) / 2
+        val textY = y + 65 + (14 - scaledHeight) / 2
+        context.matrices.push()
+        context.matrices.translate(textX.toDouble(), textY.toDouble(), 0.0)
+        context.matrices.scale(scale, scale, 1.0f)
+        context.drawText(textRenderer, infoText, 0, 0, 0xFFADD8E6.toInt(), false)
+        context.matrices.pop()
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+    /**
+     * 能量条自底向上填充，纹理区域 (179,3)-(192,16) = 13×13。
+     */
+    private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+        val barW = 13
+        val barH = 13
+        val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
+        if (fillH <= 0) return
+        context.enableScissor(gx, gy + barH - fillH, gx + barW, gy + barH)
+        context.drawTexture(TEXTURE, gx, gy, 179f, 3f, barW, barH, 256, 256)
+        context.disableScissor()
+    }
 
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD_TALL
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiheatingmachine.png")
     }
 }

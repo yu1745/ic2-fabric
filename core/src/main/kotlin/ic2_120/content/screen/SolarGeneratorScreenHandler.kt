@@ -55,15 +55,15 @@ class SolarGeneratorScreenHandler(
         val batterySlotSpec = itemStorage?.deriveSlotSpec(SolarGeneratorBlockEntity.BATTERY_SLOT)
             ?: SLOT_SPEC_FALLBACK_BATTERY
 
-        addTrackedSlot(PredicateSlot(blockInventory, SolarGeneratorBlockEntity.BATTERY_SLOT, 0, 0, batterySlotSpec), SolarGeneratorBlockEntity.BATTERY_SLOT)
+        addTrackedSlot(PredicateSlot(blockInventory, SolarGeneratorBlockEntity.BATTERY_SLOT, 80, 24, batterySlotSpec), SolarGeneratorBlockEntity.BATTERY_SLOT)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 83 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 141))
         }
     }
 

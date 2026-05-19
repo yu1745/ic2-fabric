@@ -1,21 +1,16 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
 import ic2_120.client.EnergyFormatUtils
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.GuiBackground
 import ic2_120.client.t
 import ic2_120.content.block.RtGeneratorBlock
-import ic2_120.content.block.machines.RtGeneratorBlockEntity
 import ic2_120.content.screen.RtGeneratorScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.RtGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = RtGeneratorBlock::class)
 class RtGeneratorScreen(
@@ -24,123 +19,54 @@ class RtGeneratorScreen(
     title: Text
 ) : HandledScreen<RtGeneratorScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
-    }
-
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+        backgroundWidth = 176
+        backgroundHeight = 161
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 161, 256, 256)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
+        renderBackground(context)
+        super.render(context, mouseX, mouseY, delta)
+
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = RtGeneratorSync.ENERGY_CAPACITY
-        val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
+        val energyFrac = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
 
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()
 
-        val inputText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
+        // 能量条渲染区域 (113,34)-(144,50)，纹理 (179,3)-(205,19)，由左至右平铺
+        drawEnergyGauge(context, x + 113, y + 34, energyFrac)
+
+        // 标题文字居中于 y=6
+        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+
+        // EU发电/输出文字显示在左侧
+        val generateText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
         val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(outputText))
-        val sideTextX = left - sideTextWidth - 4
+        val sideTextWidth = maxOf(textRenderer.getWidth(generateText), textRenderer.getWidth(outputText))
+        val sideTextX = x - sideTextWidth - 4
+        context.drawText(textRenderer, generateText, sideTextX, y + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, outputText, sideTextX, y + 20, 0xAAAAAA, false)
 
-        val content: UiScope.() -> Unit = {
-            Column(
-                x = left + 8,
-                y = top + 8,
-                spacing = 6,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                    Text(title.string, color = 0xFFFFFF)
-                    Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
-                }
-                EnergyBar(
-                    energyFraction,
-                    barHeight = 12,
-                )
-
-                Flex(
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.SPACE_AROUND,
-                    alignItems = AlignItems.CENTER,
-                    gap = 4
-                ) {
-                    // 燃料槽 2行3列
-                    Column {
-                        repeat(2) { i ->
-                            Row {
-                                repeat(3) { j ->
-                                    SlotAnchor(
-                                        id = slotAnchorId(i * 3 + j),
-                                        width = RtGeneratorScreenHandler.SLOT_SIZE,
-                                        height = RtGeneratorScreenHandler.SLOT_SIZE
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    SlotAnchor(
-                        id = slotAnchorId(RtGeneratorBlockEntity.BATTERY_SLOT),
-                        width = RtGeneratorScreenHandler.SLOT_SIZE,
-                        height = RtGeneratorScreenHandler.SLOT_SIZE
-                    )
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = RtGeneratorScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
-            )
-        }
-
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
-
-        super.render(context, mouseX, mouseY, delta)
-
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
+    private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+        val barW = 26
+        val barH = 16
+        val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
+        if (fillW <= 0) return
+        context.enableScissor(gx, gy, gx + fillW, gy + barH)
+        context.drawTexture(TEXTURE, gx, gy, 179f, 3f, barW, barH, 256, 256)
+        context.disableScissor()
     }
 
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
-
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guinucleargeneration.png")
     }
 }

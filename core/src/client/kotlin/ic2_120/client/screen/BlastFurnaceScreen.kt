@@ -1,19 +1,15 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.t
-import ic2_120.client.ui.GuiBackground
-import ic2_120.client.ui.HeatProgressBar
 import ic2_120.content.block.BlastFurnaceBlock
 import ic2_120.content.screen.BlastFurnaceScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.BlastFurnaceSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.slot.Slot
+import net.minecraft.registry.Registries
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = BlastFurnaceBlock::class)
 class BlastFurnaceScreen(
@@ -22,166 +18,148 @@ class BlastFurnaceScreen(
     title: Text
 ) : HandledScreen<BlastFurnaceScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
-    }
-
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+        backgroundWidth = 176
+        backgroundHeight = 166
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // Background drawing is now handled in render() to ensure correct render order.
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
+        renderBackground(context)
+        super.render(context, mouseX, mouseY, delta)
 
-        val preheat = handler.sync.preheat.toLong().coerceAtLeast(0)
-        val preheatCap = BlastFurnaceSync.PREHEAT_MAX.toLong()
-        val preheatFrac = if (preheatCap > 0) (preheat.toFloat() / preheatCap).coerceIn(0f, 1f) else 0f
+        val temperature = handler.sync.temperature.coerceIn(0, BlastFurnaceSync.TEMP_MAX)
+        val tempFrac = temperature.toFloat() / BlastFurnaceSync.TEMP_MAX
 
-        val progress = handler.sync.progress.coerceIn(0, BlastFurnaceSync.PROGRESS_MAX)
-        val progressFrac = if (BlastFurnaceSync.PROGRESS_MAX > 0) (progress.toFloat() / BlastFurnaceSync.PROGRESS_MAX).coerceIn(0f, 1f) else 0f
+        val progress = handler.sync.progress.coerceAtLeast(0)
+        val progressMax = getProgressMax(temperature)
+        val progressFrac = if (progressMax > 0 && progress > 0) progress.toFloat() / progressMax else 0f
 
-        val airUsed = handler.sync.progress / BlastFurnaceSync.TICKS_PER_AIR_CELL
+        val airAmount = handler.sync.airAmountMb.coerceIn(0, BlastFurnaceSync.AIR_CAPACITY_MB)
+        val airFrac = airAmount.toFloat() / BlastFurnaceSync.AIR_CAPACITY_MB
 
-        val content: UiScope.() -> Unit = {
-            Row(
-                x = left + 8,
-                y = top + 8,
-                spacing = 8,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Column(
-                    spacing = 6,
-                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
-                ) {
-                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                        Text(title.string, color = 0xFFFFFF)
-                    }
+        val huInput = handler.sync.huInput.coerceAtLeast(0)
 
-                    // 热量条
-                    Flex(
-                        direction = FlexDirection.ROW,
-                        alignItems = AlignItems.CENTER,
-                        gap = 8
-                    ) {
-                        Text(t("gui.ic2_120.heat"), color = 0xAAAAAA)
-                        HeatProgressBar(
-                            preheatFrac,
-                            barWidth = 0,
-                            barHeight = 8,
-                            startColor = 0xFF660000.toInt(),
-                            endColor = 0xFFCC0000.toInt(),
-                            gradient = true,
-                            modifier = Modifier.EMPTY.fractionWidth(1.0f)
-                        )
-                        Text("$preheat / $preheatCap HU", color = 0xFFFFFF, shadow = false)
-                    }
+        val canWork = temperature >= BlastFurnaceSync.TEMP_WORK_MIN
+        val isWorking = progress > 0
 
-                    Text(
-                        t("gui.ic2_120.blast_furnace.air_usage", airUsed, BlastFurnaceSync.AIR_CELLS_PER_STEEL),
-                        color = 0xAAAAAA,
-                        shadow = false
-                    )
+        // 标题居中于 y=6
+        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
-                    // 槽位布局
-                    Flex(
-                        direction = FlexDirection.ROW,
-                        alignItems = AlignItems.CENTER,
-                        gap = 4
-                    ) {
-                        SlotHost(BlastFurnaceScreenHandler.SLOT_INPUT_INDEX)
-                        HeatProgressBar(
-                            progressFrac,
-                            barWidth = 0,
-                            barHeight = 8,
-                            startColor = 0xFFCC4400.toInt(),
-                            endColor = 0xFFCC0000.toInt(),
-                            gradient = true,
-                            modifier = Modifier.EMPTY.fractionWidth(1.0f)
-                        )
-                        SlotHost(BlastFurnaceScreenHandler.SLOT_OUTPUT_STEEL_INDEX)
-                    }
+        // 升级提示图标位于 (35, 4)，16×16
+        context.drawTexture(UPTIPS, x + 35, y + 4, 0f, 0f, 16, 16, 16, 16)
 
-                    Flex(
-                        direction = FlexDirection.ROW,
-                        alignItems = AlignItems.CENTER,
-                        gap = 4
-                    ) {
-                        SlotHost(BlastFurnaceScreenHandler.SLOT_AIR_INPUT_INDEX)
-                        SlotHost(BlastFurnaceScreenHandler.SLOT_OUTPUT_SLAG_INDEX)
-                        SlotHost(BlastFurnaceScreenHandler.SLOT_OUTPUT_EMPTY_INDEX)
-                    }
-                }
+        // 热量条（温度）：源 (180,22)-(202,29) 22×7→目标 (71,70)-(82,77) 11×7，自左向右填充
+        drawHeatGauge(context, x + 71, y + 70, tempFrac)
 
-                Column(
-                    spacing = 4,
-                    modifier = Modifier.EMPTY
-                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
-                        .padding(0, 8, 0, 0)
-                ) {
-                    for (slotIndex in BlastFurnaceScreenHandler.SLOT_UPGRADE_INDEX_START..BlastFurnaceScreenHandler.SLOT_UPGRADE_INDEX_END) {
-                        SlotHost(slotIndex)
-                    }
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = BlastFurnaceScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
-            )
+        // 热量输入指示器：源 (180,4)-(193,17) 13×13，目标 (96,67)，HU 达标时渲染
+        if (huInput >= getHuPerTick(temperature)) {
+            context.drawTexture(TEXTURE, x + 96, y + 67, 180f, 4f, 13, 13, 256, 256)
         }
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
+        // 温度达标指示器（可工作）：源 (179,33)-(206,60) 27×27，目标 (75,34)-(102,61)
+        if (canWork) {
+            context.drawTexture(TEXTURE, x + 75, y + 34, 179f, 33f, 27, 27, 256, 256)
+        }
 
-        // Draw background panel and slot borders (was in drawBackground)
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
+        // 工作状态覆盖：源 (179,64)-(206,91) 27×27，目标 (75,34)-(102,61)，自底向上填充
+        if (isWorking) {
+            drawWorkingState(context, x + 75, y + 34, progressFrac)
+        }
 
-        super.render(context, mouseX, mouseY, delta)
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        // 空气流体渲染（次一层）
+        if (airAmount > 0) {
+            drawAirFluid(context, x + 11, y + 11, airFrac)
+        }
+
+        // 容量标示纹理：源 (181,95)-(192,141) 11×46，目标 (12,11)-(23,57)，有空气时渲染（顶层）
+        if (airAmount > 0) {
+            context.drawTexture(TEXTURE, x + 12, y + 11, 181f, 95f, 11, 46, 256, 256)
+        }
+
+        // 空气表工具提示：区域 (11,11)-(23,58)，仅当空气 > 0 时显示
+        if (airAmount > 0 && mouseX in (x + 11) until (x + 23) && mouseY in (y + 11) until (y + 58)) {
+            val airTooltip = Text.translatable("gui.ic2_120.blast_furnace.air_tooltip",
+                airAmount, BlastFurnaceSync.AIR_CAPACITY_MB)
+            context.drawTooltip(textRenderer, airTooltip, mouseX, mouseY)
+        }
+
+        // 温度条工具提示：区域 (71,70)-(92,77)
+        if (mouseX in (x + 71) until (x + 92) && mouseY in (y + 70) until (y + 77)) {
+            val heatTooltip = Text.translatable("gui.ic2_120.blast_furnace.heat_tooltip",
+                temperature, BlastFurnaceSync.TEMP_MAX)
+            context.drawTooltip(textRenderer, heatTooltip, mouseX, mouseY)
+        }
+
+        // 升级提示工具提示
+        if (mouseX in (x + 35) until (x + 35 + 16) && mouseY in (y + 4) until (y + 4 + 16)) {
+            val upgradeTooltip = mutableListOf<Text>()
+            upgradeTooltip.add(Text.translatable("gui.ic2_120.upgrade_slots"))
+            for (id in SUPPORTED_UPGRADES) {
+                val item = Registries.ITEM.get(Identifier.of("ic2_120", id))
+                upgradeTooltip.add(item.name)
+            }
+            context.drawTooltip(textRenderer, upgradeTooltip, mouseX, mouseY)
+        }
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun UiScope.SlotHost(slotIndex: Int) {
-        SlotAnchor(
-            id = slotAnchorId(slotIndex),
-            width = BlastFurnaceScreenHandler.SLOT_SIZE,
-            height = BlastFurnaceScreenHandler.SLOT_SIZE
-        )
+    private fun getProgressMax(temp: Int): Int = when {
+        temp >= 1601 -> BlastFurnaceSync.PROGRESS_MAX_FAST
+        temp >= 1501 -> BlastFurnaceSync.PROGRESS_MAX_MEDIUM
+        else -> BlastFurnaceSync.PROGRESS_MAX_SLOW
     }
 
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
+    private fun getHuPerTick(temp: Int): Int = when {
+        temp >= 1601 -> 40
+        temp >= 1501 -> 60
+        temp >= 1401 -> 80
+        else -> 100
     }
 
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
+    /** 压缩空气色块渲染：RGB(53,81,92)，区域 (11,11)-(23,58) 12×47，自底向上填充。 */
+    private fun drawAirFluid(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+        val barW = 12
+        val barH = 47
+        val fillH = (fraction * barH).toInt()
+        if (fillH <= 0) return
+        val topY = gy + barH - fillH
+        context.fill(gx, topY, gx + barW, gy + barH, AIR_COLOR)
+    }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (ui.mouseClicked(mouseX, mouseY, button)) return true
-        return super.mouseClicked(mouseX, mouseY, button)
+    /** 热量条：21×7（从 22×7 源纹理采样），自左向右填充。 */
+    private fun drawHeatGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+        val barW = 21
+        val barH = 7
+        val fillW = (fraction * barW).toInt()
+        if (fillW <= 0) return
+        context.enableScissor(gx, gy, gx + fillW, gy + barH)
+        context.drawTexture(TEXTURE, gx, gy, 180f, 22f, barW, barH, 256, 256)
+        context.disableScissor()
+    }
+
+    /** 工作状态覆盖：27×27，自底向上填充。 */
+    private fun drawWorkingState(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
+        val barW = 27
+        val barH = 27
+        val fillH = (fraction * barH).toInt()
+        if (fillH <= 0) return
+        context.enableScissor(gx, gy + barH - fillH, gx + barW, gy + barH)
+        context.drawTexture(TEXTURE, gx, gy, 179f, 64f, barW, barH, 256, 256)
+        context.disableScissor()
     }
 
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiblockcutter.png")
+        private val UPTIPS = Identifier.of("ic2", "textures/gui/uptips.png")
+        private const val AIR_COLOR = 0xFF35515C.toInt()
+        private val SUPPORTED_UPGRADES = listOf(
+            "ejector_upgrade",
+            "pulling_upgrade"
+        )
     }
 }

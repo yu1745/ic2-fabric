@@ -37,15 +37,15 @@ class WindKineticGeneratorScreenHandler(
         checkSize(blockInventory, 1)
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(blockInventory, WindKineticGeneratorBlockEntity.ROTOR_SLOT, 0, 0, ROTOR_SLOT_SPEC))
+        addSlot(PredicateSlot(blockInventory, WindKineticGeneratorBlockEntity.ROTOR_SLOT, 79, 25, ROTOR_SLOT_SPEC))
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 7 + col * 18, 83 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 7 + col * 18, 141))
         }
     }
 

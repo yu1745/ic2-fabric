@@ -51,28 +51,28 @@ class FluidHeatGeneratorScreenHandler(
         addProperties(propertyDelegate)
 
         // 燃料容器槽
-        addTrackedSlot(blockInventory, FluidHeatGeneratorBlockEntity.FUEL_SLOT)
-        addTrackedSlot(blockInventory, FluidHeatGeneratorBlockEntity.EMPTY_CONTAINER_SLOT)
+        addTrackedSlot(blockInventory, FluidHeatGeneratorBlockEntity.FUEL_SLOT, 27, 20)
+        addTrackedSlot(blockInventory, FluidHeatGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 27, 53)
 
         for (i in FluidHeatGeneratorBlockEntity.SLOT_UPGRADE_INDICES.indices) {
-            addTrackedSlot(blockInventory, FluidHeatGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i])
+            addTrackedSlot(blockInventory, FluidHeatGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i], 152, 8 + i * 20)
         }
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 83 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 141))
         }
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int = 0, y: Int = 0) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {

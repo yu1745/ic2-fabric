@@ -1,145 +1,82 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.t
-import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.screen.WindKineticGeneratorScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text as McText
+import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = WindKineticGeneratorBlock::class)
 class WindKineticGeneratorScreen(
     handler: WindKineticGeneratorScreenHandler,
     playerInventory: PlayerInventory,
-    title: McText
+    title: Text
 ) : HandledScreen<WindKineticGeneratorScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
-        titleY = -1000
-    }
-
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+        backgroundWidth = 175
+        backgroundHeight = 166
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, 175, 166, 256, 256)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
-        val generatedKu = handler.sync.generatedKu.coerceAtLeast(0)
-        val outputKu = handler.sync.outputKu.coerceAtLeast(0)
-        val blocked = handler.sync.isStuck != 0
-        val windInsufficient = generatedKu == 0 && !blocked
-        val rotorLifetimeTenthsHours = handler.sync.rotorLifetimeTenthsHours.coerceAtLeast(0)
-        val generatedText = McText.translatable("ic2_120.jade.wind_ku_generated", generatedKu).string
-        val outputText = McText.translatable("ic2_120.jade.wind_ku_output", outputKu).string
-        val blockedText = McText.translatable(
-            when {
-                blocked -> "gui.ic2_120.wind_kinetic.blocked"
-                windInsufficient -> "gui.ic2_120.wind_kinetic.wind_insufficient"
-                else -> "gui.ic2_120.wind_kinetic.clear"
-            }
-        ).string
-        val lifetimeText = McText.translatable(
-            "gui.ic2_120.wind_kinetic.lifetime",
-            String.format("%.1f", rotorLifetimeTenthsHours / 10.0)
-        ).string
-        val sideTextWidth = maxOf(
-            textRenderer.getWidth(generatedText),
-            textRenderer.getWidth(outputText),
-            textRenderer.getWidth(blockedText),
-            textRenderer.getWidth(lifetimeText)
-        )
-        val sideTextX = left - sideTextWidth - 4
-
-        val content: UiScope.() -> Unit = {
-            Column(
-                x = left + 8,
-                y = top + 8,
-                spacing = 6,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Text(title.string, color = 0xFFFFFF)
-                Row(spacing = 8) {
-                    SlotHost(0)
-                    Text(t("gui.ic2_120.water_kinetic.rotor_slot"), color = 0xAAAAAA, shadow = false)
-                }
-                Text(t("gui.ic2_120.wind_kinetic.rotor_hint"), color = 0xAAAAAA, shadow = false)
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = WindKineticGeneratorScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
-            )
-        }
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
-
-        // 先绘制物品（包括耐久条）
+        renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        // 再绘制 UI（slot 背景等），确保它们在物品上方
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-        context.drawText(textRenderer, generatedText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
-        context.drawText(
-            textRenderer,
-            blockedText,
-            sideTextX,
-            top + 32,
-            if (blocked) 0xD65A5A else 0x6FA85E,
-            false
-        )
-        context.drawText(textRenderer, lifetimeText, sideTextX, top + 44, 0xAAAAAA, false)
+        val outputKu = handler.sync.outputKu.coerceAtLeast(0)
+        val generatedKu = handler.sync.generatedKu.coerceAtLeast(0)
+        val blocked = handler.sync.isStuck != 0
+        val windInsufficient = generatedKu == 0 && !blocked
+        val hasRotor = handler.slots.isNotEmpty() && handler.slots[0].hasStack()
+
+        // 标题居中于 y=6
+        context.drawText(textRenderer, title, x + (175 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+
+        // 警告状态纹理：(180,4)-(209,28) = 29×24，阻挡或风力不足时绘制
+        if (blocked || windInsufficient) {
+            context.drawTexture(TEXTURE, x + 44, y + 18, 179f, 4f, 31, 24, 256, 256)
+        }
+
+        // 文字1：区域 (16,47)-(160,61)，动能输出
+        drawScaledText(context, "动能输出：${outputKu} KU/t", 16, 47, 144)
+
+        // 文字2：区域 (16,65)-(160,79)，转子/状态
+        val statusText2 = if (!hasRotor) {
+            "需放入转子进行工作"
+        } else {
+            val state = when {
+                blocked -> "阻挡"
+                windInsufficient -> "风力不足"
+                else -> "正常"
+            }
+            "工作状态：${state}"
+        }
+        drawScaledText(context, statusText2, 16, 65, 144)
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun UiScope.SlotHost(slotIndex: Int) {
-        SlotAnchor(
-            id = slotAnchorId(slotIndex),
-            width = WindKineticGeneratorScreenHandler.SLOT_SIZE,
-            height = WindKineticGeneratorScreenHandler.SLOT_SIZE
-        )
+    private fun drawScaledText(context: DrawContext, text: String, rx: Int, ry: Int, rw: Int) {
+        val scale = 7f / textRenderer.fontHeight
+        val scaledWidth = (textRenderer.getWidth(text) * scale).toInt()
+        val scaledHeight = (textRenderer.fontHeight * scale).toInt()
+        val textX = x + rx + (rw - scaledWidth) / 2
+        val textY = y + ry + (14 - scaledHeight) / 2
+        context.matrices.push()
+        context.matrices.translate(textX.toDouble(), textY.toDouble(), 0.0)
+        context.matrices.scale(scale, scale, 1.0f)
+        context.drawText(textRenderer, text, 0, 0, TEXT_COLOR, false)
+        context.matrices.pop()
     }
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
-    }
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
 
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiwindkineticgenerator.png")
+        private val TEXT_COLOR = 0xFF90EE90.toInt()
     }
 }
