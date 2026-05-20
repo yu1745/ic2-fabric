@@ -53,6 +53,15 @@ class RtGeneratorScreen(
         context.drawText(textRenderer, generateText, sideTextX, y + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, outputText, sideTextX, y + 20, 0xAAAAAA, false)
 
+        // 能量条悬停 (113,34)-(139,50) = 26×16
+        if (mouseX in x + 113 until x + 139 && mouseY in y + 34 until y + 50) {
+            context.drawTooltip(
+                textRenderer,
+                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                mouseX, mouseY
+            )
+        }
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 

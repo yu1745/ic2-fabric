@@ -9,7 +9,6 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.ExtractorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
-import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -23,6 +22,7 @@ import net.minecraft.screen.ScreenHandler
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
+import ic2_120.registry.annotation.ScreenFactory
 
 @ModScreenHandler(block = ExtractorBlock::class)
 class ExtractorScreenHandler(
@@ -30,7 +30,7 @@ class ExtractorScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate,
+    propertyDelegate: PropertyDelegate,
     private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(ExtractorScreenHandler::class.type(), syncId) {
 
@@ -38,32 +38,32 @@ class ExtractorScreenHandler(
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
-        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
-        val handlerIndex = slots.size
-        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
-    }
-
     init {
         checkSize(blockInventory, ExtractorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(blockInventory, ExtractorBlockEntity.SLOT_INPUT)
-        addTrackedSlot(blockInventory, ExtractorBlockEntity.SLOT_OUTPUT)
-        addTrackedSlot(blockInventory, ExtractorBlockEntity.SLOT_DISCHARGING)
-        for (i in 0 until ExtractorBlockEntity.SLOT_UPGRADE_INDICES.size) {
-            addTrackedSlot(blockInventory, ExtractorBlockEntity.SLOT_UPGRADE_INDICES[i])
+        addTrackedSlot(blockInventory, ExtractorBlockEntity.SLOT_INPUT, 62, 16)
+        addTrackedSlot(blockInventory, ExtractorBlockEntity.SLOT_OUTPUT, 116, 35)
+        addTrackedSlot(blockInventory, ExtractorBlockEntity.SLOT_DISCHARGING, 62, 55)
+        for (i in 0 until 4) {
+            addTrackedSlot(blockInventory, ExtractorBlockEntity.SLOT_UPGRADE_INDICES[i], 152, 8 + i * 18)
         }
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
+    }
+
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: DEFAULT_SLOT_SPEC
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -79,11 +79,8 @@ class ExtractorScreenHandler(
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START..HOTBAR_END -> {
-                    val storage = itemStorage
-                    if (storage == null) return ItemStack.EMPTY
-                    val moved = SlotMoveHelper.insertFromRoutes(
-                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
-                    )
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> {
@@ -115,7 +112,7 @@ class ExtractorScreenHandler(
         const val SLOT_UPGRADE_INDEX_START = 3
         const val SLOT_UPGRADE_INDEX_END = 6
         const val PLAYER_INV_START = 7
-        const val HOTBAR_END = 43
+        const val HOTBAR_END = 42
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ExtractorScreenHandler {

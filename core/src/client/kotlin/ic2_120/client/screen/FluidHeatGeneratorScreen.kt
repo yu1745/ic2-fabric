@@ -58,6 +58,15 @@ class FluidHeatGeneratorScreen(
         // 文本2：区域 (95,49)-(169,61)，最大热值
         drawScaledText(context, "最大输出热值：32 HU/t", 95, 49, 74, 6f)
 
+        // 流体槽悬停 (74,24)-(86,70) = 12×46
+        if (fuelAmountMb > 0 && mouseX in x + 74 until x + 86 && mouseY in y + 24 until y + 70) {
+            context.drawTooltip(
+                textRenderer,
+                Text.literal("生物燃料：${fuelAmountMb} / 8000 mB"),
+                mouseX, mouseY
+            )
+        }
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 

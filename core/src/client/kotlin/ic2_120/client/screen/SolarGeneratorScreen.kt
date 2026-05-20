@@ -35,7 +35,7 @@ class SolarGeneratorScreen(
         context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
         // 太阳图标：纹理区域 (179,3)-(192,16) = 13×13，发电时渲染到 (81,44)
-        val sunX = x + 81
+        val sunX = x + 82
         val sunY = y + 44
         val sunSize = 13
         if (isGenerating) {

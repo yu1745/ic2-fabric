@@ -38,36 +38,32 @@ class RecyclerScreenHandler(
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
-        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
-        val handlerIndex = slots.size
-        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
-    }
-
     init {
         checkSize(blockInventory, RecyclerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(blockInventory, RecyclerBlockEntity.SLOT_INPUT)
-        addTrackedSlot(blockInventory, RecyclerBlockEntity.SLOT_DISCHARGING)
-        addTrackedSlot(blockInventory, RecyclerBlockEntity.SLOT_OUTPUT)
-
-        for (i in 0 until RecyclerBlockEntity.SLOT_UPGRADE_INDICES.size) {
-            addTrackedSlot(blockInventory, RecyclerBlockEntity.SLOT_UPGRADE_INDICES[i])
+        addTrackedSlot(blockInventory, RecyclerBlockEntity.SLOT_INPUT, 52, 16)
+        addTrackedSlot(blockInventory, RecyclerBlockEntity.SLOT_DISCHARGING, 52, 54)
+        addTrackedSlot(blockInventory, RecyclerBlockEntity.SLOT_OUTPUT, 111, 35)
+        for (i in 0 until 4) {
+            addTrackedSlot(blockInventory, RecyclerBlockEntity.SLOT_UPGRADE_INDICES[i], 152, 7 + i * 18)
         }
 
-        // 玩家物品栏
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
-
-        // 快捷栏
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
+    }
+
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int, fallbackSpec: SlotSpec? = null) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -113,14 +109,13 @@ class RecyclerScreenHandler(
         const val SLOT_SIZE = 18
         private val DEFAULT_SLOT_SPEC = SlotSpec()
 
-        // 槽位索引
         const val SLOT_INPUT_INDEX = 0
         const val SLOT_DISCHARGING_INDEX = 1
         const val SLOT_OUTPUT_INDEX = 2
         const val SLOT_UPGRADE_INDEX_START = 3
         const val SLOT_UPGRADE_INDEX_END = 6
         const val PLAYER_INV_START = 7
-        const val HOTBAR_END = 43
+        const val HOTBAR_END = 42
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): RecyclerScreenHandler {
