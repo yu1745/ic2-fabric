@@ -60,6 +60,24 @@ class SemifluidGeneratorScreen(
         context.drawText(textRenderer, generateText, sideTextX, y + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, outputText, sideTextX, y + 20, 0xAAAAAA, false)
 
+        // 能量条悬停 (118,19)-(148,36) = 30×17
+        if (mouseX in x + 118 until x + 148 && mouseY in y + 19 until y + 36) {
+            context.drawTooltip(
+                textRenderer,
+                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                mouseX, mouseY
+            )
+        }
+
+        // 生物燃料槽悬停 (82,23)-(94,69) = 12×46
+        if (fuelMb > 0 && mouseX in x + 82 until x + 94 && mouseY in y + 23 until y + 69) {
+            context.drawTooltip(
+                textRenderer,
+                Text.literal("生物燃料：${fuelMb} / ${fuelCapMb} mB"),
+                mouseX, mouseY
+            )
+        }
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
