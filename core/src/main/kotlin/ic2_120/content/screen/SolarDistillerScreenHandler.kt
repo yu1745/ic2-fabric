@@ -5,7 +5,6 @@ import ic2_120.content.block.machines.SolarDistillerBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotMoveHelper
-import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.SolarDistillerSync
 import ic2_120.content.syncs.SyncedDataView
@@ -36,51 +35,35 @@ class SolarDistillerScreenHandler(
 
     val sync = SolarDistillerSync(SyncedDataView(propertyDelegate))
 
-    private val upgradeSlotSpec: ic2_120.content.screen.slot.SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
-    }
-
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
         checkSize(blockInventory, SolarDistillerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(PredicateSlot(blockInventory, SolarDistillerBlockEntity.SLOT_INPUT_WATER, 0, 0, deriveSpec(SolarDistillerBlockEntity.SLOT_INPUT_WATER)))
-        addTrackedSlot(PredicateSlot(blockInventory, SolarDistillerBlockEntity.SLOT_OUTPUT_EMPTY, 0, 0, deriveSpec(SolarDistillerBlockEntity.SLOT_OUTPUT_EMPTY)))
-        addTrackedSlot(PredicateSlot(blockInventory, SolarDistillerBlockEntity.SLOT_INPUT_CELL, 0, 0, deriveSpec(SolarDistillerBlockEntity.SLOT_INPUT_CELL)))
-        addTrackedSlot(PredicateSlot(blockInventory, SolarDistillerBlockEntity.SLOT_OUTPUT_CELL, 0, 0, deriveSpec(SolarDistillerBlockEntity.SLOT_OUTPUT_CELL)))
-
-        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addTrackedSlot(
-                PredicateSlot(
-                    blockInventory,
-                    SolarDistillerBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
-            )
-        }
+        addTrackedSlot(blockInventory, SolarDistillerBlockEntity.SLOT_INPUT_WATER, 17, 27)
+        addTrackedSlot(blockInventory, SolarDistillerBlockEntity.SLOT_OUTPUT_EMPTY, 17, 45)
+        addTrackedSlot(blockInventory, SolarDistillerBlockEntity.SLOT_INPUT_CELL, 136, 64)
+        addTrackedSlot(blockInventory, SolarDistillerBlockEntity.SLOT_OUTPUT_CELL, 136, 82)
+        addTrackedSlot(blockInventory, SolarDistillerBlockEntity.SLOT_UPGRADE_0, 152, 8)
+        addTrackedSlot(blockInventory, SolarDistillerBlockEntity.SLOT_UPGRADE_1, 152, 26)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 102 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 160))
         }
     }
 
-    private fun addTrackedSlot(slot: PredicateSlot): PredicateSlot {
-        beSlotToHandlerIndex[slot.index] = slots.size
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
+        val slot = PredicateSlot(inventory, beSlotIndex, x, y, spec)
+        beSlotToHandlerIndex[beSlotIndex] = slots.size
         addSlot(slot)
-        return slot
     }
-
-    private fun deriveSpec(beSlot: Int) =
-        itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
@@ -93,7 +76,7 @@ class SolarDistillerScreenHandler(
             SLOT_OUTPUT_EMPTY_INDEX, SLOT_OUTPUT_CELL_INDEX -> {
                 if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
-            in SLOT_UPGRADE_START..SLOT_UPGRADE_END -> {
+            SLOT_UPGRADE_0_INDEX, SLOT_UPGRADE_1_INDEX -> {
                 if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
             in PLAYER_INV_START..HOTBAR_END -> {
@@ -129,10 +112,10 @@ class SolarDistillerScreenHandler(
         const val SLOT_OUTPUT_EMPTY_INDEX = 1
         const val SLOT_INPUT_CELL_INDEX = 2
         const val SLOT_OUTPUT_CELL_INDEX = 3
-        const val SLOT_UPGRADE_START = 4
-        const val SLOT_UPGRADE_END = 7
-        const val PLAYER_INV_START = 8
-        const val HOTBAR_END = 43
+        const val SLOT_UPGRADE_0_INDEX = 4
+        const val SLOT_UPGRADE_1_INDEX = 5
+        const val PLAYER_INV_START = 6
+        const val HOTBAR_END = 41
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SolarDistillerScreenHandler {

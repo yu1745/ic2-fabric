@@ -16,25 +16,25 @@ data class EnergyStorageConfig(
         val BATBOX = EnergyStorageConfig(
             tier = 1,
             capacity = 40_000L,
-            slotCount = 1,
+            slotCount = 2,
             useEquipmentSlots = false
         )
         val CESU = EnergyStorageConfig(
             tier = 2,
             capacity = 300_000L,
-            slotCount = 1,
+            slotCount = 2,
             useEquipmentSlots = false
         )
         val MFE = EnergyStorageConfig(
             tier = 3,
             capacity = 4_000_000L,
-            slotCount = 5,
+            slotCount = 2,
             useEquipmentSlots = true
         )
         val MFSU = EnergyStorageConfig(
             tier = 4,
             capacity = 40_000_000L,
-            slotCount = 5,
+            slotCount = 2,
             useEquipmentSlots = true
         )
         val BATBOX_CHARGEPAD = BATBOX.copy(chargePlayersAbove = true)

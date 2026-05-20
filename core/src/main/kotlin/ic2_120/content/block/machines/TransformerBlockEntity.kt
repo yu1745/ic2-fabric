@@ -149,6 +149,11 @@ open class TransformerBlockEntity(
         markDirty()
     }
 
+    fun setModeDirect(mode: TransformerSync.Mode) {
+        sync.setMode(mode)
+        markDirty()
+    }
+
     /**
      * 获取当前同步的模式（用于客户端 tooltip 显示）
      */

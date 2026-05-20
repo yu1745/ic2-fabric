@@ -507,6 +507,8 @@ object ModFluids {
                 "construction_foam" -> CONSTRUCTION_FOAM_STILL
                 "creosote" -> CREOSOTE_STILL
                 "compressed_air" -> COMPRESSED_AIR_STILL
+                "steam" -> STEAM_STILL
+                "superheated_steam" -> SUPERHEATED_STEAM_STILL
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getFlowingFluid(): Fluid = when (name) {
@@ -521,6 +523,8 @@ object ModFluids {
                 "construction_foam" -> CONSTRUCTION_FOAM_FLOWING
                 "creosote" -> CREOSOTE_FLOWING
                 "compressed_air" -> COMPRESSED_AIR_FLOWING
+                "steam" -> STEAM_FLOWING
+                "superheated_steam" -> SUPERHEATED_STEAM_FLOWING
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getBlock(): Block = when (name) {
@@ -535,6 +539,8 @@ object ModFluids {
                 "construction_foam" -> CONSTRUCTION_FOAM_BLOCK
                 "creosote" -> CREOSOTE_BLOCK
                 "compressed_air" -> COMPRESSED_AIR_BLOCK
+                "steam" -> STEAM_BLOCK
+                "superheated_steam" -> SUPERHEATED_STEAM_BLOCK
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getIc2Bucket(): Item = when (name) {
@@ -549,6 +555,8 @@ object ModFluids {
                 "construction_foam" -> CONSTRUCTION_FOAM_BUCKET
                 "creosote" -> CREOSOTE_BUCKET
                 "compressed_air" -> COMPRESSED_AIR_BUCKET
+                "steam" -> STEAM_BUCKET
+                "superheated_steam" -> SUPERHEATED_STEAM_BUCKET
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
         }
@@ -572,6 +580,8 @@ object ModFluids {
                 "construction_foam" -> CONSTRUCTION_FOAM_STILL
                 "creosote" -> CREOSOTE_STILL
                 "compressed_air" -> COMPRESSED_AIR_STILL
+                "steam" -> STEAM_STILL
+                "superheated_steam" -> SUPERHEATED_STEAM_STILL
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getFlowingFluid(): Fluid = when (name) {
@@ -586,6 +596,8 @@ object ModFluids {
                 "construction_foam" -> CONSTRUCTION_FOAM_FLOWING
                 "creosote" -> CREOSOTE_FLOWING
                 "compressed_air" -> COMPRESSED_AIR_FLOWING
+                "steam" -> STEAM_FLOWING
+                "superheated_steam" -> SUPERHEATED_STEAM_FLOWING
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getBlock(): Block = when (name) {
@@ -600,6 +612,8 @@ object ModFluids {
                 "construction_foam" -> CONSTRUCTION_FOAM_BLOCK
                 "creosote" -> CREOSOTE_BLOCK
                 "compressed_air" -> COMPRESSED_AIR_BLOCK
+                "steam" -> STEAM_BLOCK
+                "superheated_steam" -> SUPERHEATED_STEAM_BLOCK
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
             override fun getIc2Bucket(): Item = when (name) {
@@ -614,6 +628,8 @@ object ModFluids {
                 "construction_foam" -> CONSTRUCTION_FOAM_BUCKET
                 "creosote" -> CREOSOTE_BUCKET
                 "compressed_air" -> COMPRESSED_AIR_BUCKET
+                "steam" -> STEAM_BUCKET
+                "superheated_steam" -> SUPERHEATED_STEAM_BUCKET
                 else -> throw IllegalStateException("Unknown fluid: $name")
             }
         }

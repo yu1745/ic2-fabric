@@ -1,26 +1,19 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.EnergyFormatUtils
-import ic2_120.client.t
-import ic2_120.client.ui.GuiBackground
-import ic2_120.content.block.TransformerBlock
-import ic2_120.client.ui.FilteredValue
-import ic2_120.content.sync.TransformerSync
 import ic2_120.content.screen.TransformerScreenHandler
-import ic2_120.content.screen.GuiSize
+import ic2_120.content.sync.TransformerSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.text.Text
-import org.slf4j.LoggerFactory
-import java.util.concurrent.atomic.AtomicLong
+import net.minecraft.util.Identifier
 
 /**
  * 变压器的 GUI 界面。
- * 显示当前模式（升压/降压），提供切换按钮。
+ * 显示当前模式（升压/降压），提供固定升压/固定降压两个按钮。
  *
  * 所有电压等级的变压器（LV、MV、HV、EV）共用此 UI。
  */
@@ -31,120 +24,87 @@ class TransformerScreen(
     title: Text
 ) : HandledScreen<TransformerScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-    private var filteredInputRate by FilteredValue()
-    private var filteredOutputRate by FilteredValue()
-    private val lastLoggedInput = AtomicLong(-1)
-    private val lastLoggedOutput = AtomicLong(-1)
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        backgroundWidth = 176
+        backgroundHeight = 219
         titleY = 4
     }
 
+    private lateinit var stepUpBtn: ButtonWidget
+    private lateinit var stepDownBtn: ButtonWidget
+
+    override fun init() {
+        super.init()
+
+        // 固定升压按钮
+        stepUpBtn = addDrawableChild(ButtonWidget.builder(
+            Text.literal("固定升压")
+        ) { btn ->
+            stepDownBtn.setFocused(false)
+            client?.player?.networkHandler?.sendPacket(
+                ButtonClickC2SPacket(handler.syncId, TransformerScreenHandler.BUTTON_ID_STEP_UP)
+            )
+        }.dimensions(x + 21, y + 69, 74, 20).build())
+
+        // 固定降压按钮
+        stepDownBtn = addDrawableChild(ButtonWidget.builder(
+            Text.literal("固定降压")
+        ) { btn ->
+            stepUpBtn.setFocused(false)
+            client?.player?.networkHandler?.sendPacket(
+                ButtonClickC2SPacket(handler.syncId, TransformerScreenHandler.BUTTON_ID_STEP_DOWN)
+            )
+        }.dimensions(x + 21, y + 90, 74, 20).build())
+    }
+
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 219, 256, 256)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
-        val currentMode = handler.sync.getMode()
-
-        val rawInput = handler.sync.getSyncedInsertedAmount()
-        val rawOutput = handler.sync.getSyncedExtractedAmount()
-        filteredInputRate = rawInput
-        filteredOutputRate = rawOutput
-
-        val lastIn = lastLoggedInput.get()
-        val lastOut = lastLoggedOutput.get()
-        if (rawInput != lastIn || rawOutput != lastOut) {
-            lastLoggedInput.compareAndSet(lastIn, rawInput)
-            lastLoggedOutput.compareAndSet(lastOut, rawOutput)
-        }
-
-        val modeText = when (currentMode) {
-            TransformerSync.Mode.STEP_UP -> t("gui.ic2_120.transformer.step_up_full")
-            TransformerSync.Mode.STEP_DOWN -> t("gui.ic2_120.transformer.step_down_full")
-        }
-        val modeColor = when (currentMode) {
-            TransformerSync.Mode.STEP_UP -> 0xFFAAAA
-            TransformerSync.Mode.STEP_DOWN -> 0xAAFFAA
-        }
-
-        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(filteredInputRate))
-        val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(filteredOutputRate))
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(outputText))
-        val sideTextX = left - sideTextWidth - 4
-
-        val content: UiScope.() -> Unit = {
-            Column(
-                x = left + 8,
-                y = top + 6,
-                spacing = 4,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth).padding(0, 0, 8, 0)
-            ) {
-                Text(title.string, color = 0xFFFFFF)
-
-                Flex(
-                    direction = FlexDirection.ROW,
-                    alignItems = AlignItems.CENTER,
-                    gap = 8,
-                    modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth - 8)
-                ) {
-                    Text(t("gui.ic2_120.transformer.mode_label"), color = 0xFFFFFF, shadow = false)
-                    Text(modeText, color = modeColor, shadow = false)
-                    Button(t("gui.ic2_120.transformer.switch_button"), onClick = {
-                        client?.player?.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, TransformerScreenHandler.BUTTON_ID_TOGGLE_MODE)
-                        )
-                    })
-                }
-
-                val (inputDesc, outputDesc) = when (currentMode) {
-                    TransformerSync.Mode.STEP_UP -> {
-                        val inputTier = handler.sync.lowTier
-                        val outputTier = handler.sync.highTier
-                        val inputEu = handler.sync.getLowEuPerTick()
-                        val outputEu = handler.sync.getHighEuPerTick()
-                        t("gui.ic2_120.transformer.other_receive", "$inputEu EU/t", inputTier) to t("gui.ic2_120.transformer.face_output", "$outputEu EU/t", outputTier)
-                    }
-                    TransformerSync.Mode.STEP_DOWN -> {
-                        val inputTier = handler.sync.highTier
-                        val outputTier = handler.sync.lowTier
-                        val inputEu = handler.sync.getHighEuPerTick()
-                        val outputEu = handler.sync.getLowEuPerTick()
-                        t("gui.ic2_120.transformer.face_receive", "$inputEu EU/t", inputTier) to t("gui.ic2_120.transformer.other_output", "$outputEu EU/t", outputTier)
-                    }
-                }
-                Text(inputDesc, color = 0x999999, shadow = false)
-                Text(outputDesc, color = 0x999999, shadow = false)
-            }
-        }
-
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-
-        // 再绘制 UI（slot 背景等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 最后绘制物品（包括耐久条），确保物品在顶层
+        renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
-        context.drawText(textRenderer, inputText, sideTextX, top + 6, 0xFFFFAA, false)
-        context.drawText(textRenderer, outputText, sideTextX, top + 18, 0xFFFFAA, false)
+
+        val currentMode = handler.sync.getMode()
+        val isStepUp = currentMode == TransformerSync.Mode.STEP_UP
+
+        val lowEu = handler.sync.getLowEuPerTick()
+        val highEu = handler.sync.getHighEuPerTick()
+
+        val (inputRate, outputRate) = if (isStepUp) {
+            "$lowEu" to "$highEu"
+        } else {
+            "$highEu" to "$lowEu"
+        }
+
+        // 标题
+        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 4, 0x404040, false)
+
+        // 文本：输入
+        context.drawText(textRenderer, Text.literal("输入："), x + 21, y + 27, 0x404040, false)
+
+        // 文本：输出
+        context.drawText(textRenderer, Text.literal("输出："), x + 21, y + 43, 0x404040, false)
+
+        // 文本：a（输入速率值）
+        context.drawText(textRenderer, Text.literal("${inputRate}EU/t"), x + 51, y + 29, INPUT_OUTPUT_COLOR, false)
+
+        // 文本：b（输出速率值）
+        context.drawText(textRenderer, Text.literal("${outputRate}EU/t"), x + 51, y + 45, INPUT_OUTPUT_COLOR, false)
+
+        // 扳手图标
+        if (isStepUp) {
+            context.drawTexture(WRENCH, x + 103, y + 70, 0f, 0f, 16, 16, 16, 16)
+        } else {
+            context.drawTexture(WRENCH, x + 103, y + 91, 0f, 0f, 16, 16, 16, 16)
+        }
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (ui.mouseClicked(mouseX, mouseY, button)) return true
-        return super.mouseClicked(mouseX, mouseY, button)
-    }
-
     companion object {
-        private val LOGGER = LoggerFactory.getLogger(TransformerScreen::class.java)
-        private val GUI_SIZE = GuiSize.STANDARD
+        private val TEXTURE = Identifier("ic2", "textures/gui/guitransfomer.png")
+        private val WRENCH = Identifier("ic2", "textures/item/tool/wrench.png")
+        private const val INPUT_OUTPUT_COLOR = 0xFF90EE90.toInt()
     }
 }
