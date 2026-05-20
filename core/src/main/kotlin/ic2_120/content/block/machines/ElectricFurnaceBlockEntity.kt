@@ -92,6 +92,7 @@ class ElectricFurnaceBlockEntity(
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT)
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_INPUT)
         const val INVENTORY_SIZE = 7
+        const val MAX_STORED_XP = 10000f
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)  // 0: 输入, 1: 输出, 2: 放电
@@ -247,7 +248,8 @@ class ElectricFurnaceBlockEntity(
             input.decrement(1)
             if (outputSlot.isEmpty()) setStack(1, result.copy())
             else outputSlot.increment(result.count)
-            storedExperience += FurnaceExperienceHelper.getExperienceFromRecipe(recipe)
+            storedExperience = (storedExperience + FurnaceExperienceHelper.getExperienceFromRecipe(recipe))
+                .coerceAtMost(MAX_STORED_XP)
             sync.progress = 0
             markDirty()
             setActiveState(world, pos, state, false)
@@ -266,6 +268,18 @@ class ElectricFurnaceBlockEntity(
             setActiveState(world, pos, state, false)
         }
         sync.syncCurrentTickFlow()
+    }
+
+    fun collectXp(player: PlayerEntity) {
+        val xp = net.minecraft.util.math.MathHelper.floor(storedExperience)
+        val frac = net.minecraft.util.math.MathHelper.fractionalPart(storedExperience)
+        var amount = xp
+        if (frac != 0.0f && Math.random() < frac) amount++
+        if (amount > 0) {
+            player.addExperience(amount)
+        }
+        storedExperience = 0f
+        markDirty()
     }
 
     fun dropStoredExperience() {

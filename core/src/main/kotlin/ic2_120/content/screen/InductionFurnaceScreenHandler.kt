@@ -38,34 +38,34 @@ class InductionFurnaceScreenHandler(
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private fun addTrackedSlot(inventory: Inventory, beSlot: Int, spec: SlotSpec) {
-        val handlerIndex = slots.size
-        addSlot(PredicateSlot(inventory, beSlot, 0, 0, spec))
-        beSlotToHandlerIndex[beSlot] = handlerIndex
-    }
-
     init {
         checkSize(blockInventory, InductionFurnaceBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_INPUT_0, DEFAULT_SLOT_SPEC)
-        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_INPUT_1, DEFAULT_SLOT_SPEC)
-        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_OUTPUT_0, OUTPUT_SLOT_SPEC)
-        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_OUTPUT_1, OUTPUT_SLOT_SPEC)
-        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_DISCHARGING, DEFAULT_SLOT_SPEC)
+        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_INPUT_0, 27, 17)
+        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_INPUT_1, 45, 17)
+        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_OUTPUT_0, 97, 34)
+        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_OUTPUT_1, 121, 34)
+        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_DISCHARGING, 36, 53)
 
-        for (i in 0 until UPGRADE_SLOT_COUNT) {
-            addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_UPGRADE_INDICES[i], DEFAULT_SLOT_SPEC)
-        }
+        // 2 个升级槽 (152,26) (152,44)
+        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_UPGRADE_INDICES[0], 152, 26)
+        addTrackedSlot(blockInventory, InductionFurnaceBlockEntity.SLOT_UPGRADE_INDICES[1], 152, 44)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
+    }
+
+    private fun addTrackedSlot(inventory: Inventory, beSlot: Int, x: Int, y: Int, spec: SlotSpec = DEFAULT_SLOT_SPEC) {
+        val handlerIndex = slots.size
+        addSlot(PredicateSlot(inventory, beSlot, x, y, spec))
+        beSlotToHandlerIndex[beSlot] = handlerIndex
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -98,14 +98,11 @@ class InductionFurnaceScreenHandler(
     override fun canUse(player: PlayerEntity): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is InductionFurnaceBlock && player.squaredDistanceTo(
-                pos.x + 0.5,
-                pos.y + 0.5,
-                pos.z + 0.5
+                pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)
 
     companion object {
-        private const val UPGRADE_SLOT_COUNT = 4
         const val SLOT_SIZE = 18
 
         private val DEFAULT_SLOT_SPEC = SlotSpec()
@@ -116,10 +113,10 @@ class InductionFurnaceScreenHandler(
         const val SLOT_OUTPUT_0_INDEX = 2
         const val SLOT_OUTPUT_1_INDEX = 3
         const val SLOT_DISCHARGING_INDEX = 4
-        const val SLOT_UPGRADE_INDEX_START = 5
-        const val SLOT_UPGRADE_INDEX_END = 8
-        const val PLAYER_INV_START = 9
-        const val HOTBAR_END = 45
+        const val SLOT_UPGRADE_0_INDEX = 5
+        const val SLOT_UPGRADE_1_INDEX = 6
+        const val PLAYER_INV_START = 7
+        const val HOTBAR_END = 42
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): InductionFurnaceScreenHandler {

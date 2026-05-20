@@ -12,6 +12,8 @@ import ic2_120.content.screen.SolarDistillerScreenHandler
 import ic2_120.content.sync.SolarDistillerSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.item.IUpgradeItem
+import ic2_120.content.item.FluidEjectorUpgrade
+import ic2_120.content.item.FluidPullingUpgrade
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.RegisterItemStorage
@@ -98,14 +100,12 @@ class SolarDistillerBlockEntity(
         const val SLOT_OUTPUT_EMPTY = 1      // 空容器输出槽（空桶、空电池等）
         const val SLOT_INPUT_CELL = 2        // 电池输入槽（空电池）
         const val SLOT_OUTPUT_CELL = 3       // 电池输出槽（蒸馏水电池）
-        const val SLOT_UPGRADE_0 = 4         // 升级槽 0
-        const val SLOT_UPGRADE_1 = 5         // 升级槽 1
-        const val SLOT_UPGRADE_2 = 6         // 升级槽 2
-        const val SLOT_UPGRADE_3 = 7         // 升级槽 3
-        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        const val SLOT_UPGRADE_0 = 4         // 升级槽 0（流体弹出升级）
+        const val SLOT_UPGRADE_1 = 5         // 升级槽 1（流体抽入升级）
+        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1)
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_EMPTY, SLOT_OUTPUT_CELL)
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_INPUT_WATER, SLOT_INPUT_CELL)
-        const val INVENTORY_SIZE = 8
+        const val INVENTORY_SIZE = 6
 
         // NBT 存储键
         private const val NBT_INPUT_TANK = "InputTank"    // 输入罐存储键
@@ -364,7 +364,8 @@ class SolarDistillerBlockEntity(
         SLOT_OUTPUT_EMPTY -> false
         SLOT_INPUT_CELL -> isInputCellStack(stack)
         SLOT_OUTPUT_CELL -> false
-        else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
+        SLOT_UPGRADE_0, SLOT_UPGRADE_1 -> stack.item is FluidEjectorUpgrade || stack.item is FluidPullingUpgrade
+        else -> false
     }
 
     override fun setStack(slot: Int, stack: ItemStack) {

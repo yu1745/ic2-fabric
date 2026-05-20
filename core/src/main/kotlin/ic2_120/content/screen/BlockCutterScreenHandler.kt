@@ -5,7 +5,6 @@ import ic2_120.content.block.machines.BlockCutterBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.BlockCutterSync
 import ic2_120.content.syncs.SyncedDataView
@@ -39,39 +38,34 @@ class BlockCutterScreenHandler(
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
-    }
-
     init {
         checkSize(blockInventory, BlockCutterBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(blockInventory, BlockCutterBlockEntity.SLOT_INPUT)
-        addTrackedSlot(blockInventory, BlockCutterBlockEntity.SLOT_DISCHARGING)
-        addTrackedSlot(blockInventory, BlockCutterBlockEntity.SLOT_OUTPUT)
-        addTrackedSlot(blockInventory, BlockCutterBlockEntity.SLOT_BLADE)
+        addTrackedSlot(blockInventory, BlockCutterBlockEntity.SLOT_INPUT, 26, 17)
+        addTrackedSlot(blockInventory, BlockCutterBlockEntity.SLOT_DISCHARGING, 26, 53)
+        addTrackedSlot(blockInventory, BlockCutterBlockEntity.SLOT_OUTPUT, 116, 35)
+        addTrackedSlot(blockInventory, BlockCutterBlockEntity.SLOT_BLADE, 70, 53)
 
-        // 5: 升级插件槽 x4
-        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addTrackedSlot(blockInventory, BlockCutterBlockEntity.SLOT_UPGRADE_INDICES[i], upgradeSlotSpec)
+        for (i in 0 until 4) {
+            addTrackedSlot(blockInventory, BlockCutterBlockEntity.SLOT_UPGRADE_INDICES[i], 152, 8 + i * 18)
         }
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
-        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int, spec: SlotSpec? = null) {
+        val slotSpec = spec ?: itemStorage?.deriveSlotSpec(beSlotIndex) ?: DEFAULT_SLOT_SPEC
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, slotSpec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -124,7 +118,7 @@ class BlockCutterScreenHandler(
         const val SLOT_UPGRADE_INDEX_START = 4
         const val SLOT_UPGRADE_INDEX_END = 7
         const val PLAYER_INV_START = 8
-        const val HOTBAR_END = 44
+        const val HOTBAR_END = 43
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): BlockCutterScreenHandler {

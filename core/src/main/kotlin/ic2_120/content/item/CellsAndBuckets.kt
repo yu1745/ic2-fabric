@@ -389,8 +389,13 @@ abstract class ModFluidCell(settings: Item.Settings) : Item(settings), FluidModi
     /** 子类实现：返回对应的空单元物品（用于配方剩余物） */
     internal abstract fun getEmptyCell(): Item
 
-    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(
+        stack: ItemStack,
+        context: Item.TooltipContext,
+        tooltip: MutableList<Text>,
+        type: TooltipType
+    ) {
+        super.appendTooltip(stack, context, tooltip, type)
         val fluidKey = Registries.FLUID.getId(getFluid()).toTranslationKey("fluid")
         tooltip.add(Text.translatable(fluidKey).formatted(Formatting.GRAY))
     }

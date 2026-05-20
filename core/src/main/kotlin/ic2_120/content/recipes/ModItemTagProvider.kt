@@ -37,7 +37,7 @@ class ModItemTagProvider(
                 val parts = tagId.split(":", limit = 2)
                 val namespace = parts[0]
                 val path = if (parts.size == 2) parts[1] else parts[0]
-                val tagKey = TagKey.of(RegistryKeys.ITEM, Identifier(namespace, path))
+                val tagKey = TagKey.of(RegistryKeys.ITEM, Identifier.of(namespace, path))
                 getOrCreateTagBuilder(tagKey).add(item)
             }
         }

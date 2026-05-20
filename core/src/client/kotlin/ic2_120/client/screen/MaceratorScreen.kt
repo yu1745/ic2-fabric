@@ -30,7 +30,7 @@ class MaceratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         // 升级提示图标位于 (4, 4) — 16×16 纹理来自 uptips.png (1,1) 至结束

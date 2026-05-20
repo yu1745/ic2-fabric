@@ -211,12 +211,12 @@ class Ic2JeiPlugin : IModPlugin {
                 "coolant_cell", "hot_coolant_cell", "uu_matter_cell",
                 "weed_ex_cell", "pahoehoe_lava_cell", "biofuel_cell", "biomass_cell"
             )) {
-                val item = Registries.ITEM.get(Identifier("ic2_120", fluidId))
+                val item = Registries.ITEM.get(Identifier.of("ic2_120", fluidId))
                 if (item is ModFluidCell) {
                     val fluid = item.getFluid()
                     modFluidCells.add(fluid)
                     // also add flowing variant if it exists
-                    val flowing = Registries.FLUID.get(Identifier("ic2_120", "flowing_${Registries.FLUID.getId(fluid).path}"))
+                    val flowing = Registries.FLUID.get(Identifier.of("ic2_120", "flowing_${Registries.FLUID.getId(fluid).path}"))
                     if (flowing !== Fluids.EMPTY) modFluidCells.add(flowing)
                 }
             }

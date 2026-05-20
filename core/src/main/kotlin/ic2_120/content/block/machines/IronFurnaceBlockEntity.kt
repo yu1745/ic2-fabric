@@ -70,6 +70,9 @@ class IronFurnaceBlockEntity(
 
         /** 岩浆在铁炉中的燃烧时间（tick） */
         private const val LAVA_BURN_TIME = 2000  // 12.5 个物品 * 160 tick/物品
+
+        /** 经验存储上限 */
+        const val MAX_STORED_XP = 10000f
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -199,7 +202,8 @@ class IronFurnaceBlockEntity(
                 } else {
                     outputItem.increment(result.count)
                 }
-                storedExperience += FurnaceExperienceHelper.getExperienceFromRecipe(recipe)
+                storedExperience = (storedExperience + FurnaceExperienceHelper.getExperienceFromRecipe(recipe))
+                    .coerceAtMost(MAX_STORED_XP)
                 sync.cookTime = 0
                 markDirty()
             }
@@ -275,6 +279,18 @@ class IronFurnaceBlockEntity(
         if (stack.isEmpty) return false
         val w = world ?: return true
         return w.recipeManager.getFirstMatch(RecipeType.SMELTING, SingleStackRecipeInput(stack.copyWithCount(1)), w).isPresent
+    }
+
+    fun collectXp(player: PlayerEntity) {
+        val xp = net.minecraft.util.math.MathHelper.floor(storedExperience)
+        val frac = net.minecraft.util.math.MathHelper.fractionalPart(storedExperience)
+        var amount = xp
+        if (frac != 0.0f && Math.random() < frac) amount++
+        if (amount > 0) {
+            player.addExperience(amount)
+        }
+        storedExperience = 0f
+        markDirty()
     }
 
     fun dropStoredExperience() {

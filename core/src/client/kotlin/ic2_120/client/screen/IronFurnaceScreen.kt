@@ -1,19 +1,19 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.t
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.IronFurnaceBlock
 import ic2_120.content.block.machines.IronFurnaceBlockEntity
 import ic2_120.content.screen.IronFurnaceScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.IronFurnaceSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = IronFurnaceBlock::class)
 class IronFurnaceScreen(
@@ -22,118 +22,130 @@ class IronFurnaceScreen(
     title: Text
 ) : HandledScreen<IronFurnaceScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
+    private lateinit var collectXpBtn: ButtonWidget
 
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        backgroundWidth = 176
+        backgroundHeight = 166
     }
 
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    override fun init() {
+        super.init()
+
+        collectXpBtn = addDrawableChild(
+            ButtonWidget.builder(Text.empty()) { btn ->
+                client?.player?.networkHandler?.sendPacket(
+                    ButtonClickC2SPacket(handler.syncId, IronFurnaceScreenHandler.BUTTON_ID_COLLECT_XP)
+                )
+            }.dimensions(x + XP_BTN_X, y + XP_BTN_Y, XP_BTN_SIZE, XP_BTN_SIZE).build()
+        )
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
+
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
         val cookFrac = if (IronFurnaceSync.COOK_TIME_MAX > 0) {
             (handler.sync.cookTime.coerceIn(0, IronFurnaceSync.COOK_TIME_MAX).toFloat() / IronFurnaceSync.COOK_TIME_MAX)
                 .coerceIn(0f, 1f)
         } else 0f
         val totalBurn = handler.sync.totalBurnTime.coerceAtLeast(1)
         val burnFrac = (handler.sync.burnTime.coerceIn(0, totalBurn).toFloat() / totalBurn).coerceIn(0f, 1f)
-        val burnPercent = (burnFrac * 100f).toInt()
 
-        val content: UiScope.() -> Unit = {
-            Column(
-                x = left + 8,
-                y = top + 8,
-                spacing = 6,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                    Text(title.string, color = 0xFFFFFF)
-                    Text(t("gui.ic2_120.iron_furnace.burning", burnPercent), color = 0xFFFFFF, shadow = false)
-                }
-                EnergyBar(burnFrac, barHeight = 12)
-
-                Flex(
-                    direction = FlexDirection.ROW,
-                    alignItems = AlignItems.CENTER,
-                    gap = 4
-                ) {
-                    SlotHost(IronFurnaceBlockEntity.SLOT_INPUT)
-                    EnergyBar(cookFrac, modifier = Modifier.EMPTY.fractionWidth(1.0f))
-                    SlotHost(IronFurnaceBlockEntity.SLOT_OUTPUT)
-                }
-                Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 4) {
-                    SlotHost(IronFurnaceBlockEntity.SLOT_FUEL)
-                    Text(t("gui.ic2_120.iron_furnace.fuel_slot"), color = 0xAAAAAA, shadow = false)
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = IronFurnaceScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
+        // 燃烧值纹理 (180,5)-(193,18) = 13×13，自下而上
+        if (burnFrac > 0f) {
+            val flameHeight = (FLAME_H * burnFrac).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + FLAME_X,
+                top + FLAME_Y + FLAME_H - flameHeight,
+                left + FLAME_X + FLAME_W,
+                top + FLAME_Y + FLAME_H
             )
+            context.drawTexture(
+                TEXTURE, left + FLAME_X, top + FLAME_Y,
+                FLAME_U.toFloat(), FLAME_V.toFloat(),
+                FLAME_W, FLAME_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+            context.disableScissor()
         }
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
+        // 工作进度纹理 (180,23)-(201,37) = 21×14，自左向右
+        if (cookFrac > 0f) {
+            val arrowWidth = (ARROW_W * cookFrac).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + ARROW_X,
+                top + ARROW_Y,
+                left + ARROW_X + arrowWidth,
+                top + ARROW_Y + ARROW_H
+            )
+            context.drawTexture(
+                TEXTURE, left + ARROW_X, top + ARROW_Y,
+                ARROW_U.toFloat(), ARROW_V.toFloat(),
+                ARROW_W, ARROW_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+            context.disableScissor()
+        }
 
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
+        // 经验瓶纹理（按钮居中）
+        context.drawItem(
+            ItemStack(Items.EXPERIENCE_BOTTLE),
+            left + XP_BTN_X + 2,
+            top + XP_BTN_Y + 2
         )
-
-        // 再绘制 UI（slot 背景、能量条等），确保它们在物品下方
-        super.render(context, mouseX, mouseY, delta)
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 左侧显示累积经验值
-        val xpRaw = handler.sync.experienceDisplay
-        val xpWhole = xpRaw / 10
-        val xpFrac = xpRaw % 10
-        val xpText = if (xpWhole > 0) "XP $xpWhole.$xpFrac" else "XP 0.0"
-        val xpX = left - textRenderer.getWidth(xpText) - 4
-        context.drawText(textRenderer, xpText, xpX, top + 8, 0xA5FE74, false)
 
         drawMouseoverTooltip(context, mouseX, mouseY)
-    }
 
-    private fun UiScope.SlotHost(slotIndex: Int) {
-        SlotAnchor(
-            id = slotAnchorId(slotIndex),
-            width = IronFurnaceScreenHandler.SLOT_SIZE,
-            height = IronFurnaceScreenHandler.SLOT_SIZE
-        )
-    }
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
+        // XP 按钮悬停提示
+        val relX = mouseX - left
+        val relY = mouseY - top
+        if (relX in XP_BTN_X until XP_BTN_X + XP_BTN_SIZE &&
+            relY in XP_BTN_Y until XP_BTN_Y + XP_BTN_SIZE
+        ) {
+            val xpRaw = handler.sync.experienceDisplay
+            val xpWhole = xpRaw / 10
+            val xpFrac = xpRaw % 10
+            context.drawTooltip(
+                textRenderer,
+                Text.literal("XP: $xpWhole.$xpFrac"),
+                mouseX, mouseY
+            )
         }
     }
 
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
-
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiironfurnace.png")
+        private const val TEXTURE_SIZE = 256
+
+        // 燃烧值纹理 (180,5)-(193,18) = 13×13
+        private const val FLAME_U = 180
+        private const val FLAME_V = 5
+        private const val FLAME_W = 13
+        private const val FLAME_H = 13
+        private const val FLAME_X = 57
+        private const val FLAME_Y = 37
+
+        // 工作进度纹理 (180,23)-(201,37) = 21×14
+        private const val ARROW_U = 180
+        private const val ARROW_V = 23
+        private const val ARROW_W = 21
+        private const val ARROW_H = 14
+        private const val ARROW_X = 81
+        private const val ARROW_Y = 36
+
+        // XP 收集按钮
+        private const val XP_BTN_X = 8
+        private const val XP_BTN_Y = 60
+        private const val XP_BTN_SIZE = 20
     }
 }

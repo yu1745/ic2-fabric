@@ -46,7 +46,7 @@ class EnergyStorageScreenHandler(
     private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(screenHandlerType, syncId) {
     private val config = resolveConfig()
-    private val machineSlotCount: Int = if (config.useEquipmentSlots) 5 else 1
+    private val machineSlotCount: Int = config.slotCount
     val sync = EnergyStorageSync(
         schema = SyncedDataView(propertyDelegate),
         getFacing = { Direction.NORTH },
@@ -70,32 +70,35 @@ class EnergyStorageScreenHandler(
         checkSize(blockInventory, machineSlotCount)
         addProperties(propertyDelegate)
 
-        // 4 个装备槽（左侧，slot 1-4），MFE/MFSU 专用
-        if (config.useEquipmentSlots) {
-            addTrackedSlot(blockInventory, 1)
-            addTrackedSlot(blockInventory, 2)
-            addTrackedSlot(blockInventory, 3)
-            addTrackedSlot(blockInventory, 4)
-        }
+        // 1 个充电槽，所有等级都有（blockInventory slot 0）
+        addTrackedSlot(blockInventory, 0, 56, 17)
 
-        // 1 个充电槽（右侧，slot 0），所有等级都有
-        addTrackedSlot(blockInventory, 0)
+        // 1 个供能槽，所有等级都有（blockInventory 最后一个 slot）
+        addTrackedSlot(blockInventory, machineSlotCount - 1, 56, 53)
+
+        // 4 个玩家装备槽（横列，1px 间距），MFE/MFSU 专用
+        if (config.useEquipmentSlots) {
+            addSlot(Slot(playerInventory, 39, 8, 84))   // 头盔
+            addSlot(Slot(playerInventory, 38, 26, 84))  // 胸甲
+            addSlot(Slot(playerInventory, 37, 44, 84))  // 护腿
+            addSlot(Slot(playerInventory, 36, 62, 84))  // 靴子
+        }
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 114 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 172))
         }
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -111,6 +114,9 @@ class EnergyStorageScreenHandler(
                 beSlot >= 0 -> {
                     if (!insertItem(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
+                }
+                useEquipmentSlots && index in machineSlotCount until machineSlotCount + 4 -> {
+                    if (!insertItem(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, true)) return ItemStack.EMPTY
                 }
                 index in playerInventorySlotStart..hotbarEnd -> {
                     val storage = itemStorage
@@ -133,7 +139,7 @@ class EnergyStorageScreenHandler(
         return stack
     }
 
-    val playerInventorySlotStart: Int get() = machineSlotCount
+    val playerInventorySlotStart: Int get() = machineSlotCount + (if (config.useEquipmentSlots) 4 else 0)
 
     private val hotbarEnd: Int
         get() = playerInventorySlotStart + 35

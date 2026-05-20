@@ -26,7 +26,7 @@ class WindKineticGeneratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val outputKu = handler.sync.outputKu.coerceAtLeast(0)

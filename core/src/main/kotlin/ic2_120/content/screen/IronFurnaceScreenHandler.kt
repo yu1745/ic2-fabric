@@ -39,36 +39,45 @@ class IronFurnaceScreenHandler(
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private fun addTrackedSlot(inventory: Inventory, beSlot: Int, spec: SlotSpec) {
-        val handlerIndex = slots.size
-        addSlot(PredicateSlot(inventory, beSlot, 0, 0, spec))
-        beSlotToHandlerIndex[beSlot] = handlerIndex
-    }
-
     init {
         checkSize(blockInventory, 3)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(blockInventory, IronFurnaceBlockEntity.SLOT_INPUT, DEFAULT_SLOT_SPEC)
-        addSlot(FurnaceOutputSlot(blockInventory, IronFurnaceBlockEntity.SLOT_OUTPUT, 0, 0, OUTPUT_SLOT_SPEC) {
+        addTrackedSlot(blockInventory, IronFurnaceBlockEntity.SLOT_INPUT, 55, 16, DEFAULT_SLOT_SPEC)
+        addSlot(FurnaceOutputSlot(blockInventory, IronFurnaceBlockEntity.SLOT_OUTPUT, 116, 35, OUTPUT_SLOT_SPEC) {
             context.get({ world, pos ->
                 val be = world.getBlockEntity(pos)
                 if (be is IronFurnaceBlockEntity) be.dropStoredExperience()
             })
         })
-        // 输出槽也需要记录映射（用于 quickMove 判断）
         beSlotToHandlerIndex[IronFurnaceBlockEntity.SLOT_OUTPUT] = slots.size - 1
-        addTrackedSlot(blockInventory, IronFurnaceBlockEntity.SLOT_FUEL, DEFAULT_SLOT_SPEC)
+        addTrackedSlot(blockInventory, IronFurnaceBlockEntity.SLOT_FUEL, 55, 53, DEFAULT_SLOT_SPEC)
 
-        // 玩家物品栏
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
+    }
+
+    private fun addTrackedSlot(inventory: Inventory, beSlot: Int, x: Int, y: Int, spec: SlotSpec) {
+        val handlerIndex = slots.size
+        addSlot(PredicateSlot(inventory, beSlot, x, y, spec))
+        beSlotToHandlerIndex[beSlot] = handlerIndex
+    }
+
+    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+        if (id == BUTTON_ID_COLLECT_XP) {
+            context.get({ world, pos ->
+                val be = world.getBlockEntity(pos)
+                if (be is IronFurnaceBlockEntity) be.collectXp(player)
+            }, true)
+            return true
+        }
+        return false
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -109,6 +118,7 @@ class IronFurnaceScreenHandler(
         const val PLAYER_INV_START = 3
         const val HOTBAR_END = 38
         const val SLOT_SIZE = 18
+        const val BUTTON_ID_COLLECT_XP = 0
 
         private val DEFAULT_SLOT_SPEC = SlotSpec()
         private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false }, canTake = { true })
