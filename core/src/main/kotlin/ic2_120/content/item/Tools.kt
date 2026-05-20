@@ -669,10 +669,10 @@ class FrequencyTransmitter : Item(FabricItemSettings().maxCount(1)) {
 }
 
 /** 链锯 - 电动伐木工具（等级 1，30k EU） */
-@ModItem(name = "chainsaw", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
+@ModItem(name = "chainsaw", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:axes"])
 class Chainsaw : ElectricMiningDrillItem(
     FabricItemSettings(),
-    miningToolFactory = { ItemStack(Items.DIAMOND_AXE) },
+    miningToolFactories = listOf({ ItemStack(Items.DIAMOND_AXE) }),
     baseEnergyPerBlock = 250L
 ) {
     companion object {
@@ -715,7 +715,7 @@ class Chainsaw : ElectricMiningDrillItem(
 
 abstract class ElectricMiningDrillItem(
     settings: FabricItemSettings,
-    private val miningToolFactory: () -> ItemStack,
+    private val miningToolFactories: List<() -> ItemStack>,
     private val baseEnergyPerBlock: Long
 ) : Item(settings.maxCount(1)), IElectricTool {
 
@@ -726,13 +726,17 @@ abstract class ElectricMiningDrillItem(
 
     override fun getMiningSpeedMultiplier(stack: ItemStack, state: BlockState): Float {
         if (!hasEnoughEnergyForMining(stack)) return 1.0f
-        val tool = miningToolFactory()
-        return tool.item.getMiningSpeedMultiplier(tool, state)
+        return miningToolFactories.maxOf { factory ->
+            val tool = factory()
+            tool.item.getMiningSpeedMultiplier(tool, state)
+        }
     }
 
     override fun isSuitableFor(state: BlockState): Boolean {
-        val tool = miningToolFactory()
-        return tool.item.isSuitableFor(state)
+        return miningToolFactories.any { factory ->
+            val tool = factory()
+            tool.item.isSuitableFor(state)
+        }
     }
 
     override fun postMine(
@@ -754,10 +758,10 @@ abstract class ElectricMiningDrillItem(
 }
 
 /** 钻石钻头 - 电动采矿工具（等级 1，10k EU） */
-@ModItem(name = "diamond_drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
+@ModItem(name = "diamond_drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:pickaxes", "minecraft:shovels"])
 class DiamondDrill : ElectricMiningDrillItem(
     FabricItemSettings(),
-    miningToolFactory = { ItemStack(Items.DIAMOND_PICKAXE) },
+    miningToolFactories = listOf({ ItemStack(Items.DIAMOND_PICKAXE) }, { ItemStack(Items.DIAMOND_SHOVEL) }),
     baseEnergyPerBlock = 80L
 ) {
     companion object {
@@ -793,10 +797,10 @@ class DiamondDrill : ElectricMiningDrillItem(
 }
 
 /** 采矿钻头 - 电动采矿工具（等级 1，10k EU） */
-@ModItem(name = "drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
+@ModItem(name = "drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:pickaxes", "minecraft:shovels"])
 class Drill : ElectricMiningDrillItem(
     FabricItemSettings(),
-    miningToolFactory = { ItemStack(Items.IRON_PICKAXE) },
+    miningToolFactories = listOf({ ItemStack(Items.IRON_PICKAXE) }, { ItemStack(Items.IRON_SHOVEL) }),
     baseEnergyPerBlock = 50L
 ) {
     companion object {
@@ -919,10 +923,10 @@ class ElectricWrench : Item(FabricItemSettings().maxCount(1)), IElectricTool {
 }
 
 /** 铱钻头 - 高级电动采矿工具（等级 3，1M EU），模式键 + 右键切换精准采集 */
-@ModItem(name = "iridium_drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
+@ModItem(name = "iridium_drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:pickaxes", "minecraft:shovels"])
 class IridiumDrill : ElectricMiningDrillItem(
     FabricItemSettings(),
-    miningToolFactory = { ItemStack(Items.DIAMOND_PICKAXE) },
+    miningToolFactories = listOf({ ItemStack(Items.DIAMOND_PICKAXE) }, { ItemStack(Items.DIAMOND_SHOVEL) }),
     baseEnergyPerBlock = 800L
 ) {
     override val tier = 3
