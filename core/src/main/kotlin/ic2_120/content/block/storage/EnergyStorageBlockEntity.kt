@@ -5,6 +5,7 @@ import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.sync.EnergyStorageSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.energy.charge.BatteryChargerComponent
+import ic2_120.content.item.EnergiumDust
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.item.energy.chargePlayerInventoryPerItemLimit
@@ -24,6 +25,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandler
@@ -49,25 +51,25 @@ abstract class EnergyStorageBlockEntity(
 
     override val tier: Int get() = config.tier
 
+    private val fuelSlotIndex: Int = config.slotCount - 1
+
     private val inventory = DefaultedList.ofSize(config.slotCount, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
-        insertRoutes = if (config.useEquipmentSlots) {
-            listOf(
-                ItemInsertRoute(intArrayOf(0, 1, 2, 3, 4), matcher = { stack ->
-                    val item = stack.item
-                    (item is IBatteryItem || item is IElectricTool) && item.tier <= config.tier
-                }, maxPerSlot = 1)
-            )
-        } else {
-            listOf(
+        insertRoutes = buildList {
+            add(
                 ItemInsertRoute(intArrayOf(0), matcher = { stack ->
                     val item = stack.item
                     (item is IBatteryItem || item is IElectricTool) && item.tier <= config.tier
                 }, maxPerSlot = 1)
+            )
+            add(
+                ItemInsertRoute(intArrayOf(fuelSlotIndex), matcher = { stack ->
+                    stack.isOf(Items.REDSTONE) || stack.item is EnergiumDust
+                }, maxPerSlot = 64)
             )
         },
         extractSlots = IntArray(config.slotCount) { it },
@@ -89,6 +91,7 @@ abstract class EnergyStorageBlockEntity(
 
     init {
         for (slot in 0 until config.slotCount) {
+            if (slot == fuelSlotIndex) continue
             chargerComponents.add(
                 BatteryChargerComponent(
                     inventory = this,
@@ -117,6 +120,9 @@ abstract class EnergyStorageBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
+        if (slot == fuelSlotIndex) {
+            return stack.isOf(Items.REDSTONE) || stack.item is EnergiumDust
+        }
         val item = stack.item
         return (item is IBatteryItem || item is IElectricTool) && item.tier <= config.tier
     }
@@ -162,6 +168,8 @@ abstract class EnergyStorageBlockEntity(
     open fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
+        consumeFuel()
+
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
         adjacentEnergyTransfer.tick()
@@ -177,6 +185,24 @@ abstract class EnergyStorageBlockEntity(
         }
 
         sync.syncCurrentTickFlow()
+    }
+
+    private fun consumeFuel() {
+        val fuelStack = inventory[fuelSlotIndex]
+        if (fuelStack.isEmpty) return
+
+        val energyPerItem = when {
+            fuelStack.isOf(Items.REDSTONE) -> 800L
+            fuelStack.item is EnergiumDust -> 16000L
+            else -> return
+        }
+
+        val remainingCapacity = config.capacity - sync.amount
+        if (remainingCapacity < energyPerItem) return
+
+        fuelStack.decrement(1)
+        sync.amount += energyPerItem
+        markDirty()
     }
 
     private fun chargePlayersAbove(world: World, pos: BlockPos): Long {

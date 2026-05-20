@@ -8,6 +8,8 @@ import ic2_120.content.block.ITieredMachine
 import ic2_120.content.screen.InductionFurnaceScreenHandler
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.energy.charge.BatteryDischargerComponent
+import ic2_120.content.item.EjectorUpgrade
+import ic2_120.content.item.PullingUpgrade
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
@@ -77,12 +79,10 @@ class InductionFurnaceBlockEntity(
         const val SLOT_DISCHARGING = 4
         const val SLOT_UPGRADE_0 = 5
         const val SLOT_UPGRADE_1 = 6
-        const val SLOT_UPGRADE_2 = 7
-        const val SLOT_UPGRADE_3 = 8
-        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1)
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_0, SLOT_OUTPUT_1)
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_INPUT_0, SLOT_INPUT_1)
-        const val INVENTORY_SIZE = 9
+        const val INVENTORY_SIZE = 7
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -92,7 +92,7 @@ class InductionFurnaceBlockEntity(
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
-            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
+            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is EjectorUpgrade || it.item is PullingUpgrade }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_0), matcher = { isSmeltingInput(it) }),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_1), matcher = { isSmeltingInput(it) })
@@ -148,7 +148,7 @@ class InductionFurnaceBlockEntity(
         SLOT_INPUT_0, SLOT_INPUT_1 -> isSmeltingInput(stack)
         SLOT_OUTPUT_0, SLOT_OUTPUT_1 -> false
         SLOT_DISCHARGING -> isBatteryItem(stack)
-        in SLOT_UPGRADE_0..SLOT_UPGRADE_3 -> stack.item is IUpgradeItem
+        SLOT_UPGRADE_0, SLOT_UPGRADE_1 -> stack.item is EjectorUpgrade || stack.item is PullingUpgrade
         else -> false
     }
 

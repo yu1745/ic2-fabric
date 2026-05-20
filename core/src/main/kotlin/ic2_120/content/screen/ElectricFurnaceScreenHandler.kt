@@ -24,10 +24,6 @@ import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import ic2_120.registry.annotation.ScreenFactory
 
-/**
- * 电炉 GUI 的 ScreenHandler。
- * 通过 SyncedDataView 按声明顺序自动对齐 index，无需手动指定。
- */
 @ModScreenHandler(block = ElectricFurnaceBlock::class, clientInventorySize = ElectricFurnaceBlockEntity.INVENTORY_SIZE)
 class ElectricFurnaceScreenHandler(
     syncId: Int,
@@ -42,41 +38,49 @@ class ElectricFurnaceScreenHandler(
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private fun addTrackedSlot(inventory: Inventory, beSlot: Int, spec: SlotSpec) {
-        val handlerIndex = slots.size
-        addSlot(PredicateSlot(inventory, beSlot, 0, 0, spec))
-        beSlotToHandlerIndex[beSlot] = handlerIndex
-    }
-
     init {
         checkSize(blockInventory, ElectricFurnaceBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
-        // 输入槽（左侧）、输出槽（右侧），同一行，留出上方给标题与能量条
-        addTrackedSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_INPUT, DEFAULT_SLOT_SPEC)
-        addSlot(FurnaceOutputSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_OUTPUT, 0, 0, OUTPUT_SLOT_SPEC) {
+
+        addTrackedSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_INPUT, 42, 15)
+        addSlot(FurnaceOutputSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_OUTPUT, 116, 35, OUTPUT_SLOT_SPEC) {
             context.get({ world, pos ->
                 val be = world.getBlockEntity(pos)
                 if (be is ElectricFurnaceBlockEntity) be.dropStoredExperience()
             })
         })
-        // 输出槽也需要记录映射（用于 quickMove 判断）
         beSlotToHandlerIndex[ElectricFurnaceBlockEntity.SLOT_OUTPUT] = slots.size - 1
-        addTrackedSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_DISCHARGING, DEFAULT_SLOT_SPEC)
+        addTrackedSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_DISCHARGING, 42, 54)
 
-        // 升级槽
         for (i in 0 until UPGRADE_SLOT_COUNT) {
-            addTrackedSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_UPGRADE_INDICES[i], DEFAULT_SLOT_SPEC)
+            addTrackedSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_UPGRADE_INDICES[i], 152, 5 + i * 20)
         }
 
-        // 玩家背包
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
+    }
+
+    private fun addTrackedSlot(inventory: Inventory, beSlot: Int, x: Int, y: Int, spec: SlotSpec = DEFAULT_SLOT_SPEC) {
+        val handlerIndex = slots.size
+        addSlot(PredicateSlot(inventory, beSlot, x, y, spec))
+        beSlotToHandlerIndex[beSlot] = handlerIndex
+    }
+
+    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+        if (id == BUTTON_ID_COLLECT_XP) {
+            context.get({ world, pos ->
+                val be = world.getBlockEntity(pos)
+                if (be is ElectricFurnaceBlockEntity) be.collectXp(player)
+            }, true)
+            return true
+        }
+        return false
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -109,29 +113,26 @@ class ElectricFurnaceScreenHandler(
     override fun canUse(player: PlayerEntity): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is ElectricFurnaceBlock && player.squaredDistanceTo(
-                pos.x + 0.5,
-                pos.y + 0.5,
-                pos.z + 0.5
+                pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)
 
     companion object {
         private const val UPGRADE_SLOT_COUNT = 4
         const val SLOT_SIZE = 18
+        const val BUTTON_ID_COLLECT_XP = 0
 
         private val DEFAULT_SLOT_SPEC = SlotSpec()
         private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false }, canTake = { true })
 
-        // 槽位索引常量
         const val SLOT_INPUT_INDEX = 0
         const val SLOT_OUTPUT_INDEX = 1
         const val SLOT_DISCHARGING_INDEX = 2
         const val SLOT_UPGRADE_INDEX_START = 3
         const val SLOT_UPGRADE_INDEX_END = 6
         const val PLAYER_INV_START = 7
-        const val HOTBAR_END = 43
+        const val HOTBAR_END = 42
 
-        /** 客户端从 ExtendedScreenHandlerType 创建：从 buf 读取 pos，用临时 Inventory。 */
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ElectricFurnaceScreenHandler {
             val pos = buf.readBlockPos()
