@@ -23,17 +23,7 @@ object FluidUtils {
      */
     fun getFluidColor(fluid: Fluid): Int {
         return colorCache.getOrPut(fluid) {
-            when (fluid) {
-                ModFluids.CONSTRUCTION_FOAM_STILL, ModFluids.CONSTRUCTION_FOAM_FLOWING ->
-                    (0xFF shl 24) or (180 shl 16) or (180 shl 8) or 175
-                ModFluids.CREOSOTE_STILL, ModFluids.CREOSOTE_FLOWING ->
-                    (0xFF shl 24) or (78 shl 16) or (45 shl 8) or 20
-                ModFluids.BIOFUEL_STILL, ModFluids.BIOFUEL_FLOWING ->
-                    (0xFF shl 24) or (151 shl 16) or (202 shl 8) or 0
-                ModFluids.BIOMASS_STILL, ModFluids.BIOMASS_FLOWING ->
-                    (0xFF shl 24) or (71 shl 16) or (106 shl 8) or 60
-                else -> sampleColorFromFluidTexture(fluid)
-            }
+            ModFluids.getFluidTintOrNull(fluid) ?: sampleColorFromFluidTexture(fluid)
         }
     }
 

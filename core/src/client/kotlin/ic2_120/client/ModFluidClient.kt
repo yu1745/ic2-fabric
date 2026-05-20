@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory
 /**
  * 客户端流体渲染注册。
  * 为 IC2 流体注册纹理与半透明渲染层。
+ *
+ * tint 颜色从 ModFluids.fluidTintColors 读取（单一数据源），
+ * 不在客户端重复定义。
  */
 object ModFluidClient {
 
@@ -59,57 +62,48 @@ object ModFluidClient {
             ModFluids.DISTILLED_WATER_FLOWING,
             "minecraft:block/water_still",
             "minecraft:block/water_flow"
-            //不传颜色，使其渲染为白灰色，但是实际上没啥用，因为放出来会自动变成水，不用指令创建不了这个蒸馏水方块
         )
-        // Biofuel（151, 202, 0）
+        // Biofuel
         registerFluid(
             ModFluids.BIOFUEL_STILL,
             ModFluids.BIOFUEL_FLOWING,
             "block/fluid/fluid_still",
-            "block/fluid/fluid_flow",
-            rgb(151, 202, 0)
+            "block/fluid/fluid_flow"
         )
-        // Biomass（71, 106, 60）
+        // Biomass
         registerFluid(
             ModFluids.BIOMASS_STILL,
             ModFluids.BIOMASS_FLOWING,
             "block/fluid/fluid_still",
-            "block/fluid/fluid_flow",
-            rgb(71, 106, 60)
+            "block/fluid/fluid_flow"
         )
-        // Construction foam（浅灰，与 FluidUtils.getFluidColor 一致）
+        // Construction foam（浅灰）
         registerFluid(
             ModFluids.CONSTRUCTION_FOAM_STILL,
             ModFluids.CONSTRUCTION_FOAM_FLOWING,
             "block/fluid/fluid_still",
-            "block/fluid/fluid_flow",
-            rgb(180, 180, 175)
+            "block/fluid/fluid_flow"
         )
         // Creosote（深棕）
         registerFluid(
             ModFluids.CREOSOTE_STILL,
             ModFluids.CREOSOTE_FLOWING,
             "block/fluid/fluid_still",
-            "block/fluid/fluid_flow",
-            rgb(78, 45, 20)
+            "block/fluid/fluid_flow"
         )
-
         // Steam（浅灰半透明，纹理动画向上）
         registerFluid(
             ModFluids.STEAM_STILL,
             ModFluids.STEAM_FLOWING,
             "block/fluid/steam_rise_still",
-            "block/fluid/steam_rise_flow",
-            rgb(208, 208, 208)
+            "block/fluid/steam_rise_flow"
         )
-
         // Superheated Steam（浅红色半透明，纹理动画向上）
         registerFluid(
             ModFluids.SUPERHEATED_STEAM_STILL,
             ModFluids.SUPERHEATED_STEAM_FLOWING,
             "block/fluid/steam_rise_still",
-            "block/fluid/steam_rise_flow",
-            rgb(255, 190, 190)
+            "block/fluid/steam_rise_flow"
         )
 
         // 流体方块使用半透明渲染层
@@ -142,6 +136,10 @@ object ModFluidClient {
         )
     }
 
+    /**
+     * 注册流体渲染处理器。
+     * tint 颜色从 ModFluids.getFluidTintOrNull() 读取（单一数据源），调用方无需传参。
+     */
     private fun registerFluid(
         still: net.minecraft.fluid.Fluid,
         flowing: net.minecraft.fluid.Fluid,
@@ -150,28 +148,20 @@ object ModFluidClient {
     ) {
         val stillId = parseTextureId(stillTex)
         val flowId = parseTextureId(flowTex)
-        logFluidRegistration(still, flowing, stillId, flowId, null)
-        FluidRenderHandlerRegistry.INSTANCE.register(still, flowing, SimpleFluidRenderHandler(stillId, flowId))
+        val tint = ModFluids.getFluidTintOrNull(still)
+        logFluidRegistration(still, flowing, stillId, flowId, tint)
+        if (tint != null) {
+            FluidRenderHandlerRegistry.INSTANCE.register(
+                still, flowing,
+                SimpleFluidRenderHandler(stillId, flowId, tint)
+            )
+        } else {
+            FluidRenderHandlerRegistry.INSTANCE.register(
+                still, flowing,
+                SimpleFluidRenderHandler(stillId, flowId)
+            )
+        }
     }
-
-    private fun registerFluid(
-        still: net.minecraft.fluid.Fluid,
-        flowing: net.minecraft.fluid.Fluid,
-        stillTex: String,
-        flowTex: String,
-        tintColor: Int
-    ) {
-        val stillId = parseTextureId(stillTex)
-        val flowId = parseTextureId(flowTex)
-        logFluidRegistration(still, flowing, stillId, flowId, tintColor)
-        FluidRenderHandlerRegistry.INSTANCE.register(
-            still,
-            flowing,
-            SimpleFluidRenderHandler(stillId, flowId, tintColor)
-        )
-    }
-
-    private fun rgb(r: Int, g: Int, b: Int): Int = (0xFF shl 24) or (r shl 16) or (g shl 8) or b
 
     private fun parseTextureId(path: String): Identifier {
         return if (path.contains(':')) {
@@ -193,10 +183,6 @@ object ModFluidClient {
         val stillExists = javaClass.getResource(stillPath) != null
         val flowExists = javaClass.getResource(flowPath) != null
         val tintInfo = tintColor?.let { String.format("#%08X", it) } ?: "<none>"
-        // logger.info(
-        //     "Register fluid render: stillFluid={}, flowFluid={}, stillTex={}, flowTex={}, tint={}, stillExists={}, flowExists={}",
-        //     stillFluid, flowingFluid, stillId, flowId, tintInfo, stillExists, flowExists
-        // )
         if (!stillExists || !flowExists) {
             logger.warn("Missing fluid texture resource: stillPath={}, flowPath={}", stillPath, flowPath)
         }

@@ -389,6 +389,12 @@ abstract class ModFluidCell(settings: Item.Settings) : Item(settings), FluidModi
     /** 子类实现：返回对应的空单元物品（用于配方剩余物） */
     internal abstract fun getEmptyCell(): Item
 
+    override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
+        super.appendTooltip(stack, world, tooltip, context)
+        val fluidKey = Registries.FLUID.getId(getFluid()).toTranslationKey("fluid")
+        tooltip.add(Text.translatable(fluidKey).formatted(Formatting.GRAY))
+    }
+
     override fun useOnBlock(context: ItemUsageContext): ActionResult {
         val world = context.world
         val pos = context.blockPos
@@ -773,18 +779,18 @@ object CellAndBucketFluidRegistration {
         FluidStorage.ITEM.registerForItems({ _, ctx -> CfPackFluidStorage(ctx) }, cfPack)
 
         // 遍历所有流体，将满流体单元注册到创造模式物品栏（IC2 材料）
-        // 排除已有独立单元类的本mod流体
+        // 排除已有独立单元类的本mod流体（同时排除 still 和 flowing，否则 flowing 变体会多出一个通用 fluid_cell 条目）
         val modFluidCells = setOf(
-            Fluids.WATER,
-            Fluids.LAVA,
-            ModFluids.DISTILLED_WATER_STILL,
-            ModFluids.COOLANT_STILL,
-            ModFluids.HOT_COOLANT_STILL,
-            ModFluids.UU_MATTER_STILL,
-            ModFluids.WEED_EX_STILL,
-            ModFluids.PAHOEHOE_LAVA_STILL,
-            ModFluids.BIOFUEL_STILL,
-            ModFluids.BIOMASS_STILL
+            Fluids.WATER, Fluids.FLOWING_WATER,
+            Fluids.LAVA, Fluids.FLOWING_LAVA,
+            ModFluids.DISTILLED_WATER_STILL, ModFluids.DISTILLED_WATER_FLOWING,
+            ModFluids.COOLANT_STILL, ModFluids.COOLANT_FLOWING,
+            ModFluids.HOT_COOLANT_STILL, ModFluids.HOT_COOLANT_FLOWING,
+            ModFluids.UU_MATTER_STILL, ModFluids.UU_MATTER_FLOWING,
+            ModFluids.WEED_EX_STILL, ModFluids.WEED_EX_FLOWING,
+            ModFluids.PAHOEHOE_LAVA_STILL, ModFluids.PAHOEHOE_LAVA_FLOWING,
+            ModFluids.BIOFUEL_STILL, ModFluids.BIOFUEL_FLOWING,
+            ModFluids.BIOMASS_STILL, ModFluids.BIOMASS_FLOWING
         )
 
         val ic2MaterialsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(modId, CreativeTab.IC2_MATERIALS.id))

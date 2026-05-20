@@ -23,7 +23,8 @@
 - `docs/systems/energy-network.md`
 - `docs/systems/kinetic-transmission.md`
 - `docs/systems/energy-flow-sync.md`
-- `docs/systems/fluid-system.md`
+- `docs/systems/fluid-system.md`（管道传输）
+- `docs/systems/fluid-registration-and-cells.md`（流体注册、单元物品、颜色系统）
 - `docs/systems/heat-system.md`
 - `docs/systems/nuclear-power.md`
 - `docs/systems/upgrade-system.md`
