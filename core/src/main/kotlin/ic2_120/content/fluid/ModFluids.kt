@@ -211,6 +211,10 @@ object ModFluids {
             Ic2Fluid.Flowing(name, stillTex, flowTex, rises)
         )
 
+        // ★ 必须在 FluidBlock 创建前填充查找表，因为 FluidBlock 构造函数会调用 getStillFluid()
+        Ic2Fluid.stillFluidMap[name] = still
+        Ic2Fluid.flowingFluidMap[name] = flowing
+
         // 存储 tint 颜色（服务端安全）
         if (tintArgb != null) {
             fluidTintColors[still] = tintArgb
@@ -307,6 +311,10 @@ object ModFluids {
                 SUPERHEATED_STEAM_BUCKET = bucket
             }
         }
+
+        // 5. 填充 block/bucket 查找表
+        Ic2Fluid.blockMap[name] = block
+        Ic2Fluid.bucketMap[name] = bucket
     }
 
     /**
@@ -355,6 +363,12 @@ object ModFluids {
         companion object {
             /** 蒸汽源计次：BlockPos.asLong() → 已 tick 次数，用于 10 秒自动消散 */
             val steamSourceTickCounts = mutableMapOf<Long, Int>()
+
+            /** 注册名 → Still/Flowing/Block/Bucket 查找表。由 registerFluid() 自动填充，替代 getStill/getFlowing/getBlock/getIc2Bucket 中的 when。 */
+            internal val stillFluidMap = mutableMapOf<String, Fluid>()
+            internal val flowingFluidMap = mutableMapOf<String, Fluid>()
+            internal val blockMap = mutableMapOf<String, Block>()
+            internal val bucketMap = mutableMapOf<String, Item>()
         }
 
         override fun getStill(): Fluid = getStillFluid()
@@ -495,62 +509,10 @@ object ModFluids {
         class Still(name: String, stillTex: String, flowTex: String, rises: Boolean = false) : Ic2Fluid(name, stillTex, flowTex, rises) {
             override fun getLevel(state: FluidState): Int = 8
             override fun isStill(state: FluidState): Boolean = true
-            override fun getStillFluid(): Fluid = when (name) {
-                "coolant" -> COOLANT_STILL
-                "hot_coolant" -> HOT_COOLANT_STILL
-                "uu_matter" -> UU_MATTER_STILL
-                "weed_ex" -> WEED_EX_STILL
-                "pahoehoe_lava" -> PAHOEHOE_LAVA_STILL
-                "biofuel" -> BIOFUEL_STILL
-                "biomass" -> BIOMASS_STILL
-                "distilled_water" -> DISTILLED_WATER_STILL
-                "construction_foam" -> CONSTRUCTION_FOAM_STILL
-                "creosote" -> CREOSOTE_STILL
-                "compressed_air" -> COMPRESSED_AIR_STILL
-                else -> throw IllegalStateException("Unknown fluid: $name")
-            }
-            override fun getFlowingFluid(): Fluid = when (name) {
-                "coolant" -> COOLANT_FLOWING
-                "hot_coolant" -> HOT_COOLANT_FLOWING
-                "uu_matter" -> UU_MATTER_FLOWING
-                "weed_ex" -> WEED_EX_FLOWING
-                "pahoehoe_lava" -> PAHOEHOE_LAVA_FLOWING
-                "biofuel" -> BIOFUEL_FLOWING
-                "biomass" -> BIOMASS_FLOWING
-                "distilled_water" -> DISTILLED_WATER_FLOWING
-                "construction_foam" -> CONSTRUCTION_FOAM_FLOWING
-                "creosote" -> CREOSOTE_FLOWING
-                "compressed_air" -> COMPRESSED_AIR_FLOWING
-                else -> throw IllegalStateException("Unknown fluid: $name")
-            }
-            override fun getBlock(): Block = when (name) {
-                "coolant" -> COOLANT_BLOCK
-                "hot_coolant" -> HOT_COOLANT_BLOCK
-                "uu_matter" -> UU_MATTER_BLOCK
-                "weed_ex" -> WEED_EX_BLOCK
-                "pahoehoe_lava" -> PAHOEHOE_LAVA_BLOCK
-                "biofuel" -> BIOFUEL_BLOCK
-                "biomass" -> BIOMASS_BLOCK
-                "distilled_water" -> DISTILLED_WATER_BLOCK
-                "construction_foam" -> CONSTRUCTION_FOAM_BLOCK
-                "creosote" -> CREOSOTE_BLOCK
-                "compressed_air" -> COMPRESSED_AIR_BLOCK
-                else -> throw IllegalStateException("Unknown fluid: $name")
-            }
-            override fun getIc2Bucket(): Item = when (name) {
-                "coolant" -> COOLANT_BUCKET
-                "hot_coolant" -> HOT_COOLANT_BUCKET
-                "uu_matter" -> UU_MATTER_BUCKET
-                "weed_ex" -> WEED_EX_BUCKET
-                "pahoehoe_lava" -> PAHOEHOE_LAVA_BUCKET
-                "biofuel" -> BIOFUEL_BUCKET
-                "biomass" -> BIOMASS_BUCKET
-                "distilled_water" -> DISTILLED_WATER_BUCKET
-                "construction_foam" -> CONSTRUCTION_FOAM_BUCKET
-                "creosote" -> CREOSOTE_BUCKET
-                "compressed_air" -> COMPRESSED_AIR_BUCKET
-                else -> throw IllegalStateException("Unknown fluid: $name")
-            }
+            override fun getStillFluid(): Fluid = stillFluidMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
+            override fun getFlowingFluid(): Fluid = flowingFluidMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
+            override fun getBlock(): Block = blockMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
+            override fun getIc2Bucket(): Item = bucketMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
         }
 
         class Flowing(name: String, stillTex: String, flowTex: String, rises: Boolean = false) : Ic2Fluid(name, stillTex, flowTex, rises) {
@@ -560,62 +522,10 @@ object ModFluids {
             }
             override fun getLevel(state: FluidState): Int = state.get(LEVEL)
             override fun isStill(state: FluidState): Boolean = false
-            override fun getStillFluid(): Fluid = when (name) {
-                "coolant" -> COOLANT_STILL
-                "hot_coolant" -> HOT_COOLANT_STILL
-                "uu_matter" -> UU_MATTER_STILL
-                "weed_ex" -> WEED_EX_STILL
-                "pahoehoe_lava" -> PAHOEHOE_LAVA_STILL
-                "biofuel" -> BIOFUEL_STILL
-                "biomass" -> BIOMASS_STILL
-                "distilled_water" -> DISTILLED_WATER_STILL
-                "construction_foam" -> CONSTRUCTION_FOAM_STILL
-                "creosote" -> CREOSOTE_STILL
-                "compressed_air" -> COMPRESSED_AIR_STILL
-                else -> throw IllegalStateException("Unknown fluid: $name")
-            }
-            override fun getFlowingFluid(): Fluid = when (name) {
-                "coolant" -> COOLANT_FLOWING
-                "hot_coolant" -> HOT_COOLANT_FLOWING
-                "uu_matter" -> UU_MATTER_FLOWING
-                "weed_ex" -> WEED_EX_FLOWING
-                "pahoehoe_lava" -> PAHOEHOE_LAVA_FLOWING
-                "biofuel" -> BIOFUEL_FLOWING
-                "biomass" -> BIOMASS_FLOWING
-                "distilled_water" -> DISTILLED_WATER_FLOWING
-                "construction_foam" -> CONSTRUCTION_FOAM_FLOWING
-                "creosote" -> CREOSOTE_FLOWING
-                "compressed_air" -> COMPRESSED_AIR_FLOWING
-                else -> throw IllegalStateException("Unknown fluid: $name")
-            }
-            override fun getBlock(): Block = when (name) {
-                "coolant" -> COOLANT_BLOCK
-                "hot_coolant" -> HOT_COOLANT_BLOCK
-                "uu_matter" -> UU_MATTER_BLOCK
-                "weed_ex" -> WEED_EX_BLOCK
-                "pahoehoe_lava" -> PAHOEHOE_LAVA_BLOCK
-                "biofuel" -> BIOFUEL_BLOCK
-                "biomass" -> BIOMASS_BLOCK
-                "distilled_water" -> DISTILLED_WATER_BLOCK
-                "construction_foam" -> CONSTRUCTION_FOAM_BLOCK
-                "creosote" -> CREOSOTE_BLOCK
-                "compressed_air" -> COMPRESSED_AIR_BLOCK
-                else -> throw IllegalStateException("Unknown fluid: $name")
-            }
-            override fun getIc2Bucket(): Item = when (name) {
-                "coolant" -> COOLANT_BUCKET
-                "hot_coolant" -> HOT_COOLANT_BUCKET
-                "uu_matter" -> UU_MATTER_BUCKET
-                "weed_ex" -> WEED_EX_BUCKET
-                "pahoehoe_lava" -> PAHOEHOE_LAVA_BUCKET
-                "biofuel" -> BIOFUEL_BUCKET
-                "biomass" -> BIOMASS_BUCKET
-                "distilled_water" -> DISTILLED_WATER_BUCKET
-                "construction_foam" -> CONSTRUCTION_FOAM_BUCKET
-                "creosote" -> CREOSOTE_BUCKET
-                "compressed_air" -> COMPRESSED_AIR_BUCKET
-                else -> throw IllegalStateException("Unknown fluid: $name")
-            }
+            override fun getStillFluid(): Fluid = stillFluidMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
+            override fun getFlowingFluid(): Fluid = flowingFluidMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
+            override fun getBlock(): Block = blockMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
+            override fun getIc2Bucket(): Item = bucketMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
         }
     }
 

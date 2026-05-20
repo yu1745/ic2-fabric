@@ -35,6 +35,7 @@ import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
+import ic2_120.content.item.ModFluidCell
 import ic2_120.content.item.getFluidCellVariant
 import ic2_120.content.item.setFluidCellVariant
 import ic2_120.content.fluid.ModFluids
@@ -48,6 +49,7 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration
 import mezz.jei.api.registration.IRecipeRegistration
 import mezz.jei.api.registration.ISubtypeRegistration
 import mezz.jei.api.runtime.IJeiRuntime
+import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.Fluids
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -203,22 +205,28 @@ class Ic2JeiPlugin : IModPlugin {
         // 通用流体单元：为所有没有专用单元类的流体注册 NBT 变体
         val fluidCell = Registries.ITEM.get(Identifier("ic2_120", "fluid_cell"))
         if (fluidCell !== Items.AIR) {
-            val modFluidCells = setOf(
-                Fluids.WATER, Fluids.FLOWING_WATER,
-                Fluids.LAVA, Fluids.FLOWING_LAVA,
-                ModFluids.DISTILLED_WATER_STILL, ModFluids.DISTILLED_WATER_FLOWING,
-                ModFluids.COOLANT_STILL, ModFluids.COOLANT_FLOWING,
-                ModFluids.HOT_COOLANT_STILL, ModFluids.HOT_COOLANT_FLOWING,
-                ModFluids.UU_MATTER_STILL, ModFluids.UU_MATTER_FLOWING,
-                ModFluids.WEED_EX_STILL, ModFluids.WEED_EX_FLOWING,
-                ModFluids.PAHOEHOE_LAVA_STILL, ModFluids.PAHOEHOE_LAVA_FLOWING,
-                ModFluids.BIOFUEL_STILL, ModFluids.BIOFUEL_FLOWING,
-                ModFluids.BIOMASS_STILL, ModFluids.BIOMASS_FLOWING,
-                ModFluids.CONSTRUCTION_FOAM_STILL, ModFluids.CONSTRUCTION_FOAM_FLOWING,
-                ModFluids.CREOSOTE_STILL, ModFluids.CREOSOTE_FLOWING,
-                ModFluids.STEAM_STILL, ModFluids.STEAM_FLOWING,
-                ModFluids.SUPERHEATED_STEAM_STILL, ModFluids.SUPERHEATED_STEAM_FLOWING
-            )
+            // 从 ModFluidCell 子类反查已有专用单元的流体，自动同步不会有遗漏
+            val modFluidCells = mutableSetOf<Fluid>()
+            for (fluidId in listOf(
+                "water_cell", "distilled_water_cell", "lava_cell",
+                "coolant_cell", "hot_coolant_cell", "uu_matter_cell",
+                "weed_ex_cell", "pahoehoe_lava_cell", "biofuel_cell", "biomass_cell"
+            )) {
+                val item = Registries.ITEM.get(Identifier("ic2_120", fluidId))
+                if (item is ModFluidCell) {
+                    val fluid = item.getFluid()
+                    modFluidCells.add(fluid)
+                    // also add flowing variant if it exists
+                    val flowing = Registries.FLUID.get(Identifier("ic2_120", "flowing_${Registries.FLUID.getId(fluid).path}"))
+                    if (flowing !== Fluids.EMPTY) modFluidCells.add(flowing)
+                }
+            }
+            // water/lava use minecraft namespace
+            modFluidCells.add(Fluids.WATER)
+            modFluidCells.add(Fluids.FLOWING_WATER)
+            modFluidCells.add(Fluids.LAVA)
+            modFluidCells.add(Fluids.FLOWING_LAVA)
+
             extraStacks += Registries.FLUID
                 .filter { fluid ->
                     fluid !== Fluids.EMPTY &&
