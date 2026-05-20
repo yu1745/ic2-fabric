@@ -58,6 +58,9 @@ class EnergyStorageScreen(
 
         val left = x
         val top = y
+
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()

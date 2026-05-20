@@ -56,6 +56,15 @@ class KineticGeneratorScreen(
         context.drawText(textRenderer, infoText, 0, 0, 0xFFADD8E6.toInt(), false)
         context.matrices.pop()
 
+        // 能量条悬停 (60,23)-(117,37) = 57×14
+        if (mouseX in x + 60 until x + 117 && mouseY in y + 23 until y + 37) {
+            context.drawTooltip(
+                textRenderer,
+                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                mouseX, mouseY
+            )
+        }
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 

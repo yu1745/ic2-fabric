@@ -1,20 +1,16 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
 import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.t
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.GuiBackground
-import ic2_120.content.sync.RecyclerSync
 import ic2_120.content.block.RecyclerBlock
 import ic2_120.content.screen.RecyclerScreenHandler
-import ic2_120.content.screen.GuiSize
+import ic2_120.content.sync.RecyclerSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = RecyclerBlock::class)
 class RecyclerScreen(
@@ -23,131 +19,144 @@ class RecyclerScreen(
     title: Text
 ) : HandledScreen<RecyclerScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        backgroundWidth = 176
+        backgroundHeight = 166
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // background drawing moved to render() for correct z-order
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
+
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
         val progressFrac = if (RecyclerSync.PROGRESS_MAX > 0) {
-            (handler.sync.progress.coerceIn(0, RecyclerSync.PROGRESS_MAX)
-                .toFloat() / RecyclerSync.PROGRESS_MAX).coerceIn(0f, 1f)
+            (handler.sync.progress.coerceIn(0, RecyclerSync.PROGRESS_MAX).toFloat() / RecyclerSync.PROGRESS_MAX).coerceIn(0f, 1f)
         } else 0f
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val consumeRate = handler.sync.getSyncedConsumedAmount()
 
+        // 电量条 (179,22)-(193,36) = 14×14，自下而上
+        if (energyFraction > 0f) {
+            val fillHeight = (ENERGY_BAR_H * energyFraction).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + ENERGY_BAR_X,
+                top + ENERGY_BAR_Y + ENERGY_BAR_H - fillHeight,
+                left + ENERGY_BAR_X + ENERGY_BAR_W,
+                top + ENERGY_BAR_Y + ENERGY_BAR_H
+            )
+            context.drawTexture(
+                TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
+                ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
+                ENERGY_BAR_W, ENERGY_BAR_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+            context.disableScissor()
+        }
+
+        // 工作进度 (179,4)-(197,19) = 18×15，自左向右
+        if (progressFrac > 0f) {
+            val arrowWidth = (PROGRESS_W * progressFrac).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + PROGRESS_X,
+                top + PROGRESS_Y,
+                left + PROGRESS_X + arrowWidth,
+                top + PROGRESS_Y + PROGRESS_H
+            )
+            context.drawTexture(
+                TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
+                PROGRESS_U.toFloat(), PROGRESS_V.toFloat(),
+                PROGRESS_W, PROGRESS_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+            context.disableScissor()
+        }
+
+        // uptips 纹理
+        context.drawTexture(
+            UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
+            0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
+            UPTIPS_SIZE, UPTIPS_SIZE
+        )
+
+        // 侧边文本
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
         val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(consumeRate))
         val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
         val sideTextX = left - sideTextWidth - 4
+        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 
-        val content: UiScope.() -> Unit = {
-            Row(
-                x = left + 8,
-                y = top + 8,
-                spacing = 8,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Column(
-                    spacing = 6,
-                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
-                ) {
-                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                        Text(title.string, color = 0xFFFFFF)
-                        Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
-                    }
-                    EnergyBar(
-                        energyFraction,
-                        barHeight = 12,
-                    )
+        drawMouseoverTooltip(context, mouseX, mouseY)
 
-                    Flex(
-                        direction = FlexDirection.ROW,
-                        alignItems = AlignItems.CENTER,
-                        gap = 4
-                    ) {
-                        Column(spacing = 4) {
-                            SlotHost(RecyclerScreenHandler.SLOT_INPUT_INDEX)
-                            SlotHost(RecyclerScreenHandler.SLOT_DISCHARGING_INDEX)
-                        }
-                        EnergyBar(progressFrac, modifier = Modifier.EMPTY.fractionWidth(1.0f))
-                        SlotHost(RecyclerScreenHandler.SLOT_OUTPUT_INDEX)
-                    }
-                }
+        // 悬停提示
+        val relX = mouseX - left
+        val relY = mouseY - top
 
-                Column(
-                    spacing = 4,
-                    modifier = Modifier.EMPTY
-                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
-                        .padding(0, 8, 0, 0)
-                ) {
-                    for (slotIndex in RecyclerScreenHandler.SLOT_UPGRADE_INDEX_START..RecyclerScreenHandler.SLOT_UPGRADE_INDEX_END) {
-                        SlotHost(slotIndex)
-                    }
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = RecyclerScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
+        // 电量条悬停
+        if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
+            relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                mouseX, mouseY
             )
         }
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-        super.render(context, mouseX, mouseY, delta)
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
-        drawMouseoverTooltip(context, mouseX, mouseY)
-    }
-
-    private fun UiScope.SlotHost(slotIndex: Int) {
-        SlotAnchor(
-            id = slotAnchorId(slotIndex),
-            width = RecyclerScreenHandler.SLOT_SIZE,
-            height = RecyclerScreenHandler.SLOT_SIZE
-        )
-    }
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
+        // uptips 悬停
+        if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
+            relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                listOf(
+                    Text.translatable("gui.ic2_120.recycler.uptips"),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.pulling_upgrade"))
+                ),
+                mouseX, mouseY
+            )
         }
     }
 
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (ui.mouseClicked(mouseX, mouseY, button)) return true
-        return super.mouseClicked(mouseX, mouseY, button)
-    }
-
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
+        private val TEXTURE = Identifier("ic2", "textures/gui/guirecycler.png")
+        private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+        private const val TEXTURE_SIZE = 256
+
+        // 电量条 (179,22)-(193,36) = 14×14
+        private const val ENERGY_BAR_U = 179
+        private const val ENERGY_BAR_V = 22
+        private const val ENERGY_BAR_W = 14
+        private const val ENERGY_BAR_H = 14
+        private const val ENERGY_BAR_X = 52
+        private const val ENERGY_BAR_Y = 38
+
+        // 工作进度 (179,4)-(197,19) = 18×15
+        private const val PROGRESS_U = 179
+        private const val PROGRESS_V = 4
+        private const val PROGRESS_W = 18
+        private const val PROGRESS_H = 15
+        private const val PROGRESS_X = 77
+        private const val PROGRESS_Y = 35
+
+        // uptips
+        private const val UPTIPS_X = 4
+        private const val UPTIPS_Y = 4
+        private const val UPTIPS_SIZE = 16
     }
 }

@@ -1,12 +1,12 @@
 package ic2_120.content.screen
 
-import ic2_120.content.sync.CompressorSync
 import ic2_120.content.block.CompressorBlock
 import ic2_120.content.block.machines.CompressorBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.sync.CompressorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
@@ -29,7 +29,7 @@ class CompressorScreenHandler(
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
     private val context: ScreenHandlerContext,
-    private val propertyDelegate: PropertyDelegate,
+    propertyDelegate: PropertyDelegate,
     private val itemStorage: RoutedItemStorage? = null
 ) : ScreenHandler(CompressorScreenHandler::class.type(), syncId) {
 
@@ -37,30 +37,32 @@ class CompressorScreenHandler(
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
-        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
-        val handlerIndex = slots.size
-        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
-    }
-
     init {
         checkSize(blockInventory, CompressorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
-        addTrackedSlot(blockInventory, CompressorBlockEntity.SLOT_INPUT)
-        addTrackedSlot(blockInventory, CompressorBlockEntity.SLOT_OUTPUT)
-        addTrackedSlot(blockInventory, CompressorBlockEntity.SLOT_DISCHARGING)
-        for (i in 0 until CompressorBlockEntity.SLOT_UPGRADE_INDICES.size) {
-            addTrackedSlot(blockInventory, CompressorBlockEntity.SLOT_UPGRADE_INDICES[i])
+
+        addTrackedSlot(blockInventory, CompressorBlockEntity.SLOT_INPUT, 58, 15)
+        addTrackedSlot(blockInventory, CompressorBlockEntity.SLOT_OUTPUT, 116, 34)
+        addTrackedSlot(blockInventory, CompressorBlockEntity.SLOT_DISCHARGING, 58, 56)
+        for (i in 0 until 4) {
+            addTrackedSlot(blockInventory, CompressorBlockEntity.SLOT_UPGRADE_INDICES[i], 152, 7 + i * 18)
         }
+
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
+    }
+
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: DEFAULT_SLOT_SPEC
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -76,11 +78,8 @@ class CompressorScreenHandler(
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START..HOTBAR_END -> {
-                    val storage = itemStorage
-                    if (storage == null) return ItemStack.EMPTY
-                    val moved = SlotMoveHelper.insertFromRoutes(
-                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
-                    )
+                    val storage = itemStorage ?: return ItemStack.EMPTY
+                    val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> {
@@ -112,7 +111,7 @@ class CompressorScreenHandler(
         const val SLOT_UPGRADE_INDEX_START = 3
         const val SLOT_UPGRADE_INDEX_END = 6
         const val PLAYER_INV_START = 7
-        const val HOTBAR_END = 43
+        const val HOTBAR_END = 42
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): CompressorScreenHandler {
