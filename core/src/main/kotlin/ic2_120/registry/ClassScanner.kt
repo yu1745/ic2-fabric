@@ -956,6 +956,9 @@ object ClassScanner {
                 if (annotation.materialTags.isNotEmpty()) {
                     MaterialTagRegistry.itemEntries.add(clazz to annotation.materialTags.toList())
                 }
+                if (annotation.tags.isNotEmpty()) {
+                    MaterialTagRegistry.itemTagEntries.add(clazz to annotation.tags.toList())
+                }
                 logger.debug("已注册物品: {}", id)
 
                 // 记录物品应该添加到哪个物品栏（带 group 以便排序，包含类类型用于检查电池/电动工具）

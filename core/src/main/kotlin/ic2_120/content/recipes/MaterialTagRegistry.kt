@@ -9,9 +9,11 @@ import kotlin.reflect.KClass
 object MaterialTagRegistry {
     val itemEntries: MutableList<Pair<KClass<*>, List<String>>> = mutableListOf()
     val blockEntries: MutableList<Pair<KClass<*>, List<String>>> = mutableListOf()
+    val itemTagEntries: MutableList<Pair<KClass<*>, List<String>>> = mutableListOf()
 
     fun clear() {
         itemEntries.clear()
         blockEntries.clear()
+        itemTagEntries.clear()
     }
 }

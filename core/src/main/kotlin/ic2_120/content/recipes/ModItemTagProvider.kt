@@ -14,6 +14,7 @@ import kotlin.reflect.KClass
 
 /**
  * 根据 [@ModItem] materialTags 与原版兼容项生成 c:/forge:/ic2_120:compat/ 物品标签。
+ * 同时根据 [@ModItem] tags 注册到指定的原版/第三方标签。
  */
 class ModItemTagProvider(
     output: FabricDataOutput,
@@ -26,6 +27,18 @@ class ModItemTagProvider(
             val item = (clazz as KClass<out Item>).instance()
             for (path in paths) {
                 registerModItemPath(path, item)
+            }
+        }
+
+        for ((clazz, tags) in MaterialTagRegistry.itemTagEntries) {
+            @Suppress("UNCHECKED_CAST")
+            val item = (clazz as KClass<out Item>).instance()
+            for (tagId in tags) {
+                val parts = tagId.split(":", limit = 2)
+                val namespace = parts[0]
+                val path = if (parts.size == 2) parts[1] else parts[0]
+                val tagKey = TagKey.of(RegistryKeys.ITEM, Identifier(namespace, path))
+                getOrCreateTagBuilder(tagKey).add(item)
             }
         }
 
