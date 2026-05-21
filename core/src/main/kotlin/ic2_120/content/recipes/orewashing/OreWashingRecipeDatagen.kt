@@ -35,8 +35,8 @@ object OreWashingRecipeDatagen {
             Registries.ITEM.get(Identifier("ic2_120", "crushed_copper")),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_copper")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_copper_dust")), 2)
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_copper_dust")), 2),
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
@@ -46,8 +46,8 @@ object OreWashingRecipeDatagen {
             Registries.ITEM.get(Identifier("ic2_120", "crushed_tin")),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_tin")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_tin_dust")), 2)
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_tin_dust")), 2),
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
@@ -57,8 +57,8 @@ object OreWashingRecipeDatagen {
             Registries.ITEM.get(Identifier("ic2_120", "crushed_iron")),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_iron")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_iron_dust")), 2)
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_iron_dust")), 2),
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
@@ -68,8 +68,8 @@ object OreWashingRecipeDatagen {
             Registries.ITEM.get(Identifier("ic2_120", "crushed_gold")),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_gold")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_gold_dust")), 2)
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_gold_dust")), 2),
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
@@ -79,8 +79,8 @@ object OreWashingRecipeDatagen {
             Registries.ITEM.get(Identifier("ic2_120", "crushed_uranium")),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_uranium")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_lead_dust")), 2)
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_lead_dust")), 2),
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
@@ -90,8 +90,8 @@ object OreWashingRecipeDatagen {
             Registries.ITEM.get(Identifier("ic2_120", "crushed_lead")),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_lead")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_sulfur_dust")), 3)
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_sulfur_dust")), 3),
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
@@ -101,8 +101,8 @@ object OreWashingRecipeDatagen {
             Registries.ITEM.get(Identifier("ic2_120", "crushed_silver")),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_silver")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_silver_dust")), 2)
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_silver_dust")), 2),
+                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),

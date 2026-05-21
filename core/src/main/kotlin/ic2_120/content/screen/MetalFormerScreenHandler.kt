@@ -37,11 +37,11 @@ class MetalFormerScreenHandler(
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
-        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: DEFAULT_SLOT_SPEC
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     /**
@@ -59,9 +59,6 @@ class MetalFormerScreenHandler(
         return true
     }
 
-    /**
-     * 获取方块位置（用于客户端显示或其他需要）
-     */
     fun getBlockPos(): net.minecraft.util.math.BlockPos? {
         return context.get({ world, pos -> pos }, null)
     }
@@ -70,26 +67,21 @@ class MetalFormerScreenHandler(
         checkSize(blockInventory, MetalFormerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        // 机器槽位：Compose 屏幕会在客户端通过 SlotAnchor 回写真实坐标，这里仅放占位坐标。
-        addTrackedSlot(blockInventory, MetalFormerBlockEntity.SLOT_INPUT)
-        addTrackedSlot(blockInventory, MetalFormerBlockEntity.SLOT_DISCHARGING)
-        addTrackedSlot(blockInventory, MetalFormerBlockEntity.SLOT_OUTPUT)
+        addTrackedSlot(blockInventory, MetalFormerBlockEntity.SLOT_INPUT, 17, 17)
+        addTrackedSlot(blockInventory, MetalFormerBlockEntity.SLOT_OUTPUT, 116, 35)
+        addTrackedSlot(blockInventory, MetalFormerBlockEntity.SLOT_DISCHARGING, 17, 53)
 
-        // 升级槽同理使用占位坐标，真实位置由 Compose UI 统一决定。
         for (i in 0 until UPGRADE_SLOT_COUNT) {
-            addTrackedSlot(blockInventory, MetalFormerBlockEntity.SLOT_UPGRADE_INDICES[i])
+            addTrackedSlot(blockInventory, MetalFormerBlockEntity.SLOT_UPGRADE_INDICES[i], 152, 8 + i * 18)
         }
 
-        // 玩家物品栏
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
-
-        // 快捷栏
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
     }
 
@@ -137,10 +129,9 @@ class MetalFormerScreenHandler(
         const val SLOT_SIZE = 18
         private val DEFAULT_SLOT_SPEC = SlotSpec()
 
-        // 槽位索引常量
         const val SLOT_INPUT_INDEX = 0
-        const val SLOT_DISCHARGING_INDEX = 1
-        const val SLOT_OUTPUT_INDEX = 2
+        const val SLOT_OUTPUT_INDEX = 1
+        const val SLOT_DISCHARGING_INDEX = 2
         const val SLOT_UPGRADE_INDEX_START = 3
         const val SLOT_UPGRADE_INDEX_END = 6
         const val PLAYER_INV_START = 7
