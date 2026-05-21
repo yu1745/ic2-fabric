@@ -246,6 +246,8 @@ class FluidCannerBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        sync.lastPourOut = if (lastOperationPourOut) 1 else 0
+        sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(tankInternal.variant.fluid)
 
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)

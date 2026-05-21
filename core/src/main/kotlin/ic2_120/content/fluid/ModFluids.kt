@@ -527,6 +527,7 @@ object ModFluids {
             override fun getBlock(): Block = blockMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
             override fun getIc2Bucket(): Item = bucketMap[name] ?: throw IllegalStateException("Unknown fluid: $name")
         }
+    }
 
     /**
      * IC2 自定义流体桶类。

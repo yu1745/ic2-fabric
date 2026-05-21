@@ -1,7 +1,7 @@
 {
   "replace": false,
   "values": [
-    "ic2_120:lead_ore",
-    "ic2_120:deepslate_lead_ore"
+    "ic2_120:deepslate_lead_ore",
+    "ic2_120:lead_ore"
   ]
 }

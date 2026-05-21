@@ -20,14 +20,17 @@ class PumpSync(
         const val ENERGY_CAPACITY = 800L
         const val MAX_INSERT = 32L
         const val MAX_EXTRACT = 0L
-        const val ENERGY_PER_BUCKET = 20L
+        const val ENERGY_PER_TICK = 1L
         const val MB_PER_OPERATION = 1000
+        const val PROGRESS_MAX = 20
         const val NBT_ENERGY_STORED = "EnergyStored"
     }
 
     var energy by schema.int("Energy")
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
     var fluidAmountMb by schema.int("FluidAmountMb")
+    var fluidRawId by schema.int("FluidRawId", default = -1)
+    var progress by schema.int("Progress")
 
     private val flow = EnergyFlowSync(schema, this)
 

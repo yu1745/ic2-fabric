@@ -36,46 +36,40 @@ class PumpScreenHandler(
 
     val sync = PumpSync(SyncedDataView(propertyDelegate))
 
-    private val upgradeSlotSpec: ic2_120.content.screen.slot.SlotSpec by lazy {
+    private val upgradeSlotSpec: SlotSpec by lazy {
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
+    private fun addTrackedSlot(slot: PredicateSlot): PredicateSlot {
+        beSlotToHandlerIndex[slot.index] = slots.size
+        addSlot(slot)
+        return slot
+    }
+
     init {
         checkSize(blockInventory, PumpBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(PredicateSlot(blockInventory, PumpBlockEntity.SLOT_INPUT, 0, 0, deriveSpec(PumpBlockEntity.SLOT_INPUT)))
-        addTrackedSlot(PredicateSlot(blockInventory, PumpBlockEntity.SLOT_OUTPUT, 0, 0, deriveSpec(PumpBlockEntity.SLOT_OUTPUT)))
-        addTrackedSlot(PredicateSlot(blockInventory, PumpBlockEntity.SLOT_DISCHARGING, 0, 0, deriveSpec(PumpBlockEntity.SLOT_DISCHARGING)))
+        addTrackedSlot(PredicateSlot(blockInventory, PumpBlockEntity.SLOT_INPUT, 125, 23, deriveSpec(PumpBlockEntity.SLOT_INPUT)))
+        addTrackedSlot(PredicateSlot(blockInventory, PumpBlockEntity.SLOT_OUTPUT, 125, 59, deriveSpec(PumpBlockEntity.SLOT_OUTPUT)))
+        addTrackedSlot(PredicateSlot(blockInventory, PumpBlockEntity.SLOT_DISCHARGING, 9, 45, deriveSpec(PumpBlockEntity.SLOT_DISCHARGING)))
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
             addTrackedSlot(
-                PredicateSlot(
-                    blockInventory,
-                    PumpBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
+                PredicateSlot(blockInventory, PumpBlockEntity.SLOT_UPGRADE_INDICES[i], 152, 8 + i * 18, upgradeSlotSpec)
             )
         }
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
-    }
-
-    private fun addTrackedSlot(slot: PredicateSlot): PredicateSlot {
-        beSlotToHandlerIndex[slot.index] = slots.size
-        addSlot(slot)
-        return slot
     }
 
     private fun deriveSpec(beSlot: Int) =
@@ -99,11 +93,7 @@ class PumpScreenHandler(
                 index in PLAYER_INV_START until HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
-                        stackInSlot,
-                        storage,
-                        storage.insertRoutes,
-                        beSlotToHandlerIndex,
-                        slots
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
                     )
                     if (!moved) return ItemStack.EMPTY
                 }

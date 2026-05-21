@@ -168,49 +168,69 @@ class OreWashingPlantBlockEntity(
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
-    // 水储罐（8桶容量）
+    // 水储罐（8桶容量 = 8000mB）
     private val waterTankInternal = object : SingleVariantStorage<FluidVariant>() {
-        private val tankCapacity: Long = FluidConstants.BUCKET * 8
+        private val tankCapacityMb: Long = 8000L
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
 
-        override fun getCapacity(variant: FluidVariant): Long = tankCapacity
+        /** Fabric Transfer API 接口，返回 droplets。流体管道/第三方使用。 */
+        override fun getCapacity(variant: FluidVariant): Long = tankCapacityMb * FluidConstants.BUCKET / 1000L
 
         override fun canInsert(variant: FluidVariant): Boolean =
             variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER
 
-        override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+        /** Fabric Transfer API 接口，参数和返回值单位均为 droplets，内部转为 mB。 */
+        override fun insert(insertedVariant: FluidVariant, maxAmountDroplets: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
-            return super.insert(insertedVariant, maxAmount, transaction)
+            val spaceMb = tankCapacityMb - amount
+            if (spaceMb <= 0L) return 0L
+            val maxAmountMb = maxAmountDroplets * 1000L / FluidConstants.BUCKET
+            val insertedMb = minOf(maxAmountMb, spaceMb)
+            if (insertedMb <= 0L) return 0L
+            val snapshotAmount = amount
+            val snapshotVariant = variant
+            amount += insertedMb
+            if (amount > 0L) variant = FluidVariant.of(Fluids.WATER)
+            transaction.addCloseCallback { ctx, result ->
+                if (result.wasAborted()) {
+                    amount = snapshotAmount
+                    variant = snapshotVariant
+                } else {
+                    sync.waterAmountMb = amount.toInt()
+                    markDirty()
+                }
+            }
+            return insertedMb * FluidConstants.BUCKET / 1000L
         }
 
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun onFinalCommit() {
-            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.waterAmountMb = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
-        fun getTankCapacity(): Long = tankCapacity
+        fun getTankCapacityMb(): Long = tankCapacityMb
 
-        fun setStoredWater(newAmount: Long) {
-            amount = newAmount.coerceIn(0L, tankCapacity)
+        fun setStoredWaterMb(newAmountMb: Long) {
+            amount = newAmountMb.coerceIn(0L, tankCapacityMb)
             variant = if (amount > 0L) FluidVariant.of(Fluids.WATER) else FluidVariant.blank()
-            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.waterAmountMb = amount.toInt().coerceAtLeast(0)
         }
 
-        fun getStoredAmount(): Long = amount
+        fun getStoredAmountMb(): Long = amount
 
-        fun hasAtLeastOneBucket(): Boolean = amount >= FluidConstants.BUCKET && variant.fluid == Fluids.WATER
+        fun hasAtLeastOneBucket(): Boolean = amount >= 1000L && variant.fluid == Fluids.WATER
 
-        /** 内部消耗水（用于加工） */
-        fun consumeInternal(toConsume: Long): Long {
-            if (toConsume <= 0L || variant.fluid != Fluids.WATER) return 0L
-            val actual = minOf(toConsume, amount)
+        /** 内部消耗水（用于加工），单位 mB */
+        fun consumeInternal(toConsumeMb: Long): Long {
+            if (toConsumeMb <= 0L || variant.fluid != Fluids.WATER) return 0L
+            val actual = minOf(toConsumeMb, amount)
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.waterAmountMb = amount.toInt().coerceAtLeast(0)
             return actual
         }
     }
@@ -277,7 +297,7 @@ class OreWashingPlantBlockEntity(
         sync.amount = nbt.getLong(OreWashingPlantSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        waterTankInternal.setStoredWater(nbt.getLong(NBT_WATER_AMOUNT))
+        waterTankInternal.setStoredWaterMb(nbt.getLong(NBT_WATER_AMOUNT))
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -285,7 +305,7 @@ class OreWashingPlantBlockEntity(
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(OreWashingPlantSync.NBT_ENERGY_STORED, sync.amount)
-        nbt.putLong(NBT_WATER_AMOUNT, waterTankInternal.getStoredAmount())
+        nbt.putLong(NBT_WATER_AMOUNT, waterTankInternal.getStoredAmountMb())
     }
 
     private fun getFluidStorageForSide(side: net.minecraft.util.math.Direction?): Storage<FluidVariant>? {
@@ -449,8 +469,8 @@ class OreWashingPlantBlockEntity(
         if (waterInput.isEmpty) return
 
         // 检查储罐是否有空间
-        val space = (waterTankInternal.getTankCapacity() - waterTankInternal.amount).coerceAtLeast(0L)
-        if (space < FluidConstants.BUCKET) return
+        val space = (waterTankInternal.getTankCapacityMb() - waterTankInternal.amount).coerceAtLeast(0L)
+        if (space < 1000L) return
 
         val emptySlot = getStack(SLOT_OUTPUT_EMPTY)
         val emptyStack = when (waterInput.item) {
@@ -468,13 +488,8 @@ class OreWashingPlantBlockEntity(
 
         if (!canAcceptEmpty) return
 
-        // 插入水到储罐
-        val inserted = waterTankInternal.amount + FluidConstants.BUCKET
-        waterTankInternal.amount = inserted.coerceAtMost(waterTankInternal.getTankCapacity())
-        if (waterTankInternal.amount > 0L && waterTankInternal.variant.isBlank) {
-            waterTankInternal.variant = FluidVariant.of(Fluids.WATER)
-        }
-        sync.waterAmountMb = (waterTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        // 插入水到储罐（1 桶 = 1000mB）
+        waterTankInternal.setStoredWaterMb(waterTankInternal.amount + 1000L)
 
         // 消耗水输入
         waterInput.decrement(1)

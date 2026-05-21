@@ -37,35 +37,34 @@ class CentrifugeScreenHandler(
 
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
-        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: DEFAULT_SLOT_SPEC
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     init {
         checkSize(blockInventory, CentrifugeBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_INPUT)
-        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_OUTPUT_1)
-        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_OUTPUT_2)
-        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_OUTPUT_3)
-        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_DISCHARGING)
+        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_INPUT, 11, 21)
+        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_OUTPUT_1, 124, 18)
+        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_OUTPUT_2, 124, 36)
+        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_OUTPUT_3, 124, 54)
+        addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_DISCHARGING, 11, 60)
 
         for (i in 0 until CentrifugeBlockEntity.SLOT_UPGRADE_INDICES.size) {
-            addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_UPGRADE_INDICES[i])
+            addTrackedSlot(blockInventory, CentrifugeBlockEntity.SLOT_UPGRADE_INDICES[i], 152, 8 + i * 18)
         }
 
-        // 玩家物品栏
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
     }
 

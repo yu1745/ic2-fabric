@@ -9,12 +9,12 @@
       "item": "ic2_120:purified_lead"
     },
     {
-      "count": 1,
-      "item": "ic2_120:stone_dust"
-    },
-    {
       "count": 3,
       "item": "ic2_120:small_sulfur_dust"
+    },
+    {
+      "count": 1,
+      "item": "ic2_120:stone_dust"
     }
   ],
   "water_consumption_mb": 1000

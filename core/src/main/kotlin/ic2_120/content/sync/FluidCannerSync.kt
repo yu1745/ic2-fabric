@@ -39,6 +39,8 @@ class FluidCannerSync(
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
     var fluidAmountMb by schema.int("FluidAmount", default = 0)
     var fluidCapacityMb by schema.int("FluidCapacity", default = 10000)
+    var fluidRawId by schema.int("FluidRawId", default = -1)
+    var lastPourOut by schema.int("LastPourOut", default = 1)
 
     private val flow = EnergyFlowSync(schema, this)
 
