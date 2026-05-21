@@ -113,11 +113,7 @@ class BlastFurnaceScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun getProgressMax(temp: Int): Int = when {
-        temp >= 1601 -> BlastFurnaceSync.PROGRESS_MAX_FAST
-        temp >= 1501 -> BlastFurnaceSync.PROGRESS_MAX_MEDIUM
-        else -> BlastFurnaceSync.PROGRESS_MAX_SLOW
-    }
+    private fun getProgressMax(temp: Int): Int = BlastFurnaceSync.getProgressMax(temp)
 
     private fun getHuPerTick(temp: Int): Int = when {
         temp >= 1601 -> 40

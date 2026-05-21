@@ -1,19 +1,18 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
 import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.t
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.GuiBackground
-import ic2_120.content.sync.OreWashingPlantSync
 import ic2_120.content.block.OreWashingPlantBlock
 import ic2_120.content.screen.OreWashingPlantScreenHandler
-import ic2_120.content.screen.GuiSize
+import ic2_120.content.sync.OreWashingPlantSync
 import ic2_120.registry.annotation.ModScreen
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.texture.SpriteAtlasTexture
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = OreWashingPlantBlock::class)
 class OreWashingPlantScreen(
@@ -22,152 +21,206 @@ class OreWashingPlantScreen(
     title: Text
 ) : HandledScreen<OreWashingPlantScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
-    init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
-        titleY = 4
+    private val waterSprite by lazy {
+        MinecraftClient.getInstance()
+            .getSpriteAtlas(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE)
+            .apply(WATER_STILL_ID)
     }
 
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    init {
+        backgroundWidth = 176
+        backgroundHeight = 166
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // Background drawing is now handled in render() to ensure correct render order.
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
+
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
-        val waterAmount = handler.sync.waterAmountMb.toLong()
+        val progressFrac = if (OreWashingPlantSync.PROGRESS_MAX > 0) {
+            (handler.sync.progress.coerceIn(0, OreWashingPlantSync.PROGRESS_MAX).toFloat() / OreWashingPlantSync.PROGRESS_MAX).coerceIn(0f, 1f)
+        } else 0f
+        val waterAmount = handler.sync.waterAmountMb.toLong().coerceAtLeast(0)
         val waterCapacity = 8000L
-        val progress = handler.sync.progress.coerceIn(0, OreWashingPlantSync.PROGRESS_MAX)
-        val progressFrac = if (OreWashingPlantSync.PROGRESS_MAX > 0) (progress.toFloat() / OreWashingPlantSync.PROGRESS_MAX).coerceIn(0f, 1f) else 0f
-
-        val energyText = "$energy / $cap EU"
-        val waterText = "$waterAmount/$waterCapacity mB"
+        val waterFraction = if (waterCapacity > 0) (waterAmount.toFloat() / waterCapacity).coerceIn(0f, 1f) else 0f
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val consumeRate = handler.sync.getSyncedConsumedAmount()
-        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
-        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(consumeRate))
-        val sideTextWidth = maxOf(
-            textRenderer.getWidth(energyText),
-            textRenderer.getWidth(waterText),
-            textRenderer.getWidth(inputText),
-            textRenderer.getWidth(consumeText)
-        )
-        val sideTextX = left - sideTextWidth - 4
 
-        val content: UiScope.() -> Unit = {
-            Row(
-                x = left + 8,
-                y = top + 8,
-                spacing = 8,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Column(
-                    spacing = 6,
-                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
-                ) {
-                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                        Text(title.string, color = 0xFFFFFF)
-                        Text(energyText, color = 0xFFFFFF, shadow = false)
-                        Text(waterText, color = 0xFFFFFF, shadow = false)
-                    }
-                    EnergyBar(energyFraction, barHeight = 12)
-
-                    Flex(
-                        direction = FlexDirection.ROW,
-                        alignItems = AlignItems.CENTER,
-                        gap = 4
-                    ) {
-                        SlotHost(OreWashingPlantScreenHandler.SLOT_INPUT_ORE_INDEX)
-                        EnergyBar(progressFrac, modifier = Modifier.EMPTY.fractionWidth(1.0f))
-                        SlotHost(OreWashingPlantScreenHandler.SLOT_INPUT_WATER_INDEX)
-                    }
-
-                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 4) {
-                        SlotHost(OreWashingPlantScreenHandler.SLOT_OUTPUT_1_INDEX)
-                        SlotHost(OreWashingPlantScreenHandler.SLOT_OUTPUT_2_INDEX)
-                        SlotHost(OreWashingPlantScreenHandler.SLOT_OUTPUT_3_INDEX)
-                        SlotHost(OreWashingPlantScreenHandler.SLOT_OUTPUT_EMPTY_INDEX)
-                    }
-
-                    SlotHost(OreWashingPlantScreenHandler.SLOT_DISCHARGING_INDEX)
-                }
-
-                Column(
-                    spacing = 4,
-                    modifier = Modifier.EMPTY
-                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
-                        .padding(0, 8, 0, 0)
-                ) {
-                    for (slotIndex in OreWashingPlantScreenHandler.SLOT_UPGRADE_INDEX_START..OreWashingPlantScreenHandler.SLOT_UPGRADE_INDEX_END) {
-                        SlotHost(slotIndex)
-                    }
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = OreWashingPlantScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
+        // 电量条 (179,3)-(193,17) = 14x14，自下而上
+        if (energyFraction > 0f) {
+            val fillHeight = (ENERGY_BAR_H * energyFraction).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + ENERGY_BAR_X,
+                top + ENERGY_BAR_Y + ENERGY_BAR_H - fillHeight,
+                left + ENERGY_BAR_X + ENERGY_BAR_W,
+                top + ENERGY_BAR_Y + ENERGY_BAR_H
             )
+            context.drawTexture(
+                TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
+                ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
+                ENERGY_BAR_W, ENERGY_BAR_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+            context.disableScissor()
         }
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
+        // 储水纹理 (64,23)-(76,70) = 12x47，自下而上
+        if (waterAmount > 0) {
+            val fillHeight = (WATER_H * waterFraction).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + WATER_X,
+                top + WATER_Y + WATER_H - fillHeight,
+                left + WATER_X + WATER_W,
+                top + WATER_Y + WATER_H
+            )
+            context.drawSprite(left + WATER_X, top + WATER_Y, 0, WATER_W, WATER_H, waterSprite, WATER_R, WATER_G, WATER_B, 1f)
+            context.disableScissor()
+        }
 
-        // Draw background panel and slot borders (was in drawBackground)
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context,
-            x,
-            y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
+        // 容量标示纹理 (182,48)-(193,94) = 11x46，常渲染于流体纹理之上
+        context.drawTexture(
+            TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
+            TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
+            TANK_OVERLAY_W, TANK_OVERLAY_H,
+            TEXTURE_SIZE, TEXTURE_SIZE
         )
 
-        super.render(context, mouseX, mouseY, delta)
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        // 工作进度 (179,20)-(199,39) = 20x19，自左向右
+        if (progressFrac > 0f) {
+            val arrowWidth = (PROGRESS_W * progressFrac).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + PROGRESS_X,
+                top + PROGRESS_Y,
+                left + PROGRESS_X + arrowWidth,
+                top + PROGRESS_Y + PROGRESS_H
+            )
+            context.drawTexture(
+                TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
+                PROGRESS_U.toFloat(), PROGRESS_V.toFloat(),
+                PROGRESS_W, PROGRESS_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+            context.disableScissor()
+        }
+
+        // uptips 纹理
+        context.drawTexture(
+            UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
+            0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
+            UPTIPS_SIZE, UPTIPS_SIZE
+        )
+
+        // 侧边文本
+        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
+        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(consumeRate))
+        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
+        val sideTextX = left - sideTextWidth - 4
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 
         drawMouseoverTooltip(context, mouseX, mouseY)
-    }
 
-    private fun UiScope.SlotHost(slotIndex: Int) {
-        SlotAnchor(
-            id = slotAnchorId(slotIndex),
-            width = OreWashingPlantScreenHandler.SLOT_SIZE,
-            height = OreWashingPlantScreenHandler.SLOT_SIZE
-        )
-    }
+        val relX = mouseX - left
+        val relY = mouseY - top
 
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
+        // 电量条悬停
+        if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
+            relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                mouseX, mouseY
+            )
+        }
+
+        // 储水槽悬停
+        if (relX in WATER_X until WATER_X + WATER_W &&
+            relY in WATER_Y until WATER_Y + WATER_H
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                listOf(
+                    Text.literal("水"),
+                    Text.literal("$waterAmount / $waterCapacity mB")
+                ),
+                mouseX, mouseY
+            )
+        }
+
+        // uptips 悬停
+        if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
+            relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                listOf(
+                    Text.translatable("gui.ic2_120.ore_washing_plant.uptips"),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_ejector_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_pulling_upgrade"))
+                ),
+                mouseX, mouseY
+            )
         }
     }
 
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (ui.mouseClicked(mouseX, mouseY, button)) return true
-        return super.mouseClicked(mouseX, mouseY, button)
-    }
-
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiorewashingplant.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val WATER_STILL_ID = Identifier.of("minecraft", "block/water_still")
+        private const val TEXTURE_SIZE = 256
+
+        // 电量条 (179,3)-(193,17) = 14x14
+        private const val ENERGY_BAR_U = 179
+        private const val ENERGY_BAR_V = 3
+        private const val ENERGY_BAR_W = 14
+        private const val ENERGY_BAR_H = 14
+        private const val ENERGY_BAR_X = 9
+        private const val ENERGY_BAR_Y = 42
+
+        // 储水槽 (64,23)-(76,70) = 12x47
+        private const val WATER_X = 64
+        private const val WATER_Y = 23
+        private const val WATER_W = 12
+        private const val WATER_H = 47
+        private const val WATER_R = 0.25f
+        private const val WATER_G = 0.45f
+        private const val WATER_B = 0.95f
+
+        // 容量标示 (182,48)-(193,94) = 11x46
+        private const val TANK_OVERLAY_U = 182
+        private const val TANK_OVERLAY_V = 48
+        private const val TANK_OVERLAY_W = 11
+        private const val TANK_OVERLAY_H = 46
+        private const val TANK_OVERLAY_X = 65
+        private const val TANK_OVERLAY_Y = 24
+
+        // 工作进度 (179,20)-(199,39) = 20x19
+        private const val PROGRESS_U = 179
+        private const val PROGRESS_V = 20
+        private const val PROGRESS_W = 20
+        private const val PROGRESS_H = 19
+        private const val PROGRESS_X = 102
+        private const val PROGRESS_Y = 37
+
+        // uptips
+        private const val UPTIPS_X = 4
+        private const val UPTIPS_Y = 4
+        private const val UPTIPS_SIZE = 16
     }
 }

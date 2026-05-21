@@ -1,21 +1,20 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
 import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.t
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.MetalFormerBlock
 import ic2_120.content.screen.MetalFormerScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.MetalFormerSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.screen.slot.Slot
+import net.minecraft.registry.Registries
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = MetalFormerBlock::class)
 class MetalFormerScreen(
@@ -24,204 +23,170 @@ class MetalFormerScreen(
     title: Text
 ) : HandledScreen<MetalFormerScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        backgroundWidth = 176
+        backgroundHeight = 166
     }
 
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    override fun init() {
+        super.init()
+        addDrawableChild(
+            ButtonWidget.builder(Text.empty()) {
+                client?.player?.networkHandler?.sendPacket(
+                    ButtonClickC2SPacket(handler.syncId, MetalFormerScreenHandler.BUTTON_ID_MODE_CYCLE)
+                )
+            }.dimensions(x + MODE_BUTTON_X, y + MODE_BUTTON_Y, MODE_BUTTON_SIZE, MODE_BUTTON_SIZE).build()
+        )
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // Background drawing is now handled in render() to ensure correct render order.
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
+
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
         val progressFrac = if (MetalFormerSync.PROGRESS_MAX > 0) {
-            (handler.sync.progress.coerceIn(0, MetalFormerSync.PROGRESS_MAX)
-                .toFloat() / MetalFormerSync.PROGRESS_MAX).coerceIn(0f, 1f)
+            (handler.sync.progress.coerceIn(0, MetalFormerSync.PROGRESS_MAX).toFloat() / MetalFormerSync.PROGRESS_MAX).coerceIn(0f, 1f)
         } else 0f
-        val currentMode = handler.sync.getMode()
-        val modeText = when (currentMode) {
-            MetalFormerSync.Mode.ROLLING -> t("gui.ic2_120.metal_former.rolling")
-            MetalFormerSync.Mode.CUTTING -> t("gui.ic2_120.metal_former.cutting")
-            MetalFormerSync.Mode.EXTRUDING -> t("gui.ic2_120.metal_former.extruding")
-        }
-        // 直接使用后端滤波后的值
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val consumeRate = handler.sync.getSyncedConsumedAmount()
 
-        // 在UI左侧绘制速度文本
+        // 电量条 (179,3)-(193,17) = 14x14，自下而上
+        if (energyFraction > 0f) {
+            val fillHeight = (ENERGY_BAR_H * energyFraction).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + ENERGY_BAR_X,
+                top + ENERGY_BAR_Y + ENERGY_BAR_H - fillHeight,
+                left + ENERGY_BAR_X + ENERGY_BAR_W,
+                top + ENERGY_BAR_Y + ENERGY_BAR_H
+            )
+            context.drawTexture(
+                TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
+                ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
+                ENERGY_BAR_W, ENERGY_BAR_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+            context.disableScissor()
+        }
+
+        // 工作进度 (179,21)-(225,30) = 46x9，自左向右
+        if (progressFrac > 0f) {
+            val arrowWidth = (PROGRESS_W * progressFrac).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + PROGRESS_X,
+                top + PROGRESS_Y,
+                left + PROGRESS_X + arrowWidth,
+                top + PROGRESS_Y + PROGRESS_H
+            )
+            context.drawTexture(
+                TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
+                PROGRESS_U.toFloat(), PROGRESS_V.toFloat(),
+                PROGRESS_W, PROGRESS_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+            context.disableScissor()
+        }
+
+        // 模式切换按钮上的物品贴图
+        val currentMode = handler.sync.getMode()
+        val modeItemId = when (currentMode) {
+            MetalFormerSync.Mode.ROLLING -> "forge_hammer"
+            MetalFormerSync.Mode.CUTTING -> "cutter"
+            MetalFormerSync.Mode.EXTRUDING -> "copper_cable"
+        }
+        val modeStack = ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", modeItemId)))
+        context.drawItem(modeStack, left + MODE_BUTTON_X + 2, top + MODE_BUTTON_Y + 2)
+
+        // uptips 纹理
+        context.drawTexture(
+            UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
+            0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
+            UPTIPS_SIZE, UPTIPS_SIZE
+        )
+
+        // 侧边文本
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
         val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(consumeRate))
         val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
         val sideTextX = left - sideTextWidth - 4
+        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 
-        val content: UiScope.() -> Unit = {
-            Row(
-                x = left + 8,
-                y = top + 8,
-                spacing = 8,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Column(
-                    spacing = 6,
-                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
-                ) {
-                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                        Text(title.string, color = 0xFFFFFF)
-                        Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
-                    }
-                    EnergyBar(
-                        energyFraction,
-                        // barWidth = 0,
-                        barHeight = 12,
-                        // modifier = Modifier.EMPTY.width(58)
-                    )
+        drawMouseoverTooltip(context, mouseX, mouseY)
 
-                    Flex(
-                        direction = FlexDirection.ROW,
-                        justifyContent = JustifyContent.CENTER,
-                        alignItems = AlignItems.CENTER,
-                        gap = 6,
-                        modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
-                    ) {
-//                        Text("模式: $modeText", color = 0xAAAAFF, shadow = false)
-                        Button(modeText, onClick = {
-                            client?.player?.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(handler.syncId, MetalFormerScreenHandler.BUTTON_ID_MODE_CYCLE)
-                            )
-                        })
-                    }
+        // 悬停提示
+        val relX = mouseX - left
+        val relY = mouseY - top
 
-                    Flex(
-                        direction = FlexDirection.ROW,
-                        alignItems = AlignItems.CENTER,
-                        gap = 4
-                    ) {
-                        Column(spacing = 4) {
-                            SlotHost(MetalFormerScreenHandler.SLOT_INPUT_INDEX)
-                            SlotHost(MetalFormerScreenHandler.SLOT_DISCHARGING_INDEX)
-                        }
-                        EnergyBar(progressFrac, modifier = Modifier.EMPTY.fractionWidth(1.0f))
-                        SlotHost(MetalFormerScreenHandler.SLOT_OUTPUT_INDEX)
-                    }
-                }
-
-                Column(
-                    spacing = 4,
-                    modifier = Modifier.EMPTY
-                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
-                        .padding(0, 8, 0, 0)
-                ) {
-                    for (slotIndex in MetalFormerScreenHandler.SLOT_UPGRADE_INDEX_START..MetalFormerScreenHandler.SLOT_UPGRADE_INDEX_END) {
-                        SlotHost(slotIndex)
-                    }
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = MetalFormerScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
+        // 电量条悬停
+        if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
+            relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                mouseX, mouseY
             )
         }
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        // Draw background panel and slot borders (was in drawBackground)
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
-
-        super.render(context, mouseX, mouseY, delta)
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-        // drawProgressSegments(context)
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
-        drawMouseoverTooltip(context, mouseX, mouseY)
-    }
-
-    private fun UiScope.SlotHost(slotIndex: Int) {
-        SlotAnchor(
-            id = slotAnchorId(slotIndex),
-            width = MetalFormerScreenHandler.SLOT_SIZE,
-            height = MetalFormerScreenHandler.SLOT_SIZE
-        )
-    }
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
+        // uptips 悬停
+        if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
+            relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                listOf(
+                    Text.translatable("gui.ic2_120.metal_former.uptips"),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.pulling_upgrade"))
+                ),
+                mouseX, mouseY
+            )
         }
     }
 
-    // private fun drawProgressSegments(context: DrawContext) {
-    //     val progress = handler.sync.progress.coerceIn(0, MetalFormerSync.PROGRESS_MAX)
-    //     val progressFrac = if (MetalFormerSync.PROGRESS_MAX > 0) {
-    //         (progress.toFloat() / MetalFormerSync.PROGRESS_MAX).coerceIn(0f, 1f)
-    //     } else {
-    //         0f
-    //     }
-    //     val segmentSize = 1f / 3f
-    //     val barFractions = listOf(
-    //         when {
-    //             progressFrac <= segmentSize -> progressFrac / segmentSize
-    //             else -> 1f
-    //         },
-    //         when {
-    //             progressFrac <= segmentSize -> 0f
-    //             progressFrac <= segmentSize * 2 -> (progressFrac - segmentSize) / segmentSize
-    //             else -> 1f
-    //         },
-    //         when {
-    //             progressFrac <= segmentSize * 2 -> 0f
-    //             else -> (progressFrac - segmentSize * 2) / segmentSize
-    //         }
-    //     )
-
-    //     val inputSlot = handler.slots[MetalFormerScreenHandler.SLOT_INPUT_INDEX]
-    //     val startX = x + inputSlot.x + MetalFormerScreenHandler.SLOT_SIZE + PROGRESS_BAR_START_GAP
-    //     val startY = y + inputSlot.y + PROGRESS_BAR_TOP_OFFSET
-
-    //     for (i in 0..2) {
-    //         val barX = startX + i * (PROGRESS_BAR_WIDTH + PROGRESS_BAR_GAP)
-    //         ProgressBar.draw(context, barX, startY, PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT, barFractions[i])
-    //     }
-    // }
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        // 模式切换已由 Compose 的 Button 处理
-        if (ui.mouseClicked(mouseX, mouseY, button)) return true
-        return super.mouseClicked(mouseX, mouseY, button)
-    }
-
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
-        private const val PROGRESS_SECTION_WIDTH = 68
-        private const val PROGRESS_BAR_START_GAP = 4
-        private const val PROGRESS_BAR_TOP_OFFSET = 2
-        private const val PROGRESS_BAR_GAP = 4
-        private const val PROGRESS_BAR_WIDTH = 20
-        private const val PROGRESS_BAR_HEIGHT = 6
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guimetalformer.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private const val TEXTURE_SIZE = 256
+
+        // 电量条 (179,3)-(193,17) = 14x14
+        private const val ENERGY_BAR_U = 179
+        private const val ENERGY_BAR_V = 3
+        private const val ENERGY_BAR_W = 14
+        private const val ENERGY_BAR_H = 14
+        private const val ENERGY_BAR_X = 17
+        private const val ENERGY_BAR_Y = 36
+
+        // 工作进度 (179,21)-(225,30) = 46x9
+        private const val PROGRESS_U = 179
+        private const val PROGRESS_V = 21
+        private const val PROGRESS_W = 46
+        private const val PROGRESS_H = 9
+        private const val PROGRESS_X = 52
+        private const val PROGRESS_Y = 39
+
+        // 模式切换按钮
+        private const val MODE_BUTTON_X = 65
+        private const val MODE_BUTTON_Y = 57
+        private const val MODE_BUTTON_SIZE = 20
+
+        // uptips
+        private const val UPTIPS_X = 40
+        private const val UPTIPS_Y = 4
+        private const val UPTIPS_SIZE = 16
     }
 }

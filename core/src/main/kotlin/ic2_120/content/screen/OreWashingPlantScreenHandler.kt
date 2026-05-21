@@ -42,41 +42,37 @@ class OreWashingPlantScreenHandler(
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int, fallbackSpec: SlotSpec? = null) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
+        val handlerIndex = slots.size
+        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
+    }
+
     init {
         checkSize(blockInventory, OreWashingPlantBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_INPUT_ORE)
-        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_INPUT_WATER)
-        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_1)
-        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_2)
-        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_3)
-        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_EMPTY)
-        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_DISCHARGING)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_INPUT_ORE, 104, 16)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_INPUT_WATER, 38, 16)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_1, 86, 61)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_2, 104, 61)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_3, 122, 61)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_OUTPUT_EMPTY, 38, 61)
+        addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_DISCHARGING, 8, 61)
 
-        // 4 个升级槽
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_UPGRADE_INDICES[i], upgradeSlotSpec)
+            addTrackedSlot(blockInventory, OreWashingPlantBlockEntity.SLOT_UPGRADE_INDICES[i], 152, 7 + i * 18, upgradeSlotSpec)
         }
 
-        // 玩家物品栏
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
-
-        // 快捷栏
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
-    }
-
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, fallbackSpec: SlotSpec? = null) {
-        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec ?: DEFAULT_SLOT_SPEC
-        val handlerIndex = slots.size
-        beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -122,7 +118,6 @@ class OreWashingPlantScreenHandler(
         const val SLOT_SIZE = 18
         private val DEFAULT_SLOT_SPEC = SlotSpec()
 
-        // 槽位索引
         const val SLOT_INPUT_ORE_INDEX = 0
         const val SLOT_INPUT_WATER_INDEX = 1
         const val SLOT_OUTPUT_1_INDEX = 2

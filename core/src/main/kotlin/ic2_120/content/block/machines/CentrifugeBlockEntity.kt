@@ -173,7 +173,6 @@ class CentrifugeBlockEntity(
         sync.amount = nbt.getLong(CentrifugeSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        sync.heat = nbt.getInt("Heat").coerceIn(0, CentrifugeSync.HEAT_MAX)
     }
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {

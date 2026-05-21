@@ -1,21 +1,16 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.t
 import ic2_120.client.EnergyFormatUtils
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.GuiBackground
-import ic2_120.client.ui.HeatProgressBar
+import ic2_120.client.t
 import ic2_120.content.block.CentrifugeBlock
 import ic2_120.content.screen.CentrifugeScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.CentrifugeSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = CentrifugeBlock::class)
 class CentrifugeScreen(
@@ -24,175 +19,202 @@ class CentrifugeScreen(
     title: Text
 ) : HandledScreen<CentrifugeScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
-    }
-
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+        backgroundWidth = 176
+        backgroundHeight = 166
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // background drawn in render() for correct z-ordering
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
+
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
         val progressFrac = if (CentrifugeSync.PROGRESS_MAX > 0) {
-            (handler.sync.progress.coerceIn(0, CentrifugeSync.PROGRESS_MAX)
-                .toFloat() / CentrifugeSync.PROGRESS_MAX).coerceIn(0f, 1f)
+            (handler.sync.progress.coerceIn(0, CentrifugeSync.PROGRESS_MAX).toFloat() / CentrifugeSync.PROGRESS_MAX).coerceIn(0f, 1f)
         } else 0f
         val heat = handler.sync.heat.toLong().coerceAtLeast(0)
-        val heatFrac =
-            if (CentrifugeSync.HEAT_MAX > 0) (heat.toFloat() / CentrifugeSync.HEAT_MAX).coerceIn(0f, 1f) else 0f
+        val heatFrac = if (CentrifugeSync.HEAT_MAX > 0) {
+            (heat.toFloat() / CentrifugeSync.HEAT_MAX).coerceIn(0f, 1f)
+        } else 0f
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val consumeRate = handler.sync.getSyncedConsumedAmount()
-        val isProcessing = handler.sync.progress > 0
 
+        // 电量条 (179,3)-(193,17) = 14x14，自下而上
+        if (energyFraction > 0f) {
+            val fillHeight = (ENERGY_BAR_H * energyFraction).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + ENERGY_BAR_X,
+                top + ENERGY_BAR_Y + ENERGY_BAR_H - fillHeight,
+                left + ENERGY_BAR_X + ENERGY_BAR_W,
+                top + ENERGY_BAR_Y + ENERGY_BAR_H
+            )
+            context.drawTexture(
+                TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
+                ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
+                ENERGY_BAR_W, ENERGY_BAR_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+            context.disableScissor()
+        }
+
+        // 工作进度 (179,46)-(184,76) = 5x30，自下而上
+        if (progressFrac > 0f) {
+            val fillHeight = (PROGRESS_H * progressFrac).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + PROGRESS_X,
+                top + PROGRESS_Y + PROGRESS_H - fillHeight,
+                left + PROGRESS_X + PROGRESS_W,
+                top + PROGRESS_Y + PROGRESS_H
+            )
+            context.drawTexture(
+                TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
+                PROGRESS_U.toFloat(), PROGRESS_V.toFloat(),
+                PROGRESS_W, PROGRESS_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+            context.disableScissor()
+        }
+
+        // 热量条 (179,37)-(201,43) = 22x6，自左向右
+        if (heatFrac > 0f) {
+            val barWidth = (HEAT_BAR_W * heatFrac).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + HEAT_BAR_X,
+                top + HEAT_BAR_Y,
+                left + HEAT_BAR_X + barWidth,
+                top + HEAT_BAR_Y + HEAT_BAR_H
+            )
+            context.drawTexture(
+                TEXTURE, left + HEAT_BAR_X, top + HEAT_BAR_Y,
+                HEAT_BAR_U.toFloat(), HEAT_BAR_V.toFloat(),
+                HEAT_BAR_W, HEAT_BAR_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+            context.disableScissor()
+        }
+
+        // 热量状态纹理 (179,20)-(193,34) = 14x14
+        if (progressFrac > 0f || heat >= CentrifugeSync.HEAT_MAX) {
+            context.drawTexture(
+                TEXTURE, left + HEAT_STATUS_X, top + HEAT_STATUS_Y,
+                HEAT_STATUS_U.toFloat(), HEAT_STATUS_V.toFloat(),
+                HEAT_STATUS_W, HEAT_STATUS_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+        }
+
+        // uptips 纹理
+        context.drawTexture(
+            UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
+            0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
+            UPTIPS_SIZE, UPTIPS_SIZE
+        )
+
+        // 侧边文本
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
         val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(consumeRate))
         val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
         val sideTextX = left - sideTextWidth - 4
+        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 
-        val content: UiScope.() -> Unit = {
-            Row(
-                x = left + 8,
-                y = top + 8,
-                spacing = 8,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Column(
-                    spacing = 6,
-                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
-                ) {
-                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                        Text(title.string, color = 0xFFFFFF)
-                        Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
-                    }
-                    EnergyBar(
-                        energyFraction,
-                        barHeight = 12,
-                    )
+        drawMouseoverTooltip(context, mouseX, mouseY)
 
-                    Flex(
-                        direction = FlexDirection.ROW,
-                        alignItems = AlignItems.CENTER,
-                        gap = 4
-                    ) {
-                        Column(spacing = 4) {
-                            SlotHost(CentrifugeScreenHandler.SLOT_INPUT_INDEX)
-                            SlotHost(CentrifugeScreenHandler.SLOT_DISCHARGING_INDEX)
-                        }
-                        // 热量条
-                        Column(
-//                            direction = FlexDirection.COLUMN,
-//                            justifyContent = JustifyContent.CENTER,
-//                            alignItems = AlignItems.CENTER,
-//                            gap = 2
-                            spacing = 2,
-                            modifier = Modifier().fractionWidth(1f)
-                        ) {
-                            EnergyBar(progressFrac, modifier = Modifier.EMPTY.fractionWidth(1.0f))
-                            Row {
-                                Text(t("gui.ic2_120.heat"), color = 0xAAAAAA)
-                                HeatProgressBar(
-                                    heatFrac,
-//                                barWidth = 0,
-                                    barHeight = 8,
-                                    startColor = 0xFF660000.toInt(),
-                                    endColor = 0xFFCC0000.toInt(),
-                                    gradient = true,
-//                                    modifier = Modifier().fractionWidth(1.0f)
-                                )
-                                Text("$heat/${CentrifugeSync.HEAT_MAX}", color = 0xFFFFFF, shadow = false)
-                            }
-                            Text(
-                                t("gui.ic2_120.centrifuge.status_line", if (isProcessing) t("gui.ic2_120.centrifuge.processing") else t("gui.ic2_120.centrifuge.preheating"), EnergyFormatUtils.formatEu(inputRate), EnergyFormatUtils.formatEu(consumeRate)),
-                                color = if (isProcessing) 0x00CC00 else 0xCC0000,
-                                shadow = false
-                            )
+        val relX = mouseX - left
+        val relY = mouseY - top
 
-                        }
-
-                        Column(spacing = 4) {
-                            SlotHost(CentrifugeScreenHandler.SLOT_OUTPUT_1_INDEX)
-                            SlotHost(CentrifugeScreenHandler.SLOT_OUTPUT_2_INDEX)
-                            SlotHost(CentrifugeScreenHandler.SLOT_OUTPUT_3_INDEX)
-                        }
-                    }
-
-
-                }
-
-                Column(
-                    spacing = 4,
-                    modifier = Modifier.EMPTY
-                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
-                        .padding(0, 8, 0, 0)
-                ) {
-                    for (slotIndex in CentrifugeScreenHandler.SLOT_UPGRADE_INDEX_START..CentrifugeScreenHandler.SLOT_UPGRADE_INDEX_END) {
-                        SlotHost(slotIndex)
-                    }
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = CentrifugeScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
+        // 电量条悬停
+        if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
+            relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                mouseX, mouseY
             )
         }
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
+        // 热量条悬停
+        if (relX in HEAT_BAR_X until HEAT_BAR_X + HEAT_BAR_W &&
+            relY in HEAT_BAR_Y until HEAT_BAR_Y + HEAT_BAR_H
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                Text.literal("热量：$heat / ${CentrifugeSync.HEAT_MAX}"),
+                mouseX, mouseY
+            )
+        }
 
-        GuiBackground.drawVanillaLikePanel(context, left, top, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, left, top,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
-        super.render(context, mouseX, mouseY, delta)
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
-        drawMouseoverTooltip(context, mouseX, mouseY)
-    }
-
-    private fun UiScope.SlotHost(slotIndex: Int) {
-        SlotAnchor(
-            id = slotAnchorId(slotIndex),
-            width = CentrifugeScreenHandler.SLOT_SIZE,
-            height = CentrifugeScreenHandler.SLOT_SIZE
-        )
-    }
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
+        // uptips 悬停
+        if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
+            relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                listOf(
+                    Text.translatable("gui.ic2_120.centrifuge.uptips"),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.pulling_upgrade"))
+                ),
+                mouseX, mouseY
+            )
         }
     }
 
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        if (ui.mouseClicked(mouseX, mouseY, button)) return true
-        return super.mouseClicked(mouseX, mouseY, button)
-    }
-
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicentrifuge.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private const val TEXTURE_SIZE = 256
+
+        // 电量条 (179,3)-(193,17) = 14x14
+        private const val ENERGY_BAR_U = 179
+        private const val ENERGY_BAR_V = 3
+        private const val ENERGY_BAR_W = 14
+        private const val ENERGY_BAR_H = 14
+        private const val ENERGY_BAR_X = 12
+        private const val ENERGY_BAR_Y = 41
+
+        // 工作进度 (179,46)-(184,76) = 5x30
+        private const val PROGRESS_U = 179
+        private const val PROGRESS_V = 46
+        private const val PROGRESS_W = 5
+        private const val PROGRESS_H = 30
+        private const val PROGRESS_X = 83
+        private const val PROGRESS_Y = 24
+
+        // 热量条 (179,37)-(201,43) = 22x6
+        private const val HEAT_BAR_U = 179
+        private const val HEAT_BAR_V = 37
+        private const val HEAT_BAR_W = 22
+        private const val HEAT_BAR_H = 6
+        private const val HEAT_BAR_X = 67
+        private const val HEAT_BAR_Y = 66
+
+        // 热量状态 (179,20)-(193,34) = 14x14
+        private const val HEAT_STATUS_U = 179
+        private const val HEAT_STATUS_V = 20
+        private const val HEAT_STATUS_W = 14
+        private const val HEAT_STATUS_H = 14
+        private const val HEAT_STATUS_X = 92
+        private const val HEAT_STATUS_Y = 62
+
+        // uptips
+        private const val UPTIPS_X = 4
+        private const val UPTIPS_Y = 4
+        private const val UPTIPS_SIZE = 16
     }
 }

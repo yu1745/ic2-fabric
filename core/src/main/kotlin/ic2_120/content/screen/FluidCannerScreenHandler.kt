@@ -43,9 +43,6 @@ class FluidCannerScreenHandler(
     /** Maps BE slot index -> handler slot index for quickMove routing. */
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    /**
-     * Add a tracked slot: registers it with the handler and records the BE->handler mapping.
-     */
     private fun addTrackedSlot(slot: Slot, beSlotIndex: Int) {
         beSlotToHandlerIndex[beSlotIndex] = slots.size
         addSlot(slot)
@@ -55,18 +52,18 @@ class FluidCannerScreenHandler(
         checkSize(blockInventory, FluidCannerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(PredicateSlot(blockInventory, FluidCannerBlockEntity.SLOT_INPUT_FILLED, 0, 0, itemStorage?.deriveSlotSpec(FluidCannerBlockEntity.SLOT_INPUT_FILLED) ?: SlotSpec()), FluidCannerBlockEntity.SLOT_INPUT_FILLED)
-        addTrackedSlot(PredicateSlot(blockInventory, FluidCannerBlockEntity.SLOT_INPUT_EMPTY, 0, 0, itemStorage?.deriveSlotSpec(FluidCannerBlockEntity.SLOT_INPUT_EMPTY) ?: SlotSpec()), FluidCannerBlockEntity.SLOT_INPUT_EMPTY)
-        addTrackedSlot(PredicateSlot(blockInventory, FluidCannerBlockEntity.SLOT_OUTPUT, 0, 0, itemStorage?.deriveSlotSpec(FluidCannerBlockEntity.SLOT_OUTPUT) ?: SlotSpec(canInsert = { false }, canTake = { true })), FluidCannerBlockEntity.SLOT_OUTPUT)
-        addTrackedSlot(PredicateSlot(blockInventory, FluidCannerBlockEntity.SLOT_DISCHARGING, 0, 0, itemStorage?.deriveSlotSpec(FluidCannerBlockEntity.SLOT_DISCHARGING) ?: SlotSpec()), FluidCannerBlockEntity.SLOT_DISCHARGING)
+        addTrackedSlot(PredicateSlot(blockInventory, FluidCannerBlockEntity.SLOT_INPUT_FILLED, 44, 35, itemStorage?.deriveSlotSpec(FluidCannerBlockEntity.SLOT_INPUT_FILLED) ?: SlotSpec()), FluidCannerBlockEntity.SLOT_INPUT_FILLED)
+        addTrackedSlot(PredicateSlot(blockInventory, FluidCannerBlockEntity.SLOT_INPUT_EMPTY, 44, 72, itemStorage?.deriveSlotSpec(FluidCannerBlockEntity.SLOT_INPUT_EMPTY) ?: SlotSpec()), FluidCannerBlockEntity.SLOT_INPUT_EMPTY)
+        addTrackedSlot(PredicateSlot(blockInventory, FluidCannerBlockEntity.SLOT_OUTPUT, 117, 53, itemStorage?.deriveSlotSpec(FluidCannerBlockEntity.SLOT_OUTPUT) ?: SlotSpec(canInsert = { false }, canTake = { true })), FluidCannerBlockEntity.SLOT_OUTPUT)
+        addTrackedSlot(PredicateSlot(blockInventory, FluidCannerBlockEntity.SLOT_DISCHARGING, 8, 53, itemStorage?.deriveSlotSpec(FluidCannerBlockEntity.SLOT_DISCHARGING) ?: SlotSpec()), FluidCannerBlockEntity.SLOT_DISCHARGING)
 
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
             addTrackedSlot(
                 PredicateSlot(
                     blockInventory,
                     FluidCannerBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
+                    152,
+                    26 + i * 18,
                     upgradeSlotSpec
                 ),
                 FluidCannerBlockEntity.SLOT_UPGRADE_INDICES[i]
@@ -75,11 +72,11 @@ class FluidCannerScreenHandler(
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 102 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 160))
         }
     }
 

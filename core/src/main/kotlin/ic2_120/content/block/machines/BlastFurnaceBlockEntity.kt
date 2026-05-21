@@ -313,18 +313,14 @@ class BlastFurnaceBlockEntity(
 
     /** 当前温度下 HU 不足时每下降 1 温度值所需 tick 数 */
     private fun getTicksPerDecay(temp: Int): Int = when {
-        temp >= 1601 -> 10   // 0.5s
-        temp >= 1501 -> 16   // 0.8s
-        temp >= 1401 -> 20   // 1.0s
-        else -> 24           // 1.2s (0–1400)
+        temp >= 1601 -> 6    // 0.3s
+        temp >= 1501 -> 10   // 0.5s
+        temp >= 1401 -> 16   // 0.8s
+        else -> 20           // 1.0s (0–1400)
     }
 
-    /** 当前温度下的加工总 tick 数 */
-    private fun getProgressMax(temp: Int): Int = when {
-        temp >= 1601 -> BlastFurnaceSync.PROGRESS_MAX_FAST
-        temp >= 1501 -> BlastFurnaceSync.PROGRESS_MAX_MEDIUM
-        else -> BlastFurnaceSync.PROGRESS_MAX_SLOW
-    }
+    /** 当前温度下的加工总 tick 数（三段线性插值） */
+    private fun getProgressMax(temp: Int): Int = BlastFurnaceSync.getProgressMax(temp)
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
@@ -445,8 +441,9 @@ class BlastFurnaceBlockEntity(
 
     /** 按当前温度 / 进度消耗压缩空气，返回实际消耗的 mB 数 */
     private fun consumeAirForTick(progressMax: Int): Long {
-        // 目标累计消耗量（微 mB）：进度每前进 1，消耗 6,000,000 / progressMax 微 mB
-        val targetNeed = (sync.progress + 1).toLong() * 6_000_000L / progressMax
+        val airPerSteel = BlastFurnaceSync.getAirPerSteelMb(temperature).toLong()
+        // 目标累计消耗量（微 mB）：进度每前进 1，消耗 airPerSteel * 1000 / progressMax 微 mB
+        val targetNeed = (sync.progress + 1).toLong() * airPerSteel * 1000L / progressMax
         val needThisTick = targetNeed - airAccumulatedNeed
         if (needThisTick <= 0L) return 1L // 至少消耗 1 mB
 

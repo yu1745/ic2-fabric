@@ -268,6 +268,7 @@ class PumpBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
+        sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(tankInternal.variant.fluid)
 
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
@@ -282,27 +283,39 @@ class PumpBlockEntity(
         extractFromDischargingSlot()
         fillFluidCellFromTank()
 
-        var pumped = false
-        if (world.time % 20L == 0L) {
-            val operations = speedMultiplier.toInt().coerceAtLeast(1)
-            repeat(operations) {
-                if (tryPumpOneBucket(world, pos, state)) pumped = true else return@repeat
+        var pumping = false
+        val progressIncrement = speedMultiplier.toInt().coerceAtLeast(1)
+        val energyNeed = (PumpSync.ENERGY_PER_TICK * energyMultiplier).toLong().coerceAtLeast(1L)
+
+        // 检查是否满足泵取条件
+        val spaceLeft = tankInternal.capacity - tankInternal.amount
+        val canPump = sync.amount >= energyNeed && spaceLeft >= FluidConstants.BUCKET
+
+        if (canPump) {
+            if (sync.consumeEnergy(energyNeed) > 0L) {
+                sync.energy = sync.amount.toInt().coerceAtLeast(0)
+                sync.progress = (sync.progress + progressIncrement).coerceAtMost(PumpSync.PROGRESS_MAX)
+                pumping = true
+
+                if (sync.progress >= PumpSync.PROGRESS_MAX) {
+                    tryPumpOneBucket(world, pos, state)
+                    sync.progress = 0
+                }
+                markDirty()
             }
+        } else if (!canPump) {
+            sync.progress = 0
         }
 
         if (fluidPipeProviderEnabled) {
             ejectFluidToNeighbors(world, pos, state)
         }
 
-        setActiveState(world, pos, state, pumped)
+        setActiveState(world, pos, state, pumping)
         sync.syncCurrentTickFlow()
     }
 
     private fun tryPumpOneBucket(world: World, pos: BlockPos, state: BlockState): Boolean {
-        val euNeed = (PumpSync.ENERGY_PER_BUCKET * energyMultiplier).toLong().coerceAtLeast(1L)
-        if (sync.amount < euNeed) return false
-
-        // 提前检查：储罐空间不足 1 桶时不抽取，避免浪费流体和能量
         val spaceLeft = tankInternal.capacity - tankInternal.amount
         if (spaceLeft < FluidConstants.BUCKET) return false
 
@@ -311,19 +324,16 @@ class PumpBlockEntity(
         for (target in positions) {
             val drained = tryDrainFromStorage(world, target, front.opposite)
             if (drained > 0L) {
-                sync.consumeEnergy(euNeed)
-                sync.energy = sync.amount.toInt().coerceAtLeast(0)
                 markDirty()
                 return true
             }
             val drainedWorld = tryDrainFromWorldSource(world, target)
             if (drainedWorld > 0L) {
-                sync.consumeEnergy(euNeed)
-                sync.energy = sync.amount.toInt().coerceAtLeast(0)
                 markDirty()
                 return true
             }
         }
+        sync.progress = 0
         return false
     }
 
