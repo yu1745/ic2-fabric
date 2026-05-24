@@ -26,7 +26,7 @@ class PumpAttachmentScreenHandler(
         this(syncId, playerInventory, be, ScreenHandlerContext.create(playerInventory.player.world, be.pos))
 
     init {
-        addSlot(object : Slot(object : net.minecraft.inventory.SimpleInventory(1) {}, 0, 0, 0) {
+        addSlot(object : Slot(object : net.minecraft.inventory.SimpleInventory(1) {}, 0, 80, 31) {
             override fun canInsert(stack: ItemStack): Boolean = false
             override fun canTakeItems(playerEntity: PlayerEntity): Boolean = false
             override fun getStack(): ItemStack = blockEntity?.pumpFilterGhostStack() ?: ItemStack.EMPTY
@@ -35,11 +35,11 @@ class PumpAttachmentScreenHandler(
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 80 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 138))
         }
     }
 

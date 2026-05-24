@@ -1,5 +1,6 @@
 package ic2_120.config
 
+import com.fasterxml.jackson.core.json.JsonReadFeature
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -470,6 +471,7 @@ object Ic2Config {
     private val mapper = jacksonObjectMapper()
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .configure(SerializationFeature.INDENT_OUTPUT, true)
+        .enable(JsonReadFeature.ALLOW_TRAILING_COMMA.mappedFeature())
     private val configPath: Path by lazy {
         FabricLoader.getInstance().configDir.resolve("${Ic2_120.MOD_ID}.json")
     }

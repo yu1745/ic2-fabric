@@ -130,8 +130,8 @@ class PumpScreen(
         )
 
         // 侧边文本
-        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
-        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(consumeRate))
+        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
+        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatRaw(consumeRate))
         val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
         val sideTextX = left - sideTextWidth - 4
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
@@ -148,7 +148,7 @@ class PumpScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
@@ -157,18 +157,14 @@ class PumpScreen(
         if (relX in TANK_X until TANK_X + TANK_W &&
             relY in TANK_Y until TANK_Y + TANK_H
         ) {
-            val fluidName = if (fluidRawId != -1) {
+            val lines = if (fluidAmount > 0 && fluidRawId != -1) {
                 val fluid = Registries.FLUID.get(fluidRawId)
-                fluid.defaultState.blockState.block.name.string
-            } else "空"
-            context.drawTooltip(
-                textRenderer,
-                listOf(
-                    Text.literal("$fluidName"),
-                    Text.literal("$fluidAmount / $fluidCapacity mB")
-                ),
-                mouseX, mouseY
-            )
+                val fluidName = fluid.defaultState.blockState.block.name.string
+                listOf(Text.literal(fluidName), Text.literal("$fluidAmount / $fluidCapacity mB"))
+            } else {
+                listOf(Text.literal("空"))
+            }
+            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
 
         // uptips 悬停

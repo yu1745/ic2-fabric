@@ -15,7 +15,7 @@ class SolarDistillerSync(
         const val NBT_PROGRESS = "Progress"
         const val NBT_IS_WORKING = "IsWorking"
 
-        const val TANK_CAPACITY_MB = 10_000
+        const val TANK_CAPACITY_MB = 8_000
         const val PRODUCE_INTERVAL_TICKS = 80
         const val PRODUCE_MB_PER_CYCLE = 1
     }

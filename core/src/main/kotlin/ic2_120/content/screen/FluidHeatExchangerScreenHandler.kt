@@ -53,7 +53,6 @@ class FluidHeatExchangerScreenHandler(
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
-    /** BE 槽位索引 -> handler 槽位索引 */
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     private fun addTrackedSlot(beSlot: Int, x: Int, y: Int, spec: SlotSpec) {
@@ -66,39 +65,44 @@ class FluidHeatExchangerScreenHandler(
         checkSize(blockInventory, FluidHeatExchangerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        for (i in FluidHeatExchangerBlockEntity.SLOT_EXCHANGER_INDICES.indices) {
-            val slotIndex = FluidHeatExchangerBlockEntity.SLOT_EXCHANGER_INDICES[i]
+        // 交换器槽 第一行 (46,50) 五个横排无间隔
+        for (col in 0 until 5) {
+            val slotIndex = FluidHeatExchangerBlockEntity.SLOT_EXCHANGER_INDICES[col]
             val spec = itemStorage?.deriveSlotSpec(slotIndex) ?: EXCHANGER_SLOT_SPEC
-            addTrackedSlot(slotIndex, 0, 0, spec)
+            addTrackedSlot(slotIndex, 46 + col * 17, 50, spec)
+        }
+        // 交换器槽 第二行 (46,72) 五个横排无间隔
+        for (col in 0 until 5) {
+            val slotIndex = FluidHeatExchangerBlockEntity.SLOT_EXCHANGER_INDICES[col + 5]
+            val spec = itemStorage?.deriveSlotSpec(slotIndex) ?: EXCHANGER_SLOT_SPEC
+            addTrackedSlot(slotIndex, 46 + col * 17, 72, spec)
         }
 
-        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addTrackedSlot(
-                FluidHeatExchangerBlockEntity.SLOT_UPGRADE_INDICES[i],
-                0,
-                0,
-                upgradeSlotSpec
-            )
+        // 升级槽 3个 (62,103) 横排无间隔
+        for (i in 0 until 3) {
+            addTrackedSlot(FluidHeatExchangerBlockEntity.SLOT_UPGRADE_INDICES[i], 62 + i * 18, 103, upgradeSlotSpec)
         }
 
+        // 容器槽
         val inputFilledSpec = itemStorage?.deriveSlotSpec(FluidHeatExchangerBlockEntity.SLOT_INPUT_FILLED_CONTAINER) ?: INPUT_FILLED_CONTAINER_SLOT_SPEC
         val inputEmptySpec = itemStorage?.deriveSlotSpec(FluidHeatExchangerBlockEntity.SLOT_INPUT_EMPTY_CONTAINER) ?: OUTPUT_ONLY_SLOT_SPEC
         val outputEmptySpec = itemStorage?.deriveSlotSpec(FluidHeatExchangerBlockEntity.SLOT_OUTPUT_EMPTY_CONTAINER) ?: OUTPUT_EMPTY_CONTAINER_SLOT_SPEC
         val outputFilledSpec = itemStorage?.deriveSlotSpec(FluidHeatExchangerBlockEntity.SLOT_OUTPUT_FILLED_CONTAINER) ?: OUTPUT_ONLY_SLOT_SPEC
 
-        addTrackedSlot(FluidHeatExchangerBlockEntity.SLOT_INPUT_FILLED_CONTAINER, 0, 0, inputFilledSpec)
-        addTrackedSlot(FluidHeatExchangerBlockEntity.SLOT_INPUT_EMPTY_CONTAINER, 0, 0, inputEmptySpec)
-        addTrackedSlot(FluidHeatExchangerBlockEntity.SLOT_OUTPUT_EMPTY_CONTAINER, 0, 0, outputEmptySpec)
-        addTrackedSlot(FluidHeatExchangerBlockEntity.SLOT_OUTPUT_FILLED_CONTAINER, 0, 0, outputFilledSpec)
+        addTrackedSlot(FluidHeatExchangerBlockEntity.SLOT_INPUT_FILLED_CONTAINER, 8, 103, inputFilledSpec)
+        addTrackedSlot(FluidHeatExchangerBlockEntity.SLOT_INPUT_EMPTY_CONTAINER, 26, 103, inputEmptySpec)
+        addTrackedSlot(FluidHeatExchangerBlockEntity.SLOT_OUTPUT_EMPTY_CONTAINER, 134, 103, outputEmptySpec)
+        addTrackedSlot(FluidHeatExchangerBlockEntity.SLOT_OUTPUT_FILLED_CONTAINER, 152, 103, outputFilledSpec)
 
+        // 玩家背包
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 122 + row * 18))
             }
         }
-
+        // 快捷栏
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 180))
         }
     }
 
@@ -126,11 +130,7 @@ class FluidHeatExchangerScreenHandler(
             in PLAYER_INV_START..HOTBAR_END -> {
                 val storage = itemStorage ?: return ItemStack.EMPTY
                 val moved = SlotMoveHelper.insertFromRoutes(
-                    inSlot,
-                    storage,
-                    storage.insertRoutes,
-                    beSlotToHandlerIndex,
-                    slots
+                    inSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
                 )
                 if (!moved) return ItemStack.EMPTY
             }
@@ -156,15 +156,14 @@ class FluidHeatExchangerScreenHandler(
         const val EXCHANGER_SLOT_INDEX_START = 0
         const val EXCHANGER_SLOT_INDEX_END = 9
         const val SLOT_UPGRADE_START = 10
-        const val SLOT_UPGRADE_END = 13
-        const val SLOT_INPUT_FILLED_CONTAINER_INDEX = 14
-        const val SLOT_INPUT_EMPTY_CONTAINER_INDEX = 15
-        const val SLOT_OUTPUT_EMPTY_CONTAINER_INDEX = 16
-        const val SLOT_OUTPUT_FILLED_CONTAINER_INDEX = 17
-        const val PLAYER_INV_START = 18
-        const val HOTBAR_END = 53
+        const val SLOT_UPGRADE_END = 12
+        const val SLOT_INPUT_FILLED_CONTAINER_INDEX = 13
+        const val SLOT_INPUT_EMPTY_CONTAINER_INDEX = 14
+        const val SLOT_OUTPUT_EMPTY_CONTAINER_INDEX = 15
+        const val SLOT_OUTPUT_FILLED_CONTAINER_INDEX = 16
+        const val PLAYER_INV_START = 17
+        const val HOTBAR_END = 52
 
-        // 客户端 fallback SlotSpec
         private val EXCHANGER_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack ->
@@ -176,15 +175,15 @@ class FluidHeatExchangerScreenHandler(
             canInsert = { stack ->
                 when {
                     stack.item == net.minecraft.item.Items.LAVA_BUCKET -> true
-                    stack.item == ic2_120.content.fluid.ModFluids.HOT_COOLANT_BUCKET -> true
+                    stack.item == ModFluids.HOT_COOLANT_BUCKET -> true
                     net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier("ic2_120", "lava_cell") -> true
                     net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier("ic2_120", "hot_coolant_cell") -> true
-                    stack.item is ic2_120.content.item.FluidCellItem -> {
+                    stack.item is FluidCellItem -> {
                         val fluid = stack.getFluidCellVariant()?.fluid
                         fluid == net.minecraft.fluid.Fluids.LAVA ||
                             fluid == net.minecraft.fluid.Fluids.FLOWING_LAVA ||
-                            fluid == ic2_120.content.fluid.ModFluids.HOT_COOLANT_STILL ||
-                            fluid == ic2_120.content.fluid.ModFluids.HOT_COOLANT_FLOWING
+                            fluid == ModFluids.HOT_COOLANT_STILL ||
+                            fluid == ModFluids.HOT_COOLANT_FLOWING
                     }
                     else -> false
                 }
@@ -195,7 +194,7 @@ class FluidHeatExchangerScreenHandler(
             canInsert = { stack ->
                 stack.item == net.minecraft.item.Items.BUCKET ||
                     net.minecraft.registry.Registries.ITEM.getId(stack.item) == net.minecraft.util.Identifier("ic2_120", "empty_cell") ||
-                    (stack.item is ic2_120.content.item.FluidCellItem && stack.isFluidCellEmpty())
+                    (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             }
         )
 

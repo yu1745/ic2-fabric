@@ -44,7 +44,7 @@ class KineticGeneratorScreen(
         context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
         // 输入/输出文本：区域 (41,49)-(138,63)，居中常显，缩放至 7px
-        val infoText = "输入：${kuIn} KU/t  输出：${EnergyFormatUtils.formatEu(euOut.toLong())} EU/t"
+        val infoText = "输入：${kuIn} KU/t  输出：${EnergyFormatUtils.formatRaw(euOut.toLong())} EU/t"
         val scale = 6f / textRenderer.fontHeight
         val scaledWidth = (textRenderer.getWidth(infoText) * scale).toInt()
         val scaledHeight = (textRenderer.fontHeight * scale).toInt()
@@ -60,7 +60,7 @@ class KineticGeneratorScreen(
         if (mouseX in x + 60 until x + 117 && mouseY in y + 23 until y + 37) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }

@@ -42,26 +42,26 @@ class ReactorFluidPortScreenHandler(
         addProperties(propertyDelegate)
 
         // 升级槽（只有 1 个）
-        addTrackedSlot(blockInventory, ReactorFluidPortBlockEntity.SLOT_UPGRADE_INDICES[0])
+        addTrackedSlot(blockInventory, ReactorFluidPortBlockEntity.SLOT_UPGRADE_INDICES[0], 80, 31)
 
         // 玩家物品栏
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 79 + row * 18))
             }
         }
 
         // 玩家快捷栏
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 137))
         }
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {

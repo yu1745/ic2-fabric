@@ -98,8 +98,8 @@ class CondenserBlockEntity(
         private const val NBT_PROGRESS = "Progress"
         private const val NBT_TIER = "Tier"
 
-        private const val STEAM_TANK_CAPACITY = FluidConstants.BUCKET * 100  // 100,000 mB
-        private const val WATER_TANK_CAPACITY = FluidConstants.BUCKET         // 1,000 mB
+        private const val STEAM_TANK_CAPACITY = FluidConstants.BUCKET * 8  // 8,000 mB
+        private const val WATER_TANK_CAPACITY = FluidConstants.BUCKET * 8  // 8,000 mB
 
         @Volatile
         private var fluidLookupRegistered = false
@@ -158,8 +158,7 @@ class CondenserBlockEntity(
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = STEAM_TANK_CAPACITY
 
-        override fun canInsert(variant: FluidVariant): Boolean =
-            variant.fluid == ModFluids.STEAM_STILL || variant.fluid == ModFluids.SUPERHEATED_STEAM_STILL
+        override fun canInsert(variant: FluidVariant): Boolean = ModFluids.isSteam(variant.fluid)
 
         override fun canExtract(variant: FluidVariant): Boolean = false
 
@@ -174,7 +173,7 @@ class CondenserBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = WATER_TANK_CAPACITY
 
         override fun canInsert(variant: FluidVariant): Boolean = false
-        override fun canExtract(variant: FluidVariant): Boolean = true
+        override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
 
         override fun onFinalCommit() {
             sync.waterAmount = toMilliBuckets(amount)

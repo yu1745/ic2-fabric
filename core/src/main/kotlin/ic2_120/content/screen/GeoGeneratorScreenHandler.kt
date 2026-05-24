@@ -7,7 +7,6 @@ import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
-import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.GeoGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
@@ -42,10 +41,6 @@ class GeoGeneratorScreenHandler(
         currentTickProvider = { null }
     )
 
-    private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
-    }
-
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     private fun addTrackedSlot(slot: Slot, beSlotIndex: Int) {
@@ -69,20 +64,6 @@ class GeoGeneratorScreenHandler(
         addTrackedSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 38, 57, emptyContainerSlotSpec), GeoGeneratorBlockEntity.EMPTY_CONTAINER_SLOT)
         addTrackedSlot(PredicateSlot(blockInventory, GeoGeneratorBlockEntity.BATTERY_SLOT, 124, 43, batterySlotSpec), GeoGeneratorBlockEntity.BATTERY_SLOT)
 
-        // 4 个升级槽
-        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addTrackedSlot(
-                PredicateSlot(
-                    blockInventory,
-                    GeoGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    152,
-                    4 + i * 20,
-                    upgradeSlotSpec
-                ),
-                GeoGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i]
-            )
-        }
-
         for (row in 0 until 3) {
             for (col in 0 until 9) {
                 addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 79 + row * 18))
@@ -103,10 +84,6 @@ class GeoGeneratorScreenHandler(
                 index == SLOT_FUEL_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 index == SLOT_EMPTY_CONTAINER_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 index == SLOT_BATTERY_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onQuickTransfer(stackInSlot, stack)
-                }
                 index in PLAYER_INV_START..HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
@@ -134,10 +111,8 @@ class GeoGeneratorScreenHandler(
         const val SLOT_FUEL_INDEX = 0
         const val SLOT_EMPTY_CONTAINER_INDEX = 1
         const val SLOT_BATTERY_INDEX = 2
-        const val SLOT_UPGRADE_INDEX_START = 3
-        const val SLOT_UPGRADE_INDEX_END = 6
-        const val PLAYER_INV_START = 7
-        const val HOTBAR_END = 43
+        const val PLAYER_INV_START = 3
+        const val HOTBAR_END = 39
 
         private val SLOT_SPEC_FALLBACK_FUEL = SlotSpec(
             maxItemCount = 64,

@@ -1,14 +1,19 @@
 package ic2_120.client.screen
 
+import ic2_120.client.FluidUtils
 import ic2_120.client.t
 import ic2_120.content.block.SteamGeneratorBlock
 import ic2_120.content.screen.SteamGeneratorScreenHandler
 import ic2_120.content.sync.SteamGeneratorSync
 import ic2_120.registry.annotation.ModScreen
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.texture.Sprite
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluid
+import net.minecraft.fluid.Fluids
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.text.Text as McText
 import net.minecraft.util.Identifier
@@ -33,6 +38,11 @@ class SteamGeneratorScreen(
     init {
         backgroundWidth = 176
         backgroundHeight = 220
+    }
+
+    private val waterSprite: Sprite? by lazy {
+        val handler = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER) ?: return@lazy null
+        handler.getFluidSprites(null, null, Fluids.WATER.defaultState)?.getOrNull(0)
     }
 
     // ==== 背景纹理 + 标题 — 对齐 ic2_origin drawBackgroundAndTitle ====
@@ -66,10 +76,28 @@ class SteamGeneratorScreen(
 
         // ==== 填充（画在背景纹理之上） ====
 
-        // 水罐填充 (TankGauge Plain at 10,155, 75×47)
+        // 水罐填充 (TankGauge Plain at 10,155, 75×47) - fluid sprite + color rendering
         val tankX = left + 10; val tankY = top + 155; val tankW = 75; val tankH = 47
         val fh = (waterFrac.coerceIn(0f, 1f) * tankH).toInt()
-        if (fh > 0) context.fill(tankX, tankY + tankH - fh, tankX + tankW, tankY + tankH, WATER_COLOR)
+        if (fh > 0) {
+            val fillY = tankY + tankH - fh
+            val color = FluidUtils.getFluidColor(Fluids.WATER)
+            val r = ((color shr 16) and 0xFF) / 255f
+            val g = ((color shr 8) and 0xFF) / 255f
+            val b = (color and 0xFF) / 255f
+            context.enableScissor(tankX, fillY, tankX + tankW, tankY + tankH)
+            val sprite = waterSprite
+            if (sprite != null) {
+                for (sy in fillY until (tankY + tankH) step 16) {
+                    val tileH = minOf(16, tankY + tankH - sy)
+                    for (sx in tankX until (tankX + tankW) step 16) {
+                        val tileW = minOf(16, tankX + tankW - sx)
+                        context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                    }
+                }
+            }
+            context.disableScissor()
+        }
 
         // 热量条 (LinkedGauge HeatSteamGenerator at 13,70, 7×76, Up方向)
         val hFill = (heatFrac.coerceIn(0f, 1f) * 76).toInt()
@@ -101,13 +129,14 @@ class SteamGeneratorScreen(
 
         // 水罐 tooltip: 显示液体类型和水量
         if (mouseX in tankX until (tankX + tankW) && mouseY in tankY until (tankY + tankH)) {
-            val lines = mutableListOf<McText>()
-            if (sync.waterAmount > 0) {
+            val amt = sync.waterAmount.coerceAtLeast(0)
+            val lines = if (amt > 0) {
                 val fluidName = if (sync.isWaterDistilled != 0)
                     t("gui.ic2_120.distilled_water") else t("gui.ic2_120.water")
-                lines.add(McText.literal(fluidName))
+                listOf(McText.literal(fluidName), McText.literal("$amt / ${SteamGeneratorSync.WATER_TANK_CAPACITY} mB"))
+            } else {
+                listOf(McText.literal("空"))
             }
-            lines.add(McText.literal("${sync.waterAmount.coerceAtLeast(0)} / ${SteamGeneratorSync.WATER_TANK_CAPACITY} mB"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
     }
@@ -150,7 +179,6 @@ class SteamGeneratorScreen(
 
     companion object {
         private val TEXTURE = Identifier("ic2", "textures/gui/guisteamgenerator.png")
-        private val WATER_COLOR = 0x993388FF.toInt()
         private val HEAT_COLOR = 0xFFFF4444.toInt()
         private val CALC_COLOR = 0xFF888888.toInt()
     }

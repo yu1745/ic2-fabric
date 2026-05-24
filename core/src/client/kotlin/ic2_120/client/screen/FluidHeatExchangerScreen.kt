@@ -1,194 +1,148 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.ComposeUI
-import ic2_120.client.compose.*
 import ic2_120.client.t
-import ic2_120.client.ui.FluidBar
-import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.FluidHeatExchangerBlock
-import ic2_120.content.block.machines.FluidHeatExchangerBlockEntity
 import ic2_120.content.screen.FluidHeatExchangerScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.FluidHeatExchangerSync
 import ic2_120.registry.annotation.ModScreen
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluid
 import net.minecraft.text.Text as McText
+import net.minecraft.util.Identifier
 
 @ModScreen(block = FluidHeatExchangerBlock::class)
 class FluidHeatExchangerScreen(
     handler: FluidHeatExchangerScreenHandler, playerInventory: PlayerInventory, title: McText
 ) : HandledScreen<FluidHeatExchangerScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        backgroundWidth = 179
+        backgroundHeight = 204
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
-        val inputFraction =
-            (handler.sync.inputFluidMb.toFloat() / FluidHeatExchangerSync.TANK_CAPACITY_MB).coerceIn(0f, 1f)
-        val outputFraction =
-            (handler.sync.outputFluidMb.toFloat() / FluidHeatExchangerSync.TANK_CAPACITY_MB).coerceIn(0f, 1f)
-        val exchangerCount = FluidHeatExchangerBlockEntity.SLOT_EXCHANGER_INDICES.count { handler.slots[it].hasStack() }
-        val generatedRate = handler.sync.getSyncedGeneratedHeat()
-        val outputRate = handler.sync.getSyncedOutputHeat()
+        val sync = handler.sync
 
-        val content: UiScope.() -> Unit = {
-            Row(
-                x = left + 8, y = top + 8, spacing = 8, modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                // 三列：输入流体柱 | 交换器+信息 | 输出流体柱
-                Flex(
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.SPACE_BETWEEN,
-                    alignItems = AlignItems.CENTER,
-                    modifier = Modifier().width(GUI_SIZE.contentWidth - 24)/*.height(GUI_SIZE.contentHeight)*/
-                ) {
-                    // 输入流体柱：满容器 → 液位条 → 空容器
-                    Flex(direction = FlexDirection.COLUMN, alignItems = AlignItems.CENTER, gap = 2) {
-                        Text(t("gui.ic2_120.fluid_heat_exchanger.input_fluid"), color = 0xAAAAAA)
-                        SlotHost(FluidHeatExchangerScreenHandler.SLOT_INPUT_FILLED_CONTAINER_INDEX)
-                        FluidBar(
-                            inputFraction,
-                            barWidth = 8,
-                            barHeight = 58,
-                            fullColor = HOT_COOLANT_COLOR,
-                            gradient = false,
-                            vertical = true,
-                            modifier = Modifier.EMPTY.width(8).height(58)
-                        )
-                        SlotHost(FluidHeatExchangerScreenHandler.SLOT_INPUT_EMPTY_CONTAINER_INDEX)
-                        Text("${handler.sync.inputFluidMb} mB", color = 0xFFFFFF, shadow = false)
-                    }
+        val inputMb = sync.inputFluidMb.coerceAtLeast(0)
+        val outputMb = sync.outputFluidMb.coerceAtLeast(0)
+        val inputFrac = if (FluidHeatExchangerSync.TANK_CAPACITY_MB > 0) (inputMb.toFloat() / FluidHeatExchangerSync.TANK_CAPACITY_MB).coerceIn(0f, 1f) else 0f
+        val outputFrac = if (FluidHeatExchangerSync.TANK_CAPACITY_MB > 0) (outputMb.toFloat() / FluidHeatExchangerSync.TANK_CAPACITY_MB).coerceIn(0f, 1f) else 0f
 
-                    // 中间列：标题 + 状态 + 交换器
-                    Flex(
-                        gap = 4,
-                        direction = FlexDirection.COLUMN,
-                        justifyContent = JustifyContent.START,
-                        alignItems = AlignItems.CENTER,
-                        modifier = Modifier().fractionWidth(1f)
-                    ) {
-                        Text(title.string, color = 0xFFFFFF)
-                        Text(
-                            t("gui.ic2_120.fluid_heat_exchanger.exchanger_count", exchangerCount), color = 0xAAAAAA
-                        )
-                        Text(
-                            if (handler.sync.isWorking != 0) t("gui.ic2_120.status_working") else t("gui.ic2_120.status_stopped"),
-                            color = 0xAAAAAA,
-                            shadow = false
-                        )
-                        Text(
-                            t("gui.ic2_120.fluid_heat_exchanger.heat_line", generatedRate, outputRate), color = 0xAAAAAA
-                        )
-                        Row(spacing = 4) {
-                            repeat(5) { index ->
-                                SlotHost(FluidHeatExchangerScreenHandler.EXCHANGER_SLOT_INDEX_START + index)
-                            }
-                        }
-                        Row(spacing = 4) {
-                            repeat(5) { index ->
-                                SlotHost(FluidHeatExchangerScreenHandler.EXCHANGER_SLOT_INDEX_START + index + 5)
-                            }
-                        }
-                    }
+        val generatedRate = sync.getSyncedGeneratedHeat()
+        val outputRate = sync.getSyncedOutputHeat()
 
-                    // 输出流体柱：空容器 → 液位条 → 满容器
-                    Flex(direction = FlexDirection.COLUMN, alignItems = AlignItems.CENTER, gap = 2) {
-                        Text(t("gui.ic2_120.fluid_heat_exchanger.output_fluid"), color = 0xAAAAAA)
-                        SlotHost(FluidHeatExchangerScreenHandler.SLOT_OUTPUT_EMPTY_CONTAINER_INDEX)
-                        FluidBar(
-                            outputFraction,
-                            barWidth = 8,
-                            barHeight = 58,
-                            fullColor = COOLANT_COLOR,
-                            gradient = false,
-                            vertical = true,
-                            modifier = Modifier.EMPTY.width(8).height(58)
-                        )
-                        SlotHost(FluidHeatExchangerScreenHandler.SLOT_OUTPUT_FILLED_CONTAINER_INDEX)
-                        Text("${handler.sync.outputFluidMb} mB", color = 0xFFFFFF, shadow = false)
-                    }
-                }
+        // 标题居中
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
 
-                // 升级槽列
-                Column(
-                    spacing = 4, modifier = Modifier.EMPTY.width(GuiSize.UPGRADE_COLUMN_WIDTH).padding(0, 8, 0, 0)
-                ) {
-                    for (slotIndex in FluidHeatExchangerScreenHandler.SLOT_UPGRADE_START..FluidHeatExchangerScreenHandler.SLOT_UPGRADE_END) {
-                        SlotHost(slotIndex)
-                    }
-                }
-            }
+        // 输入流体槽 (19,47)-(31,91) = 12×44
+        val inputFluid = sync.fluidTypeToFluid(sync.inputFluidType)
+        if (inputFrac > 0f && inputFluid != null) {
+            drawFluidFill(context, left + 19, top + 47, 12, 44, inputFrac, inputFluid)
+        }
 
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = FluidHeatExchangerScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
+        // 输出流体槽 (145,47)-(157,91) = 12×44
+        val outputFluid = sync.fluidTypeToFluid(sync.outputFluidType)
+        if (outputFrac > 0f && outputFluid != null) {
+            drawFluidFill(context, left + 145, top + 47, 12, 44, outputFrac, outputFluid)
+        }
+
+        // 文本区域 (18,29)-(159,40) — 显示产热速率和输出速率，居中，淡蓝色，7px
+        val heatText = t("gui.ic2_120.fluid_heat_exchanger.heat_line", generatedRate, outputRate)
+        val textScale = 7f / textRenderer.fontHeight
+        val scaledW = (textRenderer.getWidth(heatText) * textScale).toInt()
+        val textAreaW = 159 - 18
+        val textAreaY = top + 29
+        val textAreaCY = textAreaY + (40 - 29) / 2
+        val scaledTextX = left + 18 + (textAreaW - scaledW) / 2
+        context.matrices.push()
+        context.matrices.translate(scaledTextX.toDouble(), (textAreaCY - 3.5).toDouble(), 0.0)
+        context.matrices.scale(textScale, textScale, 1f)
+        context.drawText(textRenderer, heatText, 0, 0, 0xFF88CCFF.toInt(), false)
+        context.matrices.pop()
+
+        // uptips 纹理 (4,4)
+        context.drawTexture(UPTIPS_TEXTURE, left + 4, top + 4, 0f, 0f, 16, 16, 16, 16)
+
+        drawMouseoverTooltip(context, mouseX, mouseY)
+
+        // 悬停提示
+        val relX = mouseX - left
+        val relY = mouseY - top
+
+        // uptips 悬停
+        if (relX in 4 until 20 && relY in 4 until 20) {
+            context.drawTooltip(
+                textRenderer,
+                listOf(
+                    McText.translatable("gui.ic2_120.fluid_heat_exchanger.uptips"),
+                    McText.literal("§7").append(McText.translatable("item.ic2_120.pulling_upgrade")),
+                    McText.literal("§7").append(McText.translatable("item.ic2_120.ejector_upgrade")),
+                    McText.literal("§7").append(McText.translatable("item.ic2_120.fluid_pulling_upgrade")),
+                    McText.literal("§7").append(McText.translatable("item.ic2_120.fluid_ejector_upgrade"))
+                ),
+                mouseX, mouseY
             )
         }
 
-        // 1) 预布局，不绘制
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
+        // 输入流体槽悬停
+        if (relX in 19 until 31 && relY in 47 until 91) {
+            val lines = if (inputMb > 0 && inputFluid != null) {
+                listOf(inputFluid.defaultState.blockState.block.name, McText.literal("$inputMb / ${FluidHeatExchangerSync.TANK_CAPACITY_MB} mB"))
+            } else {
+                listOf(McText.literal("空"))
+            }
+            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+        }
 
-        // 2) 锚点写回 slot 相对坐标
-        applyAnchoredSlots(layout, left, top)
-
-        // 3) 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y, GUI_SIZE.playerInvY, GUI_SIZE.hotbarY, GuiSize.SLOT_SIZE
-        )
-
-        // 4) 再绘制 UI（slot 背景），确保它们在物品下方
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 5) 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
-
-        drawMouseoverTooltip(context, mouseX, mouseY)
-    }
-
-    private fun UiScope.SlotHost(slotIndex: Int) {
-        SlotAnchor(
-            id = slotAnchorId(slotIndex),
-            width = FluidHeatExchangerScreenHandler.SLOT_SIZE,
-            height = FluidHeatExchangerScreenHandler.SLOT_SIZE
-        )
-    }
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
+        // 输出流体槽悬停
+        if (relX in 145 until 157 && relY in 47 until 91) {
+            val lines = if (outputMb > 0 && outputFluid != null) {
+                listOf(outputFluid.defaultState.blockState.block.name, McText.literal("$outputMb / ${FluidHeatExchangerSync.TANK_CAPACITY_MB} mB"))
+            } else {
+                listOf(McText.literal("空"))
+            }
+            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
     }
 
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
+    /** 在指定区域自下而上渲染流体纹理填充 */
+    private fun drawFluidFill(context: DrawContext, gx: Int, gy: Int, w: Int, h: Int, fraction: Float, fluid: Fluid) {
+        val fillH = (fraction.coerceIn(0f, 1f) * h).toInt()
+        if (fillH <= 0) return
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+        val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
+        val sprites = handler.getFluidSprites(null, null, fluid.defaultState) ?: return
+        val sprite = sprites[0]
+
+        val fillY = gy + h - fillH
+        context.enableScissor(gx, fillY, gx + w, gy + h)
+
+        for (sy in fillY until (gy + h) step 16) {
+            val tileH = minOf(16, gy + h - sy)
+            for (sx in gx until (gx + w) step 16) {
+                val tileW = minOf(16, gx + w - sx)
+                context.drawSprite(sx, sy, 0, tileW, tileH, sprite)
+            }
+        }
+
+        context.disableScissor()
+    }
 
     companion object {
-        private val GUI_SIZE = GuiSize.UPGRADE_TALL
-
-        /** 热冷却液颜色（输入侧） */
-        private const val HOT_COOLANT_COLOR = 0xFFDD5500.toInt()
-
-        /** 冷却液颜色（输出侧） */
-        private const val COOLANT_COLOR = 0xFF22AADD.toInt()
+        private val TEXTURE = Identifier("ic2", "textures/gui/guifluidheatexchanger.png")
+        private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+        private const val TEXTURE_SIZE = 256
     }
 }

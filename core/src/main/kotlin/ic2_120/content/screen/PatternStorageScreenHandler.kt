@@ -35,16 +35,16 @@ class PatternStorageScreenHandler(
     init {
         checkSize(blockInventory, PatternStorageBlockEntity.INVENTORY_SIZE)
 
-        // All slot coordinates are anchored by the client screen at render time.
-        addTrackedSlot(PredicateSlot(blockInventory, PatternStorageBlockEntity.SLOT_CRYSTAL, 0, 0, deriveSpec(PatternStorageBlockEntity.SLOT_CRYSTAL)))
+        // 水晶槽 (152,29)
+        addTrackedSlot(PredicateSlot(blockInventory, PatternStorageBlockEntity.SLOT_CRYSTAL, 152, 29, deriveSpec(PatternStorageBlockEntity.SLOT_CRYSTAL)))
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
     }
 

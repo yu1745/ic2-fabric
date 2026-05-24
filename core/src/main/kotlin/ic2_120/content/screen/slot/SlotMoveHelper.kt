@@ -48,7 +48,7 @@ object SlotMoveHelper {
     private fun insertFromRoute(stack: ItemStack, slot: Slot, maxPerSlot: Int?): Boolean {
         val slotStack = slot.stack
         val effectiveLimit = maxPerSlot ?: slot.maxItemCount
-        val slotLimit = minOf(effectiveLimit, stack.maxCount)
+        val slotLimit = effectiveLimit
         if (slotLimit <= 0) return false
 
         if (slotStack.isEmpty) {

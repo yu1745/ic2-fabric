@@ -41,35 +41,34 @@ class CropmatronScreenHandler(
         checkSize(blockInventory, CropmatronBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(blockInventory, CropmatronBlockEntity.SLOT_WATER_INPUT)
-        addTrackedSlot(blockInventory, CropmatronBlockEntity.SLOT_WATER_OUTPUT)
-        addTrackedSlot(blockInventory, CropmatronBlockEntity.SLOT_WEED_EX_INPUT)
-        addTrackedSlot(blockInventory, CropmatronBlockEntity.SLOT_WEED_EX_OUTPUT)
-        addTrackedSlot(blockInventory, CropmatronBlockEntity.SLOT_DISCHARGING)
+        addTrackedSlot(blockInventory, CropmatronBlockEntity.SLOT_WATER_INPUT, 57, 55)
+        addTrackedSlot(blockInventory, CropmatronBlockEntity.SLOT_WATER_OUTPUT, 75, 55)
+        addTrackedSlot(blockInventory, CropmatronBlockEntity.SLOT_WEED_EX_INPUT, 49, 26)
+        addTrackedSlot(blockInventory, CropmatronBlockEntity.SLOT_WEED_EX_OUTPUT, 67, 26)
 
-        for ((_, slotIndex) in CropmatronBlockEntity.SLOT_FERTILIZER_INDICES.withIndex()) {
-            addTrackedSlot(blockInventory, slotIndex)
+        for ((i, slotIndex) in CropmatronBlockEntity.SLOT_FERTILIZER_INDICES.withIndex()) {
+            addTrackedSlot(blockInventory, slotIndex, 8 + i * 18, 79)
         }
 
         for (i in CropmatronBlockEntity.SLOT_UPGRADE_INDICES.indices) {
-            addTrackedSlot(blockInventory, CropmatronBlockEntity.SLOT_UPGRADE_INDICES[i])
+            addTrackedSlot(blockInventory, CropmatronBlockEntity.SLOT_UPGRADE_INDICES[i], 152, 25 + i * 18)
         }
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 109 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 167))
         }
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -123,10 +122,9 @@ class CropmatronScreenHandler(
 
         const val SLOT_UPGRADE_INDEX_START = 11
         const val SLOT_UPGRADE_INDEX_END = 14
-        const val SLOT_DISCHARGING_INDEX = 15
 
-        const val PLAYER_INV_START = 16
-        const val HOTBAR_END = 51
+        const val PLAYER_INV_START = 15
+        const val HOTBAR_END = 50
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): CropmatronScreenHandler {

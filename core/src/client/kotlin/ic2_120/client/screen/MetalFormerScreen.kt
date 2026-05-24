@@ -115,8 +115,8 @@ class MetalFormerScreen(
         )
 
         // 侧边文本
-        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
-        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(consumeRate))
+        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
+        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatRaw(consumeRate))
         val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
         val sideTextX = left - sideTextWidth - 4
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
@@ -134,7 +134,7 @@ class MetalFormerScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }

@@ -41,30 +41,30 @@ class AnimalSlaughtererScreenHandler(
         checkSize(blockInventory, AnimalSlaughtererBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        for (slotIndex in AnimalSlaughtererBlockEntity.SLOT_CONTENT_INDICES) {
-            addTrackedSlot(blockInventory, slotIndex)
+        for ((i, slotIndex) in AnimalSlaughtererBlockEntity.SLOT_CONTENT_INDICES.withIndex()) {
+            addTrackedSlot(blockInventory, slotIndex, 48 + (i % 5) * 18, 17 + (i / 5) * 18)
         }
-        for (slotIndex in AnimalSlaughtererBlockEntity.SLOT_UPGRADE_INDICES) {
-            addTrackedSlot(blockInventory, slotIndex)
+        for ((i, slotIndex) in AnimalSlaughtererBlockEntity.SLOT_UPGRADE_INDICES.withIndex()) {
+            addTrackedSlot(blockInventory, slotIndex, 152, 8 + i * 18)
         }
-        addTrackedSlot(blockInventory, AnimalSlaughtererBlockEntity.SLOT_DISCHARGING)
-        addTrackedSlot(blockInventory, AnimalSlaughtererBlockEntity.SLOT_SHEARS)
+        addTrackedSlot(blockInventory, AnimalSlaughtererBlockEntity.SLOT_DISCHARGING, 16, 53)
+        addTrackedSlot(blockInventory, AnimalSlaughtererBlockEntity.SLOT_SHEARS, 16, 18)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
     }
 
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {

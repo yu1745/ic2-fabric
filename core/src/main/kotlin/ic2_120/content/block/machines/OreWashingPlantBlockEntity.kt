@@ -2,6 +2,7 @@ package ic2_120.content.block.machines
 
 import ic2_120.content.block.OreWashingPlantBlock
 import ic2_120.content.block.ITieredMachine
+import ic2_120.content.fluid.ModFluids
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.WaterCell
@@ -178,7 +179,7 @@ class OreWashingPlantBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = tankCapacityMb * FluidConstants.BUCKET / 1000L
 
         override fun canInsert(variant: FluidVariant): Boolean =
-            variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER
+            (variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER) && ModFluids.isFluid(variant.fluid)
 
         /** Fabric Transfer API 接口，参数和返回值单位均为 droplets，内部转为 mB。 */
         override fun insert(insertedVariant: FluidVariant, maxAmountDroplets: Long, transaction: TransactionContext): Long {

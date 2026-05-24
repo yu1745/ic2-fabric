@@ -7,8 +7,10 @@ import ic2_120.content.block.GeoGeneratorBlock
 import ic2_120.content.screen.GeoGeneratorScreenHandler
 import ic2_120.content.sync.GeoGeneratorSync
 import ic2_120.registry.annotation.ModScreen
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.texture.Sprite
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluids
 import net.minecraft.text.Text
@@ -24,6 +26,11 @@ class GeoGeneratorScreen(
     init {
         backgroundWidth = 176
         backgroundHeight = 161
+    }
+
+    private val lavaSprite: Sprite? by lazy {
+        val handler = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.LAVA) ?: return@lazy null
+        handler.getFluidSprites(null, null, Fluids.LAVA.defaultState)?.getOrNull(0)
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
@@ -48,8 +55,8 @@ class GeoGeneratorScreen(
         // 能量条位于 (118, 19) — 30×17 水平纹理来自 guiheatsourcegenerator.png (178,2)-(207,18)
         drawEnergyGauge(context, x + 118, y + 19, energyFrac)
 
-        // 岩浆储量条：区域 (82,23)-(94,69) = 12×46
-        drawLavaBar(context, x + 82, y + 23, lavaFrac)
+        // 岩浆储量条：区域 (82,23)-(94,69) = 12×46，流体纹理+颜色渲染
+        drawFluidTank(context, x + LAVA_BAR_X, y + LAVA_BAR_Y, LAVA_BAR_W, LAVA_BAR_H, lavaFrac, lavaSprite, Fluids.LAVA)
 
         // 标题文字居中于 y=6
         context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
@@ -63,6 +70,27 @@ class GeoGeneratorScreen(
         context.drawText(textRenderer, outputText, sideTextX, y + 20, 0xAAAAAA, false)
 
         drawMouseoverTooltip(context, mouseX, mouseY)
+
+        // 悬停提示
+        val relX = mouseX - x
+        val relY = mouseY - y
+        if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
+            relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
+        ) {
+            context.drawTooltip(textRenderer,
+                listOf(Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU")),
+                mouseX, mouseY)
+        }
+        if (lavaMb > 0 &&
+            relX in LAVA_BAR_X until LAVA_BAR_X + LAVA_BAR_W &&
+            relY in LAVA_BAR_Y until LAVA_BAR_Y + LAVA_BAR_H
+        ) {
+            val lavaName = Fluids.LAVA.defaultState.blockState.block.name
+            context.drawTooltip(textRenderer, listOf(
+                lavaName,
+                Text.literal("$lavaMb / ${lavaCapMb} mB")
+            ), mouseX, mouseY)
+        }
     }
 
     private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
@@ -75,26 +103,37 @@ class GeoGeneratorScreen(
         context.disableScissor()
     }
 
-    private fun drawLavaBar(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
-        val barW = 12
-        val barH = 46
-        // 岩浆填充（自下往上），scissor 限制不超出区域
-        val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
-        if (fillH > 0) {
-            val lavaColor = FluidUtils.getFluidColor(Fluids.LAVA)
-            context.enableScissor(gx, gy, gx + barW, gy + barH)
-            context.fill(gx, gy + barH - fillH, gx + barW, gy + barH, lavaColor)
-            context.disableScissor()
+    /** 自下而上平铺流体纹理 + 流体颜色着色 */
+    private fun drawFluidTank(context: DrawContext, gx: Int, gy: Int, w: Int, h: Int, fraction: Float, sprite: Sprite?, fluid: net.minecraft.fluid.Fluid) {
+        val fillH = (fraction.coerceIn(0f, 1f) * h).toInt()
+        if (fillH <= 0) return
+        val fillY = gy + h - fillH
+        val color = FluidUtils.getFluidColor(fluid)
+        val r = ((color shr 16) and 0xFF) / 255f
+        val g = ((color shr 8) and 0xFF) / 255f
+        val b = (color and 0xFF) / 255f
+        context.enableScissor(gx, fillY, gx + w, gy + h)
+        if (sprite != null) {
+            for (sy in fillY until (gy + h) step 16) {
+                val tileH = minOf(16, gy + h - sy)
+                for (sx in gx until (gx + w) step 16) {
+                    val tileW = minOf(16, gx + w - sx)
+                    context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                }
+            }
         }
-        // 容器标示纹理覆盖，有流体时才渲染
-        if (fillH > 0) {
-            context.enableScissor(gx, gy, gx + barW, gy + barH)
-            context.drawTexture(TEXTURE, gx + 1, gy, 179f, 23f, barW, barH, 256, 256)
-            context.disableScissor()
-        }
+        context.disableScissor()
     }
 
     companion object {
         private val TEXTURE = Identifier("ic2", "textures/gui/guiheatsourcegenerator.png")
+        private const val ENERGY_BAR_X = 118
+        private const val ENERGY_BAR_Y = 19
+        private const val ENERGY_BAR_W = 30
+        private const val ENERGY_BAR_H = 17
+        private const val LAVA_BAR_X = 82
+        private const val LAVA_BAR_Y = 23
+        private const val LAVA_BAR_W = 12
+        private const val LAVA_BAR_H = 46
     }
 }

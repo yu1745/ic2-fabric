@@ -52,8 +52,8 @@ class GeneratorScreen(
         context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
         // EU发电/输出文字显示在左侧
-        val generateText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
-        val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
+        val generateText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatRaw(inputRate))
+        val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatRaw(outputRate))
         val sideTextWidth = maxOf(textRenderer.getWidth(generateText), textRenderer.getWidth(outputText))
         val sideTextX = x - sideTextWidth - 4
         context.drawText(textRenderer, generateText, sideTextX, y + 8, 0xAAAAAA, false)
@@ -63,7 +63,7 @@ class GeneratorScreen(
         if (mouseX in x + 78 until x + 104 && mouseY in y + 35 until y + 52) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(GeneratorSync.ENERGY_CAPACITY.toLong())} EU"),
+                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(GeneratorSync.ENERGY_CAPACITY.toLong())} EU"),
                 mouseX, mouseY
             )
         }

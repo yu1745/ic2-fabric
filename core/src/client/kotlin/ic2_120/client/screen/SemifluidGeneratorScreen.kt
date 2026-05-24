@@ -1,14 +1,18 @@
 package ic2_120.client.screen
 
 import ic2_120.client.EnergyFormatUtils
+import ic2_120.client.FluidUtils
 import ic2_120.client.t
 import ic2_120.content.block.SemifluidGeneratorBlock
 import ic2_120.content.screen.SemifluidGeneratorScreenHandler
 import ic2_120.content.sync.SemifluidGeneratorSync
 import ic2_120.registry.annotation.ModScreen
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluid
+import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
@@ -47,14 +51,14 @@ class SemifluidGeneratorScreen(
         drawEnergyGauge(context, x + 118, y + 19, energyFrac)
 
         // 燃料储量条：区域 (82,23)-(94,69) = 12×46
-        drawFuelBar(context, x + 82, y + 23, fuelFrac, handler.fuelColorArgb)
+        drawFuelBar(context, x + 82, y + 23, fuelFrac, handler.sync.fuelFluidRawId)
 
         // 标题文字居中于 y=6
         context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
         // EU发电/输出文字显示在左侧
-        val generateText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
-        val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
+        val generateText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatRaw(inputRate))
+        val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatRaw(outputRate))
         val sideTextWidth = maxOf(textRenderer.getWidth(generateText), textRenderer.getWidth(outputText))
         val sideTextX = x - sideTextWidth - 4
         context.drawText(textRenderer, generateText, sideTextX, y + 8, 0xAAAAAA, false)
@@ -64,7 +68,7 @@ class SemifluidGeneratorScreen(
         if (mouseX in x + 118 until x + 148 && mouseY in y + 19 until y + 36) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
@@ -91,16 +95,35 @@ class SemifluidGeneratorScreen(
         context.disableScissor()
     }
 
-    private fun drawFuelBar(context: DrawContext, gx: Int, gy: Int, fraction: Float, fuelColor: Int) {
+    private fun drawFuelBar(context: DrawContext, gx: Int, gy: Int, fraction: Float, fuelFluidRawId: Int) {
         val barW = 12
         val barH = 46
-        // 燃料填充（自下往上），scissor 限制不超出区域
         val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
-        if (fillH > 0) {
-            context.enableScissor(gx, gy, gx + barW, gy + barH)
-            context.fill(gx, gy + barH - fillH, gx + barW, gy + barH, fuelColor)
+        if (fillH <= 0) return
+
+        // 获取流体 sprite 和颜色
+        val fluid = if (fuelFluidRawId > 0) Registries.FLUID.get(fuelFluidRawId) else null
+        val fluidHandler = fluid?.let { FluidRenderHandlerRegistry.INSTANCE.get(it) }
+        val sprites = fluidHandler?.getFluidSprites(null, null, fluid?.defaultState)
+        val sprite = sprites?.getOrNull(0)
+        val color = fluid?.let { FluidUtils.getFluidColor(it) } ?: -1
+
+        if (sprite != null && color != -1) {
+            val r = ((color shr 16) and 0xFF) / 255f
+            val g = ((color shr 8) and 0xFF) / 255f
+            val b = (color and 0xFF) / 255f
+            val fillY = gy + barH - fillH
+            context.enableScissor(gx, fillY, gx + barW, gy + barH)
+            for (sy in fillY until (gy + barH) step 16) {
+                val tileH = minOf(16, gy + barH - sy)
+                for (sx in gx until (gx + barW) step 16) {
+                    val tileW = minOf(16, gx + barW - sx)
+                    context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                }
+            }
             context.disableScissor()
         }
+
         // 容器标示纹理覆盖，有流体时才渲染
         if (fillH > 0) {
             context.enableScissor(gx, gy, gx + barW, gy + barH)

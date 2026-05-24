@@ -97,13 +97,13 @@ object CentrifugeRecipeDatagen {
             )
         ),
 
-        // 粉碎铀矿石 3000 -> 小撮铀-235, 铀-238X4, 石粉
+        // 粉碎铀矿石 3000 -> 小撮铀-235, 铀-238×4, 石粉
         Entry(
             "crushed_uranium",
             CrushedUranium::class.instance(), 1, 3000,
             listOf(
                 OutputEntry(SmallUranium235::class.instance(), 1),
-                OutputEntry(SmallUranium238::class.instance(), 4),
+                OutputEntry(Uranium238::class.instance(), 4),
                 OutputEntry(StoneDust::class.instance(), 1)
             )
         ),
@@ -158,13 +158,13 @@ object CentrifugeRecipeDatagen {
             )
         ),
 
-        // 纯净的粉碎铀矿石 3000 -> 小撮铀-235X1, 铀-238X6
+        // 纯净的粉碎铀矿石 3000 -> 小撮铀-235×1, 铀-238×6
         Entry(
             "purified_uranium",
             PurifiedUranium::class.instance(), 1, 3000,
             listOf(
                 OutputEntry(SmallUranium235::class.instance(), 1),
-                OutputEntry(SmallUranium238::class.instance(), 6)
+                OutputEntry(Uranium238::class.instance(), 6)
             )
         ),
 
@@ -184,7 +184,7 @@ object CentrifugeRecipeDatagen {
             DepletedUraniumFuelRodItem::class.instance(), 1, 4000,
             listOf(
                 OutputEntry(SmallPlutonium::class.instance(), 1),
-                OutputEntry(SmallUranium238::class.instance(), 4),
+                OutputEntry(Uranium238::class.instance(), 4),
                 OutputEntry(IronDust::class.instance(), 1)
             )
         ),
@@ -195,7 +195,7 @@ object CentrifugeRecipeDatagen {
             DepletedDualUraniumFuelRodItem::class.instance(), 1, 4000,
             listOf(
                 OutputEntry(SmallPlutonium::class.instance(), 2),
-                OutputEntry(SmallUranium238::class.instance(), 8),
+                OutputEntry(Uranium238::class.instance(), 8),
                 OutputEntry(IronDust::class.instance(), 3)
             )
         ),
@@ -206,7 +206,7 @@ object CentrifugeRecipeDatagen {
             DepletedQuadUraniumFuelRodItem::class.instance(), 1, 4000,
             listOf(
                 OutputEntry(SmallPlutonium::class.instance(), 4),
-                OutputEntry(SmallUranium238::class.instance(), 16),
+                OutputEntry(Uranium238::class.instance(), 16),
                 OutputEntry(IronDust::class.instance(), 7)
             )
         ),

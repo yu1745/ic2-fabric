@@ -67,7 +67,7 @@ class FluidHeatExchangerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IFluidPipeUpgradeSupport, ExtendedScreenHandlerFactory {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IFluidPipeUpgradeSupport, ic2_120.content.upgrade.IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = FluidHeatExchangerBlock.ACTIVE
 
@@ -109,15 +109,14 @@ class FluidHeatExchangerBlockEntity(
         const val SLOT_UPGRADE_0 = 10
         const val SLOT_UPGRADE_1 = 11
         const val SLOT_UPGRADE_2 = 12
-        const val SLOT_UPGRADE_3 = 13
-        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
+        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2)
 
-        const val SLOT_INPUT_FILLED_CONTAINER = 14
-        const val SLOT_INPUT_EMPTY_CONTAINER = 15
-        const val SLOT_OUTPUT_EMPTY_CONTAINER = 16
-        const val SLOT_OUTPUT_FILLED_CONTAINER = 17
+        const val SLOT_INPUT_FILLED_CONTAINER = 13
+        const val SLOT_INPUT_EMPTY_CONTAINER = 14
+        const val SLOT_OUTPUT_EMPTY_CONTAINER = 15
+        const val SLOT_OUTPUT_FILLED_CONTAINER = 16
 
-        const val INVENTORY_SIZE = 18
+        const val INVENTORY_SIZE = 17
 
         private const val NBT_INPUT_TANK = "InputTank"
         private const val NBT_INPUT_FLUID = "InputFluid"
@@ -175,11 +174,11 @@ class FluidHeatExchangerBlockEntity(
     private var heatFromFluidRemainder: Long = 0L
 
     private val inputTankInternal = object : SingleVariantStorage<FluidVariant>() {
-        private val tankCapacity = FluidConstants.BUCKET * 10
+        private val tankCapacity = FluidConstants.BUCKET * 8
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
-        override fun canInsert(variant: FluidVariant): Boolean = isAcceptedInputFluid(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = isAcceptedInputFluid(variant.fluid) && ModFluids.isFluid(variant.fluid)
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -190,6 +189,7 @@ class FluidHeatExchangerBlockEntity(
 
         override fun onFinalCommit() {
             sync.inputFluidMb = toMilliBuckets(amount)
+            sync.inputFluidType = sync.fluidToFluidType(if (amount > 0L) variant.fluid else null)
             markDirty()
         }
 
@@ -238,7 +238,7 @@ class FluidHeatExchangerBlockEntity(
     }
 
     private val outputTankInternal = object : SingleVariantStorage<FluidVariant>() {
-        private val tankCapacity = FluidConstants.BUCKET * 10
+        private val tankCapacity = FluidConstants.BUCKET * 8
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
@@ -249,10 +249,11 @@ class FluidHeatExchangerBlockEntity(
             return super.insert(insertedVariant, maxAmount, transaction)
         }
 
-        override fun canExtract(variant: FluidVariant): Boolean = isAcceptedOutputFluid(variant.fluid)
+        override fun canExtract(variant: FluidVariant): Boolean = isAcceptedOutputFluid(variant.fluid) && ModFluids.isFluid(variant.fluid)
 
         override fun onFinalCommit() {
             sync.outputFluidMb = toMilliBuckets(amount)
+            sync.outputFluidType = sync.fluidToFluidType(if (amount > 0L) variant.fluid else null)
             markDirty()
         }
 
@@ -380,7 +381,7 @@ class FluidHeatExchangerBlockEntity(
 
     override fun setStack(slot: Int, stack: ItemStack) {
         val isExchangerSlot = slot in SLOT_EXCHANGER_0..SLOT_EXCHANGER_9
-        val isUpgradeSlot = slot in SLOT_UPGRADE_0..SLOT_UPGRADE_3
+        val isUpgradeSlot = slot in SLOT_UPGRADE_0..SLOT_UPGRADE_2
 
         if (isExchangerSlot && !stack.isEmpty && stack.item != heatConductorItem) return
 

@@ -30,8 +30,8 @@ class CondenserSync(
         const val MAX_EXTRACT = 0L
         const val NBT_ENERGY_STORED = "EnergyStored"
 
-        const val STEAM_TANK_CAPACITY = 100_000L
-        const val WATER_TANK_CAPACITY = 1_000L
+        const val STEAM_TANK_CAPACITY = 8_000L
+        const val WATER_TANK_CAPACITY = 8_000L
 
         /** 被动冷却速率 (mB/t) */
         const val PASSIVE_COOLING = 100

@@ -23,7 +23,7 @@ class MinerSync(
         const val SCAN_ENERGY_PER_STEP = 64L
         const val DRILL_ENERGY_PER_BREAK = 500L
         const val DIAMOND_OR_IRIDIUM_ENERGY_PER_BREAK = 1500L
-        const val SILK_TOUCH_MULTIPLIER = 10L
+        const val SILK_TOUCH_MULTIPLIER = 3L // 3/2 = 1.5x
         const val NBT_ENERGY_STORED = "EnergyStored"
     }
 

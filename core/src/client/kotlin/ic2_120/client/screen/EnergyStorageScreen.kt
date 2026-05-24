@@ -92,7 +92,7 @@ class EnergyStorageScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                Text.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
@@ -106,8 +106,8 @@ class EnergyStorageScreen(
             )
         }
 
-        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
-        val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
+        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
+        val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatRaw(outputRate))
         val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(outputText))
         val sideTextX = left - sideTextWidth - 4
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
