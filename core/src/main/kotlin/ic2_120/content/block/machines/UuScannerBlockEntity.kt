@@ -1,20 +1,13 @@
 package ic2_120.content.block.machines
 
+import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
-import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.UuScannerBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.UuScannerScreenHandler
 import ic2_120.content.sync.UuScannerSync
 import ic2_120.content.syncs.SyncedData
-import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
-import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
-import ic2_120.content.upgrade.IOverclockerUpgradeSupport
-import ic2_120.content.upgrade.ITransformerUpgradeSupport
-import ic2_120.content.upgrade.OverclockerUpgradeComponent
-import ic2_120.content.upgrade.TransformerUpgradeComponent
-import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
@@ -32,46 +25,37 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-
-import net.minecraft.registry.Registries
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.RegistryWrapper
+import net.minecraft.registry.Registries
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import kotlin.math.ceil
-import net.minecraft.network.PacketByteBuf
 import io.netty.buffer.Unpooled
+import kotlin.math.ceil
 
 @ModBlockEntity(block = UuScannerBlock::class)
 class UuScannerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, ExtendedScreenHandlerFactory<PacketByteBuf> {
+) : MachineBlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     override val activeProperty = UuScannerBlock.ACTIVE
     override val tier: Int = UuScannerSync.UU_SCANNER_TIER
     override fun getInventory(): Inventory = this
 
-    override var speedMultiplier: Float = 1f
-    override var energyMultiplier: Float = 1f
-    override var capacityBonus: Long = 0L
-    override var voltageTierBonus: Int = 0
-
     companion object {
         const val SLOT_INPUT = 0
         const val SLOT_DISCHARGING = 1
-        const val SLOT_UPGRADE_0 = 2
-        const val SLOT_UPGRADE_1 = 3
-        const val SLOT_UPGRADE_2 = 4
-        const val SLOT_UPGRADE_3 = 5
-        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
-        const val INVENTORY_SIZE = 6
+        const val SLOT_CRYSTAL = 2
+        const val INVENTORY_SIZE = 3
         private const val NBT_LAST_COMPLETED_ITEM = "LastCompletedItem"
+        private val crystalMemoryId = Identifier.of(Ic2_120.MOD_ID, "crystal_memory")
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -81,11 +65,11 @@ class UuScannerBlockEntity(
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
-            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isValid(SLOT_INPUT, it) })
+            ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isValid(SLOT_INPUT, it) }),
+            ItemInsertRoute(intArrayOf(SLOT_CRYSTAL), matcher = { it.isEmpty || isCrystalMemory(it) })
         ),
-        extractSlots = intArrayOf(SLOT_INPUT, SLOT_DISCHARGING) + SLOT_UPGRADE_INDICES,
+        extractSlots = intArrayOf(SLOT_INPUT, SLOT_DISCHARGING, SLOT_CRYSTAL),
         markDirty = { markDirty() }
     )
     private var lastCompletedItemId: String = ""
@@ -96,8 +80,8 @@ class UuScannerBlockEntity(
     val sync = UuScannerSync(
         syncedData,
         { world?.time },
-        { capacityBonus },
-        { TransformerUpgradeComponent.maxInsertForTier(UuScannerSync.UU_SCANNER_TIER + voltageTierBonus) }
+        { 0L },
+        { UuScannerSync.MAX_INSERT }
     )
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
@@ -138,7 +122,8 @@ class UuScannerBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> !stack.isEmpty && stack.item !is IBatteryItem
         SLOT_DISCHARGING -> !stack.isEmpty && stack.item is IBatteryItem
-        else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem
+        SLOT_CRYSTAL -> stack.isEmpty || isCrystalMemory(stack)
+        else -> false
     }
 
     override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
@@ -151,7 +136,7 @@ class UuScannerBlockEntity(
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.uu_scanner")
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        UuScannerScreenHandler(syncId, playerInventory, this, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
+        UuScannerScreenHandler(syncId, playerInventory, this, pos, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData, itemStorage)
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
@@ -170,13 +155,32 @@ class UuScannerBlockEntity(
         nbt.putString(NBT_LAST_COMPLETED_ITEM, lastCompletedItemId)
     }
 
+    fun deleteTemplate() {
+        val world = world ?: return
+        val storage = findUniqueAdjacentPatternStorage(world, pos) ?: return
+        storage.removeSelectedTemplate()
+        sync.status = UuScannerSync.STATUS_NO_INPUT
+        lastCompletedItemId = ""
+        sync.currentCostUb = 0
+        markDirty()
+    }
+
+    fun saveTemplateToCrystal() {
+        val world = world ?: return
+        val crystalStack = getStack(SLOT_CRYSTAL)
+        if (!isCrystalMemory(crystalStack)) return
+        val storage = findUniqueAdjacentPatternStorage(world, pos) ?: return
+        storage.exportSelectedTemplateToCrystal()
+        storage.removeSelectedTemplate()
+        sync.status = UuScannerSync.STATUS_NO_INPUT
+        lastCompletedItemId = ""
+        sync.currentCostUb = 0
+        markDirty()
+    }
+
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-
-        OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
-        EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
-        TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         adjacentEnergyTransfer.tick()
@@ -196,7 +200,7 @@ class UuScannerBlockEntity(
         if (input.isEmpty) {
             sync.progress = 0
             sync.currentCostUb = 0
-            sync.status = UuScannerSync.STATUS_NO_INPUT
+            sync.status = if (lastCompletedItemId.isNotBlank()) UuScannerSync.STATUS_COMPLETE else UuScannerSync.STATUS_NO_INPUT
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
@@ -221,15 +225,15 @@ class UuScannerBlockEntity(
             return
         }
 
-        val progressIncrement = speedMultiplier.toInt().coerceAtLeast(1)
-        val nextProgress = (sync.progress + progressIncrement).coerceAtMost(UuScannerSync.PROGRESS_MAX)
-        val need = ceil(UuScannerSync.ENERGY_PER_TICK * energyMultiplier.toDouble()).toLong().coerceAtLeast(1L)
+        val need = ceil(UuScannerSync.ENERGY_PER_TICK.toDouble()).toLong().coerceAtLeast(1L)
         if (sync.consumeEnergy(need) > 0L) {
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            sync.progress = nextProgress
+            sync.progress = (sync.progress + 1).coerceAtMost(UuScannerSync.PROGRESS_MAX)
             sync.status = UuScannerSync.STATUS_SCANNING
             if (sync.progress >= UuScannerSync.PROGRESS_MAX) {
                 storage.addOrSelectTemplate(template)
+                input.decrement(1)
+                if (input.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
                 sync.progress = 0
                 sync.status = UuScannerSync.STATUS_COMPLETE
                 lastCompletedItemId = itemId
@@ -254,4 +258,7 @@ class UuScannerBlockEntity(
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         markDirty()
     }
+
+    private fun isCrystalMemory(stack: ItemStack): Boolean =
+        !stack.isEmpty && Registries.ITEM.getId(stack.item) == crystalMemoryId
 }

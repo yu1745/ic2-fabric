@@ -1,24 +1,38 @@
 package ic2_120.content.block.storage
 
+import ic2_120.content.screen.TankScreenHandler
+import ic2_120.content.sync.TankSync
+import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtOps
-import net.minecraft.util.math.BlockPos
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryWrapper
+import net.minecraft.screen.ScreenHandler
+import net.minecraft.screen.ScreenHandlerContext
+import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.text.Text
+import net.minecraft.util.math.BlockPos
+import io.netty.buffer.Unpooled
 
 
 /**
@@ -46,22 +60,24 @@ import net.minecraft.registry.RegistryWrapper
 class TankBlockEntity(
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(TankBlockEntity::class.type(), pos, state) {
+) : BlockEntity(TankBlockEntity::class.type(), pos, state), ExtendedScreenHandlerFactory<PacketByteBuf> {
 
     companion object {
-        /** 青铜/铁储罐容量 */
-        private const val BRONZE_IRON_CAPACITY_BUCKETS = 32
+        /** 青铜/铁储罐容量 (mB) */
+        const val BRONZE_IRON_CAPACITY_MB = 32000
 
-        /** 钢制储罐容量 */
-        private const val STEEL_CAPACITY_BUCKETS = 128
+        /** 钢制储罐容量 (mB) */
+        const val STEEL_CAPACITY_MB = 128000
 
-        /** 铱储罐容量 */
-        private const val IRIDIUM_CAPACITY_BUCKETS = 1024
+        /** 铱储罐容量 (mB) */
+        const val IRIDIUM_CAPACITY_MB = 102400
 
-        /** 容量常量（mB） */
-        private val BRONZE_IRON_CAPACITY = FluidConstants.BUCKET * BRONZE_IRON_CAPACITY_BUCKETS
-        private val STEEL_CAPACITY = FluidConstants.BUCKET * STEEL_CAPACITY_BUCKETS
-        private val IRIDIUM_CAPACITY = FluidConstants.BUCKET * IRIDIUM_CAPACITY_BUCKETS
+        private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
+
+        /** 容量常量（droplets） */
+        private val BRONZE_IRON_CAPACITY = mbToDroplets(BRONZE_IRON_CAPACITY_MB)
+        private val STEEL_CAPACITY = mbToDroplets(STEEL_CAPACITY_MB)
+        private val IRIDIUM_CAPACITY = mbToDroplets(IRIDIUM_CAPACITY_MB)
 
         /** NBT 键 */
         private const val NBT_FLUID_AMOUNT = "FluidAmount"
@@ -102,7 +118,37 @@ class TankBlockEntity(
             return super.insert(insertedVariant, maxAmount, transaction)
         }
         override fun onFinalCommit() {
+            syncFluidState()
             markDirty()
+        }
+    }
+
+    val syncedData = SyncedData(this)
+    val sync = TankSync(syncedData) { getCapacityMb() }
+    val guiSlotInv = SimpleInventory(1)
+    var shouldDropOnBreak = true
+
+    fun syncFluidState() {
+        val variant = tankInternal.variant
+        sync.fluidRawId = if (variant.isBlank) -1 else Registries.FLUID.getRawId(variant.fluid)
+        sync.fluidAmountMb = getFluidAmountMb()
+        sync.capacityMb = getCapacityMb()
+    }
+
+    fun extractFluidForBucket(player: PlayerEntity): Boolean {
+        if (tankInternal.amount < FluidConstants.BUCKET) return false
+        val current = tankInternal.variant
+        if (current.isBlank) return false
+
+        Transaction.openOuter().use { tx ->
+            val extracted = tankInternal.extract(current, FluidConstants.BUCKET, tx)
+            if (extracted < FluidConstants.BUCKET) {
+                tx.abort()
+                return false
+            }
+            tx.commit()
+            syncFluidState()
+            return true
         }
     }
 
@@ -124,6 +170,43 @@ class TankBlockEntity(
             val ratio = (amount.toFloat() / cap)
             return (ratio * 14).toInt() + 1
         }
+
+    /** 获取容量 (mB) */
+    fun getCapacityMb(): Int {
+        val blockId = cachedState.block.toString()
+        return when {
+            blockId.contains("steel_tank") -> STEEL_CAPACITY_MB
+            blockId.contains("iridium_tank") -> IRIDIUM_CAPACITY_MB
+            else -> BRONZE_IRON_CAPACITY_MB
+        }
+    }
+
+    /** 获取当前流体量 (mB) */
+    fun getFluidAmountMb(): Int =
+        (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+
+    // ========== ExtendedScreenHandlerFactory ==========
+
+    override fun getDisplayName(): Text {
+        val block = cachedState.block
+        return Text.translatable(block.translationKey)
+    }
+
+    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
+        syncFluidState()
+        return TankScreenHandler(
+            syncId,
+            syncedData,
+            ScreenHandlerContext.create(world!!, pos)
+        )
+    }
+
+    override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
+        val buf = PacketByteBuf(Unpooled.buffer())
+        buf.writeBlockPos(pos)
+        buf.writeVarInt(syncedData.size())
+        return buf
+    }
 
     /**
      * 扳手拆卸时保留指定百分比的流体
@@ -148,6 +231,7 @@ class TankBlockEntity(
         if (!tankInternal.variant.isBlank) {
             nbt.put(NBT_FLUID_VARIANT, FluidVariant.CODEC.encodeStart(NbtOps.INSTANCE, tankInternal.variant).result().orElse(NbtCompound()))
         }
+        syncedData.writeNbt(nbt)
     }
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
@@ -155,5 +239,7 @@ class TankBlockEntity(
         tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, getCapacity())
         val fluidTag = nbt.getCompound(NBT_FLUID_VARIANT)
         tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, fluidTag).result().map { it.first }.orElse(FluidVariant.blank())
+        syncedData.readNbt(nbt)
+        syncFluidState()
     }
 }

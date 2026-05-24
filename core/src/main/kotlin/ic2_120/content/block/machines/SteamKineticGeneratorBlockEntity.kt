@@ -85,7 +85,8 @@ class SteamKineticGeneratorBlockEntity(
 
     companion object {
         const val SLOT_TURBINE = 0
-        const val INVENTORY_SIZE = 1
+        const val SLOT_UPGRADE = 1
+        const val INVENTORY_SIZE = 2
         private const val NBT_STEAM_TANK = "SteamTank"
         private const val NBT_WATER_TANK = "WaterTank"
         private const val NBT_KU_BUFFER = "KuBuffer"
@@ -118,9 +119,10 @@ class SteamKineticGeneratorBlockEntity(
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
-            ItemInsertRoute(intArrayOf(SLOT_TURBINE), matcher = { isValid(SLOT_TURBINE, it) }, maxPerSlot = 1)
+            ItemInsertRoute(intArrayOf(SLOT_TURBINE), matcher = { isValid(SLOT_TURBINE, it) }, maxPerSlot = 1),
+            ItemInsertRoute(intArrayOf(SLOT_UPGRADE), matcher = { it.item is ic2_120.content.item.IUpgradeItem && ic2_120.content.upgrade.UpgradeItemRegistry.canAccept(this@SteamKineticGeneratorBlockEntity, it.item) })
         ),
-        extractSlots = intArrayOf(SLOT_TURBINE),
+        extractSlots = intArrayOf(SLOT_TURBINE, SLOT_UPGRADE),
         markDirty = { markDirty() }
     )
 
@@ -152,8 +154,7 @@ class SteamKineticGeneratorBlockEntity(
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = STEAM_TANK_CAPACITY
 
-        override fun canInsert(variant: FluidVariant): Boolean =
-            variant.fluid == ModFluids.STEAM_STILL || variant.fluid == ModFluids.SUPERHEATED_STEAM_STILL
+        override fun canInsert(variant: FluidVariant): Boolean = ModFluids.isSteam(variant.fluid)
 
         override fun canExtract(variant: FluidVariant): Boolean = false
 
@@ -182,7 +183,7 @@ class SteamKineticGeneratorBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = WATER_TANK_CAPACITY
 
         override fun canInsert(variant: FluidVariant): Boolean = false
-        override fun canExtract(variant: FluidVariant): Boolean = true
+        override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
 
         override fun onFinalCommit() {
             sync.distilledWaterAmount = toMb(amount)
@@ -289,8 +290,11 @@ class SteamKineticGeneratorBlockEntity(
         markDirty()
     }
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean =
-        slot == SLOT_TURBINE && stack.item is SteamTurbine
+    override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
+        SLOT_TURBINE -> stack.item is SteamTurbine
+        SLOT_UPGRADE -> stack.item is ic2_120.content.item.IUpgradeItem && ic2_120.content.upgrade.UpgradeItemRegistry.canAccept(this, stack.item)
+        else -> false
+    }
 
     // ==== IKineticMachinePort — 所有面均可输出动能 ====
 
@@ -331,7 +335,8 @@ class SteamKineticGeneratorBlockEntity(
             playerInventory,
             this,
             net.minecraft.screen.ScreenHandlerContext.create(world!!, pos),
-            syncedData
+            syncedData,
+            itemStorage
         )
 
     // ==== NBT ====

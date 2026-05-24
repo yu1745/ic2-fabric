@@ -1,26 +1,32 @@
 package ic2_120.content.block.storage
 
+import com.mojang.serialization.MapCodec
 import ic2_120.editCustomData
+import ic2_120.getCustomData
 import ic2_120.content.item.BronzePlate
 import ic2_120.content.item.EmptyCell
 import ic2_120.content.item.IridiumPlate
 import ic2_120.content.item.IronPlate
+import ic2_120.content.item.FluidCellItem
 import ic2_120.content.item.ModFluidCell
 import ic2_120.content.item.SteelPlate
 import ic2_120.content.item.fluidToFilledCellStack
 import ic2_120.content.item.getFluidCellVariant
+import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
+import net.fabricmc.api.EnvType
+import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
-import com.mojang.serialization.MapCodec
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
@@ -31,6 +37,8 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.BlockItem
+import net.minecraft.item.Item
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -43,10 +51,13 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.ItemActionResult
 import net.minecraft.util.Identifier
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.world.WorldView
+import net.minecraft.item.tooltip.TooltipType
 
 /**
  * 储罐基类
@@ -79,263 +90,139 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
 
         val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
 
+        // 空手或非桶/单元物品 → 打开 GUI
+        if (stack.isEmpty || !isBucketOrCell(stack.item)) {
+            player.openHandledScreen(be)
+            return ItemActionResult.SUCCESS
+        }
+
         val heldItem = stack.item
-        val modId = "ic2_120"
-        val emptyCell = Registries.ITEM.get(Identifier.of(modId, "empty_cell"))
-        val fluidCellItem = Registries.ITEM.get(Identifier.of(modId, "fluid_cell"))
+        // 空桶 → 取出流体
+        if (heldItem == Items.BUCKET) return tryFillBucket(world, be, player, hand, stack)
+        // 满桶 → 放入流体
+        if (heldItem == Items.WATER_BUCKET || heldItem == Items.LAVA_BUCKET || isModBucket(heldItem))
+            return tryDrainBucket(world, be, player, hand, stack)
+        // 空单元 → 取出流体
+        if (isEmptyCell(stack)) return tryFillCell(world, be, player, hand, stack)
+        // 满单元 → 放入流体
+        if (isFilledCell(stack)) return tryDrainCell(world, be, player, hand, stack)
 
-        if (heldItem === emptyCell || (heldItem === fluidCellItem && stack.getFluidCellVariant() == null)) {
-            return extractFromTank(world, be, player, hand, stack)
-        }
-
-        if (heldItem === fluidCellItem || heldItem is ModFluidCell) {
-            return insertIntoTank(world, be, player, hand, stack)
-        }
-
-        return interactWithBucket(world, pos, be, player, hand, stack)
+        player.openHandledScreen(be)
+        return ItemActionResult.SUCCESS
     }
 
     override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
         if (world.isClient) return ActionResult.SUCCESS
-        return ActionResult.PASS
+        val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return ActionResult.PASS
+        player.openHandledScreen(be)
+        return ActionResult.SUCCESS
     }
 
-    /**
-     * 空单元交互：从储罐取出 1 桶流体，获得对应的满单元
-     */
-    private fun extractFromTank(
-        world: World,
-        be: TankBlockEntity,
-        player: PlayerEntity,
-        hand: Hand,
-        held: ItemStack
-    ): ItemActionResult {
-        val current = be.fluidVariant
-        if (current.isBlank || be.fluidAmount < FluidConstants.BUCKET) {
-            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-        }
+    private fun isBucketOrCell(item: net.minecraft.item.Item): Boolean =
+        item == Items.BUCKET || item == Items.WATER_BUCKET || item == Items.LAVA_BUCKET ||
+        isModBucket(item) || item is FluidCellItem || item is ModFluidCell
 
-        val fluid = current.fluid
+    private fun isModBucket(item: net.minecraft.item.Item): Boolean =
+        Registries.ITEM.getId(item).path.endsWith("_bucket")
+
+    private fun resolveBucketItem(fluid: net.minecraft.fluid.Fluid): net.minecraft.item.Item {
+        if (fluid == net.minecraft.fluid.Fluids.WATER) return Items.WATER_BUCKET
+        if (fluid == net.minecraft.fluid.Fluids.LAVA) return Items.LAVA_BUCKET
+        val fluidId = Registries.FLUID.getId(fluid)
+        val bucketId = Identifier.of(fluidId.namespace, "${fluidId.path}_bucket")
+        return Registries.ITEM.getOrEmpty(bucketId).orElse(Items.BUCKET)
+    }
+
+    private fun isEmptyCell(stack: ItemStack): Boolean {
+        val item = stack.item
+        val emptyCell = Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell"))
+        if (item == emptyCell) return true
+        if (item is FluidCellItem) return stack.isFluidCellEmpty()
+        return false
+    }
+
+    private fun isFilledCell(stack: ItemStack): Boolean {
+        val item = stack.item
+        if (item is ModFluidCell) return true
+        if (item is FluidCellItem) return !stack.isFluidCellEmpty()
+        return false
+    }
+
+    private fun tryFillBucket(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ItemActionResult {
+        if (be.fluidAmount < FluidConstants.BUCKET) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        val variant = be.fluidVariant
         Transaction.openOuter().use { tx ->
-            val extracted = be.fluidTank.extract(current, FluidConstants.BUCKET, tx)
-            if (extracted < FluidConstants.BUCKET) {
-                tx.abort()
-                return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-            }
-
-            val filled = fluidToFilledCellStack(fluid)
-
-            if (!player.abilities.creativeMode) {
-                held.decrement(1)
-                if (held.isEmpty) {
-                    player.setStackInHand(hand, filled)
-                } else if (!player.inventory.insertStack(filled)) {
-                    player.dropItem(filled, false)
-                    player.setStackInHand(hand, held)
-                }
-            }
+            val extracted = be.fluidTank.extract(variant, FluidConstants.BUCKET, tx)
+            if (extracted < FluidConstants.BUCKET) { tx.abort(); return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION }
             tx.commit()
             be.markDirty()
+        }
+        if (!player.abilities.creativeMode) {
+            held.decrement(1)
+            val bucketItem = resolveBucketItem(variant.fluid)
+            val bucket = ItemStack(bucketItem)
+            if (held.isEmpty) player.setStackInHand(hand, bucket)
+            else if (!player.inventory.insertStack(bucket)) player.dropItem(bucket, false)
         }
         return ItemActionResult.SUCCESS
     }
 
-    /**
-     * 满单元（filled fluid_cell / ModFluidCell）交互：将单元内 1 桶流体推入储罐
-     */
-    private fun insertIntoTank(
-        world: World,
-        be: TankBlockEntity,
-        player: PlayerEntity,
-        hand: Hand,
-        held: ItemStack
-    ): ItemActionResult {
-        // 获取单元内的流体：fluid_cell 用 NBT，ModFluidCell 用 getFluid()
-        val cellFluidVariant = when (val item = held.item) {
+    private fun tryDrainBucket(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ItemActionResult {
+        val storage = FluidStorage.ITEM.find(held, null) ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        for (view in storage) {
+            if (view.isResourceBlank || view.amount < FluidConstants.BUCKET) continue
+            val inserted = be.fluidTank.insert(view.resource, FluidConstants.BUCKET, null)
+            if (inserted >= FluidConstants.BUCKET) {
+                if (!player.abilities.creativeMode) {
+                    held.decrement(1)
+                    val emptyBucket = ItemStack(Items.BUCKET)
+                    if (held.isEmpty) player.setStackInHand(hand, emptyBucket)
+                    else if (!player.inventory.insertStack(emptyBucket)) player.dropItem(emptyBucket, false)
+                }
+                be.markDirty()
+                return ItemActionResult.SUCCESS
+            }
+        }
+        return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+    }
+
+    private fun tryFillCell(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ItemActionResult {
+        if (be.fluidAmount < FluidConstants.BUCKET) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        val variant = be.fluidVariant
+        val filled = fluidToFilledCellStack(variant.fluid)
+        Transaction.openOuter().use { tx ->
+            val extracted = be.fluidTank.extract(variant, FluidConstants.BUCKET, tx)
+            if (extracted < FluidConstants.BUCKET) { tx.abort(); return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION }
+            tx.commit()
+            be.markDirty()
+        }
+        if (!player.abilities.creativeMode) {
+            held.decrement(1)
+            if (held.isEmpty) player.setStackInHand(hand, filled)
+            else if (!player.inventory.insertStack(filled)) player.dropItem(filled, false)
+        }
+        return ItemActionResult.SUCCESS
+    }
+
+    private fun tryDrainCell(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ItemActionResult {
+        val variant = when (val item = held.item) {
             is ModFluidCell -> FluidVariant.of(item.getFluid())
             else -> held.getFluidCellVariant()
-        }
-        if (cellFluidVariant == null || cellFluidVariant.isBlank) {
-            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-        }
-
-        val tankVariant = be.fluidVariant
-        val tankAmount = be.fluidAmount
-        val tankCapacity = be.getCapacity()
-
-        // 已有不同流体，拒绝放入
-        if (!tankVariant.isBlank && !tankVariant.equals(cellFluidVariant)) {
-            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-        }
-
-        // 没有空间
-        if (tankAmount >= tankCapacity) {
-            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-        }
-
-        // 只能插入 1 桶
-        val canAccept = (tankCapacity - tankAmount).coerceAtMost(FluidConstants.BUCKET)
-
-        Transaction.openOuter().use { tx ->
-            val inserted = be.fluidTank.insert(cellFluidVariant, canAccept, tx)
-            if (inserted <= 0) {
-                tx.abort()
-                return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-            }
-
-            // 消耗 1 桶流体：变为空单元
-            if (!player.abilities.creativeMode) {
-                held.decrement(1)
-                val emptyStack = ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell")))
-                if (held.isEmpty) {
-                    player.setStackInHand(hand, emptyStack)
-                } else if (!player.inventory.insertStack(emptyStack)) {
-                    player.dropItem(emptyStack, false)
-                    player.setStackInHand(hand, held)
-                }
-            }
-            tx.commit()
-            be.markDirty()
-        }
-        return ItemActionResult.SUCCESS
-    }
-
-    /**
-     * 桶交互
-     * - 空桶（bucket）：有流体则取出
-     * - 满桶：有空间且同种流体则放入，已有不同流体或无空间则 PASS
-     */
-    private fun interactWithBucket(
-        world: World,
-        pos: BlockPos,
-        be: TankBlockEntity,
-        player: PlayerEntity,
-        hand: Hand,
-        held: ItemStack
-    ): ItemActionResult {
-        val bucketItem = held.item
-
-        // 空桶：取出流体
-        if (bucketItem === Items.BUCKET) {
-            return drainTankIntoBucket(world, pos, be, player, hand, held)
-        }
-
-        // 满桶：放入流体
-        return fillTankFromBucket(world, pos, be, player, hand, held)
-    }
-
-    /**
-     * 空桶取出 1 桶流体
-     */
-    private fun drainTankIntoBucket(
-        world: World,
-        pos: BlockPos,
-        be: TankBlockEntity,
-        player: PlayerEntity,
-        hand: Hand,
-        held: ItemStack
-    ): ItemActionResult {
-        if (be.fluidAmount < FluidConstants.BUCKET) {
-            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-        }
-
-        val current = be.fluidVariant
-        Transaction.openOuter().use { tx ->
-            val extracted = be.fluidTank.extract(current, FluidConstants.BUCKET, tx)
-            if (extracted < FluidConstants.BUCKET) {
-                tx.abort()
-                return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-            }
-
-            if (!player.abilities.creativeMode) {
-                held.decrement(1)
-                val filledBucket = ItemStack(Items.BUCKET)
-                if (held.isEmpty) {
-                    player.setStackInHand(hand, filledBucket)
-                } else if (!player.inventory.insertStack(filledBucket)) {
-                    player.dropItem(filledBucket, false)
-                    player.setStackInHand(hand, held)
-                }
-            }
-            tx.commit()
-            be.markDirty()
-        }
-        return ItemActionResult.SUCCESS
-    }
-
-    /**
-     * 满桶放入储罐
-     * - 已有流体：必须是同种流体且有空间
-     * - 无流体：必须有空间
-     */
-    private fun fillTankFromBucket(
-        world: World,
-        pos: BlockPos,
-        be: TankBlockEntity,
-        player: PlayerEntity,
-        hand: Hand,
-        held: ItemStack
-    ): ItemActionResult {
-        // 通过 FluidStorage.ITEM 获取桶内流体
-        val bucketStorage = try {
-            FluidStorage.ITEM.find(held, null)
-        } catch (_: NullPointerException) {
-            null
         } ?: return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
+        if (variant.isBlank) return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
 
-        var bucketFluid: FluidVariant? = null
-        var bucketAmount: Long = 0
-        for (view in bucketStorage) {
-            if (!view.isResourceBlank && view.amount >= FluidConstants.BUCKET) {
-                bucketFluid = view.resource
-                bucketAmount = view.amount
-                break
-            }
-        }
-
-        if (bucketFluid == null || bucketFluid.isBlank || bucketAmount < FluidConstants.BUCKET) {
-            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-        }
-
-        val tankVariant = be.fluidVariant
-        val tankAmount = be.fluidAmount
-        val tankCapacity = be.getCapacity()
-
-        // 检查：已有不同流体，拒绝放入
-        if (!tankVariant.isBlank && !tankVariant.equals(bucketFluid)) {
-            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-        }
-
-        // 检查：没有空间
-        if (tankAmount >= tankCapacity) {
-            return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-        }
-
-        // 计算可放入量
-        val canAccept = (tankCapacity - tankAmount).coerceAtMost(FluidConstants.BUCKET)
-
-        Transaction.openOuter().use { tx ->
-            val inserted = be.fluidTank.insert(bucketFluid, canAccept, tx)
-            if (inserted <= 0) {
-                tx.abort()
-                return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
-            }
-
-            // 消耗 1 桶流体：等效替换为空桶
+        val inserted = be.fluidTank.insert(variant, FluidConstants.BUCKET, null)
+        if (inserted >= FluidConstants.BUCKET) {
             if (!player.abilities.creativeMode) {
                 held.decrement(1)
-                val emptyBucket = ItemStack(Items.BUCKET)
-                if (held.isEmpty) {
-                    player.setStackInHand(hand, emptyBucket)
-                } else if (!player.inventory.insertStack(emptyBucket)) {
-                    player.dropItem(emptyBucket, false)
-                    player.setStackInHand(hand, held)
-                }
+                val emptyCell = ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell")))
+                if (held.isEmpty) player.setStackInHand(hand, emptyCell)
+                else if (!player.inventory.insertStack(emptyCell)) player.dropItem(emptyCell, false)
             }
-            tx.commit()
             be.markDirty()
+            return ItemActionResult.SUCCESS
         }
-        return ItemActionResult.SUCCESS
+        return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION
     }
 
     /**
@@ -356,20 +243,18 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.isOf(newState.block)) {
             val blockEntity = world.getBlockEntity(pos)
-            if (blockEntity is TankBlockEntity) {
+            if (blockEntity is TankBlockEntity && (moved || blockEntity.shouldDropOnBreak)) {
                 val itemStack = ItemStack(this.asItem())
                 applyTankBlockEntityNbt(itemStack, blockEntity)
-                if (!itemStack.isEmpty) {
-                    val itemEntity = net.minecraft.entity.ItemEntity(
-                        world,
-                        pos.x.toDouble() + 0.5,
-                        pos.y.toDouble() + 0.5,
-                        pos.z.toDouble() + 0.5,
-                        itemStack
-                    )
-                    itemEntity.setToDefaultPickupDelay()
-                    world.spawnEntity(itemEntity)
-                }
+                val itemEntity = net.minecraft.entity.ItemEntity(
+                    world,
+                    pos.x.toDouble() + 0.5,
+                    pos.y.toDouble() + 0.5,
+                    pos.z.toDouble() + 0.5,
+                    itemStack
+                )
+                itemEntity.setToDefaultPickupDelay()
+                world.spawnEntity(itemEntity)
             }
         }
         super.onStateReplaced(state, world, pos, newState, moved)
@@ -383,7 +268,16 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         if (!world.isClient) {
             val be = world.getBlockEntity(pos)
             if (be is TankBlockEntity) {
-                be.retainFluidPercent(0.0)
+                val holdingWrench = ic2_120.content.WrenchHandler.isWrench(player.mainHandStack)
+                if (player.abilities.creativeMode) {
+                    be.retainFluidPercent(0.0)
+                    be.shouldDropOnBreak = false // 创造模式：不掉落
+                } else if (holdingWrench || player.canHarvest(state)) {
+                    be.retainFluidPercent(1.0)  // 扳手/正确工具：保留流体并掉落
+                } else {
+                    be.retainFluidPercent(0.0)
+                    be.shouldDropOnBreak = false // 错误工具：不掉落，直接销毁
+                }
             }
         }
         return super.onBreak(world, pos, state, player)
@@ -408,21 +302,55 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         return 0
     }
 
+    /**
+     * 手持物品提示：内部流体种类与储量（mB），与 [TankBlockEntity] 容量一致。
+     */
+    @Environment(EnvType.CLIENT)
+    override fun appendTooltip(
+        stack: ItemStack,
+        context: Item.TooltipContext,
+        tooltip: MutableList<Text>,
+        type: TooltipType
+    ) {
+        super.appendTooltip(stack, context, tooltip, type)
+        val blockItem = stack.item as? BlockItem ?: return
+        val block = blockItem.block
+        if (block !is TankBlock) return
+
+        val capMb = fluidCapacityMbForBlock(block)
+        val beTag = stack.getCustomData()?.getCompound("BlockEntityTag")
+        val amountRaw = beTag?.getLong(NBT_FLUID_AMOUNT) ?: 0L
+        val variantTag = beTag?.getCompound(NBT_FLUID_VARIANT)
+        val variant =
+            if (variantTag == null || variantTag.isEmpty) FluidVariant.blank()
+            else FluidVariant.CODEC.decode(NbtOps.INSTANCE, variantTag).result().map { it.first }.orElse(FluidVariant.blank())
+        val amountMb =
+            (amountRaw * 1000L / FluidConstants.BUCKET).toInt().coerceIn(0, capMb)
+
+        if (variant.isBlank || amountRaw <= 0L) {
+            tooltip.add(Text.literal("流体: 无").formatted(Formatting.GRAY))
+        } else {
+            tooltip.add(
+                Text.literal("流体: ").append(FluidVariantAttributes.getName(variant)).formatted(Formatting.GRAY)
+            )
+        }
+        tooltip.add(Text.literal("储量: $amountMb / $capMb mB").formatted(Formatting.GRAY))
+    }
+
     companion object {
         val TANK_CODEC: MapCodec<TankBlock> = Block.createCodec { error("TankBlock cannot be deserialized from JSON") }
 
         private const val NBT_FLUID_AMOUNT = "FluidAmount"
         private const val NBT_FLUID_VARIANT = "FluidVariant"
 
-        /** 与 [TankBlockEntity.getCapacity] 对应的容量（mB），用于 tooltip */
+        /** 与 [TankBlockEntity] 对应的容量（mB），用于 tooltip */
         private fun fluidCapacityMbForBlock(block: net.minecraft.block.Block): Int {
             val path = Registries.BLOCK.getId(block).path
-            val buckets = when (path) {
-                "steel_tank" -> 128
-                "iridium_tank" -> 1024
-                else -> 32
+            return when (path) {
+                "steel_tank" -> TankBlockEntity.STEEL_CAPACITY_MB
+                "iridium_tank" -> TankBlockEntity.IRIDIUM_CAPACITY_MB
+                else -> TankBlockEntity.BRONZE_IRON_CAPACITY_MB
             }
-            return buckets * 1000
         }
     }
 }

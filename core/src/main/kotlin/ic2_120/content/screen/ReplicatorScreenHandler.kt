@@ -41,7 +41,7 @@ class ReplicatorScreenHandler(
         { ReplicatorSync.ENERGY_CAPACITY }
     )
 
-    private val upgradeSlotSpec: ic2_120.content.screen.slot.SlotSpec by lazy {
+    private val upgradeSlotSpec: SlotSpec by lazy {
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
@@ -51,55 +51,54 @@ class ReplicatorScreenHandler(
         checkSize(blockInventory, ReplicatorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        // All slot coordinates are anchored by the client screen at render time.
-        addTrackedSlot(PredicateSlot(blockInventory, ReplicatorBlockEntity.SLOT_OUTPUT, 0, 0, deriveSpec(ReplicatorBlockEntity.SLOT_OUTPUT)))
-        addTrackedSlot(PredicateSlot(blockInventory, ReplicatorBlockEntity.SLOT_CONTAINER_INPUT, 0, 0, deriveSpec(ReplicatorBlockEntity.SLOT_CONTAINER_INPUT)))
-        addTrackedSlot(PredicateSlot(blockInventory, ReplicatorBlockEntity.SLOT_CONTAINER_OUTPUT, 0, 0, deriveSpec(ReplicatorBlockEntity.SLOT_CONTAINER_OUTPUT)))
-        addTrackedSlot(PredicateSlot(blockInventory, ReplicatorBlockEntity.SLOT_DISCHARGING, 0, 0, deriveSpec(ReplicatorBlockEntity.SLOT_DISCHARGING)))
+        // 输出槽 (91,59)
+        addTrackedSlot(PredicateSlot(blockInventory, ReplicatorBlockEntity.SLOT_OUTPUT, 91, 59,
+            deriveSpec(ReplicatorBlockEntity.SLOT_OUTPUT)))
+        // 流体容器输入 (8,27)
+        addTrackedSlot(PredicateSlot(blockInventory, ReplicatorBlockEntity.SLOT_CONTAINER_INPUT, 8, 27,
+            deriveSpec(ReplicatorBlockEntity.SLOT_CONTAINER_INPUT)))
+        // 空容器输出 (8,72)
+        addTrackedSlot(PredicateSlot(blockInventory, ReplicatorBlockEntity.SLOT_CONTAINER_OUTPUT, 8, 72,
+            deriveSpec(ReplicatorBlockEntity.SLOT_CONTAINER_OUTPUT)))
+        // 电池槽 (152,83)
+        addTrackedSlot(PredicateSlot(blockInventory, ReplicatorBlockEntity.SLOT_DISCHARGING, 152, 83,
+            deriveSpec(ReplicatorBlockEntity.SLOT_DISCHARGING)))
 
+        // 升级槽 (152,8) (152,26) (152,44) (152,62)
+        val upgradeYs = intArrayOf(8, 26, 44, 62)
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addTrackedSlot(
-                PredicateSlot(
-                    blockInventory,
-                    ReplicatorBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0, 0,
-                    upgradeSlotSpec
-                )
-            )
+            addTrackedSlot(PredicateSlot(blockInventory, ReplicatorBlockEntity.SLOT_UPGRADE_INDICES[i], 152, upgradeYs[i],
+                upgradeSlotSpec))
         }
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 102 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 160))
         }
     }
 
-    private fun addTrackedSlot(slot: PredicateSlot): PredicateSlot {
+    private fun addTrackedSlot(slot: PredicateSlot) {
         beSlotToHandlerIndex[slot.index] = slots.size
         addSlot(slot)
-        return slot
     }
 
-    private fun deriveSpec(beSlot: Int) =
-        itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
+    private fun deriveSpec(beSlot: Int) = itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
 
     override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
         context.get({ world, pos ->
-            val be = world.getBlockEntity(pos) as? ReplicatorBlockEntity ?: return@get false
-            when {
-                id == BUTTON_MODE_TOGGLE -> {
-                    be.toggleMode()
-                    true
-                }
-                id >= BUTTON_SELECT_BASE -> be.selectTemplate(id - BUTTON_SELECT_BASE)
-                else -> false
+            val be = world.getBlockEntity(pos) as? ReplicatorBlockEntity ?: return@get
+            when (id) {
+                BUTTON_CANCEL -> be.cancelWork()
+                BUTTON_MODE_SINGLE -> be.setSingleMode()
+                BUTTON_MODE_REPEAT -> be.setRepeatMode()
+                else -> return@get
             }
         }, false)
-        return true
+        return id == BUTTON_CANCEL || id == BUTTON_MODE_SINGLE || id == BUTTON_MODE_REPEAT
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -109,18 +108,14 @@ class ReplicatorScreenHandler(
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
-                index == SLOT_CONTAINER_OUTPUT_INDEX || index == SLOT_OUTPUT_INDEX || index == SLOT_BATTERY_INDEX || index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
+                index == SLOT_CONTAINER_OUTPUT_INDEX || index == SLOT_OUTPUT_INDEX || index == SLOT_BATTERY_INDEX
+                    || index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 }
                 index in PLAYER_INV_START..HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
-                        stackInSlot,
-                        storage,
-                        storage.insertRoutes,
-                        beSlotToHandlerIndex,
-                        slots
-                    )
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
@@ -144,25 +139,21 @@ class ReplicatorScreenHandler(
         const val SLOT_CONTAINER_OUTPUT_INDEX = 2
         const val SLOT_BATTERY_INDEX = 3
         const val SLOT_UPGRADE_INDEX_START = 4
-        const val SLOT_UPGRADE_INDEX_END = SLOT_UPGRADE_INDEX_START + 3
-        const val MACHINE_SLOT_START = SLOT_OUTPUT_INDEX
-        const val MACHINE_SLOT_END = SLOT_UPGRADE_INDEX_END
-        const val PLAYER_INV_START = MACHINE_SLOT_END + 1
-        const val HOTBAR_END = PLAYER_INV_START + 36 - 1
+        const val SLOT_UPGRADE_INDEX_END = 7
+        const val PLAYER_INV_START = 8
+        const val HOTBAR_END = 44
 
-        const val BUTTON_MODE_TOGGLE = 1
-        const val BUTTON_SELECT_BASE = 1000
+        const val BUTTON_CANCEL = 0
+        const val BUTTON_MODE_SINGLE = 1
+        const val BUTTON_MODE_REPEAT = 2
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ReplicatorScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             return ReplicatorScreenHandler(
-                syncId,
-                playerInventory,
-                SimpleInventory(ReplicatorBlockEntity.INVENTORY_SIZE),
-                pos,
-                ScreenHandlerContext.create(playerInventory.player.world, pos),
+                syncId, playerInventory, SimpleInventory(ReplicatorBlockEntity.INVENTORY_SIZE),
+                pos, ScreenHandlerContext.create(playerInventory.player.world, pos),
                 ArrayPropertyDelegate(propertyCount)
             )
         }

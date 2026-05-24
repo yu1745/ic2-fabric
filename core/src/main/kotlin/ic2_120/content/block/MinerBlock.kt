@@ -66,6 +66,14 @@ abstract class BaseMinerBlock : MachineBlock() {
 
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.isOf(newState.block) && !moved) {
+            val be = world.getBlockEntity(pos)
+            if (be is BaseMinerBlockEntity) {
+                for (stack in be.itemCache) {
+                    if (!stack.isEmpty) net.minecraft.util.ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), stack.copy())
+                }
+                be.itemCache.clear()
+                be.cacheItemCount = 0
+            }
             retrieveMiningPipes(world, pos)
         }
         super.onStateReplaced(state, world, pos, newState, moved)

@@ -1,19 +1,23 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.t
 import ic2_120.client.EnergyFormatUtils
-import ic2_120.client.ui.GuiBackground
+import ic2_120.client.FluidUtils
 import ic2_120.content.block.nuclear.NuclearReactorBlock
+import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.NuclearReactorScreenHandler
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.registry.annotation.ModScreen
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.gui.widget.ButtonWidget
+import net.minecraft.client.texture.Sprite
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = NuclearReactorBlock::class)
 class NuclearReactorScreen(
@@ -22,444 +26,397 @@ class NuclearReactorScreen(
     title: Text
 ) : HandledScreen<NuclearReactorScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
+    private val isThermal get() = handler.isThermalMode || handler.sync.isThermalMode == 1
+    private var lockButton: ButtonWidget? = null
 
-    /** 能量条/温度条宽度 */
-    private val barWidth = 14
-
-    /** 左侧文本边距 */
-    private val leftTextMargin = 4
-
-    /** 热模式时左右各多出的流体条宽度（barWidth + 间距） */
-    private val thermalExtraWidth = barWidth + 4
-
-    /** 流体条高度：能量条高度 - 2个slot高度，使 流体条+两槽 总高等于能量条 */
-    private val fluidBarHeight =
-        9 * NuclearReactorScreenHandler.SLOT_SIZE - 2 * NuclearReactorScreenHandler.SLOT_SIZE  // 126 = 7*18
+    private val coolantSprite by lazy {
+        FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.COOLANT_STILL)
+            ?.getFluidSprites(null, null, ModFluids.COOLANT_STILL.defaultState)?.getOrNull(0)
+    }
+    private val hotCoolantSprite by lazy {
+        FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.HOT_COOLANT_STILL)
+            ?.getFluidSprites(null, null, ModFluids.HOT_COOLANT_STILL.defaultState)?.getOrNull(0)
+    }
+    private val coolantColor by lazy { FluidUtils.getFluidColor(ModFluids.COOLANT_STILL) }
+    private val hotCoolantColor by lazy { FluidUtils.getFluidColor(ModFluids.HOT_COOLANT_STILL) }
 
     init {
+        val frameH = if (isThermal) {
+            maxOf(TH_BG_H, handler.hotbarY + NuclearReactorScreenHandler.SLOT_SIZE + PANEL_BOTTOM_PADDING)
+        } else {
+            maxOf(NT_BG_H, handler.hotbarY + NuclearReactorScreenHandler.SLOT_SIZE + PANEL_BOTTOM_PADDING)
+        }
         backgroundWidth = NuclearReactorScreenHandler.FRAME_WIDTH
-        backgroundHeight = handler.hotbarY + NuclearReactorScreenHandler.SLOT_SIZE + PANEL_BOTTOM_PADDING
+        backgroundHeight = frameH
         titleY = -1000
-        playerInventoryTitleY = -1000  // 隐藏 "Inv" 文本
+        playerInventoryTitleY = -1000
     }
 
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    override fun init() {
+        super.init()
+        val btnW = if (isThermal) TH_BTN_W else NT_BTN_W
+        val btnH = if (isThermal) TH_BTN_H else NT_BTN_H
+        lockButton = ButtonWidget.builder(
+            Text.translatable("gui.ic2_120.nuclear_reactor.lock")
+        ) {
+            MinecraftClient.getInstance().player?.networkHandler?.sendPacket(
+                ButtonClickC2SPacket(handler.syncId, NuclearReactorScreenHandler.BUTTON_ID_TOGGLE_LOCK)
+            )
+        }.dimensions(0, 0, btnW, btnH).build()
+        addDrawableChild(lockButton!!)
+    }
+
+    private fun updateLockButton() {
+        val btn = lockButton ?: return
+        val isLocked = handler.sync.layoutLocked == 1
+        btn.setPosition(
+            x + (if (isThermal) TH_BTN_X else NT_BTN_X),
+            y + (if (isThermal) TH_BTN_Y else NT_BTN_Y)
+        )
+        btn.message = Text.translatable(
+            if (isLocked) "gui.ic2_120.nuclear_reactor.unlock"
+            else "gui.ic2_120.nuclear_reactor.lock"
+        )
+    }
+
+    private fun positionSlots() {
+        val h = NuclearReactorScreenHandler
+        for (i in 0 until handler.reactorSlotCount) {
+            val col = i / h.GRID_ROWS
+            val row = i % h.GRID_ROWS
+            handler.slots[i].x = h.SLOT_GRID_X + col * h.SLOT_SIZE
+            handler.slots[i].y = handler.slotGridY + row * h.SLOT_SIZE
+        }
+        if (isThermal) {
+            val base = handler.reactorSlotCount
+            handler.slots[base + 0].x = TH_SLOT_COOL_IN_X
+            handler.slots[base + 0].y = TH_SLOT_COOL_IN_Y
+            handler.slots[base + 1].x = TH_SLOT_COOL_OUT_X
+            handler.slots[base + 1].y = TH_SLOT_COOL_OUT_Y
+            handler.slots[base + 2].x = TH_SLOT_HOT_IN_X
+            handler.slots[base + 2].y = TH_SLOT_HOT_IN_Y
+            handler.slots[base + 3].x = TH_SLOT_HOT_OUT_X
+            handler.slots[base + 3].y = TH_SLOT_HOT_OUT_Y
+        }
+        val playerStart = handler.playerInventorySlotStart
+        for (row in 0 until 3) {
+            for (col in 0 until 9) {
+                val idx = playerStart + row * 9 + col
+                handler.slots[idx].x = h.PLAYER_INV_X + col * h.SLOT_SIZE
+                handler.slots[idx].y = handler.playerInvY + row * h.SLOT_SIZE
+            }
+        }
+        for (col in 0 until 9) {
+            val idx = playerStart + 27 + col
+            handler.slots[idx].x = h.PLAYER_INV_X + col * h.SLOT_SIZE
+            handler.slots[idx].y = handler.hotbarY
+        }
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
-    }
-
-    private fun drawVerticalEnergyBar(context: DrawContext, barX: Int, barY: Int, w: Int, h: Int) {
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = NuclearReactorSync.ENERGY_CAPACITY
-        val fraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
-
-        context.fill(barX, barY, barX + w, barY + h, 0xFF333333.toInt())
-        val filledH = (fraction * h).toInt()
-        if (filledH > 0) {
-            val fillY = barY + h - filledH
-            context.enableScissor(barX, fillY, barX + w, barY + h)
-            val strips = maxOf(2, h)
-            for (i in 0 until strips) {
-                val t = i.toFloat() / (strips - 1).coerceAtLeast(1)
-                val color = lerpArgb(0xFFCC0000.toInt(), 0xFF00CC00.toInt(), t)
-                val y1 = fillY + (i * h / strips)
-                val y2 = fillY + ((i + 1) * h / strips).coerceAtMost(fillY + h)
-                context.fill(barX, y1, barX + w, y2, color)
-            }
-            context.disableScissor()
+        if (isThermal) {
+            context.drawTexture(TEXTURE, x, y, TH_BG_U.toFloat(), TH_BG_V.toFloat(), TH_BG_W, TH_BG_H, TEX_W, TEX_H)
+        } else {
+            context.drawTexture(TEXTURE, x, y, NT_BG_U.toFloat(), NT_BG_V.toFloat(), NT_BG_W, NT_BG_H, TEX_W, TEX_H)
         }
-        context.drawBorder(barX, barY, w, h, 0xFF888888.toInt())
+        drawLockOverlays(context)
+        drawHeatBar(context)
+        if (isThermal) drawFluidBars(context)
     }
 
-    private fun drawVerticalTemperatureBar(context: DrawContext, barX: Int, barY: Int, w: Int, h: Int) {
+    private fun drawLockOverlays(context: DrawContext) {
+        val cols = handler.reactorCols
+        val offsetX = 1
+        val offsetY = 1
+        val h = NuclearReactorScreenHandler
+        for (col in cols until 9) {
+            for (row in 0 until h.GRID_ROWS) {
+                val lx = x + h.SLOT_GRID_X + col * h.SLOT_SIZE + offsetX
+                val ly = y + handler.slotGridY + row * h.SLOT_SIZE + offsetY
+                context.drawTexture(TEXTURE, lx, ly, LOCK_U.toFloat(), LOCK_V.toFloat(), LOCK_W, LOCK_H, TEX_W, TEX_H)
+            }
+        }
+    }
+
+    private fun drawHeatBar(context: DrawContext) {
         val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
         val fraction = temp.toFloat() / NuclearReactorSync.HEAT_CAPACITY
-
-        context.fill(barX, barY, barX + w, barY + h, 0xFF333333.toInt())
-        val filledH = (fraction * h).toInt()
-        if (filledH > 0) {
-            val fillY = barY + h - filledH
-            context.enableScissor(barX, fillY, barX + w, barY + h)
-            val strips = maxOf(2, h)
-            for (i in 0 until strips) {
-                val t = i.toFloat() / (strips - 1).coerceAtLeast(1)
-                val color = lerpArgb(0xFF0066CC.toInt(), 0xFFCC0000.toInt(), t)
-                val y1 = fillY + (i * h / strips)
-                val y2 = fillY + ((i + 1) * h / strips).coerceAtMost(fillY + h)
-                context.fill(barX, y1, barX + w, y2, color)
-            }
-            context.disableScissor()
-        }
-        context.drawBorder(barX, barY, w, h, 0xFF888888.toInt())
+        val fillW = (fraction * HEAT_W).toInt()
+        if (fillW <= 0) return
+        val barX = x + (if (isThermal) TH_HEAT_X else NT_HEAT_X)
+        val barY = y + (if (isThermal) TH_HEAT_Y else NT_HEAT_Y)
+        context.enableScissor(barX, barY, barX + fillW, barY + HEAT_H)
+        context.drawTexture(TEXTURE, barX, barY, HEAT_U.toFloat(), HEAT_V.toFloat(), HEAT_W, HEAT_H, TEX_W, TEX_H)
+        context.disableScissor()
     }
 
-    private fun drawVerticalFluidBar(
-        context: DrawContext,
-        barX: Int,
-        barY: Int,
-        w: Int,
-        h: Int,
-        color: Int,
-        fraction: Float
+    private fun drawFluidBars(context: DrawContext) {
+        val inputFraction = handler.sync.inputCoolantMb.coerceAtLeast(0).toFloat() / NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
+        val outputFraction = handler.sync.outputHotCoolantMb.coerceAtLeast(0).toFloat() / NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
+        val fwL = TH_FLUID_L_X2 - TH_FLUID_L_X
+        val fhL = TH_FLUID_L_Y2 - TH_FLUID_L_Y
+        val fwR = TH_FLUID_R_X2 - TH_FLUID_R_X
+        val fhR = TH_FLUID_R_Y2 - TH_FLUID_R_Y
+        drawFluidTank(context, x + TH_FLUID_L_X, y + TH_FLUID_L_Y, fwL, fhL, coolantSprite, coolantColor, inputFraction)
+        drawFluidTank(context, x + TH_FLUID_R_X, y + TH_FLUID_R_Y, fwR, fhR, hotCoolantSprite, hotCoolantColor, outputFraction)
+    }
+
+    private fun drawFluidTank(
+        context: DrawContext, fx: Int, fy: Int, fw: Int, fh: Int,
+        sprite: Sprite?, color: Int, fraction: Float
     ) {
-        context.fill(barX, barY, barX + w, barY + h, 0xFF333333.toInt())
-        val filledH = (fraction.coerceIn(0f, 1f) * h).toInt()
-        if (filledH > 0) {
-            val fillY = barY + h - filledH
-            context.enableScissor(barX, fillY, barX + w, barY + h)
-            context.fill(barX, fillY, barX + w, barY + h, color)
-            context.disableScissor()
+        val fillH = (fraction.coerceIn(0f, 1f) * fh).toInt()
+        if (fillH <= 0 || sprite == null || color == -1) return
+        val r = ((color shr 16) and 0xFF) / 255f
+        val g = ((color shr 8) and 0xFF) / 255f
+        val b = (color and 0xFF) / 255f
+        val fillY = fy + fh - fillH
+        context.enableScissor(fx, fillY, fx + fw, fy + fh)
+        for (sy in fillY until (fy + fh) step 16) {
+            val tileH = minOf(16, fy + fh - sy)
+            for (sx in fx until (fx + fw) step 16) {
+                val tileW = minOf(16, fx + fw - sx)
+                context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+            }
         }
-        context.drawBorder(barX, barY, w, h, 0xFF888888.toInt())
-    }
-
-    private fun lerpArgb(a: Int, b: Int, t: Float): Int {
-        val u = t.coerceIn(0f, 1f)
-        val aa = (a shr 24) and 0xFF
-        val ar = (a shr 16) and 0xFF
-        val ag = (a shr 8) and 0xFF
-        val ab = a and 0xFF
-        val ba = (b shr 24) and 0xFF
-        val br = (b shr 16) and 0xFF
-        val bg = (b shr 8) and 0xFF
-        val bb = b and 0xFF
-        return ((aa + (ba - aa) * u).toInt() and 0xFF shl 24) or
-                ((ar + (br - ar) * u).toInt() and 0xFF shl 16) or
-                ((ag + (bg - ag) * u).toInt() and 0xFF shl 8) or
-                ((ab + (bb - ab) * u).toInt() and 0xFF)
+        context.disableScissor()
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
-
-        // 布局锁定按钮位置（左侧状态文本区域）
-        val isLocked = handler.sync.layoutLocked == 1
-        val lockButtonText = if (isLocked) "§c§l${t("gui.ic2_120.nuclear_reactor.unlock")}" else t("gui.ic2_120.nuclear_reactor.lock")
-        val lockTextWidth = textRenderer.getWidth(lockButtonText)
-        val thermalOffset = if (isThermalLayout()) thermalExtraWidth else 0
-        val lockBtnX = left - lockTextWidth - leftTextMargin - thermalOffset - 8
-        val lockBtnY = top + 24
-
-        val content: UiScope.() -> Unit = {
-            val h = NuclearReactorScreenHandler
-            val sz = h.SLOT_SIZE
-
-            // 布局锁定按钮（左侧状态文本区域顶部）
-            Button(
-                text = lockButtonText,
-                x = lockBtnX,
-                y = lockBtnY,
-                absolute = true,
-                onClick = {
-                    client?.player?.networkHandler?.sendPacket(
-                        ButtonClickC2SPacket(handler.syncId, NuclearReactorScreenHandler.BUTTON_ID_TOGGLE_LOCK)
-                    )
-                }
-            )
-
-            Column(
-                x = left + h.SLOT_GRID_X,
-                y = top + h.SLOT_GRID_Y,
-                spacing = 0,
-                absolute = true
-            ) {
-                for (row in 0 until h.GRID_ROWS) {
-                    Row(spacing = 0) {
-                        for (col in 0 until handler.reactorCols) {
-                            val slotIndex = col * h.GRID_ROWS + row
-                            if (slotIndex < handler.reactorSlotCount) {
-                                SlotAnchor(
-                                    id = slotAnchorId(slotIndex),
-                                    width = sz,
-                                    height = sz,
-                                    showBorder = false
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            if (isThermalLayout()) {
-                val base = handler.reactorSlotCount
-                val fluidVerticalGap = FLUID_SLOT_BOTTOM_Y - FLUID_SLOT_TOP_Y - sz
-                Column(
-                    x = left + FLUID_SLOT_LEFT_X,
-                    y = top + FLUID_SLOT_TOP_Y,
-                    spacing = fluidVerticalGap,
-                    absolute = true
-                ) {
-                    SlotAnchor(id = slotAnchorId(base), width = sz, height = sz, showBorder = false)
-                    SlotAnchor(id = slotAnchorId(base + 1), width = sz, height = sz, showBorder = false)
-                }
-                Column(
-                    x = left + FLUID_SLOT_RIGHT_X,
-                    y = top + FLUID_SLOT_TOP_Y,
-                    spacing = fluidVerticalGap,
-                    absolute = true
-                ) {
-                    SlotAnchor(id = slotAnchorId(base + 2), width = sz, height = sz, showBorder = false)
-                    SlotAnchor(id = slotAnchorId(base + 3), width = sz, height = sz, showBorder = false)
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = handler.playerInventorySlotStart,
-                playerInvY = handler.playerInvY,
-                hotbarY = handler.hotbarY,
-                slotColumnLeftOffset = NuclearReactorScreenHandler.PLAYER_INV_X
-            )
-        }
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        // 先绘制面板背景
-        val isThermal = isThermalLayout()
-        val effectiveWidth =
-            if (isThermal) NuclearReactorScreenHandler.FRAME_WIDTH + thermalExtraWidth * 2 else NuclearReactorScreenHandler.FRAME_WIDTH
-        val bgX = if (isThermal) x - thermalExtraWidth else x
-        GuiBackground.drawVanillaLikePanel(context, bgX, y, effectiveWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            handler.playerInvY,
-            handler.hotbarY,
-            NuclearReactorScreenHandler.SLOT_SIZE,
-            playerInvX = NuclearReactorScreenHandler.PLAYER_INV_X
-        )
-        val slotSize = NuclearReactorScreenHandler.SLOT_SIZE
-        val borderOffset = GuiBackground.SLOT_ANCHOR_INSET
-
-        // 反应堆槽位整体 9x9 区域外边框
-        val gridX = x + NuclearReactorScreenHandler.SLOT_GRID_X - borderOffset
-        val gridY = y + NuclearReactorScreenHandler.SLOT_GRID_Y - borderOffset
-        val gridW = 9 * slotSize + borderOffset * 2
-        val gridH = 9 * slotSize + borderOffset * 2
-
-        // 为每个反应堆槽位绘制外边框
-        for (i in 0 until handler.reactorSlotCount) {
-            val slot = handler.slots[i]
-            GuiBackground.drawVanillaLikeSlot(
-                context,
-                x + slot.x - borderOffset,
-                y + slot.y - borderOffset,
-                slotSize,
-                slotSize
-            )
-        }
-
-        // 热模式：为 4 个流体槽绘制边框
-        if (isThermal) {
-            for (i in handler.reactorSlotCount until handler.reactorSlotCount + 4) {
-                val slot = handler.slots[i]
-                GuiBackground.drawVanillaLikeSlot(
-                    context,
-                    x + slot.x - borderOffset,
-                    y + slot.y - borderOffset,
-                    slotSize,
-                    slotSize
-                )
-            }
-        }
-
-        // 能量条和温度条位置（固定）
-        val energyBarX = x + 9
-        val tempBarX = x + NuclearReactorScreenHandler.SLOT_GRID_X + 9 * slotSize + 4
-
-        if (isThermal) {
-            // 热模式：流体条+两槽 与能量条垂直对齐
-            val fluidBarY = NuclearReactorScreenHandler.SLOT_GRID_Y + slotSize
-
-            // 冷却液条（左侧）
-            val inputFraction = handler.sync.inputCoolantMb.toFloat() / NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
-            val inputX = energyBarX - barWidth - 4
-            drawVerticalFluidBar(
-                context, inputX, y + fluidBarY,
-                barWidth, fluidBarHeight, 0xFF00CCFF.toInt(), inputFraction
-            )
-
-            // 热冷却液条（右侧）
-            val outputFraction = handler.sync.outputHotCoolantMb.toFloat() / NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
-            val outputX = tempBarX + barWidth + 4
-            drawVerticalFluidBar(
-                context, outputX, y + fluidBarY,
-                barWidth, fluidBarHeight, 0xFFFF6600.toInt(), outputFraction
-            )
-        }
-
-        // 绘制能量和温度条（位置不变）
-        drawVerticalEnergyBar(context, energyBarX, y + NuclearReactorScreenHandler.SLOT_GRID_Y, barWidth, 9 * slotSize)
-        drawVerticalTemperatureBar(
-            context,
-            tempBarX,
-            y + NuclearReactorScreenHandler.SLOT_GRID_Y,
-            barWidth,
-            9 * slotSize
-        )
-
-        // 布局锁定时，为空槽绘制虚影
-        if (handler.sync.layoutLocked == 1) {
-            val reactor = handler.reactor
-            for (i in 0 until handler.reactorSlotCount) {
-                val slot = handler.slots[i]
-                if (slot.hasStack()) continue
-                val lockedItem = reactor?.getLockedItemForSlot(i) ?: continue
-                val ghostStack = ItemStack(lockedItem)
-                val sx = x + slot.x
-                val sy = y + slot.y
-                context.drawItem(ghostStack, sx, sy)
-                // 覆盖半透明黑色遮罩，产生虚影效果
-                context.fill(sx, sy, sx + 16, sy + 16, 0x90000000.toInt())
-            }
-        }
-
-        // 最后绘制物品（包括耐久条），确保物品在顶层
+        positionSlots()
+        updateLockButton()
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
-
-        // 再绘制 UI（slot 背景等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = NuclearReactorSync.ENERGY_CAPACITY
-        val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val outputRate = handler.sync.getSyncedExtractedAmount()
-
-
-        val heatProduced = handler.sync.totalHeatProduced
-        val heatDissipated = handler.sync.totalHeatDissipated
-        val actualHeatDissipated = handler.sync.actualHeatDissipated
-        val thermalHeatOutput = handler.sync.thermalHeatOutput
-        // 在 GUI 左侧外部绘制状态信息（缩短文本避免溢出）
-        val lines = mutableListOf<String>()
-        if (!isThermalLayout()) {
-            lines.add(t("gui.ic2_120.nuclear_reactor.energy_line", EnergyFormatUtils.formatEu(energy), EnergyFormatUtils.formatEu(cap)))
-            lines.add(t("gui.ic2_120.nuclear_reactor.gen_output_line", EnergyFormatUtils.formatEu(inputRate), EnergyFormatUtils.formatEu(outputRate)))
-        }
-        lines.add(t("gui.ic2_120.nuclear_reactor.core_temp", temp))
-        if (isThermalLayout()) {
-            lines.add("(流体堆发热翻倍)")
-            lines.add(t("gui.ic2_120.nuclear_reactor.thermal_output", thermalHeatOutput/20))
-            lines.add(t("gui.ic2_120.nuclear_reactor.produce_dissipate", heatProduced, heatDissipated))
-            lines.add(t("gui.ic2_120.nuclear_reactor.actual_dissipate", actualHeatDissipated/20))
-        } else {
-            lines.add(t("gui.ic2_120.nuclear_reactor.produce_dissipate", heatProduced, heatDissipated))
-            lines.add("HU/s")
-        }
-
-
-        // 热模式：冷却液数据
-        if (isThermalLayout()) {
-            val inputMb = handler.sync.inputCoolantMb.coerceAtLeast(0)
-            val outputMb = handler.sync.outputHotCoolantMb.coerceAtLeast(0)
-            val capMb = NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
-            lines.add(t("gui.ic2_120.nuclear_reactor.coolant_input", inputMb, capMb))
-            lines.add("${"%.1f".format(inputMb.toFloat() / capMb.toFloat() * 100)}%")
-            lines.add(t("gui.ic2_120.nuclear_reactor.hot_coolant", outputMb, capMb))
-            lines.add("${"%.1f".format(outputMb.toFloat() / capMb.toFloat() * 100)}%")
-        }
-
-        // 槽位产热/散热/发电：只在鼠标悬停时显示
-        val hoveredSlotIndex = findHoveredReactorSlot(mouseX, mouseY)
-        if (hoveredSlotIndex != null) {
-            val reactor = handler.reactor
-            reactor?.let {
-                val heatInfo = it.slotHeatInfo[hoveredSlotIndex]
-                heatInfo?.let { info ->
-                    lines.add("§e产热 ${info.heatProduced} 散热 ${info.heatDissipated}")
-                    if (info.energyOutput > 0 && !isThermalLayout()) {
-                        lines.add("§a发电 ${if (isThermalLayout()) info.energyOutput / 5 else info.energyOutput}")
-                    }
-                }
-            }
-        }
-
-        // 绘制所有文本在 GUI 左侧外部；热模式时多两个流体条，需额外左移避免重叠
-        var textY = top + 42
-        val maxWidth = lines.maxOf { textRenderer.getWidth(it) }
-        val thermalTextOffset = if (isThermalLayout()) thermalExtraWidth else 0
-        val textX = left - maxWidth - leftTextMargin - thermalTextOffset
-
-        for (line in lines) {
-            val color = when {
-                line.startsWith("§e") -> 0xFFFFAA
-                line.startsWith("§a") -> 0xAAFFAA
-                line.isBlank() -> 0xFFFFFF
-                else -> 0xFFFFFF
-            }
-            val displayLine = line.replace("§e", "").replace("§a", "")
-            context.drawText(textRenderer, displayLine, textX, textY, color, false)
-            textY += textRenderer.fontHeight + 2
-        }
-
-        // 手动调用 tooltip 绘制，确保物品 tooltip 显示在最上层
+        drawTextOverlay(context)
+        if (handler.sync.layoutLocked == 1) drawGhostItems(context)
+        drawCustomTooltips(context, mouseX, mouseY)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    /** 查找鼠标悬停的反应堆槽位索引，如果没有悬停则返回 null */
-    private fun findHoveredReactorSlot(mouseX: Int, mouseY: Int): Int? {
+    private fun drawTextOverlay(context: DrawContext) {
+        val scale = 7f / 9f
+        if (isThermal) {
+            val heatOutput = handler.sync.thermalHeatOutput
+            val text = "HU输出：$heatOutput HU/t"
+            val tw = textRenderer.getWidth(text)
+            val areaCenterX = (TH_TEXT_X1 + TH_TEXT_X2) / 2
+            context.matrices.push()
+            context.matrices.scale(scale, scale, 1f)
+            context.drawText(textRenderer, text,
+                ((x + areaCenterX - tw / 2) / scale).toInt(),
+                ((y + TH_TEXT_Y) / scale).toInt(), 0xFFFFFF, false)
+            context.matrices.pop()
+        } else {
+            val outputRate = handler.sync.getSyncedExtractedAmount()
+            val text = "EU输出：${EnergyFormatUtils.formatEu(outputRate)} EU/t"
+            val tw = textRenderer.getWidth(text)
+            val areaCenterX = (NT_TEXT_X1 + NT_TEXT_X2) / 2
+            context.matrices.push()
+            context.matrices.scale(scale, scale, 1f)
+            context.drawText(textRenderer, text,
+                ((x + areaCenterX - tw / 2) / scale).toInt(),
+                ((y + NT_TEXT_Y) / scale).toInt(), 0xFFFFFF, false)
+            context.matrices.pop()
+        }
+    }
+
+    private fun drawGhostItems(context: DrawContext) {
+        val reactor = handler.reactor ?: return
         for (i in 0 until handler.reactorSlotCount) {
             val slot = handler.slots[i]
-            if (isPointOverSlot(slot, mouseX, mouseY)) {
-                return i
+            if (slot.hasStack()) continue
+            val lockedItem = reactor.getLockedItemForSlot(i) ?: continue
+            val ghostStack = ItemStack(lockedItem)
+            val sx = x + slot.x
+            val sy = y + slot.y
+            context.drawItem(ghostStack, sx, sy)
+            context.fill(sx, sy, sx + 16, sy + 16, 0x90000000.toInt())
+        }
+    }
+
+    private fun drawCustomTooltips(context: DrawContext, mouseX: Int, mouseY: Int) {
+        if (isThermal) {
+            if (mouseX in (x + TH_HEAT_X) until (x + TH_HEAT_X + HEAT_W) &&
+                mouseY in (y + TH_HEAT_Y) until (y + TH_HEAT_Y + HEAT_H)
+            ) {
+                val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
+                context.drawTooltip(textRenderer,
+                    listOf(Text.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp)),
+                    mouseX, mouseY
+                )
+            }
+            if (mouseX in (x + TH_FLUID_L_X) until (x + TH_FLUID_L_X2) &&
+                mouseY in (y + TH_FLUID_L_Y) until (y + TH_FLUID_L_Y2)
+            ) {
+                val inputMb = handler.sync.inputCoolantMb.coerceAtLeast(0)
+                val capMb = NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
+                if (inputMb > 0) {
+                    context.drawTooltip(
+                        textRenderer,
+                        listOf(Text.translatable("gui.ic2_120.nuclear_reactor.coolant_input", inputMb, capMb)),
+                        mouseX, mouseY
+                    )
+                } else {
+                    context.drawTooltip(textRenderer, listOf(Text.literal("空")), mouseX, mouseY)
+                }
+            }
+            if (mouseX in (x + TH_FLUID_R_X) until (x + TH_FLUID_R_X2) &&
+                mouseY in (y + TH_FLUID_R_Y) until (y + TH_FLUID_R_Y2)
+            ) {
+                val outputMb = handler.sync.outputHotCoolantMb.coerceAtLeast(0)
+                val capMb = NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
+                if (outputMb > 0) {
+                    context.drawTooltip(
+                        textRenderer,
+                        listOf(Text.translatable("gui.ic2_120.nuclear_reactor.hot_coolant", outputMb, capMb)),
+                        mouseX, mouseY
+                    )
+                } else {
+                    context.drawTooltip(textRenderer, listOf(Text.literal("空")), mouseX, mouseY)
+                }
+            }
+            if (mouseX in (x + TH_HOVER_X1) until (x + TH_HOVER_X2) &&
+                mouseY in (y + TH_HOVER_Y1) until (y + TH_HOVER_Y2)
+            ) {
+                context.drawTooltip(textRenderer, buildThermalInfoLines(), mouseX, mouseY)
+            }
+        } else {
+            if (mouseX in (x + NT_HEAT_X) until (x + NT_HEAT_X + HEAT_W) &&
+                mouseY in (y + NT_HEAT_Y) until (y + NT_HEAT_Y + HEAT_H)
+            ) {
+                val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
+                context.drawTooltip(textRenderer,
+                    listOf(Text.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp)),
+                    mouseX, mouseY
+                )
+            }
+            if (mouseX in (x + NT_HOVER_X1) until (x + NT_HOVER_X2) &&
+                mouseY in (y + NT_HOVER_Y1) until (y + NT_HOVER_Y2)
+            ) {
+                context.drawTooltip(textRenderer, buildElectricInfoLines(), mouseX, mouseY)
             }
         }
-        return null
     }
 
-    private fun isPointOverSlot(slot: net.minecraft.screen.slot.Slot, mouseX: Int, mouseY: Int): Boolean {
-        val slotX = x + slot.x
-        val slotY = y + slot.y
-        return mouseX >= slotX && mouseX < slotX + 18 && mouseY >= slotY && mouseY < slotY + 18
+    private fun buildElectricInfoLines(): List<Text> {
+        val lines = mutableListOf<Text>()
+        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+        val cap = NuclearReactorSync.ENERGY_CAPACITY
+        val inputRate = handler.sync.getSyncedInsertedAmount()
+        val outputRate = handler.sync.getSyncedExtractedAmount()
+        val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
+        val heatProduced = handler.sync.totalHeatProduced
+        val heatDissipated = handler.sync.totalHeatDissipated
+        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.energy_line",
+            EnergyFormatUtils.formatEu(energy), EnergyFormatUtils.formatEu(cap)))
+        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.gen_output_line",
+            EnergyFormatUtils.formatEu(inputRate), EnergyFormatUtils.formatEu(outputRate)))
+        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp))
+        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.produce_dissipate", heatProduced, heatDissipated))
+        return lines
     }
 
-    private fun formatMb(value: Int): String = when {
-        value >= 1_000_000 -> String.format("%.3fM", value / 1_000_000.0)
-        value >= 1_000 -> String.format("%.3fk", value / 1_000.0)
-        else -> value.toString()
+    private fun buildThermalInfoLines(): List<Text> {
+        val lines = mutableListOf<Text>()
+        val temp = handler.sync.temperature.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
+        val heatProduced = handler.sync.totalHeatProduced
+        val heatDissipated = handler.sync.totalHeatDissipated
+        val actualDissipated = handler.sync.actualHeatDissipated
+        val thermalOutput = handler.sync.thermalHeatOutput
+        val inputMb = handler.sync.inputCoolantMb.coerceAtLeast(0)
+        val outputMb = handler.sync.outputHotCoolantMb.coerceAtLeast(0)
+        val capMb = NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
+        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp))
+        lines.add(Text.literal("(流体堆发热翻倍)"))
+        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.thermal_output", thermalOutput / 20))
+        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.produce_dissipate", heatProduced, heatDissipated))
+        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.actual_dissipate", actualDissipated / 20))
+        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.coolant_input", inputMb, capMb))
+        lines.add(Text.literal("%.1f".format(inputMb.toFloat() / capMb.toFloat() * 100) + "%"))
+        lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.hot_coolant", outputMb, capMb))
+        lines.add(Text.literal("%.1f".format(outputMb.toFloat() / capMb.toFloat() * 100) + "%"))
+        return lines
     }
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
-    }
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
-
-    override fun isClickOutsideBounds(mouseX: Double, mouseY: Double, left: Int, top: Int, button: Int): Boolean {
-        if (!isThermalLayout()) {
-            return super.isClickOutsideBounds(mouseX, mouseY, left, top, button)
-        }
-
-        // 热模式下两侧有额外的流体槽和流体条，需要扩展“界面内点击区域”。
-        val extendedLeft = left - thermalExtraWidth
-        val extendedWidth = backgroundWidth + thermalExtraWidth * 2
-        val withinX = mouseX >= extendedLeft && mouseX < (extendedLeft + extendedWidth)
-        val withinY = mouseY >= top && mouseY < (top + backgroundHeight)
-        return !(withinX && withinY)
-    }
-
-    private fun isThermalLayout(): Boolean = handler.isThermalMode || handler.sync.isThermalMode == 1
 
     companion object {
-        /** 快捷栏以下与面板底边的留白（与 [NuclearReactorScreenHandler] 推导的背包 Y 配合） */
-        private const val PANEL_BOTTOM_PADDING = 8
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guinuclearpowergenerationequipment.png")
+        private const val TEX_W = 512
+        private const val TEX_H = 512
 
-        /** 与 [NuclearReactorScreenHandler] 内热模式流体槽坐标一致（用于锚点，避免依赖 slot.x/y 循环） */
-        private const val FLUID_SLOT_LEFT_X = -9
-        private const val FLUID_SLOT_RIGHT_X = 215
-        private const val FLUID_SLOT_TOP_Y = 18
-        private const val FLUID_SLOT_BOTTOM_Y = 162
+        // Non-thermal background
+        private const val NT_BG_U = 0
+        private const val NT_BG_V = 0
+        private const val NT_BG_W = 212
+        private const val NT_BG_H = 296
+
+        // Thermal background (248,100)-(460,397) = 212×297
+        private const val TH_BG_U = 248
+        private const val TH_BG_V = 100
+        private const val TH_BG_W = 212
+        private const val TH_BG_H = 297
+
+        // Thermal GUI shift
+        private const val TH_SHIFT_X = 248
+        private const val TH_SHIFT_Y = 100
+
+        // Heat bar texture UV
+        private const val HEAT_U = 216
+        private const val HEAT_V = 29
+        private const val HEAT_W = 100
+        private const val HEAT_H = 13
+
+        // Lock overlay texture UV
+        private const val LOCK_U = 217
+        private const val LOCK_V = 6
+        private const val LOCK_W = 15
+        private const val LOCK_H = 15
+
+        // Non-thermal element positions
+        private const val NT_HEAT_X = 7
+        private const val NT_HEAT_Y = 189
+        private const val NT_TEXT_X1 = 109
+        private const val NT_TEXT_X2 = 205
+        private const val NT_TEXT_Y = 193
+        private const val NT_HOVER_X1 = 7
+        private const val NT_HOVER_Y1 = 215
+        private const val NT_HOVER_X2 = 22
+        private const val NT_HOVER_Y2 = 230
+        private const val NT_BTN_X = 26
+        private const val NT_BTN_Y = 5
+        private const val NT_BTN_W = 50
+        private const val NT_BTN_H = 18
+
+        // Thermal element positions (texture coords - shift)
+        private const val TH_HEAT_X = 255 - TH_SHIFT_X
+        private const val TH_HEAT_Y = 290 - TH_SHIFT_Y
+        private const val TH_TEXT_X1 = 357 - TH_SHIFT_X
+        private const val TH_TEXT_X2 = 453 - TH_SHIFT_X
+        private const val TH_TEXT_Y = 294 - TH_SHIFT_Y
+        private const val TH_HOVER_X1 = 255 - TH_SHIFT_X
+        private const val TH_HOVER_Y1 = 316 - TH_SHIFT_Y
+        private const val TH_HOVER_X2 = 270 - TH_SHIFT_X
+        private const val TH_HOVER_Y2 = 331 - TH_SHIFT_Y
+        private const val TH_FLUID_L_X = 258 - TH_SHIFT_X
+        private const val TH_FLUID_L_Y = 154 - TH_SHIFT_Y
+        private const val TH_FLUID_L_X2 = 270 - TH_SHIFT_X
+        private const val TH_FLUID_L_Y2 = 255 - TH_SHIFT_Y
+        private const val TH_FLUID_R_X = 438 - TH_SHIFT_X
+        private const val TH_FLUID_R_Y = 154 - TH_SHIFT_Y
+        private const val TH_FLUID_R_X2 = 450 - TH_SHIFT_X
+        private const val TH_FLUID_R_Y2 = 255 - TH_SHIFT_Y
+        private const val TH_SLOT_COOL_IN_X = 256 - TH_SHIFT_X
+        private const val TH_SLOT_COOL_IN_Y = 125 - TH_SHIFT_Y
+        private const val TH_SLOT_COOL_OUT_X = 256 - TH_SHIFT_X
+        private const val TH_SLOT_COOL_OUT_Y = 269 - TH_SHIFT_Y
+        private const val TH_SLOT_HOT_IN_X = 436 - TH_SHIFT_X
+        private const val TH_SLOT_HOT_IN_Y = 125 - TH_SHIFT_Y
+        private const val TH_SLOT_HOT_OUT_X = 436 - TH_SHIFT_X
+        private const val TH_SLOT_HOT_OUT_Y = 269 - TH_SHIFT_Y
+        private const val TH_BTN_X = 259 - TH_SHIFT_X
+        private const val TH_BTN_Y = 104 - TH_SHIFT_Y
+        private const val TH_BTN_W = 50
+        private const val TH_BTN_H = 14
+
+        private const val PANEL_BOTTOM_PADDING = 8
     }
 }

@@ -675,4 +675,21 @@ object ModFluids {
     fun getFluidFromModBucket(item: Item): FlowableFluid? {
         return (item as? Ic2BucketItem)?.bucketFluid
     }
+
+    // ========== 气体/流体判定 ==========
+
+    /** 压缩空气、蒸汽、过热蒸汽均属于气体 */
+    fun isGas(fluid: Fluid): Boolean = isSteam(fluid) || isCompressedAir(fluid)
+
+    /** 非气体即为流体 */
+    fun isFluid(fluid: Fluid): Boolean = !isGas(fluid) && fluid != Fluids.EMPTY && fluid != Fluids.FLOWING_WATER && fluid != Fluids.WATER
+
+    /** 蒸汽或过热蒸汽 */
+    fun isSteam(fluid: Fluid): Boolean =
+        fluid == STEAM_STILL || fluid == STEAM_FLOWING ||
+        fluid == SUPERHEATED_STEAM_STILL || fluid == SUPERHEATED_STEAM_FLOWING
+
+    /** 压缩空气 */
+    fun isCompressedAir(fluid: Fluid): Boolean =
+        fluid == COMPRESSED_AIR_STILL || fluid == COMPRESSED_AIR_FLOWING
 }

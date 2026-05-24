@@ -1,12 +1,15 @@
 package ic2_120.client.screen
 
 import ic2_120.content.block.CondenserBlock
+import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.CondenserScreenHandler
 import ic2_120.content.sync.CondenserSync
 import ic2_120.registry.annotation.ModScreen
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluid
 import net.minecraft.text.Text as McText
 import net.minecraft.util.Identifier
 
@@ -37,6 +40,7 @@ class CondenserScreen(
     // ==== 背景纹理 + 标题 — 对齐 ic2_origin drawBackgroundAndTitle ====
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+        renderBackground(context, mouseX, mouseY, delta)
         // 背景: guicondenser.png (0,0) 到 (176,184)
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, 256, 256)
         // 标题: 居中, 颜色 0x404040 (4210752) — 与 Ic2Gui.drawXCenteredString 一致
@@ -60,23 +64,32 @@ class CondenserScreen(
         val steamAmount = handler.sync.steamAmount.coerceAtLeast(0)
         val waterAmount = handler.sync.waterAmount.coerceAtLeast(0)
 
-        // ==== 能量条 ====
-        context.drawTexture(COMMON, left + 8, top + 25, 96f, 64f, 16, 16, 256, 256)
+        // ==== 电量条 (178,2)-(192,15) = 14×13，自下而上渲染至 (9,25) ====
         val energyFrac = if (CondenserSync.ENERGY_CAPACITY > 0) energy.toFloat() / CondenserSync.ENERGY_CAPACITY else 0f
-        val boltHeight = (energyFrac.coerceIn(0f, 1f) * BOLT_HEIGHT).toInt()
-        if (boltHeight > 0) {
-            context.drawTexture(COMMON,
-                left + 12, top + 26 + BOLT_HEIGHT - boltHeight,
-                116f, 65f + BOLT_HEIGHT - boltHeight,
-                7, boltHeight, 256, 256
+        if (energyFrac > 0f) {
+            val fillH = (ENERGY_BAR_H * energyFrac).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + ENERGY_BAR_X,
+                top + ENERGY_BAR_Y + ENERGY_BAR_H - fillH,
+                left + ENERGY_BAR_X + ENERGY_BAR_W,
+                top + ENERGY_BAR_Y + ENERGY_BAR_H
             )
+            context.drawTexture(
+                TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
+                ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
+                ENERGY_BAR_W, ENERGY_BAR_H,
+                256, 256
+            )
+            context.disableScissor()
         }
 
-        // ==== 液位罐填充 ====
+        // ==== 蒸汽槽 (46,26)-(130,59) 84×33 ====
         val steamFrac = if (CondenserSync.STEAM_TANK_CAPACITY > 0) steamAmount.toFloat() / CondenserSync.STEAM_TANK_CAPACITY else 0f
-        drawTankFill(context, left + 46, top + 27, 84, 33, steamFrac)
+        drawFluidTank(context, left + 46, top + 26, 84, 33, steamFrac, ModFluids.STEAM_STILL)
+
+        // ==== 蒸馏水槽 (46,73)-(130,88) 84×15 ====
         val waterFrac = if (CondenserSync.WATER_TANK_CAPACITY > 0) waterAmount.toFloat() / CondenserSync.WATER_TANK_CAPACITY else 0f
-        drawTankFill(context, left + 46, top + 74, 84, 15, waterFrac)
+        drawFluidTank(context, left + 46, top + 73, 84, 15, waterFrac, ModFluids.DISTILLED_WATER_STILL)
 
         // ==== 进度条 ====
         val progFrac = if (CondenserSync.PROGRESS_MAX > 0) handler.sync.progress.toFloat() / CondenserSync.PROGRESS_MAX else 0f
@@ -110,33 +123,80 @@ class CondenserScreen(
             }
         }
         if (!handled) drawMouseoverTooltip(context, mouseX, mouseY)
+
+        // 电量条悬停
+        if (mx in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
+            my in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                McText.literal("储能：$energy / ${CondenserSync.ENERGY_CAPACITY} EU"),
+                mouseX, mouseY
+            )
+        }
+
+        // 蒸汽槽悬停 (46,26)-(130,59)
+        if (mx in 46 until 130 && my in 26 until 59) {
+            val name = ModFluids.STEAM_STILL.defaultState.blockState.block.name
+            val lines = if (steamAmount > 0) listOf(name, McText.literal("$steamAmount / ${CondenserSync.STEAM_TANK_CAPACITY} mB"))
+                        else listOf(McText.literal("空"))
+            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+        }
+
+        // 蒸馏水槽悬停 (46,73)-(130,88)
+        if (mx in 46 until 130 && my in 73 until 88) {
+            val name = ModFluids.DISTILLED_WATER_STILL.defaultState.blockState.block.name
+            val lines = if (waterAmount > 0) listOf(name, McText.literal("$waterAmount / ${CondenserSync.WATER_TANK_CAPACITY} mB"))
+                        else listOf(McText.literal("空"))
+            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+        }
     }
 
-    private fun drawTankFill(context: DrawContext, x: Int, y: Int, width: Int, height: Int, fraction: Float) {
-        val f = fraction.coerceIn(0f, 1f)
-        val fillH = (f * height).toInt()
-        if (fillH > 0) {
-            context.fill(x, y + height - fillH, x + width, y + height, TANK_FILL_COLOR)
+    /** 自下而上渲染流体纹理填充 */
+    private fun drawFluidTank(context: DrawContext, gx: Int, gy: Int, w: Int, h: Int, fraction: Float, fluid: Fluid) {
+        val fillH = (fraction.coerceIn(0f, 1f) * h).toInt()
+        if (fillH <= 0) return
+
+        val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
+        val sprites = handler.getFluidSprites(null, null, fluid.defaultState) ?: return
+        val sprite = sprites[0]
+
+        val fillY = gy + h - fillH
+        context.enableScissor(gx, fillY, gx + w, gy + h)
+
+        for (sy in fillY until (gy + h) step 16) {
+            val tileH = minOf(16, gy + h - sy)
+            for (sx in gx until (gx + w) step 16) {
+                val tileW = minOf(16, gx + w - sx)
+                context.drawSprite(sx, sy, 0, tileW, tileH, sprite)
+            }
         }
+
+        context.disableScissor()
     }
 
     companion object {
         private val TEXTURE = Identifier.of("ic2", "textures/gui/guicondenser.png")
-        private val COMMON = Identifier.of("ic2", "textures/gui/common.png")
         private const val PROGRESS_WIDTH = 82
-        private const val BOLT_HEIGHT = 13
-        private const val TANK_FILL_COLOR = 0x993388FF.toInt()
+
+        // 电量条 (178,2)-(192,15) = 14×13，渲染至 (9,25)
+        private const val ENERGY_BAR_U = 178
+        private const val ENERGY_BAR_V = 2
+        private const val ENERGY_BAR_W = 14
+        private const val ENERGY_BAR_H = 13
+        private const val ENERGY_BAR_X = 9
+        private const val ENERGY_BAR_Y = 25
 
         // 槽位 hover tooltip (slotX, slotY, langKey) — 对齐实际槽位坐标
         private val SLOT_TOOLTIPS = listOf(
-            Triple(26, 26, "gui.ic2_120.slot.vent"),
-            Triple(134, 26, "gui.ic2_120.slot.vent"),
-            Triple(26, 44, "gui.ic2_120.slot.vent"),
-            Triple(134, 44, "gui.ic2_120.slot.vent"),
-            Triple(152, 73, "gui.ic2_120.slot.upgrade"),
-            Triple(8, 44, "gui.ic2_120.slot.discharge"),
-            Triple(26, 73, "gui.ic2_120.slot.water_input"),
-            Triple(134, 73, "gui.ic2_120.slot.water_output")
+            Triple(26, 25, "gui.ic2_120.slot.vent"),
+            Triple(134, 25, "gui.ic2_120.slot.vent"),
+            Triple(26, 43, "gui.ic2_120.slot.vent"),
+            Triple(134, 43, "gui.ic2_120.slot.vent"),
+            Triple(152, 72, "gui.ic2_120.slot.upgrade"),
+            Triple(8, 43, "gui.ic2_120.slot.discharge"),
+            Triple(26, 72, "gui.ic2_120.slot.water_input"),
+            Triple(134, 72, "gui.ic2_120.slot.water_output")
         )
     }
 }

@@ -1,8 +1,6 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
 import ic2_120.client.t
-import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.PatternStorageBlock
 import ic2_120.content.network.SelectTemplatePayload
 import ic2_120.content.screen.PatternStorageScreenHandler
@@ -23,179 +21,117 @@ class PatternStorageScreen(
     handler: PatternStorageScreenHandler, playerInventory: net.minecraft.entity.player.PlayerInventory, title: Text
 ) : HandledScreen<PatternStorageScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
-    private val guiSize = GuiSize.STANDARD_TALL
+    private var templates: List<UuTemplateEntry> = emptyList()
+    private var selectedIndex = -1
 
     init {
-        backgroundWidth = guiSize.width
-        backgroundHeight = guiSize.height
-        titleY = 4
-    }
-
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+        backgroundWidth = 176
+        backgroundHeight = 166
+        titleY = -1000
+        playerInventoryTitleY = -1000
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
         val world = client?.world ?: client?.player?.world
         val storage = world?.let(handler::getPatternStorage)
-        val templates = storage?.getTemplatesSnapshot().orEmpty()
-        val selectedIndex = storage?.selectedTemplateIndex ?: -1
+        templates = storage?.getTemplatesSnapshot().orEmpty()
+        selectedIndex = storage?.selectedTemplateIndex ?: -1
 
-        val content: UiScope.() -> Unit = {
-            Flex(
-                x = left + 8,
-                y = top + 8,
-                direction = FlexDirection.ROW,
-                gap = 8,
-                modifier = Modifier.EMPTY.width(guiSize.contentWidth).height(guiSize.contentHeight)
-            ) {
-                // 左侧：操作区
-                Column(
-                    spacing = 4, modifier = Modifier.EMPTY.width(LEFT_WIDTH).fractionWidth(1.0f)
-                ) {
-                    Text(title.string, color = 0xFFFFFF)
-                    // 水晶槽
-                    SlotAnchor(
-                        id = slotAnchorId(PatternStorageScreenHandler.SLOT_CRYSTAL_INDEX), width = 18, height = 18
-                    )
-                    // 按钮
-                    Button(
-                        text = t("gui.ic2_120.pattern_storage.write_crystal"), modifier = Modifier.EMPTY.width(70)
-                    ) {
-                        client?.player?.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, PatternStorageScreenHandler.BUTTON_EXPORT_TO_CRYSTAL)
-                        )
-                    }
-                    Button(
-                        text = t("gui.ic2_120.pattern_storage.import_crystal"), modifier = Modifier.EMPTY.width(70)
-                    ) {
-                        client?.player?.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, PatternStorageScreenHandler.BUTTON_IMPORT_FROM_CRYSTAL)
-                        )
-                    }
+        // 模板物品纹理 (18,20) 18×18 居中
+        drawTemplateItem(context, left, top)
 
-                    Flex(
-                        alignItems = AlignItems.CENTER,
-                    ) {
-                        // 当前选中模板
-                        val selected = templates.getOrNull(selectedIndex)
-                        if (selected != null) {
-                            val stack = templateToStack(selected)
-                            if (!stack.isEmpty) {
-                                ItemStack(stack, size = 18)
-                            }
-                            Text(selected.displayName().string, color = 0xFFFFFF, shadow = false, center = true)
-                            Text("${selected.uuCostUb} uB", color = 0xFFAA33, shadow = false, center = true)
-                        } else {
-                            Text("<空>", color = 0x666666, shadow = false, center = true)
-                        }
-                    }
-                }
+        // 选中模板文本信息 (8,46)-(167,79) 7px
+        drawTemplateInfo(context, left, top)
 
-                // 右侧：模板列表
-                Flex(
-                    direction = FlexDirection.COLUMN,
-                    modifier = Modifier.EMPTY.fractionWidth(1.0f).height(guiSize.contentHeight),
-                    gap = 2,
-                ) {
-                    Text(t("gui.ic2_120.count_items", templates.size), color = 0x666666, shadow = false)
+        // 悬停高亮
+        val relX = mouseX - left
+        val relY = mouseY - top
 
-                    ScrollView(
-                        scrollbarWidth = 8, modifier = Modifier.EMPTY.fractionHeight(1.0f)
-                    ) {
-                        Column(spacing = 2) {
-                            if (templates.isEmpty()) {
-                                Text(t("gui.ic2_120.pattern_storage.no_templates"), color = 0x666666, shadow = false)
-                            } else {
-                                templates.forEachIndexed { index, template ->
-                                    Row(spacing = 0, modifier = Modifier.EMPTY.fractionWidth(1.0f)) {
-                                        val stack = templateToStack(template)
-                                        if (!stack.isEmpty) {
-                                            ItemStack(stack, size = 18)
-                                        }
-                                        Button(
-                                            text = templateLine(index, selectedIndex, template),
-                                            modifier = Modifier.EMPTY.fractionWidth(1.0f),
-                                            tooltip = listOf(
-                                                template.displayName().copy(), Text.literal("${template.uuCostUb} uB")
-                                            ),
-                                            onClick = {
-                                                ClientPlayNetworking.send(SelectTemplatePayload(handler.blockPos, index))
-                                            })
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = PatternStorageScreenHandler.PLAYER_INV_START,
-                playerInvY = guiSize.playerInvY,
-                hotbarY = guiSize.hotbarY
-            )
+        // 读取水晶 (10,37)-(26,45)
+        if (relX in READ_X1..READ_X2 && relY in READ_Y1..READ_Y2) {
+            context.fill(left + READ_X1, top + READ_Y1, left + READ_X2 + 1, top + READ_Y2 + 1, 0x80FFFFFF.toInt())
+            context.drawTooltip(textRenderer, listOf(Text.translatable("gui.ic2_120.pattern_storage.import_crystal")), mouseX, mouseY)
+        }
+        // 写入水晶 (26,37)-(42,45)
+        if (relX in WRITE_X1..WRITE_X2 && relY in WRITE_Y1..WRITE_Y2) {
+            context.fill(left + WRITE_X1, top + WRITE_Y1, left + WRITE_X2 + 1, top + WRITE_Y2 + 1, 0x80FFFFFF.toInt())
+            context.drawTooltip(textRenderer, listOf(Text.translatable("gui.ic2_120.pattern_storage.write_crystal")), mouseX, mouseY)
+        }
+        // 向左 (7,19)-(16,37)
+        if (templates.size > 1 && relX in NAV_L_X1..NAV_L_X2 && relY in NAV_Y1..NAV_Y2) {
+            context.fill(left + NAV_L_X1, top + NAV_Y1, left + NAV_L_X2 + 1, top + NAV_Y2 + 1, 0x80FFFFFF.toInt())
+        }
+        // 向右 (36,19)-(45,37)
+        if (templates.size > 1 && relX in NAV_R_X1..NAV_R_X2 && relY in NAV_Y1..NAV_Y2) {
+            context.fill(left + NAV_R_X1, top + NAV_Y1, left + NAV_R_X2 + 1, top + NAV_Y2 + 1, 0x80FFFFFF.toInt())
         }
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
+        drawMouseoverTooltip(context, mouseX, mouseY)
+    }
 
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y, guiSize.playerInvY, guiSize.hotbarY, GuiSize.SLOT_SIZE
-        )
+    private fun drawTemplateItem(context: DrawContext, left: Int, top: Int) {
+        val template = templates.getOrNull(selectedIndex) ?: return
+        val stack = templateToStack(template)
+        if (stack.isEmpty) return
+        context.drawItem(stack, left + TEMPLATE_ITEM_X, top + TEMPLATE_ITEM_Y)
+    }
 
-        // 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
-
-        // 再绘制 UI（slot 背景等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-        val tooltip = ui.getTooltipAt(mouseX, mouseY)
-        if (!tooltip.isNullOrEmpty()) {
-            context.drawTooltip(textRenderer, tooltip, mouseX, mouseY)
+    private fun drawTemplateInfo(context: DrawContext, left: Int, top: Int) {
+        val template = templates.getOrNull(selectedIndex)
+        val text = if (template != null) {
+            "${template.displayName().string} (${template.uuCostUb} uB)"
         } else {
-            drawMouseoverTooltip(context, mouseX, mouseY)
+            t("gui.ic2_120.pattern_storage.no_select_info")
         }
+        val scale = 7f / 9f
+        context.matrices.push()
+        context.matrices.scale(scale, scale, 1f)
+        val sx = ((left + INFO_X1) / scale).toInt()
+        val sy = ((top + INFO_Y + 2) / scale).toInt()
+        context.drawText(textRenderer, text, sx, sy, 0xFFFFFF, false)
+        context.matrices.pop()
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (button == 0) {
+            val relX = mouseX.toInt() - x
+            val relY = mouseY.toInt() - y
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, amount: Double): Boolean =
-        ui.mouseScrolled(mouseX, mouseY, 0.0, amount) || super.mouseScrolled(mouseX, mouseY, horizontalAmount, amount)
-
-    override fun mouseDragged(
-        mouseX: Double, mouseY: Double, button: Int, deltaX: Double, deltaY: Double
-    ): Boolean = ui.mouseDragged(mouseX, mouseY, button) || super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
-
-    override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        ui.stopDrag()
-        return super.mouseReleased(mouseX, mouseY, button)
-    }
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
+            if (relX in READ_X1..READ_X2 && relY in READ_Y1..READ_Y2) {
+                client?.player?.networkHandler?.sendPacket(
+                    ButtonClickC2SPacket(handler.syncId, PatternStorageScreenHandler.BUTTON_IMPORT_FROM_CRYSTAL))
+                return true
+            }
+            if (relX in WRITE_X1..WRITE_X2 && relY in WRITE_Y1..WRITE_Y2) {
+                client?.player?.networkHandler?.sendPacket(
+                    ButtonClickC2SPacket(handler.syncId, PatternStorageScreenHandler.BUTTON_EXPORT_TO_CRYSTAL))
+                return true
+            }
+            if (templates.size > 1 && relX in NAV_L_X1..NAV_L_X2 && relY in NAV_Y1..NAV_Y2) {
+                navigateTemplate(-1)
+                return true
+            }
+            if (templates.size > 1 && relX in NAV_R_X1..NAV_R_X2 && relY in NAV_Y1..NAV_Y2) {
+                navigateTemplate(1)
+                return true
+            }
         }
+        return super.mouseClicked(mouseX, mouseY, button)
     }
 
-    private fun templateLine(index: Int, selectedIndex: Int, template: UuTemplateEntry): String {
-        return "${template.displayName().string} (${template.uuCostUb} uB)"
+    private fun navigateTemplate(delta: Int) {
+        if (templates.isEmpty()) return
+        val newIndex = ((selectedIndex + delta) % templates.size + templates.size) % templates.size
+        ClientPlayNetworking.send(SelectTemplatePayload(handler.blockPos, newIndex))
     }
 
     private fun templateToStack(template: UuTemplateEntry): ItemStack {
@@ -205,6 +141,30 @@ class PatternStorageScreen(
     }
 
     companion object {
-        private const val LEFT_WIDTH = 76
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guipatternstorage.png")
+        private const val TEX_SIZE = 256
+
+        private const val TEMPLATE_ITEM_X = 18
+        private const val TEMPLATE_ITEM_Y = 20
+
+        private const val NAV_Y1 = 19
+        private const val NAV_Y2 = 37
+        private const val NAV_L_X1 = 7
+        private const val NAV_L_X2 = 16
+        private const val NAV_R_X1 = 36
+        private const val NAV_R_X2 = 45
+
+        private const val READ_X1 = 10
+        private const val READ_Y1 = 37
+        private const val READ_X2 = 26
+        private const val READ_Y2 = 45
+
+        private const val WRITE_X1 = 26
+        private const val WRITE_Y1 = 37
+        private const val WRITE_X2 = 42
+        private const val WRITE_Y2 = 45
+
+        private const val INFO_X1 = 8
+        private const val INFO_Y = 46
     }
 }

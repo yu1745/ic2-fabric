@@ -1,11 +1,14 @@
 package ic2_120.content.screen
 
+import ic2_120.content.block.storage.StorageBoxBlock
 import ic2_120.content.block.storage.StorageBoxBlockEntity
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
+import net.minecraft.block.ShulkerBoxBlock
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
+import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
 
 import net.minecraft.screen.ScreenHandler
@@ -29,28 +32,44 @@ class StorageBoxScreenHandler(
     val playerInventorySlotStart: Int get() = inventory.size()
 
     init {
-        // 储物箱槽位：统一使用单列 9 格布局
+        // 储物箱槽位
         val inventorySize = inventory.size()
-        val rows = (inventorySize + 8) / 9
+        val columns = if (inventorySize == 126) 14 else 9
+        val rows = (inventorySize + columns - 1) / columns
+        val (slotStartX, slotStartY) = when (inventorySize) {
+            27 -> 32 to 19
+            45 -> 32 to 18
+            63 -> 32 to 18
+            126 -> 6 to 19
+            else -> 32 to 19
+        }
 
         for (row in 0 until rows) {
-            for (col in 0 until 9) {
-                val slotIndex = row * 9 + col
+            for (col in 0 until columns) {
+                val slotIndex = row * columns + col
                 if (slotIndex < inventorySize) {
-                    addSlot(Slot(inventory, slotIndex, 0, 0))
+                    addSlot(Slot(inventory, slotIndex, slotStartX + col * 18, slotStartY + row * 18))
                 }
             }
         }
 
-        // 玩家背包槽位（3x9）；坐标由 StorageBoxScreen Compose 锚点写回
+        // 玩家背包槽位（3x9 + 1x9 快捷栏）
+        val (playerInvX, playerInvY) = when (inventorySize) {
+            27 -> 32 to 79
+            45 -> 32 to 119
+            63 -> 32 to 153
+            126 -> 51 to 194
+            else -> 32 to 79
+        }
+        val hotbarY = playerInvY + 58
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, playerInvX + col * 18, playerInvY + row * 18))
             }
         }
 
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, playerInvX + col * 18, hotbarY))
         }
     }
 
@@ -67,9 +86,12 @@ class StorageBoxScreenHandler(
                     return ItemStack.EMPTY
                 }
             }
-            // 从玩家背包移到储物箱
-            else if (!this.insertItem(stack, 0, inventory.size(), false)) {
-                return ItemStack.EMPTY
+            // 从玩家背包移到储物箱：禁止放入可存储物品
+            else {
+                if (isStorageItem(stack)) return ItemStack.EMPTY
+                if (!this.insertItem(stack, 0, inventory.size(), false)) {
+                    return ItemStack.EMPTY
+                }
             }
 
             if (stack.isEmpty) {
@@ -80,6 +102,13 @@ class StorageBoxScreenHandler(
         }
 
         return movedStack
+    }
+
+    private fun isStorageItem(stack: ItemStack): Boolean {
+        val item = stack.item
+        if (item !is BlockItem) return false
+        val block = item.block
+        return block is ShulkerBoxBlock || block is StorageBoxBlock
     }
 
     override fun canUse(player: PlayerEntity): Boolean {

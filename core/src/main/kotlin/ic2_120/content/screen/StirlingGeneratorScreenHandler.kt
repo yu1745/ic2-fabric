@@ -3,12 +3,10 @@ package ic2_120.content.screen
 import ic2_120.content.block.StirlingGeneratorBlock
 import ic2_120.content.block.machines.StirlingGeneratorBlockEntity
 import ic2_120.content.sync.StirlingGeneratorSync
-import ic2_120.content.screen.slot.PredicateSlot
+import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.syncs.SyncedDataView
-import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
-import ic2_120.content.item.energy.IBatteryItem
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -37,18 +35,9 @@ class StirlingGeneratorScreenHandler(
         { net.minecraft.util.math.Direction.NORTH }
     )
 
-    private val batterySlotSpec = SlotSpec(
-        canInsert = { stack ->
-            !stack.isEmpty && stack.item is IBatteryItem && (stack.item as IBatteryItem).tier <= 2
-        },
-        maxItemCount = 1
-    )
-
     init {
         checkSize(blockInventory, StirlingGeneratorBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
-
-        addSlot(PredicateSlot(blockInventory, StirlingGeneratorBlockEntity.BATTERY_SLOT, 79, 25, batterySlotSpec))
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -66,17 +55,9 @@ class StirlingGeneratorScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
-            when (index) {
-                StirlingGeneratorBlockEntity.BATTERY_SLOT -> {
-                    if (!insertItem(stackInSlot, 1, 37, true)) return ItemStack.EMPTY
-                }
-                in 1..36 -> {
-                    if (batterySlotSpec.canInsert(stackInSlot)) {
-                        if (!insertItem(stackInSlot, 0, 1, false)) return ItemStack.EMPTY
-                    } else return ItemStack.EMPTY
-                }
-                else -> if (!insertItem(stackInSlot, 1, 37, false)) return ItemStack.EMPTY
-            }
+            if (index in 0..26) {
+                if (!insertItem(stackInSlot, 27, 36, false)) return ItemStack.EMPTY
+            } else if (!insertItem(stackInSlot, 0, 27, false)) return ItemStack.EMPTY
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTakeItem(player, stackInSlot)
@@ -91,8 +72,6 @@ class StirlingGeneratorScreenHandler(
         }, true)
 
     companion object {
-        const val PLAYER_INV_START = 1
-
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): StirlingGeneratorScreenHandler {
             val pos = buf.readBlockPos()

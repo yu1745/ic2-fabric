@@ -5,8 +5,6 @@ import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.RtGeneratorBlock
-import ic2_120.content.energy.charge.BatteryChargerComponent
-import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.screen.RtGeneratorScreenHandler
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
@@ -59,13 +57,9 @@ class RtGeneratorBlockEntity(
 
     companion object {
         const val GENERATOR_TIER = 1
-        /** 燃料槽数量（6 个靶丸槽位） */
         const val FUEL_SLOT_COUNT = 6
-        /** 燃料槽 0..5 */
         const val FUEL_SLOT_START = 0
         const val FUEL_SLOT_END = 5
-        /** 电池槽 */
-        const val BATTERY_SLOT = 6
 
         private val RTG_PELLET_ITEM = lazy {
             Registries.ITEM.get(Identifier.of(Ic2_120.MOD_ID, "rtg_pellet"))
@@ -77,17 +71,16 @@ class RtGeneratorBlockEntity(
 
     override val tier: Int = GENERATOR_TIER
 
-    private val inventory = DefaultedList.ofSize(7, ItemStack.EMPTY)  // 6 燃料槽 + 1 电池槽
+    private val inventory = DefaultedList.ofSize(6, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> canPlaceInSlot(slot, stack) },
         insertRoutes = listOf(
-            ItemInsertRoute((FUEL_SLOT_START..FUEL_SLOT_END).toList().toIntArray(), matcher = { isRtgPellet(it) }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(BATTERY_SLOT), matcher = { !it.isEmpty && it.canBeCharged() }, maxPerSlot = 1)
+            ItemInsertRoute((FUEL_SLOT_START..FUEL_SLOT_END).toList().toIntArray(), matcher = { isRtgPellet(it) }, maxPerSlot = 1)
         ),
-        extractSlots = IntArray(7) { it },
+        extractSlots = IntArray(6) { it },
         markDirty = { markDirty() }
     )
 
@@ -102,15 +95,6 @@ class RtGeneratorBlockEntity(
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
-    private val batteryCharger = BatteryChargerComponent(
-        inventory = this,
-        batterySlot = BATTERY_SLOT,
-        machineTierProvider = { tier },
-        machineEnergyProvider = { sync.amount },
-        extractEnergy = { requested -> sync.consumeEnergy(requested) },
-        canChargeNow = { sync.amount > 0 }
-    )
-
     constructor(pos: BlockPos, state: BlockState) : this(
         RtGeneratorBlockEntity::class.type(),
         pos,
@@ -119,7 +103,7 @@ class RtGeneratorBlockEntity(
 
     override fun getInventory(): Inventory = this
 
-    override fun size(): Int = 7
+    override fun size(): Int = 6
 
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
 
@@ -130,10 +114,7 @@ class RtGeneratorBlockEntity(
     override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
 
     override fun setStack(slot: Int, stack: ItemStack) {
-        when {
-            slot in FUEL_SLOT_START..FUEL_SLOT_END -> if (stack.count > 1) stack.count = 1
-            slot == BATTERY_SLOT -> if (stack.count > 1) stack.count = 1
-        }
+        if (slot in FUEL_SLOT_START..FUEL_SLOT_END && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         markDirty()
     }
@@ -146,11 +127,7 @@ class RtGeneratorBlockEntity(
 
     fun canPlaceInSlot(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        return when {
-            slot in FUEL_SLOT_START..FUEL_SLOT_END -> isRtgPellet(stack)
-            slot == BATTERY_SLOT -> stack.canBeCharged()
-            else -> false
-        }
+        return slot in FUEL_SLOT_START..FUEL_SLOT_END && isRtgPellet(stack)
     }
 
     /** 统计燃料槽中靶丸数量 */
@@ -210,8 +187,6 @@ class RtGeneratorBlockEntity(
                 markDirty()
             }
         }
-
-        batteryCharger.tick()
 
         val active = pelletCount > 0
         setActiveState(world, pos, state, active)

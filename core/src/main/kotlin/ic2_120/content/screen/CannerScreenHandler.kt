@@ -41,12 +41,8 @@ class CannerScreenHandler(
         UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
-    /** Maps BE slot index -> handler slot index for quickMove routing. */
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    /**
-     * Add a tracked slot: registers it with the handler and records the BE->handler mapping.
-     */
     private fun addTrackedSlot(slot: Slot, beSlotIndex: Int) {
         beSlotToHandlerIndex[beSlotIndex] = slots.size
         addSlot(slot)
@@ -56,34 +52,58 @@ class CannerScreenHandler(
         checkSize(blockInventory, CannerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_CONTAINER, 0, 0, itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_CONTAINER) ?: SlotSpec()), CannerBlockEntity.SLOT_CONTAINER)
-        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_MATERIAL, 0, 0, itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_MATERIAL) ?: SlotSpec()), CannerBlockEntity.SLOT_MATERIAL)
-        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_OUTPUT, 0, 0, itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_OUTPUT) ?: SlotSpec(canInsert = { false }, canTake = { true })), CannerBlockEntity.SLOT_OUTPUT)
-        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_DISCHARGING, 0, 0, itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_DISCHARGING) ?: SlotSpec()), CannerBlockEntity.SLOT_DISCHARGING)
+        // 左上容器输入 (41,16)
+        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_CONTAINER, 41, 16,
+            itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_CONTAINER) ?: SlotSpec()
+        ), CannerBlockEntity.SLOT_CONTAINER)
 
+        // 中列材料输入 (80,43) — 根据模式锁定
+        val materialSpec = itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_MATERIAL) ?: SlotSpec()
+        addTrackedSlot(object : PredicateSlot(blockInventory, CannerBlockEntity.SLOT_MATERIAL, 80, 43, materialSpec) {
+            override fun canInsert(stack: ItemStack): Boolean {
+                val mode = sync.getMode()
+                if (mode == CannerSync.Mode.EMPTY_LIQUID || mode == CannerSync.Mode.BOTTLE_LIQUID) return false
+                return super.canInsert(stack)
+            }
+        }, CannerBlockEntity.SLOT_MATERIAL)
+
+        // 右侧输出 (119,16)
+        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_OUTPUT, 119, 16,
+            itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_OUTPUT) ?: SlotSpec(canInsert = { false }, canTake = { true })
+        ), CannerBlockEntity.SLOT_OUTPUT)
+
+        // 放电槽 (8,79)
+        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_DISCHARGING, 8, 79,
+            itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_DISCHARGING) ?: SlotSpec()
+        ), CannerBlockEntity.SLOT_DISCHARGING)
+
+        // 升级槽 (152,25) (152,43) (152,61) (152,79)
+        val upgradeYs = intArrayOf(25, 43, 61, 79)
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
             addTrackedSlot(
-                PredicateSlot(
-                    blockInventory,
-                    CannerBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                ),
+                PredicateSlot(blockInventory, CannerBlockEntity.SLOT_UPGRADE_INDICES[i], 152, upgradeYs[i], upgradeSlotSpec),
                 CannerBlockEntity.SLOT_UPGRADE_INDICES[i]
             )
         }
 
-        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_LEFT_EMPTY, 0, 0, itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_LEFT_EMPTY) ?: SlotSpec(canInsert = { false }, canTake = { true })), CannerBlockEntity.SLOT_LEFT_EMPTY)
-        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_RIGHT_INPUT, 0, 0, itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_RIGHT_INPUT) ?: SlotSpec()), CannerBlockEntity.SLOT_RIGHT_INPUT)
+        // 左液槽底部空容器输出 (0,0) — ComposeUI 已不再使用，放无效位置
+        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_LEFT_EMPTY, -1000, -1000,
+            itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_LEFT_EMPTY) ?: SlotSpec(canInsert = { false }, canTake = { true })
+        ), CannerBlockEntity.SLOT_LEFT_EMPTY)
 
+        // 右液槽顶部空容器输入 (0,0) — ComposeUI 已不再使用，放无效位置
+        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_RIGHT_INPUT, -1000, -1000,
+            itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_RIGHT_INPUT) ?: SlotSpec()
+        ), CannerBlockEntity.SLOT_RIGHT_INPUT)
+
+        // 玩家背包 (8,102) 3行 + 快捷栏 (8,160)
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 101 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 159))
         }
     }
 
@@ -94,25 +114,18 @@ class CannerScreenHandler(
                 when (id) {
                     BUTTON_ID_MODE_CYCLE -> be.cycleMode()
                     BUTTON_ID_SWAP_TANKS -> {
-                        val leftBefore = be.sync.leftFluidAmountMb
-                        val rightBefore = be.sync.rightFluidAmountMb
+                        val leftBefore = be.getLeftFluidAmount()
+                        val rightBefore = be.getRightFluidAmount()
                         val changed = be.swapTanks()
-                        val leftAfter = be.sync.leftFluidAmountMb
-                        val rightAfter = be.sync.rightFluidAmountMb
+                        val leftAfter = be.getLeftFluidAmount()
+                        val rightAfter = be.getRightFluidAmount()
                         player.sendMessage(
                             Text.translatable(
-                                if (changed) {
-                                    "gui.ic2_120.canner.tanks_swapped"
-                                } else {
-                                    "gui.ic2_120.canner.tanks_swap_unchanged"
-                                },
-                                *if (changed) {
-                                    arrayOf(leftBefore, leftAfter, rightBefore, rightAfter)
-                                } else {
-                                    arrayOf(leftAfter, rightAfter)
-                                }
-                            ),
-                            true
+                                if (changed) "gui.ic2_120.canner.tanks_swapped"
+                                else "gui.ic2_120.canner.tanks_swap_unchanged",
+                                *if (changed) arrayOf(leftBefore, leftAfter, rightBefore, rightAfter)
+                                else arrayOf(leftAfter, rightAfter)
+                            ), true
                         )
                     }
                     else -> return@get

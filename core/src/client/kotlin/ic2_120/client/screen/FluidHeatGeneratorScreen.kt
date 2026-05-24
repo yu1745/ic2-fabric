@@ -19,7 +19,6 @@ class FluidHeatGeneratorScreen(
     title: Text
 ) : HandledScreen<FluidHeatGeneratorScreenHandler>(handler, playerInventory, title) {
 
-    private val fluidColor = FluidUtils.getFluidColor(ModFluids.BIOFUEL_STILL)
     private val fluidSprite by lazy {
         FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.BIOFUEL_STILL)
             ?.getFluidSprites(null, null, ModFluids.BIOFUEL_STILL.defaultState)?.getOrNull(0)
@@ -77,20 +76,21 @@ class FluidHeatGeneratorScreen(
         val fillH = (fuelAmountMb.toFloat() / tankCapMb * tankH).toInt().coerceIn(0, tankH)
         if (fillH <= 0) return
 
-        val topY = gy + tankH - fillH
-        val sprite = fluidSprite
-        if (sprite != null) {
-            // 平铺流体纹理
-            for (sy in topY until (gy + tankH) step 16) {
-                val h = minOf(16, gy + tankH - sy)
-                for (sx in gx until (gx + tankW) step 16) {
-                    val w = minOf(16, gx + tankW - sx)
-                    context.drawSprite(sx, sy, 0, w, h, sprite)
-                }
+        val fillY = gy + tankH - fillH
+        val sprite = fluidSprite ?: return
+        val color = FluidUtils.getFluidColor(ModFluids.BIOFUEL_STILL)
+        val r = ((color shr 16) and 0xFF) / 255f
+        val g = ((color shr 8) and 0xFF) / 255f
+        val b = (color and 0xFF) / 255f
+        context.enableScissor(gx, fillY, gx + tankW, gy + tankH)
+        for (sy in fillY until (gy + tankH) step 16) {
+            val tileH = minOf(16, gy + tankH - sy)
+            for (sx in gx until (gx + tankW) step 16) {
+                val tileW = minOf(16, gx + tankW - sx)
+                context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
             }
         }
-        // 着色叠加
-        context.fill(gx, topY, gx + tankW, gy + tankH, fluidColor)
+        context.disableScissor()
     }
 
     private fun drawScaledText(context: DrawContext, text: String, rx: Int, ry: Int, rw: Int, height: Float = 7f) {

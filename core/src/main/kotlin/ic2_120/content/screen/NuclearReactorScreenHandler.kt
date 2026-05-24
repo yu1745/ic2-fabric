@@ -178,22 +178,28 @@ class NuclearReactorScreenHandler(
     val reactorCols: Int get() = (reactorSlotCount + 8) / 9
 
     /** 玩家背包 Y 偏移（用于 Screen 绘制） */
-    val playerInvY: Int get() = SLOT_GRID_Y + GRID_ROWS * SLOT_SIZE + 16
+    val playerInvY: Int get() = if (isThermalMode) PLAYER_INV_Y_THERMAL else PLAYER_INV_Y_NT
 
     /** 快捷栏 Y 偏移 */
-    val hotbarY: Int get() = playerInvY + 58
+    val hotbarY: Int get() = if (isThermalMode) HOTBAR_Y_THERMAL else HOTBAR_Y_NT
+
+    /** 槽位区域起始 Y（GUI 相对坐标），电力模式-1 */
+    val slotGridY: Int get() = if (isThermalMode) 25 else 24
 
     companion object {
         const val BUTTON_ID_TOGGLE_LOCK = 100
         const val GRID_ROWS = 9
-        /** 槽位区域居中：(FRAME_WIDTH - 能量条 - 间距 - 9*SLOT_SIZE - 间距 - 温度条) / 2 = 9 */
-        const val SLOT_GRID_X = 31
-        const val SLOT_GRID_Y = 18
+        /** 槽位区域起始 X（GUI 相对坐标） */
+        const val SLOT_GRID_X = 26
         const val SLOT_SIZE = 18
         /** 固定界面框宽度（不随容量变化） */
-        const val FRAME_WIDTH = 220
-        /** 玩家背包 X 偏移（居中于 FRAME_WIDTH） */
-        val PLAYER_INV_X = (FRAME_WIDTH - 9 * SLOT_SIZE) / 2
+        const val FRAME_WIDTH = 212
+        /** 玩家背包 X 偏移 */
+        const val PLAYER_INV_X = 26
+        const val PLAYER_INV_Y_NT = 214
+        const val PLAYER_INV_Y_THERMAL = 215
+        const val HOTBAR_Y_NT = 272
+        const val HOTBAR_Y_THERMAL = 273
 
         private val REACTOR_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,

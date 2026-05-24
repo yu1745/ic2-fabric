@@ -120,6 +120,13 @@ class PatternStorageBlockEntity(
         return true
     }
 
+    fun removeSelectedTemplate() {
+        val index = selectedTemplateIndex
+        if (index !in templates.indices) return
+        templates.removeAt(index)
+        markDirtyAndSync()
+    }
+
     fun getTemplateCount(): Int = templates.size
 
     private fun markDirtyAndSync() {

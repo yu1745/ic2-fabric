@@ -33,6 +33,7 @@ import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
+import ic2_120.content.fluid.ModFluids
 import net.minecraft.fluid.Fluids
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
@@ -158,7 +159,8 @@ class WaterGeneratorBlockEntity(
 
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
 
-        override fun canInsert(variant: FluidVariant): Boolean = variant.fluid == Fluids.WATER
+        override fun canInsert(variant: FluidVariant): Boolean =
+            ModFluids.isFluid(variant.fluid) && variant.fluid == net.minecraft.fluid.Fluids.WATER
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L

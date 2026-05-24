@@ -1,213 +1,133 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
+import ic2_120.client.EnergyFormatUtils
+import ic2_120.client.FluidUtils
 import ic2_120.client.t
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.FluidBar
-import ic2_120.client.ui.GuiBackground
-import ic2_120.client.ui.HeatProgressBar
 import ic2_120.content.block.MatterGeneratorBlock
+import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.MatterGeneratorScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.MatterGeneratorSync
 import ic2_120.registry.annotation.ModScreen
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text as McText
+import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = MatterGeneratorBlock::class)
 class MatterGeneratorScreen(
-    handler: MatterGeneratorScreenHandler,
-    playerInventory: PlayerInventory,
-    title: McText
+    handler: MatterGeneratorScreenHandler, playerInventory: PlayerInventory, title: Text
 ) : HandledScreen<MatterGeneratorScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        backgroundWidth = 176
+        backgroundHeight = 166
         titleY = -1000
-    }
-
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+        playerInventoryTitleY = -1000
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
 
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0L)
-        val energyCap = handler.sync.energyCapacity.toLong().coerceAtLeast(1L)
-        val energyFraction = (energy.toFloat() / energyCap).coerceIn(0f, 1f)
-        val fluidAmount = handler.sync.fluidAmountMb.toLong().coerceAtLeast(0L)
-        val fluidCap = handler.sync.fluidCapacityMb.toLong().coerceAtLeast(1L)
-        val fluidFraction = (fluidAmount.toFloat() / fluidCap).coerceIn(0f, 1f)
-        val progressFraction = (handler.sync.progress.toFloat() / MatterGeneratorSync.PROGRESS_MAX).coerceIn(0f, 1f)
-        val modeText = if (handler.sync.mode != 0) t("gui.ic2_120.matter_generator.mode_scrap") else t("gui.ic2_120.matter_generator.mode_normal")
+        // 流体槽 (100,26)-(112,73) 12×47
+        drawFluidTank(context, left, top)
 
-        val content: UiScope.() -> Unit = {
-            Row(
-                x = left + 8,
-                y = top + 8,
-                spacing = 8,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Flex(
-                    gap = 8,
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.SPACE_BETWEEN,
-                    alignItems = AlignItems.START,
-                    modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)
-                ) {
-                    Column(
-                        spacing = 6,
-                        modifier = Modifier.EMPTY.fractionWidth(1.0f)
-                    ) {
-                        Flex(
-                            direction = FlexDirection.ROW,
-                            justifyContent = JustifyContent.SPACE_BETWEEN,
-                            alignItems = AlignItems.CENTER, gap = 8
-                        ) {
-                            Text(title.string, color = 0xFFFFFF)
-                            Text(modeText, color = 0xAAAAAA, shadow = false)
-                        }
-
-                        Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                            Text(t("gui.ic2_120.energy"), color = 0xAAAAAA)
-                            EnergyBar(energyFraction, modifier = Modifier.EMPTY.fractionWidth(1.0f))
-                            Text("${formatEu(energy)} / ${formatEu(energyCap)}", color = 0xFFFFFF, shadow = false)
-                        }
-
-                        Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                            Text(t("gui.ic2_120.progress"), color = 0xAAAAAA)
-                            HeatProgressBar(
-                                progressFraction,
-                                barWidth = 0,
-                                barHeight = 8,
-                                startColor = 0xFF335577.toInt(),
-                                endColor = 0xFF66BBFF.toInt(),
-                                gradient = true,
-                                modifier = Modifier.EMPTY.fractionWidth(1.0f)
-                            )
-                            Text(
-                                "${handler.sync.progress}/${MatterGeneratorSync.PROGRESS_MAX}",
-                                color = 0xFFFFFF,
-                                shadow = false
-                            )
-                        }
-                        Column(spacing = 4) {
-                            Row(spacing = 4) {
-                                SlotAnchor(id = slotAnchorId(MatterGeneratorScreenHandler.SLOT_SCRAP_INDEX))
-                                SlotAnchor(id = slotAnchorId(MatterGeneratorScreenHandler.SLOT_CONTAINER_INPUT_INDEX))
-                                SlotAnchor(id = slotAnchorId(MatterGeneratorScreenHandler.SLOT_CONTAINER_OUTPUT_INDEX))
-                            }
-                            SlotAnchor(id = slotAnchorId(MatterGeneratorScreenHandler.SLOT_DISCHARGING_INDEX))
-                        }
-
-                    }
-                    Flex(
-                        direction = FlexDirection.COLUMN,
-                        justifyContent = JustifyContent.START,
-                        alignItems = AlignItems.END,
-                        gap = 4
-                    ) {
-                        Text(t("gui.ic2_120.matter_generator.uu_tank"), color = 0xAAAAAA)
-                        FluidBar(
-                            fluidFraction,
-                            barWidth = 8,
-                            barHeight = 52,
-                            vertical = true,
-                            modifier = Modifier.EMPTY.width(8).height(52)
-                        )
-                        Text("${handler.sync.fluidAmountMb} mB", color = 0xFFFFFF, shadow = false)
-                    }
-                }
-
-
-                Column(
-                    spacing = 4,
-                    modifier = Modifier.EMPTY
-                        .width(GuiSize.UPGRADE_COLUMN_WIDTH)
-                        .padding(0, 8, 0, 0)
-                ) {
-                    for (slotIndex in MatterGeneratorScreenHandler.SLOT_UPGRADE_INDEX_START..MatterGeneratorScreenHandler.SLOT_UPGRADE_INDEX_END) {
-                        SlotAnchor(
-                            id = slotAnchorId(slotIndex),
-                            width = MatterGeneratorScreenHandler.SLOT_SIZE,
-                            height = MatterGeneratorScreenHandler.SLOT_SIZE
-                        )
-                    }
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = MatterGeneratorScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
-            )
+        // 容量标示纹理 (181,6)-(192,52) = 11×46 渲染至 (101,27)
+        if (handler.sync.fluidAmountMb > 0) {
+            context.drawTexture(TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
+                TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(), TANK_OVERLAY_W, TANK_OVERLAY_H, TEX_SIZE, TEX_SIZE)
         }
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
+        // 进度文本 (12,43) — 百分比
+        val pct = (handler.sync.progress.toFloat() / MatterGeneratorSync.PROGRESS_MAX * 100).toInt().coerceIn(0, 100)
+        context.drawText(textRenderer, t("gui.ic2_120.matter_generator.progress_pct", pct), left + 12, top + 43, 0xFFFFFF, false)
 
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context,
-            x,
-            y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
+        // uptips (4,4) 16×16
+        context.drawTexture(UPTIPS_TEXTURE, left + 4, top + 4, 0f, 0f, 16, 16, 16, 16)
 
-        // 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
+        // 悬停提示
+        val relX = mouseX - left
+        val relY = mouseY - top
 
-        // 再绘制 UI（slot 背景、能量条等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        // 流体槽悬停
+        if (relX in TANK_X until TANK_X + TANK_W && relY in TANK_Y until TANK_Y + TANK_H) {
+            val amt = handler.sync.fluidAmountMb.coerceAtLeast(0)
+            val cap = handler.sync.fluidCapacityMb.coerceAtLeast(1)
+            val lines = if (amt > 0) listOf(Text.literal("UU物质"), Text.literal("$amt / $cap mB"))
+                        else listOf(Text.literal("空"))
+            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+        }
 
-        val inputText = t("gui.ic2_120.input_eu", formatEu(handler.sync.getSyncedInsertedAmount()))
-        val consumeText = t("gui.ic2_120.consume_eu", formatEu(handler.sync.getSyncedConsumedAmount()))
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
-        val sideTextX = left - sideTextWidth - 4
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
+        // uptips悬停
+        if (relX in 4 until 20 && relY in 4 until 20) {
+            context.drawTooltip(textRenderer, listOf(
+                Text.translatable("gui.ic2_120.matter_generator.uptips"),
+                Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
+                Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
+                Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
+                Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
+                Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_pulling_upgrade"))
+            ), mouseX, mouseY)
+        }
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
+    private fun drawFluidTank(context: DrawContext, left: Int, top: Int) {
+        val amt = handler.sync.fluidAmountMb.coerceAtLeast(0)
+        if (amt <= 0) return
+        val cap = handler.sync.fluidCapacityMb.coerceAtLeast(1)
+        val fraction = (amt.toFloat() / cap).coerceIn(0f, 1f)
+        val fillH = (TANK_H * fraction).toInt().coerceAtLeast(1)
+        val sx = left + TANK_X
+        val sy = top + TANK_Y
+        val sprite = uuMatterSprite ?: return
+        val color = FluidUtils.getFluidColor(ModFluids.UU_MATTER_STILL)
+        if (color == -1) return
+        val r = ((color shr 16) and 0xFF) / 255f
+        val g = ((color shr 8) and 0xFF) / 255f
+        val b = (color and 0xFF) / 255f
+        val fillY = sy + TANK_H - fillH
+        context.enableScissor(sx, fillY, sx + TANK_W, sy + TANK_H)
+        for (cy in fillY until (sy + TANK_H) step 16) {
+            val tileH = minOf(16, sy + TANK_H - cy)
+            for (cx in sx until (sx + TANK_W) step 16) {
+                val tileW = minOf(16, sx + TANK_W - cx)
+                context.drawSprite(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
+            }
         }
-    }
-
-    private fun formatEu(value: Long): String {
-        return when {
-            value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000.0)
-            value >= 1_000 -> String.format("%.1fK", value / 1_000.0)
-            else -> value.toString()
-        }
+        context.disableScissor()
     }
 
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guimattergenerator.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private const val TEX_SIZE = 256
+
+        private const val TANK_X = 100
+        private const val TANK_Y = 26
+        private const val TANK_W = 12
+        private const val TANK_H = 47
+
+        private const val TANK_OVERLAY_U = 181
+        private const val TANK_OVERLAY_V = 6
+        private const val TANK_OVERLAY_W = 11
+        private const val TANK_OVERLAY_H = 46
+        private const val TANK_OVERLAY_X = 101
+        private const val TANK_OVERLAY_Y = 27
+
+        private val uuMatterSprite by lazy {
+            FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.UU_MATTER_STILL)
+                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultState)?.getOrNull(0)
+        }
     }
 }

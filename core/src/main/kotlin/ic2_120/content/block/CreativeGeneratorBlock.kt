@@ -10,21 +10,17 @@ import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.sound.BlockSoundGroup
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 
 /**
- * 创造模式发电机方块。无限生成 32 EU/t，支持电池充电。
+ * 创造模式发电机方块。无缓存，直接输出 512 EU/t。
  *
  * - 与铁机不同的方块设置：不 [AbstractBlock.Settings.requiresTool]，便于空手挖掘；爆炸抗性同基岩，避免被炸毁。
  * - 标签上排除 `needs_iron_tool` / 强制镐类，避免空手挖矿倍率过低。
@@ -46,7 +42,7 @@ class CreativeGeneratorBlock : MachineBlock(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(type, CreativeGeneratorBlockEntity::class.type()){ w, p, s, be ->
+        else validateTicker(type, CreativeGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -57,20 +53,6 @@ class CreativeGeneratorBlock : MachineBlock(
 
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =
         super.getPlacementState(ctx)?.with(ACTIVE, true)
-
-    override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
-        val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.screen.NamedScreenHandlerFactory
-    }
-
-    override fun onUse(state: BlockState, world: World, pos: BlockPos, player: PlayerEntity, hit: BlockHitResult): ActionResult {
-        if (!world.isClient) {
-            createScreenHandlerFactory(state, world, pos)?.let { factory ->
-                player.openHandledScreen(factory)
-            }
-        }
-        return ActionResult.SUCCESS
-    }
 
     /**
      * 注册器扫描的 BlockItem；忽略传入的 [Item.Settings]，始终使用防火（岩浆中不烧毁）。

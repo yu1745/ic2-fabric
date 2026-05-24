@@ -157,7 +157,7 @@ class ReplicatorBlockEntity(
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
-        override fun canInsert(variant: FluidVariant): Boolean = isUuMatter(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = isUuMatter(variant.fluid) && ModFluids.isFluid(variant.fluid)
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -396,11 +396,22 @@ class ReplicatorBlockEntity(
         sync.syncCurrentTickFlow()
     }
 
-    fun toggleMode() {
-        sync.mode = if (sync.mode == ReplicatorSync.MODE_SINGLE) ReplicatorSync.MODE_CONTINUOUS else ReplicatorSync.MODE_SINGLE
-        if (sync.mode == ReplicatorSync.MODE_CONTINUOUS) {
-            singlePulseConsumed = false
-        }
+    fun cancelWork() {
+        resetProgress()
+        singlePulseConsumed = false
+        sync.status = ReplicatorSync.STATUS_IDLE
+        markDirty()
+    }
+
+    fun setSingleMode() {
+        sync.mode = ReplicatorSync.MODE_SINGLE
+        singlePulseConsumed = false
+        markDirty()
+    }
+
+    fun setRepeatMode() {
+        sync.mode = ReplicatorSync.MODE_CONTINUOUS
+        singlePulseConsumed = false
         markDirty()
     }
 

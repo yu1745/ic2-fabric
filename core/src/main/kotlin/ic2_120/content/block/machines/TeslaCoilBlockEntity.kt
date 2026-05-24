@@ -3,39 +3,29 @@ package ic2_120.content.block.machines
 import ic2_120.content.block.TeslaCoilBlock
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.AdjacentEnergyTransferComponent
-import ic2_120.content.screen.TeslaCoilScreenHandler
 import ic2_120.content.sync.TeslaCoilSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
-import ic2_120.registry.type
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.EntityType
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ArmorItem
 import net.minecraft.nbt.NbtCompound
-
-import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryWrapper
+import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
-import net.minecraft.screen.ScreenHandler
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.state.property.Properties
-import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 /**
  * 特斯拉线圈方块实体。无物品槽，仅能量存储。
@@ -47,7 +37,7 @@ class TeslaCoilBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), ITieredMachine, ExtendedScreenHandlerFactory<PacketByteBuf> {
+) : BlockEntity(type, pos, state), ITieredMachine {
 
     override val tier: Int = 2
 
@@ -68,18 +58,6 @@ class TeslaCoilBlockEntity(
         pos,
         state
     )
-
-    override fun getScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity): PacketByteBuf {
-        val buf = PacketByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size())
-        return buf
-    }
-
-    override fun getDisplayName(): Text = Text.translatable("block.ic2_120.tesla_coil")
-
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        TeslaCoilScreenHandler(syncId, playerInventory, net.minecraft.screen.ScreenHandlerContext.create(world!!, pos), syncedData)
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
@@ -200,7 +178,5 @@ class TeslaCoilBlockEntity(
         }
     }
 }
-
-
 
 

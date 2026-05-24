@@ -122,8 +122,8 @@ class OreWashingPlantScreen(
         )
 
         // 侧边文本
-        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
-        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(consumeRate))
+        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
+        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatRaw(consumeRate))
         val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
         val sideTextX = left - sideTextWidth - 4
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
@@ -140,7 +140,7 @@ class OreWashingPlantScreen(
         ) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU"),
+                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
@@ -149,14 +149,9 @@ class OreWashingPlantScreen(
         if (relX in WATER_X until WATER_X + WATER_W &&
             relY in WATER_Y until WATER_Y + WATER_H
         ) {
-            context.drawTooltip(
-                textRenderer,
-                listOf(
-                    Text.literal("水"),
-                    Text.literal("$waterAmount / $waterCapacity mB")
-                ),
-                mouseX, mouseY
-            )
+            val lines = if (waterAmount > 0) listOf(Text.literal("水"), Text.literal("$waterAmount / $waterCapacity mB"))
+                        else listOf(Text.literal("空"))
+            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
 
         // uptips 悬停

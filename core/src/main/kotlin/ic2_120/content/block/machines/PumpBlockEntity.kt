@@ -4,6 +4,7 @@ import ic2_120.Ic2_120
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.PumpBlock
+import ic2_120.content.fluid.ModFluids
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.FluidCellItem
@@ -171,14 +172,14 @@ class PumpBlockEntity(
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
-        override fun canInsert(variant: FluidVariant): Boolean = !variant.isBlank
+        override fun canInsert(variant: FluidVariant): Boolean = false
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
             return super.insert(insertedVariant, maxAmount, transaction)
         }
 
-        override fun canExtract(variant: FluidVariant): Boolean = !this.variant.isBlank && this.variant == variant
+        override fun canExtract(variant: FluidVariant): Boolean = !this.variant.isBlank && this.variant == variant && ModFluids.isFluid(variant.fluid)
 
         override fun onFinalCommit() {
             sync.fluidAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)

@@ -155,14 +155,14 @@ class SolarDistillerBlockEntity(
      * - 不支持外部提取（只能被机器内部消耗）
      */
     private val inputTankInternal = object : SingleVariantStorage<FluidVariant>() {
-        private val tankCapacity: Long = FluidConstants.BUCKET * 10  // 10 桶容量
+        private val tankCapacity: Long = FluidConstants.BUCKET * 8  // 8 桶容量
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
 
-        // 只允许插入水
+        // 只允许插入水（FLUID INPUT）
         override fun canInsert(variant: FluidVariant): Boolean =
-            variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER
+            (variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER) && ModFluids.isFluid(variant.fluid)
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -219,7 +219,7 @@ class SolarDistillerBlockEntity(
      * - 支持提取蒸馏水（DISTILLED_WATER_STILL/FLOWING）
      */
     private val outputTankInternal = object : SingleVariantStorage<FluidVariant>() {
-        private val tankCapacity: Long = FluidConstants.BUCKET * 10  // 10 桶容量
+        private val tankCapacity: Long = FluidConstants.BUCKET * 8  // 8 桶容量
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
@@ -232,9 +232,9 @@ class SolarDistillerBlockEntity(
             return super.insert(insertedVariant, maxAmount, transaction)
         }
 
-        // 允许提取蒸馏水
+        // 允许提取蒸馏水（FLUID OUTPUT）
         override fun canExtract(variant: FluidVariant): Boolean =
-            variant.fluid == ModFluids.DISTILLED_WATER_STILL || variant.fluid == ModFluids.DISTILLED_WATER_FLOWING
+            ModFluids.isFluid(variant.fluid)
 
         // 提交后同步数据到客户端
         override fun onFinalCommit() {

@@ -1,12 +1,16 @@
 package ic2_120.client.screen
 
+import ic2_120.client.FluidUtils
 import ic2_120.content.block.BlastFurnaceBlock
+import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.BlastFurnaceScreenHandler
 import ic2_120.content.sync.BlastFurnaceSync
 import ic2_120.registry.annotation.ModScreen
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluid
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
@@ -122,14 +126,30 @@ class BlastFurnaceScreen(
         else -> 100
     }
 
-    /** 压缩空气色块渲染：RGB(53,81,92)，区域 (11,11)-(23,58) 12×47，自底向上填充。 */
+    /** 压缩空气流体渲染：区域 (11,11)-(23,58) 12×47，自底向上填充。 */
     private fun drawAirFluid(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
         val barW = 12
         val barH = 47
         val fillH = (fraction * barH).toInt()
         if (fillH <= 0) return
-        val topY = gy + barH - fillH
-        context.fill(gx, topY, gx + barW, gy + barH, AIR_COLOR)
+        val fluid = ModFluids.COMPRESSED_AIR_STILL
+        val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
+        val sprites = handler.getFluidSprites(null, null, fluid.defaultState) ?: return
+        val sprite = sprites[0]
+        val color = FluidUtils.getFluidColor(fluid)
+        val r = ((color shr 16) and 0xFF) / 255f
+        val g = ((color shr 8) and 0xFF) / 255f
+        val b = (color and 0xFF) / 255f
+        val fillY = gy + barH - fillH
+        context.enableScissor(gx, fillY, gx + barW, gy + barH)
+        for (sy in fillY until (gy + barH) step 16) {
+            val tileH = minOf(16, gy + barH - sy)
+            for (sx in gx until (gx + barW) step 16) {
+                val tileW = minOf(16, gx + barW - sx)
+                context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+            }
+        }
+        context.disableScissor()
     }
 
     /** 热量条：21×7（从 22×7 源纹理采样），自左向右填充。 */
@@ -157,7 +177,6 @@ class BlastFurnaceScreen(
     companion object {
         private val TEXTURE = Identifier.of("ic2", "textures/gui/guiblockcutter.png")
         private val UPTIPS = Identifier.of("ic2", "textures/gui/uptips.png")
-        private const val AIR_COLOR = 0xFF35515C.toInt()
         private val SUPPORTED_UPGRADES = listOf(
             "ejector_upgrade",
             "pulling_upgrade"

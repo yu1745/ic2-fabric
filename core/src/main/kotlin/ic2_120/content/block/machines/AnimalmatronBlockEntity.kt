@@ -4,12 +4,10 @@ import ic2_120.Ic2_120
 import ic2_120.content.block.AnimalmatronBlock
 import ic2_120.content.entity.AnimalFoodMapping
 import ic2_120.content.entity.AnimalGrowthData
-import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.FluidCellItem
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.getFluidCellVariant
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -110,7 +108,6 @@ class AnimalmatronBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_SHEARS), matcher = { !it.isEmpty && it.item == Items.SHEARS }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_WATER_INPUT), matcher = { isValid(SLOT_WATER_INPUT, it) }),
             ItemInsertRoute(intArrayOf(SLOT_WEED_EX_INPUT), matcher = { isValid(SLOT_WEED_EX_INPUT, it) }),
@@ -120,12 +117,6 @@ class AnimalmatronBlockEntity(
         markDirty = { markDirty() }
     )
     val syncedData = SyncedData(this)
-    private val discharger = BatteryDischargerComponent(
-        inventory = this,
-        batterySlot = SLOT_DISCHARGING,
-        machineTierProvider = { ANIMALMATRON_TIER },
-        canDischargeNow = { sync.amount < sync.getEffectiveCapacity() }
-    )
 
     @RegisterEnergy
     val sync = AnimalmatronSync(
@@ -146,7 +137,7 @@ class AnimalmatronBlockEntity(
     private val waterTankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = waterTankCapacity
-        override fun canInsert(variant: FluidVariant): Boolean = isWater(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = isWater(variant.fluid) && ModFluids.isFluid(variant.fluid)
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
@@ -194,7 +185,7 @@ class AnimalmatronBlockEntity(
     private val weedExTankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = weedExTankCapacity
-        override fun canInsert(variant: FluidVariant): Boolean = isWeedEx(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = isWeedEx(variant.fluid) && ModFluids.isFluid(variant.fluid)
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
@@ -296,7 +287,7 @@ class AnimalmatronBlockEntity(
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
     override fun setStack(slot: Int, stack: ItemStack) {
-        if ((slot == SLOT_DISCHARGING || slot == SLOT_SHEARS) && stack.count > 1) stack.count = 1
+        if (slot == SLOT_SHEARS && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
@@ -350,8 +341,7 @@ class AnimalmatronBlockEntity(
         slot == SLOT_WATER_OUTPUT || slot == SLOT_WEED_EX_OUTPUT || slot == SLOT_HARVEST_OUTPUT -> false
         slot == SLOT_WATER_INPUT -> matchesWaterInput(stack)
         slot == SLOT_WEED_EX_INPUT -> matchesWeedExInput(stack)
-        slot == SLOT_DISCHARGING -> stack.item is IBatteryItem
-        slot == SLOT_SHEARS -> stack.item == Items.SHEARS
+slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         SLOT_FEED_INDICES.contains(slot) -> matchesFeedInput(stack)
         SLOT_UPGRADE_INDICES.contains(slot) -> stack.item is IUpgradeItem
         else -> false
@@ -430,7 +420,6 @@ class AnimalmatronBlockEntity(
         if (fluidPipeReceiverEnabled) {
             FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, waterTankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
-        extractFromDischargingSlot()
         processWaterInputContainer()
         processWeedExInputContainer()
 
@@ -806,17 +795,6 @@ class AnimalmatronBlockEntity(
         return current.isEmpty || (ItemStack.areItemsAndComponentsEqual(current, toInsert) && current.count < current.maxCount)
     }
 
-    private fun extractFromDischargingSlot() {
-        val capacity = sync.getEffectiveCapacity().coerceAtLeast(0L)
-        val maxDemand = (capacity - sync.amount).coerceAtLeast(0L)
-        if (maxDemand <= 0L) return
-        val extracted = discharger.tick(maxDemand)
-        if (extracted <= 0L) return
-        sync.amount = (sync.amount + extracted).coerceAtMost(capacity)
-        sync.energy = sync.amount.toInt().coerceAtMost(Int.MAX_VALUE)
-        markDirty()
-    }
-
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
         return ioStorage
     }
@@ -878,16 +856,13 @@ class AnimalmatronBlockEntity(
         const val SLOT_FEED_2 = 6
         const val SLOT_FEED_3 = 7
         const val SLOT_FEED_4 = 8
-        const val SLOT_FEED_5 = 9
-        const val SLOT_FEED_6 = 10
 
-        const val SLOT_UPGRADE_0 = 11
-        const val SLOT_UPGRADE_1 = 12
-        const val SLOT_UPGRADE_2 = 13
-        const val SLOT_UPGRADE_3 = 14
-        const val SLOT_DISCHARGING = 15
-        const val SLOT_SHEARS = 16
-        const val SLOT_HARVEST_OUTPUT = 17
+        const val SLOT_UPGRADE_0 = 9
+        const val SLOT_UPGRADE_1 = 10
+        const val SLOT_UPGRADE_2 = 11
+        const val SLOT_UPGRADE_3 = 12
+        const val SLOT_SHEARS = 13
+        const val SLOT_HARVEST_OUTPUT = 14
 
         val SLOT_FEED_INDICES = intArrayOf(
             SLOT_FEED_0,
@@ -898,7 +873,7 @@ class AnimalmatronBlockEntity(
         )
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
 
-        const val INVENTORY_SIZE = 18
+        const val INVENTORY_SIZE = 15
 
         private const val WORK_INTERVAL_TICKS = 20  // 每秒运行一次（20 tick = 1秒）
         private const val HARVEST_INTERVAL_TICKS = 2400L  // 每2分钟收获一次（羊）

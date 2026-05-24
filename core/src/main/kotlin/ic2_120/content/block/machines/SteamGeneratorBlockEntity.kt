@@ -139,7 +139,7 @@ class SteamGeneratorBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = WATER_TANK_CAPACITY
 
         override fun canInsert(variant: FluidVariant): Boolean =
-            variant.fluid == Fluids.WATER || variant.fluid == ModFluids.DISTILLED_WATER_STILL
+            ModFluids.isFluid(variant.fluid) && variant.fluid == net.minecraft.fluid.Fluids.WATER
 
         override fun canExtract(variant: FluidVariant): Boolean = false
 
@@ -185,7 +185,7 @@ class SteamGeneratorBlockEntity(
 
         override fun canInsert(variant: FluidVariant): Boolean = false  // 只能由机器产出
 
-        override fun canExtract(variant: FluidVariant): Boolean = true
+        override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isSteam(variant.fluid)
 
         override fun onFinalCommit() {
             sync.steamAmount = toMb(amount)

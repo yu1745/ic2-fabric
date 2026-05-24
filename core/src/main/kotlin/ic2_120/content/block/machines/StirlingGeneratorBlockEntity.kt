@@ -49,8 +49,7 @@ class StirlingGeneratorBlockEntity(
 
     companion object {
         const val STIRLING_TIER = 2
-        const val BATTERY_SLOT = 0
-        const val INVENTORY_SIZE = 1
+        const val INVENTORY_SIZE = 0
 
         private const val NBT_HEAT_BUFFERED = "HeatBuffered"
 
@@ -61,17 +60,6 @@ class StirlingGeneratorBlockEntity(
 
     override val tier: Int = STIRLING_TIER
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
-    @RegisterItemStorage
-    val itemStorage = RoutedItemStorage(
-        inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
-        insertRoutes = listOf(
-            ItemInsertRoute(intArrayOf(BATTERY_SLOT), matcher = { isValid(BATTERY_SLOT, it) }, maxPerSlot = 1)
-        ),
-        extractSlots = intArrayOf(BATTERY_SLOT),
-        markDirty = { markDirty() }
-    )
     val syncedData = SyncedData(this)
 
     @RegisterEnergy
@@ -81,15 +69,6 @@ class StirlingGeneratorBlockEntity(
         { world?.time }
     )
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
-
-    private val batteryCharger = BatteryChargerComponent(
-        inventory = this,
-        batterySlot = BATTERY_SLOT,
-        machineTierProvider = { tier },
-        machineEnergyProvider = { sync.amount },
-        extractEnergy = { requested -> sync.consumeEnergy(requested) },
-        canChargeNow = { sync.amount > 0L }
-    )
 
     private var heatBuffered: Long = 0L
 
@@ -108,14 +87,9 @@ class StirlingGeneratorBlockEntity(
     override fun clear() = inventory.clear()
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
-    override fun setStack(slot: Int, stack: ItemStack) {
-        if (slot == BATTERY_SLOT && stack.count > 1) stack.count = 1
-        inventory[slot] = stack
-        markDirty()
-    }
+    override fun setStack(slot: Int, stack: ItemStack) {}
 
-    override fun isValid(slot: Int, stack: ItemStack): Boolean =
-        slot == BATTERY_SLOT && !stack.isEmpty && stack.canBeCharged()
+    override fun isValid(slot: Int, stack: ItemStack): Boolean = false
 
     override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
         val buf = PacketByteBuf(Unpooled.buffer())
@@ -183,8 +157,6 @@ class StirlingGeneratorBlockEntity(
                 markDirty()
             }
         }
-        batteryCharger.tick()
-
         val active = sync.amount < StirlingGeneratorSync.ENERGY_CAPACITY &&
             heatBuffered > 0L &&
             hasValidHeatSource()
