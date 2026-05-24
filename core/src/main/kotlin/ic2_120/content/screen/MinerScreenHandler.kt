@@ -5,7 +5,6 @@ import ic2_120.content.block.BaseMinerBlock
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotMoveHelper
-import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.MinerSync
 import ic2_120.content.syncs.SyncedDataView
@@ -41,56 +40,75 @@ class MinerScreenHandler(
         { MinerSync.BASE_ENERGY_CAPACITY }
     )
 
-    private val upgradeSlotSpec: ic2_120.content.screen.slot.SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
-    }
-
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
         checkSize(blockInventory, BaseMinerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_SCANNER, 0, 0, deriveSpec(BaseMinerBlockEntity.SLOT_SCANNER)))
-        addTrackedSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_DRILL, 0, 0, deriveSpec(BaseMinerBlockEntity.SLOT_DRILL)))
-        addTrackedSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_DISCHARGING, 0, 0, deriveSpec(BaseMinerBlockEntity.SLOT_DISCHARGING)))
-        addTrackedSlot(PredicateSlot(blockInventory, BaseMinerBlockEntity.SLOT_PIPE, 0, 0, deriveSpec(BaseMinerBlockEntity.SLOT_PIPE)))
+        if (isAdvanced) {
+            // 高级采矿机：无钻头槽
+            addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_SCANNER, 8, 26)
+            addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_PIPE, 8, 44, 1024)
+            addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_DISCHARGING, 8, 80)
 
-        var idx = BaseMinerBlockEntity.SLOT_FILTER_START
-        repeat(BaseMinerBlockEntity.FILTER_SLOT_COUNT) {
-            addTrackedSlot(PredicateSlot(blockInventory, idx++, 0, 0, deriveSpec(idx - 1)))
-        }
+            // 过滤槽 3×5
+            for (i in 0 until 15) {
+                addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_FILTER_START + i,
+                    36 + (i % 5) * 18, 44 + (i / 5) * 18)
+            }
 
-        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addTrackedSlot(
-                PredicateSlot(
-                    blockInventory,
-                    BaseMinerBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
-                    upgradeSlotSpec
-                )
-            )
-        }
+            // 升级槽 4个
+            for (i in 0 until 4) {
+                addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_UPGRADE_INDICES[i],
+                    152, 26 + i * 18)
+            }
 
-        for (row in 0 until 3) {
+            for (row in 0 until 3) {
+                for (col in 0 until 9) {
+                    addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 121 + row * 18))
+                }
+            }
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col, 8 + col * 18, 179))
+            }
+        } else {
+            // 普通采矿机
+            addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_DRILL, 8, 21)
+            addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_PIPE, 8, 39, 1024)
+            addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_SCANNER, 8, 57)
+
+            for (i in 0 until 15) {
+                addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_FILTER_START + i,
+                    44 + (i % 5) * 18, 21 + (i / 5) * 18)
+            }
+
+            addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_UPGRADE_INDICES[0], 152, 21)
+            addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_DISCHARGING, 152, 57)
+
+            for (row in 0 until 3) {
+                for (col in 0 until 9) {
+                    addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 83 + row * 18))
+                }
+            }
+            for (col in 0 until 9) {
+                addSlot(Slot(playerInventory, col, 8 + col * 18, 141))
             }
         }
-        for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
-        }
     }
 
-    private fun addTrackedSlot(slot: PredicateSlot): PredicateSlot {
-        beSlotToHandlerIndex[slot.index] = slots.size
-        addSlot(slot)
-        return slot
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
+        val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
+        beSlotToHandlerIndex[beSlotIndex] = slots.size
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
-    private fun deriveSpec(beSlot: Int) =
-        itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int, maxItemCount: Int) {
+        val base = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
+        val spec = base.copy(maxItemCount = maxItemCount, canInsert = { true })
+        beSlotToHandlerIndex[beSlotIndex] = slots.size
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
+    }
 
     override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
         context.get({ world, pos ->
@@ -113,23 +131,22 @@ class MinerScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
+            val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
-                index in MACHINE_SLOT_START..MACHINE_SLOT_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                beSlot >= 0 -> {
+                    if (!insertItem(stackInSlot, playerSlotStart, slots.size - 1, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                index in PLAYER_INV_START..HOTBAR_END -> {
+                index >= playerSlotStart -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
-                        stackInSlot,
-                        storage,
-                        storage.insertRoutes,
-                        beSlotToHandlerIndex,
-                        slots
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
                     )
                     if (!moved) return ItemStack.EMPTY
                 }
-                else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                else -> {
+                    if (!insertItem(stackInSlot, playerSlotStart, slots.size - 1, false)) return ItemStack.EMPTY
+                }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
@@ -138,29 +155,17 @@ class MinerScreenHandler(
         return stack
     }
 
+    private val playerSlotStart: Int
+        get() = if (isAdvanced) 22 else 20
+
     override fun canUse(player: PlayerEntity): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is BaseMinerBlock && player.squaredDistanceTo(
-                pos.x + 0.5,
-                pos.y + 0.5,
-                pos.z + 0.5
+                pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)
 
     companion object {
-        const val SLOT_SCANNER_INDEX = 0
-        const val SLOT_DRILL_INDEX = 1
-        const val SLOT_BATTERY_INDEX = 2
-        const val SLOT_PIPE_INDEX = 3
-        const val SLOT_FILTER_INDEX_START = 4
-        const val SLOT_FILTER_INDEX_END = SLOT_FILTER_INDEX_START + BaseMinerBlockEntity.FILTER_SLOT_COUNT - 1
-        const val SLOT_UPGRADE_INDEX_START = SLOT_FILTER_INDEX_END + 1
-        const val SLOT_UPGRADE_INDEX_END = SLOT_UPGRADE_INDEX_START + 3
-        const val MACHINE_SLOT_START = SLOT_SCANNER_INDEX
-        const val MACHINE_SLOT_END = SLOT_UPGRADE_INDEX_END
-        const val PLAYER_INV_START = MACHINE_SLOT_END + 1
-        const val HOTBAR_END = PLAYER_INV_START + 36 - 1
-
         const val BUTTON_TOGGLE_MODE = 0
         const val BUTTON_TOGGLE_SILK = 1
         const val BUTTON_RESTART = 2

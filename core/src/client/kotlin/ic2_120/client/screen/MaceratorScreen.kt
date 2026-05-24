@@ -56,8 +56,8 @@ class MaceratorScreen(
         context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
         // EU输入/消耗文字显示在左侧
-        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
-        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(consumeRate))
+        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
+        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatRaw(consumeRate))
         val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
         val sideTextX = x - sideTextWidth - 4
         context.drawText(textRenderer, inputText, sideTextX, y + 8, 0xAAAAAA, false)
@@ -67,8 +67,8 @@ class MaceratorScreen(
         if (mouseX in (x + 44) until (x + 44 + 14) && mouseY in (y + 36) until (y + 36 + 14)) {
             val energyTooltip = listOf(
                 Text.translatable("gui.ic2_120.energy_tooltip",
-                    EnergyFormatUtils.formatEu(energy),
-                    EnergyFormatUtils.formatEu(cap))
+                    EnergyFormatUtils.formatRaw(energy),
+                    EnergyFormatUtils.formatRaw(cap))
             )
             context.drawTooltip(textRenderer, energyTooltip, mouseX, mouseY)
         }

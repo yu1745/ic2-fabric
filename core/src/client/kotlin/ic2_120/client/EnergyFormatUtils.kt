@@ -28,4 +28,7 @@ object EnergyFormatUtils {
      * @return 格式化后的字符串
      */
     fun formatEu(value: Int): String = formatEu(value.toLong())
+
+    fun formatRaw(value: Long): String = value.toString()
+    fun formatRaw(value: Int): String = value.toString()
 }

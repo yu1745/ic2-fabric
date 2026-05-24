@@ -1,18 +1,15 @@
 package ic2_120.client.screen
 
 import ic2_120.client.EnergyFormatUtils
-import ic2_120.client.compose.*
 import ic2_120.client.t
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.CropHarvesterBlock
 import ic2_120.content.screen.CropHarvesterScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = CropHarvesterBlock::class)
 class CropHarvesterScreen(
@@ -21,123 +18,112 @@ class CropHarvesterScreen(
     title: Text
 ) : HandledScreen<CropHarvesterScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        backgroundWidth = 176
+        backgroundHeight = 166
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
 
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val capacity = handler.sync.energyCapacity.toLong().coerceAtLeast(1L)
-        val energyFraction = (energy.toFloat() / capacity).coerceIn(0f, 1f)
+        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
+        val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
+        val inputRate = handler.sync.getSyncedInsertedAmount()
+        val consumeRate = handler.sync.getSyncedConsumedAmount()
 
-        val inputRateText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(handler.sync.getSyncedInsertedAmount()))
-        val consumeRateText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(handler.sync.getSyncedConsumedAmount()))
+        // 电量条 (180,4)-(194,18) = 14x14，自下而上
+        if (energyFraction > 0f) {
+            val fillHeight = (ENERGY_BAR_H * energyFraction).toInt().coerceAtLeast(1)
+            context.enableScissor(
+                left + ENERGY_BAR_X,
+                top + ENERGY_BAR_Y + ENERGY_BAR_H - fillHeight,
+                left + ENERGY_BAR_X + ENERGY_BAR_W,
+                top + ENERGY_BAR_Y + ENERGY_BAR_H
+            )
+            context.drawTexture(
+                TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
+                ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
+                ENERGY_BAR_W, ENERGY_BAR_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+            context.disableScissor()
+        }
 
-        val content: UiScope.() -> Unit = {
-            Row(
-                x = left + 8,
-                y = top + 6,
-                spacing = 8,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Column(spacing = 4, modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)) {
-                    Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 4) {
-                        Text(title.string, color = 0xFFFFFF)
-                        EnergyBar(energyFraction, barHeight = 8, modifier = Modifier.EMPTY.fractionWidth(1f))
-                        Text("${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(capacity)} EU", color = 0xFFFFFF, shadow = false)
-                    }
+        // uptips 纹理
+        context.drawTexture(
+            UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
+            0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
+            UPTIPS_SIZE, UPTIPS_SIZE
+        )
 
-                    Text(
-                        t("gui.ic2_120.crop_harvester.scan_cursor", handler.sync.scanX, handler.sync.scanY, handler.sync.scanZ),
-                        color = 0xAAAAAA,
-                        shadow = false
-                    )
-                    Text(
-                        t("gui.ic2_120.crop_harvester.run_stats", handler.sync.checkedThisRun, handler.sync.harvestedThisRun),
-                        color = 0xAAAAAA,
-                        shadow = false
-                    )
+        // 侧边文本
+        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
+        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatRaw(consumeRate))
+        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
+        val sideTextX = left - sideTextWidth - 4
+        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 
-                    Column(spacing = 0) {
-                        for (row in 0 until 3) {
-                            Row(spacing = 0) {
-                                for (col in 0 until 5) {
-                                    val slotIndex = CropHarvesterScreenHandler.SLOT_CONTENT_INDEX_START + row * 5 + col
-                                    SlotAnchor(id = slotAnchorId(slotIndex))
-                                }
-                                if (row == 2) {
-                                    SlotAnchor(
-                                        id = slotAnchorId(CropHarvesterScreenHandler.SLOT_DISCHARGING_INDEX),
-                                        modifier = Modifier.EMPTY.padding(left = 4, top = 0, right = 0, bottom = 0)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+        drawMouseoverTooltip(context, mouseX, mouseY)
 
-                Column(
-                    spacing = 4,
-                    modifier = Modifier.EMPTY.width(GuiSize.UPGRADE_COLUMN_WIDTH).padding(0, 8, 0, 0)
-                ) {
-                    for (slotIndex in CropHarvesterScreenHandler.SLOT_UPGRADE_INDEX_START..CropHarvesterScreenHandler.SLOT_UPGRADE_INDEX_END) {
-                        SlotAnchor(id = slotAnchorId(slotIndex), width = CropHarvesterScreenHandler.SLOT_SIZE, height = CropHarvesterScreenHandler.SLOT_SIZE)
-                    }
-                }
-            }
+        val relX = mouseX - left
+        val relY = mouseY - top
 
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = CropHarvesterScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
+        // 电量条悬停
+        if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
+            relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                Text.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
+                mouseX, mouseY
             )
         }
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
+        // uptips 悬停
+        if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
+            relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                listOf(
+                    Text.translatable("gui.ic2_120.crop_harvester.uptips"),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade"))
+                ),
+                mouseX, mouseY
+            )
         }
-
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y, GUI_SIZE.playerInvY, GUI_SIZE.hotbarY, GuiSize.SLOT_SIZE
-        )
-
-        // 再绘制 UI（slot 背景、能量条等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
-
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputRateText), textRenderer.getWidth(consumeRateText))
-        val sideX = left - sideTextWidth - 4
-        context.drawText(textRenderer, inputRateText, sideX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeRateText, sideX, top + 20, 0xAAAAAA, false)
-
-        drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
     companion object {
-        private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
+        private val TEXTURE = Identifier("ic2", "textures/gui/guiharvest.png")
+        private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+        private const val TEXTURE_SIZE = 256
+
+        // 电量条 (180,4)-(194,18) = 14x14
+        private const val ENERGY_BAR_U = 180
+        private const val ENERGY_BAR_V = 4
+        private const val ENERGY_BAR_W = 14
+        private const val ENERGY_BAR_H = 14
+        private const val ENERGY_BAR_X = 16
+        private const val ENERGY_BAR_Y = 37
+
+        // uptips
+        private const val UPTIPS_X = 4
+        private const val UPTIPS_Y = 4
+        private const val UPTIPS_SIZE = 16
     }
 }

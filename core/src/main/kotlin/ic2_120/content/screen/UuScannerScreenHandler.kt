@@ -5,7 +5,6 @@ import ic2_120.content.block.machines.UuScannerBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotMoveHelper
-import ic2_120.content.screen.slot.UpgradeSlotLayout
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.UuScannerSync
 import ic2_120.content.syncs.SyncedDataView
@@ -29,6 +28,7 @@ class UuScannerScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
     blockInventory: Inventory,
+    val blockPos: net.minecraft.util.math.BlockPos,
     private val context: ScreenHandlerContext,
     propertyDelegate: PropertyDelegate,
     private val itemStorage: RoutedItemStorage? = null
@@ -40,48 +40,49 @@ class UuScannerScreenHandler(
         { UuScannerSync.ENERGY_CAPACITY }
     )
 
-    private val upgradeSlotSpec: ic2_120.content.screen.slot.SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
-    }
-
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
         checkSize(blockInventory, UuScannerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(PredicateSlot(blockInventory, UuScannerBlockEntity.SLOT_INPUT, 0, 0, deriveSpec(UuScannerBlockEntity.SLOT_INPUT)))
-        addTrackedSlot(PredicateSlot(blockInventory, UuScannerBlockEntity.SLOT_DISCHARGING, 0, 0, deriveSpec(UuScannerBlockEntity.SLOT_DISCHARGING)))
-
-        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
-            addTrackedSlot(
-                PredicateSlot(
-                    blockInventory,
-                    UuScannerBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0, 0,
-                    upgradeSlotSpec
-                )
-            )
-        }
+        // 输入槽 (54,34)
+        addTrackedSlot(PredicateSlot(blockInventory, UuScannerBlockEntity.SLOT_INPUT, 54, 34,
+            deriveSpec(UuScannerBlockEntity.SLOT_INPUT)))
+        // 电池槽 (7,42)
+        addTrackedSlot(PredicateSlot(blockInventory, UuScannerBlockEntity.SLOT_DISCHARGING, 7, 42,
+            deriveSpec(UuScannerBlockEntity.SLOT_DISCHARGING)))
+        // 水晶槽 (151,64)
+        addTrackedSlot(PredicateSlot(blockInventory, UuScannerBlockEntity.SLOT_CRYSTAL, 151, 64,
+            deriveSpec(UuScannerBlockEntity.SLOT_CRYSTAL)))
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 83 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 141))
         }
     }
 
-    private fun addTrackedSlot(slot: PredicateSlot): PredicateSlot {
+    private fun addTrackedSlot(slot: PredicateSlot) {
         beSlotToHandlerIndex[slot.index] = slots.size
         addSlot(slot)
-        return slot
     }
 
-    private fun deriveSpec(beSlot: Int) =
-        itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
+    private fun deriveSpec(beSlot: Int) = itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
+
+    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+        context.get({ world, pos ->
+            val be = world.getBlockEntity(pos) as? UuScannerBlockEntity ?: return@get
+            when (id) {
+                BUTTON_DELETE_TEMPLATE -> be.deleteTemplate()
+                BUTTON_SAVE_TO_CRYSTAL -> be.saveTemplateToCrystal()
+            }
+        }, false)
+        return id == BUTTON_DELETE_TEMPLATE || id == BUTTON_SAVE_TO_CRYSTAL
+    }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
@@ -90,18 +91,13 @@ class UuScannerScreenHandler(
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
-                index in MACHINE_SLOT_START..MACHINE_SLOT_END -> {
+                index in SLOT_INPUT_INDEX..SLOT_CRYSTAL_INDEX -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 }
                 index in PLAYER_INV_START..HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
-                        stackInSlot,
-                        storage,
-                        storage.insertRoutes,
-                        beSlotToHandlerIndex,
-                        slots
-                    )
+                        stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
@@ -122,21 +118,21 @@ class UuScannerScreenHandler(
     companion object {
         const val SLOT_INPUT_INDEX = 0
         const val SLOT_BATTERY_INDEX = 1
-        const val SLOT_UPGRADE_INDEX_START = 2
-        const val SLOT_UPGRADE_INDEX_END = SLOT_UPGRADE_INDEX_START + 3
-        const val MACHINE_SLOT_START = SLOT_INPUT_INDEX
-        const val MACHINE_SLOT_END = SLOT_UPGRADE_INDEX_END
-        const val PLAYER_INV_START = MACHINE_SLOT_END + 1
-        const val HOTBAR_END = PLAYER_INV_START + 36 - 1
+        const val SLOT_CRYSTAL_INDEX = 2
+        const val PLAYER_INV_START = 3
+        const val HOTBAR_END = 39
+
+        const val BUTTON_DELETE_TEMPLATE = 1
+        const val BUTTON_SAVE_TO_CRYSTAL = 2
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): UuScannerScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             return UuScannerScreenHandler(
-                syncId,
-                playerInventory,
+                syncId, playerInventory,
                 SimpleInventory(UuScannerBlockEntity.INVENTORY_SIZE),
+                pos,
                 ScreenHandlerContext.create(playerInventory.player.world, pos),
                 ArrayPropertyDelegate(propertyCount)
             )

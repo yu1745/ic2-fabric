@@ -1,104 +1,56 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.t
-import ic2_120.client.ui.GuiBackground
 import ic2_120.content.block.nuclear.ReactorFluidPortBlock
 import ic2_120.content.screen.ReactorFluidPortScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text as McText
+import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
-/**
- * 反应堆流体接口：升级槽 + 玩家栏，布局与标准 [GuiSize.STANDARD] 机器一致。
- */
 @ModScreen(block = ReactorFluidPortBlock::class)
 class ReactorFluidPortScreen(
     handler: ReactorFluidPortScreenHandler,
     playerInventory: PlayerInventory,
-    title: McText
+    title: Text
 ) : HandledScreen<ReactorFluidPortScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-    private val gui = GuiSize.STANDARD
-
     init {
-        backgroundWidth = gui.width
-        backgroundHeight = gui.height
+        backgroundWidth = 176
+        backgroundHeight = 162
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        // 主 PNG 背景
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        // 升级槽背景 (179,3)-(197,21) = 18×18，渲染至 (79,30) — 必须在 drawBackground 内，早于 super.render 的物品绘制
+        context.drawTexture(
+            TEXTURE, x + SLOT_BG_X, y + SLOT_BG_Y,
+            SLOT_BG_U.toFloat(), SLOT_BG_V.toFloat(),
+            SLOT_BG_SIZE, SLOT_BG_SIZE,
+            TEXTURE_SIZE, TEXTURE_SIZE
+        )
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
-        val content: UiScope.() -> Unit = {
-            Column(
-                x = left + 8,
-                y = top + 8,
-                spacing = 6,
-                modifier = Modifier().width(gui.contentWidth)
-            ) {
-                Text(title.string, color = 0xFFFFFF)
-                Text(t("gui.ic2_120.reactor_fluid_port.title"), color = 0xAAAAAA, shadow = false)
-                Flex(justifyContent = JustifyContent.CENTER, alignItems = AlignItems.CENTER) {
-                    SlotAnchor(
-                        id = slotAnchorId(ReactorFluidPortScreenHandler.UPGRADE_SLOT_INDEX),
-                        width = GuiSize.SLOT_SIZE,
-                        height = GuiSize.SLOT_SIZE
-                    )
-                }
-            }
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = ReactorFluidPortScreenHandler.PLAYER_INV_START,
-                playerInvY = gui.playerInvY,
-                hotbarY = gui.hotbarY
-            )
-        }
-
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context,
-            x,
-            y,
-            gui.playerInvY,
-            gui.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
-        val inset = GuiBackground.SLOT_ANCHOR_INSET
-        val slot = handler.slots[ReactorFluidPortScreenHandler.UPGRADE_SLOT_INDEX]
-        GuiBackground.drawVanillaLikeSlot(
-            context,
-            x + slot.x - inset,
-            y + slot.y - inset,
-            GuiSize.SLOT_SIZE,
-            GuiSize.SLOT_SIZE
-        )
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
+
+        // 标题居中
+        context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+    companion object {
+        private val TEXTURE = Identifier("ic2", "textures/gui/guiother.png")
+        private const val TEXTURE_SIZE = 256
 
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
+        private const val SLOT_BG_U = 179
+        private const val SLOT_BG_V = 3
+        private const val SLOT_BG_SIZE = 18
+        private const val SLOT_BG_X = 79
+        private const val SLOT_BG_Y = 30
     }
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
 }

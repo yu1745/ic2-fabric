@@ -49,7 +49,7 @@ class RtGeneratorScreenHandler(
     }
 
     init {
-        checkSize(blockInventory, 7)
+        checkSize(blockInventory, 6)
         addProperties(propertyDelegate)
 
         // 燃料靶丸槽 2行×3列，起点 (31, 25)
@@ -59,8 +59,6 @@ class RtGeneratorScreenHandler(
         addTrackedSlot(RtGeneratorBlockEntity.FUEL_SLOT_START + 3, 31, 43)
         addTrackedSlot(RtGeneratorBlockEntity.FUEL_SLOT_START + 4, 49, 43)
         addTrackedSlot(RtGeneratorBlockEntity.FUEL_SLOT_START + 5, 67, 43)
-        addTrackedSlot(RtGeneratorBlockEntity.BATTERY_SLOT, 95, 34)
-
         for (row in 0 until 3) {
             for (col in 0 until 9) {
                 addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 79 + row * 18))
@@ -111,8 +109,8 @@ class RtGeneratorScreenHandler(
         }, true)
 
     companion object {
-        const val PLAYER_INV_START = 7
-        const val HOTBAR_END = 43
+        const val PLAYER_INV_START = 6
+        const val HOTBAR_END = 42
         const val SLOT_SIZE = 18
 
         @ScreenFactory
@@ -120,7 +118,7 @@ class RtGeneratorScreenHandler(
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
             val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(7)
+            val blockInv = SimpleInventory(6)
             return RtGeneratorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
         }
     }

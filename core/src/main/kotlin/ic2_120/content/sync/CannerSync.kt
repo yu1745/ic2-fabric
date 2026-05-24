@@ -50,9 +50,11 @@ class CannerSync(
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
     var mode by schema.int("Mode", default = Mode.EMPTY_LIQUID.id)
     var leftFluidAmountMb by schema.int("LeftFluidAmount", default = 0)
-    var leftFluidCapacityMb by schema.int("LeftFluidCapacity", default = 10000)
+    var leftFluidCapacityMb by schema.int("LeftFluidCapacity", default = 8000)
+    var leftFluidRawId by schema.int("LeftFluidRawId", default = -1)
     var rightFluidAmountMb by schema.int("RightFluidAmount", default = 0)
-    var rightFluidCapacityMb by schema.int("RightFluidCapacity", default = 10000)
+    var rightFluidCapacityMb by schema.int("RightFluidCapacity", default = 8000)
+    var rightFluidRawId by schema.int("RightFluidRawId", default = -1)
 
     private val flow = EnergyFlowSync(schema, this)
 

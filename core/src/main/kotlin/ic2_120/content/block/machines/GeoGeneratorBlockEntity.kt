@@ -5,7 +5,6 @@ import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.energy.charge.BatteryChargerComponent
-import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.LavaCell
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
@@ -15,13 +14,12 @@ import ic2_120.Ic2_120
 import ic2_120.content.sync.GeoGeneratorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
+import ic2_120.content.fluid.ModFluids
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
-import ic2_120.content.upgrade.FluidPipeUpgradeComponent
-import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -66,32 +64,17 @@ class GeoGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
-
-    // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
-    override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
-    override var fluidPipeReceiverEnabled: Boolean = false  // 是否作为 receiver 从管道接收流体
-    override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null     // provider 流体过滤器（null = 不过滤）
-    override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null    // receiver 流体过滤器（null = 不过滤）
-    override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()   // provider 工作面（null = 任意面）
-    override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()   // receiver 工作面（null = 任意面）
-    override var fluidPipeEjectorCount: Int = 0
-    override var fluidPipePullingCount: Int = 0
+) : MachineBlockEntity(type, pos, state), Inventory, IGenerator,
+    net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     companion object {
         const val GENERATOR_TIER = 1
         private const val NBT_LAVA_AMOUNT = "LavaAmount"
 
-        /** 地热发电机槽位：燃料输入、空容器输出、电池充电、4个升级槽 */
         const val FUEL_SLOT = 0
         const val EMPTY_CONTAINER_SLOT = 1
         const val BATTERY_SLOT = 2
-        const val SLOT_UPGRADE_0 = 3
-        const val SLOT_UPGRADE_1 = 4
-        const val SLOT_UPGRADE_2 = 5
-        const val SLOT_UPGRADE_3 = 6
-        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
-        const val INVENTORY_SIZE = 7
+        const val INVENTORY_SIZE = 3
 
         @Volatile
         private var fluidLookupRegistered = false
@@ -123,11 +106,10 @@ class GeoGeneratorBlockEntity(
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
-            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(BATTERY_SLOT), matcher = { isValid(BATTERY_SLOT, it) }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(FUEL_SLOT), matcher = { isValid(FUEL_SLOT, it) })
         ),
-        extractSlots = intArrayOf(FUEL_SLOT, EMPTY_CONTAINER_SLOT, BATTERY_SLOT, *SLOT_UPGRADE_INDICES),
+        extractSlots = intArrayOf(FUEL_SLOT, EMPTY_CONTAINER_SLOT, BATTERY_SLOT),
         markDirty = { markDirty() }
     )
 
@@ -149,7 +131,7 @@ class GeoGeneratorBlockEntity(
 
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
 
-        override fun canInsert(variant: FluidVariant): Boolean = variant.fluid == Fluids.LAVA
+        override fun canInsert(variant: FluidVariant): Boolean = variant.fluid == Fluids.LAVA && ModFluids.isFluid(variant.fluid)
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -256,7 +238,6 @@ class GeoGeneratorBlockEntity(
         slot == FUEL_SLOT -> stack.item == Items.LAVA_BUCKET || stack.item is LavaCell
         slot == EMPTY_CONTAINER_SLOT -> false
         slot == BATTERY_SLOT -> stack.canBeCharged()
-        SLOT_UPGRADE_INDICES.contains(slot) -> stack.item is IUpgradeItem
         else -> false
     }
 
@@ -327,12 +308,6 @@ class GeoGeneratorBlockEntity(
         if (world.isClient) return
 
         adjacentEnergyTransfer.tick()
-
-        // 应用流体管道升级
-        FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
-        if (fluidPipeProviderEnabled) {
-            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, lavaTankInternal, fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
-        }
 
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
 

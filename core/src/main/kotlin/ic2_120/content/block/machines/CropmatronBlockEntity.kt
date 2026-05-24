@@ -3,12 +3,10 @@ package ic2_120.content.block.machines
 import ic2_120.Ic2_120
 import ic2_120.content.block.CropmatronBlock
 import ic2_120.content.crop.CropCareTarget
-import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.FluidCellItem
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.Fertilizer
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.getFluidCellVariant
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
@@ -101,7 +99,6 @@ class CropmatronBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_WATER_INPUT), matcher = { isValid(SLOT_WATER_INPUT, it) }),
             ItemInsertRoute(intArrayOf(SLOT_WEED_EX_INPUT), matcher = { isValid(SLOT_WEED_EX_INPUT, it) }),
             ItemInsertRoute(SLOT_FERTILIZER_INDICES, matcher = { isValid(SLOT_FERTILIZER_0, it) })
@@ -110,12 +107,6 @@ class CropmatronBlockEntity(
         markDirty = { markDirty() }
     )
     val syncedData = SyncedData(this)
-    private val discharger = BatteryDischargerComponent(
-        inventory = this,
-        batterySlot = SLOT_DISCHARGING,
-        machineTierProvider = { CROPMATRON_TIER },
-        canDischargeNow = { sync.amount < sync.getEffectiveCapacity() }
-    )
 
     @RegisterEnergy
     val sync = CropmatronSync(
@@ -133,7 +124,7 @@ class CropmatronBlockEntity(
     private val waterTankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = waterTankCapacity
-        override fun canInsert(variant: FluidVariant): Boolean = isWater(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = isWater(variant.fluid) && ModFluids.isFluid(variant.fluid)
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
@@ -181,7 +172,7 @@ class CropmatronBlockEntity(
     private val weedExTankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = weedExTankCapacity
-        override fun canInsert(variant: FluidVariant): Boolean = isWeedEx(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = isWeedEx(variant.fluid) && ModFluids.isFluid(variant.fluid)
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
@@ -283,7 +274,6 @@ class CropmatronBlockEntity(
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
     override fun setStack(slot: Int, stack: ItemStack) {
-        if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
@@ -327,8 +317,7 @@ class CropmatronBlockEntity(
         slot == SLOT_WATER_OUTPUT || slot == SLOT_WEED_EX_OUTPUT -> false
         slot == SLOT_WATER_INPUT -> cropmatronMatchesWaterInput(stack)
         slot == SLOT_WEED_EX_INPUT -> cropmatronMatchesWeedExInput(stack)
-        slot == SLOT_DISCHARGING -> stack.item is IBatteryItem
-        SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
+SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         SLOT_UPGRADE_INDICES.contains(slot) -> stack.item is IUpgradeItem
         else -> false
     }
@@ -388,7 +377,6 @@ class CropmatronBlockEntity(
         if (fluidPipeReceiverEnabled) {
             FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, waterTankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
-        extractFromDischargingSlot()
         processWaterInputContainer()
         processWeedExInputContainer()
 
@@ -605,17 +593,6 @@ class CropmatronBlockEntity(
         return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
     }
 
-    private fun extractFromDischargingSlot() {
-        val capacity = sync.getEffectiveCapacity().coerceAtLeast(0L)
-        val maxDemand = (capacity - sync.amount).coerceAtLeast(0L)
-        if (maxDemand <= 0L) return
-        val extracted = discharger.tick(maxDemand)
-        if (extracted <= 0L) return
-        sync.amount = (sync.amount + extracted).coerceAtMost(capacity)
-        sync.energy = sync.amount.toInt().coerceAtMost(Int.MAX_VALUE)
-        markDirty()
-    }
-
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
         return ioStorage
     }
@@ -663,7 +640,6 @@ class CropmatronBlockEntity(
         const val SLOT_UPGRADE_1 = 12
         const val SLOT_UPGRADE_2 = 13
         const val SLOT_UPGRADE_3 = 14
-        const val SLOT_DISCHARGING = 15
 
         val SLOT_FERTILIZER_INDICES = intArrayOf(
             SLOT_FERTILIZER_0,
@@ -676,7 +652,7 @@ class CropmatronBlockEntity(
         )
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
 
-        const val INVENTORY_SIZE = 16
+        const val INVENTORY_SIZE = 15
 
         private const val WORK_INTERVAL_TICKS = 10
         private const val SCAN_RADIUS = 4

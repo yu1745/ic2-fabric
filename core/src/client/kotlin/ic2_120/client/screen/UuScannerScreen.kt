@@ -2,171 +2,175 @@ package ic2_120.client.screen
 
 import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.t
-import ic2_120.client.compose.*
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.GuiBackground
-import ic2_120.client.ui.HeatProgressBar
 import ic2_120.content.block.UuScannerBlock
 import ic2_120.content.screen.UuScannerScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.UuScannerSync
+import ic2_120.content.uu.findUniqueAdjacentPatternStorage
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = UuScannerBlock::class)
 class UuScannerScreen(
-    handler: UuScannerScreenHandler,
-    playerInventory: PlayerInventory,
-    title: Text
+    handler: UuScannerScreenHandler, playerInventory: PlayerInventory, title: Text
 ) : HandledScreen<UuScannerScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
-        titleY = 4
+        backgroundWidth = 175
+        backgroundHeight = 165
+        titleY = -1000
+        playerInventoryTitleY = -1000
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0L)
-        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1L)
-        val fraction = (energy.toFloat() / cap.toFloat()).coerceIn(0f, 1f)
-        val progressFraction = (handler.sync.progress.toFloat() / UuScannerSync.PROGRESS_MAX.toFloat()).coerceIn(0f, 1f)
-        val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(handler.sync.getSyncedInsertedAmount()))
-        val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(handler.sync.getSyncedConsumedAmount()))
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
-        val sideTextX = left - sideTextWidth - 4
+        val status = handler.sync.status
+        val isComplete = status == UuScannerSync.STATUS_COMPLETE
+        val isScanning = status == UuScannerSync.STATUS_SCANNING
+        val world = client?.world
+        val storage = world?.let { findUniqueAdjacentPatternStorage(it, handler.blockPos) }
 
-        val content: UiScope.() -> Unit = {
-            Row(
-                x = left + 8,
-                y = top + 6,
-                spacing = 8,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Column(spacing = 4, modifier = Modifier.EMPTY.width(GuiSize.STANDARD.contentWidth)) {
-                    Flex {
-                        Text(title.string, color = 0xFFFFFF)
-                        HeatProgressBar(fraction, barHeight = 6, modifier = Modifier.EMPTY.fractionWidth(1f))
-                        Text(
-                            "${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU",
-                            color = 0xFFFFFF,
-                            shadow = false
-                        )
-                    }
-                    Text(statusText(handler.sync.status), color = statusColor(handler.sync.status), shadow = false)
-                    Text("${handler.sync.currentCostUb} uB", color = 0xFFAA33, shadow = false)
-                    Text(
-                        t("gui.ic2_120.uu_scanner.scan_progress", handler.sync.progress, UuScannerSync.PROGRESS_MAX),
-                        color = 0xAAAAAA,
-                        shadow = false
-                    )
-                    EnergyBar(progressFraction, modifier = Modifier.EMPTY.width(120), barHeight = 6)
+        // 电量条 (179,3)-(193,16) = 14×13 渲染至 (8,24)
+        drawEnergyBar(context, left, top)
 
-                    Row(spacing = 6) {
-                        Column(spacing = 4) {
-                            Text(t("gui.ic2_120.item_slot"), color = 0xAAAAAA, shadow = false)
-                            SlotAnchor(
-                                id = slotAnchorId(UuScannerScreenHandler.SLOT_INPUT_INDEX),
-                                width = 18,
-                                height = 18
-                            )
-                        }
-                        Column(spacing = 4) {
-                            Text(t("gui.ic2_120.battery_slot"), color = 0xAAAAAA, shadow = false)
-                            SlotAnchor(
-                                id = slotAnchorId(UuScannerScreenHandler.SLOT_BATTERY_INDEX),
-                                width = 18,
-                                height = 18
-                            )
-                        }
-                    }
-                }
-                Column(spacing = 4, modifier = Modifier.EMPTY.width(GuiSize.UPGRADE_COLUMN_WIDTH).padding(0, 8, 0, 0)) {
-                    for (i in UuScannerScreenHandler.SLOT_UPGRADE_INDEX_START..UuScannerScreenHandler.SLOT_UPGRADE_INDEX_END) {
-                        SlotAnchor(id = slotAnchorId(i), width = 18, height = 18)
-                    }
-                }
+        // 工作进度条 (30,20) — 扫描时自左向右重复动画
+        drawProgressBar(context, left, top, isScanning)
+
+        // 扫描进度/状态文本 (10,67)
+        val statusLine = when {
+            isScanning -> t("gui.ic2_120.uu_scanner.status_scanning")
+            else -> t("gui.ic2_120.uu_scanner.status_idle")
+        }
+        context.drawText(textRenderer, statusLine, left + 10, top + 67, 0xAAAAAA, false)
+
+        // 扫描完成后：模板信息 (102,24) + 删除/存入按钮
+        if (isComplete) {
+            val template = storage?.getSelectedTemplate()
+            val name = template?.displayName()?.string ?: ""
+            val cost = handler.sync.currentCostUb
+            val templateText = if (name.isNotEmpty()) "$name ($cost uB)" else "$cost uB"
+            context.drawText(textRenderer, templateText, left + 102, top + 24, 0xFFAA33, false)
+
+            // 删除模板 (197,4)-(209,16) = 12×12 渲染至 (129,48)
+            context.drawTexture(TEXTURE, left + DEL_X, top + DEL_Y,
+                DEL_U.toFloat(), DEL_V.toFloat(), 12, 12, TEX_SIZE, TEX_SIZE)
+            // 存入水晶 (213,4)-(237,16) = 24×12 渲染至 (142,48)
+            context.drawTexture(TEXTURE, left + SAVE_X, top + SAVE_Y,
+                SAVE_U.toFloat(), SAVE_V.toFloat(), 24, 12, TEX_SIZE, TEX_SIZE)
+        }
+
+        // 悬停高亮
+        val relX = mouseX - left
+        val relY = mouseY - top
+
+        // 电量条悬停
+        if (relX in ENERGY_X until ENERGY_X + ENERGY_W && relY in ENERGY_Y until ENERGY_Y + ENERGY_H) {
+            val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+            val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
+            context.drawTooltip(textRenderer,
+                listOf(Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU")),
+                mouseX, mouseY)
+        }
+
+        if (isComplete) {
+            if (relX in DEL_X until DEL_X + 12 && relY in DEL_Y until DEL_Y + 12) {
+                context.fill(left + DEL_X, top + DEL_Y, left + DEL_X + 12, top + DEL_Y + 12, 0x80FFFFFF.toInt())
+                context.drawTooltip(textRenderer, listOf(Text.translatable("gui.ic2_120.uu_scanner.delete_template")), mouseX, mouseY)
             }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = UuScannerScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
-            )
+            if (relX in SAVE_X until SAVE_X + 24 && relY in SAVE_Y until SAVE_Y + 12) {
+                context.fill(left + SAVE_X, top + SAVE_Y, left + SAVE_X + 24, top + SAVE_Y + 12, 0x80FFFFFF.toInt())
+                context.drawTooltip(textRenderer, listOf(Text.translatable("gui.ic2_120.uu_scanner.save_to_crystal")), mouseX, mouseY)
+            }
         }
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y, GUI_SIZE.playerInvY, GUI_SIZE.hotbarY, GuiSize.SLOT_SIZE
-        )
-
-        // 再绘制 UI（slot 背景、能量条等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
-        val tooltip = ui.getTooltipAt(mouseX, mouseY)
-        if (!tooltip.isNullOrEmpty()) {
-            context.drawTooltip(textRenderer, tooltip, mouseX, mouseY)
-        } else {
-            drawMouseoverTooltip(context, mouseX, mouseY)
-        }
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
+    private fun drawEnergyBar(context: DrawContext, left: Int, top: Int) {
+        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
+        val fraction = (energy.toFloat() / cap).coerceIn(0f, 1f)
+        if (fraction <= 0f) return
+        val fillH = (ENERGY_H * fraction).toInt().coerceAtLeast(1)
+        context.enableScissor(
+            left + ENERGY_X, top + ENERGY_Y + ENERGY_H - fillH,
+            left + ENERGY_X + ENERGY_W, top + ENERGY_Y + ENERGY_H
+        )
+        context.drawTexture(TEXTURE, left + ENERGY_X, top + ENERGY_Y,
+            ENERGY_U.toFloat(), ENERGY_V.toFloat(), ENERGY_W, ENERGY_H, TEX_SIZE, TEX_SIZE)
+        context.disableScissor()
+    }
 
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
+    private fun drawProgressBar(context: DrawContext, left: Int, top: Int, isScanning: Boolean) {
+        if (!isScanning) return
+        val cycleMs = 1000L
+        val fraction = ((System.currentTimeMillis() % cycleMs).toFloat() / cycleMs).coerceIn(0f, 1f)
+        val fillW = (PROGRESS_W * fraction).toInt().coerceAtLeast(1)
+        context.enableScissor(
+            left + PROGRESS_X, top + PROGRESS_Y,
+            left + PROGRESS_X + fillW, top + PROGRESS_Y + PROGRESS_H
+        )
+        context.drawTexture(TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
+            PROGRESS_U.toFloat(), PROGRESS_V.toFloat(), PROGRESS_W, PROGRESS_H, TEX_SIZE, TEX_SIZE)
+        context.disableScissor()
+    }
 
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
+    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (button == 0 && handler.sync.status == UuScannerSync.STATUS_COMPLETE) {
+            val relX = mouseX.toInt() - x
+            val relY = mouseY.toInt() - y
+            if (relX in DEL_X until DEL_X + 12 && relY in DEL_Y until DEL_Y + 12) {
+                client?.player?.networkHandler?.sendPacket(
+                    ButtonClickC2SPacket(handler.syncId, UuScannerScreenHandler.BUTTON_DELETE_TEMPLATE))
+                return true
+            }
+            if (relX in SAVE_X until SAVE_X + 24 && relY in SAVE_Y until SAVE_Y + 12) {
+                client?.player?.networkHandler?.sendPacket(
+                    ButtonClickC2SPacket(handler.syncId, UuScannerScreenHandler.BUTTON_SAVE_TO_CRYSTAL))
+                return true
+            }
         }
-    }
-
-    private fun statusText(status: Int): String = when (status) {
-        UuScannerSync.STATUS_NO_STORAGE -> t("gui.ic2_120.status_no_storage")
-        UuScannerSync.STATUS_NO_INPUT -> t("gui.ic2_120.uu_scanner.status_no_input")
-        UuScannerSync.STATUS_NOT_WHITELISTED -> t("gui.ic2_120.uu_scanner.status_not_whitelisted")
-        UuScannerSync.STATUS_NO_ENERGY -> t("gui.ic2_120.status_no_energy")
-        UuScannerSync.STATUS_SCANNING -> t("gui.ic2_120.uu_scanner.status_scanning")
-        UuScannerSync.STATUS_COMPLETE -> t("gui.ic2_120.uu_scanner.status_complete")
-        else -> t("gui.ic2_120.status_idle")
-    }
-
-    private fun statusColor(status: Int): Int = when (status) {
-        UuScannerSync.STATUS_COMPLETE -> 0x55FF55
-        UuScannerSync.STATUS_SCANNING -> 0x55AAFF
-        UuScannerSync.STATUS_NO_STORAGE,
-        UuScannerSync.STATUS_NOT_WHITELISTED,
-        UuScannerSync.STATUS_NO_ENERGY -> 0xFF5555
-
-        else -> 0xAAAAAA
+        return super.mouseClicked(mouseX, mouseY, button)
     }
 
     companion object {
-        private val GUI_SIZE = GuiSize.UPGRADE_TALL
+        private val TEXTURE = Identifier("ic2", "textures/gui/guiuuscanner.png")
+        private const val TEX_SIZE = 256
+
+        private const val ENERGY_U = 179
+        private const val ENERGY_V = 3
+        private const val ENERGY_W = 14
+        private const val ENERGY_H = 13
+        private const val ENERGY_X = 8
+        private const val ENERGY_Y = 24
+
+        private const val PROGRESS_U = 179
+        private const val PROGRESS_V = 20
+        private const val PROGRESS_X = 29
+        private const val PROGRESS_Y = 19
+        private const val PROGRESS_W = 67
+        private const val PROGRESS_H = 43
+
+        private const val DEL_U = 197
+        private const val DEL_V = 4
+        private const val DEL_X = 129
+        private const val DEL_Y = 48
+
+        private const val SAVE_U = 213
+        private const val SAVE_V = 4
+        private const val SAVE_X = 142
+        private const val SAVE_Y = 48
     }
 }

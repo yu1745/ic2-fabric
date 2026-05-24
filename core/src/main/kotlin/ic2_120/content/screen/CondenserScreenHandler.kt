@@ -110,19 +110,19 @@ class CondenserScreenHandler(
         }, true)
 
     companion object {
-        const val VENT_0_X = 26; const val VENT_0_Y = 26
-        const val VENT_1_X = 134; const val VENT_1_Y = 26
-        const val VENT_2_X = 26; const val VENT_2_Y = 44
-        const val VENT_3_X = 134; const val VENT_3_Y = 44
-        const val UPGRADE_X = 152; const val UPGRADE_Y = 73
-        const val DISCHARGE_X = 8; const val DISCHARGE_Y = 44
-        const val WATER_IN_X = 26; const val WATER_IN_Y = 73
-        const val WATER_OUT_X = 134; const val WATER_OUT_Y = 73
+        const val VENT_0_X = 26; const val VENT_0_Y = 25
+        const val VENT_1_X = 134; const val VENT_1_Y = 25
+        const val VENT_2_X = 26; const val VENT_2_Y = 43
+        const val VENT_3_X = 134; const val VENT_3_Y = 43
+        const val UPGRADE_X = 152; const val UPGRADE_Y = 72
+        const val DISCHARGE_X = 8; const val DISCHARGE_Y = 43
+        const val WATER_IN_X = 26; const val WATER_IN_Y = 72
+        const val WATER_OUT_X = 134; const val WATER_OUT_Y = 72
         const val PLAYER_INV_START = 8
         const val HOTBAR_END = 43
         const val PLAYER_INV_X = 8
-        const val PLAYER_INV_Y = 102
-        const val HOTBAR_Y = 160
+        const val PLAYER_INV_Y = 101
+        const val HOTBAR_Y = 159
 
         private val FALLBACK_SPEC = SlotSpec()
 

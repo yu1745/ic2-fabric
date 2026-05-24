@@ -164,8 +164,7 @@ class BlastFurnaceBlockEntity(
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
         override fun canExtract(variant: FluidVariant): Boolean = false
-        override fun canInsert(variant: FluidVariant): Boolean =
-            variant.fluid == ModFluids.COMPRESSED_AIR_STILL || variant.fluid == ModFluids.COMPRESSED_AIR_FLOWING
+        override fun canInsert(variant: FluidVariant): Boolean = ModFluids.isCompressedAir(variant.fluid)
 
         override fun onFinalCommit() {
             sync.airAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)

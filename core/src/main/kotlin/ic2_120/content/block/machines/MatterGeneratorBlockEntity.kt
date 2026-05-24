@@ -3,11 +3,9 @@ package ic2_120.content.block.machines
 import ic2_120.Ic2_120
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.MatterGeneratorBlock
-import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.OverclockerUpgrade
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.content.item.setFluidCellVariant
 import ic2_120.content.storage.ItemInsertRoute
@@ -90,15 +88,14 @@ class MatterGeneratorBlockEntity(
         const val SLOT_SCRAP = 0
         const val SLOT_CONTAINER_INPUT = 1
         const val SLOT_CONTAINER_OUTPUT = 2
-        const val SLOT_DISCHARGING = 3
-        const val SLOT_UPGRADE_0 = 4
-        const val SLOT_UPGRADE_1 = 5
-        const val SLOT_UPGRADE_2 = 6
-        const val SLOT_UPGRADE_3 = 7
+        const val SLOT_UPGRADE_0 = 3
+        const val SLOT_UPGRADE_1 = 4
+        const val SLOT_UPGRADE_2 = 5
+        const val SLOT_UPGRADE_3 = 6
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_CONTAINER_OUTPUT)
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_CONTAINER_INPUT)
-        const val INVENTORY_SIZE = 8
+        const val INVENTORY_SIZE = 7
 
         private const val NBT_TANK_AMOUNT = "TankAmount"
         private const val NBT_PROGRESS = "Progress"
@@ -125,11 +122,10 @@ class MatterGeneratorBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_SCRAP), matcher = { isValid(SLOT_SCRAP, it) }),
             ItemInsertRoute(intArrayOf(SLOT_CONTAINER_INPUT), matcher = { isValid(SLOT_CONTAINER_INPUT, it) })
         ),
-        extractSlots = intArrayOf(SLOT_SCRAP, SLOT_CONTAINER_INPUT, SLOT_CONTAINER_OUTPUT, SLOT_DISCHARGING),
+        extractSlots = intArrayOf(SLOT_SCRAP, SLOT_CONTAINER_INPUT, SLOT_CONTAINER_OUTPUT),
         markDirty = { markDirty() }
     )
     private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
@@ -161,7 +157,7 @@ class MatterGeneratorBlockEntity(
             return super.insert(insertedVariant, maxAmount, transaction)
         }
 
-        override fun canExtract(variant: FluidVariant): Boolean = isUuMatter(variant.fluid)
+        override fun canExtract(variant: FluidVariant): Boolean = isUuMatter(variant.fluid) && ModFluids.isFluid(variant.fluid)
 
         override fun onFinalCommit() {
             sync.fluidAmountMb = toMilliBuckets(amount)
@@ -231,13 +227,6 @@ class MatterGeneratorBlockEntity(
         }
     }
 
-    private val batteryDischarger = BatteryDischargerComponent(
-        inventory = this,
-        batterySlot = SLOT_DISCHARGING,
-        machineTierProvider = { MatterGeneratorSync.MATTER_GENERATOR_TIER },
-        canDischargeNow = { sync.amount < sync.getEffectiveCapacity() }
-    )
-
     constructor(pos: BlockPos, state: BlockState) : this(
         MatterGeneratorBlockEntity::class.type(),
         pos,
@@ -248,9 +237,6 @@ class MatterGeneratorBlockEntity(
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
     override fun setStack(slot: Int, stack: ItemStack) {
-        if (slot == SLOT_DISCHARGING && stack.count > 1) {
-            stack.count = 1
-        }
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
@@ -273,9 +259,8 @@ class MatterGeneratorBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_SCRAP -> !stack.isEmpty && Registries.ITEM.getId(stack.item) == Identifier(Ic2_120.MOD_ID, "scrap")
-        SLOT_CONTAINER_INPUT -> !stack.isEmpty && stack.item !is IBatteryItem && matterGenIsFillableContainer(stack)
+        SLOT_CONTAINER_INPUT -> !stack.isEmpty && matterGenIsFillableContainer(stack)
         SLOT_CONTAINER_OUTPUT -> false
-        SLOT_DISCHARGING -> !stack.isEmpty && stack.item is IBatteryItem
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem && stack.item !is OverclockerUpgrade
     }
 
@@ -337,7 +322,6 @@ class MatterGeneratorBlockEntity(
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
 
         adjacentEnergyTransfer.tick()
-        extractFromDischargingSlot()
         fillContainersFromTank()
 
         if (!world.isReceivingRedstonePower(pos)) {
@@ -451,19 +435,6 @@ class MatterGeneratorBlockEntity(
         val facing = world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH
         if (side == facing) return null
         return outputStorage
-    }
-
-    private fun extractFromDischargingSlot() {
-        val space = (sync.getEffectiveCapacity() - sync.amount).coerceAtLeast(0L)
-        if (space <= 0L) return
-
-        val request = minOf(space, sync.getEffectiveMaxInsertPerTick())
-        val extracted = batteryDischarger.tick(request)
-        if (extracted <= 0L) return
-
-        sync.insertEnergy(extracted)
-        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
     }
 
     private fun resolveDisplayedMode(): Int {
