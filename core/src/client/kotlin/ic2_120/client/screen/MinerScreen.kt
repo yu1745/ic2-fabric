@@ -126,7 +126,9 @@ class MinerScreen(
                     Text.translatable("gui.ic2_120.miner.uptips_advanced"),
                     Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
                     Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.redstone_inverter_upgrade"))
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.redstone_inverter_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_ejector_upgrade"))
                 ), mouseX, mouseY)
             }
         } else {
@@ -139,7 +141,9 @@ class MinerScreen(
                 context.drawTooltip(textRenderer, listOf(
                     Text.translatable("gui.ic2_120.miner.uptips"),
                     Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
-                    Text.literal("§7").append(Text.translatable("item.ic2_120.pulling_upgrade"))
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.pulling_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_ejector_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_pulling_upgrade"))
                 ), mouseX, mouseY)
             }
         }

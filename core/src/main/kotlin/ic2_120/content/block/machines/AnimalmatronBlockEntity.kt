@@ -909,6 +909,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             val type = AnimalmatronBlockEntity::class.type()
             FluidStorage.SIDED.registerForBlockEntity({ be, side -> be.getFluidStorageForSide(side) }, type)
             fluidLookupRegistered = true
-        }
+        } 
     }
 }
