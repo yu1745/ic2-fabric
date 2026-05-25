@@ -11,7 +11,6 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
-import org.slf4j.LoggerFactory
 
 class PipeNetwork {
     val pipes = mutableSetOf<Long>()
@@ -275,7 +274,7 @@ class PipeNetwork {
     }
 
     private fun canReceiverAccept(receiver: Storage<FluidVariant>, variant: FluidVariant): Boolean =
-        Transaction.openOuter().use { tx -> receiver.insert(variant, 1L, tx) > 0L }
+        Transaction.openOuter().use { tx -> receiver.insert(variant, FluidConstants.BUCKET, tx) > 0L }
 
     private fun findProviders(world: World, topology: TopologyCache): List<ProviderEndpoint> {
         val providers = mutableListOf<ProviderEndpoint>()
@@ -304,7 +303,7 @@ class PipeNetwork {
             val neighborPos = BlockPos.fromLong(edge.neighborPosLong)
             val storage = FluidStorage.SIDED.find(world, neighborPos, edge.lookupFromNeighborSide) ?: continue
             if (!storage.supportsInsertion()) continue
-            if (simulateInsertion(storage, primaryVariant, 1L) > 0L) {
+            if (simulateInsertion(storage, primaryVariant, FluidConstants.BUCKET) > 0L) {
                 receivers.add(ReceiverEndpoint(storage, edge.cablePosLong))
             }
         }

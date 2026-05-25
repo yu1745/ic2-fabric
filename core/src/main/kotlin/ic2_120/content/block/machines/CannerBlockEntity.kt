@@ -185,7 +185,7 @@ class CannerBlockEntity(
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = TANK_CAPACITY
         override fun canInsert(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
-        override fun canExtract(variant: FluidVariant): Boolean = false
+        override fun canExtract(variant: FluidVariant): Boolean = true
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -203,7 +203,7 @@ class CannerBlockEntity(
     private val rightTankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = TANK_CAPACITY
-        override fun canInsert(variant: FluidVariant): Boolean = false
+        override fun canInsert(variant: FluidVariant): Boolean = true
         override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
@@ -351,15 +351,7 @@ class CannerBlockEntity(
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
-        val mode = sync.getMode()
-        // 锁定规则：被锁定的槽位禁止对外交互，机器内部操作不受影响
-        val leftLocked = mode != CannerSync.Mode.EMPTY_LIQUID
-        val rightLocked = mode == CannerSync.Mode.BOTTLE_SOLID || mode == CannerSync.Mode.EMPTY_LIQUID
-        val storages = mutableListOf<Storage<FluidVariant>>()
-        if (!leftLocked) storages.add(leftTankInputOnly)
-        if (!rightLocked) storages.add(rightTankOutputOnly)
-        if (storages.isEmpty()) return Storage.empty()
-        return CombinedStorage(storages)
+        return CombinedStorage(listOf(leftTankInputOnly, rightTankOutputOnly))
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
