@@ -681,7 +681,7 @@ object ModFluids {
     fun isGas(fluid: Fluid): Boolean = isSteam(fluid) || isCompressedAir(fluid)
 
     /** 非气体即为流体 */
-    fun isFluid(fluid: Fluid): Boolean = !isGas(fluid) && fluid != Fluids.EMPTY && fluid != Fluids.FLOWING_WATER && fluid != Fluids.WATER
+    fun isFluid(fluid: Fluid): Boolean = !isGas(fluid) && fluid != Fluids.EMPTY
 
     /** 蒸汽或过热蒸汽 */
     fun isSteam(fluid: Fluid): Boolean =
