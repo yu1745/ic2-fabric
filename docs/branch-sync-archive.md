@@ -95,3 +95,23 @@
 | 102 | `64611492` | merge: refactor: 发电机A迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick 无冲突 |
 | 103 | `c161afb2` | merge: refactor: 发电机B+热能迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突 + Identifier.of 适配 |
 | 104 | `8a9d1142` | merge: refactor: 特殊机器A迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突（MatterGenerator/OreWashingPlant）|
+| 105 | `260a09d2` | merge: refactor: 特殊机器B迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突（PatternStorage/Pump/Replicator/SolarDistiller）|
+| 106 | `da4bb903` | merge: Unit 8 BE — 为缺少 RoutedItemStorage 的 BlockEntity 新增存储 | ✅ | cherry-pick + 解决冲突 + 1.21.1 API 适配 |
+| 107 | `c136631b` | refactor: 完成所有机器的 ScreenHandler 迁移到 RoutedItemStorage 驱动 | ✅ | cherry-pick + 解决冲突 + 1.21.1 API 适配 |
+| 108 | `20b714a5` | refactor: 清除旧 API，迁移附属机器到 RoutedItemStorage | ✅ | cherry-pick + SlotMoveHelper 冲突 + ItemStack.areEqual 适配 |
+| 109 | `cd5e7cdc` | merge: 全机器 RoutedItemStorage 驱动 quickMove 迁移完成 | ✅ | cherry-pick -m 1 + 1.21.1 API 适配（Identifier.of/ExtendedScreenHandlerFactory/Inventories/RecipeInput/DataComponentTypes.FOOD）+ datagen 刷新 |
+| 110 | `3bbfa45b` | fix: 洗矿机输入槽改用配方表查询，修复沙砾无法放入 | ✅ | cherry-pick 无冲突 |
+| 111 | `44865f50` | feat: 流体热交换机 UI 三栏布局优化，增加 MetalFormer ScreenFactory | ✅ | cherry-pick 无冲突 |
+| 112 | `83305a9c` | fix: 橡胶树叶加入 minecraft:leaves tag | ✅ | cherry-pick + 适配 1.21.1 tags/block/ 路径 |
+| 113 | `1c4cddfc` | fix: 修复压缩机/离心机/切石机输入槽无法放入需要多个原料的配方物品 | ✅ | cherry-pick + 适配 1.21.1 API（RecipeInput→SingleStackRecipeInput）|
+| 114 | `ec799f6e` | fix: 复制机/模板存储模板选择按钮因 ButtonClickC2SPacket byte 溢出失效 | ✅ | cherry-pick + 适配 1.21.1 CustomPayload C2S（SelectTemplatePayload）|
+| 115 | `c35cb357` | fix: 修正能量水晶粉合成配方为4钻石粉+5红石粉 | ✅ | cherry-pick 无冲突 |
+| 116 | `f7b604d9` | feat: 绝缘导线递进合成/剪刀剥离配方，添加耐压等级 tooltip | ✅ | cherry-pick + 适配 1.21.1 API（RecipeExporter、Identifier.of、CustomPayload C2S）+ datagen 刷新 |
+| 117 | `d80abc0d` | feat: 电路板合成改用铁板，粘性树脂+活塞合成粘性活塞 | ✅ | cherry-pick + 适配 1.21.1 路径（recipe/ 单数）+ datagen 刷新 |
+| 118 | `f82870b4` | feat: EU分流导线（红石开关）+ EU限流导线（GUI限流） | ✅ | cherry-pick + 适配 1.21.1 API（onUse 无 Hand、ExtendedScreenHandlerFactory<PacketByteBuf>/getScreenOpeningData、RecipeExporter）+ data 目录单数 + datagen 刷新 |
+| 119 | `06f74979` | feat: 蒸汽系统——蒸汽/过热蒸汽流体、蒸汽发生器/蒸汽动能发生机/冷凝器 | ✅ | cherry-pick + 解决多处冲突（FluidVariant CODEC、ExtendedScreenHandlerFactory、OnUse 无 Hand、validateTicker）+ 适配 1.21.1 API + datagen 刷新 |
+| 120 | `37af24e4` | feat: 压缩机配方补全+容器返还支持 | ✅ | cherry-pick + 解决冲突（containerReturn 适配 codec/packetCodec）+ 适配 1.21.1 API（ItemStack.fromNbt/encode）+ datagen 刷新 |
+| 121 | `5f6df96f` | feat: 流体管道系统重构——simulateInsertion + 升级解耦 + 泵附件作唯一 provider | ✅ | cherry-pick + 解决冲突（FluidPipeUpgradeComponent DataComponent 适配）|
+| 122 | `6f2633f3` | fix: BER 光照硬编码 MAX_LIGHT_COORDINATE，改用环境光照 | ✅ | cherry-pick 无冲突 |
+| 123 | `152ca7ab` | feat: 多台机器GUI从ComposeUI改为传统纹理渲染 | ✅ | cherry-pick + Screen conflict 解决（取 HEAD 版本）|
+| 124 | `33a52f58` | chore: 移除 .deploy-enabled 引用（文件已删除） | ✅ | cherry-pick 无冲突 |

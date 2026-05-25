@@ -1,6 +1,6 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-05-16
+最后更新：2026-05-25
 
 分叉点：`c5e247c`
 
@@ -10,38 +10,34 @@
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **129 个 commit**，**127 个已同步，2 个待同步**。
-（归档 1-104 → `branch-sync-archive.md`）
+从分叉点 `c5e247c` 到 main HEAD 共 **144 个 commit**，**125 个已同步，19 个待同步**。
+（归档 1-124 → `branch-sync-archive.md`）
 
 ## 逐 commit 状态
 
 | # | Commit | 说明 | 在 1.21.1？ | 备注 |
 |---|--------|------|:-----------:|------|
 
-| 105 | `260a09d2` | merge: refactor: 特殊机器B迁移到 RoutedItemStorage 驱动 quickMove | ✅ | cherry-pick + 解决冲突（PatternStorage/Pump/Replicator/SolarDistiller）|
-| 106 | `da4bb903` | merge: Unit 8 BE — 为缺少 RoutedItemStorage 的 BlockEntity 新增存储 | ✅ | cherry-pick + 解决冲突 + 1.21.1 API 适配 |
-| 107 | `c136631b` | refactor: 完成所有机器的 ScreenHandler 迁移到 RoutedItemStorage 驱动 | ✅ | cherry-pick + 解决冲突 + 1.21.1 API 适配 |
-| 108 | `20b714a5` | refactor: 清除旧 API，迁移附属机器到 RoutedItemStorage | ✅ | cherry-pick + SlotMoveHelper 冲突 + ItemStack.areEqual 适配 |
-| 109 | `cd5e7cdc` | merge: 全机器 RoutedItemStorage 驱动 quickMove 迁移完成 | ✅ | cherry-pick -m 1 + 1.21.1 API 适配（Identifier.of/ExtendedScreenHandlerFactory/Inventories/RecipeInput/DataComponentTypes.FOOD）+ datagen 刷新 |
-| 110 | `3bbfa45b` | fix: 洗矿机输入槽改用配方表查询，修复沙砾无法放入 | ✅ | cherry-pick 无冲突 |
-| 111 | `44865f50` | feat: 流体热交换机 UI 三栏布局优化，增加 MetalFormer ScreenFactory | ✅ | cherry-pick 无冲突 |
-| 112 | `83305a9c` | fix: 橡胶树叶加入 minecraft:leaves tag | ✅ | cherry-pick + 适配 1.21.1 tags/block/ 路径 |
-| 113 | `1c4cddfc` | fix: 修复压缩机/离心机/切石机输入槽无法放入需要多个原料的配方物品 | ✅ | cherry-pick + 适配 1.21.1 API（RecipeInput→SingleStackRecipeInput）|
-| 114 | `ec799f6e` | fix: 复制机/模板存储模板选择按钮因 ButtonClickC2SPacket byte 溢出失效 | ✅ | cherry-pick + 适配 1.21.1 CustomPayload C2S（SelectTemplatePayload）|
-| 115 | `c35cb357` | fix: 修正能量水晶粉合成配方为4钻石粉+5红石粉 | ✅ | cherry-pick 无冲突 |
-| 116 | `f7b604d9` | feat: 绝缘导线递进合成/剪刀剥离配方，添加耐压等级 tooltip | ✅ | cherry-pick + 适配 1.21.1 API（RecipeExporter、Identifier.of、CustomPayload C2S）+ datagen 刷新 |
-| 117 | `d80abc0d` | feat: 电路板合成改用铁板，粘性树脂+活塞合成粘性活塞 | ✅ | cherry-pick + 适配 1.21.1 路径（recipe/ 单数）+ datagen 刷新 |
-| 118 | `f82870b4` | feat: EU分流导线（红石开关）+ EU限流导线（GUI限流） | ✅ | cherry-pick + 适配 1.21.1 API（onUse 无 Hand、ExtendedScreenHandlerFactory<PacketByteBuf>/getScreenOpeningData、RecipeExporter）+ data 目录单数 + datagen 刷新 |
-| 119 | `06f74979` | feat: 蒸汽系统——蒸汽/过热蒸汽流体、蒸汽发生器/蒸汽动能发生机/冷凝器 | ✅ | cherry-pick + 解决多处冲突（FluidVariant CODEC、ExtendedScreenHandlerFactory、OnUse 无 Hand、validateTicker）+ 适配 1.21.1 API + datagen 刷新 |
-| 120 | `37af24e4` | feat: 压缩机配方补全+容器返还支持 | ✅ | cherry-pick + 解决冲突（containerReturn 适配 codec/packetCodec）+ 适配 1.21.1 API（ItemStack.fromNbt/encode）+ datagen 刷新 |
-| 121 | `5f6df96f` | feat: 流体管道系统重构——simulateInsertion + 升级解耦 + 泵附件作唯一 provider | ✅ | cherry-pick + 解决冲突（FluidPipeUpgradeComponent DataComponent 适配）|
-| 122 | `6f2633f3` | fix: BER 光照硬编码 MAX_LIGHT_COORDINATE，改用环境光照 | ✅ | cherry-pick 无冲突 |
-| 123 | `152ca7ab` | feat: 多台机器GUI从ComposeUI改为传统纹理渲染 | ✅ | cherry-pick + Screen conflict 解决（取 HEAD 版本）|
-| 124 | `33a52f58` | chore: 移除 .deploy-enabled 引用（文件已删除） | ✅ | cherry-pick 无冲突 |
 | 125 | `7f74eecc` | feat: 风力计配方+粗矿块反向分解+发电机燃料过滤修复 | ✅ | cherry-pick + 适配 1.21.1 RecipeExporter/CraftingRecipeCategory（tools→equipment）+ datagen 刷新 |
 | 126 | `4ee9b03e` | feat: 核爆炸对齐 IC2 原版——自定义射线投射+分tick方块摧毁 | ❌ | 待同步 |
 | 127 | `88fe5847` | feat: 核爆炸全分tick+严格数值对齐+全服公告+冷却 | ❌ | 待同步 |
 | 128 | `f9841c26` | docs: TODO 添加特斯拉线圈电鱼 | ❌ | 待同步 |
+| 129 | `6e412bcf` | feat: 高炉GUI改为传统纹理渲染 + 温度/HU/压缩空气机制重做 | ❌ | 待同步 |
+| 130 | `b0ae678f` | fix: 高炉缺失压缩空气纹理源 | ❌ | 待同步 |
+| 131 | `e159a492` | 部分GUI更新 + 高炉更改（PR #2） | ❌ | 待同步 |
+| 132 | `e0d5114e` | fix: 恢复 PR 中误删的 steam 流体常量和类 + 修复 BlastFurnace typo | ❌ | 待同步 |
+| 133 | `90605282` | feat: 流体系统重构——Map 查表替代 when、颜色单一数据源、JEI 排除自动同步 | ❌ | 待同步 |
+| 134 | `7845b2fa` | feat: 钻头同时支持镐+铲双工具 + @ModItem 新增 tags 参数 | ❌ | 待同步 |
+| 135 | `59c2b646` | GUI全面更新：铁炉/电炉/感应炉/储电箱/太阳能蒸馏机/方块切割机改用PNG纹理渲染 | ❌ | 待同步 |
+| 136 | `e860b5d4` | GUI 版本更新：纹理修复 + 变压器/能量存储/机器 GUI 更新 | ❌ | 待同步 |
+| 137 | `3377e9e6` | fix: 补上冲突解决时误删的 Ic2Fluid 结束大括号 | ❌ | 待同步 |
+| 138 | `06235b00` | 新增压缩机/提取机/回收机/固体装罐机PNG GUI + 多机器电量条/流体槽悬停提示 | ❌ | 待同步 |
+| 139 | `8d619cab` | 压缩机/提取机/收集机/固体装罐机等多机器储能/流体槽新增GUI及提示文本 | ❌ | 待同步 |
+| 140 | `961dcf2e` | docs: 新增 19 份机器玩家文档，重写流体管道系统文档 | ❌ | 待同步 |
+| 141 | `7299140f` | 更新了部分GUI 优化了高炉程序（PR #12） | ❌ | 待同步 |
+| 142 | `ebd14a81` | 更新了部分GUI 以及优化了高炉程序 | ❌ | 待同步 |
+| 143 | `ea30898b` | feat: 全面GUI重构 + 流体/气体系统区分 + 储罐系统 + 离心机配方修正 | ❌ | 待同步 |
+| 144 | `19bf0da8` | feat: 采矿机流体处理 + 高级采矿机逐层回收管道 + 核电日志降级 | ❌ | 待同步 |
 
 ## 同步历史
 
