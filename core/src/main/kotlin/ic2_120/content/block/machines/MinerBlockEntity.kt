@@ -11,6 +11,8 @@ import ic2_120.content.item.AdvancedScannerItem
 import ic2_120.content.item.DiamondDrill
 import ic2_120.content.item.Drill
 import ic2_120.content.item.EjectorUpgrade
+import ic2_120.content.item.FluidEjectorUpgrade
+import ic2_120.content.item.FluidPullingUpgrade
 import ic2_120.content.item.IridiumDrill
 import ic2_120.content.item.OdScannerItem
 import ic2_120.content.item.OverclockerUpgrade
@@ -42,11 +44,18 @@ import ic2_120.config.Ic2Config
 import net.minecraft.block.Block
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
+import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import ic2_120.registry.item
 import ic2_120.registry.instance
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.enchantment.Enchantments
@@ -54,6 +63,9 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
+import net.minecraft.fluid.Fluid
+import net.minecraft.fluid.FluidState
+import net.minecraft.fluid.Fluids
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
@@ -154,6 +166,8 @@ abstract class BaseMinerBlockEntity(
         private const val STALL_LOG_INTERVAL_TICKS = 20L
         private const val MAX_SAME_TARGET_PATH_FAILS = 40
         private const val MAX_RECOVERY_SEARCH_NODES = 16384
+        private const val NBT_TANK_AMOUNT = "TankAmount"
+        private const val NBT_TANK_FLUID = "TankFluid"
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -165,15 +179,15 @@ abstract class BaseMinerBlockEntity(
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = {
                 if (acceptsAdvancedScanner)
-                    it.item is OverclockerUpgrade || it.item is TransformerUpgrade || it.item is RedstoneInverterUpgrade
+                    it.item is OverclockerUpgrade || it.item is TransformerUpgrade || it.item is RedstoneInverterUpgrade || it.item is EjectorUpgrade || it.item is FluidEjectorUpgrade
                 else
-                    it.item is EjectorUpgrade || it.item is PullingUpgrade
+                    it.item is EjectorUpgrade || it.item is PullingUpgrade || it.item is FluidEjectorUpgrade || it.item is FluidPullingUpgrade
             }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_SCANNER), matcher = { isValid(SLOT_SCANNER, it) }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_DRILL), matcher = { isValid(SLOT_DRILL, it) }, maxPerSlot = 1),
-            ItemInsertRoute((SLOT_FILTER_START..SLOT_FILTER_END).toList().toIntArray(), matcher = { !it.isEmpty }),
-            ItemInsertRoute(intArrayOf(SLOT_PIPE), matcher = { isValid(SLOT_PIPE, it) }, maxPerSlot = PIPE_SLOT_MAX_COUNT)
+            ItemInsertRoute(intArrayOf(SLOT_PIPE), matcher = { isValid(SLOT_PIPE, it) }, maxPerSlot = PIPE_SLOT_MAX_COUNT),
+            ItemInsertRoute((SLOT_FILTER_START..SLOT_FILTER_END).toList().toIntArray(), matcher = { !it.isEmpty })
         ),
         extractSlots = IntArray(INVENTORY_SIZE) { it },
         markDirty = { markDirty() }
@@ -205,6 +219,34 @@ abstract class BaseMinerBlockEntity(
     var cacheItemCount = 0
     val syncedData = SyncedData(this)
 
+    /** 内部流体储罐（1桶容量），用于储存采矿管遇到的流体。 */
+    private val fluidTankInternal = object : SingleVariantStorage<FluidVariant>() {
+        override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
+        override fun getCapacity(variant: FluidVariant): Long = FluidConstants.BUCKET
+        override fun canInsert(variant: FluidVariant): Boolean =
+            !variant.isBlank && (variant.fluid == Fluids.WATER || variant.fluid == Fluids.LAVA)
+        override fun canExtract(variant: FluidVariant): Boolean = true
+        override fun onFinalCommit() { markDirty() }
+
+        fun hasSpaceForBucket(fluid: Fluid): Boolean {
+            val space = FluidConstants.BUCKET - amount
+            if (space < FluidConstants.BUCKET) return false
+            if (amount > 0L && !variant.isBlank && variant.fluid != fluid) return false
+            return true
+        }
+
+        fun insertBucket(fluid: Fluid) {
+            val fv = FluidVariant.of(fluid)
+            Transaction.openOuter().use { tx ->
+                val inserted = insert(fv, FluidConstants.BUCKET, tx)
+                if (inserted > 0L) tx.commit()
+            }
+        }
+    }
+    val fluidTank: Storage<FluidVariant> = fluidTankInternal
+
+    fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? = fluidTank
+
     @RegisterEnergy
     val sync = MinerSync(
         syncedData,
@@ -213,7 +255,8 @@ abstract class BaseMinerBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(baseTier + voltageTierBonus) }
     )
 
-    private fun consumeWorkEnergy(amount: Long): Long {
+    /** 从扫描器电池消耗能量（仅用于扫描非矿石方块）。 */
+    private fun consumeScannerEnergy(amount: Long): Long {
         if (!acceptsAdvancedScanner) return sync.consumeEnergy(amount)
         val scannerStack = getStack(SLOT_SCANNER)
         val tool = scannerStack.item as? IElectricTool ?: return 0L
@@ -278,9 +321,9 @@ abstract class BaseMinerBlockEntity(
             }
             in SLOT_UPGRADE_INDICES -> {
                 if (acceptsAdvancedScanner)
-                    stack.item is OverclockerUpgrade || stack.item is TransformerUpgrade || stack.item is RedstoneInverterUpgrade
+                    stack.item is OverclockerUpgrade || stack.item is TransformerUpgrade || stack.item is RedstoneInverterUpgrade || stack.item is EjectorUpgrade || stack.item is FluidEjectorUpgrade
                 else
-                    stack.item is EjectorUpgrade || stack.item is PullingUpgrade
+                    stack.item is EjectorUpgrade || stack.item is PullingUpgrade || stack.item is FluidEjectorUpgrade || stack.item is FluidPullingUpgrade
             }
             in SLOT_OUTPUT_INDICES -> false
             SLOT_PIPE -> stack.item === MiningPipeBlock::class.item()
@@ -328,6 +371,16 @@ abstract class BaseMinerBlockEntity(
         } else {
             renderTargetTime = -1L
         }
+        // 流体储罐
+        val tankFluid = nbt.getString(NBT_TANK_FLUID)
+        val tankAmount = nbt.getLong(NBT_TANK_AMOUNT)
+        if (tankFluid.isNotEmpty() && tankAmount > 0L) {
+            val id = net.minecraft.util.Identifier.tryParse(tankFluid)
+            if (id != null && Registries.FLUID.containsId(id)) {
+                val fluid = Registries.FLUID.get(id)
+                fluidTankInternal.insertBucket(fluid)
+            }
+        }
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -350,6 +403,13 @@ abstract class BaseMinerBlockEntity(
             nbt.putInt(NBT_RENDER_TARGET_Z, renderTargetZ)
             nbt.putLong(NBT_RENDER_TARGET_TIME, renderTargetTime)
         }
+        // 流体储罐
+        nbt.putLong(NBT_TANK_AMOUNT, fluidTankInternal.amount)
+        if (!fluidTankInternal.variant.isBlank) {
+            nbt.putString(NBT_TANK_FLUID, Registries.FLUID.getId(fluidTankInternal.variant.fluid).toString())
+        } else {
+            nbt.putString(NBT_TANK_FLUID, "")
+        }
     }
 
     override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
@@ -364,6 +424,14 @@ abstract class BaseMinerBlockEntity(
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+
+        // 流体弹出升级：将储罐中的流体排到相邻方块
+        if (fluidPipeProviderEnabled) {
+            FluidPipeUpgradeComponent.ejectFluidToNeighbors(
+                world, pos, fluidTankInternal, fluidPipeProviderFilter,
+                fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount
+            )
+        }
 
         adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
@@ -457,7 +525,7 @@ abstract class BaseMinerBlockEntity(
 
                 val toReserve = minOf(sync.amount, breakEnergy - pendingBreakEnergy)
                 if (toReserve > 0L) {
-                    consumeWorkEnergy(toReserve)
+                    sync.consumeEnergy(toReserve)
                     pendingBreakEnergy += toReserve
                 }
 
@@ -540,7 +608,7 @@ abstract class BaseMinerBlockEntity(
                 val silkMultiplier = if (sync.silkTouch != 0 && acceptsAdvancedScanner) MinerSync.SILK_TOUCH_MULTIPLIER else 2L
                 val breakEnergy = (breakCost * silkMultiplier / 2L * energyMultiplier).toLong().coerceAtLeast(1L)
 
-                if (consumeWorkEnergy(breakEnergy) > 0L) {
+                if (sync.consumeEnergy(breakEnergy) > 0L) {
                     advanceCursor(scannerType.scanRadius)
                     mineBlock(world as ServerWorld, targetPos, blockState)
                     active = true
@@ -548,13 +616,13 @@ abstract class BaseMinerBlockEntity(
                 } else {
                     // 能量不足，将现有能量转入待挖掘池，下一 tick 继续攒
                     pendingBreakEnergy = sync.amount
-                    if (pendingBreakEnergy > 0L) consumeWorkEnergy(pendingBreakEnergy)
+                    if (pendingBreakEnergy > 0L) sync.consumeEnergy(pendingBreakEnergy)
                 }
                 break
             }
 
             // 非矿石方块，消耗扫描能量并前进
-            if (consumeWorkEnergy(scanCost) <= 0L) {
+            if (consumeScannerEnergy(scanCost) <= 0L) {
                 logDecision(world, "insufficient_scan_energy", targetPos)
                 break
             }
@@ -607,6 +675,11 @@ abstract class BaseMinerBlockEntity(
         resetPathFailState()
         buildPipeRecoveryQueue(serverWorld)
         recoveringPipes = pendingPipeRecovery.isNotEmpty()
+        if (!recoveringPipes && acceptsAdvancedScanner) {
+            // 没有管道需要回收，高级采矿机直接恢复工作
+            manualStoppedForRecovery = false
+            sync.running = 1
+        }
         markDirty()
     }
 
@@ -736,10 +809,34 @@ abstract class BaseMinerBlockEntity(
             return
         }
         sync.cursorX = -range
+        val completedY = sync.cursorY
         sync.cursorY -= 1
         if (sync.cursorY < -64) {
             sync.running = 0
         }
+        // 高级采矿机：每层完成后立即回收水平管道，仅保留中心柱
+        if (acceptsAdvancedScanner) {
+            recoverLayerPipes(completedY, range)
+        }
+    }
+
+    /**
+     * 回收指定 Y 层的所有水平采矿管道（保留中心柱）。
+     * 高级采矿机每挖完一层后调用，将水平分支管道回收进管道槽。
+     */
+    private fun recoverLayerPipes(completedY: Int, range: Int) {
+        val serverWorld = world as? ServerWorld ?: return
+        for (dx in -(range + 2)..(range + 2)) {
+            for (dz in -(range + 2)..(range + 2)) {
+                if (dx == 0 && dz == 0) continue  // 保留中心柱
+                val pipePos = BlockPos(pos.x + dx, completedY, pos.z + dz)
+                if (serverWorld.getBlockState(pipePos).block !is MiningPipeBlock) continue
+                if (!canAcceptRecoveredPipe()) return
+                serverWorld.setBlockState(pipePos, net.minecraft.block.Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+                insertRecoveredPipeIntoSlot()
+            }
+        }
+        markDirty()
     }
 
     private fun getPipeEnergyCost(): Long {
@@ -849,9 +946,17 @@ abstract class BaseMinerBlockEntity(
     private fun tryPlacePipeAt(world: ServerWorld, pipePos: BlockPos): Boolean {
         val currentState = world.getBlockState(pipePos)
         if (currentState.block is MiningPipeBlock) return true
-        if (!currentState.isAir) {
-            // 可破坏方块先清掉，再放置采矿管道；不可破坏方块则视为阻塞。
-            if (currentState.getHardness(world, pipePos) < 0f) return false
+
+        // 遇到流体：抽入内部储罐，储罐满则等待
+        val fluidState = world.getFluidState(pipePos)
+        if (!fluidState.isEmpty) {
+            if (!handleFluidBlockForPipe(world, pipePos, fluidState)) return false
+        }
+
+        // 重新读取方块状态（流体可能已被清除）
+        val stateAfterFluid = world.getBlockState(pipePos)
+        if (!stateAfterFluid.isAir && stateAfterFluid.block !is MiningPipeBlock) {
+            if (stateAfterFluid.getHardness(world, pipePos) < 0f) return false
             world.breakBlock(pipePos, false)
         }
 
@@ -859,7 +964,7 @@ abstract class BaseMinerBlockEntity(
         if (pipePlacementBudget <= 0) return false
 
         val pipeEnergy = getPipeEnergyCost()
-        if (consumeWorkEnergy(pipeEnergy) <= 0L) return false
+        if (sync.consumeEnergy(pipeEnergy) <= 0L) return false
 
         val pipeSlot = findPipeInInventory() ?: run {
             sync.running = 0
@@ -1062,7 +1167,72 @@ abstract class BaseMinerBlockEntity(
         val state = world.getBlockState(pos)
         if (state.block is MiningPipeBlock) return true
         if (state.isAir) return true
+        if (!state.fluidState.isEmpty) return true  // 流体可穿越，铺设时再抽走
         return state.getHardness(world, pos) >= 0f
+    }
+
+    /**
+     * 处理管道铺设遇到的流体方块。
+     * - 源头：直接抽入储罐
+     * - 流动：BFS 找到源头并抽走，再清除当前位置
+     * @return true 成功处理，false 储罐已满需等待
+     */
+    private fun handleFluidBlockForPipe(world: ServerWorld, pos: BlockPos, fluidState: FluidState): Boolean {
+        val fluid = fluidState.fluid
+        val sourceFluid = when (fluid) {
+            Fluids.WATER, Fluids.FLOWING_WATER -> Fluids.WATER
+            Fluids.LAVA, Fluids.FLOWING_LAVA -> Fluids.LAVA
+            else -> return true  // 未知流体直接放行
+        }
+
+        if (!fluidTankInternal.hasSpaceForBucket(sourceFluid)) return false
+
+        if (fluidState.isStill) {
+            fluidTankInternal.insertBucket(sourceFluid)
+            world.setBlockState(pos, net.minecraft.block.Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+        } else {
+            val sourcePos = findFluidSourceBFS(world, pos, sourceFluid)
+            if (sourcePos != null) {
+                fluidTankInternal.insertBucket(sourceFluid)
+                world.setBlockState(sourcePos, net.minecraft.block.Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+            }
+            // 清除当前位置的流动流体
+            world.setBlockState(pos, net.minecraft.block.Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+        }
+        return true
+    }
+
+    /** BFS 搜索同类型流体的源头方块（isStill），上限 256 节点。 */
+    private fun findFluidSourceBFS(world: ServerWorld, start: BlockPos, sourceFluid: Fluid): BlockPos? {
+        val visited = HashSet<BlockPos>()
+        val queue = ArrayDeque<BlockPos>()
+        queue.add(start)
+        visited.add(start)
+        val dirs = arrayOf(
+            BlockPos(1, 0, 0), BlockPos(-1, 0, 0),
+            BlockPos(0, 1, 0), BlockPos(0, -1, 0),
+            BlockPos(0, 0, 1), BlockPos(0, 0, -1)
+        )
+        var explored = 0
+        while (queue.isNotEmpty()) {
+            val cur = queue.removeFirst()
+            explored++
+            if (explored > 256) break
+            val fs = world.getFluidState(cur)
+            if (fs.isEmpty) continue
+            if (fs.isStill && fs.fluid == sourceFluid) return cur
+            for (d in dirs) {
+                val next = cur.add(d)
+                if (!visited.add(next)) continue
+                val nfs = world.getFluidState(next)
+                if (nfs.isEmpty) continue
+                val nf = nfs.fluid
+                val matches = (sourceFluid == Fluids.WATER && (nf == Fluids.WATER || nf == Fluids.FLOWING_WATER))
+                    || (sourceFluid == Fluids.LAVA && (nf == Fluids.LAVA || nf == Fluids.FLOWING_LAVA))
+                if (matches) queue.add(next)
+            }
+        }
+        return null
     }
 
     private fun observeCursorStall(world: World, phase: String) {
@@ -1364,6 +1534,21 @@ class MinerBlockEntity(
 ) : BaseMinerBlockEntity(type, pos, state, "miner", 2, false) {
 
     constructor(pos: BlockPos, state: BlockState) : this(MinerBlockEntity::class.type(), pos, state)
+
+    companion object {
+        @Volatile
+        private var fluidLookupRegistered = false
+
+        @RegisterFluidStorage
+        fun registerFluidStorageLookup() {
+            if (fluidLookupRegistered) return
+            FluidStorage.SIDED.registerForBlockEntity(
+                { be, _ -> be.getFluidStorageForSide(null) },
+                MinerBlockEntity::class.type()
+            )
+            fluidLookupRegistered = true
+        }
+    }
 }
 
 @ModBlockEntity(block = AdvancedMinerBlock::class)
@@ -1374,4 +1559,19 @@ class AdvancedMinerBlockEntity(
 ) : BaseMinerBlockEntity(type, pos, state, "advanced_miner", 3, true) {
 
     constructor(pos: BlockPos, state: BlockState) : this(AdvancedMinerBlockEntity::class.type(), pos, state)
+
+    companion object {
+        @Volatile
+        private var fluidLookupRegistered = false
+
+        @RegisterFluidStorage
+        fun registerFluidStorageLookup() {
+            if (fluidLookupRegistered) return
+            FluidStorage.SIDED.registerForBlockEntity(
+                { be, _ -> be.getFluidStorageForSide(null) },
+                AdvancedMinerBlockEntity::class.type()
+            )
+            fluidLookupRegistered = true
+        }
+    }
 }

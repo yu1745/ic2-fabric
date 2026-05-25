@@ -1041,7 +1041,7 @@ class NuclearReactorBlockEntity(
                 var heatActuallyConverted = 0L
                 // 每秒日志一次，避免刷屏
                 if (world != null && (world!!.time % 20L == 0L)) {
-                    LOG.info(
+                    LOG.debug(
                         "[冷却液转换] producedHeat=$actualProducedHeat " +
                             "ventDissipatedHeat=$rawVentDissipatedHeat " +
                             "effectiveDissipatedHeat=$dissipatedHeat " +
@@ -1053,11 +1053,11 @@ class NuclearReactorBlockEntity(
                 if (dissipatedHeat <= 0 || availableCoolant <= 0) {
                     // 跳过时仅在有意向转换时记录
                     if (rawVentDissipatedHeat > 0 && availableCoolant <= 0) {
-                        LOG.info("[冷却液转换] 跳过: 无冷却液 availableCoolant=0mB")
+                        LOG.debug("[冷却液转换] 跳过: 无冷却液 availableCoolant=0mB")
                     } else if (rawVentDissipatedHeat <= 0 && availableCoolant > 0) {
-                        LOG.info("[冷却液转换] 跳过: 无散热量 ventDissipatedHeat=0 (需散热片)")
+                        LOG.debug("[冷却液转换] 跳过: 无散热量 ventDissipatedHeat=0 (需散热片)")
                     } else if (actualProducedHeat <= 0 && rawVentDissipatedHeat > 0 && availableCoolant > 0) {
-                        LOG.info("[冷却液转换] 跳过: 本周期无实际产热，散热片散热不计入转换")
+                        LOG.debug("[冷却液转换] 跳过: 本周期无实际产热，散热片散热不计入转换")
                     }
                 } else {
                     // 计算可转换的热量
@@ -1092,7 +1092,7 @@ class NuclearReactorBlockEntity(
                                 extracted < coolantNeeded && extracted == availableCoolant -> "冷却液不足"
                                 else -> "无"
                             }
-                            LOG.info(
+                            LOG.debug(
                                 "[冷却液转换] 成功: 冷却液 ${dropletsToMb(extracted)}mB " +
                                     "-> 热冷却液 ${dropletsToMb(extracted)}mB " +
                                     "(理论需冷却液 ${dropletsToMb(coolantNeeded)}mB, " +
@@ -1101,7 +1101,7 @@ class NuclearReactorBlockEntity(
                                     "限制=$limitReason)"
                             )
                         } else if (!outputAccepts) {
-                            LOG.warn("[冷却液转换] 跳过: 输出罐流体类型异常，无法写入热冷却液")
+                            LOG.debug("[冷却液转换] 跳过: 输出罐流体类型异常，无法写入热冷却液")
                         }
                     }
                 }
@@ -1115,7 +1115,7 @@ class NuclearReactorBlockEntity(
                             sync.temperature + backfill.remainingHeat.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
                         ).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
                     }
-                    LOG.info(
+                    LOG.debug(
                         "[冷却液转换] 未转换热量回灌散热片: unconverted=${unconvertedHeat}HU " +
                             "vents=${backfill.targetCount} " +
                             "applied=${backfill.appliedHeat}HU " +
@@ -1147,7 +1147,7 @@ class NuclearReactorBlockEntity(
             val reactorDelta = tempAfter - tempBefore
             val componentDelta = componentHeatAfter - componentHeatBefore
             if (isThermalMode()) {
-                LOG.info(
+                LOG.debug(
                     "[热量诊断] pos=$pos changedSinceLastCycle=$inventoryChangedSinceLastCycle temp:$tempBefore->$tempAfter(Δ$reactorDelta) " +
                         "componentHeat:$componentHeatBefore->$componentHeatAfter(Δ$componentDelta) " +
                         "produced=$totalHeatProduced dissipatedCapacity=$totalHeatDissipated " +
@@ -1297,7 +1297,7 @@ class NuclearReactorBlockEntity(
                 val afterTemp = sync.temperature
                 val afterComponentHeat = calculateStoredComponentHeat()
                 val afterEmit = emitHeatBuffer
-                LOG.info(
+                LOG.debug(
                     "[反应堆Pass] pos={} pass={} heatRun={} temp:{}->{}(Δ{}) componentHeat:{}->{}(Δ{}) emit:{}->{}(Δ{})",
                     pos,
                     pass,
