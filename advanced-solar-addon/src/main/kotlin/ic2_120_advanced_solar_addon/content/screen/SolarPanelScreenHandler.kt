@@ -46,45 +46,38 @@ class SolarPanelScreenHandler(
 
     val machineSlotCount: Int get() = chargeSlotCount
 
-    /**
-     * BlockEntity slot index -> ScreenHandler slot index mapping.
-     */
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
-    /** End index (exclusive) of the hotbar in handler slot indices. */
     private val hotbarEnd: Int get() = machineSlotCount + 36
 
     init {
         addProperties(propertyDelegate)
 
-        // Charge slots
+        // Charge slots: x=17 + i*18, y=59
         if (chargeInventory != null && chargeSlotCount > 0) {
             checkSize(chargeInventory, chargeSlotCount)
             for (i in 0 until chargeSlotCount) {
-                addTrackedSlot(chargeInventory, i)
+                addTrackedSlot(chargeInventory, i, CHARGE_SLOT_X + i * SLOT_SIZE, CHARGE_SLOT_Y)
             }
         }
 
-        // Player inventory
+        // Player inventory: x=17 + col*18, y=86 + row*18
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, PLAYER_INV_X + col * SLOT_SIZE, PLAYER_INV_Y + row * SLOT_SIZE))
             }
         }
+        // Hotbar: x=17 + col*18, y=144
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, PLAYER_INV_X + col * SLOT_SIZE, HOTBAR_Y))
         }
     }
 
-    /**
-     * Adds a PredicateSlot and records BE slot index -> handler slot index mapping.
-     * SlotSpec is derived from [itemStorage] when available; falls back to tier-based spec on client.
-     */
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: chargeSlotSpec(chargeTier)
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -96,7 +89,6 @@ class SolarPanelScreenHandler(
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
 
-            // PredicateSlot index is the BE slot index; player slots are not PredicateSlot, return -1
             val beSlot = (slot as? PredicateSlot)?.index ?: -1
 
             when {
@@ -143,10 +135,25 @@ class SolarPanelScreenHandler(
     companion object {
         const val SLOT_SIZE = 18
 
+        // Charge slots: start at 17,59, horizontal no gap
+        private const val CHARGE_SLOT_X = 17
+        private const val CHARGE_SLOT_Y = 59
+
+        // Player inventory: start at 17,86
+        private const val PLAYER_INV_X = 17
+        private const val PLAYER_INV_Y = 86
+
+        // Hotbar: y=144
+        private const val HOTBAR_Y = 144
+
         private fun chargeSlotSpec(maxTier: Int): SlotSpec = SlotSpec(
             canInsert = { stack ->
                 val item = stack.item
-                (item is IBatteryItem || item is IElectricTool) && item.tier <= maxTier
+                when {
+                    item is IElectricTool -> true
+                    item is IBatteryItem && item.canCharge -> item.tier <= maxTier
+                    else -> false
+                }
             },
             maxItemCount = 1
         )

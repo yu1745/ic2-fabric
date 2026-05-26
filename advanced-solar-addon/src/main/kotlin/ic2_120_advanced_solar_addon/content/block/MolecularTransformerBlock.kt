@@ -14,6 +14,7 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
+import net.minecraft.block.AbstractBlock
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -41,13 +42,16 @@ import net.minecraft.world.World
 // zh_cn: 分子重组仪
 // en_us: Molecular Transformer
 @ModBlock(name = "molecular_transformer", registerItem = true, tab = CreativeTab.IC2_SOLAR, group = "machine")
-class MolecularTransformerBlock : MachineBlock() {
+class MolecularTransformerBlock : MachineBlock(
+    defaultMachineSettings().luminance { state -> if (state.get(LIT)) 7 else 0 }
+) {
 
     companion object {
         const val INPUT_SLOT = 0
         const val OUTPUT_SLOT = 1
         const val INVENTORY_SIZE = 2
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+        val LIT: BooleanProperty = BooleanProperty.of("lit")
 
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
@@ -95,11 +99,11 @@ class MolecularTransformerBlock : MachineBlock() {
 
     override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
         super.appendProperties(builder)
-        builder.add(ACTIVE)
+        builder.add(ACTIVE, LIT)
     }
 
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =
-        super.getPlacementState(ctx)?.with(ACTIVE, false)
+        super.getPlacementState(ctx)?.with(ACTIVE, false)?.with(LIT, false)
 
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.INVISIBLE
 

@@ -25,7 +25,9 @@ data class MolecularTransformerRecipeConfig(
     @field:ConfigComment("输出物品 ID，例如 ic2_120_advanced_solar_addon:iridium_ingot", "")
     val output: String = "",
     @field:ConfigComment("所需能量（EU）", "0")
-    val energy: Long = 0
+    val energy: Long = 0,
+    @field:ConfigComment("输出物品数量", "1")
+    val outputCount: Int = 1
 )
 
 data class Ic2AdvancedSolarAddonMainConfig(
@@ -39,71 +41,40 @@ data class MolecularTransformerConfig(
 )
 
 private val defaultRecipes = listOf(
-    MolecularTransformerRecipeConfig(
-        input = "minecraft:wither_skeleton_skull",
-        output = "minecraft:nether_star",
-        energy = 250000000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "minecraft:iron_ingot",
-        output = "ic2_120:iridium_ore_item",
-        energy = 9000000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "minecraft:coal",
-        output = "minecraft:diamond",
-        energy = 9000000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "minecraft:glowstone",
-        output = "ic2_120_advanced_solar_addon:sunnarium",
-        energy = 9000000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "minecraft:glowstone_dust",
-        output = "ic2_120_advanced_solar_addon:sunnarium_part",
-        energy = 1000000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "minecraft:netherrack",
-        output = "minecraft:gunpowder",
-        energy = 70000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "minecraft:sand",
-        output = "minecraft:gravel",
-        energy = 50000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "minecraft:dirt",
-        output = "minecraft:clay",
-        energy = 50000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "minecraft:yellow_wool",
-        output = "minecraft:glowstone",
-        energy = 500000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "minecraft:blue_wool",
-        output = "minecraft:lapis_block",
-        energy = 500000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "minecraft:red_wool",
-        output = "minecraft:redstone_block",
-        energy = 500000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "ic2_120:tin_ingot",
-        output = "ic2_120:silver_ingot",
-        energy = 500000
-    ),
-    MolecularTransformerRecipeConfig(
-        input = "ic2_120:silver_ingot",
-        output = "minecraft:gold_ingot",
-        energy = 500000
-    )
+    // ====== 特殊产物 ======
+    MolecularTransformerRecipeConfig("minecraft:wither_skeleton_skull", "minecraft:nether_star", 250_000_000),
+    MolecularTransformerRecipeConfig("minecraft:iron_ingot", "ic2_120:iridium_ore_item", 9_000_000),
+
+    // ====== 基础转化 ======
+    MolecularTransformerRecipeConfig("minecraft:charcoal", "minecraft:coal", 60_000),
+    MolecularTransformerRecipeConfig("minecraft:netherrack", "minecraft:gunpowder", 70_000, outputCount = 2),
+    MolecularTransformerRecipeConfig("minecraft:sand", "minecraft:gravel", 50_000),
+    MolecularTransformerRecipeConfig("minecraft:dirt", "minecraft:clay", 50_000),
+
+    // ====== 染料 / 矿物块 ======
+    MolecularTransformerRecipeConfig("minecraft:yellow_wool", "minecraft:glowstone", 500_000),
+    MolecularTransformerRecipeConfig("minecraft:blue_wool", "minecraft:lapis_block", 500_000),
+    MolecularTransformerRecipeConfig("minecraft:red_wool", "minecraft:redstone_block", 500_000),
+
+    // ====== 阳光化合物产线 ======
+    MolecularTransformerRecipeConfig("minecraft:glowstone_dust", "ic2_120_advanced_solar_addon:sunnarium_part", 1_000_000),
+    MolecularTransformerRecipeConfig("minecraft:glowstone", "ic2_120_advanced_solar_addon:sunnarium", 9_000_000),
+
+    // ====== 钻石 ======
+    MolecularTransformerRecipeConfig("minecraft:coal", "minecraft:diamond", 1_000_000),
+
+    // ====== 金属嬗变 ======
+    MolecularTransformerRecipeConfig("ic2_120:tin_ingot", "ic2_120:silver_ingot", 500_000),
+    MolecularTransformerRecipeConfig("ic2_120:silver_ingot", "minecraft:gold_ingot", 500_000),
+
+    // ====== 跨模组配方（依赖其他模组提供物品） ======
+    MolecularTransformerRecipeConfig("minecraft:lapis_lazuli", "ic2_120:sapphire", 5_000_000),
+    MolecularTransformerRecipeConfig("minecraft:redstone", "ic2_120:ruby", 5_000_000),
+    MolecularTransformerRecipeConfig("minecraft:copper_ingot", "ic2_120:nickel_ingot", 300_000),
+    MolecularTransformerRecipeConfig("minecraft:gold_ingot", "ic2_120:platinum_ingot", 9_000_000),
+    MolecularTransformerRecipeConfig("ic2_120:titanium_dust", "ic2_120:chrome_dust", 500_000),
+    MolecularTransformerRecipeConfig("ic2_120:titanium_ingot", "ic2_120:chrome_ingot", 500_000),
+    MolecularTransformerRecipeConfig("minecraft:quartz", "ae2:certus_quartz_crystal", 500_000)
 )
 
 private val DEFAULT_CONFIG_TEMPLATE = Ic2AdvancedSolarAddonMainConfig()

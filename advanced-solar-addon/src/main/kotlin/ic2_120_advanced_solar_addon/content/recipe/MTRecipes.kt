@@ -22,18 +22,18 @@ object MTRecipes {
     fun loadFromConfig() {
         recipes.clear()
         for (configRecipe in Ic2AdvancedSolarAddonConfig.getMolecularTransformerRecipes()) {
-            addRecipe(configRecipe.input, configRecipe.output, configRecipe.energy)
+            addRecipe(configRecipe.input, configRecipe.output, configRecipe.energy, configRecipe.outputCount)
         }
     }
 
     fun loadFromSync(entries: List<MTRecipeEntry>) {
         recipes.clear()
         for (entry in entries) {
-            addRecipe(entry.inputId, entry.outputId, entry.energy)
+            addRecipe(entry.inputId, entry.outputId, entry.energy, entry.outputCount)
         }
     }
 
-    private fun addRecipe(inputId: String, outputId: String, energy: Long) {
+    private fun addRecipe(inputId: String, outputId: String, energy: Long, outputCount: Int = 1) {
         val inId = Identifier.tryParse(inputId)
         val outId = Identifier.tryParse(outputId)
         if (inId != null && outId != null) {
@@ -42,7 +42,7 @@ object MTRecipes {
             if (inputItem != Items.AIR && outputItem != Items.AIR && energy > 0) {
                 recipes.add(MTRecipe(
                     input = ItemStack(inputItem),
-                    output = ItemStack(outputItem),
+                    output = ItemStack(outputItem, outputCount.coerceIn(1, 64)),
                     energy = energy
                 ))
             }

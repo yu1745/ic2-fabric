@@ -82,9 +82,9 @@
     "ic2_120:iridium_tank",
     "ic2_120:liquid_heat_exchanger",
     "ic2_120:geo_generator",
-    "ic2_120:miner",
-    "ic2_120:advanced_miner",
     "ic2_120:tesla_coil",
-    "ic2_120:uu_scanner"
+    "ic2_120:uu_scanner",
+    "ic2_120:miner",
+    "ic2_120:advanced_miner"
   ]
 }
