@@ -36,41 +36,42 @@ class MolecularTransformerScreenHandler(
         schema = SyncedDataView(propertyDelegate),
         tier = MolecularTransformerBlockEntity.TIER,
         getFacing = { Direction.NORTH },
-        currentTickProvider = { null }
+        currentTickProvider = { null },
+        canAcceptEnergy = { false },
+        getRemainingEnergyNeeded = { 0L }
     )
 
-    /**
-     * BlockEntity slot index -> ScreenHandler slot index mapping.
-     */
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
         addProperties(propertyDelegate)
 
-        // Machine slots
-        addTrackedSlot(blockInventory, MolecularTransformerBlock.INPUT_SLOT)
-        addTrackedSlot(blockInventory, MolecularTransformerBlock.OUTPUT_SLOT)
+        // Input slot: 20, 27
+        addTrackedSlot(blockInventory, MolecularTransformerBlock.INPUT_SLOT, INPUT_SLOT_X, INPUT_SLOT_Y)
+        // Output slot: 20, 68
+        addTrackedSlot(blockInventory, MolecularTransformerBlock.OUTPUT_SLOT, OUTPUT_SLOT_X, OUTPUT_SLOT_Y)
 
-        // Player inventory
+        // Player inventory: start 18, 98, 3px gap (21px spacing)
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9,
+                    PLAYER_INV_X + col * SLOT_SPACING,
+                    PLAYER_INV_Y + row * SLOT_SPACING))
             }
         }
+        // Hotbar: 18, 165, 3px gap
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col,
+                HOTBAR_X + col * SLOT_SPACING,
+                HOTBAR_Y))
         }
     }
 
-    /**
-     * Adds a PredicateSlot and records BE slot index -> handler slot index mapping.
-     * SlotSpec is derived from [itemStorage] when available; falls back to default on client.
-     */
-    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int) {
+    private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int) {
         val spec = itemStorage?.deriveSlotSpec(beSlotIndex) ?: fallbackSpec(beSlotIndex)
         val handlerIndex = slots.size
         beSlotToHandlerIndex[beSlotIndex] = handlerIndex
-        addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
+        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
@@ -80,11 +81,10 @@ class MolecularTransformerScreenHandler(
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
 
-            // PredicateSlot index is the BE slot index; player slots are not PredicateSlot, return -1
             val beSlot = (slot as? PredicateSlot)?.index ?: -1
 
             when {
-                // Machine slots (input/output) -> player inventory
+                // Machine slots -> player inventory
                 beSlot >= 0 -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
@@ -123,10 +123,23 @@ class MolecularTransformerScreenHandler(
 
     companion object {
         const val SLOT_SIZE = 18
+        const val SLOT_SPACING = 21 // 18 + 3px gap
         const val SLOT_INPUT_INDEX = 0
         const val SLOT_OUTPUT_INDEX = 1
         const val PLAYER_INV_START = 2
         const val HOTBAR_END = 38
+
+        // Machine slots
+        private const val INPUT_SLOT_X = 20
+        private const val INPUT_SLOT_Y = 27
+        private const val OUTPUT_SLOT_X = 20
+        private const val OUTPUT_SLOT_Y = 68
+
+        // Player inventory
+        private const val PLAYER_INV_X = 18
+        private const val PLAYER_INV_Y = 98
+        private const val HOTBAR_X = 18
+        private const val HOTBAR_Y = 165
 
         private val DEFAULT_INPUT_SPEC = SlotSpec(canInsert = { true })
         private val DEFAULT_OUTPUT_SPEC = SlotSpec(canInsert = { false })

@@ -30,6 +30,7 @@
   "gui.ic2_120_advanced_solar_addon.max": "MAX",
   "gui.ic2_120_advanced_solar_addon.storage": "存储",
   "gui.ic2_120_advanced_solar_addon.generating": "产生：",
+  "gui.ic2_120_advanced_solar_addon.generate": "发电",
   "gui.ic2_120_advanced_solar_addon.status": "状态",
   "gui.ic2_120_advanced_solar_addon.day": "白天",
   "gui.ic2_120_advanced_solar_addon.night": "夜晚",

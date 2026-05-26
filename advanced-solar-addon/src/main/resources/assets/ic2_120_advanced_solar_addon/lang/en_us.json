@@ -30,6 +30,7 @@
   "gui.ic2_120_advanced_solar_addon.max": "MAX",
   "gui.ic2_120_advanced_solar_addon.storage": "Storage",
   "gui.ic2_120_advanced_solar_addon.generating": "Generating:",
+  "gui.ic2_120_advanced_solar_addon.generate": "Generating",
   "gui.ic2_120_advanced_solar_addon.status": "Status",
   "gui.ic2_120_advanced_solar_addon.day": "Day",
   "gui.ic2_120_advanced_solar_addon.night": "Night",
