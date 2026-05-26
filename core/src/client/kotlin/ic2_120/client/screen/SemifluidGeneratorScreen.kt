@@ -73,13 +73,14 @@ class SemifluidGeneratorScreen(
             )
         }
 
-        // 生物燃料槽悬停 (82,23)-(94,69) = 12×46
-        if (fuelMb > 0 && mouseX in x + 82 until x + 94 && mouseY in y + 23 until y + 69) {
-            context.drawTooltip(
-                textRenderer,
-                Text.literal("生物燃料：${fuelMb} / ${fuelCapMb} mB"),
-                mouseX, mouseY
-            )
+        // 燃料槽悬停 (82,23)-(94,69) = 12×46
+        if (mouseX in x + 82 until x + 94 && mouseY in y + 23 until y + 69) {
+            val fuelLines = if (fuelMb > 0) {
+                listOf(Text.translatable("gui.ic2_120.semifluid_generator.fuel_tooltip", "%,d".format(fuelMb), "%,d".format(fuelCapMb)))
+            } else {
+                listOf(Text.translatable("ic2.generic.text.empty"))
+            }
+            context.drawTooltip(textRenderer, fuelLines, mouseX, mouseY)
         }
 
         drawMouseoverTooltip(context, mouseX, mouseY)

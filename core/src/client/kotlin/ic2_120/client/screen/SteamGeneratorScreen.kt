@@ -133,7 +133,7 @@ class SteamGeneratorScreen(
             val lines = if (amt > 0) {
                 val fluidName = if (sync.isWaterDistilled != 0)
                     t("gui.ic2_120.distilled_water") else t("gui.ic2_120.water")
-                listOf(McText.literal(fluidName), McText.literal("$amt / ${SteamGeneratorSync.WATER_TANK_CAPACITY} mB"))
+                listOf(McText.literal(fluidName), McText.literal("${"%,d".format(amt)} / ${"%,d".format(SteamGeneratorSync.WATER_TANK_CAPACITY)} mB"))
             } else {
                 listOf(McText.literal("空"))
             }

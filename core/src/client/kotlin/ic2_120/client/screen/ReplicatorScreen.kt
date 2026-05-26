@@ -44,8 +44,6 @@ class ReplicatorScreen(
     init {
         backgroundWidth = 176
         backgroundHeight = 184
-        titleY = -1000
-        playerInventoryTitleY = -1000
     }
 
     override fun init() {
@@ -87,6 +85,9 @@ class ReplicatorScreen(
 
         val left = x
         val top = y
+
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
         val world = client?.world
         val storage = world?.let { findUniqueAdjacentPatternStorage(it, handler.blockPos) }
         templates = storage?.getTemplatesSnapshot().orEmpty()
@@ -141,7 +142,7 @@ class ReplicatorScreen(
             val energy = handler.sync.energy.toLong().coerceAtLeast(0)
             val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
             context.drawTooltip(textRenderer,
-                listOf(Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU")),
+                listOf(Text.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU")),
                 mouseX, mouseY)
         }
 
@@ -149,7 +150,7 @@ class ReplicatorScreen(
         if (relX in TANK_X until TANK_X + TANK_W && relY in TANK_Y until TANK_Y + TANK_H) {
             val amt = handler.sync.fluidAmountMb.coerceAtLeast(0)
             val cap = handler.sync.fluidCapacityMb.coerceAtLeast(1)
-            val lines = if (amt > 0) listOf(Text.literal("UU物质"), Text.literal("$amt / $cap mB"))
+            val lines = if (amt > 0) listOf(Text.literal("UU物质"), Text.literal("${"%,d".format(amt)} / ${"%,d".format(cap)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -234,7 +235,13 @@ class ReplicatorScreen(
         val text = if (showTemplateInfo) {
             templateInfoText
         } else {
-            statusText(handler.sync.status)
+            val base = statusText(handler.sync.status)
+            if (handler.sync.status == ReplicatorSync.STATUS_RUNNING) {
+                val pct = if (handler.sync.progressMaxUb > 0)
+                    (handler.sync.progressUb.toFloat() / handler.sync.progressMaxUb * 100).toInt().coerceIn(0, 100)
+                else 0
+                "$base($pct%)"
+            } else base
         }
         if (text.isEmpty()) return
         val tw = textRenderer.getWidth(text)
@@ -338,7 +345,7 @@ class ReplicatorScreen(
 
         private const val STATUS_X1 = 50
         private const val STATUS_X2 = 144
-        private const val STATUS_Y = 37
+        private const val STATUS_Y = 40
 
         private const val NAV_Y1 = 16
         private const val NAV_Y2 = 34

@@ -1,14 +1,17 @@
 package ic2_120.client.screen
 
+import ic2_120.client.FluidUtils
 import ic2_120.content.block.SolarDistillerBlock
+import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.SolarDistillerScreenHandler
 import ic2_120.content.sync.SolarDistillerSync
 import ic2_120.registry.annotation.ModScreen
-import net.minecraft.client.MinecraftClient
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.texture.SpriteAtlasTexture
+import net.minecraft.client.texture.Sprite
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluids
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
@@ -19,11 +22,21 @@ class SolarDistillerScreen(
     title: Text
 ) : HandledScreen<SolarDistillerScreenHandler>(handler, playerInventory, title) {
 
-    private val waterSprite by lazy {
-        MinecraftClient.getInstance()
-            .getSpriteAtlas(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE)
-            .apply(WATER_STILL_ID)
+    private val waterFlowSprite: Sprite? by lazy {
+        FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER)
+            ?.getFluidSprites(null, null, Fluids.WATER.defaultState)
+            ?.getOrNull(1)
     }
+
+    private val waterColor: Int by lazy { FluidUtils.getFluidColor(Fluids.WATER) }
+
+    private val distilledFlowSprite: Sprite? by lazy {
+        FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.DISTILLED_WATER_STILL)
+            ?.getFluidSprites(null, null, ModFluids.DISTILLED_WATER_STILL.defaultState)
+            ?.getOrNull(1)
+    }
+
+    private val distilledColor: Int by lazy { FluidUtils.getFluidColor(ModFluids.DISTILLED_WATER_STILL) }
 
     init {
         backgroundWidth = 176
@@ -48,30 +61,18 @@ class SolarDistillerScreen(
         val waterFraction = (waterMb.toFloat() / SolarDistillerSync.TANK_CAPACITY_MB).coerceIn(0f, 1f)
         val distilledFraction = (distilledMb.toFloat() / SolarDistillerSync.TANK_CAPACITY_MB).coerceIn(0f, 1f)
 
-        // 水纹理渲染（自下而上，带蓝色着色）
+        // 水纹理渲染 — 使用流体本身 flowing 纹理 + 颜色
         if (waterMb > 0) {
             val fillHeight = (WATER_H * waterFraction).toInt().coerceAtLeast(1)
-            context.enableScissor(
-                left + WATER_X,
-                top + WATER_Y + WATER_H - fillHeight,
-                left + WATER_X + WATER_W,
-                top + WATER_Y + WATER_H
-            )
-            context.drawSprite(left + WATER_X, top + WATER_Y, 0, WATER_W, WATER_H, waterSprite, WATER_R, WATER_G, WATER_B, 1f)
-            context.disableScissor()
+            drawFluidTank(context, left + WATER_X, top + WATER_Y, WATER_W, WATER_H, fillHeight,
+                waterFlowSprite, waterColor)
         }
 
-        // 蒸馏水纹理渲染（自下而上，带蓝色着色）
+        // 蒸馏水纹理渲染 — 使用流体本身 flowing 纹理 + 颜色
         if (distilledMb > 0) {
             val fillHeight = (DISTILLED_H * distilledFraction).toInt().coerceAtLeast(1)
-            context.enableScissor(
-                left + DISTILLED_X,
-                top + DISTILLED_Y + DISTILLED_H - fillHeight,
-                left + DISTILLED_X + DISTILLED_W,
-                top + DISTILLED_Y + DISTILLED_H
-            )
-            context.drawSprite(left + DISTILLED_X, top + DISTILLED_Y, 0, DISTILLED_W, DISTILLED_H, waterSprite, DISTILLED_R, DISTILLED_G, DISTILLED_B, 1f)
-            context.disableScissor()
+            drawFluidTank(context, left + DISTILLED_X, top + DISTILLED_Y, DISTILLED_W, DISTILLED_H, fillHeight,
+                distilledFlowSprite, distilledColor)
         }
 
         // 工作状态纹理 (4,190)-(100,218) = 96×28
@@ -91,24 +92,26 @@ class SolarDistillerScreen(
             UPTIPS_SIZE, UPTIPS_SIZE
         )
 
-        // 水悬停提示
+        // 水槽悬停提示
         val relX = mouseX - left
         val relY = mouseY - top
-        if (waterMb > 0 && relX in WATER_X until WATER_X + WATER_W && relY in WATER_Y until WATER_Y + WATER_H) {
-            context.drawTooltip(
-                textRenderer,
-                listOf(Text.translatable("gui.ic2_120.solar_distiller.water_tooltip", waterMb, SolarDistillerSync.TANK_CAPACITY_MB)),
-                mouseX, mouseY
-            )
+        if (relX in WATER_X until WATER_X + WATER_W && relY in WATER_Y until WATER_Y + WATER_H) {
+            val waterLines = if (waterMb > 0) {
+                listOf(Text.translatable("gui.ic2_120.solar_distiller.water_tooltip", "%,d".format(waterMb), "%,d".format(SolarDistillerSync.TANK_CAPACITY_MB)))
+            } else {
+                listOf(Text.translatable("ic2.generic.text.empty"))
+            }
+            context.drawTooltip(textRenderer, waterLines, mouseX, mouseY)
         }
 
-        // 蒸馏水悬停提示
-        if (distilledMb > 0 && relX in DISTILLED_X until DISTILLED_X + DISTILLED_W && relY in DISTILLED_Y until DISTILLED_Y + DISTILLED_H) {
-            context.drawTooltip(
-                textRenderer,
-                listOf(Text.translatable("gui.ic2_120.solar_distiller.distilled_tooltip", distilledMb, SolarDistillerSync.TANK_CAPACITY_MB)),
-                mouseX, mouseY
-            )
+        // 蒸馏水槽悬停提示
+        if (relX in DISTILLED_X until DISTILLED_X + DISTILLED_W && relY in DISTILLED_Y until DISTILLED_Y + DISTILLED_H) {
+            val distilledLines = if (distilledMb > 0) {
+                listOf(Text.translatable("gui.ic2_120.solar_distiller.distilled_tooltip", "%,d".format(distilledMb), "%,d".format(SolarDistillerSync.TANK_CAPACITY_MB)))
+            } else {
+                listOf(Text.translatable("ic2.generic.text.empty"))
+            }
+            context.drawTooltip(textRenderer, distilledLines, mouseX, mouseY)
         }
 
         // uptips 悬停提示
@@ -127,10 +130,27 @@ class SolarDistillerScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
+    /** 自下而上平铺流体 flowing 纹理 + 颜色着色 */
+    private fun drawFluidTank(context: DrawContext, gx: Int, gy: Int, w: Int, h: Int, fillH: Int, sprite: Sprite?, color: Int) {
+        if (sprite == null || color == -1) return
+        val r = ((color shr 16) and 0xFF) / 255f
+        val g = ((color shr 8) and 0xFF) / 255f
+        val b = (color and 0xFF) / 255f
+        val fillY = gy + h - fillH
+        context.enableScissor(gx, fillY, gx + w, gy + h)
+        for (sy in fillY until (gy + h) step 16) {
+            val tileH = minOf(16, gy + h - sy)
+            for (sx in gx until (gx + w) step 16) {
+                val tileW = minOf(16, gx + w - sx)
+                context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+            }
+        }
+        context.disableScissor()
+    }
+
     companion object {
         private val TEXTURE = Identifier("ic2", "textures/gui/guisolardistiller.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
-        private val WATER_STILL_ID = Identifier("minecraft", "block/water_flow")
         private const val TEXTURE_SIZE = 256
 
         // 水纹理区域 (37,44)-(90,61) = 53×17
@@ -138,18 +158,12 @@ class SolarDistillerScreen(
         private const val WATER_Y = 44
         private const val WATER_W = 53
         private const val WATER_H = 17
-        private const val WATER_R = 0.25f
-        private const val WATER_G = 0.45f
-        private const val WATER_B = 0.95f
 
         // 蒸馏水纹理区域 (115,56)-(132,98) = 17×42
         private const val DISTILLED_X = 115
         private const val DISTILLED_Y = 56
         private const val DISTILLED_W = 17
         private const val DISTILLED_H = 42
-        private const val DISTILLED_R = 0.45f
-        private const val DISTILLED_G = 0.65f
-        private const val DISTILLED_B = 0.98f
 
         // 工作状态纹理 (4,190)-(100,218) = 96×28
         private const val STATUS_U = 4

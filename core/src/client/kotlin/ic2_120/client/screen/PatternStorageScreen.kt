@@ -29,8 +29,6 @@ class PatternStorageScreen(
     init {
         backgroundWidth = 176
         backgroundHeight = 166
-        titleY = -1000
-        playerInventoryTitleY = -1000
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
@@ -43,6 +41,9 @@ class PatternStorageScreen(
 
         val left = x
         val top = y
+
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
         val world = client?.world ?: client?.player?.world
         val storage = world?.let(handler::getPatternStorage)
         templates = storage?.getTemplatesSnapshot().orEmpty()

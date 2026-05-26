@@ -162,7 +162,7 @@ class FluidCannerScreen(
             val lines = if (fluidAmount > 0 && fluidRawId != -1) {
                 val fluid = Registries.FLUID.get(fluidRawId)
                 val fluidName = fluid.defaultState.blockState.block.name.string
-                listOf(Text.literal(fluidName), Text.literal("${EnergyFormatUtils.formatRaw(fluidAmount)} / ${EnergyFormatUtils.formatRaw(fluidCapacity)} mB"))
+                listOf(Text.literal(fluidName), Text.literal("${"%,d".format(fluidAmount)} / ${"%,d".format(fluidCapacity)} mB"))
             } else {
                 listOf(Text.literal("空"))
             }

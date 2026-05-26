@@ -42,6 +42,7 @@ class UuScannerSync(
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
     var status by schema.int("Status", default = STATUS_IDLE)
     var currentCostUb by schema.int("CurrentCostUb", default = 0)
+    var cachedItemRawId by schema.int("CachedItemRawId", default = 0)
 
     private val flow = EnergyFlowSync(schema, this)
 

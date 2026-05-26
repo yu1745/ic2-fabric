@@ -18,7 +18,7 @@ object EnergyFormatUtils {
     fun formatEu(value: Long): String = when {
         value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000.0)
         value >= 1_000 -> String.format("%.1fK", value / 1_000.0)
-        else -> value.toString()
+        else -> "%,d".format(value)
     }
 
     /**
@@ -29,6 +29,6 @@ object EnergyFormatUtils {
      */
     fun formatEu(value: Int): String = formatEu(value.toLong())
 
-    fun formatRaw(value: Long): String = value.toString()
-    fun formatRaw(value: Int): String = value.toString()
+    fun formatRaw(value: Long): String = "%,d".format(value)
+    fun formatRaw(value: Int): String = "%,d".format(value)
 }

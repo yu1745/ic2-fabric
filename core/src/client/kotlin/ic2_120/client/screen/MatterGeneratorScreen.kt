@@ -23,8 +23,6 @@ class MatterGeneratorScreen(
     init {
         backgroundWidth = 176
         backgroundHeight = 166
-        titleY = -1000
-        playerInventoryTitleY = -1000
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
@@ -38,6 +36,8 @@ class MatterGeneratorScreen(
         val left = x
         val top = y
 
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
         // 流体槽 (100,26)-(112,73) 12×47
         drawFluidTank(context, left, top)
 
@@ -49,7 +49,7 @@ class MatterGeneratorScreen(
 
         // 进度文本 (12,43) — 百分比
         val pct = (handler.sync.progress.toFloat() / MatterGeneratorSync.PROGRESS_MAX * 100).toInt().coerceIn(0, 100)
-        context.drawText(textRenderer, t("gui.ic2_120.matter_generator.progress_pct", pct), left + 12, top + 43, 0xFFFFFF, false)
+        context.drawText(textRenderer, t("gui.ic2_120.matter_generator.progress_pct", pct), left + 12, top + 43, 0x000000, false)
 
         // uptips (4,4) 16×16
         context.drawTexture(UPTIPS_TEXTURE, left + 4, top + 4, 0f, 0f, 16, 16, 16, 16)
@@ -62,7 +62,7 @@ class MatterGeneratorScreen(
         if (relX in TANK_X until TANK_X + TANK_W && relY in TANK_Y until TANK_Y + TANK_H) {
             val amt = handler.sync.fluidAmountMb.coerceAtLeast(0)
             val cap = handler.sync.fluidCapacityMb.coerceAtLeast(1)
-            val lines = if (amt > 0) listOf(Text.literal("UU物质"), Text.literal("$amt / $cap mB"))
+            val lines = if (amt > 0) listOf(Text.literal("UU物质"), Text.literal("${"%,d".format(amt)} / ${"%,d".format(cap)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
