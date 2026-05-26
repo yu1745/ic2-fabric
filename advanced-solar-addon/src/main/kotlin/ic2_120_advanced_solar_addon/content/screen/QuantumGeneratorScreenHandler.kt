@@ -1,5 +1,6 @@
 package ic2_120_advanced_solar_addon.content.screen
 
+import ic2_120_advanced_solar_addon.content.block.QuantumGeneratorBlockEntity
 import ic2_120_advanced_solar_addon.content.sync.QuantumGeneratorSync
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -25,7 +26,7 @@ class QuantumGeneratorScreenHandler(
 
     val sync = QuantumGeneratorSync(
         schema = SyncedDataView(propertyDelegate),
-        tier = 3,
+        tier = QuantumGeneratorBlockEntity.DEFAULT_VARIABLE,
         getFacing = { Direction.NORTH },
         currentTickProvider = { null }
     )
@@ -35,11 +36,15 @@ class QuantumGeneratorScreenHandler(
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9,
+                    PLAYER_INV_X + col * SLOT_SPACING,
+                    PLAYER_INV_Y + row * SLOT_SPACING))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col,
+                HOTBAR_X + col * SLOT_SPACING,
+                HOTBAR_Y))
         }
     }
 
@@ -49,18 +54,14 @@ class QuantumGeneratorScreenHandler(
         if (slot.hasStack()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
-
             when {
-                // Player main inventory -> hotbar
                 index in PLAYER_INV_START until HOTBAR_START -> {
                     if (!insertItem(stackInSlot, HOTBAR_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
-                // Hotbar -> player main inventory
                 index in HOTBAR_START until HOTBAR_END -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_START, false)) return ItemStack.EMPTY
                 }
             }
-
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
             else slot.markDirty()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
@@ -69,16 +70,61 @@ class QuantumGeneratorScreenHandler(
         return stack
     }
 
+    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+        if (player.world.isClient) return true
+        // 使用双参数版本 get(BiFunction, defaultValue)，返回 T? 而不是 Optional<T>
+        val be = context.get({ world, pos -> world.getBlockEntity(pos) }, null)
+            as? QuantumGeneratorBlockEntity ?: return false
+
+        when (id) {
+            BTN_EM_MINUS_100 -> be.addEnergyMac(-100)
+            BTN_EM_MINUS_10  -> be.addEnergyMac(-10)
+            BTN_EM_MINUS_1   -> be.addEnergyMac(-1)
+            BTN_EM_PLUS_1    -> be.addEnergyMac(1)
+            BTN_EM_PLUS_10   -> be.addEnergyMac(10)
+            BTN_EM_PLUS_100  -> be.addEnergyMac(100)
+            BTN_VAR_1   -> be.applyVariable(1)
+            BTN_VAR_2   -> be.applyVariable(2)
+            BTN_VAR_3   -> be.applyVariable(3)
+            BTN_VAR_4   -> be.applyVariable(4)
+            BTN_VAR_5   -> be.applyVariable(5)
+            BTN_VAR_6   -> be.applyVariable(6)
+            BTN_VAR_MAX -> be.applyVariable(8)
+            else -> return false
+        }
+        return true
+    }
+
     override fun canUse(player: PlayerEntity): Boolean =
         context.get({ world, pos ->
             player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     companion object {
-        const val SLOT_SIZE = 18
+        const val SLOT_SIZE = 16
+        const val SLOT_SPACING = 18 // 16 + 2px gap
         const val PLAYER_INV_START = 0
         const val HOTBAR_START = 27
         const val HOTBAR_END = 36
+
+        private const val PLAYER_INV_X = 8
+        private const val PLAYER_INV_Y = 110
+        private const val HOTBAR_X = 8
+        private const val HOTBAR_Y = 168
+
+        const val BTN_EM_MINUS_100 = 0
+        const val BTN_EM_MINUS_10  = 1
+        const val BTN_EM_MINUS_1   = 2
+        const val BTN_EM_PLUS_1    = 3
+        const val BTN_EM_PLUS_10   = 4
+        const val BTN_EM_PLUS_100  = 5
+        const val BTN_VAR_1   = 10
+        const val BTN_VAR_2   = 11
+        const val BTN_VAR_3   = 12
+        const val BTN_VAR_4   = 13
+        const val BTN_VAR_5   = 14
+        const val BTN_VAR_6   = 15
+        const val BTN_VAR_MAX = 16
 
         @ScreenFactory
         @JvmStatic

@@ -30,6 +30,7 @@ class SolarPanelSync(
     var isGenerating by schema.int("IsGenerating")
     var dayPower by schema.int("DayPower")
     var nightPower by schema.int("NightPower")
+    var maxOutput by schema.int("MaxOutput")
     var avgInserted by schema.intAveraged("AvgInserted")
     var avgExtracted by schema.intAveraged("AvgExtract")
 
@@ -58,7 +59,7 @@ class QuantumGeneratorSync(
 ) : TickLimitedSidedEnergyContainer(
     baseCapacity = 1000000L,
     maxInsertPerTick = 0L,
-    maxExtractPerTick = EnergyTier.euPerTickFromTier(tier),
+    maxExtractPerTick = Long.MAX_VALUE,
     currentTickProvider = currentTickProvider
 ) {
     companion object {
@@ -69,15 +70,15 @@ class QuantumGeneratorSync(
     var production by schema.int("Production")
     var tierLevel by schema.int("Tier")
     var isActive by schema.int("IsActive")
+    var energyMac by schema.int("EnergyMac")
+    var variable by schema.int("Variable")
     var avgInserted by schema.intAveraged("AvgInserted")
     var avgExtracted by schema.intAveraged("AvgExtract")
-
-    private val maxExtract = EnergyTier.euPerTickFromTier(tier)
 
     override fun getSideMaxInsert(side: Direction?): Long = 0L
 
     override fun getSideMaxExtract(side: Direction?): Long =
-        if (side != getFacing()) maxExtract else 0L
+        if (side != getFacing()) energyMac.toLong() else 0L
 
     override fun onEnergyCommitted() {
         energy = amount.toInt().coerceIn(0, Int.MAX_VALUE)
@@ -94,9 +95,11 @@ class MolecularTransformerSync(
     schema: SyncSchema,
     tier: Int,
     private val getFacing: () -> Direction,
-    currentTickProvider: () -> Long?
+    currentTickProvider: () -> Long?,
+    private val canAcceptEnergy: () -> Boolean,
+    private val getRemainingEnergyNeeded: () -> Long
 ) : TickLimitedSidedEnergyContainer(
-    baseCapacity = 10000000L,
+    baseCapacity = Long.MAX_VALUE,
     maxInsertPerTick = EnergyTier.euPerTickFromTier(tier),
     maxExtractPerTick = 0L,
     currentTickProvider = currentTickProvider
@@ -105,12 +108,23 @@ class MolecularTransformerSync(
         const val NBT_ENERGY = "Energy"
     }
 
+    private val tierMaxInsert: Long = EnergyTier.euPerTickFromTier(tier)
+
     var energy by schema.int("Energy")
     var progress by schema.int("Progress")
     var requiredEnergy by schema.int("ReqEnergy")
+    var inputItemId by schema.int("InputItemId")
+    var outputItemId by schema.int("OutputItemId")
     var avgInserted by schema.intAveraged("AvgInserted")
     var avgExtracted by schema.intAveraged("AvgExtract")
     var avgConsumed by schema.intAveraged("AvgConsume")
+
+    override fun getSideMaxInsert(side: Direction?): Long {
+        if (!canAcceptEnergy()) return 0L
+        val remaining = getRemainingEnergyNeeded()
+        if (remaining <= 0) return 0L
+        return minOf(tierMaxInsert, remaining)
+    }
 
     override fun getSideMaxExtract(side: Direction?): Long = 0L
 
