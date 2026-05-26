@@ -114,13 +114,15 @@ class PumpScreen(
             }
         }
 
-        // 容量标示 (183,49)-(194,96) = 11x47，常驻渲染于流体之上
-        context.drawTexture(
-            TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
-            TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
-            TANK_OVERLAY_W, TANK_OVERLAY_H,
-            TEXTURE_SIZE, TEXTURE_SIZE
-        )
+        // 容量标示 (183,49)-(194,96) = 11x47，有流体时渲染在流体纹理之上
+        if (fluidAmount > 0) {
+            context.drawTexture(
+                TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
+                TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
+                TANK_OVERLAY_W, TANK_OVERLAY_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+        }
 
         // uptips 纹理
         context.drawTexture(
@@ -203,11 +205,11 @@ class PumpScreen(
 
         // 工作进度 (179,25)-(201,39) = 22x14
         private const val PROGRESS_U = 179
-        private const val PROGRESS_V = 25
+        private const val PROGRESS_V = 24
         private const val PROGRESS_W = 22
-        private const val PROGRESS_H = 14
-        private const val PROGRESS_X = 61
-        private const val PROGRESS_Y = 42
+        private const val PROGRESS_H = 15
+        private const val PROGRESS_X = 60
+        private const val PROGRESS_Y = 41
 
         // 流体槽 (100,26)-(112,73) = 12x47
         private const val TANK_X = 100

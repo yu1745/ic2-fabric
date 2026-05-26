@@ -112,6 +112,15 @@ class AnimalmatronScreen(
             context.disableScissor()
         }
 
+        // 水槽容量标示 (182,41)-(194,88) = 12×47 → (23,26)，有流体时渲染
+        if (waterAmount > 0) {
+            context.drawTexture(TEXTURE, left + 23, top + 26, 182f, 41f, 12, 47, TEXTURE_SIZE, TEXTURE_SIZE)
+        }
+        // Weed-EX 槽容量标示 (182,41)-(194,88) = 12×47 → (117,26)，有流体时渲染
+        if (weedExAmount > 0) {
+            context.drawTexture(TEXTURE, left + 117, top + 26, 182f, 41f, 12, 47, TEXTURE_SIZE, TEXTURE_SIZE)
+        }
+
         // uptips 纹理
         context.drawTexture(
             UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,

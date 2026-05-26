@@ -115,13 +115,15 @@ class FluidCannerScreen(
             }
         }
 
-        // 容量标示纹理 (180,43)-(192,90) = 12x47，始终渲染在流体纹理之上
-        context.drawTexture(
-            TEXTURE, left + TANK_X, top + TANK_Y,
-            TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
-            TANK_W, TANK_H,
-            TEXTURE_SIZE, TEXTURE_SIZE
-        )
+        // 容量标示纹理 (180,43)-(192,90) = 12x47，有流体时渲染在流体纹理之上
+        if (fluidAmount > 0) {
+            context.drawTexture(
+                TEXTURE, left + TANK_X, top + TANK_Y,
+                TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
+                TANK_W, TANK_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+        }
 
         // uptips 纹理
         context.drawTexture(

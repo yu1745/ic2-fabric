@@ -58,6 +58,11 @@ class GeoGeneratorScreen(
         // 岩浆储量条：区域 (82,23)-(94,69) = 12×46，流体纹理+颜色渲染
         drawFluidTank(context, x + LAVA_BAR_X, y + LAVA_BAR_Y, LAVA_BAR_W, LAVA_BAR_H, lavaFrac, lavaSprite, Fluids.LAVA)
 
+        // 容量标示纹理 (178,21)-(190,68) = 12×47 → (82,23)，有岩浆时渲染在流体之上
+        if (lavaMb > 0) {
+            context.drawTexture(TEXTURE, x + 82, y + 23, 178f, 21f, 12, 47, 256, 256)
+        }
+
         // 标题文字居中于 y=6
         context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
