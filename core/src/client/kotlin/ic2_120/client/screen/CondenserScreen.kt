@@ -138,7 +138,7 @@ class CondenserScreen(
         // 蒸汽槽悬停 (46,26)-(130,59)
         if (mx in 46 until 130 && my in 26 until 59) {
             val name = ModFluids.STEAM_STILL.defaultState.blockState.block.name
-            val lines = if (steamAmount > 0) listOf(name, McText.literal("$steamAmount / ${CondenserSync.STEAM_TANK_CAPACITY} mB"))
+            val lines = if (steamAmount > 0) listOf(name, McText.literal("${"%,d".format(steamAmount)} / ${"%,d".format(CondenserSync.STEAM_TANK_CAPACITY)} mB"))
                         else listOf(McText.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -146,7 +146,7 @@ class CondenserScreen(
         // 蒸馏水槽悬停 (46,73)-(130,88)
         if (mx in 46 until 130 && my in 73 until 88) {
             val name = ModFluids.DISTILLED_WATER_STILL.defaultState.blockState.block.name
-            val lines = if (waterAmount > 0) listOf(name, McText.literal("$waterAmount / ${CondenserSync.WATER_TANK_CAPACITY} mB"))
+            val lines = if (waterAmount > 0) listOf(name, McText.literal("${"%,d".format(waterAmount)} / ${"%,d".format(CondenserSync.WATER_TANK_CAPACITY)} mB"))
                         else listOf(McText.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }

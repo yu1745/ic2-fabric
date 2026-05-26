@@ -46,7 +46,7 @@ class ElectricHeatGeneratorScreen(
 
         // 鼠标悬停能量条时显示储能
         if (mouseX in gaugeX until (gaugeX + gaugeSize) && mouseY in gaugeY until (gaugeY + gaugeSize)) {
-            context.drawTooltip(textRenderer, Text.literal("储能：${energy} / ${cap} EU"), mouseX, mouseY)
+            context.drawTooltip(textRenderer, Text.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU"), mouseX, mouseY)
         }
 
         // 输出文本：区域 (29,65)-(149,79)，居中常显，缩放至 7px

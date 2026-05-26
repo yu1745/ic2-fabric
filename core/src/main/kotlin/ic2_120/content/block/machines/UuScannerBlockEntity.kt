@@ -11,7 +11,9 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.uu.UuTemplateEntry
 import ic2_120.content.uu.findUniqueAdjacentPatternStorage
+import ic2_120.content.uu.setUuTemplate
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
@@ -73,6 +75,7 @@ class UuScannerBlockEntity(
         markDirty = { markDirty() }
     )
     private var lastCompletedItemId: String = ""
+    private var cachedTemplate: UuTemplateEntry? = null
 
     val syncedData = SyncedData(this)
 
@@ -145,6 +148,7 @@ class UuScannerBlockEntity(
         sync.restoreEnergy(nbt.getLong(UuScannerSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
         lastCompletedItemId = nbt.getString(NBT_LAST_COMPLETED_ITEM)
+        cachedTemplate = if (nbt.contains("CachedTemplate")) UuTemplateEntry.fromNbt(nbt.getCompound("CachedTemplate")) else null
     }
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
@@ -153,28 +157,35 @@ class UuScannerBlockEntity(
         syncedData.writeNbt(nbt)
         nbt.putLong(UuScannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putString(NBT_LAST_COMPLETED_ITEM, lastCompletedItemId)
+        cachedTemplate?.let { nbt.put("CachedTemplate", it.toNbt()) }
     }
 
     fun deleteTemplate() {
-        val world = world ?: return
-        val storage = findUniqueAdjacentPatternStorage(world, pos) ?: return
-        storage.removeSelectedTemplate()
-        sync.status = UuScannerSync.STATUS_NO_INPUT
-        lastCompletedItemId = ""
+        cachedTemplate = null
+        sync.cachedItemRawId = 0
         sync.currentCostUb = 0
+        sync.status = UuScannerSync.STATUS_NO_INPUT
         markDirty()
     }
 
     fun saveTemplateToCrystal() {
+        val template = cachedTemplate ?: return
         val world = world ?: return
+
+        // 优先存入水晶
         val crystalStack = getStack(SLOT_CRYSTAL)
-        if (!isCrystalMemory(crystalStack)) return
-        val storage = findUniqueAdjacentPatternStorage(world, pos) ?: return
-        storage.exportSelectedTemplateToCrystal()
-        storage.removeSelectedTemplate()
-        sync.status = UuScannerSync.STATUS_NO_INPUT
-        lastCompletedItemId = ""
+        if (isCrystalMemory(crystalStack)) {
+            crystalStack.setUuTemplate(template)
+        } else {
+            // 水晶槽无水晶 → 存入邻接存储机
+            val storage = findUniqueAdjacentPatternStorage(world, pos) ?: return
+            storage.addOrSelectTemplate(template)
+        }
+
+        cachedTemplate = null
+        sync.cachedItemRawId = 0
         sync.currentCostUb = 0
+        sync.status = UuScannerSync.STATUS_NO_INPUT
         markDirty()
     }
 
@@ -186,8 +197,17 @@ class UuScannerBlockEntity(
         adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
+        // 缓存中有模板 → 等待存入/删除，不允许新扫描
+        if (cachedTemplate != null) {
+            sync.status = UuScannerSync.STATUS_COMPLETE
+            setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
+            return
+        }
+
         val storage = findUniqueAdjacentPatternStorage(world, pos)
-        if (storage == null) {
+        val useCrystal = storage == null && isCrystalMemory(getStack(SLOT_CRYSTAL))
+        if (storage == null && !useCrystal) {
             sync.progress = 0
             sync.currentCostUb = 0
             sync.status = UuScannerSync.STATUS_NO_STORAGE
@@ -200,7 +220,7 @@ class UuScannerBlockEntity(
         if (input.isEmpty) {
             sync.progress = 0
             sync.currentCostUb = 0
-            sync.status = if (lastCompletedItemId.isNotBlank()) UuScannerSync.STATUS_COMPLETE else UuScannerSync.STATUS_NO_INPUT
+            sync.status = UuScannerSync.STATUS_NO_INPUT
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
@@ -218,12 +238,7 @@ class UuScannerBlockEntity(
         }
 
         sync.currentCostUb = template.uuCostUb
-        if (lastCompletedItemId == itemId && sync.progress == 0) {
-            sync.status = UuScannerSync.STATUS_COMPLETE
-            setActiveState(world, pos, state, false)
-            sync.syncCurrentTickFlow()
-            return
-        }
+        sync.cachedItemRawId = Registries.ITEM.getRawId(input.item)
 
         val need = ceil(UuScannerSync.ENERGY_PER_TICK.toDouble()).toLong().coerceAtLeast(1L)
         if (sync.consumeEnergy(need) > 0L) {
@@ -231,12 +246,12 @@ class UuScannerBlockEntity(
             sync.progress = (sync.progress + 1).coerceAtMost(UuScannerSync.PROGRESS_MAX)
             sync.status = UuScannerSync.STATUS_SCANNING
             if (sync.progress >= UuScannerSync.PROGRESS_MAX) {
-                storage.addOrSelectTemplate(template)
+                // 扫描完成 → 模板缓存至内置缓存位
+                cachedTemplate = template
                 input.decrement(1)
                 if (input.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
                 sync.progress = 0
                 sync.status = UuScannerSync.STATUS_COMPLETE
-                lastCompletedItemId = itemId
             }
             markDirty()
             setActiveState(world, pos, state, true)

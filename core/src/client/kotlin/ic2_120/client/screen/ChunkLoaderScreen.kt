@@ -62,7 +62,7 @@ class ChunkLoaderScreen(
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val consumeRate = handler.sync.getSyncedConsumedAmount()
 
-        val energyText = "$energy / $cap EU"
+        val energyText = "${"%,d".format(energy)} / ${"%,d".format(cap)} EU"
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
         val consumeText = t("gui.ic2_120.chunk_loader.consume_chunks", EnergyFormatUtils.formatEu(consumeRate), chunkCount)
         val sideTextWidth = maxOf(

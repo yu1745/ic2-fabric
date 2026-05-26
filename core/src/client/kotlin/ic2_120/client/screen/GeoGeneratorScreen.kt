@@ -81,15 +81,15 @@ class GeoGeneratorScreen(
                 listOf(Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU")),
                 mouseX, mouseY)
         }
-        if (lavaMb > 0 &&
-            relX in LAVA_BAR_X until LAVA_BAR_X + LAVA_BAR_W &&
+        if (relX in LAVA_BAR_X until LAVA_BAR_X + LAVA_BAR_W &&
             relY in LAVA_BAR_Y until LAVA_BAR_Y + LAVA_BAR_H
         ) {
-            val lavaName = Fluids.LAVA.defaultState.blockState.block.name
-            context.drawTooltip(textRenderer, listOf(
-                lavaName,
-                Text.literal("$lavaMb / ${lavaCapMb} mB")
-            ), mouseX, mouseY)
+            val lavaLines = if (lavaMb > 0) {
+                listOf(Text.translatable("gui.ic2_120.geo_generator.lava_tooltip", "%,d".format(lavaMb), "%,d".format(lavaCapMb)))
+            } else {
+                listOf(Text.translatable("ic2.generic.text.empty"))
+            }
+            context.drawTooltip(textRenderer, lavaLines, mouseX, mouseY)
         }
     }
 

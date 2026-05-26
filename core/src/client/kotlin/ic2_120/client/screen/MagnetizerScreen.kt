@@ -60,7 +60,7 @@ class MagnetizerScreen(
             ) {
                 Row(spacing = 8) {
                     Text(title.string, color = 0xFFFFFF)
-                    Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
+                    Text("${"%,d".format(energy)} / ${"%,d".format(cap)} EU", color = 0xFFFFFF, shadow = false)
                 }
                 EnergyBar(energyFraction, barHeight = 12)
                 Text(poweredText, color = 0xFFFFFF, shadow = false)

@@ -74,7 +74,7 @@ class WindGeneratorScreen(
                         textureHeight = 16
                     )
                     Text(title.string, color = 0xFFFFFF)
-                    Text("$energy / $cap EU", color = 0xFFFFFF, shadow = false)
+                    Text("${"%,d".format(energy)} / ${"%,d".format(cap)} EU", color = 0xFFFFFF, shadow = false)
                 }
                 EnergyBar(
                     energyFraction,

@@ -58,12 +58,13 @@ class FluidHeatGeneratorScreen(
         drawScaledText(context, "最大输出热值：32 HU/t", 95, 49, 74, 6f)
 
         // 流体槽悬停 (74,24)-(86,70) = 12×46
-        if (fuelAmountMb > 0 && mouseX in x + 74 until x + 86 && mouseY in y + 24 until y + 70) {
-            context.drawTooltip(
-                textRenderer,
-                Text.literal("生物燃料：${fuelAmountMb} / 8000 mB"),
-                mouseX, mouseY
-            )
+        if (mouseX in x + 74 until x + 86 && mouseY in y + 24 until y + 70) {
+            val fuelLines = if (fuelAmountMb > 0) {
+                listOf(Text.translatable("gui.ic2_120.fluid_heat_generator.fuel_tooltip", "%,d".format(fuelAmountMb), "8,000"))
+            } else {
+                listOf(Text.translatable("ic2.generic.text.empty"))
+            }
+            context.drawTooltip(textRenderer, fuelLines, mouseX, mouseY)
         }
 
         drawMouseoverTooltip(context, mouseX, mouseY)

@@ -81,7 +81,7 @@ class TankScreen(
                 val fluidName = net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes.getName(
                     net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(fluid)
                 ).string
-                listOf(Text.literal(fluidName), Text.literal("$amount / $capacity mB"))
+                listOf(Text.literal(fluidName), Text.literal("${"%,d".format(amount)} / ${"%,d".format(capacity)} mB"))
             } else {
                 listOf(Text.literal("空"))
             }

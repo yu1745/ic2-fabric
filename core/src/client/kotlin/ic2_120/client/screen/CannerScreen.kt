@@ -60,6 +60,15 @@ class CannerScreen(
             tankW = TANK_W, tankH = TANK_H, fluidRawId = handler.sync.rightFluidRawId,
             amountMb = handler.sync.rightFluidAmountMb, capacityMb = handler.sync.rightFluidCapacityMb)
 
+        // 左侧容量标示 (182,124)-(194,171) = 12×47 → (43,47)，有流体时渲染
+        if (handler.sync.leftFluidAmountMb > 0) {
+            context.drawTexture(TEXTURE, left + 43, top + 47, 182f, 124f, 12, 47, TEX_SIZE, TEX_SIZE)
+        }
+        // 右侧容量标示 (182,124)-(194,171) = 12×47 → (121,47)，有流体时渲染
+        if (handler.sync.rightFluidAmountMb > 0) {
+            context.drawTexture(TEXTURE, left + 121, top + 47, 182f, 124f, 12, 47, TEX_SIZE, TEX_SIZE)
+        }
+
         // 模式标识纹理
         drawModeTexture(context, left, top, mode)
 
@@ -198,7 +207,7 @@ class CannerScreen(
             val cap = handler.sync.leftFluidCapacityMb.coerceAtLeast(1)
             val lines = if (amt > 0) {
                 val name = Registries.FLUID.get(handler.sync.leftFluidRawId).defaultState.blockState.block.name.string
-                listOf(Text.literal(name), Text.literal("$amt / $cap mB"))
+                listOf(Text.literal(name), Text.literal("${"%,d".format(amt)} / ${"%,d".format(cap)} mB"))
             } else {
                 listOf(Text.literal("空"))
             }
@@ -211,7 +220,7 @@ class CannerScreen(
             val cap = handler.sync.rightFluidCapacityMb.coerceAtLeast(1)
             val lines = if (amt > 0) {
                 val name = Registries.FLUID.get(handler.sync.rightFluidRawId).defaultState.blockState.block.name.string
-                listOf(Text.literal(name), Text.literal("$amt / $cap mB"))
+                listOf(Text.literal(name), Text.literal("${"%,d".format(amt)} / ${"%,d".format(cap)} mB"))
             } else {
                 listOf(Text.literal("空"))
             }

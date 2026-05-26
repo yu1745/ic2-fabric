@@ -1,16 +1,15 @@
 package ic2_120.client.screen
 
-import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.t
 import ic2_120.content.block.UuScannerBlock
 import ic2_120.content.screen.UuScannerScreenHandler
 import ic2_120.content.sync.UuScannerSync
-import ic2_120.content.uu.findUniqueAdjacentPatternStorage
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
+import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
@@ -22,8 +21,6 @@ class UuScannerScreen(
     init {
         backgroundWidth = 175
         backgroundHeight = 165
-        titleY = -1000
-        playerInventoryTitleY = -1000
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
@@ -36,12 +33,12 @@ class UuScannerScreen(
 
         val left = x
         val top = y
+
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
         val status = handler.sync.status
         val isComplete = status == UuScannerSync.STATUS_COMPLETE
         val isScanning = status == UuScannerSync.STATUS_SCANNING
-        val world = client?.world
-        val storage = world?.let { findUniqueAdjacentPatternStorage(it, handler.blockPos) }
-
         // 电量条 (179,3)-(193,16) = 14×13 渲染至 (8,24)
         drawEnergyBar(context, left, top)
 
@@ -49,26 +46,47 @@ class UuScannerScreen(
         drawProgressBar(context, left, top, isScanning)
 
         // 扫描进度/状态文本 (10,67)
-        val statusLine = when {
-            isScanning -> t("gui.ic2_120.uu_scanner.status_scanning")
-            else -> t("gui.ic2_120.uu_scanner.status_idle")
+        // 无物品 → 待机中，工作中 → 工作中，有物品但不能工作 → 显示原因（亮绿色）
+        val (statusLine, statusColor) = when (status) {
+            UuScannerSync.STATUS_SCANNING -> {
+                val pct = (handler.sync.progress.toFloat() / UuScannerSync.PROGRESS_MAX * 100).toInt().coerceIn(0, 100)
+                "扫描中($pct%)" to 0x55FF55
+            }
+            UuScannerSync.STATUS_NO_STORAGE -> "需要邻接模式存储机/放入存储水晶" to 0x55FF55
+            UuScannerSync.STATUS_NOT_WHITELISTED -> "物品不在复制白名单中" to 0x55FF55
+            UuScannerSync.STATUS_NO_ENERGY -> "能量不足" to 0x55FF55
+            else -> t("gui.ic2_120.uu_scanner.status_idle") to 0x55FF55
         }
-        context.drawText(textRenderer, statusLine, left + 10, top + 67, 0xAAAAAA, false)
+        context.drawText(textRenderer, Text.literal(statusLine), left + 10, top + 68, statusColor, false)
 
-        // 扫描完成后：模板信息 (102,24) + 删除/存入按钮
+        // 扫描完成后：模板信息 + 删除/存入按钮
         if (isComplete) {
-            val template = storage?.getSelectedTemplate()
-            val name = template?.displayName()?.string ?: ""
             val cost = handler.sync.currentCostUb
-            val templateText = if (name.isNotEmpty()) "$name ($cost uB)" else "$cost uB"
-            context.drawText(textRenderer, templateText, left + 102, top + 24, 0xFFAA33, false)
+            val rawId = handler.sync.cachedItemRawId
+            if (rawId > 0 && cost > 0) {
+                val item = Registries.ITEM.get(rawId)
+                val name = item.name.string
+                val scale = 7f / textRenderer.fontHeight
+                val infoX = left + 102
+                // 物品名称
+                drawScaledText(context, name, infoX, top + 22, scale, 0xFFAA33)
+                // UU消耗标签
+                val labelText = "UU消耗："
+                drawScaledText(context, labelText, infoX, top + 30, scale, 0xFFAA33)
+                // 消耗值 — 居中于标签下方
+                val valueText = "%,d uB".format(cost)
+                val labelW = (textRenderer.getWidth(labelText) * scale).toInt()
+                val valueW = (textRenderer.getWidth(valueText) * scale).toInt()
+                val valueX = infoX + (labelW - valueW) / 2 + 5
+                drawScaledText(context, valueText, valueX, top + 38, scale, 0xFFAA33)
+            }
 
-            // 删除模板 (197,4)-(209,16) = 12×12 渲染至 (129,48)
-            context.drawTexture(TEXTURE, left + DEL_X, top + DEL_Y,
-                DEL_U.toFloat(), DEL_V.toFloat(), 12, 12, TEX_SIZE, TEX_SIZE)
             // 存入水晶 (213,4)-(237,16) = 24×12 渲染至 (142,48)
             context.drawTexture(TEXTURE, left + SAVE_X, top + SAVE_Y,
                 SAVE_U.toFloat(), SAVE_V.toFloat(), 24, 12, TEX_SIZE, TEX_SIZE)
+            // 删除模板 (197,4)-(209,16) = 12×12 渲染至 (129,48)
+            context.drawTexture(TEXTURE, left + DEL_X, top + DEL_Y,
+                DEL_U.toFloat(), DEL_V.toFloat(), 12, 12, TEX_SIZE, TEX_SIZE)
         }
 
         // 悬停高亮
@@ -80,7 +98,7 @@ class UuScannerScreen(
             val energy = handler.sync.energy.toLong().coerceAtLeast(0)
             val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
             context.drawTooltip(textRenderer,
-                listOf(Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU")),
+                listOf(Text.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU")),
                 mouseX, mouseY)
         }
 
@@ -143,6 +161,14 @@ class UuScannerScreen(
             }
         }
         return super.mouseClicked(mouseX, mouseY, button)
+    }
+
+    private fun drawScaledText(context: DrawContext, text: String, tx: Int, ty: Int, scale: Float, color: Int) {
+        context.matrices.push()
+        context.matrices.translate(tx.toDouble(), ty.toDouble(), 0.0)
+        context.matrices.scale(scale, scale, 1f)
+        context.drawText(textRenderer, Text.literal(text), 0, 0, color, false)
+        context.matrices.pop()
     }
 
     companion object {

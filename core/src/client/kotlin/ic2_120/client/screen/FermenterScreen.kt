@@ -86,7 +86,7 @@ class FermenterScreen(
         val biofuelX = x + 128; val biofuelY = y + 25; val biofuelW = 12; val biofuelH = 47
 
         if (mouseX in biomassX until (biomassX + biomassW) && mouseY in biomassY until (biomassY + biomassH)) {
-            val lines = if (inputBiomassMb > 0) listOf(Text.literal("生物质"), Text.literal("$inputBiomassMb / ${FermenterSync.TANK_CAPACITY_MB} mB"))
+            val lines = if (inputBiomassMb > 0) listOf(Text.literal("生物质"), Text.literal("${"%,d".format(inputBiomassMb)} / ${"%,d".format(FermenterSync.TANK_CAPACITY_MB)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -94,7 +94,7 @@ class FermenterScreen(
             context.drawTooltip(textRenderer, Text.literal("热量: ${bufferedHeat} / 40000 HU"), mouseX, mouseY)
         }
         if (mouseX in biofuelX until (biofuelX + biofuelW) && mouseY in biofuelY until (biofuelY + biofuelH)) {
-            val lines = if (outputBiogasMb > 0) listOf(Text.literal("生物燃料"), Text.literal("$outputBiogasMb / ${FermenterSync.TANK_CAPACITY_MB} mB"))
+            val lines = if (outputBiogasMb > 0) listOf(Text.literal("生物燃料"), Text.literal("${"%,d".format(outputBiogasMb)} / ${"%,d".format(FermenterSync.TANK_CAPACITY_MB)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }

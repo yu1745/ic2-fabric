@@ -149,7 +149,7 @@ class OreWashingPlantScreen(
         if (relX in WATER_X until WATER_X + WATER_W &&
             relY in WATER_Y until WATER_Y + WATER_H
         ) {
-            val lines = if (waterAmount > 0) listOf(Text.literal("水"), Text.literal("$waterAmount / $waterCapacity mB"))
+            val lines = if (waterAmount > 0) listOf(Text.literal("水"), Text.literal("${"%,d".format(waterAmount)} / ${"%,d".format(waterCapacity)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }

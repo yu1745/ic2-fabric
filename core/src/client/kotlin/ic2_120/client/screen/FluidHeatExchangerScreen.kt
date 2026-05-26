@@ -99,7 +99,7 @@ class FluidHeatExchangerScreen(
         // 输入流体槽悬停
         if (relX in 19 until 31 && relY in 47 until 91) {
             val lines = if (inputMb > 0 && inputFluid != null) {
-                listOf(inputFluid.defaultState.blockState.block.name, McText.literal("$inputMb / ${FluidHeatExchangerSync.TANK_CAPACITY_MB} mB"))
+                listOf(inputFluid.defaultState.blockState.block.name, McText.literal("${"%,d".format(inputMb)} / ${"%,d".format(FluidHeatExchangerSync.TANK_CAPACITY_MB)} mB"))
             } else {
                 listOf(McText.literal("空"))
             }
@@ -109,7 +109,7 @@ class FluidHeatExchangerScreen(
         // 输出流体槽悬停
         if (relX in 145 until 157 && relY in 47 until 91) {
             val lines = if (outputMb > 0 && outputFluid != null) {
-                listOf(outputFluid.defaultState.blockState.block.name, McText.literal("$outputMb / ${FluidHeatExchangerSync.TANK_CAPACITY_MB} mB"))
+                listOf(outputFluid.defaultState.blockState.block.name, McText.literal("${"%,d".format(outputMb)} / ${"%,d".format(FluidHeatExchangerSync.TANK_CAPACITY_MB)} mB"))
             } else {
                 listOf(McText.literal("空"))
             }

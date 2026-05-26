@@ -159,7 +159,7 @@ class CropmatronScreen(
         if (relX in WATER_TANK_X until WATER_TANK_X + WATER_TANK_W &&
             relY in WATER_TANK_Y until WATER_TANK_Y + WATER_TANK_H
         ) {
-            val lines = if (waterAmount > 0) listOf(Text.literal("水"), Text.literal("$waterAmount / ${CropmatronSync.WATER_TANK_CAPACITY_MB} mB"))
+            val lines = if (waterAmount > 0) listOf(Text.literal("水"), Text.literal("${"%,d".format(waterAmount)} / ${"%,d".format(CropmatronSync.WATER_TANK_CAPACITY_MB)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -168,7 +168,7 @@ class CropmatronScreen(
         if (relX in WEED_EX_TANK_X until WEED_EX_TANK_X + WEED_EX_TANK_W &&
             relY in WEED_EX_TANK_Y until WEED_EX_TANK_Y + WEED_EX_TANK_H
         ) {
-            val lines = if (weedExAmount > 0) listOf(Text.translatable("fluid.ic2_120.weed_ex"), Text.literal("$weedExAmount / ${CropmatronSync.WEED_EX_TANK_CAPACITY_MB} mB"))
+            val lines = if (weedExAmount > 0) listOf(Text.translatable("fluid.ic2_120.weed_ex"), Text.literal("${"%,d".format(weedExAmount)} / ${"%,d".format(CropmatronSync.WEED_EX_TANK_CAPACITY_MB)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
