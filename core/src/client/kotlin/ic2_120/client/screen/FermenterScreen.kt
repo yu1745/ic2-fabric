@@ -73,7 +73,7 @@ class FermenterScreen(
 
         // 容量标示覆盖层，有生物燃料时渲染
         if (outputBiogasMb > 0) {
-            context.drawTexture(TEXTURE, x + 128, y + 25, 180f, 10f, 12, 47, 256, 256)
+            context.drawTexture(TEXTURE, x + 129, y + 26, 180f, 10f, 12, 47, 256, 256)
         }
 
         // 肥料进度纹理：(178,80)-(219,88) = 41×8，自左向右

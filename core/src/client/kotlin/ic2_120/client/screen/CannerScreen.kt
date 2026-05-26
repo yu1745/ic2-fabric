@@ -274,11 +274,11 @@ class CannerScreen(
 
         // 进度条 (180,81)-(203,95) = 23×14, 渲染至 (74,21)
         private const val PROGRESS_U = 180
-        private const val PROGRESS_V = 81
+        private const val PROGRESS_V = 80
         private const val PROGRESS_W = 23
-        private const val PROGRESS_H = 14
+        private const val PROGRESS_H = 15
         private const val PROGRESS_X = 74
-        private const val PROGRESS_Y = 22
+        private const val PROGRESS_Y = 21
 
         // 模式纹理 渲染至 (63,80)
         private const val MODE_TEX_X = 63

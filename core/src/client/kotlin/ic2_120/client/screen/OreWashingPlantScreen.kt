@@ -88,13 +88,15 @@ class OreWashingPlantScreen(
             context.disableScissor()
         }
 
-        // 容量标示纹理 (182,48)-(193,94) = 11x46，常渲染于流体纹理之上
-        context.drawTexture(
-            TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
-            TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
-            TANK_OVERLAY_W, TANK_OVERLAY_H,
-            TEXTURE_SIZE, TEXTURE_SIZE
-        )
+        // 容量标示纹理 (182,48)-(193,94) = 11x46，有流体时渲染在流体纹理之上
+        if (waterAmount > 0) {
+            context.drawTexture(
+                TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
+                TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
+                TANK_OVERLAY_W, TANK_OVERLAY_H,
+                TEXTURE_SIZE, TEXTURE_SIZE
+            )
+        }
 
         // 工作进度 (179,20)-(199,39) = 20x19，自左向右
         if (progressFrac > 0f) {

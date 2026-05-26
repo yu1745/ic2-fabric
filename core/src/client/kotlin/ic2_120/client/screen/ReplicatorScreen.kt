@@ -111,9 +111,11 @@ class ReplicatorScreen(
         // 流体槽 (31,34)-(43,81) = 12×47
         drawFluidTank(context, left, top)
 
-        // 容量标示纹理 (181,25)-(192,71) = 11×46 渲染至 (32,35)
-        context.drawTexture(TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
-            TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(), TANK_OVERLAY_W, TANK_OVERLAY_H, TEX_SIZE, TEX_SIZE)
+        // 容量标示纹理 (181,25)-(192,71) = 11×46 → (32,35)，有流体时渲染
+        if (handler.sync.fluidAmountMb > 0) {
+            context.drawTexture(TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
+                TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(), TANK_OVERLAY_W, TANK_OVERLAY_H, TEX_SIZE, TEX_SIZE)
+        }
 
         // 复制产物详情区域 (91,17) 18×18
         drawProductDetail(context, left, top)
