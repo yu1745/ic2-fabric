@@ -1,17 +1,14 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.t
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.GuiBackground
 import ic2_120.content.item.OdScannerItem
+import ic2_120.content.item.ScannerType
 import ic2_120.content.network.OreScanEntry
 import ic2_120.content.network.ScannerResultPacket
 import ic2_120.content.screen.ScannerScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
@@ -19,14 +16,6 @@ import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
-/**
- * 扫描仪 GUI（客户端）。
- *
- * 上方：信息 + 范围控制（X/Y/Z 步进按钮）+ 扫描按钮
- * 下方：扫描结果 4 列网格（可滚动）
- *
- * Y 轴范围按钮仅作显示，扫描不受限（从世界底部扫到顶部）。
- */
 @ModScreen(handler = "scanner")
 class ScannerScreen(
     handler: ScannerScreenHandler,
@@ -34,92 +23,174 @@ class ScannerScreen(
     title: Text
 ) : HandledScreen<ScannerScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-    private val gui = GuiSize.LARGE
-
     init {
-        backgroundWidth = gui.width
-        backgroundHeight = gui.height
+        backgroundWidth = 176
+        backgroundHeight = 231
+        titleY = 6
     }
 
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        // no-op: panel drawn in render() directly, prevents dark overlay on top of GUI
+    private lateinit var scanBtn: ButtonWidget
+    private var scrollOffset = 0.0
+
+    override fun init() {
+        super.init()
+
+        // 背包槽位
+        for (row in 0 until 3) {
+            for (col in 0 until 9) {
+                val idx = ScannerScreenHandler.PLAYER_INV_START + row * 9 + col
+                handler.slots[idx].x = INV_X + col * 18
+                handler.slots[idx].y = INV_Y + row * 18
+            }
+        }
+        // 快捷栏槽位
+        for (col in 0 until 9) {
+            val idx = ScannerScreenHandler.PLAYER_INV_START + 27 + col
+            handler.slots[idx].x = INV_X + col * 18
+            handler.slots[idx].y = HOTBAR_Y
+        }
+
+        scanBtn = addDrawableChild(ButtonWidget.builder(
+            Text.literal("")
+        ) {
+            client?.player?.networkHandler?.sendPacket(
+                ButtonClickC2SPacket(handler.syncId, ScannerScreenHandler.BUTTON_ID_SCAN)
+            )
+        }.dimensions(x + SCAN_BTN_X, y + SCAN_BTN_Y, SCAN_BTN_W, SCAN_BTN_H).build())
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
-        val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
-        val type = OdScannerItem.getScannerType(handler.playerInventory.getStack(handler.playerInventory.selectedSlot))
-        val usesRemaining = handler.sync.usesRemaining
-        val maxUses = handler.sync.maxUses
-        val scannerTitle = if (type.tier == 3) "OV 扫描仪" else "OD 扫描仪"
-        val rangeX = handler.sync.rangeX
-        val rangeY = handler.sync.rangeY
-        val rangeZ = handler.sync.rangeZ
-        val energyCost = ScannerScreenHandler.computeEnergyCost(type, rangeX, rangeY, rangeZ)
-        val canScan = energy >= energyCost && usesRemaining > 0
-        val results = lastResults
-
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, gui.width, gui.height)
-
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
-        // 再绘制 UI（slot 背景等）
-        ui.render(context, textRenderer, mouseX, mouseY) {
-            buildUi(
-                x = x + 8,
-                y = y + 6,
-                energy = energy,
-                cap = cap,
-                energyFraction = energyFraction,
-                scannerTitle = scannerTitle,
-                canScan = canScan,
-                usesRemaining = usesRemaining,
-                maxUses = maxUses,
-                results = results,
-                energyCost = energyCost,
-                rangeX = rangeX,
-                rangeY = rangeY,
-                rangeZ = rangeZ
+        val stack = handler.playerInventory.getStack(handler.playerInventory.selectedSlot)
+        val type = OdScannerItem.getScannerType(stack)
+        val results = lastResults
+
+        // 标题
+        val scannerTitle = if (type.tier == 3) "OV 扫描仪" else "OD 扫描仪"
+        context.drawText(textRenderer, Text.literal(scannerTitle), x + 8, y + 6, 0x404040, false)
+
+        // 扫描按钮文字（7px）
+        drawScanButtonText(context, x + SCAN_BTN_X, y + SCAN_BTN_Y)
+
+        val scissorLeft = x + RESULTS_X
+        val scissorTop = y + RESULTS_Y
+        val scrollAreaTop = scissorTop + 22
+        val scrollAreaH = RESULTS_H - 22
+
+        if (results.isEmpty()) {
+            // 空状态提示
+            context.drawText(
+                textRenderer, Text.literal("点击扫描按钮开始扫描"), scissorLeft, scissorTop + 4, 0x666666, false
             )
-        }
-
-        val tooltip = ui.getTooltipAt(mouseX, mouseY)
-        if (tooltip != null) {
-            context.drawTooltip(textRenderer, tooltip, mouseX, mouseY)
         } else {
-            drawMouseoverTooltip(context, mouseX, mouseY)
+            // 扫描结果： 固定标题，不滚动
+            context.drawText(
+                textRenderer, Text.literal("扫描结果："), scissorLeft, scissorTop, RESULTS_TITLE_COLOR, false
+            )
+
+            // 列头：名称（左） 数量（中），7px 亮绿色，不滚动
+            drawSmallText(context, "名称", scissorLeft, scissorTop + 12, RESULTS_TITLE_COLOR)
+            val qtyText = "数量"
+            val qtyX = scissorLeft + (RESULTS_W - (textRenderer.getWidth(qtyText) * 7f / textRenderer.fontHeight).toInt()) / 2
+            drawSmallText(context, qtyText, qtyX, scissorTop + 12, RESULTS_TITLE_COLOR)
+
+            // 结果行滚动区域
+            context.enableScissor(scissorLeft, scrollAreaTop, scissorLeft + RESULTS_W, scrollAreaTop + scrollAreaH)
+
+            val startY = scrollAreaTop - scrollOffset.toInt()
+            for ((index, entry) in results.withIndex()) {
+                val rowY = startY + index * 18
+                if (rowY + 16 < scrollAreaTop) continue
+                if (rowY > scrollAreaTop + scrollAreaH) break
+                val oreStack = entryToItemStack(entry)
+                val label = "${oreStack.name.string}"
+
+                context.drawText(textRenderer, Text.literal(label), scissorLeft, rowY + 4, 0xFFFFFF, false)
+                context.drawText(textRenderer, Text.literal("${entry.count}"), scissorLeft + RESULTS_W / 2, rowY + 4, 0xFFFFFF, false)
+                if (!oreStack.isEmpty) {
+                    context.drawItem(oreStack, scissorLeft + RESULTS_W - 18, rowY)
+                }
+            }
+
+            context.disableScissor()
         }
+
+        drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        if (ui.mouseClicked(mouseX, mouseY, button)) true
-        else super.mouseClicked(mouseX, mouseY, button)
-
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, horizontalAmount: Double, amount: Double): Boolean =
-        ui.mouseScrolled(mouseX, mouseY, 0.0, amount)
-                || super.mouseScrolled(mouseX, mouseY, horizontalAmount, amount)
-
-    override fun mouseDragged(
-        mouseX: Double, mouseY: Double, button: Int,
-        deltaX: Double, deltaY: Double
-    ): Boolean = ui.mouseDragged(mouseX, mouseY, button)
-            || super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)
-
-    override fun mouseReleased(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        ui.stopDrag()
-        return super.mouseReleased(mouseX, mouseY, button)
+    override fun removed() {
+        super.removed()
+        lastResults = emptyList()
+        scrollOffset = 0.0
     }
 
-    // ─── 扫描结果（S2C 包更新）──────────────────────────────────────
+    override fun mouseScrolled(
+        mouseX: Double,
+        mouseY: Double,
+        horizontalAmount: Double,
+        amount: Double
+    ): Boolean {
+        if (lastResults.isEmpty()) return false
+
+        val relX = mouseX - x
+        val relY = mouseY - y
+        if (relX < RESULTS_X || relX > RESULTS_X + RESULTS_W ||
+            relY < RESULTS_Y || relY > RESULTS_Y + RESULTS_H
+        ) return super.mouseScrolled(mouseX, mouseY, horizontalAmount, amount)
+
+        val contentH = lastResults.size * 18
+        val scrollAreaH = RESULTS_H - 22
+        val maxScroll = (contentH - scrollAreaH).coerceAtLeast(0).toDouble()
+        scrollOffset = (scrollOffset - amount * 12.0).coerceIn(0.0, maxScroll)
+        return true
+    }
+
+    private fun drawSmallText(context: DrawContext, text: String, tx: Int, ty: Int, color: Int) {
+        val scale = 7f / textRenderer.fontHeight
+        context.matrices.push()
+        context.matrices.translate(tx.toDouble(), ty.toDouble(), 0.0)
+        context.matrices.scale(scale, scale, 1f)
+        context.drawText(textRenderer, text, 0, 0, color, false)
+        context.matrices.pop()
+    }
+
+    private fun drawScanButtonText(context: DrawContext, bx: Int, by: Int) {
+        val text = "扫描"
+        val scale = 8f / textRenderer.fontHeight
+        val tw = textRenderer.getWidth(text)
+
+        context.matrices.push()
+        context.matrices.translate((bx + SCAN_BTN_W / 2).toDouble(), (by + SCAN_BTN_H / 2).toDouble(), 0.0)
+        context.matrices.scale(scale, scale, 1f)
+        context.drawText(textRenderer, text, -tw / 2, -textRenderer.fontHeight / 2, 0xFFFFFF, false)
+        context.matrices.pop()
+    }
 
     companion object {
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guitoolscanner.png")
+        private const val TEXTURE_SIZE = 256
+
+        private const val SCAN_BTN_X = 148
+        private const val SCAN_BTN_Y = 5
+        private const val SCAN_BTN_W = 20
+        private const val SCAN_BTN_H = 10
+
+        private const val RESULTS_X = 9
+        private const val RESULTS_Y = 18
+        private const val RESULTS_W = 159
+        private const val RESULTS_H = 127
+        private const val RESULTS_TITLE_COLOR = 0x55FF55
+
+        private const val INV_X = 8
+        private const val INV_Y = 149
+        private const val HOTBAR_Y = 207
+
         @JvmField
         var lastResults: List<OreScanEntry> = emptyList()
 
@@ -133,161 +204,6 @@ class ScannerScreen(
             val item = block.asItem()
             if (item == net.minecraft.item.Items.AIR) return ItemStack.EMPTY
             return ItemStack(item, entry.count.coerceAtLeast(1))
-        }
-    }
-
-    // ─── UI 构建 ───────────────────────────────────────────────────
-
-    private fun UiScope.buildUi(
-        x: Int,
-        y: Int,
-        energy: Long,
-        cap: Long,
-        energyFraction: Float,
-        scannerTitle: String,
-        canScan: Boolean,
-        usesRemaining: Int,
-        maxUses: Int,
-        results: List<OreScanEntry>,
-        rangeX: Int,
-        rangeY: Int,
-        rangeZ: Int,
-        energyCost: Int
-    ) {
-        Flex(
-            x = x,
-            y = y,
-            direction = FlexDirection.COLUMN,
-            gap = 6,
-            modifier = Modifier.EMPTY.width(gui.contentWidth).height(gui.height - 16)
-        ) {
-            // 上方：信息 + 范围控制 + 扫描按钮
-            Flex(direction = FlexDirection.ROW, gap = 8) {
-                // 左侧：基础信息
-                Column(spacing = 4, modifier = Modifier().fractionWidth(0.4f)) {
-                    Text(scannerTitle, color = 0xFFFFFF)
-                    Text(
-                        "${energy.toInt()} / $cap EU",
-                        color = 0xCCCCCC,
-                        shadow = false
-                    )
-                    EnergyBar(energyFraction)
-                    Text(
-                        t("gui.ic2_120.scanner.remaining_uses", usesRemaining, maxUses),
-                        color = if (usesRemaining > 0) 0xAAAAAA else 0xFF4A4A,
-                        shadow = false
-                    )
-                    Text(
-                        "本次消耗: ${energyCost}EU",
-                        color = if (canScan) 0x88FF88 else 0xFF4A4A,
-                        shadow = false
-                    )
-                }
-
-                // 右侧：范围控制
-                Column(spacing = 4, modifier = Modifier().fractionWidth(0.6f)) {
-                    Text("范围控制", color = 0x888888, shadow = false)
-
-                    // X
-                    Flex(gap = 2, alignItems = AlignItems.CENTER) {
-                        Text("X", color = 0xAAAAAA)
-                        Button("-", modifier = Modifier().width(18), onClick = {
-                            client?.player?.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(handler.syncId, ScannerScreenHandler.BUTTON_RANGE_X_DEC)
-                            )
-                        })
-                        Text("$rangeX", color = 0xFFFFFF, modifier = Modifier().width(18), center = true)
-                        Button("+", modifier = Modifier().width(18), onClick = {
-                            client?.player?.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(handler.syncId, ScannerScreenHandler.BUTTON_RANGE_X_INC)
-                            )
-                        })
-                        Text("  Z", color = 0xAAAAAA)
-                        Button("-", modifier = Modifier().width(18), onClick = {
-                            client?.player?.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(handler.syncId, ScannerScreenHandler.BUTTON_RANGE_Z_DEC)
-                            )
-                        })
-                        Text("$rangeZ", color = 0xFFFFFF, modifier = Modifier().width(18), center = true)
-                        Button("+", modifier = Modifier().width(18), onClick = {
-                            client?.player?.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(handler.syncId, ScannerScreenHandler.BUTTON_RANGE_Z_INC)
-                            )
-                        })
-                    }
-
-                    // Y（带 10 步进）
-                    Flex(gap = 2, alignItems = AlignItems.CENTER) {
-                        Text("Y", color = 0xAAAAAA)
-                        Button("-", modifier = Modifier().width(18), onClick = {
-                            client?.player?.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(handler.syncId, ScannerScreenHandler.BUTTON_RANGE_Y_DEC)
-                            )
-                        })
-                        Button("-10", modifier = Modifier().width(28), onClick = {
-                            client?.player?.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(handler.syncId, ScannerScreenHandler.BUTTON_RANGE_Y_DEC_10)
-                            )
-                        })
-                        Text("$rangeY", color = 0xFFFFFF, modifier = Modifier().width(18), center = true)
-                        Button("+", modifier = Modifier().width(18), onClick = {
-                            client?.player?.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(handler.syncId, ScannerScreenHandler.BUTTON_RANGE_Y_INC)
-                            )
-                        })
-                        Button("+10", modifier = Modifier().width(28), onClick = {
-                            client?.player?.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(handler.syncId, ScannerScreenHandler.BUTTON_RANGE_Y_INC_10)
-                            )
-                        })
-                    }
-                }
-            }
-
-            // 扫描按钮
-            Button(
-                text = if (canScan) t("gui.ic2_120.scan") else t("gui.ic2_120.status_no_energy"),
-                modifier = Modifier.EMPTY.width(100),
-                onClick = {
-                    client?.player?.networkHandler?.sendPacket(
-                        ButtonClickC2SPacket(handler.syncId, ScannerScreenHandler.BUTTON_ID_SCAN)
-                    )
-                }
-            )
-
-            // 下方：扫描结果区（4 列网格，占满剩余高度）
-            if (results.isNotEmpty()) {
-                ScrollView(modifier = Modifier().fractionHeight(1.0f), scrollbarWidth = 8) {
-                    Column(spacing = 4) {
-                        Text(t("gui.ic2_120.scanner.scan_results"), color = 0xFFFFFF)
-                        results.chunked(4).forEach { row ->
-                            Flex(gap = 4) {
-                                for (entry in row) {
-                                    val oreStack = entryToItemStack(entry)
-                                    if (!oreStack.isEmpty) {
-                                        Column(modifier = Modifier().fractionWidth(0.25f), spacing = 2) {
-                                            ItemStack(oreStack, size = 16)
-                                            Text(
-                                                if (entry.count >= 1000) "${entry.count / 1000}k"
-                                                else entry.count.toString(),
-                                                color = 0xFFAA33,
-                                                shadow = false
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                Text(
-                    t("gui.ic2_120.scanner.click_to_scan"),
-                    color = 0x666666,
-                    shadow = false,
-                    modifier = Modifier().fractionHeight(1.0f)
-                )
-            }
         }
     }
 }

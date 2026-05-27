@@ -36,10 +36,11 @@ enum class ScannerType(
     val energyPerScan: Int,
     val scanRadius: Int,
     val maxUses: Int,
-    val tier: Int
+    val tier: Int,
+    val deepY: Int = 0
 ) {
-    OD(10_000L, 48, 7, 208, 1),
-    OV(1_000_000L, 250, 12, 512, 3);
+    OD(10_000L, 48, 12, 208, 1, -64),
+    OV(1_000_000L, 250, 7, 512, 3, 0);
 
     companion object {
         fun fromTier(tier: Int): ScannerType = entries.find { it.tier == tier } ?: OD

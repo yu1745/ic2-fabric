@@ -18,7 +18,6 @@ import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import ic2_120.content.item.IUpgradeItem
-import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
@@ -83,13 +82,10 @@ class TeleporterBlockEntity(
         private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.of(Identifier.of("ic2", "machine.teleporter.charge"))
         private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.of(Identifier.of("ic2", "machine.teleporter.use"))
 
-        const val SLOT_DISCHARGING = 0
-        const val SLOT_UPGRADE_0 = 1
-        const val SLOT_UPGRADE_1 = 2
-        const val SLOT_UPGRADE_2 = 3
-        const val SLOT_UPGRADE_3 = 4
-        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
-        const val INVENTORY_SIZE = 5
+        const val SLOT_UPGRADE_0 = 0
+        const val SLOT_UPGRADE_1 = 1
+        val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1)
+        const val INVENTORY_SIZE = 2
 
         private const val NBT_TARGET_SET = "TargetSet"
         private const val NBT_TARGET_X = "TargetX"
@@ -120,10 +116,9 @@ class TeleporterBlockEntity(
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
-            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1)
+            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }, maxPerSlot = 1)
         ),
-        extractSlots = intArrayOf(SLOT_DISCHARGING, *SLOT_UPGRADE_INDICES),
+        extractSlots = intArrayOf(*SLOT_UPGRADE_INDICES),
         markDirty = { markDirty() }
     )
 
@@ -177,7 +172,6 @@ class TeleporterBlockEntity(
     override fun markDirty() = super.markDirty()
 
     override fun setStack(slot: Int, stack: ItemStack) {
-        if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
@@ -185,7 +179,6 @@ class TeleporterBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
-        slot == SLOT_DISCHARGING -> stack.item is IBatteryItem
         SLOT_UPGRADE_INDICES.contains(slot) -> stack.item is IUpgradeItem
         else -> false
     }
