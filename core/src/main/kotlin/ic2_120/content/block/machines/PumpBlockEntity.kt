@@ -177,7 +177,7 @@ class PumpBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = !this.variant.isBlank && this.variant == variant && ModFluids.isFluid(variant.fluid)
 
         override fun onFinalCommit() {
-            sync.fluidAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            syncTankState()
             markDirty()
         }
 
@@ -190,7 +190,7 @@ class PumpBlockEntity(
                 FluidVariant.blank()
             }
             if (variant.isBlank) amount = 0L
-            sync.fluidAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            syncTankState()
         }
     }
 
@@ -264,7 +264,7 @@ class PumpBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
-        sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(tankInternal.variant.fluid)
+        syncTankState()
 
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
@@ -445,5 +445,9 @@ class PumpBlockEntity(
         val front = world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH
         return if (side == front) null else tank
     }
-}
 
+    private fun syncTankState() {
+        sync.fluidAmountMb = (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(tankInternal.variant.fluid)
+    }
+}

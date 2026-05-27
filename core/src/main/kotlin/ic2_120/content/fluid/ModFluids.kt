@@ -163,7 +163,7 @@ object ModFluids {
         // 建筑泡沫：客户端渲染复用通用流体贴图 + 着色（见 ModFluidClient）
         registerFluid("construction_foam", "fluid_still", "fluid_flow", tintArgb = 0xFFB4B4AF.toInt())
         registerFluid("creosote", "fluid_still", "fluid_flow", tintArgb = 0xFF4E2D14.toInt())
-        registerFluid("compressed_air", "fluid_still", "fluid_flow", tintArgb = 0xFFB0D8F0.toInt())
+        registerFluid("compressed_air", "fluid_still", "fluid_flow", tintArgb = 0x80B0D8F0.toInt())
         // 蒸汽和过热蒸汽不能装在桶里（蒸汽单元/过热蒸汽单元代替）
         registerFluid("steam", "fluid_still", "fluid_flow", tintArgb = 0xFFD0D0D0.toInt(), withBucket = false, rises = true)
         registerFluid("superheated_steam", "fluid_still", "fluid_flow", tintArgb = 0xFFFFBEBE.toInt(), withBucket = false, rises = true)

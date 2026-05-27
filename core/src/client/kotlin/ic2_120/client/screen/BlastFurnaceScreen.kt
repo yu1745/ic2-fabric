@@ -135,11 +135,12 @@ class BlastFurnaceScreen(
         val barH = 47
         val fillH = (fraction * barH).toInt()
         if (fillH <= 0) return
-        val fluid = ModFluids.COMPRESSED_AIR_STILL
+        val fluid = ModFluids.COMPRESSED_AIR_FLOWING
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
         val sprites = handler.getFluidSprites(null, null, fluid.defaultState) ?: return
-        val sprite = sprites[0]
+        val sprite = sprites.getOrElse(1) { sprites[0] }
         val color = FluidUtils.getFluidColor(fluid)
+        val a = ((color ushr 24) and 0xFF) / 255f
         val r = ((color shr 16) and 0xFF) / 255f
         val g = ((color shr 8) and 0xFF) / 255f
         val b = (color and 0xFF) / 255f
@@ -149,7 +150,7 @@ class BlastFurnaceScreen(
             val tileH = minOf(16, gy + barH - sy)
             for (sx in gx until (gx + barW) step 16) {
                 val tileW = minOf(16, gx + barW - sx)
-                context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, a)
             }
         }
         context.disableScissor()

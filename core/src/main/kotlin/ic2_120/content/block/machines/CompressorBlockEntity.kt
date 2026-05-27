@@ -26,28 +26,34 @@ import ic2_120.content.recipes.compressor.CompressorRecipeSerializer
 import ic2_120.content.recipes.getRecipeType
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.ModMachineRecipeBinding
-import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluids
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
-import net.minecraft.recipe.input.SingleStackRecipeInput
+import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
-
-import net.minecraft.recipe.RecipeManager
+import net.minecraft.network.PacketByteBuf
+import net.minecraft.recipe.Ingredient
+import net.minecraft.recipe.input.SingleStackRecipeInput
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
 import net.minecraft.registry.RegistryWrapper
-import net.minecraft.network.PacketByteBuf
 import io.netty.buffer.Unpooled
 
 @ModBlockEntity(block = CompressorBlock::class)
@@ -281,7 +287,39 @@ class CompressorBlockEntity(
         if (input.isEmpty) return null
         val recipeManager = world.recipeManager
         val optionalRecipe = recipeManager.getFirstMatch(getRecipeType<CompressorRecipe>(), SingleStackRecipeInput(input), world)
-        return optionalRecipe.map { it.value }.orElse(null)
+        return optionalRecipe.map { it.value }.orElse(null) ?: getWaterContainerRecipe(input)
+    }
+
+    private fun getWaterContainerRecipe(input: ItemStack): CompressorRecipe? {
+        val emptyContainer = extractWaterContainerRemainder(input) ?: return null
+        return CompressorRecipe(
+            Identifier.of("ic2_120", "compressing/water_container_to_snow_block"),
+            Ingredient.EMPTY,
+            1,
+            ItemStack(Items.SNOW_BLOCK),
+            emptyContainer
+        )
+    }
+
+    private fun extractWaterContainerRemainder(input: ItemStack): ItemStack? {
+        if (input.isEmpty) return null
+        val ctx = ContainerItemContext.withConstant(input.copyWithCount(1))
+        val itemStorage = ctx.find(FluidStorage.ITEM) ?: return null
+        for (view in itemStorage) {
+            val resource = view.resource
+            if (resource.isBlank || view.amount < FluidConstants.BUCKET || !isWater(resource)) continue
+            Transaction.openOuter().use { tx ->
+                val extracted = view.extract(resource, FluidConstants.BUCKET, tx)
+                if (extracted != FluidConstants.BUCKET) return@use
+                tx.commit()
+                return ctx.itemVariant.toStack(ctx.amount.toInt().coerceAtLeast(0))
+            }
+        }
+        return null
+    }
+
+    private fun isWater(variant: FluidVariant): Boolean {
+        return variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER
     }
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem
@@ -289,7 +327,8 @@ class CompressorBlockEntity(
     private fun isRecipeInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || isBatteryItem(stack)) return false
         val w = world ?: return true
-        return w.recipeManager.getFirstMatch(getRecipeType<CompressorRecipe>(), SingleStackRecipeInput(stack.copyWithCount(stack.maxCount)), w).isPresent
+        return w.recipeManager.getFirstMatch(getRecipeType<CompressorRecipe>(), SingleStackRecipeInput(stack.copyWithCount(stack.maxCount)), w).isPresent ||
+            extractWaterContainerRemainder(stack) != null
     }
 
     /**
@@ -308,5 +347,3 @@ class CompressorBlockEntity(
         markDirty()
     }
 }
-
-

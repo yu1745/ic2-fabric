@@ -60,7 +60,6 @@
 ### inventory（资源清单）
 
 - `docs/inventory/assets-inventory.md`
-- `docs/inventory/sounds-inventory.md`
 
 ### reports（统计报告）
 
