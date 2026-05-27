@@ -180,6 +180,11 @@ class FluidHeatExchangerBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
         override fun canInsert(variant: FluidVariant): Boolean = isAcceptedInputFluid(variant.fluid) && ModFluids.isFluid(variant.fluid)
 
+        private fun syncTankState() {
+            sync.inputFluidMb = toMilliBuckets(amount)
+            sync.inputFluidType = sync.fluidToFluidType(if (amount > 0L) variant.fluid else null)
+        }
+
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
             return super.insert(insertedVariant, maxAmount, transaction)
@@ -188,8 +193,7 @@ class FluidHeatExchangerBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun onFinalCommit() {
-            sync.inputFluidMb = toMilliBuckets(amount)
-            sync.inputFluidType = sync.fluidToFluidType(if (amount > 0L) variant.fluid else null)
+            syncTankState()
             markDirty()
         }
 
@@ -203,7 +207,7 @@ class FluidHeatExchangerBlockEntity(
                 isHotCoolant(fluid) -> FluidVariant.of(ModFluids.HOT_COOLANT_STILL)
                 else -> FluidVariant.of(Fluids.LAVA)
             }
-            sync.inputFluidMb = toMilliBuckets(amount)
+            syncTankState()
         }
 
         fun insertInternal(toInsert: Long, fluid: Fluid): Long {
@@ -219,7 +223,7 @@ class FluidHeatExchangerBlockEntity(
 
             amount += actual
             if (variant.isBlank) variant = FluidVariant.of(normalized)
-            sync.inputFluidMb = toMilliBuckets(amount)
+            syncTankState()
             markDirty()
             return actual
         }
@@ -231,7 +235,7 @@ class FluidHeatExchangerBlockEntity(
 
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.inputFluidMb = toMilliBuckets(amount)
+            syncTankState()
             markDirty()
             return actual
         }
@@ -244,6 +248,11 @@ class FluidHeatExchangerBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
         override fun canInsert(variant: FluidVariant): Boolean = false
 
+        private fun syncTankState() {
+            sync.outputFluidMb = toMilliBuckets(amount)
+            sync.outputFluidType = sync.fluidToFluidType(if (amount > 0L) variant.fluid else null)
+        }
+
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
             return super.insert(insertedVariant, maxAmount, transaction)
@@ -252,8 +261,7 @@ class FluidHeatExchangerBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = isAcceptedOutputFluid(variant.fluid) && ModFluids.isFluid(variant.fluid)
 
         override fun onFinalCommit() {
-            sync.outputFluidMb = toMilliBuckets(amount)
-            sync.outputFluidType = sync.fluidToFluidType(if (amount > 0L) variant.fluid else null)
+            syncTankState()
             markDirty()
         }
 
@@ -267,7 +275,7 @@ class FluidHeatExchangerBlockEntity(
                 isCoolant(fluid) -> FluidVariant.of(ModFluids.COOLANT_STILL)
                 else -> FluidVariant.of(ModFluids.PAHOEHOE_LAVA_STILL)
             }
-            sync.outputFluidMb = toMilliBuckets(amount)
+            syncTankState()
         }
 
         fun canAccept(toInsert: Long, outputVariant: FluidVariant): Boolean {
@@ -290,7 +298,7 @@ class FluidHeatExchangerBlockEntity(
 
             amount += actual
             if (variant.isBlank) variant = outputVariant
-            sync.outputFluidMb = toMilliBuckets(amount)
+            syncTankState()
             markDirty()
             return actual
         }
@@ -302,7 +310,7 @@ class FluidHeatExchangerBlockEntity(
 
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.outputFluidMb = toMilliBuckets(amount)
+            syncTankState()
             markDirty()
             return actual
         }

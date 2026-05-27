@@ -91,6 +91,13 @@ object ModFluidClient {
             "block/fluid/fluid_still",
             "block/fluid/fluid_flow"
         )
+        // Compressed Air（通用流体纹理 + 半透明浅蓝 tint）
+        registerFluid(
+            ModFluids.COMPRESSED_AIR_STILL,
+            ModFluids.COMPRESSED_AIR_FLOWING,
+            "block/fluid/fluid_still",
+            "block/fluid/fluid_flow"
+        )
         // Steam（浅灰半透明，纹理动画向上）
         registerFluid(
             ModFluids.STEAM_STILL,
@@ -129,6 +136,8 @@ object ModFluidClient {
             ModFluids.CONSTRUCTION_FOAM_FLOWING,
             ModFluids.CREOSOTE_STILL,
             ModFluids.CREOSOTE_FLOWING,
+            ModFluids.COMPRESSED_AIR_STILL,
+            ModFluids.COMPRESSED_AIR_FLOWING,
             ModFluids.STEAM_STILL,
             ModFluids.STEAM_FLOWING,
             ModFluids.SUPERHEATED_STEAM_STILL,

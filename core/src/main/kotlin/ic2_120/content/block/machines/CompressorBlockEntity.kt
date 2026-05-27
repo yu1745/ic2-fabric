@@ -30,19 +30,28 @@ import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
+import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluids
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.RecipeManager
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -277,7 +286,39 @@ class CompressorBlockEntity(
         val inventory = SimpleInventory(input)
         val recipeManager = world.recipeManager
         val optionalRecipe = recipeManager.getFirstMatch(getRecipeType<CompressorRecipe>(), inventory, world)
-        return optionalRecipe.orElse(null)
+        return optionalRecipe.orElse(null) ?: getWaterContainerRecipe(input)
+    }
+
+    private fun getWaterContainerRecipe(input: ItemStack): CompressorRecipe? {
+        val emptyContainer = extractWaterContainerRemainder(input) ?: return null
+        return CompressorRecipe(
+            Identifier("ic2_120", "compressing/water_container_to_snow_block"),
+            Ingredient.EMPTY,
+            1,
+            ItemStack(Items.SNOW_BLOCK),
+            emptyContainer
+        )
+    }
+
+    private fun extractWaterContainerRemainder(input: ItemStack): ItemStack? {
+        if (input.isEmpty) return null
+        val ctx = ContainerItemContext.withInitial(input.copyWithCount(1))
+        val itemStorage = ctx.find(FluidStorage.ITEM) ?: return null
+        for (view in itemStorage) {
+            val resource = view.resource
+            if (resource.isBlank || view.amount < FluidConstants.BUCKET || !isWater(resource)) continue
+            Transaction.openOuter().use { tx ->
+                val extracted = view.extract(resource, FluidConstants.BUCKET, tx)
+                if (extracted != FluidConstants.BUCKET) return@use
+                tx.commit()
+                return ctx.itemVariant.toStack(ctx.amount.toInt().coerceAtLeast(0))
+            }
+        }
+        return null
+    }
+
+    private fun isWater(variant: FluidVariant): Boolean {
+        return variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER
     }
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem
@@ -305,5 +346,3 @@ class CompressorBlockEntity(
         markDirty()
     }
 }
-
-

@@ -162,8 +162,7 @@ class FluidCannerBlockEntity(
         }
 
         override fun onFinalCommit() {
-            sync.fluidAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
-            sync.fluidCapacityMb = (TANK_CAPACITY * 1000L / FluidConstants.BUCKET).toInt()
+            syncTankState()
             markDirty()
         }
     }
@@ -222,8 +221,7 @@ class FluidCannerBlockEntity(
         tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, TANK_CAPACITY)
         val fluidTag = nbt.getCompound(NBT_FLUID_VARIANT)
         tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(fluidTag)
-        sync.fluidAmountMb = (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
-        sync.fluidCapacityMb = (TANK_CAPACITY * 1000L / FluidConstants.BUCKET).toInt()
+        syncTankState()
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -243,11 +241,17 @@ class FluidCannerBlockEntity(
         return fluidTank
     }
 
+    private fun syncTankState() {
+        sync.fluidAmountMb = (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        sync.fluidCapacityMb = (TANK_CAPACITY * 1000L / FluidConstants.BUCKET).toInt()
+        sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(tankInternal.variant.fluid)
+    }
+
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         sync.lastPourOut = if (lastOperationPourOut) 1 else 0
-        sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(tankInternal.variant.fluid)
+        syncTankState()
 
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
@@ -471,7 +475,7 @@ class FluidCannerBlockEntity(
                                 if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, emptyResult)
                                 else outputSlot.increment(emptyResult.count)
 
-                                sync.fluidAmountMb = (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+                                syncTankState()
                                 tx.commit()
                                 return
                             }
@@ -499,7 +503,7 @@ class FluidCannerBlockEntity(
                         val fuelToAdd = minOf(space, FluidConstants.BUCKET)
                         JetpackItem.setFuel(inputSlot, currentFuel + fuelToAdd)
                         tankInternal.amount -= fuelToAdd
-                        sync.fluidAmountMb = (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+                        syncTankState()
                         markDirty()
                         return
                     }
@@ -518,7 +522,7 @@ class FluidCannerBlockEntity(
                         }
                         if (wasPrimarySlot) setStack(SLOT_INPUT_FILLED, inputSlot)
                         else setStack(SLOT_INPUT_EMPTY, inputSlot)
-                        sync.fluidAmountMb = (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+                        syncTankState()
                         markDirty()
                         return
                     }
@@ -536,7 +540,7 @@ class FluidCannerBlockEntity(
                         }
                         if (wasPrimarySlot) setStack(SLOT_INPUT_FILLED, inputSlot)
                         else setStack(SLOT_INPUT_EMPTY, inputSlot)
-                        sync.fluidAmountMb = (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+                        syncTankState()
                         markDirty()
                         return
                     }
@@ -563,7 +567,7 @@ class FluidCannerBlockEntity(
                         if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, filledResult)
                         else outputSlot.increment(filledResult.count)
 
-                        sync.fluidAmountMb = (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+                        syncTankState()
                         tx.commit()
                     }
                 }

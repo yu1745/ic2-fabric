@@ -141,7 +141,7 @@ registerFluid(BIOFUEL_STILL, BIOFUEL_FLOWING, "block/fluid/fluid_still", "block/
 - **模式 A**：纹理 PNG 本身带颜色，适用 coolant、hot_coolant、uu_matter 等
 - **模式 B**：使用 `fluid_still` / `fluid_flow` 灰度纹理，`SimpleFluidRenderHandler` 的 tint 颜色自动从 `ModFluids.getFluidTintOrNull()` 读取（单一数据源）
 
-**注意：** `compressed_air` 未在 `ModFluidClient` 中注册渲染处理器。它在世界中不存在方块形式（无法自然放置），因此不需要注册流体渲染。
+**注意：** `compressed_air` 也必须在 `ModFluidClient` 中注册渲染处理器。它虽然主要作为高炉内部流体使用，但 GUI、流体单元着色、JEI/Jade 或 Connector 兼容层都可能查询 `FluidRenderHandler`。客户端注册使用通用 `fluid_still` / `fluid_flow` 纹理，并通过 `ModFluids` 的 ARGB tint 提供半透明浅蓝颜色。
 
 ### 4.2 tint 颜色来源
 
@@ -183,9 +183,8 @@ getFluidColor(fluid)
 construction_foam、creosote、steam、superheated_steam），`tintArgb` 在注册时已包含正确
 颜色，`FluidUtils` 直接从 `fluidTintColors` 读取，不需要额外处理。
 
-**特例：** 对于没有注册 `FluidRenderHandler` 的流体（如 `compressed_air`，它不在世界中
-以方块形式存在），`sampleColorFromFluidTexture` 会失败返回 -1。但 `tintArgb` 已在
-`registerFluid()` 中指定，`fluidTintColors` 有记录，`getFluidTintOrNull` 能正确返回颜色。
+**特例：** 对于半透明流体（如 `compressed_air`），`tintArgb` 使用 ARGB，其中 alpha 分量
+参与客户端流体渲染；`FluidUtils` 仍然直接从 `fluidTintColors` 读取颜色。
 
 ### 5.2 流体单元物品着色
 
