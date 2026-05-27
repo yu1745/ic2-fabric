@@ -3,6 +3,9 @@ package ic2_120.content.screen
 import ic2_120.content.block.TeleporterBlock
 import ic2_120.content.block.machines.TeleporterBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
+import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
+import ic2_120.content.upgrade.IOverclockerUpgradeSupport
+import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.screen.slot.SlotMoveHelper
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.UpgradeSlotLayout
@@ -11,6 +14,7 @@ import ic2_120.content.sync.TeleporterSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
+import net.minecraft.text.Text as McText
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -46,8 +50,7 @@ class TeleporterScreenHandler(
         checkSize(blockInventory, TeleporterBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        addTrackedSlot(blockInventory, TeleporterBlockEntity.SLOT_DISCHARGING)
-        for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
+        for (i in 0 until 2) {
             addTrackedSlot(blockInventory, TeleporterBlockEntity.SLOT_UPGRADE_INDICES[i], upgradeSlotSpec)
         }
 
@@ -69,10 +72,10 @@ class TeleporterScreenHandler(
     }
 
     override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
-        if (id != BUTTON_ID_RANGE_DEC && id != BUTTON_ID_RANGE_INC) return false
+        if (id != BUTTON_ID_RANGE_1 && id != BUTTON_ID_RANGE_3) return false
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? TeleporterBlockEntity ?: return@get
-            val next = if (id == BUTTON_ID_RANGE_INC) {
+            val next = if (id == BUTTON_ID_RANGE_3) {
                 TeleporterBlockEntity.TELEPORT_RANGE_MAX
             } else {
                 TeleporterBlockEntity.TELEPORT_RANGE_MIN
@@ -122,16 +125,25 @@ class TeleporterScreenHandler(
             ) <= 64.0
         }, true)
 
+    fun getUpgradeTooltips(): List<McText> {
+        val be = context.get({ world, pos -> world.getBlockEntity(pos) }, null)
+        return buildList {
+            add(McText.literal("可支持的升级"))
+            if (be is IOverclockerUpgradeSupport) add(McText.literal("超频升级"))
+            if (be is ITransformerUpgradeSupport) add(McText.literal("变压器升级"))
+            if (be is IEnergyStorageUpgradeSupport) add(McText.literal("储能升级"))
+        }
+    }
+
     companion object {
         private val DEFAULT_SLOT_SPEC = SlotSpec()
 
-        const val SLOT_DISCHARGING_INDEX = 0
-        const val SLOT_UPGRADE_INDEX_START = 1
-        const val SLOT_UPGRADE_INDEX_END = 4
-        const val PLAYER_INV_START = 5
-        const val HOTBAR_END = 41
-        const val BUTTON_ID_RANGE_DEC = 0
-        const val BUTTON_ID_RANGE_INC = 1
+        const val SLOT_UPGRADE_INDEX_START = 0
+        const val SLOT_UPGRADE_INDEX_END = 2
+        const val PLAYER_INV_START = 2
+        const val HOTBAR_END = 38
+        const val BUTTON_ID_RANGE_1 = 0
+        const val BUTTON_ID_RANGE_3 = 1
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): TeleporterScreenHandler {

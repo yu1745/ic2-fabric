@@ -4,71 +4,71 @@
 # against bad commits.
 # 每次 push 都会创建 GitHub Release 并上传 JAR。
 
-name: build
-on: [pull_request, push]
+#name: build
+#on: [pull_request, push]
 
-jobs:
-  build:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: checkout repository
-        uses: actions/checkout@v4
-      - name: validate gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
-      - name: setup jdk
-        uses: actions/setup-java@v4
-        with:
-          java-version: '25'
-          distribution: 'microsoft'
-      - name: make gradle wrapper executable
-        run: chmod +x ./gradlew
-      - name: build
-        env:
-          GITHUB_RUN_NUMBER: ${{ github.run_number }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: ./gradlew build
-      - name: capture build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Artifacts
-          path: |
-            core/build/libs/
-            advanced-solar-addon/build/libs/
+#jobs:
+#  build:
+#    runs-on: ubuntu-24.04
+#    steps:
+#      - name: checkout repository
+#        uses: actions/checkout@v4
+#      - name: validate gradle wrapper
+#        uses: gradle/actions/wrapper-validation@v4
+#      - name: setup jdk
+#        uses: actions/setup-java@v4
+#        with:
+#          java-version: '25'
+#          distribution: 'microsoft'
+#      - name: make gradle wrapper executable
+#        run: chmod +x ./gradlew
+#      - name: build
+#        env:
+#          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+#          GITHUB_REPOSITORY: ${{ github.repository }}
+#        run: ./gradlew build
+#      - name: capture build artifacts
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: Artifacts
+#          path: |
+#            core/build/libs/
+#            advanced-solar-addon/build/libs/
 
-  release:
-    needs: build
-    runs-on: ubuntu-24.04
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-    steps:
-      - name: checkout for libs
-        uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            libs
-          sparse-checkout-cone-mode: false
-      - name: download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: Artifacts
-          path: build-output
-      - name: filter mod jar
-        run: |
-          mkdir -p mod-release
-          shopt -s globstar nullglob
-          for f in build-output/**/ic2_120-*.jar build-output/**/ic2_120_advanced_solar_addon-*.jar; do
-            [[ "$f" != *-sources* && "$f" != *-remapped* ]] && cp "$f" "mod-release/$(basename "$f" .jar)-mc1.20.1.jar" || true
-          done
-          if [ -d "libs" ]; then
-            cp libs/*.jar mod-release/ || true
-          fi
-          rm -f mod-release/energy-*.jar
-      - name: create release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: release-1.20.1-${{ github.run_number }}
-          files: mod-release/*.jar
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#  release:
+#    needs: build
+#    runs-on: ubuntu-24.04
+#    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#    permissions:
+#      contents: write
+#    steps:
+#      - name: checkout for libs
+#        uses: actions/checkout@v4
+#        with:
+#          sparse-checkout: |
+#            libs
+#          sparse-checkout-cone-mode: false
+#      - name: download build artifacts
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: Artifacts
+#          path: build-output
+#      - name: filter mod jar
+#        run: |
+#          mkdir -p mod-release
+#          shopt -s globstar nullglob
+#          for f in build-output/**/ic2_120-*.jar build-output/**/ic2_120_advanced_solar_addon-*.jar; do
+#            [[ "$f" != *-sources* && "$f" != *-remapped* ]] && cp "$f" "mod-release/$(basename "$f" .jar)-mc1.20.1.jar" || true
+#          done
+#          if [ -d "libs" ]; then
+#            cp libs/*.jar mod-release/ || true
+#          fi
+#          rm -f mod-release/energy-*.jar
+#      - name: create release
+#        uses: softprops/action-gh-release@v2
+#        with:
+#          tag_name: release-1.20.1-${{ github.run_number }}
+#          files: mod-release/*.jar
+#          generate_release_notes: true
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
