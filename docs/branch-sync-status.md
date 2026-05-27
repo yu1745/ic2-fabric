@@ -1,24 +1,22 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-05-25
+最后更新：2026-05-28
 
 分叉点：`c5e247c`
 
 验证方法：对 main 上每个 commit 的代码改动在 1.21.1 worktree 中逐文件比对。
 
-> 迁移参考：`docs/migration-1.20.1-to-1.21.1.md` — 汇总了全部 125 个 commit 中出现的 API 变化及对应代码示例。
+> 迁移参考：`docs/migration-1.20.1-to-1.21.1.md` — 汇总了截至早期同步批次中出现的 API 变化及对应代码示例。
 
 ## 总览
 
-从分叉点 `c5e247c` 到 main HEAD 共 **144 个 commit**，**125 个已同步，19 个待同步**。
-（归档 1-124 → `branch-sync-archive.md`）
+同步跟踪表共 **154 个条目**，**125 个已同步，29 个待同步**。
+已同步条目 `#1-#125` 归档在 `branch-sync-archive.md`；未同步条目不归档，即使主表超过 20 行。
 
 ## 逐 commit 状态
 
 | # | Commit | 说明 | 在 1.21.1？ | 备注 |
 |---|--------|------|:-----------:|------|
-
-| 125 | `7f74eecc` | feat: 风力计配方+粗矿块反向分解+发电机燃料过滤修复 | ✅ | cherry-pick + 适配 1.21.1 RecipeExporter/CraftingRecipeCategory（tools→equipment）+ datagen 刷新 |
 | 126 | `4ee9b03e` | feat: 核爆炸对齐 IC2 原版——自定义射线投射+分tick方块摧毁 | ❌ | 待同步 |
 | 127 | `88fe5847` | feat: 核爆炸全分tick+严格数值对齐+全服公告+冷却 | ❌ | 待同步 |
 | 128 | `f9841c26` | docs: TODO 添加特斯拉线圈电鱼 | ❌ | 待同步 |
@@ -38,6 +36,16 @@
 | 142 | `ebd14a81` | 更新了部分GUI 以及优化了高炉程序 | ❌ | 待同步 |
 | 143 | `ea30898b` | feat: 全面GUI重构 + 流体/气体系统区分 + 储罐系统 + 离心机配方修正 | ❌ | 待同步 |
 | 144 | `19bf0da8` | feat: 采矿机流体处理 + 高级采矿机逐层回收管道 + 核电日志降级 | ❌ | 待同步 |
+| 145 | `e58e819d` | docs: 更新同步状态表——添加 commits 129-144，归档 105-124 | ❌ | 待同步 |
+| 146 | `7e78eeda` | 高级太阳能相关机器重构、GUI更新 | ❌ | 待同步 |
+| 147 | `ab7a2cfd` | Merge pull request #13 from yu1745/feat/macerator-gui-texture | ❌ | 待同步 |
+| 148 | `4ea41f63` | fix: 流体管道输入水被拒——isFluid 排除 WATER + canInsert/canExtract 误改 + simulateInsertion 精度 | ❌ | 待同步 |
+| 149 | `801f453f` | 部分GUI交互更新 | ❌ | 待同步 |
+| 150 | `336efb20` | GUI交互更新 | ❌ | 待同步 |
+| 151 | `019e3ea6` | fix: 泵不吸流体——canInsert=false 阻断内部insert + 迁移ic2翻译到ic2_120 | ❌ | 待同步 |
+| 152 | `ca0c1a89` | ci: 启用 GitHub Actions 构建与发布工作流 | ❌ | 待同步 |
+| 153 | `ad08a51f` | refactor: 传送机GUI重构 + OD/OV扫描仪GUI重构 + build.yml注释化 | ❌ | 待同步 |
+| 154 | `fcb99f05` | fix: 流体槽屏幕同步 + 压缩空气相关更新 | ❌ | 待同步 |
 
 ## 同步历史
 

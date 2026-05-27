@@ -115,3 +115,4 @@
 | 122 | `6f2633f3` | fix: BER 光照硬编码 MAX_LIGHT_COORDINATE，改用环境光照 | ✅ | cherry-pick 无冲突 |
 | 123 | `152ca7ab` | feat: 多台机器GUI从ComposeUI改为传统纹理渲染 | ✅ | cherry-pick + Screen conflict 解决（取 HEAD 版本）|
 | 124 | `33a52f58` | chore: 移除 .deploy-enabled 引用（文件已删除） | ✅ | cherry-pick 无冲突 |
+| 125 | `7f74eecc` | feat: 风力计配方+粗矿块反向分解+发电机燃料过滤修复 | ✅ | cherry-pick + 适配 1.21.1 RecipeExporter/CraftingRecipeCategory（tools→equipment）+ datagen 刷新 |
