@@ -1,5 +1,6 @@
 package ic2_120.client.screen
 
+import ic2_120.client.FluidUtils
 import ic2_120.client.t
 import ic2_120.content.block.FluidHeatExchangerBlock
 import ic2_120.content.screen.FluidHeatExchangerScreenHandler
@@ -117,14 +118,21 @@ class FluidHeatExchangerScreen(
         }
     }
 
-    /** 在指定区域自下而上渲染流体纹理填充 */
+    /** 在指定区域自下而上渲染流体纹理填充，使用 FluidUtils 着色 */
     private fun drawFluidFill(context: DrawContext, gx: Int, gy: Int, w: Int, h: Int, fraction: Float, fluid: Fluid) {
         val fillH = (fraction.coerceIn(0f, 1f) * h).toInt()
         if (fillH <= 0) return
 
-        val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
-        val sprites = handler.getFluidSprites(null, null, fluid.defaultState) ?: return
+        val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
+        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultState) ?: return
         val sprite = sprites[0]
+
+        val color = FluidUtils.getFluidColor(fluid)
+        val (r, g, b) = if (color != -1) {
+            Triple(((color shr 16) and 0xFF) / 255f, ((color shr 8) and 0xFF) / 255f, (color and 0xFF) / 255f)
+        } else {
+            Triple(1f, 1f, 1f)
+        }
 
         val fillY = gy + h - fillH
         context.enableScissor(gx, fillY, gx + w, gy + h)
@@ -133,7 +141,7 @@ class FluidHeatExchangerScreen(
             val tileH = minOf(16, gy + h - sy)
             for (sx in gx until (gx + w) step 16) {
                 val tileW = minOf(16, gx + w - sx)
-                context.drawSprite(sx, sy, 0, tileW, tileH, sprite)
+                context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
             }
         }
 

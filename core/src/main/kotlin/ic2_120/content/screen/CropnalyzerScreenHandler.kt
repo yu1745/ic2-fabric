@@ -27,12 +27,18 @@ class CropnalyzerScreenHandler(
     syncId: Int,
     private val playerInventory: PlayerInventory,
     private val hand: Hand,
-    private val itemInventory: Inventory = SimpleInventory(1),
+    private val itemInventory: Inventory = SimpleInventory(2),
     private val propertyDelegate: PropertyDelegate = ArrayPropertyDelegate(PROPERTY_COUNT)
 ) : ScreenHandler(CropnalyzerScreenHandler::class.type(), syncId) {
 
-    private val seedSlotSpec = SlotSpec(
+    private val seedInputSpec = SlotSpec(
         canInsert = { it.item is CropSeedBagItem },
+        maxItemCount = 1
+    )
+
+    private val seedOutputSpec = SlotSpec(
+        canInsert = { false },
+        canTake = { true },
         maxItemCount = 1
     )
 
@@ -42,7 +48,8 @@ class CropnalyzerScreenHandler(
     init {
         addProperties(propertyDelegate)
 
-        addSlot(PredicateSlot(itemInventory, SLOT_SEED, 0, 0, seedSlotSpec))
+        addSlot(PredicateSlot(itemInventory, SLOT_INPUT, 8, 7, seedInputSpec))
+        addSlot(PredicateSlot(itemInventory, SLOT_OUTPUT, 41, 7, seedOutputSpec))
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -60,7 +67,7 @@ class CropnalyzerScreenHandler(
         if (id != BUTTON_ID_SCAN) return false
 
         val scanner = getScannerStack(player) ?: return true
-        val seed = itemInventory.getStack(SLOT_SEED)
+        val seed = itemInventory.getStack(SLOT_INPUT)
         if (seed.item !is CropSeedBagItem) {
             player.sendMessage(net.minecraft.text.Text.translatable("gui.ic2_120.cropnalyzer.insert_seed_bag").formatted(net.minecraft.util.Formatting.RED), true)
             return true
@@ -69,6 +76,11 @@ class CropnalyzerScreenHandler(
         val type = CropSeedData.readType(seed)
         if (type == null) {
             player.sendMessage(net.minecraft.text.Text.translatable("gui.ic2_120.cropnalyzer.no_valid_crop_data").formatted(net.minecraft.util.Formatting.RED), true)
+            return true
+        }
+
+        if (!itemInventory.getStack(SLOT_OUTPUT).isEmpty) {
+            player.sendMessage(net.minecraft.text.Text.translatable("gui.ic2_120.cropnalyzer.output_occupied").formatted(net.minecraft.util.Formatting.RED), true)
             return true
         }
 
@@ -81,15 +93,16 @@ class CropnalyzerScreenHandler(
 
         tool.setEnergy(scanner, currentEnergy - CropnalyzerItem.ENERGY_PER_SCAN)
 
-        val oldLevel = CropSeedData.readScanLevel(seed)
-        val newLevel = (oldLevel + 1).coerceAtMost(4)
+        // 一次扫描即达满级
         val stats = CropSeedData.readStats(seed)
-        CropSeedData.write(seed, type, stats, newLevel)
+        CropSeedData.write(seed, type, stats, 4)
+        itemInventory.setStack(SLOT_OUTPUT, seed.copy())
+        itemInventory.setStack(SLOT_INPUT, ItemStack.EMPTY)
         itemInventory.markDirty()
 
         refreshEnergyState()
         sendContentUpdates()
-        player.sendMessage(CropnalyzerItem.buildResultMessage(type, stats, newLevel), false)
+        player.sendMessage(CropnalyzerItem.buildResultMessage(type, stats, 4), false)
         return true
     }
 
@@ -100,11 +113,13 @@ class CropnalyzerScreenHandler(
 
         val stack = slot.stack
         moved = stack.copy()
-        if (index == SLOT_INDEX_SEED) {
+        if (index == SLOT_INDEX_INPUT) {
+            if (!insertItem(stack, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+        } else if (index == SLOT_INDEX_OUTPUT) {
             if (!insertItem(stack, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
         } else if (index in PLAYER_INV_START until HOTBAR_END) {
             if (stack.item is CropSeedBagItem) {
-                if (!insertItem(stack, SLOT_INDEX_SEED, SLOT_INDEX_SEED + 1, false)) return ItemStack.EMPTY
+                if (!insertItem(stack, SLOT_INDEX_INPUT, SLOT_INDEX_INPUT + 1, false)) return ItemStack.EMPTY
             } else {
                 return ItemStack.EMPTY
             }
@@ -145,10 +160,12 @@ class CropnalyzerScreenHandler(
     companion object {
         const val BUTTON_ID_SCAN = 0
 
-        private const val SLOT_SEED = 0
-        const val SLOT_INDEX_SEED = 0
-        const val PLAYER_INV_START = 1
-        const val HOTBAR_END = 37
+        private const val SLOT_INPUT = 0
+        private const val SLOT_OUTPUT = 1
+        const val SLOT_INDEX_INPUT = 0
+        const val SLOT_INDEX_OUTPUT = 1
+        const val PLAYER_INV_START = 2
+        const val HOTBAR_END = 38
         private const val PROPERTY_COUNT = 2
 
         @ScreenFactory

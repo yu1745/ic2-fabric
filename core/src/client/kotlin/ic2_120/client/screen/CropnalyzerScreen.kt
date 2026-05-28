@@ -1,33 +1,58 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.GuiBackground
 import ic2_120.client.t
+import ic2_120.client.ui.GuiBackground
+import ic2_120.content.crop.CropSystem
+import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.CropSeedData
+import ic2_120.content.item.CropnalyzerItem
 import ic2_120.content.screen.CropnalyzerScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.sound.PositionedSoundInstance
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
+import net.minecraft.sound.SoundEvents
 import net.minecraft.text.Text as McText
-import ic2_120.client.EnergyFormatUtils
+import net.minecraft.util.Identifier
 
 @ModScreen(handler = "cropnalyzer")
 class CropnalyzerScreen(
     handler: CropnalyzerScreenHandler,
     playerInventory: PlayerInventory,
     title: McText
-) : HandledScreen<CropnalyzerScreenHandler>(handler, playerInventory, title) {
+    ) : HandledScreen<CropnalyzerScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-    private val gui = GuiSize.STANDARD_TALL
+    companion object {
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicropnalyzer.png")
+        private const val TEXTURE_SIZE = 256
+        private const val GUI_WIDTH = 176
+        private const val GUI_HEIGHT = 223
+        private const val PLAYER_INV_Y = 141
+        private const val HOTBAR_Y = 199
+
+        private const val BTN_X = 143
+        private const val BTN_Y = 7
+        private const val BTN_W = 27
+        private const val BTN_H = 18
+
+        private const val RESULT_X = 9
+        private const val RESULT_Y = 38
+        private const val RESULT_W = 159
+
+        private val GREEN = 0x55FF55
+        private val YELLOW = 0xFFFF55
+        private val BLUE = 0x55AADD
+        private val WHITE = 0xFFFFFF
+    }
 
     init {
-        backgroundWidth = gui.width
-        backgroundHeight = gui.height
+        backgroundWidth = GUI_WIDTH
+        backgroundHeight = GUI_HEIGHT
+        titleY = 6
     }
 
     override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -35,106 +60,162 @@ class CropnalyzerScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
-        val energy = handler.energy.toLong().coerceAtLeast(0)
-        val cap = handler.energyCapacity.toLong().coerceAtLeast(1)
-        val fraction = (energy.toFloat() / cap.toFloat()).coerceIn(0f, 1f)
-        val seed = handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_SEED].stack
-        val scanLevel = CropSeedData.readScanLevel(seed)
-        val type = CropSeedData.readType(seed)?.let { CropSeedData.displayName(it).string } ?: t("gui.ic2_120.cropnalyzer.unknown")
-        val canScan = energy >= 50L && !seed.isEmpty
 
-        val content: UiScope.() -> Unit = {
-            Column(
-                x = left + 8,
-                y = top + 6,
-                spacing = 5,
-                modifier = Modifier().width(gui.contentWidth)
-            ) {
-                Flex(alignItems = AlignItems.CENTER, gap = 4) {
-                    Text(t("gui.ic2_120.cropnalyzer.title"), color = 0xFFFFFF)
-                    EnergyBar(fraction, barHeight = 8, modifier = Modifier().fractionWidth(1f))
-                    Text(
-                        "${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU",
-                        color = 0xCCCCCC,
-                        shadow = false
-                    )
-                }
-                Flex(justifyContent = JustifyContent.CENTER, alignItems = AlignItems.CENTER) {
-                    SlotAnchor(
-                        id = slotAnchorId(CropnalyzerScreenHandler.SLOT_INDEX_SEED),
-                        width = GuiSize.SLOT_SIZE,
-                        height = GuiSize.SLOT_SIZE
-                    )
-                }
-                Text(t("gui.ic2_120.cropnalyzer.scan_hint"), color = 0xAAAAAA, shadow = false)
-                Text(t("gui.ic2_120.cropnalyzer.crop_type", type), color = 0xFFFFFF, shadow = false)
-                Text(t("gui.ic2_120.cropnalyzer.scan_level", scanLevel), color = 0xFFFFFF, shadow = false)
-                Button(
-                    text = if (canScan) t("gui.ic2_120.scan") else t("gui.ic2_120.cannot_scan"),
-                    modifier = Modifier().width(90),
-                    onClick = {
-                        client?.player?.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, CropnalyzerScreenHandler.BUTTON_ID_SCAN)
-                        )
-                    }
-                )
-            }
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = CropnalyzerScreenHandler.PLAYER_INV_START,
-                playerInvY = gui.playerInvY,
-                hotbarY = gui.hotbarY
-            )
-        }
+        setSlotPositions()
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
         val inset = GuiBackground.SLOT_ANCHOR_INSET
         GuiBackground.drawVanillaLikeSlot(
             context,
-            x + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_SEED].x - inset,
-            y + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_SEED].y - inset,
-            GuiSize.SLOT_SIZE,
-            GuiSize.SLOT_SIZE
+            left + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].x - inset,
+            top + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].y - inset,
+            GuiSize.SLOT_SIZE, GuiSize.SLOT_SIZE
+        )
+        GuiBackground.drawVanillaLikeSlot(
+            context,
+            left + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].x - inset,
+            top + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].y - inset,
+            GuiSize.SLOT_SIZE, GuiSize.SLOT_SIZE
         )
         GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y, gui.playerInvY, gui.hotbarY, GuiSize.SLOT_SIZE
+            context, left, top, PLAYER_INV_Y, HOTBAR_Y, GuiSize.SLOT_SIZE
         )
 
-        // 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
+        drawTitle(context, left, top)
+        drawButton(context, left, top, mouseX, mouseY)
+        drawResultText(context, left, top)
 
-        // 再绘制 UI（slot 背景、能量条等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        drawMouseoverTooltip(context, mouseX, mouseY)
+    }
 
-        val tooltip = ui.getTooltipAt(mouseX, mouseY)
-        if (tooltip != null) {
-            context.drawTooltip(textRenderer, tooltip, mouseX, mouseY)
-        } else {
-            drawMouseoverTooltip(context, mouseX, mouseY)
+    private fun setSlotPositions() {
+        handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].x = 8
+        handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].y = 7
+        handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].x = 41
+        handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].y = 7
+
+        for (row in 0 until 3) {
+            for (col in 0 until 9) {
+                val idx = CropnalyzerScreenHandler.PLAYER_INV_START + col + row * 9
+                handler.slots[idx].x = 8 + col * GuiSize.SLOT_SIZE
+                handler.slots[idx].y = PLAYER_INV_Y + row * GuiSize.SLOT_SIZE
+            }
+        }
+        for (col in 0 until 9) {
+            val idx = CropnalyzerScreenHandler.PLAYER_INV_START + 27 + col
+            handler.slots[idx].x = 8 + col * GuiSize.SLOT_SIZE
+            handler.slots[idx].y = HOTBAR_Y
         }
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
+    private fun drawTitle(context: DrawContext, left: Int, top: Int) {
+        val tx = left + (backgroundWidth - textRenderer.getWidth(title)) / 2
+        context.drawText(textRenderer, title, tx, top + 6, 0x404040, false)
     }
 
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
+    private fun drawButton(context: DrawContext, left: Int, top: Int, mouseX: Int, mouseY: Int) {
+        val bx = left + BTN_X
+        val by = top + BTN_Y
+        val hovered = mouseX in bx until (bx + BTN_W) && mouseY in by until (by + BTN_H)
+        val faceColor = if (hovered) 0xFF9D9D9D.toInt() else 0xFF8B8B8B.toInt()
+        val dark = 0xFF373737.toInt()
+        val light = 0xFFFFFFFF.toInt()
+        val x1 = bx + BTN_W
+        val y1 = by + BTN_H
+
+        context.fill(bx, by, x1, y1, faceColor)
+        context.fill(bx, by, x1, by + 1, light)
+        context.fill(bx, by, bx + 1, y1, light)
+        context.fill(bx, y1 - 1, x1, y1, dark)
+        context.fill(x1 - 1, by, x1, y1, dark)
+        context.fill(bx + 1, by + 1, x1 - 1, by + 2, 0xFFE6E6E6.toInt())
+        context.fill(bx + 1, by + 1, bx + 2, y1 - 1, 0xFFE6E6E6.toInt())
+        context.fill(bx + 1, y1 - 2, x1 - 1, y1 - 1, 0xFF555555.toInt())
+        context.fill(x1 - 2, by + 1, x1 - 1, y1 - 1, 0xFF555555.toInt())
+
+        val text = t("gui.ic2_120.cropnalyzer.scan")
+        val tw = textRenderer.getWidth(text)
+        val tx = bx + (BTN_W - tw) / 2
+        val ty = by + (BTN_H - textRenderer.fontHeight) / 2
+        context.drawTextWithShadow(textRenderer, text, tx, ty, 0xFFE0E0E0.toInt())
+    }
+
+    private fun drawResultText(context: DrawContext, left: Int, top: Int) {
+        val outputSeed = handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].stack
+        if (outputSeed.item !is CropSeedBagItem) return
+        val type = CropSeedData.readType(outputSeed) ?: return
+        val stats = CropSeedData.readStats(outputSeed)
+        val def = CropSystem.definition(type)
+
+        val harvestFirst = CropSystem.harvestItems(type).firstOrNull()
+        val harvestName = harvestFirst?.let {
+            McText.translatable(it.item.asItem().translationKey).string
+        } ?: "-"
+
+        val x0 = left + RESULT_X
+        val x1 = left + RESULT_X + RESULT_W
+        val lineH = textRenderer.fontHeight
+        val gap = 5
+
+        // Line 1: 作物名（左）| Tier: N（右）
+        val name = CropSeedData.displayName(type).string
+        drawSplitLine(context, name, t("gui.ic2_120.cropnalyzer.tier_label", def.tier), x0, x1, top + RESULT_Y, WHITE, WHITE)
+
+        // Line 2: 成熟龄:（左）| N（右）
+        val y2 = top + RESULT_Y + lineH + gap
+        drawSplitLine(context, t("gui.ic2_120.cropnalyzer.mature_label"), def.maxVisualAge.toString(), x0, x1, y2, WHITE, WHITE)
+
+        // Line 3: 属性:（左）| attr1/attr2/attr3（右）
+        val y3 = y2 + lineH + gap
+        drawSplitLine(context, t("gui.ic2_120.cropnalyzer.attr_label"), def.attributes.take(3).joinToString("/"), x0, x1, y3, WHITE, WHITE)
+
+        // Line 4: 产物:（左）| 收获物名（右）
+        val y4 = y3 + lineH + gap
+        drawSplitLine(context, t("gui.ic2_120.cropnalyzer.product"), harvestName, x0, x1, y4, WHITE, WHITE)
+
+        // 5px 间隔，然后 Growth/Gain/Resis.
+        val y5 = y4 + lineH + gap + gap
+        drawSplitLine(context, t("gui.ic2_120.cropnalyzer.growth"), stats.growth.toString(), x0, x1, y5, WHITE, GREEN)
+        val y6 = y5 + lineH + gap
+        drawSplitLine(context, t("gui.ic2_120.cropnalyzer.gain"), stats.gain.toString(), x0, x1, y6, WHITE, YELLOW)
+        val y7 = y6 + lineH + gap
+        drawSplitLine(context, t("gui.ic2_120.cropnalyzer.resistance"), stats.resistance.toString(), x0, x1, y7, WHITE, BLUE)
+    }
+
+    private fun drawSplitLine(context: DrawContext, leftText: String, rightText: String, x0: Int, x1: Int, y: Int, leftColor: Int, rightColor: Int) {
+        context.drawText(textRenderer, leftText, x0, y, leftColor, false)
+        val rw = textRenderer.getWidth(rightText)
+        context.drawText(textRenderer, rightText, x1 - rw, y, rightColor, false)
+    }
+
+    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
+        if (button == 0) {
+            val bx = x + BTN_X
+            val by = y + BTN_Y
+            if (mouseX in bx.toDouble()..(bx + BTN_W).toDouble() && mouseY in by.toDouble()..(by + BTN_H).toDouble()) {
+                val inputSeed = handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].stack
+                val canScan = handler.energy >= CropnalyzerItem.ENERGY_PER_SCAN
+                        && inputSeed.item is CropSeedBagItem
+                        && CropSeedData.readType(inputSeed) != null
+                if (canScan) {
+                    MinecraftClient.getInstance().soundManager.play(
+                        PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
+                    )
+                    client?.player?.networkHandler?.sendPacket(
+                        ButtonClickC2SPacket(handler.syncId, CropnalyzerScreenHandler.BUTTON_ID_SCAN)
+                    )
+                }
+                return true
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button)
+    }
 }

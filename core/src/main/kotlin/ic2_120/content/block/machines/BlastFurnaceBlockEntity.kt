@@ -67,10 +67,10 @@ import net.minecraft.world.World
  *
  * 工作条件：温度 > 1400。工作时温度冻结，持续消耗对应温度段的 HU 维持。
  *
- * 每钢锭固定消耗 6,000 mB 压缩空气，单 tick 消耗量随温度升高而加快：
- * - 1401–1500：8,400 ticks → 约 0.71 mB/tick
- * - 1501–1600：6,000 ticks → 1.00 mB/tick
- * - 1601–1700：4,000 ticks → 1.50 mB/tick
+ * 每钢锭空气消耗随温度线性递减（单位 droplets）：
+ * - 1401→1500：486,000→421,200 droplets（显示约 6000→5200 mB）
+ * - 1501→1600：421,119→380,700 droplets（显示约 5199→4700 mB）
+ * - 1601→1700：380,619→340,200 droplets（显示约 4699→4200 mB）
  *
  * 槽位：
  * - SLOT_INPUT：铁质材料
@@ -156,12 +156,12 @@ class BlastFurnaceBlockEntity(
     private var tempDecayProgress: Int = 0
     private var heatReceivedLastTick: Boolean = false
 
-    // 空气消耗累加器（微 mB，即千分之一 mB），用于分 tick 精确消耗
-    private var airAccumulatedNeed: Long = 0L
+    // 当前钢锭已消耗的空气 droplet 数（用于滞后耗尽模型）
+    private var airConsumedThisSteel: Long = 0L
 
-    // 压缩空气储罐 (8,000 mB)
+    // 压缩空气储罐 (8 BUCKET = 648,000 droplets)
     private val airTankInternal = object : SingleVariantStorage<FluidVariant>() {
-        private val tankCapacity = FluidConstants.BUCKET * 8
+        private val tankCapacity = FluidConstants.BUCKET * BlastFurnaceSync.AIR_TANK_BUCKETS
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
@@ -169,41 +169,36 @@ class BlastFurnaceBlockEntity(
         override fun canInsert(variant: FluidVariant): Boolean = ModFluids.isCompressedAir(variant.fluid)
 
         override fun onFinalCommit() {
-            sync.airAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.airAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
-        fun tryConsumeAir(mlToConsume: Long): Long {
-            val toConsume = mlToConsume * FluidConstants.BUCKET / 1000L
-            if (toConsume <= 0L || amount <= 0L) return 0L
-            val actual = minOf(toConsume, amount)
+        fun tryConsumeAir(droplets: Long): Long {
+            if (droplets <= 0L || amount <= 0L) return 0L
+            val actual = minOf(droplets, amount)
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.airAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
-            return actual * 1000L / FluidConstants.BUCKET
+            sync.airAmount = amount.toInt().coerceAtLeast(0)
+            return actual
         }
 
-        fun tryFillAir(mlToInsert: Long): Long {
-            val toInsert = mlToInsert * FluidConstants.BUCKET / 1000L
-            if (toInsert <= 0L) return 0L
+        fun tryFillAir(droplets: Long): Long {
+            if (droplets <= 0L) return 0L
             val space = tankCapacity - amount
-            val actual = minOf(toInsert, space)
+            val actual = minOf(droplets, space)
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.isBlank) variant = FluidVariant.of(ModFluids.COMPRESSED_AIR_STILL)
-            sync.airAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
-            return actual * 1000L / FluidConstants.BUCKET
+            sync.airAmount = amount.toInt().coerceAtLeast(0)
+            return actual
         }
 
-        fun getRemainingSpaceMl(): Long {
-            val space = tankCapacity - amount
-            return space * 1000L / FluidConstants.BUCKET
-        }
+        fun remainingSpace(): Long = tankCapacity - amount
 
         fun setStoredAir(droplets: Long) {
             amount = droplets.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L) FluidVariant.of(ModFluids.COMPRESSED_AIR_STILL) else FluidVariant.blank()
-            sync.airAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.airAmount = amount.toInt().coerceAtLeast(0)
         }
     }
 
@@ -357,7 +352,7 @@ class BlastFurnaceBlockEntity(
                 applyTemperatureDecay()
                 if (temperature < BlastFurnaceSync.TEMP_WORK_MIN && sync.progress != 0) {
                     sync.progress = 0
-                    airAccumulatedNeed = 0L
+                    airConsumedThisSteel = 0L
                 }
                 setActiveState(world, pos, state, false)
                 return
@@ -382,8 +377,7 @@ class BlastFurnaceBlockEntity(
             }
 
             // 消耗压缩空气
-            val consumedAir = consumeAirForTick(progressMax)
-            if (consumedAir <= 0L) {
+            if (!consumeAirForTick(progressMax)) {
                 // 空气不足：仅消耗 HU，不推进进度
                 markDirty()
                 setActiveState(world, pos, state, false)
@@ -402,7 +396,7 @@ class BlastFurnaceBlockEntity(
                 if (outputSlag.isEmpty) setStack(SLOT_OUTPUT_SLAG, slagOutput)
                 else outputSlag.increment(slagOutput.count)
                 sync.progress = 0
-                airAccumulatedNeed = 0L
+                airConsumedThisSteel = 0L
                 markDirty()
                 setActiveState(world, pos, state, false)
                 return
@@ -414,7 +408,7 @@ class BlastFurnaceBlockEntity(
         } else {
             // 不工作
             if (sync.progress != 0) sync.progress = 0
-            airAccumulatedNeed = 0L
+            airConsumedThisSteel = 0L
 
             if (huReceivedThisTick >= huPerTick && temperature < BlastFurnaceSync.TEMP_MAX) {
                 // HU 充足：累积温度进度，达到阈值后温度 +1
@@ -438,35 +432,23 @@ class BlastFurnaceBlockEntity(
         heatReceivedLastTick = false
     }
 
-    /** 按当前温度 / 进度消耗压缩空气，返回实际消耗的 mB 数 */
-    private fun consumeAirForTick(progressMax: Int): Long {
-        val airPerSteel = BlastFurnaceSync.getAirPerSteelMb(temperature).toLong()
-        // 目标累计消耗量（微 mB）：进度每前进 1，消耗 airPerSteel * 1000 / progressMax 微 mB
-        val targetNeed = (sync.progress + 1).toLong() * airPerSteel * 1000L / progressMax
-        val needThisTick = targetNeed - airAccumulatedNeed
-        if (needThisTick <= 0L) return 1L // 至少消耗 1 mB
+    /** 按当前温度 / 进度消耗压缩空气，返回是否成功消耗（可用于推进进度） */
+    private fun consumeAirForTick(progressMax: Int): Boolean {
+        val airPerSteel = BlastFurnaceSync.getAirPerSteelDroplets(temperature).toLong()
+        // 当前进度应消耗的 droplet 总量
+        val expected = airPerSteel * sync.progress / progressMax
+        val need = expected - airConsumedThisSteel
+        if (need <= 0L) return true  // 已消耗足够
 
-        var consumedTotal = 0L
-        var remaining = needThisTick
+        val consumed = airTankInternal.tryConsumeAir(need)
+        if (consumed < need) return false  // 空气不足
 
-        while (remaining >= 1000L) {
-            val mB = (remaining / 1000L).coerceAtMost(10L) // 单次最多 10 mB
-            val c = airTankInternal.tryConsumeAir(mB)
-            if (c <= 0L) {
-                // 空气不足，回退已消耗的部分
-                airAccumulatedNeed += consumedTotal * 1000L
-                return 0L
-            }
-            consumedTotal += c
-            remaining -= c * 1000L
-        }
-
-        airAccumulatedNeed = targetNeed
-        return consumedTotal
+        airConsumedThisSteel += consumed
+        return true
     }
 
     private fun fillAirTankFromSlot() {
-        if (airTankInternal.getRemainingSpaceMl() < 1000L) return
+        if (airTankInternal.remainingSpace() < FluidConstants.BUCKET) return
         val airSlot = getStack(SLOT_AIR_INPUT)
         if (airSlot.isEmpty || airSlot.item !is AirCell) return
         val emptySlot = getStack(SLOT_OUTPUT_EMPTY)
@@ -480,7 +462,7 @@ class BlastFurnaceBlockEntity(
         if (emptySlot.isEmpty) setStack(SLOT_OUTPUT_EMPTY, emptyCell)
         else emptySlot.increment(1)
 
-        airTankInternal.tryFillAir(1000L)
+        airTankInternal.tryFillAir(FluidConstants.BUCKET)
     }
 
     /** HU 不足时温度衰减，达到阈值后温度 -1。温度到 0 后不再衰减。 */

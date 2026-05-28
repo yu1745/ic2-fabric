@@ -7,6 +7,7 @@ import ic2_120.content.screen.BlastFurnaceScreenHandler
 import ic2_120.content.sync.BlastFurnaceSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
@@ -42,8 +43,9 @@ class BlastFurnaceScreen(
         val progressMax = getProgressMax(temperature)
         val progressFrac = if (progressMax > 0 && progress > 0) progress.toFloat() / progressMax else 0f
 
-        val airAmount = handler.sync.airAmountMb.coerceIn(0, BlastFurnaceSync.AIR_CAPACITY_MB)
-        val airFrac = airAmount.toFloat() / BlastFurnaceSync.AIR_CAPACITY_MB
+        val airAmountDroplets = handler.sync.airAmount.coerceIn(0, AIR_TANK_DROPLETS)
+        val airFrac = airAmountDroplets.toFloat() / AIR_TANK_DROPLETS
+        val airAmountMb = airAmountDroplets / DROPLETS_PER_MB
 
         val huInput = handler.sync.huInput.coerceAtLeast(0)
 
@@ -75,24 +77,24 @@ class BlastFurnaceScreen(
         }
 
         // 空气流体渲染（次一层）
-        if (airAmount > 0) {
+        if (airAmountDroplets > 0) {
             drawAirFluid(context, x + 11, y + 11, airFrac)
         }
 
         // 容量标示纹理：源 (181,95)-(192,141) 11×46，目标 (12,12)-(23,58)，有空气时渲染（顶层）
-        if (airAmount > 0) {
+        if (airAmountDroplets > 0) {
             context.drawTexture(TEXTURE, x + 12, y + 12, 181f, 95f, 11, 46, 256, 256)
         }
 
         // 缺失压缩空气纹理：源 (206,3)-(228,25) 22×22，目标 (109,38)-(131,60)，无空气时渲染
-        if (airAmount <= 0) {
+        if (airAmountDroplets <= 0) {
             context.drawTexture(TEXTURE, x + 109, y + 38, 206f, 3f, 22, 22, 256, 256)
         }
 
         // 空气表工具提示：区域 (11,11)-(23,58)
         if (mouseX in (x + 11) until (x + 23) && mouseY in (y + 11) until (y + 58)) {
-            val airLines = if (airAmount > 0) {
-                listOf(Text.translatable("gui.ic2_120.blast_furnace.air_tooltip", "%,d".format(airAmount), "%,d".format(BlastFurnaceSync.AIR_CAPACITY_MB)))
+            val airLines = if (airAmountDroplets > 0) {
+                listOf(Text.translatable("gui.ic2_120.blast_furnace.air_tooltip", "%,d".format(airAmountMb), "%,d".format(AIR_CAPACITY_MB)))
             } else {
                 listOf(Text.translatable("ic2.generic.text.empty"))
             }
@@ -185,5 +187,8 @@ class BlastFurnaceScreen(
             "ejector_upgrade",
             "pulling_upgrade"
         )
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
+        private val AIR_TANK_DROPLETS = (FluidConstants.BUCKET * BlastFurnaceSync.AIR_TANK_BUCKETS).toInt()
+        private val AIR_CAPACITY_MB = AIR_TANK_DROPLETS / DROPLETS_PER_MB
     }
 }
