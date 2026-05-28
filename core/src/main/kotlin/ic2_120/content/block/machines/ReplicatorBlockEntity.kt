@@ -150,7 +150,7 @@ class ReplicatorBlockEntity(
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val tankInternal = object : SingleVariantStorage<FluidVariant>() {
-        private val tankCapacity = FluidConstants.BUCKET * ReplicatorSync.TANK_CAPACITY_MB / 1000L
+        private val tankCapacity = FluidConstants.BUCKET * ReplicatorSync.TANK_CAPACITY_DROPLETS
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
@@ -164,16 +164,16 @@ class ReplicatorBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun onFinalCommit() {
-            sync.fluidAmountMb = toMilliBuckets(amount)
-            sync.fluidCapacityMb = ReplicatorSync.TANK_CAPACITY_MB
+            sync.fluidAmount = toMilliBuckets(amount)
+            sync.fluidCapacity = ReplicatorSync.TANK_CAPACITY_DROPLETS
             markDirty()
         }
 
         fun setStoredAmount(newAmount: Long) {
             amount = newAmount.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L) FluidVariant.of(ModFluids.UU_MATTER_STILL) else FluidVariant.blank()
-            sync.fluidAmountMb = toMilliBuckets(amount)
-            sync.fluidCapacityMb = ReplicatorSync.TANK_CAPACITY_MB
+            sync.fluidAmount = toMilliBuckets(amount)
+            sync.fluidCapacity = ReplicatorSync.TANK_CAPACITY_DROPLETS
         }
 
         fun getTankCapacity(): Long = tankCapacity
@@ -183,7 +183,7 @@ class ReplicatorBlockEntity(
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.fluidAmountMb = toMilliBuckets(amount)
+            sync.fluidAmount = toMilliBuckets(amount)
             markDirty()
             return actual
         }
@@ -290,7 +290,7 @@ class ReplicatorBlockEntity(
             FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, tankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
-        sync.fluidCapacityMb = ReplicatorSync.TANK_CAPACITY_MB
+        sync.fluidCapacity = ReplicatorSync.TANK_CAPACITY_DROPLETS
 
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
@@ -468,7 +468,7 @@ class ReplicatorBlockEntity(
                 if (output.isEmpty) setStack(SLOT_CONTAINER_OUTPUT, emptyResult.copy())
                 else output.increment(emptyResult.count)
 
-                sync.fluidAmountMb = toMilliBuckets(tankInternal.amount)
+                sync.fluidAmount = toMilliBuckets(tankInternal.amount)
                 tx.commit()
                 return
             }
@@ -488,7 +488,7 @@ class ReplicatorBlockEntity(
     }
 
     private fun toMilliBuckets(amount: Long): Int =
-        (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        amount.toInt().coerceAtLeast(0)
 
     private fun previewDropletsForTick(ub: Int): Pair<Long, Long> {
         val total = fluidConsumptionRemainder + ub.toLong() * FluidConstants.BUCKET

@@ -6,6 +6,7 @@ import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.FluidHeatGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
@@ -37,17 +38,17 @@ class FluidHeatGeneratorScreen(
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val fuelAmountMb = handler.sync.fuelAmountMb.coerceAtLeast(0)
+        val fuelAmount = handler.sync.fuelAmount.coerceAtLeast(0)
         val outputRate = handler.sync.getSyncedOutputHeat().coerceAtLeast(0L)
 
         // 标题居中于 y=6
         context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
         // 流体槽：区域 (74,24)-(85,70) = 11×46
-        drawFluidTank(context, x + 74, y + 24, fuelAmountMb)
+        drawFluidTank(context, x + 74, y + 24, fuelAmount)
 
         // 容量标示覆盖层：纹理 (180,3)-(191,49)，有流体时才渲染
-        if (fuelAmountMb > 0) {
+        if (fuelAmount > 0) {
             context.drawTexture(TEXTURE, x + 75, y + 24, 180f, 3f, 12, 46, 256, 256)
         }
 
@@ -59,7 +60,8 @@ class FluidHeatGeneratorScreen(
 
         // 流体槽悬停 (74,24)-(86,70) = 12×46
         if (mouseX in x + 74 until x + 86 && mouseY in y + 24 until y + 70) {
-            val fuelLines = if (fuelAmountMb > 0) {
+            val fuelLines = if (fuelAmount > 0) {
+                val fuelAmountMb = fuelAmount / DROPLETS_PER_MB
                 listOf(Text.translatable("gui.ic2_120.fluid_heat_generator.fuel_tooltip", "%,d".format(fuelAmountMb), "8,000"))
             } else {
                 listOf(Text.translatable("ic2.generic.text.empty"))
@@ -70,11 +72,11 @@ class FluidHeatGeneratorScreen(
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun drawFluidTank(context: DrawContext, gx: Int, gy: Int, fuelAmountMb: Int) {
+    private fun drawFluidTank(context: DrawContext, gx: Int, gy: Int, fuelAmount: Int) {
         val tankW = 12
         val tankH = 46
-        val tankCapMb = 8000
-        val fillH = (fuelAmountMb.toFloat() / tankCapMb * tankH).toInt().coerceIn(0, tankH)
+        val tankCap = FluidConstants.BUCKET * 8
+        val fillH = (fuelAmount.toFloat() / tankCap * tankH).toInt().coerceIn(0, tankH)
         if (fillH <= 0) return
 
         val fillY = gy + tankH - fillH
@@ -109,5 +111,6 @@ class FluidHeatGeneratorScreen(
 
     companion object {
         private val TEXTURE = Identifier("ic2", "textures/gui/guiliquidheatingmachine.png")
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
     }
 }

@@ -185,7 +185,7 @@ class NuclearReactorBlockEntity(
 
     // 流体存储（冷却液和热冷却液）
     val inputTank = object : SingleVariantStorage<FluidVariant>() {
-        private val tankCapacity = mbToDroplets(NuclearReactorSync.COOLANT_TANK_CAPACITY_MB)
+        private val tankCapacity = FluidConstants.BUCKET * NuclearReactorSync.COOLANT_TANK_CAPACITY_BUCKETS
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
@@ -200,13 +200,13 @@ class NuclearReactorBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun onFinalCommit() {
-            sync.inputCoolantMb = dropletsToMb(amount)
+            sync.inputCoolant = dropletsToMb(amount)
             markDirty()
         }
     }
 
     val outputTank = object : SingleVariantStorage<FluidVariant>() {
-        private val tankCapacity = mbToDroplets(NuclearReactorSync.COOLANT_TANK_CAPACITY_MB)
+        private val tankCapacity = FluidConstants.BUCKET * NuclearReactorSync.COOLANT_TANK_CAPACITY_BUCKETS
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
@@ -220,7 +220,7 @@ class NuclearReactorBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
 
         override fun onFinalCommit() {
-            sync.outputHotCoolantMb = dropletsToMb(amount)
+            sync.outputHotCoolant = dropletsToMb(amount)
             markDirty()
         }
     }
@@ -604,7 +604,7 @@ class NuclearReactorBlockEntity(
     private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
 
     private fun dropletsToMb(amount: Long): Int =
-        (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        amount.toInt().coerceAtLeast(0)
 
     /**
      * 检测是否为热模式（5×5×5 外壳结构）
@@ -963,8 +963,8 @@ class NuclearReactorBlockEntity(
 
         // 更新热模式和流体同步数据
         sync.isThermalMode = if (isThermalMode()) 1 else 0
-        sync.inputCoolantMb = dropletsToMb(inputTank.amount)
-        sync.outputHotCoolantMb = dropletsToMb(outputTank.amount)
+        sync.inputCoolant = dropletsToMb(inputTank.amount)
+        sync.outputHotCoolant = dropletsToMb(outputTank.amount)
 
         dropOverflowItems(world, pos)
 
@@ -1083,8 +1083,8 @@ class NuclearReactorBlockEntity(
                             }
                             outputTank.amount = (outputTank.amount + extracted).coerceAtMost(outputTank.capacity)
 
-                            sync.inputCoolantMb = dropletsToMb(inputTank.amount)
-                            sync.outputHotCoolantMb = dropletsToMb(outputTank.amount)
+                            sync.inputCoolant = dropletsToMb(inputTank.amount)
+                            sync.outputHotCoolant = dropletsToMb(outputTank.amount)
                             markDirty()
 
                             val limitReason = when {

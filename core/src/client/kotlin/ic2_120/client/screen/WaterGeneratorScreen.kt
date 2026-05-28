@@ -7,6 +7,7 @@ import ic2_120.client.ui.EnergyBarOrientation
 import ic2_120.client.ui.GuiBackground
 import ic2_120.client.t
 import ic2_120.content.block.WaterGeneratorBlock
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import ic2_120.content.block.machines.WaterGeneratorBlockEntity
 import ic2_120.content.screen.WaterGeneratorScreenHandler
 import ic2_120.content.screen.GuiSize
@@ -45,10 +46,10 @@ class WaterGeneratorScreen(
         val cap = WaterGeneratorSync.ENERGY_CAPACITY
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
 
-        // 水储量竖向条（1 桶 = 1000 mB）
-        val waterMb = handler.sync.waterAmountMb.coerceAtLeast(0)
-        val waterCapMb = 1000
-        val waterFrac = if (waterCapMb > 0) (waterMb.toFloat() / waterCapMb).coerceIn(0f, 1f) else 0f
+        // 水储量竖向条（8 桶，droplet 单位）
+        val waterDroplets = handler.sync.waterAmount.coerceAtLeast(0)
+        val waterCapDroplets = 8 * FluidConstants.BUCKET
+        val waterFrac = if (waterCapDroplets > 0) (waterDroplets.toFloat() / waterCapDroplets).coerceIn(0f, 1f) else 0f
 
         val inputText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
         val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
@@ -176,6 +177,7 @@ class WaterGeneratorScreen(
 
     companion object {
         private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
+        private const val DROPLETS_PER_MB = FluidConstants.BUCKET / 1000
     }
 }
 

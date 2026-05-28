@@ -40,7 +40,9 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
             ItemStack(item, count)
         }
 
-        val waterConsumption = JsonHelper.getLong(json, "water_consumption_mb", 1000L)
+        // 读取旧 mB 键并转为 droplets（兼容旧 JSON）
+        val waterMb = JsonHelper.getLong(json, "water_consumption_mb", 1000L)
+        val waterConsumption = waterMb * net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET / 1000L
 
         return OreWashingRecipe(id, ingredient, outputs, waterConsumption)
     }
@@ -66,6 +68,6 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
             buf.writeItemStack(output.copy())
         }
 
-        buf.writeLong(recipe.waterConsumptionMb)
+        buf.writeLong(recipe.waterConsumptionDroplets)
     }
 }

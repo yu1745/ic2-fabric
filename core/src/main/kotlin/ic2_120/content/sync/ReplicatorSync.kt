@@ -23,7 +23,8 @@ class ReplicatorSync(
         const val MAX_INSERT = 512L
         const val MAX_EXTRACT = 0L
         const val NBT_ENERGY_STORED = "EnergyStored"
-        const val TANK_CAPACITY_MB = 16_000
+        /** 流体容量：16 BUCKET = 1,296,000 droplets */
+        const val TANK_CAPACITY_DROPLETS = 1_296_000
         const val BASE_UB_PER_SECOND = 100
         const val BASE_UB_PER_TICK = 5
         const val ENERGY_PER_TICK = 512L
@@ -44,8 +45,10 @@ class ReplicatorSync(
 
     var energy by schema.int("Energy")
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
-    var fluidAmountMb by schema.int("FluidAmountMb")
-    var fluidCapacityMb by schema.int("FluidCapacityMb", default = TANK_CAPACITY_MB)
+    /** 流体储量（droplets） */
+    var fluidAmount by schema.int("FluidAmountMb")
+    /** 流体容量（droplets） */
+    var fluidCapacity by schema.int("FluidCapacityMb", default = TANK_CAPACITY_DROPLETS)
     var progressUb by schema.int("ProgressUb")
     var progressMaxUb by schema.int("ProgressMaxUb")
     var mode by schema.int("Mode", default = MODE_SINGLE)

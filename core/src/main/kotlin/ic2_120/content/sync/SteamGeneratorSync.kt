@@ -1,6 +1,7 @@
 package ic2_120.content.sync
 
 import ic2_120.content.syncs.SyncSchema
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 
 /**
  * 蒸汽发生器同步数据。
@@ -10,8 +11,8 @@ class SteamGeneratorSync(
     schema: SyncSchema
 ) {
     companion object {
-        /** 水罐容量 (mB) */
-        const val WATER_TANK_CAPACITY = 10_000L
+        /** 水罐容量 (droplets, 10 BUCKET) */
+        val WATER_TANK_CAPACITY: Long = FluidConstants.BUCKET * 10
         /** 蒸汽罐容量 (mB) */
         const val STEAM_TANK_CAPACITY = 100_000L
         /** 最大热输入 (HU/t)，参考 ic2_origin */

@@ -242,8 +242,8 @@ class FluidCannerBlockEntity(
     }
 
     private fun syncTankState() {
-        sync.fluidAmountMb = (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
-        sync.fluidCapacityMb = (TANK_CAPACITY * 1000L / FluidConstants.BUCKET).toInt()
+        sync.fluidAmount = tankInternal.amount.toInt().coerceAtLeast(0)
+        sync.fluidCapacity = TANK_CAPACITY.toInt()
         sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(tankInternal.variant.fluid)
     }
 

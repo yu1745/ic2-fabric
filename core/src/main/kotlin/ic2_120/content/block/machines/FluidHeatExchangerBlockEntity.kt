@@ -181,7 +181,7 @@ class FluidHeatExchangerBlockEntity(
         override fun canInsert(variant: FluidVariant): Boolean = isAcceptedInputFluid(variant.fluid) && ModFluids.isFluid(variant.fluid)
 
         private fun syncTankState() {
-            sync.inputFluidMb = toMilliBuckets(amount)
+            sync.inputFluid = toMilliBuckets(amount)
             sync.inputFluidType = sync.fluidToFluidType(if (amount > 0L) variant.fluid else null)
         }
 
@@ -249,7 +249,7 @@ class FluidHeatExchangerBlockEntity(
         override fun canInsert(variant: FluidVariant): Boolean = false
 
         private fun syncTankState() {
-            sync.outputFluidMb = toMilliBuckets(amount)
+            sync.outputFluid = toMilliBuckets(amount)
             sync.outputFluidType = sync.fluidToFluidType(if (amount > 0L) variant.fluid else null)
         }
 
@@ -676,7 +676,7 @@ class FluidHeatExchangerBlockEntity(
         fluid == ModFluids.PAHOEHOE_LAVA_STILL || fluid == ModFluids.PAHOEHOE_LAVA_FLOWING
 
     private fun toMilliBuckets(amount: Long): Int =
-        (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        amount.toInt().coerceAtLeast(0)
 
     private fun readFluidId(nbt: NbtCompound, key: String): Fluid? {
         if (!nbt.contains(key)) return null

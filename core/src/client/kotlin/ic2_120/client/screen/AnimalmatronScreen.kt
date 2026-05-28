@@ -5,6 +5,7 @@ import ic2_120.client.t
 import ic2_120.content.block.AnimalmatronBlock
 import ic2_120.content.screen.AnimalmatronScreenHandler
 import ic2_120.content.sync.AnimalmatronSync
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
@@ -53,10 +54,10 @@ class AnimalmatronScreen(
         val energy = handler.sync.energy.toLong().coerceAtLeast(0)
         val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
-        val waterAmount = handler.sync.waterAmountMb.toLong().coerceAtLeast(0)
-        val weedExAmount = handler.sync.weedExAmountMb.toLong().coerceAtLeast(0)
-        val waterFraction = (waterAmount.toFloat() / AnimalmatronSync.WATER_TANK_CAPACITY_MB).coerceIn(0f, 1f)
-        val weedExFraction = (weedExAmount.toFloat() / AnimalmatronSync.WEED_EX_TANK_CAPACITY_MB).coerceIn(0f, 1f)
+        val waterAmount = handler.sync.waterAmount.toLong().coerceAtLeast(0)
+        val weedExAmount = handler.sync.weedExAmount.toLong().coerceAtLeast(0)
+        val waterFraction = (waterAmount.toFloat() / WATER_TANK_DROPLETS).coerceIn(0f, 1f)
+        val weedExFraction = (weedExAmount.toFloat() / WEED_EX_TANK_DROPLETS).coerceIn(0f, 1f)
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val consumeRate = handler.sync.getSyncedConsumedAmount()
 
@@ -168,7 +169,7 @@ class AnimalmatronScreen(
         if (relX in WATER_TANK_X until WATER_TANK_X + WATER_TANK_W &&
             relY in WATER_TANK_Y until WATER_TANK_Y + WATER_TANK_H
         ) {
-            val lines = if (waterAmount > 0) listOf(Text.literal("水"), Text.literal("${"%,d".format(waterAmount)} / ${"%,d".format(AnimalmatronSync.WATER_TANK_CAPACITY_MB)} mB"))
+            val lines = if (waterAmount > 0) listOf(Text.literal("水"), Text.literal("${"%,d".format(waterAmount / DROPLETS_PER_MB)} / ${"%,d".format(WATER_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -177,7 +178,7 @@ class AnimalmatronScreen(
         if (relX in WEED_EX_TANK_X until WEED_EX_TANK_X + WEED_EX_TANK_W &&
             relY in WEED_EX_TANK_Y until WEED_EX_TANK_Y + WEED_EX_TANK_H
         ) {
-            val lines = if (weedExAmount > 0) listOf(Text.translatable("fluid.ic2_120.weed_ex"), Text.literal("${"%,d".format(weedExAmount)} / ${"%,d".format(AnimalmatronSync.WEED_EX_TANK_CAPACITY_MB)} mB"))
+            val lines = if (weedExAmount > 0) listOf(Text.translatable("fluid.ic2_120.weed_ex"), Text.literal("${"%,d".format(weedExAmount / DROPLETS_PER_MB)} / ${"%,d".format(WEED_EX_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -202,6 +203,9 @@ class AnimalmatronScreen(
     }
 
     companion object {
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
+        private val WATER_TANK_DROPLETS = (FluidConstants.BUCKET * AnimalmatronSync.WATER_TANK_CAPACITY_BUCKETS).toInt()
+        private val WEED_EX_TANK_DROPLETS = (FluidConstants.BUCKET * AnimalmatronSync.WEED_EX_TANK_CAPACITY_BUCKETS).toInt()
         private val TEXTURE = Identifier("ic2", "textures/gui/guiregulation.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
         private val WATER_STILL_ID = Identifier("minecraft", "block/water_still")

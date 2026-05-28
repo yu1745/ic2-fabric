@@ -442,7 +442,7 @@ class PumpBlockEntity(
     }
 
     private fun syncTankState() {
-        sync.fluidAmountMb = (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        sync.fluidAmount = tankInternal.amount.toInt().coerceAtLeast(0)
         sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(tankInternal.variant.fluid)
     }
 }

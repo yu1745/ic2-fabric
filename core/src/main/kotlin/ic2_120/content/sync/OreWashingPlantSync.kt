@@ -32,7 +32,8 @@ class OreWashingPlantSync(
     var energy by schema.int("Energy")
     var progress by schema.int("Progress")
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
-    var waterAmountMb by schema.int("WaterAmount", default = 0)  // 以 mB 为单位显示
+    /** 水储量（droplets） */
+    var waterAmount by schema.int("WaterAmount", default = 0)
 
     private val flow = EnergyFlowSync(schema, this)
 

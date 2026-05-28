@@ -7,6 +7,7 @@ import ic2_120.content.screen.CannerScreenHandler
 import ic2_120.content.sync.CannerSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
@@ -53,19 +54,19 @@ class CannerScreen(
         // 左侧流体槽
         drawFluidTank(context, left = left, top = top, tankX = TANK_L_X, tankY = TANK_L_Y,
             tankW = TANK_W, tankH = TANK_H, fluidRawId = handler.sync.leftFluidRawId,
-            amountMb = handler.sync.leftFluidAmountMb, capacityMb = handler.sync.leftFluidCapacityMb)
+            amountMb = handler.sync.leftFluidAmount, capacityMb = handler.sync.leftFluidCapacity)
 
         // 右侧流体槽
         drawFluidTank(context, left = left, top = top, tankX = TANK_R_X, tankY = TANK_R_Y,
             tankW = TANK_W, tankH = TANK_H, fluidRawId = handler.sync.rightFluidRawId,
-            amountMb = handler.sync.rightFluidAmountMb, capacityMb = handler.sync.rightFluidCapacityMb)
+            amountMb = handler.sync.rightFluidAmount, capacityMb = handler.sync.rightFluidCapacity)
 
         // 左侧容量标示 (182,124)-(194,171) = 12×47 → (43,47)，有流体时渲染
-        if (handler.sync.leftFluidAmountMb > 0) {
+        if (handler.sync.leftFluidAmount > 0) {
             context.drawTexture(TEXTURE, left + 43, top + 47, 182f, 124f, 12, 47, TEX_SIZE, TEX_SIZE)
         }
         // 右侧容量标示 (182,124)-(194,171) = 12×47 → (121,47)，有流体时渲染
-        if (handler.sync.rightFluidAmountMb > 0) {
+        if (handler.sync.rightFluidAmount > 0) {
             context.drawTexture(TEXTURE, left + 121, top + 47, 182f, 124f, 12, 47, TEX_SIZE, TEX_SIZE)
         }
 
@@ -203,11 +204,11 @@ class CannerScreen(
 
         // 左侧流体槽悬停
         if (relX in TANK_L_X until TANK_L_X + TANK_W && relY in TANK_L_Y until TANK_L_Y + TANK_H) {
-            val amt = handler.sync.leftFluidAmountMb.coerceAtLeast(0)
-            val cap = handler.sync.leftFluidCapacityMb.coerceAtLeast(1)
+            val amt = handler.sync.leftFluidAmount.coerceAtLeast(0)
+            val cap = handler.sync.leftFluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
                 val name = Registries.FLUID.get(handler.sync.leftFluidRawId).defaultState.blockState.block.name.string
-                listOf(Text.literal(name), Text.literal("${"%,d".format(amt)} / ${"%,d".format(cap)} mB"))
+                listOf(Text.literal(name), Text.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Text.literal("空"))
             }
@@ -216,11 +217,11 @@ class CannerScreen(
 
         // 右侧流体槽悬停
         if (relX in TANK_R_X until TANK_R_X + TANK_W && relY in TANK_R_Y until TANK_R_Y + TANK_H) {
-            val amt = handler.sync.rightFluidAmountMb.coerceAtLeast(0)
-            val cap = handler.sync.rightFluidCapacityMb.coerceAtLeast(1)
+            val amt = handler.sync.rightFluidAmount.coerceAtLeast(0)
+            val cap = handler.sync.rightFluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
                 val name = Registries.FLUID.get(handler.sync.rightFluidRawId).defaultState.blockState.block.name.string
-                listOf(Text.literal(name), Text.literal("${"%,d".format(amt)} / ${"%,d".format(cap)} mB"))
+                listOf(Text.literal(name), Text.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Text.literal("空"))
             }
@@ -263,6 +264,7 @@ class CannerScreen(
         private val TEXTURE = Identifier("ic2", "textures/gui/guicanner.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
 
         // 能量条 (180,2)-(194,15) = 14×13, 渲染至 (9,61)
         private const val ENERGY_BAR_U = 180

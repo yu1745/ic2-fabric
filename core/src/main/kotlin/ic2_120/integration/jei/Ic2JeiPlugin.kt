@@ -327,7 +327,7 @@ class Ic2JeiPlugin : IModPlugin {
                 OreWashingJeiRecipe(
                     ItemStack(entry.input, 1),
                     entry.outputs.map { ItemStack(it.item, it.count) },
-                    entry.waterConsumptionMb
+                    entry.waterConsumptionDroplets
                 )
             }
         registration.addRecipes(Ic2JeiRecipeTypes.ORE_WASHING, oreWashingRecipes)

@@ -21,20 +21,25 @@ class FermenterSync(
         const val NBT_INPUT_FLUID_TYPE = "InputFluidType"
         const val NBT_OUTPUT_FLUID_TYPE = "OutputFluidType"
 
-        const val TANK_CAPACITY_MB = 8_000
+        /** 容量：8 BUCKET = 648,000 droplets */
+        const val TANK_CAPACITY_BUCKETS = 8
         const val PROCESS_INTERVAL_TICKS = 40
-        const val INPUT_MB_PER_CYCLE = 20
-        const val OUTPUT_MB_PER_CYCLE = 400
+        /** 每周期消耗 20 mB = 1,620 droplets */
+        const val INPUT_DROPLETS_PER_CYCLE = 1620
+        /** 每周期产出 400 mB = 32,400 droplets */
+        const val OUTPUT_DROPLETS_PER_CYCLE = 32400
         const val HEAT_PER_CYCLE = 4_000
-        const val FERTILIZER_PER_BIOMASS_BUCKET_MB = 1_000
+        const val FERTILIZER_PER_BIOMASS_BUCKET_DROPLETS: Int = net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET.toInt()
 
         const val FLUID_TYPE_EMPTY = 0
         const val FLUID_TYPE_BIOMASS = 1
         const val FLUID_TYPE_BIOFUEL = 2
     }
 
-    var inputBiomassMb by schema.int(NBT_INPUT_BIOMASS)
-    var outputBiogasMb by schema.int(NBT_OUTPUT_BIOGAS)
+    /** 生物质储量（droplets） */
+    var inputBiomass by schema.int(NBT_INPUT_BIOMASS)
+    /** 生物燃料储量（droplets） */
+    var outputBiogas by schema.int(NBT_OUTPUT_BIOGAS)
     var bufferedHeat by schema.int(NBT_BUFFERED_HEAT)
     var progress by schema.int(NBT_PROGRESS)
     var isWorking by schema.int(NBT_IS_WORKING)

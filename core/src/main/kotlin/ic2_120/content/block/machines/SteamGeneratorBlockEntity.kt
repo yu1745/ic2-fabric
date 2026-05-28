@@ -104,8 +104,6 @@ class SteamGeneratorBlockEntity(
             fluidLookupRegistered = true
         }
 
-        fun toMb(droplets: Long): Int =
-            (droplets * 1000 / FluidConstants.BUCKET).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
 
         fun mbToDroplets(mb: Long): Long = mb * FluidConstants.BUCKET / 1000
     }
@@ -141,7 +139,7 @@ class SteamGeneratorBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun onFinalCommit() {
-            sync.waterAmount = toMb(amount)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
@@ -156,7 +154,7 @@ class SteamGeneratorBlockEntity(
             if (actual <= 0L) return false
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.waterAmount = toMb(amount)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return true
         }
@@ -184,7 +182,7 @@ class SteamGeneratorBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isSteam(variant.fluid)
 
         override fun onFinalCommit() {
-            sync.steamAmount = toMb(amount)
+            sync.steamAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
@@ -201,7 +199,7 @@ class SteamGeneratorBlockEntity(
                 else
                     FluidVariant.of(ModFluids.STEAM_STILL)
             }
-            sync.steamAmount = toMb(amount)
+            sync.steamAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return actual
         }
@@ -318,8 +316,8 @@ class SteamGeneratorBlockEntity(
 
         if (nbt.contains(NBT_WATER_TANK)) waterTank.readFromNbt(nbt.getCompound(NBT_WATER_TANK))
         if (nbt.contains(NBT_STEAM_TANK)) steamTank.readFromNbt(nbt.getCompound(NBT_STEAM_TANK))
-        sync.waterAmount = toMb(waterTank.amount)
-        sync.steamAmount = toMb(steamTank.amount)
+        sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
+        sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
         sync.calcification = calcification.coerceIn(0L, SteamGeneratorSync.MAX_CALCIFICATION).toInt()
     }
 
@@ -374,11 +372,12 @@ class SteamGeneratorBlockEntity(
         } else {
             // 3a. 低压出水模式 — 对齐 ic2_origin work() 低压分支
             if (pressure == 0 && systemHeatMilli < 100_000L) {
-                val waterToOutput = minOf(inputMB.toLong(), toMb(waterTank.amount).toLong())
+                val inputDroplets = mbToDroplets(inputMB.toLong())
+                val waterToOutput = minOf(inputDroplets, waterTank.amount)
                 if (waterToOutput > 0L) {
                     val variant = waterTank.variant
                     if (!variant.isBlank) {
-                        val droplets = mbToDroplets(waterToOutput)
+                        val droplets = waterToOutput
                         var ejected = 0L
                         for (side in Direction.entries) {
                             if (ejected >= droplets) break
@@ -396,10 +395,10 @@ class SteamGeneratorBlockEntity(
                         }
                         if (ejected > 0) {
                             waterTank.amount -= ejected
-                            sync.waterAmount = toMb(waterTank.amount)
+                            sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
                             consumedWaterIsDistilled = waterTank.isDistilled()
                             if (waterTank.amount <= 0L) waterTank.variant = FluidVariant.blank()
-                            sync.outputMB = toMb(ejected) * SteamGeneratorSync.STEAM_EXPANSION
+                            sync.outputMB = ejected.toInt().coerceAtLeast(0) * SteamGeneratorSync.STEAM_EXPANSION
                             markDirty()
                         }
                     }
@@ -420,7 +419,7 @@ class SteamGeneratorBlockEntity(
                     producingSuperheated = systemHeatMilli >= SteamGeneratorSync.SUPERHEATED_THRESHOLD_MILLI
 
                     // 实际消耗水量 = min(进水速率, 可用水量)
-                    val waterToConsume = minOf(inputMB.toLong(), toMb(waterTank.amount).toLong())
+                    val waterToConsume = minOf(inputMB.toLong(), waterTank.amount.toInt().coerceAtLeast(0).toLong())
                     if (waterToConsume > 0L) {
                         consumedWaterIsDistilled = waterTank.isDistilled()
                         if (waterTank.consumeMb(waterToConsume)) {
@@ -463,7 +462,7 @@ class SteamGeneratorBlockEntity(
             // 先尝试排出刚产出的蒸汽
             FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, steamTank,
                 fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
-            val remainingMb = toMb(steamTank.amount)
+            val remainingMb = steamTank.amount.toInt().coerceAtLeast(0)
             if (remainingMb > 0) {
                 if (world.random.nextInt(10) == 0) {
                     world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
@@ -480,7 +479,7 @@ class SteamGeneratorBlockEntity(
                         if (actual > 0L) {
                             if (waterTank.variant.isBlank) waterTank.variant = fillVariant
                             waterTank.amount += actual
-                            sync.waterAmount = toMb(waterTank.amount)
+                            sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
                             markDirty()
                         }
                     }
@@ -491,8 +490,8 @@ class SteamGeneratorBlockEntity(
         // 7. 更新同步数据
         sync.systemHeatMilli = systemHeatMilli.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
         sync.heatInput = heatAvailableThisTick.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
-        sync.waterAmount = toMb(waterTank.amount)
-        sync.steamAmount = toMb(steamTank.amount)
+        sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
+        sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
         sync.calcification = calcification.coerceIn(0L, SteamGeneratorSync.MAX_CALCIFICATION).toInt()
         sync.calcified = if (calcification >= SteamGeneratorSync.MAX_CALCIFICATION) 1 else 0
         sync.isSuperheated = if (producingSuperheated) 1 else 0

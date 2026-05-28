@@ -13,6 +13,7 @@ import net.minecraft.client.texture.Sprite
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluids
 import net.minecraft.text.Text
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.util.Identifier
 
 @ModScreen(block = SolarDistillerBlock::class)
@@ -56,10 +57,10 @@ class SolarDistillerScreen(
 
         context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
 
-        val waterMb = handler.sync.waterInputMb.coerceAtLeast(0)
-        val distilledMb = handler.sync.distilledOutputMb.coerceAtLeast(0)
-        val waterFraction = (waterMb.toFloat() / SolarDistillerSync.TANK_CAPACITY_MB).coerceIn(0f, 1f)
-        val distilledFraction = (distilledMb.toFloat() / SolarDistillerSync.TANK_CAPACITY_MB).coerceIn(0f, 1f)
+        val waterMb = handler.sync.waterInput.coerceAtLeast(0)
+        val distilledMb = handler.sync.distilledOutput.coerceAtLeast(0)
+        val waterFraction = (waterMb.toFloat() / TANK_CAPACITY_DROPLETS).coerceIn(0f, 1f)
+        val distilledFraction = (distilledMb.toFloat() / TANK_CAPACITY_DROPLETS).coerceIn(0f, 1f)
 
         // 水纹理渲染 — 使用流体本身 flowing 纹理 + 颜色
         if (waterMb > 0) {
@@ -97,7 +98,7 @@ class SolarDistillerScreen(
         val relY = mouseY - top
         if (relX in WATER_X until WATER_X + WATER_W && relY in WATER_Y until WATER_Y + WATER_H) {
             val waterLines = if (waterMb > 0) {
-                listOf(Text.translatable("gui.ic2_120.solar_distiller.water_tooltip", "%,d".format(waterMb), "%,d".format(SolarDistillerSync.TANK_CAPACITY_MB)))
+                listOf(Text.translatable("gui.ic2_120.solar_distiller.water_tooltip", "%,d".format(waterMb / DROPLETS_PER_MB), "%,d".format(TANK_CAPACITY_MB)))
             } else {
                 listOf(Text.translatable("ic2.generic.text.empty"))
             }
@@ -107,7 +108,7 @@ class SolarDistillerScreen(
         // 蒸馏水槽悬停提示
         if (relX in DISTILLED_X until DISTILLED_X + DISTILLED_W && relY in DISTILLED_Y until DISTILLED_Y + DISTILLED_H) {
             val distilledLines = if (distilledMb > 0) {
-                listOf(Text.translatable("gui.ic2_120.solar_distiller.distilled_tooltip", "%,d".format(distilledMb), "%,d".format(SolarDistillerSync.TANK_CAPACITY_MB)))
+                listOf(Text.translatable("gui.ic2_120.solar_distiller.distilled_tooltip", "%,d".format(distilledMb / DROPLETS_PER_MB), "%,d".format(TANK_CAPACITY_MB)))
             } else {
                 listOf(Text.translatable("ic2.generic.text.empty"))
             }
@@ -152,6 +153,10 @@ class SolarDistillerScreen(
         private val TEXTURE = Identifier("ic2", "textures/gui/guisolardistiller.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
+
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
+        private val TANK_CAPACITY_DROPLETS = (FluidConstants.BUCKET * SolarDistillerSync.TANK_CAPACITY_BUCKETS).toInt()
+        private val TANK_CAPACITY_MB = TANK_CAPACITY_DROPLETS / DROPLETS_PER_MB
 
         // 水纹理区域 (37,44)-(90,61) = 53×17
         private const val WATER_X = 37

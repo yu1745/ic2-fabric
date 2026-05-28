@@ -22,7 +22,8 @@ class SemifluidGeneratorSync(
     }
 
     var energy by schema.int("Energy")
-    var fuelAmountMb by schema.int("FuelAmountMb")
+    /** 燃料储量（droplets） */
+    var fuelAmount by schema.int("FuelAmount")
     var fuelFluidRawId by schema.int("FuelFluidRawId", default = -1)
     var fuelColorArgb by schema.int("FuelColorArgb", default = 0xFFCC4400.toInt())
     private val flow = EnergyFlowSync(schema, this, useGeneratedAsInput = true)

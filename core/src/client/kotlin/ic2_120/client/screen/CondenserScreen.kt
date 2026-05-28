@@ -12,6 +12,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluid
 import net.minecraft.text.Text as McText
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.util.Identifier
 
 /**
@@ -85,11 +86,11 @@ class CondenserScreen(
         }
 
         // ==== 蒸汽槽 (46,26)-(130,59) 84×33 ====
-        val steamFrac = if (CondenserSync.STEAM_TANK_CAPACITY > 0) steamAmount.toFloat() / CondenserSync.STEAM_TANK_CAPACITY else 0f
+        val steamFrac = if (STEAM_TANK_DROPLETS > 0) steamAmount.toFloat() / STEAM_TANK_DROPLETS else 0f
         drawFluidTank(context, left + 46, top + 26, 84, 33, steamFrac, ModFluids.STEAM_STILL)
 
         // ==== 蒸馏水槽 (46,73)-(130,88) 84×15 ====
-        val waterFrac = if (CondenserSync.WATER_TANK_CAPACITY > 0) waterAmount.toFloat() / CondenserSync.WATER_TANK_CAPACITY else 0f
+        val waterFrac = if (WATER_TANK_DROPLETS > 0) waterAmount.toFloat() / WATER_TANK_DROPLETS else 0f
         drawFluidTank(context, left + 46, top + 73, 84, 15, waterFrac, ModFluids.DISTILLED_WATER_STILL)
 
         // ==== 进度条 ====
@@ -139,7 +140,7 @@ class CondenserScreen(
         // 蒸汽槽悬停 (46,26)-(130,59)
         if (mx in 46 until 130 && my in 26 until 59) {
             val name = ModFluids.STEAM_STILL.defaultState.blockState.block.name
-            val lines = if (steamAmount > 0) listOf(name, McText.literal("${"%,d".format(steamAmount)} / ${"%,d".format(CondenserSync.STEAM_TANK_CAPACITY)} mB"))
+            val lines = if (steamAmount > 0) listOf(name, McText.literal("${"%,d".format(steamAmount / DROPLETS_PER_MB)} / ${"%,d".format(STEAM_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
                         else listOf(McText.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -147,7 +148,7 @@ class CondenserScreen(
         // 蒸馏水槽悬停 (46,73)-(130,88)
         if (mx in 46 until 130 && my in 73 until 88) {
             val name = ModFluids.DISTILLED_WATER_STILL.defaultState.blockState.block.name
-            val lines = if (waterAmount > 0) listOf(name, McText.literal("${"%,d".format(waterAmount)} / ${"%,d".format(CondenserSync.WATER_TANK_CAPACITY)} mB"))
+            val lines = if (waterAmount > 0) listOf(name, McText.literal("${"%,d".format(waterAmount / DROPLETS_PER_MB)} / ${"%,d".format(WATER_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
                         else listOf(McText.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -186,6 +187,10 @@ class CondenserScreen(
     companion object {
         private val TEXTURE = Identifier("ic2", "textures/gui/guicondenser.png")
         private const val PROGRESS_WIDTH = 82
+
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
+        private val STEAM_TANK_DROPLETS = (FluidConstants.BUCKET * 8).toInt()
+        private val WATER_TANK_DROPLETS = (FluidConstants.BUCKET * 8).toInt()
 
         // 电量条 (178,2)-(192,15) = 14×13，渲染至 (9,25)
         private const val ENERGY_BAR_U = 178

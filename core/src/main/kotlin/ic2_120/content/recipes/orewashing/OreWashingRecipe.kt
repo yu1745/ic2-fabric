@@ -18,12 +18,13 @@ class OreWashingRecipe(
     private val id: Identifier,
     val ingredient: Ingredient,
     val outputItems: List<ItemStack>,
-    val waterConsumptionMb: Long
+    /** 水消耗量（droplets） */
+    val waterConsumptionDroplets: Long
 ) : Recipe<OreWashingRecipe.Input> {
 
     init {
         require(outputItems.size <= 3) { "OreWashingRecipe supports at most 3 outputs" }
-        require(waterConsumptionMb > 0) { "Water consumption must be positive" }
+        require(waterConsumptionDroplets > 0) { "Water consumption must be positive" }
     }
 
     override fun matches(inventory: Input, world: World): Boolean {

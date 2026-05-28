@@ -37,8 +37,10 @@ class FluidCannerSync(
     var energy by schema.int("Energy")
     var progress by schema.int("Progress")
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
-    var fluidAmountMb by schema.int("FluidAmount", default = 0)
-    var fluidCapacityMb by schema.int("FluidCapacity", default = 8000)
+    /** 流体储量（droplets） */
+    var fluidAmount by schema.int("FluidAmount", default = 0)
+    /** 流体容量（droplets） */
+    var fluidCapacity by schema.int("FluidCapacity", default = 0)
     var fluidRawId by schema.int("FluidRawId", default = -1)
     var lastPourOut by schema.int("LastPourOut", default = 1)
 

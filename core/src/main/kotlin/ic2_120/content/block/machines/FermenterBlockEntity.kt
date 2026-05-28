@@ -136,8 +136,8 @@ class FermenterBlockEntity(
     private val biomassCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "biomass_cell")) }
     private val fertilizerItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fertilizer")) }
 
-    private val inputPerCycle = mbToDroplets(FermenterSync.INPUT_MB_PER_CYCLE)
-    private val outputPerCycle = mbToDroplets(FermenterSync.OUTPUT_MB_PER_CYCLE)
+    private val inputPerCycle = FermenterSync.INPUT_DROPLETS_PER_CYCLE.toLong()
+    private val outputPerCycle = FermenterSync.OUTPUT_DROPLETS_PER_CYCLE.toLong()
 
     val syncedData = SyncedData(this)
     val sync = FermenterSync(syncedData)
@@ -160,7 +160,7 @@ class FermenterBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun onFinalCommit() {
-            sync.inputBiomassMb = toMilliBuckets(amount)
+            sync.inputBiomass = toMilliBuckets(amount)
             sync.inputFluidType = sync.fluidToType(if (amount > 0L) variant.fluid else null)
             markDirty()
         }
@@ -171,7 +171,7 @@ class FermenterBlockEntity(
         fun setStoredFluid(newAmount: Long) {
             amount = newAmount.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L) FluidVariant.of(ModFluids.BIOMASS_STILL) else FluidVariant.blank()
-            sync.inputBiomassMb = toMilliBuckets(amount)
+            sync.inputBiomass = toMilliBuckets(amount)
             sync.inputFluidType = sync.fluidToType(if (amount > 0L) variant.fluid else null)
         }
 
@@ -182,7 +182,7 @@ class FermenterBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.isBlank) variant = FluidVariant.of(ModFluids.BIOMASS_STILL)
-            sync.inputBiomassMb = toMilliBuckets(amount)
+            sync.inputBiomass = toMilliBuckets(amount)
             sync.inputFluidType = sync.fluidToType(variant.fluid)
             markDirty()
             return actual
@@ -195,7 +195,7 @@ class FermenterBlockEntity(
             amount -= actual
             val becameEmpty = amount <= 0L
             if (becameEmpty) variant = FluidVariant.blank()
-            sync.inputBiomassMb = toMilliBuckets(amount)
+            sync.inputBiomass = toMilliBuckets(amount)
             sync.inputFluidType = sync.fluidToType(if (becameEmpty) null else variant.fluid)
             markDirty()
             return actual
@@ -217,7 +217,7 @@ class FermenterBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
 
         override fun onFinalCommit() {
-            sync.outputBiogasMb = toMilliBuckets(amount)
+            sync.outputBiogas = toMilliBuckets(amount)
             sync.outputFluidType = sync.fluidToType(if (amount > 0L) variant.fluid else null)
             markDirty()
         }
@@ -228,7 +228,7 @@ class FermenterBlockEntity(
         fun setStoredFluid(newAmount: Long) {
             amount = newAmount.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L) FluidVariant.of(ModFluids.BIOFUEL_STILL) else FluidVariant.blank()
-            sync.outputBiogasMb = toMilliBuckets(amount)
+            sync.outputBiogas = toMilliBuckets(amount)
             sync.outputFluidType = sync.fluidToType(if (amount > 0L) variant.fluid else null)
         }
 
@@ -241,7 +241,7 @@ class FermenterBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.isBlank) variant = FluidVariant.of(ModFluids.BIOFUEL_STILL)
-            sync.outputBiogasMb = toMilliBuckets(amount)
+            sync.outputBiogas = toMilliBuckets(amount)
             sync.outputFluidType = sync.fluidToType(variant.fluid)
             markDirty()
             return actual
@@ -254,7 +254,7 @@ class FermenterBlockEntity(
             amount -= actual
             val becameEmpty = amount <= 0L
             if (becameEmpty) variant = FluidVariant.blank()
-            sync.outputBiogasMb = toMilliBuckets(amount)
+            sync.outputBiogas = toMilliBuckets(amount)
             sync.outputFluidType = sync.fluidToType(if (becameEmpty) null else variant.fluid)
             markDirty()
             return actual
@@ -417,8 +417,8 @@ class FermenterBlockEntity(
                 if (consumedInput >= inputPerCycle) {
                     heatBuffer = (heatBuffer - FermenterSync.HEAT_PER_CYCLE).coerceAtLeast(0L)
                     outputTankInternal.insertInternal(outputPerCycle)
-                    sync.fertilizerProgress += FermenterSync.INPUT_MB_PER_CYCLE
-                    if (sync.fertilizerProgress >= FermenterSync.FERTILIZER_PER_BIOMASS_BUCKET_MB) {
+                    sync.fertilizerProgress += FermenterSync.INPUT_DROPLETS_PER_CYCLE
+                    if (sync.fertilizerProgress >= FermenterSync.FERTILIZER_PER_BIOMASS_BUCKET_DROPLETS) {
                         tryProduceFertilizer()
                     }
                     sync.heatConsumePerTick = FermenterSync.HEAT_PER_CYCLE
@@ -499,7 +499,7 @@ class FermenterBlockEntity(
         val fertilizerStack = ItemStack(fertilizerItem, 1)
         val currentOutput = getStack(SLOT_OUTPUT_FERTILIZER)
         if (!canMergeIntoSlot(currentOutput, fertilizerStack)) return
-        sync.fertilizerProgress -= FermenterSync.FERTILIZER_PER_BIOMASS_BUCKET_MB
+        sync.fertilizerProgress -= FermenterSync.FERTILIZER_PER_BIOMASS_BUCKET_DROPLETS
         if (currentOutput.isEmpty) setStack(SLOT_OUTPUT_FERTILIZER, fertilizerStack.copy())
         else currentOutput.increment(1)
         markDirty()
@@ -515,9 +515,7 @@ class FermenterBlockEntity(
         fluid == ModFluids.BIOFUEL_STILL || fluid == ModFluids.BIOFUEL_FLOWING
 
     private fun toMilliBuckets(amount: Long): Int =
-        (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
-
-    private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
+        amount.toInt().coerceAtLeast(0)
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false

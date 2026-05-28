@@ -103,8 +103,6 @@ class SteamKineticGeneratorBlockEntity(
             fluidLookupRegistered = true
         }
 
-        fun toMb(droplets: Long): Int =
-            (droplets * 1000 / FluidConstants.BUCKET).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
 
         fun mbToDroplets(mb: Long): Long = mb * FluidConstants.BUCKET / 1000
     }
@@ -156,7 +154,7 @@ class SteamKineticGeneratorBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun onFinalCommit() {
-            sync.steamAmount = toMb(amount)
+            sync.steamAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
@@ -166,7 +164,7 @@ class SteamKineticGeneratorBlockEntity(
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.steamAmount = toMb(amount)
+            sync.steamAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return actual
         }
@@ -183,7 +181,7 @@ class SteamKineticGeneratorBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
 
         override fun onFinalCommit() {
-            sync.distilledWaterAmount = toMb(amount)
+            sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
@@ -196,7 +194,7 @@ class SteamKineticGeneratorBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
-            sync.distilledWaterAmount = toMb(amount)
+            sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return actual
         }
@@ -212,7 +210,7 @@ class SteamKineticGeneratorBlockEntity(
                     if (extracted > 0L) {
                         amount -= extracted
                         if (amount <= 0L) variant = FluidVariant.blank()
-                        sync.distilledWaterAmount = toMb(amount)
+                        sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
                         markDirty()
                     }
                 } catch (_: Exception) { }
@@ -353,8 +351,8 @@ class SteamKineticGeneratorBlockEntity(
             distilledWaterTank.variant = FluidVariant.fromNbt(tankNbt.getCompound("variant"))
             distilledWaterTank.amount = tankNbt.getLong("amount")
         }
-        sync.steamAmount = toMb(steamTank.amount)
-        sync.distilledWaterAmount = toMb(distilledWaterTank.amount)
+        sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
+        sync.distilledWaterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -407,7 +405,7 @@ class SteamKineticGeneratorBlockEntity(
             val superheated = isSuperheated
 
             // ---- handleSteam: 消耗全部蒸汽 ----
-            val totalMb = toMb(steamTank.amount)
+            val totalMb = steamTank.amount.toInt().coerceAtLeast(0)
             steamTank.amount = 0L
             steamTank.variant = FluidVariant.blank()
             sync.steamAmount = 0
@@ -427,7 +425,7 @@ class SteamKineticGeneratorBlockEntity(
             }
 
             // ---- KU 节流: 蒸馏水罐有水时按比例降低 ----
-            val waterFill = toMb(distilledWaterTank.amount)
+            val waterFill = distilledWaterTank.amount.toInt().coerceAtLeast(0)
             val kuMultiplier = if (waterFill == 0) 1f
                 else (1f - waterFill.toFloat() / WATER_TANK_CAPACITY.toFloat())
             val finalKu = (kuProduced * kuMultiplier).toInt().coerceAtLeast(0)
@@ -462,7 +460,7 @@ class SteamKineticGeneratorBlockEntity(
             }
         } else if (hasTurbine && steamTank.amount > 0L && isTurbineFilledWithWater) {
             // 蒸馏水满阻塞 → 强制排汽，否则爆炸
-            val totalMb = toMb(steamTank.amount)
+            val totalMb = steamTank.amount.toInt().coerceAtLeast(0)
             steamTank.amount = 0L
             steamTank.variant = FluidVariant.blank()
             sync.steamAmount = 0
@@ -470,8 +468,8 @@ class SteamKineticGeneratorBlockEntity(
         }
 
         // 更新同步数据
-        sync.steamAmount = toMb(steamTank.amount)
-        sync.distilledWaterAmount = toMb(distilledWaterTank.amount)
+        sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
+        sync.distilledWaterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
         sync.kuOutput = lastKuOutput
         sync.steamConsume = steamConsumed.toInt()
         sync.isSuperheated = if (isSuperheated) 1 else 0
@@ -501,10 +499,10 @@ class SteamKineticGeneratorBlockEntity(
             if (neighborStorage == null || !neighborStorage.supportsInsertion()) continue
 
             Transaction.openOuter().use { tx ->
-                val accepted = neighborStorage.insert(steamVariant, mbToDroplets(remaining.toLong()), tx)
+                val accepted = neighborStorage.insert(steamVariant, remaining.toLong(), tx)
                 if (accepted > 0) {
                     tx.commit()
-                    remaining -= toMb(accepted)
+                    remaining -= accepted.toInt()
                 }
             }
         }
@@ -538,10 +536,10 @@ class SteamKineticGeneratorBlockEntity(
             if (neighborStorage == null || !neighborStorage.supportsInsertion()) continue
 
             Transaction.openOuter().use { tx ->
-                val accepted = neighborStorage.insert(steamVariant, mbToDroplets(remaining.toLong()), tx)
+                val accepted = neighborStorage.insert(steamVariant, remaining.toLong(), tx)
                 if (accepted > 0) {
                     tx.commit()
-                    remaining -= toMb(accepted)
+                    remaining -= accepted.toInt()
                 }
             }
         }

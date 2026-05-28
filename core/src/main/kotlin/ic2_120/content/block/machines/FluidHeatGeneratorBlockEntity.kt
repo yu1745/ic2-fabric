@@ -72,10 +72,11 @@ class FluidHeatGeneratorBlockEntity(
     enum class FuelType(
         val fluid: net.minecraft.fluid.Fluid,
         val heatPerTick: Long,
-        val mbPerSecond: Long,
+        /** 每秒消耗量（droplets），FluidConstants.BUCKET / 100 = 810 ≈ 10 mB/s */
+        val dropletsPerSecond: Long,
         private val matcher: (net.minecraft.fluid.Fluid) -> Boolean
     ) {
-        BIOFUEL(ModFluids.BIOFUEL_STILL, 32L, 10L, { fluid ->
+        BIOFUEL(ModFluids.BIOFUEL_STILL, 32L, FluidConstants.BUCKET / 100, { fluid ->
             fluid == ModFluids.BIOFUEL_STILL || fluid == ModFluids.BIOFUEL_FLOWING
         });
 
@@ -95,7 +96,7 @@ class FluidHeatGeneratorBlockEntity(
         private const val NBT_FUEL_AMOUNT = "FuelAmount"
         private const val NBT_BUFFERED_HEAT = "BufferedHeat"
         private const val NBT_FUEL_TYPE = "FuelType"
-        private const val NBT_FUEL_MB_ACCUMULATOR = "FuelMbAccumulator"
+        private const val NBT_FUEL_DROPLET_ACCUMULATOR = "FuelDropletAccumulator"
 
         const val FUEL_SLOT = 0
         const val EMPTY_CONTAINER_SLOT = 1
@@ -138,7 +139,7 @@ class FluidHeatGeneratorBlockEntity(
 
     private var currentFuelType: FuelType? = null
 
-    private var fuelMbAccumulator: Long = 0L
+    private var fuelDropletAccumulator: Long = 0L
 
     private val fuelTankInternal = object : SingleVariantStorage<FluidVariant>() {
         private val tankCapacity = FluidConstants.BUCKET * 8
@@ -154,17 +155,17 @@ class FluidHeatGeneratorBlockEntity(
         }
 
         override fun onFinalCommit() {
-            sync.fuelAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
-        fun tryConsume(amountToConsume: Long): Long {
-            if (amountToConsume <= 0L || !isSupportedFuelFluid(variant.fluid)) return 0L
-            val actual = minOf(amountToConsume, amount)
+        fun tryConsume(droplets: Long): Long {
+            if (droplets <= 0L || !isSupportedFuelFluid(variant.fluid)) return 0L
+            val actual = minOf(droplets, amount)
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.fuelAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
             return actual
         }
 
@@ -175,7 +176,7 @@ class FluidHeatGeneratorBlockEntity(
             } else {
                 FluidVariant.blank()
             }
-            sync.fuelAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
         }
 
         fun tryInsertFuel(fluid: net.minecraft.fluid.Fluid, toInsert: Long): Long {
@@ -186,7 +187,7 @@ class FluidHeatGeneratorBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.fluid != fluid) variant = FluidVariant.of(fluid)
-            sync.fuelAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
             return actual
         }
     }
@@ -300,7 +301,7 @@ class FluidHeatGeneratorBlockEntity(
         fuelTankInternal.setStoredFuel(nbt.getLong(NBT_FUEL_AMOUNT), fluid)
         val fuelTypeName = nbt.getString(NBT_FUEL_TYPE)
         currentFuelType = if (fuelTypeName.isNotBlank()) FuelType.valueOf(fuelTypeName) else null
-        fuelMbAccumulator = nbt.getLong(NBT_FUEL_MB_ACCUMULATOR)
+        fuelDropletAccumulator = nbt.getLong(NBT_FUEL_DROPLET_ACCUMULATOR)
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -312,17 +313,18 @@ class FluidHeatGeneratorBlockEntity(
             nbt.putString("FuelFluid", Registries.FLUID.getId(fuelTankInternal.variant.fluid).toString())
         }
         currentFuelType?.let { nbt.putString(NBT_FUEL_TYPE, it.name) }
-        nbt.putLong(NBT_FUEL_MB_ACCUMULATOR, fuelMbAccumulator)
+        nbt.putLong(NBT_FUEL_DROPLET_ACCUMULATOR, fuelDropletAccumulator)
     }
 
     override fun generateHeat(world: World, pos: BlockPos, state: BlockState): Long {
         val fuelType = currentFuelType ?: FuelType.fromFluid(fuelTankInternal.variant.fluid)
         if (fuelType != null) {
             currentFuelType = fuelType
-            val consumePerTickMilliBuckets = FluidConstants.BUCKET * fuelType.mbPerSecond / 1000L / 20 * 1000
-            fuelMbAccumulator += consumePerTickMilliBuckets
-            val toConsume = fuelMbAccumulator / 1000
-            fuelMbAccumulator %= 1000
+            // 每 tick 消耗量（毫滴），累积满 1000 毫滴 = 1 droplet 才实际扣除
+            val consumePerTickMilliDroplets = fuelType.dropletsPerSecond * 1000 / 20
+            fuelDropletAccumulator += consumePerTickMilliDroplets
+            val toConsume = fuelDropletAccumulator / 1000
+            fuelDropletAccumulator %= 1000
             if (toConsume > 0L) {
                 val consumed = fuelTankInternal.tryConsume(toConsume)
                 if (consumed > 0L) {

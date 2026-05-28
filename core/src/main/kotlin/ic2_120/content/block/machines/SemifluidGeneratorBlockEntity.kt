@@ -168,7 +168,7 @@ class SemifluidGeneratorBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun onFinalCommit() {
-            sync.fuelAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
             sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) Registries.FLUID.getRawId(variant.fluid) else -1
             fuelColorDirty = true
             markDirty()
@@ -181,7 +181,7 @@ class SemifluidGeneratorBlockEntity(
             } else {
                 FluidVariant.blank()
             }
-            sync.fuelAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
             sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) Registries.FLUID.getRawId(variant.fluid) else -1
             fuelColorDirty = true
         }
@@ -194,7 +194,7 @@ class SemifluidGeneratorBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.fluid != fluid) variant = FluidVariant.of(fluid)
-            sync.fuelAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
             sync.fuelFluidRawId = Registries.FLUID.getRawId(variant.fluid)
             fuelColorDirty = true
             return actual
@@ -206,7 +206,7 @@ class SemifluidGeneratorBlockEntity(
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.fuelAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
             sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) Registries.FLUID.getRawId(variant.fluid) else -1
             fuelColorDirty = true
             return actual

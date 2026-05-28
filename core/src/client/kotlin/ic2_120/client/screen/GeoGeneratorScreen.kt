@@ -8,6 +8,7 @@ import ic2_120.content.screen.GeoGeneratorScreenHandler
 import ic2_120.content.sync.GeoGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.texture.Sprite
@@ -45,15 +46,15 @@ class GeoGeneratorScreen(
         val cap = GeoGeneratorSync.ENERGY_CAPACITY
         val energyFrac = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
 
-        val lavaMb = handler.sync.lavaAmountMb.coerceAtLeast(0)
-        val lavaCapMb = 8 * 1000
+        val lavaMb = handler.sync.lavaAmount.coerceAtLeast(0)
+        val lavaCapMb = LAVA_TANK_DROPLETS
         val lavaFrac = if (lavaCapMb > 0) (lavaMb.toFloat() / lavaCapMb).coerceIn(0f, 1f) else 0f
 
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()
 
-        // 能量条位于 (118, 19) — 30×17 水平纹理来自 guiheatsourcegenerator.png (178,2)-(207,18)
-        drawEnergyGauge(context, x + 118, y + 19, energyFrac)
+        // 能量条位于 (120, 19)-(144, 35)，纹理源 (178,2)-(202,18) = 24×16
+        drawEnergyGauge(context, x + ENERGY_BAR_X, y + ENERGY_BAR_Y, energyFrac)
 
         // 岩浆储量条：区域 (82,23)-(94,69) = 12×46，流体纹理+颜色渲染
         drawFluidTank(context, x + LAVA_BAR_X, y + LAVA_BAR_Y, LAVA_BAR_W, LAVA_BAR_H, lavaFrac, lavaSprite, Fluids.LAVA)
@@ -90,7 +91,7 @@ class GeoGeneratorScreen(
             relY in LAVA_BAR_Y until LAVA_BAR_Y + LAVA_BAR_H
         ) {
             val lavaLines = if (lavaMb > 0) {
-                listOf(Text.translatable("gui.ic2_120.geo_generator.lava_tooltip", "%,d".format(lavaMb), "%,d".format(lavaCapMb)))
+                listOf(Text.translatable("gui.ic2_120.geo_generator.lava_tooltip", "%,d".format(lavaMb / DROPLETS_PER_MB), "%,d".format(lavaCapMb / DROPLETS_PER_MB)))
             } else {
                 listOf(Text.translatable("ic2.generic.text.empty"))
             }
@@ -99,8 +100,8 @@ class GeoGeneratorScreen(
     }
 
     private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
-        val barW = 30
-        val barH = 17
+        val barW = 24
+        val barH = 16
         val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
         if (fillW <= 0) return
         context.enableScissor(gx, gy, gx + fillW, gy + barH)
@@ -131,11 +132,13 @@ class GeoGeneratorScreen(
     }
 
     companion object {
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
+        private val LAVA_TANK_DROPLETS = (FluidConstants.BUCKET * 8).toInt()
         private val TEXTURE = Identifier("ic2", "textures/gui/guiheatsourcegenerator.png")
-        private const val ENERGY_BAR_X = 118
+        private const val ENERGY_BAR_X = 120
         private const val ENERGY_BAR_Y = 19
-        private const val ENERGY_BAR_W = 30
-        private const val ENERGY_BAR_H = 17
+        private const val ENERGY_BAR_W = 24
+        private const val ENERGY_BAR_H = 16
         private const val LAVA_BAR_X = 82
         private const val LAVA_BAR_Y = 23
         private const val LAVA_BAR_W = 12

@@ -189,8 +189,8 @@ class CannerBlockEntity(
         }
 
         override fun onFinalCommit() {
-            sync.leftFluidAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
-            sync.leftFluidCapacityMb = (TANK_CAPACITY * 1000L / FluidConstants.BUCKET).toInt()
+            sync.leftFluidAmount = amount.toInt().coerceAtLeast(0)
+            sync.leftFluidCapacity = TANK_CAPACITY.toInt()
             sync.leftFluidRawId = if (variant.isBlank) -1 else Registries.FLUID.getRawId(variant.fluid)
             markDirty()
         }
@@ -208,8 +208,8 @@ class CannerBlockEntity(
         }
 
         override fun onFinalCommit() {
-            sync.rightFluidAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
-            sync.rightFluidCapacityMb = (TANK_CAPACITY * 1000L / FluidConstants.BUCKET).toInt()
+            sync.rightFluidAmount = amount.toInt().coerceAtLeast(0)
+            sync.rightFluidCapacity = TANK_CAPACITY.toInt()
             sync.rightFluidRawId = if (variant.isBlank) -1 else Registries.FLUID.getRawId(variant.fluid)
             markDirty()
         }
@@ -325,11 +325,11 @@ class CannerBlockEntity(
         rightTankInternal.amount = nbt.getLong(NBT_RIGHT_FLUID_AMOUNT).coerceIn(0L, TANK_CAPACITY)
         val rightFluidTag = nbt.getCompound(NBT_RIGHT_FLUID_VARIANT)
         rightTankInternal.variant = if (rightFluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(rightFluidTag)
-        sync.leftFluidAmountMb = (leftTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
-        sync.leftFluidCapacityMb = (TANK_CAPACITY * 1000L / FluidConstants.BUCKET).toInt()
+        sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
+        sync.leftFluidCapacity = TANK_CAPACITY.toInt()
         sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(leftTankInternal.variant.fluid)
-        sync.rightFluidAmountMb = (rightTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
-        sync.rightFluidCapacityMb = (TANK_CAPACITY * 1000L / FluidConstants.BUCKET).toInt()
+        sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
+        sync.rightFluidCapacity = TANK_CAPACITY.toInt()
         sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(rightTankInternal.variant.fluid)
     }
 
@@ -431,9 +431,9 @@ class CannerBlockEntity(
             }
             tx.commit()
         }
-        sync.leftFluidAmountMb = (leftTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
         sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(leftTankInternal.variant.fluid)
-        sync.rightFluidAmountMb = (rightTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
         sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(rightTankInternal.variant.fluid)
         sync.progress = 0
         markDirty()
@@ -591,9 +591,9 @@ class CannerBlockEntity(
                     tx.commit()
                     material.decrement(recipe.inputSolidCount)
                     if (material.isEmpty) setStack(SLOT_MATERIAL, ItemStack.EMPTY)
-                    sync.leftFluidAmountMb = (leftTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+                    sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
                     sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(leftTankInternal.variant.fluid)
-                    sync.rightFluidAmountMb = (rightTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+                    sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
                     sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(rightTankInternal.variant.fluid)
                 }
             }
@@ -638,7 +638,7 @@ class CannerBlockEntity(
                             val leftEmpty = getStack(SLOT_LEFT_EMPTY)
                             if (leftEmpty.isEmpty) setStack(SLOT_LEFT_EMPTY, emptyResult)
                             else leftEmpty.increment(emptyResult.count)
-                            sync.leftFluidAmountMb = (leftTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+                            sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
                             sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(leftTankInternal.variant.fluid)
                             return
                         }
@@ -669,7 +669,7 @@ class CannerBlockEntity(
                 FoamSprayerItem.setFluidAmount(container, before + extracted)
             }
             setStack(slot, container)
-            sync.rightFluidAmountMb = (rightTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
             return
         }
 
@@ -685,7 +685,7 @@ class CannerBlockEntity(
                 CfPack.setFluidAmount(container, before + extracted)
             }
             setStack(slot, container)
-            sync.rightFluidAmountMb = (rightTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
             return
         }
 
@@ -717,7 +717,7 @@ class CannerBlockEntity(
                     } else {
                         setStack(slot, filledResult)
                     }
-                    sync.rightFluidAmountMb = (rightTankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+                    sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
                 }
             }
         }

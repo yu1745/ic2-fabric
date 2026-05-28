@@ -4,6 +4,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.Item
 import net.minecraft.registry.Registries
@@ -20,7 +21,7 @@ object OreWashingRecipeDatagen {
         val name: String,
         val input: Item,
         val outputs: List<OutputItem>,
-        val waterConsumptionMb: Long = 1000L
+        val waterConsumptionDroplets: Long = FluidConstants.BUCKET
     )
 
     data class OutputItem(
@@ -125,7 +126,7 @@ object OreWashingRecipeDatagen {
                 recipeId = Identifier("ic2_120", "ore_washing/${entry.name}"),
                 inputItem = entry.input,
                 outputs = entry.outputs,
-                waterConsumptionMb = entry.waterConsumptionMb
+                waterConsumptionDroplets = entry.waterConsumptionDroplets
             ).also(exporter::accept)
         }
     }
@@ -134,7 +135,7 @@ object OreWashingRecipeDatagen {
         private val recipeId: Identifier,
         private val inputItem: Item,
         private val outputs: List<OutputItem>,
-        private val waterConsumptionMb: Long
+        private val waterConsumptionDroplets: Long
     ) : RecipeJsonProvider {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(OreWashingRecipe::class)}")
@@ -155,7 +156,7 @@ object OreWashingRecipeDatagen {
             json.add("outputs", outputsArray)
 
             // 水消耗
-            json.addProperty("water_consumption_mb", waterConsumptionMb)
+            json.addProperty("water_consumption_mb", waterConsumptionDroplets)
         }
 
         override fun getSerializer() = ModMachineRecipes.recipeSerializer(OreWashingRecipe::class)

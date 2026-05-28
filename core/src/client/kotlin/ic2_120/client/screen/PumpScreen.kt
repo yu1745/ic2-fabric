@@ -8,6 +8,7 @@ import ic2_120.content.screen.PumpScreenHandler
 import ic2_120.content.sync.PumpSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.texture.Sprite
@@ -50,8 +51,8 @@ class PumpScreen(
         } else 0f
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val consumeRate = handler.sync.getSyncedConsumedAmount()
-        val fluidAmount = handler.sync.fluidAmountMb.toLong().coerceAtLeast(0)
-        val fluidCapacity = 8000L
+        val fluidAmount = handler.sync.fluidAmount.toLong().coerceAtLeast(0)
+        val fluidCapacity = FluidConstants.BUCKET * 8
         val fluidFraction = if (fluidCapacity > 0) (fluidAmount.toFloat() / fluidCapacity).coerceIn(0f, 1f) else 0f
         val fluidRawId = handler.sync.fluidRawId
 
@@ -162,7 +163,7 @@ class PumpScreen(
             val lines = if (fluidAmount > 0 && fluidRawId != -1) {
                 val fluid = Registries.FLUID.get(fluidRawId)
                 val fluidName = fluid.defaultState.blockState.block.name.string
-                listOf(Text.literal(fluidName), Text.literal("${"%,d".format(fluidAmount)} / ${"%,d".format(fluidCapacity)} mB"))
+                listOf(Text.literal(fluidName), Text.literal("${"%,d".format(fluidAmount / DROPLETS_PER_MB)} / ${"%,d".format(fluidCapacity / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Text.literal("空"))
             }
@@ -194,6 +195,8 @@ class PumpScreen(
         private val TEXTURE = Identifier("ic2", "textures/gui/guipump.png")
         private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
+
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
 
         // 电量条 (179,3)-(193,17) = 14x14
         private const val ENERGY_BAR_U = 179

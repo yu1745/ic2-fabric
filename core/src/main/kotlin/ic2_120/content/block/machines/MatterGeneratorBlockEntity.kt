@@ -146,7 +146,7 @@ class MatterGeneratorBlockEntity(
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val tankInternal = object : SingleVariantStorage<FluidVariant>() {
-        private val tankCapacity = FluidConstants.BUCKET * MatterGeneratorSync.TANK_CAPACITY_MB / 1000L
+        private val tankCapacity = FluidConstants.BUCKET * MatterGeneratorSync.TANK_CAPACITY_DROPLETS
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
@@ -160,7 +160,7 @@ class MatterGeneratorBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = isUuMatter(variant.fluid) && ModFluids.isFluid(variant.fluid)
 
         override fun onFinalCommit() {
-            sync.fluidAmountMb = toMilliBuckets(amount)
+            sync.fluidAmount = toMilliBuckets(amount)
             markDirty()
         }
 
@@ -171,7 +171,7 @@ class MatterGeneratorBlockEntity(
         fun setStoredAmount(newAmount: Long) {
             amount = newAmount.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L) FluidVariant.of(ModFluids.UU_MATTER_STILL) else FluidVariant.blank()
-            sync.fluidAmountMb = toMilliBuckets(amount)
+            sync.fluidAmount = toMilliBuckets(amount)
         }
 
         fun insertInternal(toInsert: Long): Long {
@@ -180,7 +180,7 @@ class MatterGeneratorBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.isBlank) variant = FluidVariant.of(ModFluids.UU_MATTER_STILL)
-            sync.fluidAmountMb = toMilliBuckets(amount)
+            sync.fluidAmount = toMilliBuckets(amount)
             markDirty()
             return actual
         }
@@ -191,7 +191,7 @@ class MatterGeneratorBlockEntity(
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.fluidAmountMb = toMilliBuckets(amount)
+            sync.fluidAmount = toMilliBuckets(amount)
             markDirty()
             return actual
         }
@@ -289,7 +289,7 @@ class MatterGeneratorBlockEntity(
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
         sync.progress = nbt.getInt(NBT_PROGRESS).coerceAtLeast(0)
         tankInternal.setStoredAmount(nbt.getLong(NBT_TANK_AMOUNT))
-        sync.fluidCapacityMb = MatterGeneratorSync.TANK_CAPACITY_MB
+        sync.fluidCapacity = MatterGeneratorSync.TANK_CAPACITY_DROPLETS
         sync.mode = resolveDisplayedMode()
     }
 
@@ -316,7 +316,7 @@ class MatterGeneratorBlockEntity(
             FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, tankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
-        sync.fluidCapacityMb = MatterGeneratorSync.TANK_CAPACITY_MB
+        sync.fluidCapacity = MatterGeneratorSync.TANK_CAPACITY_DROPLETS
 
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
@@ -454,7 +454,7 @@ class MatterGeneratorBlockEntity(
         fluid == ModFluids.UU_MATTER_STILL || fluid == ModFluids.UU_MATTER_FLOWING
 
     private fun toMilliBuckets(amount: Long): Int =
-        (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        amount.toInt().coerceAtLeast(0)
 
     private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
 }

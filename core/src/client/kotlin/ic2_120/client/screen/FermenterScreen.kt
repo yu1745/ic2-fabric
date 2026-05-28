@@ -14,6 +14,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluid
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.util.Identifier
 
 @ModScreen(block = FermenterBlock::class)
@@ -36,8 +37,8 @@ class FermenterScreen(
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val inputBiomassMb = handler.sync.inputBiomassMb.coerceAtLeast(0)
-        val outputBiogasMb = handler.sync.outputBiogasMb.coerceAtLeast(0)
+        val inputBiomassMb = handler.sync.inputBiomass.coerceAtLeast(0)
+        val outputBiogasMb = handler.sync.outputBiogas.coerceAtLeast(0)
         val bufferedHeat = handler.sync.bufferedHeat.coerceAtLeast(0)
         val progress = handler.sync.progress.coerceIn(0, FermenterSync.PROCESS_INTERVAL_TICKS)
         val isWorking = handler.sync.isWorking != 0
@@ -53,7 +54,7 @@ class FermenterScreen(
         val inputFluid = handler.sync.fluidTypeToFluid(handler.sync.inputFluidType)
         val inputSprite = getFluidSprite(inputFluid)
         val inputColor = if (inputFluid != null) FluidUtils.getFluidColor(inputFluid) else -1
-        drawFluidTank(context, x + 37, y + 48, 48, 30, inputBiomassMb, FermenterSync.TANK_CAPACITY_MB, inputSprite, inputColor)
+        drawFluidTank(context, x + 37, y + 48, 48, 30, inputBiomassMb, TANK_CAPACITY_DROPLETS, inputSprite, inputColor)
 
         // 工作进度纹理：(178,3)-(219,7) = 41×4，工作进行时自左向右绘制
         if (isWorking) {
@@ -69,7 +70,7 @@ class FermenterScreen(
         val outputFluid = handler.sync.fluidTypeToFluid(handler.sync.outputFluidType)
         val outputSprite = getFluidSprite(outputFluid)
         val outputColor = if (outputFluid != null) FluidUtils.getFluidColor(outputFluid) else -1
-        drawFluidTank(context, x + 128, y + 25, 12, 47, outputBiogasMb, FermenterSync.TANK_CAPACITY_MB, outputSprite, outputColor)
+        drawFluidTank(context, x + 128, y + 25, 12, 47, outputBiogasMb, TANK_CAPACITY_DROPLETS, outputSprite, outputColor)
 
         // 容量标示覆盖层，有生物燃料时渲染
         if (outputBiogasMb > 0) {
@@ -77,7 +78,7 @@ class FermenterScreen(
         }
 
         // 肥料进度纹理：(178,80)-(219,88) = 41×8，自左向右
-        val fertFrac = (fertilizerProgress.toFloat() / FermenterSync.FERTILIZER_PER_BIOMASS_BUCKET_MB).coerceIn(0f, 1f)
+        val fertFrac = (fertilizerProgress.toFloat() / FermenterSync.FERTILIZER_PER_BIOMASS_BUCKET_DROPLETS).coerceIn(0f, 1f)
         drawProgressH(context, x + 37, y + 87, 41, 8, 178f, 80f, fertFrac)
 
         // 工具提示
@@ -86,7 +87,7 @@ class FermenterScreen(
         val biofuelX = x + 128; val biofuelY = y + 25; val biofuelW = 12; val biofuelH = 47
 
         if (mouseX in biomassX until (biomassX + biomassW) && mouseY in biomassY until (biomassY + biomassH)) {
-            val lines = if (inputBiomassMb > 0) listOf(Text.literal("生物质"), Text.literal("${"%,d".format(inputBiomassMb)} / ${"%,d".format(FermenterSync.TANK_CAPACITY_MB)} mB"))
+            val lines = if (inputBiomassMb > 0) listOf(Text.literal("生物质"), Text.literal("${"%,d".format(inputBiomassMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_CAPACITY_MB)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -94,7 +95,7 @@ class FermenterScreen(
             context.drawTooltip(textRenderer, Text.literal("热量: ${bufferedHeat} / 40000 HU"), mouseX, mouseY)
         }
         if (mouseX in biofuelX until (biofuelX + biofuelW) && mouseY in biofuelY until (biofuelY + biofuelH)) {
-            val lines = if (outputBiogasMb > 0) listOf(Text.literal("生物燃料"), Text.literal("${"%,d".format(outputBiogasMb)} / ${"%,d".format(FermenterSync.TANK_CAPACITY_MB)} mB"))
+            val lines = if (outputBiogasMb > 0) listOf(Text.literal("生物燃料"), Text.literal("${"%,d".format(outputBiogasMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_CAPACITY_MB)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -168,5 +169,8 @@ class FermenterScreen(
             "fluid_ejector_upgrade",
             "fluid_pulling_upgrade"
         )
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
+        private val TANK_CAPACITY_DROPLETS = (FluidConstants.BUCKET * FermenterSync.TANK_CAPACITY_BUCKETS).toInt()
+        private val TANK_CAPACITY_MB = TANK_CAPACITY_DROPLETS / DROPLETS_PER_MB
     }
 }

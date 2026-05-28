@@ -128,8 +128,8 @@ class AnimalmatronBlockEntity(
     // 动物数据追踪
     private val animalDataMap = mutableMapOf<java.util.UUID, AnimalGrowthData>()
 
-    private val waterTankCapacity = mbToDroplets(AnimalmatronSync.WATER_TANK_CAPACITY_MB)
-    private val weedExTankCapacity = mbToDroplets(AnimalmatronSync.WEED_EX_TANK_CAPACITY_MB)
+    private val waterTankCapacity = FluidConstants.BUCKET * AnimalmatronSync.WATER_TANK_CAPACITY_BUCKETS
+    private val weedExTankCapacity = FluidConstants.BUCKET * AnimalmatronSync.WEED_EX_TANK_CAPACITY_BUCKETS
 
     private val waterTankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
@@ -143,14 +143,14 @@ class AnimalmatronBlockEntity(
         }
 
         override fun onFinalCommit() {
-            sync.waterAmountMb = toMilliBuckets(amount)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
         fun setStoredFluid(newAmount: Long) {
             amount = newAmount.coerceIn(0L, waterTankCapacity)
             variant = if (amount > 0L) FluidVariant.of(Fluids.WATER) else FluidVariant.blank()
-            sync.waterAmountMb = toMilliBuckets(amount)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
         }
 
         fun insertInternal(toInsert: Long): Long {
@@ -160,7 +160,7 @@ class AnimalmatronBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.isBlank) variant = FluidVariant.of(Fluids.WATER)
-            sync.waterAmountMb = toMilliBuckets(amount)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return actual
         }
@@ -171,12 +171,12 @@ class AnimalmatronBlockEntity(
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.waterAmountMb = toMilliBuckets(amount)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return actual
         }
 
-        fun getWaterMb(): Int = toMilliBuckets(amount)
+        fun getStoredWater(): Long = amount
     }
 
     private val weedExTankInternal = object : SingleVariantStorage<FluidVariant>() {
@@ -191,14 +191,14 @@ class AnimalmatronBlockEntity(
         }
 
         override fun onFinalCommit() {
-            sync.weedExAmountMb = toMilliBuckets(amount)
+            sync.weedExAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
         fun setStoredFluid(newAmount: Long) {
             amount = newAmount.coerceIn(0L, weedExTankCapacity)
             variant = if (amount > 0L) FluidVariant.of(ModFluids.WEED_EX_STILL) else FluidVariant.blank()
-            sync.weedExAmountMb = toMilliBuckets(amount)
+            sync.weedExAmount = amount.toInt().coerceAtLeast(0)
         }
 
         fun insertInternal(toInsert: Long): Long {
@@ -208,7 +208,7 @@ class AnimalmatronBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.isBlank) variant = FluidVariant.of(ModFluids.WEED_EX_STILL)
-            sync.weedExAmountMb = toMilliBuckets(amount)
+            sync.weedExAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return actual
         }
@@ -219,12 +219,12 @@ class AnimalmatronBlockEntity(
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.weedExAmountMb = toMilliBuckets(amount)
+            sync.weedExAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return actual
         }
 
-        fun getWeedExMb(): Int = toMilliBuckets(amount)
+        fun getStoredWeedEx(): Long = amount
     }
 
     private val ioStorage = object : Storage<FluidVariant> {
@@ -369,8 +369,8 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
-        waterTankInternal.setStoredFluid(mbToDroplets(nbt.getInt(NBT_WATER_MB).coerceIn(0, AnimalmatronSync.WATER_TANK_CAPACITY_MB)))
-        weedExTankInternal.setStoredFluid(mbToDroplets(nbt.getInt(NBT_WEED_EX_MB).coerceIn(0, AnimalmatronSync.WEED_EX_TANK_CAPACITY_MB)))
+        waterTankInternal.setStoredFluid(nbt.getLong(NBT_WATER_MB).coerceIn(0, waterTankCapacity))
+        weedExTankInternal.setStoredFluid(nbt.getLong(NBT_WEED_EX_MB).coerceIn(0, weedExTankCapacity))
         workOffset = nbt.getInt(NBT_WORK_OFFSET).coerceIn(0, WORK_INTERVAL_TICKS - 1)
 
         // 读取动物数据
@@ -388,8 +388,8 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(AnimalmatronSync.NBT_ENERGY_STORED, sync.amount)
-        nbt.putInt(NBT_WATER_MB, waterTankInternal.getWaterMb())
-        nbt.putInt(NBT_WEED_EX_MB, weedExTankInternal.getWeedExMb())
+        nbt.putLong(NBT_WATER_MB, waterTankInternal.amount)
+        nbt.putLong(NBT_WEED_EX_MB, weedExTankInternal.amount)
         nbt.putInt(NBT_WORK_OFFSET, workOffset)
 
         // 写入动物数据
@@ -439,8 +439,8 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             active = report.touched > 0
         }
 
-        sync.waterAmountMb = waterTankInternal.getWaterMb()
-        sync.weedExAmountMb = weedExTankInternal.getWeedExMb()
+        sync.waterAmount = waterTankInternal.amount.toInt().coerceAtLeast(0)
+        sync.weedExAmount = weedExTankInternal.amount.toInt().coerceAtLeast(0)
         setActiveState(world, pos, state, active)
         sync.syncCurrentTickFlow()
     }
@@ -541,7 +541,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
                 consumeWater(report)
 
                 // 每日杀虫剂消耗（每只动物每天固定 100mb）
-                if (!animalData.insecticidePaidToday && weedExTankInternal.getWeedExMb() >= INSECTICIDE_PER_DAY) {
+                if (!animalData.insecticidePaidToday && weedExTankInternal.getStoredWeedEx() >= INSECTICIDE_PER_DAY) {
                     weedExTankInternal.consumeInternal(mbToDroplets(INSECTICIDE_PER_DAY))
                     animalData.insecticidePaidToday = true
                     report.weedExConsumed += INSECTICIDE_PER_DAY
@@ -559,9 +559,9 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
      * 消耗水（加快生长速度——缩短喂食间隔）
      */
     private fun consumeWater(report: ScanReport) {
-        val waterMb = waterTankInternal.getWaterMb()
-        if (waterMb <= 0) return
-        val toConsume = minOf(waterMb, WATER_PER_CARE)
+        val waterDroplets = waterTankInternal.getStoredWater().toInt()
+        if (waterDroplets <= 0) return
+        val toConsume = minOf(waterDroplets, WATER_PER_CARE)
         if (toConsume <= 0) return
         waterTankInternal.consumeInternal(mbToDroplets(toConsume))
         report.waterConsumed += toConsume
@@ -645,7 +645,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     }
 
     private fun processWaterInputContainer() {
-        if (waterTankInternal.getWaterMb() > AnimalmatronSync.WATER_TANK_CAPACITY_MB - 1000) return
+        if (waterTankInternal.amount > waterTankCapacity - FluidConstants.BUCKET) return
 
         val input = getStack(SLOT_WATER_INPUT)
         if (input.isEmpty) return
@@ -674,7 +674,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     }
 
     private fun processWeedExInputContainer() {
-        if (weedExTankInternal.getWeedExMb() > AnimalmatronSync.WEED_EX_TANK_CAPACITY_MB - 1000) return
+        if (weedExTankInternal.amount > weedExTankCapacity - FluidConstants.BUCKET) return
 
         val input = getStack(SLOT_WEED_EX_INPUT)
         if (input.isEmpty) return
@@ -804,8 +804,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     private fun isWeedEx(fluid: net.minecraft.fluid.Fluid): Boolean =
         fluid == ModFluids.WEED_EX_STILL || fluid == ModFluids.WEED_EX_FLOWING
 
-    private fun toMilliBuckets(amount: Long): Int =
-        (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
 
     private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
 

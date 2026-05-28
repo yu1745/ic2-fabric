@@ -311,7 +311,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
             if (variantTag == null || variantTag.isEmpty) FluidVariant.blank()
             else FluidVariant.fromNbt(variantTag)
         val amountMb =
-            (amountRaw * 1000L / FluidConstants.BUCKET).toInt().coerceIn(0, capMb)
+            amountRaw.toInt().coerceIn(0, capMb)
 
         if (variant.isBlank || amountRaw <= 0L) {
             tooltip.add(Text.literal("流体: 无").formatted(Formatting.GRAY))

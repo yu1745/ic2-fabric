@@ -15,13 +15,17 @@ class SolarDistillerSync(
         const val NBT_PROGRESS = "Progress"
         const val NBT_IS_WORKING = "IsWorking"
 
-        const val TANK_CAPACITY_MB = 8_000
+        /** 容量：8 BUCKET = 648,000 droplets */
+        const val TANK_CAPACITY_BUCKETS = 8
         const val PRODUCE_INTERVAL_TICKS = 80
-        const val PRODUCE_MB_PER_CYCLE = 1
+        /** 每周期（80 tick）产出/消耗：1 mB = 81 droplets */
+        const val PRODUCE_DROPLETS_PER_CYCLE = 81
     }
 
-    var waterInputMb by schema.int(NBT_WATER_INPUT)
-    var distilledOutputMb by schema.int(NBT_DISTILLED_OUTPUT)
+    /** 水储量（droplets） */
+    var waterInput by schema.int(NBT_WATER_INPUT)
+    /** 蒸馏水储量（droplets） */
+    var distilledOutput by schema.int(NBT_DISTILLED_OUTPUT)
     var progress by schema.int(NBT_PROGRESS)
     var isWorking by schema.int(NBT_IS_WORKING)
 }

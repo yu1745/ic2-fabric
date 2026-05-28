@@ -40,7 +40,7 @@ class TankScreen(
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
         val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultState)
         val sprite = sprites[0]
-        val amount = handler.sync.fluidAmountMb
+        val amount = handler.sync.fluidAmount
         if (amount <= 0) return
         val color = FluidUtils.getFluidColor(fluid)
         val (r, g, b) = if (color != -1) {
@@ -76,8 +76,8 @@ class TankScreen(
             )
 
             val fluidId = handler.sync.fluidId
-            val amount = handler.sync.fluidAmountMb
-            val capacity = handler.sync.capacityMb
+            val amount = handler.sync.fluidAmount
+            val capacity = handler.sync.capacity
 
             val lines = if (fluidId != null && amount > 0) {
                 val fluid = Registries.FLUID.get(fluidId)

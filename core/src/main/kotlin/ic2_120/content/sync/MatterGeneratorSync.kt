@@ -24,7 +24,8 @@ class MatterGeneratorSync(
         const val MAX_EXTRACT = 0L
         const val NBT_ENERGY_STORED = "EnergyStored"
         const val PROGRESS_MAX = 1_954
-        const val TANK_CAPACITY_MB = 10_000
+        /** 容量：10,000 mB ≈ 810,000 droplets */
+        const val TANK_CAPACITY_DROPLETS = 810_000
         const val BASE_EU_PER_MB = 1_000_000L
         const val SCRAP_EU_PER_MB = 166_667L
         const val SCRAP_PER_MB = 34
@@ -33,8 +34,10 @@ class MatterGeneratorSync(
     var energy by schema.int("Energy")
     var progress by schema.int("Progress")
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
-    var fluidAmountMb by schema.int("FluidAmount", default = 0)
-    var fluidCapacityMb by schema.int("FluidCapacity", default = TANK_CAPACITY_MB)
+    /** 流体储量（droplets） */
+    var fluidAmount by schema.int("FluidAmount", default = 0)
+    /** 流体容量（droplets） */
+    var fluidCapacity by schema.int("FluidCapacity", default = TANK_CAPACITY_DROPLETS)
     var mode by schema.int("Mode", default = 0)
 
     private val flow = EnergyFlowSync(schema, this)
