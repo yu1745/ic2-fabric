@@ -634,6 +634,7 @@
   "message.ic2_120.sodium_without_indium": "[IC2] Sodium was detected without Indium.\nRubber log rendering will break. Please install Indium.",
   "tooltip.ic2_120.nano_saber.active": "State: ON (full damage when charged)",
   "tooltip.ic2_120.nano_saber.inactive": "State: OFF",
+  "tooltip.ic2_120.nano_saber.est_time": "Est. remaining: ~%s min",
   "message.ic2_120.foam_sprayer.mode_single": "CF Sprayer: single-block mode",
   "message.ic2_120.foam_sprayer.mode_multi": "CF Sprayer: multi-area mode",
   "mining_laser.mode.mining": "Mining",

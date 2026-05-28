@@ -7,6 +7,7 @@ import ic2_120.content.screen.SteamGeneratorScreenHandler
 import ic2_120.content.sync.SteamGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -68,6 +69,7 @@ class SteamGeneratorScreen(
         val left = x; val top = y
         val sync = handler.sync
 
+        // waterAmount 和 WATER_TANK_CAPACITY 现在都是 droplets，分数计算一致
         val waterFrac = if (SteamGeneratorSync.WATER_TANK_CAPACITY > 0)
             sync.waterAmount.toFloat() / SteamGeneratorSync.WATER_TANK_CAPACITY else 0f
         val heatFrac = (sync.systemHeatMilli.toFloat() / SteamGeneratorSync.MAX_SYSTEM_HEAT_MILLI).coerceIn(0f, 1f)
@@ -129,11 +131,11 @@ class SteamGeneratorScreen(
 
         // 水罐 tooltip: 显示液体类型和水量
         if (mouseX in tankX until (tankX + tankW) && mouseY in tankY until (tankY + tankH)) {
-            val amt = sync.waterAmount.coerceAtLeast(0)
-            val lines = if (amt > 0) {
+            val amtDroplets = sync.waterAmount.coerceAtLeast(0)
+            val lines = if (amtDroplets > 0) {
                 val fluidName = if (sync.isWaterDistilled != 0)
                     t("gui.ic2_120.distilled_water") else t("gui.ic2_120.water")
-                listOf(McText.literal(fluidName), McText.literal("${"%,d".format(amt)} / ${"%,d".format(SteamGeneratorSync.WATER_TANK_CAPACITY)} mB"))
+                listOf(McText.literal(fluidName), McText.literal("${"%,d".format(amtDroplets / DROPLETS_PER_MB)} / ${"%,d".format(SteamGeneratorSync.WATER_TANK_CAPACITY / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(McText.literal("空"))
             }
@@ -179,6 +181,7 @@ class SteamGeneratorScreen(
 
     companion object {
         private val TEXTURE = Identifier.of("ic2", "textures/gui/guisteamgenerator.png")
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val HEAT_COLOR = 0xFFFF4444.toInt()
         private val CALC_COLOR = 0xFF888888.toInt()
     }

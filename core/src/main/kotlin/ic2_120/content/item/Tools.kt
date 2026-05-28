@@ -22,11 +22,12 @@ import com.google.common.collect.ImmutableMultimap
 import com.google.common.collect.Multimap
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
-import net.minecraft.registry.tag.BlockTags
+import net.minecraft.entity.Entity
 import net.minecraft.entity.attribute.EntityAttribute
 import net.minecraft.entity.attribute.EntityAttributeModifier
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.registry.entry.RegistryEntry
+import net.minecraft.registry.tag.BlockTags
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -1061,7 +1062,8 @@ class NanoSaber : SwordItem(
 
     companion object {
         private const val NBT_ACTIVE = "NanoSaberActive"
-        private const val ENERGY_PER_HIT = 1000L
+        private const val ENERGY_PER_HIT = 400L
+        private const val NANO_SABER_MAX_CAPACITY = 160_000L
 
         private val ATTACK_DAMAGE_MODIFIER_ID = Identifier.ofVanilla("cb3f55d3-645c-4f38-a497-9c13a33db5cf")
         private val ATTACK_SPEED_MODIFIER_ID = Identifier.ofVanilla("fa233e1c-4180-4865-b01b-bcce9785aca3")
@@ -1089,13 +1091,77 @@ class NanoSaber : SwordItem(
                 AttributeModifierSlot.MAINHAND
             )
             .build()
+        // 空闲消耗：按 tick 累积，每 FLUSH_INTERVAL tick 批量写入 NBT 一次
+        private const val IDLE_COST_HOTBAR = 4L     // 快捷栏 4 EU/t
+        private const val IDLE_COST_INVENTORY = 1L  // 背包 1 EU/t（每 4 tick 累计 ≈ 0.25 EU/t）
+        private const val FLUSH_INTERVAL = 100      // 100 tick = 5 秒批量刷盘
+        private const val INVENTORY_TICK_MOD = 4    // 背包每 4 tick 才累计一次
+
+        /** 待机累计待扣电量：entityUUID → (slot → PendingDrain) */
+        private val pendingDrains = mutableMapOf<java.util.UUID, MutableMap<Int, PendingDrain>>()
+
+        data class PendingDrain(var drain: Long = 0, var ticks: Int = 0)
+
+        /** 动画 tick 计数器，激活时每 tick +1，未激活归零 */
+        var ticker = 0
+        private const val ANIMATION_TICKS_PER_FRAME = 5
 
         fun isActive(stack: ItemStack): Boolean = stack.getCustomData()?.getBoolean(NBT_ACTIVE) ?: false
 
-        fun toggleActive(stack: ItemStack): Boolean {
+        fun toggleActive(stack: ItemStack, entity: Entity?): Boolean {
             val v = !(stack.getCustomData()?.getBoolean(NBT_ACTIVE) ?: false)
             stack.editCustomData { it.putBoolean(NBT_ACTIVE, v) }
+            if (!v) {
+                ticker = 0
+                if (entity != null) {
+                    removeAllDrainsFor(entity)
+                }
+            }
             return v
+        }
+
+        /** 返回 0.0（未激活）或 0.1~1.0（激活时对应 10 帧） */
+        fun getActiveData(): Float {
+            if (ticker <= 0) return 0.0f
+            val frame = (ticker / ANIMATION_TICKS_PER_FRAME % 10 + 1)
+            return frame / 10.0f
+        }
+
+        /** 按快捷栏空闲消耗率（4 EU/t）估算剩余续航分钟数 */
+        fun getEstimatedMinutes(stack: ItemStack): Int {
+            val energy = IElectricTool.getEnergy(stack)
+            return (energy / 4800).toInt()
+        }
+
+        private fun flushDrain(stack: ItemStack, state: PendingDrain) {
+            if (state.drain <= 0L) return
+            val newEnergy = (IElectricTool.getEnergy(stack) - state.drain).coerceAtLeast(0)
+            IElectricTool.setEnergy(stack, newEnergy, NANO_SABER_MAX_CAPACITY)
+            state.drain = 0L
+            state.ticks = 0
+        }
+
+        fun removeAllDrainsFor(entity: Entity) {
+            pendingDrains.remove(entity.uuid)
+        }
+
+        /** 刷新实体的所有待扣槽位（用于关闭时） */
+        fun flushAllPendingDrainsFor(entity: Entity, stack: ItemStack) {
+            val perSlot = pendingDrains[entity.uuid] ?: return
+            for ((_, state) in perSlot) {
+                if (state.drain > 0L) flushDrain(stack, state)
+            }
+        }
+
+        /** 刷新实体的第一个待扣槽位（用于挥砍命中等无法确定槽位的场景） */
+        fun flushAnyPendingDrainFor(entity: Entity, stack: ItemStack) {
+            val perSlot = pendingDrains[entity.uuid] ?: return
+            for ((_, state) in perSlot) {
+                if (state.drain > 0L) {
+                    flushDrain(stack, state)
+                    return
+                }
+            }
         }
 
         @RecipeProvider
@@ -1171,7 +1237,11 @@ class NanoSaber : SwordItem(
     override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
         val stack = user.getStackInHand(hand)
         if (!world.isClient) {
-            val on = toggleActive(stack)
+            // 关闭前先把待机累计扣了
+            if (isActive(stack)) {
+                flushAllPendingDrainsFor(user, stack)
+            }
+            val on = toggleActive(stack, user)
             user.sendMessage(
                 Text.translatable(if (on) "message.ic2_120.nano_saber.active_on" else "message.ic2_120.nano_saber.active_off"),
                 true
@@ -1181,9 +1251,45 @@ class NanoSaber : SwordItem(
         return TypedActionResult.success(stack)
     }
 
+    override fun inventoryTick(stack: ItemStack, world: World, entity: Entity, slot: Int, selected: Boolean) {
+        if (!isActive(stack)) {
+            ticker = 0
+            return
+        }
+        ticker++
+        if (world.isClient) return  // 客户端只驱动动画
+
+        // --- 服务端：累积待扣电量 ---
+        val inHotbar = slot in 0..8
+        if (!inHotbar && ticker % INVENTORY_TICK_MOD != 0) return  // 背包每 4 tick 才计一次
+
+        val perSlot = pendingDrains.getOrPut(entity.uuid) { mutableMapOf() }
+        val state = perSlot.getOrPut(slot) { PendingDrain() }
+        state.drain += if (inHotbar) IDLE_COST_HOTBAR else IDLE_COST_INVENTORY
+        state.ticks++
+
+        // 每 FLUSH_INTERVAL tick 批量写入 NBT
+        if (state.ticks >= FLUSH_INTERVAL) {
+            flushDrain(stack, state)
+        }
+
+        // 电量耗尽自动关闭
+        val currentEnergy = getEnergy(stack)
+        if (currentEnergy <= 0L) {
+            toggleActive(stack, entity)
+            perSlot.remove(slot)
+            if (perSlot.isEmpty()) pendingDrains.remove(entity.uuid)
+        }
+    }
+
     override fun postHit(stack: ItemStack, target: LivingEntity, attacker: LivingEntity): Boolean {
-        if (!attacker.world.isClient && isActive(stack) && getEnergy(stack) >= ENERGY_PER_HIT) {
-            setEnergy(stack, getEnergy(stack) - ENERGY_PER_HIT)
+        if (!attacker.world.isClient && isActive(stack)) {
+            // 先把待机累计扣了
+            flushAnyPendingDrainFor(attacker, stack)
+            // 再扣当次挥砍
+            if (getEnergy(stack) >= ENERGY_PER_HIT) {
+                setEnergy(stack, getEnergy(stack) - ENERGY_PER_HIT)
+            }
             updateAttributeModifiers(stack)
         }
         return true
@@ -1208,8 +1314,11 @@ class NanoSaber : SwordItem(
     ) {
         super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
-        val key = if (isActive(stack)) "tooltip.ic2_120.nano_saber.active" else "tooltip.ic2_120.nano_saber.inactive"
-        tooltip.add(Text.translatable(key).formatted(net.minecraft.util.Formatting.GRAY))
+        if (isActive(stack)) {
+            val minutes = getEstimatedMinutes(stack)
+            tooltip.add(Text.translatable("tooltip.ic2_120.nano_saber.est_time", minutes)
+                .formatted(net.minecraft.util.Formatting.GRAY))
+        }
     }
 
     override fun isItemBarVisible(stack: ItemStack) = true

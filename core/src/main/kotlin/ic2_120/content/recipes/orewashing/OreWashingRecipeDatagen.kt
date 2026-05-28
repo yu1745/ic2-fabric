@@ -1,6 +1,7 @@
 package ic2_120.content.recipes.orewashing
 
 import ic2_120.registry.instance
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -18,7 +19,7 @@ object OreWashingRecipeDatagen {
         val name: String,
         val input: Item,
         val outputs: List<OutputItem>,
-        val waterConsumptionMb: Long = 1000L
+        val waterConsumptionDroplets: Long = FluidConstants.BUCKET
     )
 
     data class OutputItem(
@@ -36,7 +37,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_copper_dust")), 2),
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 粉碎锡矿石
         Entry(
@@ -47,7 +48,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_tin_dust")), 2),
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 粉碎铁矿石
         Entry(
@@ -58,7 +59,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_iron_dust")), 2),
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 粉碎金矿石
         Entry(
@@ -69,7 +70,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_gold_dust")), 2),
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 粉碎铀矿石（副产物是小撮铅粉）
         Entry(
@@ -80,7 +81,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_lead_dust")), 2),
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 粉碎铅矿石（副产物是小撮硫粉*3）
         Entry(
@@ -91,7 +92,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_sulfur_dust")), 3),
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 粉碎银矿石
         Entry(
@@ -102,7 +103,7 @@ object OreWashingRecipeDatagen {
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_silver_dust")), 2),
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         ),
         // 沙砾（只有石粉输出）
         Entry(
@@ -111,7 +112,7 @@ object OreWashingRecipeDatagen {
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
-            1000L
+            FluidConstants.BUCKET
         )
     )
 
@@ -124,7 +125,7 @@ object OreWashingRecipeDatagen {
                 id = id,
                 ingredient = Ingredient.ofItems(entry.input),
                 outputItems = entry.outputs.map { ItemStack(it.item, it.count) },
-                waterConsumptionMb = entry.waterConsumptionMb
+                waterConsumptionDroplets = entry.waterConsumptionDroplets
             )
             exporter.accept(id, recipe, null)
         }

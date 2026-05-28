@@ -43,8 +43,8 @@ class WaterGeneratorSync(
     }
 
     var energy by schema.int("Energy")
-    /** 水储量（mB），供 GUI 显示 */
-    var waterAmountMb by schema.int("WaterAmountMb")
+    /** 水储量（droplets） */
+    var waterAmount by schema.int("WaterAmount")
     private val flow = EnergyFlowSync(schema, this, useGeneratedAsInput = true)
 
     override fun getSideMaxInsert(side: Direction?): Long = 0L

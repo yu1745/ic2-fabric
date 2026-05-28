@@ -8,6 +8,7 @@ import ic2_120.content.screen.NuclearReactorScreenHandler
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -151,8 +152,11 @@ class NuclearReactorScreen(
     }
 
     private fun drawFluidBars(context: DrawContext) {
-        val inputFraction = handler.sync.inputCoolantMb.coerceAtLeast(0).toFloat() / NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
-        val outputFraction = handler.sync.outputHotCoolantMb.coerceAtLeast(0).toFloat() / NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
+        // inputCoolant/outputHotCoolant 现在是 droplets，容量 = BUCKET * 16
+        val inputFraction = if (COOLANT_TANK_DROPLETS > 0)
+            handler.sync.inputCoolant.coerceAtLeast(0).toFloat() / COOLANT_TANK_DROPLETS else 0f
+        val outputFraction = if (COOLANT_TANK_DROPLETS > 0)
+            handler.sync.outputHotCoolant.coerceAtLeast(0).toFloat() / COOLANT_TANK_DROPLETS else 0f
         val fwL = TH_FLUID_L_X2 - TH_FLUID_L_X
         val fhL = TH_FLUID_L_Y2 - TH_FLUID_L_Y
         val fwR = TH_FLUID_R_X2 - TH_FLUID_R_X
@@ -204,7 +208,7 @@ class NuclearReactorScreen(
             context.matrices.scale(scale, scale, 1f)
             context.drawText(textRenderer, text,
                 ((x + areaCenterX - tw / 2) / scale).toInt(),
-                ((y + TH_TEXT_Y) / scale).toInt(), 0xFFFFFF, false)
+                ((y + TH_TEXT_Y) / scale).toInt(), 0xFFADD8E6.toInt(), false)
             context.matrices.pop()
         } else {
             val outputRate = handler.sync.getSyncedExtractedAmount()
@@ -215,7 +219,7 @@ class NuclearReactorScreen(
             context.matrices.scale(scale, scale, 1f)
             context.drawText(textRenderer, text,
                 ((x + areaCenterX - tw / 2) / scale).toInt(),
-                ((y + NT_TEXT_Y) / scale).toInt(), 0xFFFFFF, false)
+                ((y + NT_TEXT_Y) / scale).toInt(), 0x55FF55, false)
             context.matrices.pop()
         }
     }
@@ -248,12 +252,12 @@ class NuclearReactorScreen(
             if (mouseX in (x + TH_FLUID_L_X) until (x + TH_FLUID_L_X2) &&
                 mouseY in (y + TH_FLUID_L_Y) until (y + TH_FLUID_L_Y2)
             ) {
-                val inputMb = handler.sync.inputCoolantMb.coerceAtLeast(0)
-                val capMb = NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
-                if (inputMb > 0) {
+                val inputDroplets = handler.sync.inputCoolant.coerceAtLeast(0)
+                val capMb = COOLANT_TANK_CAPACITY_MB
+                if (inputDroplets > 0) {
                     context.drawTooltip(
                         textRenderer,
-                        listOf(Text.translatable("gui.ic2_120.nuclear_reactor.coolant_input", inputMb, capMb)),
+                        listOf(Text.translatable("gui.ic2_120.nuclear_reactor.coolant_input", inputDroplets / DROPLETS_PER_MB, capMb)),
                         mouseX, mouseY
                     )
                 } else {
@@ -263,12 +267,12 @@ class NuclearReactorScreen(
             if (mouseX in (x + TH_FLUID_R_X) until (x + TH_FLUID_R_X2) &&
                 mouseY in (y + TH_FLUID_R_Y) until (y + TH_FLUID_R_Y2)
             ) {
-                val outputMb = handler.sync.outputHotCoolantMb.coerceAtLeast(0)
-                val capMb = NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
-                if (outputMb > 0) {
+                val outputDroplets = handler.sync.outputHotCoolant.coerceAtLeast(0)
+                val capMb = COOLANT_TANK_CAPACITY_MB
+                if (outputDroplets > 0) {
                     context.drawTooltip(
                         textRenderer,
-                        listOf(Text.translatable("gui.ic2_120.nuclear_reactor.hot_coolant", outputMb, capMb)),
+                        listOf(Text.translatable("gui.ic2_120.nuclear_reactor.hot_coolant", outputDroplets / DROPLETS_PER_MB, capMb)),
                         mouseX, mouseY
                     )
                 } else {
@@ -323,23 +327,28 @@ class NuclearReactorScreen(
         val heatDissipated = handler.sync.totalHeatDissipated
         val actualDissipated = handler.sync.actualHeatDissipated
         val thermalOutput = handler.sync.thermalHeatOutput
-        val inputMb = handler.sync.inputCoolantMb.coerceAtLeast(0)
-        val outputMb = handler.sync.outputHotCoolantMb.coerceAtLeast(0)
-        val capMb = NuclearReactorSync.COOLANT_TANK_CAPACITY_MB
+        val inputDroplets = handler.sync.inputCoolant.coerceAtLeast(0)
+        val outputDroplets = handler.sync.outputHotCoolant.coerceAtLeast(0)
+        val inputMb = inputDroplets / DROPLETS_PER_MB
+        val outputMb = outputDroplets / DROPLETS_PER_MB
+        val capMb = COOLANT_TANK_CAPACITY_MB
         lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.core_temp", temp))
         lines.add(Text.literal("(流体堆发热翻倍)"))
         lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.thermal_output", thermalOutput / 20))
         lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.produce_dissipate", heatProduced, heatDissipated))
         lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.actual_dissipate", actualDissipated / 20))
         lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.coolant_input", inputMb, capMb))
-        lines.add(Text.literal("%.1f".format(inputMb.toFloat() / capMb.toFloat() * 100) + "%"))
+        lines.add(Text.literal("%.1f".format(inputDroplets.toFloat() / COOLANT_TANK_DROPLETS.toFloat() * 100) + "%"))
         lines.add(Text.translatable("gui.ic2_120.nuclear_reactor.hot_coolant", outputMb, capMb))
-        lines.add(Text.literal("%.1f".format(outputMb.toFloat() / capMb.toFloat() * 100) + "%"))
+        lines.add(Text.literal("%.1f".format(outputDroplets.toFloat() / COOLANT_TANK_DROPLETS.toFloat() * 100) + "%"))
         return lines
     }
 
     companion object {
         private val TEXTURE = Identifier.of("ic2", "textures/gui/guinuclearpowergenerationequipment.png")
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
+        private val COOLANT_TANK_DROPLETS = (FluidConstants.BUCKET * NuclearReactorSync.COOLANT_TANK_CAPACITY_BUCKETS).toInt()
+        private val COOLANT_TANK_CAPACITY_MB = (COOLANT_TANK_DROPLETS / DROPLETS_PER_MB)
         private const val TEX_W = 512
         private const val TEX_H = 512
 

@@ -48,7 +48,7 @@ class StirlingGeneratorScreen(
         context.matrices.push()
         context.matrices.translate(textX.toDouble(), textY.toDouble(), 0.0)
         context.matrices.scale(scale, scale, 1.0f)
-        context.drawText(textRenderer, infoText, 0, 0, 0xFFADD8E6.toInt(), false)
+        context.drawText(textRenderer, infoText, 0, 0, 0x55FF55, false)
         context.matrices.pop()
 
         drawMouseoverTooltip(context, mouseX, mouseY)

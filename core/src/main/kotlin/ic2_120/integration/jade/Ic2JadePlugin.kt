@@ -651,8 +651,8 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
                     val be = world.getBlockEntity(checkPos)
                     if (be is AnimalmatronBlockEntity) {
                         foundMachine = be
-                        hasWater = be.sync.waterAmountMb > 0
-                        hasWeedEx = be.sync.weedExAmountMb > 0
+                        hasWater = be.sync.waterAmount > 0
+                        hasWeedEx = be.sync.weedExAmount > 0
                         // 获取喂食进度
                         val progress = be.getAnimalFeedProgress(entity.uuid)
                         if (progress != null) {

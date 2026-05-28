@@ -44,8 +44,8 @@ object BatteryModelPredicates {
         ModelPredicateProviderRegistry.register(
             saber,
             NANO_SABER_ACTIVE_ID
-        ) { stack, _, _, _ ->
-            if (NanoSaber.isActive(stack)) 1.0f else 0.0f
+        ) { _, _, _, _ ->
+            NanoSaber.getActiveData()
         }
     }
 

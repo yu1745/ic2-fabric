@@ -143,14 +143,14 @@ class GeoGeneratorBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun onFinalCommit() {
-            sync.lavaAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.lavaAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
         fun setStoredLava(newAmount: Long) {
             amount = newAmount.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L) FluidVariant.of(Fluids.LAVA) else FluidVariant.blank()
-            sync.lavaAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.lavaAmount = amount.toInt().coerceAtLeast(0)
         }
 
         fun getStoredAmount(): Long = amount
@@ -160,7 +160,7 @@ class GeoGeneratorBlockEntity(
 
         fun canAcceptFullBucket(): Boolean = (tankCapacity - amount) >= FluidConstants.BUCKET
 
-        /** 尝试插入岩浆（用于岩浆桶倒入），返回实际插入量 */
+        /** 尝试插入岩浆（用于岩浆桶倒入），返回实际插入量（droplets） */
         fun tryInsertLava(toInsert: Long): Long {
             if (toInsert <= 0L || (amount > 0L && variant.fluid != Fluids.LAVA)) return 0L
             val space = tankCapacity - amount
@@ -168,18 +168,18 @@ class GeoGeneratorBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.fluid != Fluids.LAVA) variant = FluidVariant.of(Fluids.LAVA)
-            sync.lavaAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.lavaAmount = amount.toInt().coerceAtLeast(0)
             return actual
         }
 
-        /** 内部消耗岩浆（不经过 extract，因 canExtract=false 会阻止外部抽取） */
+        /** 内部消耗岩浆（不经过 extract，因 canExtract=false 会阻止外部抽取），返回实际消耗量（droplets） */
         fun consumeInternal(toConsume: Long): Long {
             if (toConsume <= 0L || variant.fluid != Fluids.LAVA) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.lavaAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.lavaAmount = amount.toInt().coerceAtLeast(0)
             return actual
         }
     }

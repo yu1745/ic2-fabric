@@ -33,7 +33,8 @@ class GeoGeneratorSync(
     }
 
     var energy by schema.int("Energy")
-    var lavaAmountMb by schema.int("LavaAmountMb")
+    /** 岩浆储量（droplets） */
+    var lavaAmount by schema.int("LavaAmount")
     private val flow = EnergyFlowSync(schema, this, useGeneratedAsInput = true)
 
     override fun getSideMaxInsert(side: Direction?): Long = 0L

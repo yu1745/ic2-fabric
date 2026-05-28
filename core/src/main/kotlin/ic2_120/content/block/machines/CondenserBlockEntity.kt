@@ -115,10 +115,8 @@ class CondenserBlockEntity(
             fluidLookupRegistered = true
         }
 
-        fun toMilliBuckets(droplets: Long): Int =
-            (droplets * 1000 / FluidConstants.BUCKET).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
-
-        fun mbToDroplets(mb: Long): Long = mb * FluidConstants.BUCKET / 1000
+        /** 蒸馏水每进度产率：100 mB = 8,100 droplets */
+        private const val WATER_PER_PROGRESS = 8100L
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -166,7 +164,7 @@ class CondenserBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun onFinalCommit() {
-            sync.steamAmount = toMilliBuckets(amount)
+            sync.steamAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
     }
@@ -179,7 +177,7 @@ class CondenserBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
 
         override fun onFinalCommit() {
-            sync.waterAmount = toMilliBuckets(amount)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
@@ -190,7 +188,7 @@ class CondenserBlockEntity(
             if (actual <= 0L) return false
             amount += actual
             if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
-            sync.waterAmount = toMilliBuckets(amount)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return true
         }
@@ -206,7 +204,7 @@ class CondenserBlockEntity(
                     if (extracted > 0L) {
                         amount -= extracted
                         if (amount <= 0L) variant = FluidVariant.blank()
-                        sync.waterAmount = toMilliBuckets(amount)
+                        sync.waterAmount = amount.toInt().coerceAtLeast(0)
                         markDirty()
                     }
                 } catch (_: Exception) { }
@@ -328,8 +326,8 @@ class CondenserBlockEntity(
             distilledWaterTank.variant = if (waterTag.isEmpty) FluidVariant.blank() else FluidVariant.CODEC.decode(NbtOps.INSTANCE, waterTag).result().map { it.first }.orElse(FluidVariant.blank())
             distilledWaterTank.amount = t.getLong("amount")
         }
-        sync.steamAmount = toMilliBuckets(steamTank.amount)
-        sync.waterAmount = toMilliBuckets(distilledWaterTank.amount)
+        sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
+        sync.waterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
     }
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
@@ -396,7 +394,7 @@ class CondenserBlockEntity(
         val euPerTick = ventCount * CondenserSync.EU_PER_VENT.toLong()
 
         var steamConsumed = 0L
-        val steamAvailableMb = toMilliBuckets(steamTank.amount).toLong()
+        val steamAvailableMb = steamTank.amount
         val hasEnergy: Boolean
         if (steamAvailableMb > 0L && distilledWaterTank.amount < WATER_TANK_CAPACITY) {
             // 对齐 ic2_origin: 有散热口时必须消耗 EU，否则不工作（不消耗蒸汽）
@@ -404,18 +402,18 @@ class CondenserBlockEntity(
             if (hasEnergy) {
                 val toConsume = minOf(steamAvailableMb, coolingRate.toLong())
                 if (toConsume > 0L && steamTank.amount > 0L) {
-                val consumed = steamTank.amount.coerceAtMost(mbToDroplets(toConsume))
+                val consumed = steamTank.amount.coerceAtMost(toConsume)
                 if (consumed > 0L) {
                     steamTank.amount -= consumed
                     if (steamTank.amount <= 0L) steamTank.variant = FluidVariant.blank()
-                    steamConsumed = toMilliBuckets(consumed).toLong()
+                    steamConsumed = consumed.toInt().coerceAtLeast(0).toLong()
                     progress += steamConsumed.toInt()
-                    sync.steamAmount = toMilliBuckets(steamTank.amount)
+                    sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
 
                     // 进度够了产出蒸馏水
                     while (progress >= CondenserSync.PROGRESS_MAX) {
                         progress -= CondenserSync.PROGRESS_MAX
-                        distilledWaterTank.injectWater(mbToDroplets(100))
+                        distilledWaterTank.injectWater(WATER_PER_PROGRESS)
                     }
                 }
             }
@@ -425,8 +423,8 @@ class CondenserBlockEntity(
         }
 
         // 同步
-        sync.steamAmount = toMilliBuckets(steamTank.amount)
-        sync.waterAmount = toMilliBuckets(distilledWaterTank.amount)
+        sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
+        sync.waterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
         sync.progress = progress
         sync.ventCount = ventCount
         sync.coolingRate = if (hasEnergy) coolingRate else 0
@@ -473,7 +471,7 @@ class CondenserBlockEntity(
             val actual = distilledWaterTank.extract(FluidVariant.of(ModFluids.DISTILLED_WATER_STILL), distilledDroplets, tx)
             if (actual >= distilledDroplets) tx.commit() else return
         }
-        sync.waterAmount = toMilliBuckets(distilledWaterTank.amount)
+        sync.waterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
 
         // 扣输入
         inputStack.decrement(1)

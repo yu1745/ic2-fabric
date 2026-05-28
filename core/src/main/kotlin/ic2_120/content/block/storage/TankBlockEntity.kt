@@ -131,8 +131,8 @@ class TankBlockEntity(
     fun syncFluidState() {
         val variant = tankInternal.variant
         sync.fluidRawId = if (variant.isBlank) -1 else Registries.FLUID.getRawId(variant.fluid)
-        sync.fluidAmountMb = getFluidAmountMb()
-        sync.capacityMb = getCapacityMb()
+        sync.fluidAmount = getFluidAmountMb()
+        sync.capacity = getCapacityMb()
     }
 
     fun extractFluidForBucket(player: PlayerEntity): Boolean {
@@ -183,7 +183,7 @@ class TankBlockEntity(
 
     /** 获取当前流体量 (mB) */
     fun getFluidAmountMb(): Int =
-        (tankInternal.amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+        tankInternal.amount.toInt().coerceAtLeast(0)
 
     // ========== ExtendedScreenHandlerFactory ==========
 

@@ -8,6 +8,7 @@ import ic2_120.content.screen.SemifluidGeneratorScreenHandler
 import ic2_120.content.sync.SemifluidGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
@@ -40,9 +41,9 @@ class SemifluidGeneratorScreen(
         val cap = SemifluidGeneratorSync.ENERGY_CAPACITY
         val energyFrac = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
 
-        val fuelMb = handler.sync.fuelAmountMb.coerceAtLeast(0)
-        val fuelCapMb = 8 * 1000
-        val fuelFrac = if (fuelCapMb > 0) (fuelMb.toFloat() / fuelCapMb).coerceIn(0f, 1f) else 0f
+        val fuelDroplets = handler.sync.fuelAmount.coerceAtLeast(0)
+        val fuelCapDroplets = 8 * FluidConstants.BUCKET
+        val fuelFrac = if (fuelCapDroplets > 0) (fuelDroplets.toFloat() / fuelCapDroplets).coerceIn(0f, 1f) else 0f
 
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()
@@ -75,7 +76,9 @@ class SemifluidGeneratorScreen(
 
         // 燃料槽悬停 (82,23)-(94,69) = 12×46
         if (mouseX in x + 82 until x + 94 && mouseY in y + 23 until y + 69) {
-            val fuelLines = if (fuelMb > 0) {
+            val fuelLines = if (fuelDroplets > 0) {
+                val fuelMb = fuelDroplets / DROPLETS_PER_MB
+                val fuelCapMb = fuelCapDroplets / DROPLETS_PER_MB
                 listOf(Text.translatable("gui.ic2_120.semifluid_generator.fuel_tooltip", "%,d".format(fuelMb), "%,d".format(fuelCapMb)))
             } else {
                 listOf(Text.translatable("ic2.generic.text.empty"))
@@ -135,5 +138,6 @@ class SemifluidGeneratorScreen(
 
     companion object {
         private val TEXTURE = Identifier.of("ic2", "textures/gui/guiheatsourcegenerator.png")
+        private const val DROPLETS_PER_MB = FluidConstants.BUCKET / 1000
     }
 }

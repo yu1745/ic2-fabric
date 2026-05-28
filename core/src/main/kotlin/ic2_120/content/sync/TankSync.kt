@@ -8,8 +8,10 @@ class TankSync(
     schema: SyncSchema,
     capacityMbProvider: () -> Int
 ) {
-    var fluidAmountMb by schema.int("FluidAmountMb")
-    var capacityMb by schema.int("CapacityMb", default = capacityMbProvider())
+    /** 流体储量（droplets） */
+    var fluidAmount by schema.int("FluidAmountMb")
+    /** 容量（droplets） */
+    var capacity by schema.int("CapacityMb", default = capacityMbProvider())
     var fluidRawId by schema.int("FluidRawId", default = -1)
 
     val fluidId: Identifier?
@@ -19,5 +21,5 @@ class TankSync(
             return Registries.FLUID.getId(fluid)
         }
 
-    val hasFluid: Boolean get() = fluidAmountMb > 0 && fluidRawId >= 0
+    val hasFluid: Boolean get() = fluidAmount > 0 && fluidRawId >= 0
 }

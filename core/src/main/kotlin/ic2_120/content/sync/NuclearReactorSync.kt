@@ -49,8 +49,8 @@ class NuclearReactorSync(
         const val HEAT_EXPLODE_THRESHOLD = 10_000
         /** 每 output 点对应的 EU 数（与 IC2 平衡，output 每脉冲 +1） */
         const val EU_PER_OUTPUT = 100
-        /** 冷却液/热冷却液储罐容量（mB），16 桶 */
-        const val COOLANT_TANK_CAPACITY_MB = 16 * 1000
+        /** 冷却液/热冷却液储罐容量（16 BUCKET） */
+        const val COOLANT_TANK_CAPACITY_BUCKETS = 16
     }
 
     var energy by schema.int("Energy")
@@ -75,10 +75,10 @@ class NuclearReactorSync(
     // 热模式相关同步数据
     /** 是否为热模式（0 = false, 1 = true） */
     var isThermalMode by schema.int("IsThermalMode", default = 0)
-    /** 冷却液输入量（mB） */
-    var inputCoolantMb by schema.int("InputCoolantMb", default = 0)
-    /** 热冷却液输出量（mB） */
-    var outputHotCoolantMb by schema.int("OutputHotCoolantMb", default = 0)
+    /** 冷却液输入量（droplets） */
+    var inputCoolant by schema.int("InputCoolantMb", default = 0)
+    /** 热冷却液输出量（droplets） */
+    var outputHotCoolant by schema.int("OutputHotCoolantMb", default = 0)
 
     // override fun getSideMaxInsert(side: Direction?): Long = 0L
     // /** 正面不输出；其余面可输出 */

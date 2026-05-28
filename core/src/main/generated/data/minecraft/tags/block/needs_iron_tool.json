@@ -6,7 +6,6 @@
     "ic2_120:block_cutter",
     "ic2_120:canner",
     "ic2_120:centrifuge",
-    "ic2_120:chunk_loader",
     "ic2_120:coke_kiln",
     "ic2_120:compressor",
     "ic2_120:condenser",
@@ -85,6 +84,7 @@
     "ic2_120:tesla_coil",
     "ic2_120:uu_scanner",
     "ic2_120:miner",
-    "ic2_120:advanced_miner"
+    "ic2_120:advanced_miner",
+    "ic2_120:chunk_loader"
   ]
 }

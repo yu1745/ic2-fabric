@@ -170,14 +170,14 @@ class WaterGeneratorBlockEntity(
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun onFinalCommit() {
-            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
         fun setStoredWater(newAmount: Long) {
             amount = newAmount.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L) FluidVariant.of(Fluids.WATER) else FluidVariant.blank()
-            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
         }
 
         fun getStoredAmount(): Long = amount
@@ -190,7 +190,7 @@ class WaterGeneratorBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.fluid != Fluids.WATER) variant = FluidVariant.of(Fluids.WATER)
-            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             return actual
         }
 
@@ -201,7 +201,7 @@ class WaterGeneratorBlockEntity(
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.waterAmountMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             return actual
         }
     }

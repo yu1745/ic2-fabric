@@ -21,14 +21,16 @@ class PumpSync(
         const val MAX_INSERT = 32L
         const val MAX_EXTRACT = 0L
         const val ENERGY_PER_TICK = 1L
-        const val MB_PER_OPERATION = 1000
+        /** 每周期抽取 1 BUCKET = 81,000 droplets */
+        const val DROPLETS_PER_OPERATION: Long = net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET
         const val PROGRESS_MAX = 20
         const val NBT_ENERGY_STORED = "EnergyStored"
     }
 
     var energy by schema.int("Energy")
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
-    var fluidAmountMb by schema.int("FluidAmountMb")
+    /** 流体储量（droplets） */
+    var fluidAmount by schema.int("FluidAmount")
     var fluidRawId by schema.int("FluidRawId", default = -1)
     var progress by schema.int("Progress")
 

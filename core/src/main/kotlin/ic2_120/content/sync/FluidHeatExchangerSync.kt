@@ -20,7 +20,8 @@ class FluidHeatExchangerSync(
         const val NBT_INPUT_FLUID_TYPE = "InputFluidType"
         const val NBT_OUTPUT_FLUID_TYPE = "OutputFluidType"
 
-        const val TANK_CAPACITY_MB = 8_000
+        /** 容量：8 BUCKET = 648,000 droplets */
+        const val TANK_CAPACITY_BUCKETS = 8
 
         const val FLUID_TYPE_EMPTY = 0
         const val FLUID_TYPE_HOT_COOLANT = 1
@@ -29,8 +30,10 @@ class FluidHeatExchangerSync(
         const val FLUID_TYPE_PAHOEHOE_LAVA = 4
     }
 
-    var inputFluidMb by schema.int(NBT_INPUT_FLUID)
-    var outputFluidMb by schema.int(NBT_OUTPUT_FLUID)
+    /** 输入流体储量（droplets） */
+    var inputFluid by schema.int(NBT_INPUT_FLUID)
+    /** 输出流体储量（droplets） */
+    var outputFluid by schema.int(NBT_OUTPUT_FLUID)
     var isWorking by schema.int(NBT_IS_WORKING)
     var inputFluidType by schema.int(NBT_INPUT_FLUID_TYPE)
     var outputFluidType by schema.int(NBT_OUTPUT_FLUID_TYPE)

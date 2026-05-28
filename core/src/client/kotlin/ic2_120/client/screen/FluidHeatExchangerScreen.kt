@@ -7,6 +7,7 @@ import ic2_120.content.screen.FluidHeatExchangerScreenHandler
 import ic2_120.content.sync.FluidHeatExchangerSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
@@ -36,10 +37,10 @@ class FluidHeatExchangerScreen(
         val top = y
         val sync = handler.sync
 
-        val inputMb = sync.inputFluidMb.coerceAtLeast(0)
-        val outputMb = sync.outputFluidMb.coerceAtLeast(0)
-        val inputFrac = if (FluidHeatExchangerSync.TANK_CAPACITY_MB > 0) (inputMb.toFloat() / FluidHeatExchangerSync.TANK_CAPACITY_MB).coerceIn(0f, 1f) else 0f
-        val outputFrac = if (FluidHeatExchangerSync.TANK_CAPACITY_MB > 0) (outputMb.toFloat() / FluidHeatExchangerSync.TANK_CAPACITY_MB).coerceIn(0f, 1f) else 0f
+        val inputMb = sync.inputFluid.coerceAtLeast(0)
+        val outputMb = sync.outputFluid.coerceAtLeast(0)
+        val inputFrac = if (TANK_DROPLETS > 0) (inputMb.toFloat() / TANK_DROPLETS).coerceIn(0f, 1f) else 0f
+        val outputFrac = if (TANK_DROPLETS > 0) (outputMb.toFloat() / TANK_DROPLETS).coerceIn(0f, 1f) else 0f
 
         val generatedRate = sync.getSyncedGeneratedHeat()
         val outputRate = sync.getSyncedOutputHeat()
@@ -100,7 +101,7 @@ class FluidHeatExchangerScreen(
         // 输入流体槽悬停
         if (relX in 19 until 31 && relY in 47 until 91) {
             val lines = if (inputMb > 0 && inputFluid != null) {
-                listOf(inputFluid.defaultState.blockState.block.name, McText.literal("${"%,d".format(inputMb)} / ${"%,d".format(FluidHeatExchangerSync.TANK_CAPACITY_MB)} mB"))
+                listOf(inputFluid.defaultState.blockState.block.name, McText.literal("${"%,d".format(inputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(McText.literal("空"))
             }
@@ -110,7 +111,7 @@ class FluidHeatExchangerScreen(
         // 输出流体槽悬停
         if (relX in 145 until 157 && relY in 47 until 91) {
             val lines = if (outputMb > 0 && outputFluid != null) {
-                listOf(outputFluid.defaultState.blockState.block.name, McText.literal("${"%,d".format(outputMb)} / ${"%,d".format(FluidHeatExchangerSync.TANK_CAPACITY_MB)} mB"))
+                listOf(outputFluid.defaultState.blockState.block.name, McText.literal("${"%,d".format(outputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(McText.literal("空"))
             }
@@ -152,5 +153,7 @@ class FluidHeatExchangerScreen(
         private val TEXTURE = Identifier.of("ic2", "textures/gui/guifluidheatexchanger.png")
         private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
+        private val TANK_DROPLETS = (FluidConstants.BUCKET * FluidHeatExchangerSync.TANK_CAPACITY_BUCKETS).toInt()
     }
 }

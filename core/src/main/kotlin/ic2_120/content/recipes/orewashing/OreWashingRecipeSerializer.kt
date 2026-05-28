@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.MapCodec
 import com.mojang.serialization.codecs.RecordCodecBuilder
 import ic2_120.registry.annotation.ModMachineRecipe
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.item.ItemStack
 import net.minecraft.network.RegistryByteBuf
 import net.minecraft.network.codec.PacketCodec
@@ -17,7 +18,13 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
         instance.group(
             Ingredient.ALLOW_EMPTY_CODEC.fieldOf("ingredient").forGetter { it.ingredient },
             ItemStack.VALIDATED_CODEC.listOf().fieldOf("outputs").forGetter { it.outputItems },
-            Codec.LONG.fieldOf("water_consumption_mb").orElse(1000L).forGetter { it.waterConsumptionMb }
+            Codec.LONG.fieldOf("water_consumption_mb")
+                .xmap(
+                    { waterMb -> waterMb * FluidConstants.BUCKET / 1000L },
+                    { droplets -> droplets * 1000L / FluidConstants.BUCKET }
+                )
+                .orElse(FluidConstants.BUCKET)
+                .forGetter { it.waterConsumptionDroplets }
         ).apply(instance) { ingredient, outputs, waterConsumption ->
             OreWashingRecipe(Identifier.of("ic2_120", "_"), ingredient, outputs, waterConsumption)
         }
@@ -30,7 +37,7 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
             recipe.outputItems.forEach { output ->
                 ItemStack.PACKET_CODEC.encode(buf, output.copy())
             }
-            buf.writeLong(recipe.waterConsumptionMb)
+            buf.writeLong(recipe.waterConsumptionDroplets)
         },
         { buf ->
             val ingredient = Ingredient.PACKET_CODEC.decode(buf)

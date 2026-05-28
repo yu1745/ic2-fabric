@@ -6,7 +6,8 @@ class FluidHeatGeneratorSync(
     schema: SyncSchema,
     private val heatFlow: HeatFlowSync? = null
 ) {
-    var fuelAmountMb by schema.int("FuelAmountMb")
+    /** 燃料储量（droplets） */
+    var fuelAmount by schema.int("FuelAmount")
 
     /** 获取同步的滤波后产热速率（HU/t） */
     fun getSyncedGeneratedHeat(): Long = heatFlow?.getSyncedGeneratedHeat() ?: 0L

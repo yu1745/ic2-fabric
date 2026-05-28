@@ -121,8 +121,8 @@ class CropmatronBlockEntity(
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
-    private val waterTankCapacity = mbToDroplets(CropmatronSync.WATER_TANK_CAPACITY_MB)
-    private val weedExTankCapacity = mbToDroplets(CropmatronSync.WEED_EX_TANK_CAPACITY_MB)
+    private val waterTankCapacity = FluidConstants.BUCKET * CropmatronSync.WATER_TANK_CAPACITY_BUCKETS
+    private val weedExTankCapacity = FluidConstants.BUCKET * CropmatronSync.WEED_EX_TANK_CAPACITY_BUCKETS
 
     private val waterTankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
@@ -136,14 +136,14 @@ class CropmatronBlockEntity(
         }
 
         override fun onFinalCommit() {
-            sync.waterAmountMb = toMilliBuckets(amount)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
         fun setStoredFluid(newAmount: Long) {
             amount = newAmount.coerceIn(0L, waterTankCapacity)
             variant = if (amount > 0L) FluidVariant.of(Fluids.WATER) else FluidVariant.blank()
-            sync.waterAmountMb = toMilliBuckets(amount)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
         }
 
         fun insertInternal(toInsert: Long): Long {
@@ -153,7 +153,7 @@ class CropmatronBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.isBlank) variant = FluidVariant.of(Fluids.WATER)
-            sync.waterAmountMb = toMilliBuckets(amount)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return actual
         }
@@ -164,12 +164,12 @@ class CropmatronBlockEntity(
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.waterAmountMb = toMilliBuckets(amount)
+            sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return actual
         }
 
-        fun getWaterMb(): Int = toMilliBuckets(amount)
+        fun getStoredWater(): Long = amount
     }
 
     private val weedExTankInternal = object : SingleVariantStorage<FluidVariant>() {
@@ -184,14 +184,14 @@ class CropmatronBlockEntity(
         }
 
         override fun onFinalCommit() {
-            sync.weedExAmountMb = toMilliBuckets(amount)
+            sync.weedExAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
         fun setStoredFluid(newAmount: Long) {
             amount = newAmount.coerceIn(0L, weedExTankCapacity)
             variant = if (amount > 0L) FluidVariant.of(ModFluids.WEED_EX_STILL) else FluidVariant.blank()
-            sync.weedExAmountMb = toMilliBuckets(amount)
+            sync.weedExAmount = amount.toInt().coerceAtLeast(0)
         }
 
         fun insertInternal(toInsert: Long): Long {
@@ -201,7 +201,7 @@ class CropmatronBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.isBlank) variant = FluidVariant.of(ModFluids.WEED_EX_STILL)
-            sync.weedExAmountMb = toMilliBuckets(amount)
+            sync.weedExAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return actual
         }
@@ -212,12 +212,12 @@ class CropmatronBlockEntity(
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.weedExAmountMb = toMilliBuckets(amount)
+            sync.weedExAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return actual
         }
 
-        fun getWeedExMb(): Int = toMilliBuckets(amount)
+        fun getStoredWeedEx(): Long = amount
     }
 
     private val ioStorage = object : Storage<FluidVariant> {
@@ -352,8 +352,8 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
 
-        waterTankInternal.setStoredFluid(mbToDroplets(nbt.getInt(NBT_WATER_MB).coerceIn(0, CropmatronSync.WATER_TANK_CAPACITY_MB)))
-        weedExTankInternal.setStoredFluid(mbToDroplets(nbt.getInt(NBT_WEED_EX_MB).coerceIn(0, CropmatronSync.WEED_EX_TANK_CAPACITY_MB)))
+        waterTankInternal.setStoredFluid(nbt.getLong(NBT_WATER_MB).coerceIn(0, waterTankCapacity))
+        weedExTankInternal.setStoredFluid(nbt.getLong(NBT_WEED_EX_MB).coerceIn(0, weedExTankCapacity))
         workOffset = nbt.getInt(NBT_WORK_OFFSET).coerceIn(0, WORK_INTERVAL_TICKS - 1)
     }
 
@@ -362,8 +362,8 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         Inventories.writeNbt(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CropmatronSync.NBT_ENERGY_STORED, sync.amount)
-        nbt.putInt(NBT_WATER_MB, waterTankInternal.getWaterMb())
-        nbt.putInt(NBT_WEED_EX_MB, weedExTankInternal.getWeedExMb())
+        nbt.putLong(NBT_WATER_MB, waterTankInternal.amount)
+        nbt.putLong(NBT_WEED_EX_MB, weedExTankInternal.amount)
         nbt.putInt(NBT_WORK_OFFSET, workOffset)
     }
 
@@ -397,8 +397,8 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
             active = report.fertilized > 0 || report.hydrated > 0 || report.weedExApplied > 0 || report.farmlandHydrated > 0
         }
 
-        sync.waterAmountMb = waterTankInternal.getWaterMb()
-        sync.weedExAmountMb = weedExTankInternal.getWeedExMb()
+        sync.waterAmount = waterTankInternal.amount.toInt().coerceAtLeast(0)
+        sync.weedExAmount = weedExTankInternal.amount.toInt().coerceAtLeast(0)
         setActiveState(world, pos, state, active)
         sync.syncCurrentTickFlow()
     }
@@ -454,15 +454,15 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
 
     private fun tryApplyHydration(target: CropCareTarget, applyEnergyCost: Long, report: ScanReport) {
         if (sync.amount < applyEnergyCost) return
-        val waterMb = waterTankInternal.getWaterMb()
-        if (waterMb <= 0) return
+        val waterDroplets = waterTankInternal.getStoredWater().toInt()
+        if (waterDroplets <= 0) return
 
-        val request = waterMb.coerceAtMost(200)
+        val request = waterDroplets.coerceAtMost(200)
         val simulated = target.applyHydration(request, simulate = true)
         if (simulated <= 0) return
 
         if (sync.consumeEnergy(applyEnergyCost) <= 0L) return
-        val used = target.applyHydration(request, simulate = false).coerceAtMost(waterMb)
+        val used = target.applyHydration(request, simulate = false).coerceAtMost(waterDroplets)
         if (used <= 0) return
         waterTankInternal.consumeInternal(mbToDroplets(used))
         report.hydrated += used
@@ -470,15 +470,15 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
 
     private fun tryApplyWeedEx(target: CropCareTarget, applyEnergyCost: Long, report: ScanReport) {
         if (sync.amount < applyEnergyCost) return
-        val weedExMb = weedExTankInternal.getWeedExMb()
-        if (weedExMb <= 0) return
+        val weedExDroplets = weedExTankInternal.getStoredWeedEx().toInt()
+        if (weedExDroplets <= 0) return
 
-        val request = weedExMb.coerceAtMost(200)
+        val request = weedExDroplets.coerceAtMost(200)
         val simulated = target.applyWeedEx(request, simulate = true)
         if (simulated <= 0) return
 
         if (sync.consumeEnergy(applyEnergyCost) <= 0L) return
-        val used = target.applyWeedEx(request, simulate = false).coerceAtMost(weedExMb)
+        val used = target.applyWeedEx(request, simulate = false).coerceAtMost(weedExDroplets)
         if (used <= 0) return
         weedExTankInternal.consumeInternal(mbToDroplets(used))
         report.weedExApplied += used
@@ -490,7 +490,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         val moisture = state.get(FarmlandBlock.MOISTURE)
         if (moisture >= 7) return false
 
-        val waterMb = waterTankInternal.getWaterMb()
+        val waterMb = waterTankInternal.getStoredWater().toInt()
         val add = minOf(7 - moisture, waterMb)
         if (add <= 0) return false
 
@@ -500,7 +500,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
     }
 
     private fun processWaterInputContainer() {
-        if (waterTankInternal.getWaterMb() > CropmatronSync.WATER_TANK_CAPACITY_MB - 1000) return
+        if (waterTankInternal.amount > waterTankCapacity - FluidConstants.BUCKET) return
 
         val input = getStack(SLOT_WATER_INPUT)
         if (input.isEmpty) return
@@ -529,7 +529,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
     }
 
     private fun processWeedExInputContainer() {
-        if (weedExTankInternal.getWeedExMb() > CropmatronSync.WEED_EX_TANK_CAPACITY_MB - 1000) return
+        if (weedExTankInternal.amount > weedExTankCapacity - FluidConstants.BUCKET) return
 
         val input = getStack(SLOT_WEED_EX_INPUT)
         if (input.isEmpty) return
@@ -612,8 +612,6 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
     private fun isWeedEx(fluid: net.minecraft.fluid.Fluid): Boolean =
         fluid == ModFluids.WEED_EX_STILL || fluid == ModFluids.WEED_EX_FLOWING
 
-    private fun toMilliBuckets(amount: Long): Int =
-        (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
 
     private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
 

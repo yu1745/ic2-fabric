@@ -27,14 +27,17 @@ class AnimalmatronSync(
         const val MAX_EXTRACT = 0L
         const val NBT_ENERGY_STORED = "EnergyStored"
 
-        const val WATER_TANK_CAPACITY_MB = 8_000
-        const val WEED_EX_TANK_CAPACITY_MB = 8_000
+        /** 容量：8 BUCKET = 648,000 droplets */
+        const val WATER_TANK_CAPACITY_BUCKETS = 8
+        const val WEED_EX_TANK_CAPACITY_BUCKETS = 8
     }
 
     var energy by schema.int("Energy")
     var energyCapacity by schema.int("EnergyCapacity", default = ENERGY_CAPACITY.toInt())
-    var waterAmountMb by schema.int("WaterAmountMb")
-    var weedExAmountMb by schema.int("WeedExAmountMb")
+    /** 水储量（droplets） */
+    var waterAmount by schema.int("WaterAmountMb")
+    /** 除草剂储量（droplets） */
+    var weedExAmount by schema.int("WeedExAmountMb")
 
     // 统计数据
     var animalCount by schema.int("AnimalCount")

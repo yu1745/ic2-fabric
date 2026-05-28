@@ -47,7 +47,6 @@
     "ic2_120:reinforced_iron_scaffold",
     "ic2_120:canner",
     "ic2_120:centrifuge",
-    "ic2_120:chunk_loader",
     "ic2_120:refractory_bricks",
     "ic2_120:coke_kiln",
     "ic2_120:coke_kiln_grate",
@@ -194,6 +193,7 @@
     "ic2_120:tesla_coil",
     "ic2_120:uu_scanner",
     "ic2_120:miner",
-    "ic2_120:advanced_miner"
+    "ic2_120:advanced_miner",
+    "ic2_120:chunk_loader"
   ]
 }

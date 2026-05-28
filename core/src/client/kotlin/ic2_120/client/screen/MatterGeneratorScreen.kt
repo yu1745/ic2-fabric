@@ -6,6 +6,7 @@ import ic2_120.client.t
 import ic2_120.content.block.MatterGeneratorBlock
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.MatterGeneratorScreenHandler
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import ic2_120.content.sync.MatterGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
@@ -42,7 +43,7 @@ class MatterGeneratorScreen(
         drawFluidTank(context, left, top)
 
         // 容量标示纹理 (181,6)-(192,52) = 11×46 渲染至 (101,27)
-        if (handler.sync.fluidAmountMb > 0) {
+        if (handler.sync.fluidAmount > 0) {
             context.drawTexture(TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
                 TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(), TANK_OVERLAY_W, TANK_OVERLAY_H, TEX_SIZE, TEX_SIZE)
         }
@@ -60,9 +61,9 @@ class MatterGeneratorScreen(
 
         // 流体槽悬停
         if (relX in TANK_X until TANK_X + TANK_W && relY in TANK_Y until TANK_Y + TANK_H) {
-            val amt = handler.sync.fluidAmountMb.coerceAtLeast(0)
-            val cap = handler.sync.fluidCapacityMb.coerceAtLeast(1)
-            val lines = if (amt > 0) listOf(Text.literal("UU物质"), Text.literal("${"%,d".format(amt)} / ${"%,d".format(cap)} mB"))
+            val amt = handler.sync.fluidAmount.coerceAtLeast(0)
+            val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
+            val lines = if (amt > 0) listOf(Text.literal("UU物质"), Text.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -83,9 +84,9 @@ class MatterGeneratorScreen(
     }
 
     private fun drawFluidTank(context: DrawContext, left: Int, top: Int) {
-        val amt = handler.sync.fluidAmountMb.coerceAtLeast(0)
+        val amt = handler.sync.fluidAmount.coerceAtLeast(0)
         if (amt <= 0) return
-        val cap = handler.sync.fluidCapacityMb.coerceAtLeast(1)
+        val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
         val fraction = (amt.toFloat() / cap).coerceIn(0f, 1f)
         val fillH = (TANK_H * fraction).toInt().coerceAtLeast(1)
         val sx = left + TANK_X
@@ -109,6 +110,7 @@ class MatterGeneratorScreen(
     }
 
     companion object {
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val TEXTURE = Identifier.of("ic2", "textures/gui/guimattergenerator.png")
         private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256

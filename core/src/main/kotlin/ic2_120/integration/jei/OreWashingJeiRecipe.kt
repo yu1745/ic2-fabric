@@ -8,5 +8,5 @@ import net.minecraft.item.ItemStack
 data class OreWashingJeiRecipe(
     val input: ItemStack,
     val outputs: List<ItemStack>,
-    val waterConsumptionMb: Long
+    val waterConsumptionDroplets: Long
 )

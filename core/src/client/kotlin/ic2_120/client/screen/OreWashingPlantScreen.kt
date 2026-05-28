@@ -6,6 +6,7 @@ import ic2_120.content.block.OreWashingPlantBlock
 import ic2_120.content.screen.OreWashingPlantScreenHandler
 import ic2_120.content.sync.OreWashingPlantSync
 import ic2_120.registry.annotation.ModScreen
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -51,9 +52,11 @@ class OreWashingPlantScreen(
         val progressFrac = if (OreWashingPlantSync.PROGRESS_MAX > 0) {
             (handler.sync.progress.coerceIn(0, OreWashingPlantSync.PROGRESS_MAX).toFloat() / OreWashingPlantSync.PROGRESS_MAX).coerceIn(0f, 1f)
         } else 0f
-        val waterAmount = handler.sync.waterAmountMb.toLong().coerceAtLeast(0)
-        val waterCapacity = 8000L
-        val waterFraction = if (waterCapacity > 0) (waterAmount.toFloat() / waterCapacity).coerceIn(0f, 1f) else 0f
+        val waterAmountDroplets = handler.sync.waterAmount.toLong().coerceAtLeast(0)
+        val waterCapacityDroplets = FluidConstants.BUCKET * 8
+        val waterFraction = if (waterCapacityDroplets > 0) (waterAmountDroplets.toFloat() / waterCapacityDroplets).coerceIn(0f, 1f) else 0f
+        val waterAmountMb = waterAmountDroplets / DROPLETS_PER_MB
+        val waterCapacityMb = (waterCapacityDroplets / DROPLETS_PER_MB).toLong()
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val consumeRate = handler.sync.getSyncedConsumedAmount()
 
@@ -76,7 +79,7 @@ class OreWashingPlantScreen(
         }
 
         // 储水纹理 (64,23)-(76,70) = 12x47，自下而上
-        if (waterAmount > 0) {
+        if (waterAmountDroplets > 0) {
             val fillHeight = (WATER_H * waterFraction).toInt().coerceAtLeast(1)
             context.enableScissor(
                 left + WATER_X,
@@ -89,7 +92,7 @@ class OreWashingPlantScreen(
         }
 
         // 容量标示纹理 (182,48)-(193,94) = 11x46，有流体时渲染在流体纹理之上
-        if (waterAmount > 0) {
+        if (waterAmountDroplets > 0) {
             context.drawTexture(
                 TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
                 TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
@@ -151,7 +154,7 @@ class OreWashingPlantScreen(
         if (relX in WATER_X until WATER_X + WATER_W &&
             relY in WATER_Y until WATER_Y + WATER_H
         ) {
-            val lines = if (waterAmount > 0) listOf(Text.literal("水"), Text.literal("${"%,d".format(waterAmount)} / ${"%,d".format(waterCapacity)} mB"))
+            val lines = if (waterAmountDroplets > 0) listOf(Text.literal("水"), Text.literal("${"%,d".format(waterAmountMb)} / ${"%,d".format(waterCapacityMb)} mB"))
                         else listOf(Text.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
         }
@@ -181,6 +184,7 @@ class OreWashingPlantScreen(
         private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
         private val WATER_STILL_ID = Identifier.of("minecraft", "block/water_still")
         private const val TEXTURE_SIZE = 256
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
 
         // 电量条 (179,3)-(193,17) = 14x14
         private const val ENERGY_BAR_U = 179

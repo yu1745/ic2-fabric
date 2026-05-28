@@ -10,6 +10,7 @@ import ic2_120.content.screen.SteamKineticGeneratorScreenHandler
 import ic2_120.content.sync.SteamKineticGeneratorSync
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.texture.Sprite
@@ -56,8 +57,9 @@ class SteamKineticGeneratorScreen(
         val sync = handler.sync
 
         // 蒸馏水罐填充 (TankGauge Plain at 75,21, 26×26) - fluid sprite + color rendering
-        val waterFrac = if (SteamKineticGeneratorSync.DISTILLED_WATER_TANK_CAPACITY > 0)
-            sync.distilledWaterAmount.toFloat() / SteamKineticGeneratorSync.DISTILLED_WATER_TANK_CAPACITY else 0f
+        // distilledWaterAmount 现在是 droplets，容量为 1 BUCKET
+        val waterFrac = if (DISTILLED_WATER_TANK_DROPLETS > 0)
+            sync.distilledWaterAmount.toFloat() / DISTILLED_WATER_TANK_DROPLETS else 0f
         val tx = left + 75; val ty = top + 21; val tw = 26; val th = 26
         val fh = (waterFrac.coerceIn(0f, 1f) * th).toInt()
         if (fh > 0) {
@@ -144,6 +146,7 @@ class SteamKineticGeneratorScreen(
     companion object {
         private val TEXTURE = Identifier.of("ic2", "textures/gui/guisteamkineticgenerator.png")
         private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
+        private val DISTILLED_WATER_TANK_DROPLETS = FluidConstants.BUCKET.toInt()
         private const val PLAYER_INV_Y = 84
         private const val HOTBAR_Y = 142
         private const val SLOT_SIZE = 18

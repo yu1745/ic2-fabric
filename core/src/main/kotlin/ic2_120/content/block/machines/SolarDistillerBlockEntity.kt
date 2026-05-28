@@ -174,7 +174,7 @@ class SolarDistillerBlockEntity(
 
         // 提交后同步数据到客户端
         override fun onFinalCommit() {
-            sync.waterInputMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.waterInput = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
@@ -182,7 +182,7 @@ class SolarDistillerBlockEntity(
         fun setStoredWater(newAmount: Long) {
             amount = newAmount.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L) FluidVariant.of(Fluids.WATER) else FluidVariant.blank()
-            sync.waterInputMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.waterInput = amount.toInt().coerceAtLeast(0)
         }
 
         fun getStoredAmount(): Long = amount
@@ -196,7 +196,7 @@ class SolarDistillerBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.fluid != Fluids.WATER) variant = FluidVariant.of(Fluids.WATER)
-            sync.waterInputMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.waterInput = amount.toInt().coerceAtLeast(0)
             return actual
         }
 
@@ -207,7 +207,7 @@ class SolarDistillerBlockEntity(
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.waterInputMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.waterInput = amount.toInt().coerceAtLeast(0)
             return actual
         }
     }
@@ -238,7 +238,7 @@ class SolarDistillerBlockEntity(
 
         // 提交后同步数据到客户端
         override fun onFinalCommit() {
-            sync.distilledOutputMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.distilledOutput = amount.toInt().coerceAtLeast(0)
             markDirty()
         }
 
@@ -246,7 +246,7 @@ class SolarDistillerBlockEntity(
         fun setStoredDistilled(newAmount: Long) {
             amount = newAmount.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L) FluidVariant.of(ModFluids.DISTILLED_WATER_STILL) else FluidVariant.blank()
-            sync.distilledOutputMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.distilledOutput = amount.toInt().coerceAtLeast(0)
         }
 
         fun getStoredAmount(): Long = amount
@@ -261,7 +261,7 @@ class SolarDistillerBlockEntity(
             if (actual <= 0L) return 0L
             amount += actual
             if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
-            sync.distilledOutputMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.distilledOutput = amount.toInt().coerceAtLeast(0)
             return actual
         }
 
@@ -272,7 +272,7 @@ class SolarDistillerBlockEntity(
             if (actual <= 0L) return 0L
             amount -= actual
             if (amount <= 0L) variant = FluidVariant.blank()
-            sync.distilledOutputMb = (amount * 1000L / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
+            sync.distilledOutput = amount.toInt().coerceAtLeast(0)
             return actual
         }
     }
@@ -411,9 +411,6 @@ class SolarDistillerBlockEntity(
         nbt.putLong(NBT_OUTPUT_TANK, outputTankInternal.getStoredAmount())
     }
 
-    // 工具方法：毫巴转换为滴（1 桶 = 1000 毫巴）
-    private fun mbToDroppers(mb: Int): Long = mb * FluidConstants.BUCKET / 1000
-
     /**
      * 检查当前是否可以工作
      * 条件：主世界 + 非雨天 + 白天 + 顶部无遮挡
@@ -463,7 +460,7 @@ class SolarDistillerBlockEntity(
 
         // 检查是否可以工作（条件满足 + 有足够的水 + 输出罐未满）
         val canWork = canWorkNow(world, pos) &&
-                inputTankInternal.getStoredAmount() >= mbToDroppers(SolarDistillerSync.PRODUCE_MB_PER_CYCLE) &&
+                inputTankInternal.getStoredAmount() >= SolarDistillerSync.PRODUCE_DROPLETS_PER_CYCLE &&
                 outputTankInternal.getStoredAmount() < outputTankInternal.getTankCapacity()
         sync.isWorking = if (canWork) 1 else 0
 
@@ -472,10 +469,10 @@ class SolarDistillerBlockEntity(
             sync.progress += 1
             if (sync.progress >= SolarDistillerSync.PRODUCE_INTERVAL_TICKS) {
                 // 达到处理间隔：执行蒸馏
-                val produceDroppers = mbToDroppers(SolarDistillerSync.PRODUCE_MB_PER_CYCLE)
-                val consumed = inputTankInternal.consumeInternal(produceDroppers)
-                if (consumed >= produceDroppers) {
-                    outputTankInternal.insertInternal(produceDroppers)
+                val produce = SolarDistillerSync.PRODUCE_DROPLETS_PER_CYCLE.toLong()
+                val consumed = inputTankInternal.consumeInternal(produce)
+                if (consumed >= produce) {
+                    outputTankInternal.insertInternal(produce)
                 }
                 sync.progress = 0
             }
