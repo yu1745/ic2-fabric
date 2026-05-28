@@ -15,10 +15,10 @@ import ic2_120.content.syncs.SyncSchema
  *
  * 工作条件：温度 > 1400。
  *
- * 每钢锭空气消耗（随温度线性递减）：
- * - 1401→1500：6000→5200 mB
- * - 1501→1600：5199→4700 mB
- * - 1601→1700：4699→4200 mB
+ * 每钢锭空气消耗（随温度线性递减，单位 droplets）：
+ * - 1401→1500：486,000→421,200 droplets
+ * - 1501→1600：421,119→380,700 droplets
+ * - 1601→1700：380,619→340,200 droplets
  *
  * 工作时间（随温度线性递减）：
  * - 1401→1500：10000→8400 ticks
@@ -34,14 +34,15 @@ class BlastFurnaceSync(schema: SyncSchema) {
         const val TEMP_MAX = 1_700
         const val TEMP_WORK_MIN = 1_401
 
-        const val AIR_CAPACITY_MB = 8_000
+        /** 空气储罐容量：8 BUCKET = 648,000 droplets */
+        const val AIR_TANK_BUCKETS = 8
 
-        /** 根据温度线性计算每钢锭空气消耗量（mB） */
-        fun getAirPerSteelMb(temp: Int): Int = when {
+        /** 根据温度线性计算每钢锭空气消耗量（droplets） */
+        fun getAirPerSteelDroplets(temp: Int): Int = when {
             temp < TEMP_WORK_MIN -> 0
-            temp in TEMP_WORK_MIN..1500 -> 6000 - 800 * (temp - 1401) / 99
-            temp in 1501..1600 -> 5199 - 499 * (temp - 1501) / 99
-            else -> 4699 - 499 * (temp - 1601) / 99  // 1601..TEMP_MAX
+            temp in TEMP_WORK_MIN..1500 -> 486_000 - 64_800 * (temp - 1401) / 99
+            temp in 1501..1600 -> 421_119 - 40_419 * (temp - 1501) / 99
+            else -> 380_619 - 40_419 * (temp - 1601) / 99  // 1601..TEMP_MAX
         }
 
         /** 根据温度线性计算加工总 tick 数 */
@@ -57,5 +58,6 @@ class BlastFurnaceSync(schema: SyncSchema) {
     var temperature by schema.int("Temperature", default = 0)
     var progress by schema.int("Progress", default = 0)
     var heatInput by schema.int("HeatInput", default = 0)
-    var airAmountMb by schema.int("AirAmount", default = 0)
+    /** 压缩空气储量（droplets），0..648,000 */
+    var airAmount by schema.int("AirAmount", default = 0)
 }

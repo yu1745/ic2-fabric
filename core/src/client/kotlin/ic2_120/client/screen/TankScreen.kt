@@ -1,5 +1,6 @@
 package ic2_120.client.screen
 
+import ic2_120.client.FluidUtils
 import ic2_120.content.screen.TankScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
@@ -17,14 +18,6 @@ class TankScreen(
     title: Text
 ) : HandledScreen<TankScreenHandler>(handler, playerInventory, title) {
 
-    private fun getFluidSprite() = run {
-        val fluidId = handler.sync.fluidId ?: return@run null
-        val fluid = Registries.FLUID.get(fluidId)
-        val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return@run null
-        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultState)
-        sprites[0]
-    }
-
     init {
         backgroundWidth = 176
         backgroundHeight = 166
@@ -41,14 +34,24 @@ class TankScreen(
             TEXTURE_SIZE, TEXTURE_SIZE
         )
 
-        // 流体全铺渲染至 (79,27)-(97,45) = 18x18
-        val sprite = getFluidSprite() ?: return
+        // 流体全铺渲染至 (79,27)-(97,45) = 18x18，使用 FluidUtils 着色
+        val fluidId = handler.sync.fluidId ?: return
+        val fluid = Registries.FLUID.get(fluidId)
+        val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
+        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultState)
+        val sprite = sprites[0]
         val amount = handler.sync.fluidAmountMb
         if (amount <= 0) return
+        val color = FluidUtils.getFluidColor(fluid)
+        val (r, g, b) = if (color != -1) {
+            Triple(((color shr 16) and 0xFF) / 255f, ((color shr 8) and 0xFF) / 255f, (color and 0xFF) / 255f)
+        } else {
+            Triple(1f, 1f, 1f)
+        }
         context.drawSprite(
             x + FLUID_X, y + FLUID_Y, 0,
             FLUID_W, FLUID_H, sprite,
-            1f, 1f, 1f, 1f
+            r, g, b, 1f
         )
     }
 

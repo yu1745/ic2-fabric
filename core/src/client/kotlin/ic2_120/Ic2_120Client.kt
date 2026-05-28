@@ -29,6 +29,7 @@ import ic2_120.client.IridiumDrillModeHandler
 import ic2_120.client.MiningLaserModeHandler
 import ic2_120.client.SodiumCompatibilityWarning
 import ic2_120.client.UpdateNotifier
+import ic2_120.client.WindMeterClientInitializer
 import ic2_120.client.network.NetworkManager
 import net.fabricmc.api.ClientModInitializer
 
@@ -60,6 +61,7 @@ object Ic2_120Client : ClientModInitializer {
 		SodiumCompatibilityWarning.register()
 		JetpackSoundController.register()
 		MachineLoopSoundController.register()
+		WindMeterClientInitializer.init()
 
 		// 注册储物箱着色器
 		StorageBoxColorProvider.register()
