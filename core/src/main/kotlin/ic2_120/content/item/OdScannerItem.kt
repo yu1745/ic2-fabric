@@ -78,7 +78,7 @@ class OdScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
         appendEnergyTooltip(stack, tooltip)
         val uses = getUsesRemaining(stack)
         tooltip.add(Text.literal("剩余使用次数: $uses").formatted(net.minecraft.util.Formatting.GRAY))
-        tooltip.add(Text.literal("扫描半径: ${ScannerType.OD.scanRadius * 2 + 1}×${ScannerType.OD.scanRadius * 2 + 1}").formatted(net.minecraft.util.Formatting.GRAY))
+        tooltip.add(Text.literal("扫描范围: ${ScannerType.OD.scanRadius * 2 + 1}×${ScannerType.OD.scanRadius * 2 + 1}").formatted(net.minecraft.util.Formatting.GRAY))
     }
 
     override fun isItemBarVisible(stack: ItemStack): Boolean = true
@@ -205,7 +205,7 @@ class AdvancedScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricToo
         appendEnergyTooltip(stack, tooltip)
         val uses = OdScannerItem.getUsesRemaining(stack)
         tooltip.add(Text.literal("剩余使用次数: $uses").formatted(net.minecraft.util.Formatting.GRAY))
-        tooltip.add(Text.literal("扫描半径: ${ScannerType.OV.scanRadius * 2 + 1}×${ScannerType.OV.scanRadius * 2 + 1}").formatted(net.minecraft.util.Formatting.GRAY))
+        tooltip.add(Text.literal("扫描范围: ${ScannerType.OV.scanRadius * 2 + 1}×${ScannerType.OV.scanRadius * 2 + 1}").formatted(net.minecraft.util.Formatting.GRAY))
         tooltip.add(Text.literal("⚠ OV 扫描仪 - 扫描范围更大").formatted(net.minecraft.util.Formatting.YELLOW))
     }
 
