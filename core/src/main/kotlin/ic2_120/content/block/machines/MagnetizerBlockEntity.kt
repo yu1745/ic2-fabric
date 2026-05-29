@@ -77,8 +77,9 @@ class MagnetizerBlockEntity(
         const val SLOT_UPGRADE_1 = 2
         const val SLOT_UPGRADE_2 = 3
         const val SLOT_UPGRADE_3 = 4
+        const val SLOT_BOOTS = 5
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
-        const val INVENTORY_SIZE = 5
+        const val INVENTORY_SIZE = 6
 
         private val CONNECT_DIRECTIONS = arrayOf(
             Direction.UP, Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST
@@ -93,9 +94,10 @@ class MagnetizerBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1)
+            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
+            ItemInsertRoute(intArrayOf(SLOT_BOOTS), matcher = { isValid(SLOT_BOOTS, it) }, maxPerSlot = 1)
         ),
-        extractSlots = intArrayOf(SLOT_DISCHARGING, SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3),
+        extractSlots = intArrayOf(SLOT_DISCHARGING, SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3, SLOT_BOOTS),
         markDirty = { markDirty() }
     )
 
@@ -108,6 +110,8 @@ class MagnetizerBlockEntity(
         { capacityBonus },
         { TransformerUpgradeComponent.maxInsertForTier(tier + voltageTierBonus) }
     )
+
+    private var interactingPlayer: ServerPlayerEntity? = null
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
     private val batteryDischarger = BatteryDischargerComponent(
@@ -126,13 +130,43 @@ class MagnetizerBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) {
+        if (slot == SLOT_BOOTS) {
+            handleBootSlotChange(stack)
+        }
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         inventory[slot] = stack
         if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
         markDirty()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
+
+    private fun handleBootSlotChange(newStack: ItemStack) {
+        val player = interactingPlayer ?: return
+        val oldStack = getStack(SLOT_BOOTS)
+        if (newStack.isEmpty && !oldStack.isEmpty) {
+            player.equipStack(EquipmentSlot.FEET, ItemStack.EMPTY)
+        } else if (!newStack.isEmpty && isMetalBootsByStack(newStack) && (oldStack.isEmpty || !ItemStack.areEqual(newStack, oldStack))) {
+            val oldBoots = player.getEquippedStack(EquipmentSlot.FEET).copy()
+            player.equipStack(EquipmentSlot.FEET, newStack.copyWithCount(1))
+            if (!oldBoots.isEmpty) {
+                player.inventory.offerOrDrop(oldBoots)
+            }
+        }
+    }
+    override fun removeStack(slot: Int, amount: Int): ItemStack {
+        val result = Inventories.splitStack(inventory, slot, amount)
+        if (slot == SLOT_BOOTS && getStack(SLOT_BOOTS).isEmpty) {
+            interactingPlayer?.equipStack(EquipmentSlot.FEET, ItemStack.EMPTY)
+        }
+        return result
+    }
+
+    override fun removeStack(slot: Int): ItemStack {
+        val result = Inventories.removeStack(inventory, slot)
+        if (slot == SLOT_BOOTS) {
+            interactingPlayer?.equipStack(EquipmentSlot.FEET, ItemStack.EMPTY)
+        }
+        return result
+    }
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
@@ -140,6 +174,7 @@ class MagnetizerBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_DISCHARGING -> !stack.isEmpty && stack.item is IBatteryItem
         in SLOT_UPGRADE_0..SLOT_UPGRADE_3 -> stack.item is IUpgradeItem
+        SLOT_BOOTS -> !stack.isEmpty && isMetalBootsByStack(stack)
         else -> false
     }
 
@@ -152,8 +187,16 @@ class MagnetizerBlockEntity(
 
     override fun getDisplayName(): Text = Text.translatable("block.ic2_120.magnetizer")
 
-    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler =
-        MagnetizerScreenHandler(
+    override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
+        interactingPlayer = player as? ServerPlayerEntity
+        // 将玩家脚部装备同步到鞋子槽位
+        val boots = player?.getEquippedStack(EquipmentSlot.FEET)?.copy() ?: ItemStack.EMPTY
+        if (!boots.isEmpty && isMetalBootsByStack(boots)) {
+            inventory[SLOT_BOOTS] = boots
+        } else {
+            inventory[SLOT_BOOTS] = ItemStack.EMPTY
+        }
+        return MagnetizerScreenHandler(
             syncId,
             playerInventory,
             this,
@@ -161,6 +204,7 @@ class MagnetizerBlockEntity(
             syncedData,
             itemStorage
         )
+    }
 
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
@@ -228,6 +272,8 @@ class MagnetizerBlockEntity(
         } else {
             sync.pulseTicksRemaining = 0
         }
+
+        sync.isWearingMetalBoots = if (interactingPlayer?.let { isMetalBoots(it) } == true) 1 else 0
 
         setActiveState(world, pos, state, active)
         sync.syncCurrentTickFlow()
@@ -313,8 +359,12 @@ class MagnetizerBlockEntity(
 
     private fun isMetalBoots(player: PlayerEntity): Boolean {
         val boots = player.getEquippedStack(EquipmentSlot.FEET)
-        if (boots.isEmpty) return false
-        val item = boots.item
+        return isMetalBootsByStack(boots)
+    }
+
+    private fun isMetalBootsByStack(stack: ItemStack): Boolean {
+        if (stack.isEmpty) return false
+        val item = stack.item
         if (item == Items.IRON_BOOTS || item == Items.DIAMOND_BOOTS || item == Items.NETHERITE_BOOTS) return true
         val path = net.minecraft.registry.Registries.ITEM.getId(item).path
         return path == "bronze_boots" || path == "nano_boots" || path == "quantum_boots"

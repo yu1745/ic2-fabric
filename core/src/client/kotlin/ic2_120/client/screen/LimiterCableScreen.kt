@@ -1,16 +1,15 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
 import ic2_120.client.t
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.LimiterCableScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.text.Text
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import ic2_120.client.ui.GuiBackground
+import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(handler = "limiter_cable")
 class LimiterCableScreen(
@@ -19,161 +18,79 @@ class LimiterCableScreen(
     title: Text
 ) : HandledScreen<LimiterCableScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-    private val gui = GuiSize.STANDARD
-
     init {
-        backgroundWidth = gui.width
-        backgroundHeight = gui.height
-        titleY = 6
+        backgroundWidth = 176
+        backgroundHeight = 166
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
+    }
+
+    override fun init() {
+        super.init()
+        val client = client ?: return
+
+        // Row 1: -1, -10, -100, -1000 (y=16)
+        addDrawableChild(ButtonWidget.builder(Text.literal("-1")) {
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_MINUS_1))
+        }.dimensions(x + 6, y + 16, 15, 15).build())
+
+        addDrawableChild(ButtonWidget.builder(Text.literal("-10")) {
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_MINUS_10))
+        }.dimensions(x + 24, y + 16, 25, 15).build())
+
+        addDrawableChild(ButtonWidget.builder(Text.literal("-100")) {
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_MINUS_100))
+        }.dimensions(x + 52, y + 16, 30, 15).build())
+
+        addDrawableChild(ButtonWidget.builder(Text.literal("-1000")) {
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_MINUS_1000))
+        }.dimensions(x + 85, y + 16, 35, 15).build())
+
+        // Row 2: +1, +10, +100, +1000 (y=41)
+        addDrawableChild(ButtonWidget.builder(Text.literal("+1")) {
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_PLUS_1))
+        }.dimensions(x + 6, y + 41, 15, 15).build())
+
+        addDrawableChild(ButtonWidget.builder(Text.literal("+10")) {
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_PLUS_10))
+        }.dimensions(x + 24, y + 41, 25, 15).build())
+
+        addDrawableChild(ButtonWidget.builder(Text.literal("+100")) {
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_PLUS_100))
+        }.dimensions(x + 52, y + 41, 30, 15).build())
+
+        addDrawableChild(ButtonWidget.builder(Text.literal("+1000")) {
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_PLUS_1000))
+        }.dimensions(x + 85, y + 41, 35, 15).build())
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
-        val client = client!!
-        val limit = handler.limit
+        renderBackground(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
 
-        val limitDisplay = if (limit >= 0) {
+        context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+
+        val limit = handler.limit
+        val limitDisplay = if (limit > 0) {
             t("gui.ic2_120.limiter_cable.limit_value", limit)
         } else {
             t("gui.ic2_120.limiter_cable.limit_unlimited")
         }
+        val textWidth = textRenderer.getWidth(limitDisplay)
+        val areaCenterX = 41 + (136 - 41) / 2
+        val areaCenterY = 65 + (79 - 65) / 2
+        context.drawText(textRenderer, limitDisplay,
+            x + areaCenterX - textWidth / 2,
+            y + areaCenterY - textRenderer.fontHeight / 2,
+            0x55FF55, false)
 
-        val content: UiScope.() -> Unit = {
-            // Title: current limit value
-            Text(
-                x = left + 8,
-                y = top + 18,
-                text = limitDisplay,
-                color = 0xFFFFFF,
-                shadow = false
-            )
-
-            // Row 1: -1000, -100, -10, -1
-            Flex(
-                x = left + 8,
-                y = top + 38,
-                gap = 4
-            ) {
-                Button(
-                    text = "-1000",
-                    modifier = Modifier().width(46),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_MINUS_1000)
-                        )
-                    }
-                )
-                Button(
-                    text = "-100",
-                    modifier = Modifier().width(40),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_MINUS_100)
-                        )
-                    }
-                )
-                Button(
-                    text = "-10",
-                    modifier = Modifier().width(36),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_MINUS_10)
-                        )
-                    }
-                )
-                Button(
-                    text = "-1",
-                    modifier = Modifier().width(32),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_MINUS_1)
-                        )
-                    }
-                )
-            }
-
-            // Row 2: +1, +10, +100, +1000
-            Flex(
-                x = left + 8,
-                y = top + 60,
-                gap = 4
-            ) {
-                Button(
-                    text = "+1",
-                    modifier = Modifier().width(32),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_PLUS_1)
-                        )
-                    }
-                )
-                Button(
-                    text = "+10",
-                    modifier = Modifier().width(36),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_PLUS_10)
-                        )
-                    }
-                )
-                Button(
-                    text = "+100",
-                    modifier = Modifier().width(40),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_PLUS_100)
-                        )
-                    }
-                )
-                Button(
-                    text = "+1000",
-                    modifier = Modifier().width(46),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, LimiterCableScreenHandler.BUTTON_PLUS_1000)
-                        )
-                    }
-                )
-            }
-
-            // Player inventory
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = 0,
-                playerInvY = gui.playerInvY,
-                hotbarY = gui.hotbarY
-            )
-        }
-
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y, gui.playerInvY, gui.hotbarY, GuiSize.SLOT_SIZE
-        )
-
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-        super.render(context, mouseX, mouseY, delta)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
+    companion object {
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guilimitercable.png")
+        private const val TEX_SIZE = 256
     }
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
 }

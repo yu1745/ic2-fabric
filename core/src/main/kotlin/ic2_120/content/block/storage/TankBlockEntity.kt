@@ -183,7 +183,7 @@ class TankBlockEntity(
 
     /** 获取当前流体量 (mB) */
     fun getFluidAmountMb(): Int =
-        tankInternal.amount.toInt().coerceAtLeast(0)
+        (tankInternal.amount * 1000 / FluidConstants.BUCKET).toInt().coerceAtLeast(0)
 
     // ========== ExtendedScreenHandlerFactory ==========
 
@@ -196,6 +196,7 @@ class TankBlockEntity(
         syncFluidState()
         return TankScreenHandler(
             syncId,
+            playerInventory,
             syncedData,
             ScreenHandlerContext.create(world!!, pos)
         )

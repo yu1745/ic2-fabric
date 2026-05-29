@@ -1,17 +1,18 @@
 package ic2_120.client.screen
 
 import ic2_120.client.EnergyFormatUtils
+import ic2_120.client.FluidUtils
 import ic2_120.client.t
 import ic2_120.content.block.OreWashingPlantBlock
 import ic2_120.content.screen.OreWashingPlantScreenHandler
 import ic2_120.content.sync.OreWashingPlantSync
 import ic2_120.registry.annotation.ModScreen
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.texture.SpriteAtlasTexture
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluids
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
@@ -21,12 +22,6 @@ class OreWashingPlantScreen(
     playerInventory: PlayerInventory,
     title: Text
 ) : HandledScreen<OreWashingPlantScreenHandler>(handler, playerInventory, title) {
-
-    private val waterSprite by lazy {
-        MinecraftClient.getInstance()
-            .getSpriteAtlas(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE)
-            .apply(WATER_STILL_ID)
-    }
 
     init {
         backgroundWidth = 176
@@ -79,15 +74,27 @@ class OreWashingPlantScreen(
         }
 
         // 储水纹理 (64,23)-(76,70) = 12x47，自下而上
-        if (waterAmountDroplets > 0) {
+        if (waterAmountDroplets > 0) run {
+            val fluid = Fluids.WATER
+            val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return@run
+            val sprite = handler.getFluidSprites(null, null, fluid.defaultState).getOrNull(0) ?: return@run
+            val color = FluidUtils.getFluidColor(fluid)
+            if (color == -1) return@run
+            val r = ((color shr 16) and 0xFF) / 255f
+            val g = ((color shr 8) and 0xFF) / 255f
+            val b = (color and 0xFF) / 255f
             val fillHeight = (WATER_H * waterFraction).toInt().coerceAtLeast(1)
-            context.enableScissor(
-                left + WATER_X,
-                top + WATER_Y + WATER_H - fillHeight,
-                left + WATER_X + WATER_W,
-                top + WATER_Y + WATER_H
-            )
-            context.drawSprite(left + WATER_X, top + WATER_Y, 0, WATER_W, WATER_H, waterSprite, WATER_R, WATER_G, WATER_B, 1f)
+            val sx = left + WATER_X
+            val sy = top + WATER_Y
+            val fillY = sy + WATER_H - fillHeight
+            context.enableScissor(sx, fillY, sx + WATER_W, sy + WATER_H)
+            for (cy in fillY until (sy + WATER_H) step 16) {
+                val tileH = minOf(16, sy + WATER_H - cy)
+                for (cx in sx until (sx + WATER_W) step 16) {
+                    val tileW = minOf(16, sx + WATER_W - cx)
+                    context.drawSprite(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                }
+            }
             context.disableScissor()
         }
 
@@ -199,9 +206,6 @@ class OreWashingPlantScreen(
         private const val WATER_Y = 23
         private const val WATER_W = 12
         private const val WATER_H = 47
-        private const val WATER_R = 0.25f
-        private const val WATER_G = 0.45f
-        private const val WATER_B = 0.95f
 
         // 容量标示 (182,48)-(193,94) = 11x46
         private const val TANK_OVERLAY_U = 182

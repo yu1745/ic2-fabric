@@ -55,15 +55,15 @@ class WindGeneratorScreenHandler(
         val batterySlotSpec = itemStorage?.deriveSlotSpec(WindGeneratorBlockEntity.BATTERY_SLOT)
             ?: SLOT_SPEC_FALLBACK_BATTERY
 
-        addTrackedSlot(PredicateSlot(blockInventory, WindGeneratorBlockEntity.BATTERY_SLOT, 0, 0, batterySlotSpec), WindGeneratorBlockEntity.BATTERY_SLOT)
+        addTrackedSlot(PredicateSlot(blockInventory, WindGeneratorBlockEntity.BATTERY_SLOT, 80, 32, batterySlotSpec), WindGeneratorBlockEntity.BATTERY_SLOT)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 79 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 137))
         }
     }
 
@@ -75,7 +75,7 @@ class WindGeneratorScreenHandler(
             stack = stackInSlot.copy()
             when {
                 index == SLOT_BATTERY_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                index in PLAYER_INV_START..HOTBAR_END -> {
+                index in PLAYER_INV_START until HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY

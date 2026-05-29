@@ -1,17 +1,19 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.t
-import ic2_120.client.ui.GuiBackground
+import ic2_120.client.FluidUtils
 import ic2_120.content.block.CokeKilnBlock
 import ic2_120.content.screen.CokeKilnScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.content.sync.CokeKilnSync
 import ic2_120.registry.annotation.ModScreen
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.registry.Registries
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 
 @ModScreen(block = CokeKilnBlock::class)
 class CokeKilnScreen(
@@ -19,8 +21,6 @@ class CokeKilnScreen(
     playerInventory: PlayerInventory,
     title: Text
 ) : HandledScreen<CokeKilnScreenHandler>(handler, playerInventory, title) {
-
-    private val ui = ComposeUI()
 
     init {
         backgroundWidth = GUI_SIZE.width
@@ -32,70 +32,99 @@ class CokeKilnScreen(
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context, mouseX, mouseY, delta)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
-        val remainingSecs = if (handler.sync.progress < CokeKilnSync.PROGRESS_MAX) {
-            (CokeKilnSync.PROGRESS_MAX - handler.sync.progress) / 20
-        } else 0
-        val timeText = t("gui.ic2_120.coke_kiln.time_remaining", remainingSecs)
-        val structureText = if (handler.sync.structureValid > 0) t("gui.ic2_120.coke_kiln.structure_valid") else t("gui.ic2_120.coke_kiln.structure_invalid")
 
-        val content: UiScope.() -> Unit = {
-            Column(
-                x = left + 8,
-                y = top + 8,
-                spacing = 6,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Text(title.string, color = 0xFFFFFF)
-                Text(structureText, color = 0xAAAAAA, shadow = false)
-                Text(timeText, color = 0xAAAAAA, shadow = false)
-                Flex(direction = FlexDirection.ROW, justifyContent = JustifyContent.SPACE_BETWEEN, alignItems = AlignItems.CENTER) {
-                    SlotAnchor(id = slotAnchorId(CokeKilnScreenHandler.SLOT_INPUT), width = CokeKilnScreenHandler.SLOT_SIZE, height = CokeKilnScreenHandler.SLOT_SIZE)
-                    Text("->", color = 0xFFFFFF)
-                    SlotAnchor(id = slotAnchorId(CokeKilnScreenHandler.SLOT_OUTPUT), width = CokeKilnScreenHandler.SLOT_SIZE, height = CokeKilnScreenHandler.SLOT_SIZE)
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
+        // 工作进度 (181,8)-(195,21) = 14×13 → (81,27)，满纹理从上至下减少
+        val progressFrac = if (CokeKilnSync.PROGRESS_MAX > 0) {
+            (handler.sync.progress.coerceIn(0, CokeKilnSync.PROGRESS_MAX).toFloat() / CokeKilnSync.PROGRESS_MAX).coerceIn(0f, 1f)
+        } else 0f
+        if (handler.sync.progress > 0) {
+            val drainedH = (PROGRESS_H * progressFrac).toInt()
+            context.enableScissor(
+                left + PROGRESS_X,
+                top + PROGRESS_Y + drainedH,
+                left + PROGRESS_X + PROGRESS_W,
+                top + PROGRESS_Y + PROGRESS_H
+            )
+            context.drawTexture(TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
+                PROGRESS_U.toFloat(), PROGRESS_V.toFloat(),
+                PROGRESS_W, PROGRESS_H, TEX_SIZE, TEX_SIZE)
+            context.disableScissor()
+        }
+
+        // 流体槽 (115,41) 16×16，有流体时满平铺
+        val fluidAmount = handler.sync.fluidAmount.coerceAtLeast(0)
+        if (fluidAmount > 0) run {
+            val fluid = Registries.FLUID.get(handler.sync.fluidRawId)
+            val fluidHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return@run
+            val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultState).getOrNull(0) ?: return@run
+            val color = FluidUtils.getFluidColor(fluid)
+            if (color == -1) return@run
+            val r = ((color shr 16) and 0xFF) / 255f
+            val g = ((color shr 8) and 0xFF) / 255f
+            val b = (color and 0xFF) / 255f
+            val sx = left + TANK_X + (SLOT_S - TANK_S) / 2
+            val sy = top + TANK_Y + (SLOT_S - TANK_S) / 2
+            // 居中的 16×16 tile（居中在槽内）
+            for (cy in sy until (sy + TANK_S) step 16) {
+                val tileH = minOf(16, sy + TANK_S - cy)
+                for (cx in sx until (sx + TANK_S) step 16) {
+                    val tileW = minOf(16, sx + TANK_S - cx)
+                    context.drawSprite(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
                 }
             }
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = CokeKilnScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
-            )
         }
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
-
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context = context,
-            screenX = x,
-            screenY = y,
-            playerInvY = GUI_SIZE.playerInvY,
-            hotbarY = GUI_SIZE.hotbarY,
-            slotSize = GuiSize.SLOT_SIZE
-        )
-        super.render(context, mouseX, mouseY, delta)
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
         drawMouseoverTooltip(context, mouseX, mouseY)
+
+        // 流体槽悬停
+        val relX = mouseX - left
+        val relY = mouseY - top
+        if (relX in TANK_X until TANK_X + SLOT_S && relY in TANK_Y until TANK_Y + SLOT_S) {
+            val lines = if (fluidAmount > 0) {
+                val fluid = Registries.FLUID.get(handler.sync.fluidRawId)
+                val mb = fluidAmount / DROPLETS_PER_MB
+                val capMb = (8 * FluidConstants.BUCKET / DROPLETS_PER_MB).toLong()
+                listOf(Text.literal(fluid.defaultState.blockState.block.name.string),
+                    Text.literal("${"%,d".format(mb)} / ${"%,d".format(capMb)} mB"))
+            } else {
+                listOf(Text.literal("空"))
+            }
+            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+        }
     }
 
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
-
     companion object {
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicokeoven.png")
+        private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD
+        private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
+
+        private const val BG_W = 176
+        private const val BG_H = 161
+        private const val SLOT_S = 18
+        private const val TANK_S = 16
+
+        // 工作进度 (181,8)-(195,21) = 14×13 → (81,27)
+        private const val PROGRESS_U = 181
+        private const val PROGRESS_V = 8
+        private const val PROGRESS_W = 14
+        private const val PROGRESS_H = 13
+        private const val PROGRESS_X = 81
+        private const val PROGRESS_Y = 27
+
+        // 流体槽 (115,41) 16×16
+        private const val TANK_X = 115
+        private const val TANK_Y = 41
     }
 }

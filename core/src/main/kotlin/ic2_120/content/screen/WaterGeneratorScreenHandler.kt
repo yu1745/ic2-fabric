@@ -66,9 +66,9 @@ class WaterGeneratorScreenHandler(
         val batterySlotSpec = itemStorage?.deriveSlotSpec(WaterGeneratorBlockEntity.BATTERY_SLOT)
             ?: SLOT_SPEC_FALLBACK_BATTERY
 
-        addTrackedSlot(PredicateSlot(blockInventory, WaterGeneratorBlockEntity.FUEL_SLOT, 0, 0, fuelSlotSpec), WaterGeneratorBlockEntity.FUEL_SLOT)
-        addTrackedSlot(PredicateSlot(blockInventory, WaterGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 0, 0, emptyContainerSlotSpec), WaterGeneratorBlockEntity.EMPTY_CONTAINER_SLOT)
-        addTrackedSlot(PredicateSlot(blockInventory, WaterGeneratorBlockEntity.BATTERY_SLOT, 0, 0, batterySlotSpec), WaterGeneratorBlockEntity.BATTERY_SLOT)
+        addTrackedSlot(PredicateSlot(blockInventory, WaterGeneratorBlockEntity.FUEL_SLOT, 38, 18, fuelSlotSpec), WaterGeneratorBlockEntity.FUEL_SLOT)
+        addTrackedSlot(PredicateSlot(blockInventory, WaterGeneratorBlockEntity.EMPTY_CONTAINER_SLOT, 38, 57, emptyContainerSlotSpec), WaterGeneratorBlockEntity.EMPTY_CONTAINER_SLOT)
+        addTrackedSlot(PredicateSlot(blockInventory, WaterGeneratorBlockEntity.BATTERY_SLOT, 134, 38, batterySlotSpec), WaterGeneratorBlockEntity.BATTERY_SLOT)
 
         // 4 个升级槽
         for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
@@ -76,8 +76,8 @@ class WaterGeneratorScreenHandler(
                 PredicateSlot(
                     blockInventory,
                     WaterGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i],
-                    0,
-                    0,
+                    176,
+                    8 + i * 18,
                     upgradeSlotSpec
                 ),
                 WaterGeneratorBlockEntity.SLOT_UPGRADE_INDICES[i]
@@ -86,11 +86,11 @@ class WaterGeneratorScreenHandler(
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 79 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 137))
         }
     }
 
@@ -108,7 +108,7 @@ class WaterGeneratorScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                index in PLAYER_INV_START..HOTBAR_END -> {
+                index in PLAYER_INV_START until HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY

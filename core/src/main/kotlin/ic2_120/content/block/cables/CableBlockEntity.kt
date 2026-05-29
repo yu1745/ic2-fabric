@@ -35,8 +35,8 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     /** 本地暂存能量，仅用于 NBT 存取和电网重建时的中转。 */
     var localEnergy: Long = 0
 
-    /** 限流值，-1 表示不限流。由限流导线 GUI 设置。 */
-    var configuredLimit: Long = -1
+    /** 限流值，0 表示不限流。由限流导线 GUI 设置。 */
+    var configuredLimit: Long = 0
 
     /** 有效传输速率，受限于 [configuredLimit]。 */
     val effectiveTransferRate: Long
@@ -76,13 +76,13 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     override fun readNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.readNbt(nbt, lookup)
         localEnergy = nbt.getLong(NBT_ENERGY)
-        configuredLimit = if (nbt.contains(NBT_LIMIT)) nbt.getLong(NBT_LIMIT) else -1
+        configuredLimit = if (nbt.contains(NBT_LIMIT)) nbt.getLong(NBT_LIMIT) else 0
     }
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
         nbt.putLong(NBT_ENERGY, network?.getEnergySharePerCable() ?: localEnergy)
-        if (configuredLimit >= 0) {
+        if (configuredLimit > 0) {
             nbt.putLong(NBT_LIMIT, configuredLimit)
         }
     }
