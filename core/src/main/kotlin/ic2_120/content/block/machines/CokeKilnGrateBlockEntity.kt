@@ -83,6 +83,9 @@ class CokeKilnGrateBlockEntity(
 
     constructor(pos: BlockPos, state: BlockState) : this(CokeKilnGrateBlockEntity::class.type(), pos, state)
 
+    fun getStoredAmount(): Long = creosoteTank.amount
+    fun getStoredFluidRawId(): Int = if (creosoteTank.variant.isBlank) -1 else net.minecraft.registry.Registries.FLUID.getRawId(creosoteTank.variant.fluid)
+
     fun canAcceptDroplets(amount: Long): Boolean = amount > 0 && (TANK_CAPACITY - creosoteTank.amount) >= amount
 
     fun insertDroplets(amount: Long): Long {

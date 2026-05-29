@@ -73,7 +73,7 @@ class CokeKilnBlockEntity(
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
-            ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { getRecipe(it) != null }, maxPerSlot = 1)
+            ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { getRecipe(it) != null })
         ),
         extractSlots = intArrayOf(SLOT_OUTPUT),
         markDirty = { markDirty() }
@@ -94,6 +94,13 @@ class CokeKilnBlockEntity(
         refreshStructureCacheIfNeeded(world, pos)
         sync.structureValid = if (cachedStructureValid) 1 else 0
         sync.progress = progress
+        sync.fluidAmount = 0
+        sync.fluidRawId = -1
+        val grateBe = getCachedGrateEntity(world)
+        if (grateBe != null) {
+            sync.fluidAmount = grateBe.getStoredAmount().toInt()
+            sync.fluidRawId = grateBe.getStoredFluidRawId()
+        }
         val recipe = getRecipe(getStack(SLOT_INPUT))
         if (recipe == null || !cachedStructureValid || !canOutput(recipe) || !hasTankSpace(recipe)) {
             progress = 0

@@ -52,17 +52,17 @@ class CannerScreenHandler(
         checkSize(blockInventory, CannerBlockEntity.INVENTORY_SIZE)
         addProperties(propertyDelegate)
 
-        // 左上容器输入 (41,16)
-        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_CONTAINER, 41, 16,
-            itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_CONTAINER) ?: SlotSpec()
-        ), CannerBlockEntity.SLOT_CONTAINER)
+        // 左输入槽 (41,16)
+        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_INPUT, 41, 16,
+            itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_INPUT) ?: SlotSpec()
+        ), CannerBlockEntity.SLOT_INPUT)
 
         // 中列材料输入 (80,43) — 根据模式锁定
         val materialSpec = itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_MATERIAL) ?: SlotSpec()
         addTrackedSlot(object : PredicateSlot(blockInventory, CannerBlockEntity.SLOT_MATERIAL, 80, 43, materialSpec) {
             override fun canInsert(stack: ItemStack): Boolean {
                 val mode = sync.getMode()
-                if (mode == CannerSync.Mode.EMPTY_LIQUID || mode == CannerSync.Mode.BOTTLE_LIQUID) return false
+                if (mode == CannerSync.Mode.EMPTY_LIQUID) return false
                 return super.canInsert(stack)
             }
         }, CannerBlockEntity.SLOT_MATERIAL)
@@ -85,16 +85,6 @@ class CannerScreenHandler(
                 CannerBlockEntity.SLOT_UPGRADE_INDICES[i]
             )
         }
-
-        // 左液槽底部空容器输出 (0,0) — ComposeUI 已不再使用，放无效位置
-        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_LEFT_EMPTY, -1000, -1000,
-            itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_LEFT_EMPTY) ?: SlotSpec(canInsert = { false }, canTake = { true })
-        ), CannerBlockEntity.SLOT_LEFT_EMPTY)
-
-        // 右液槽顶部空容器输入 (0,0) — ComposeUI 已不再使用，放无效位置
-        addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_RIGHT_INPUT, -1000, -1000,
-            itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_RIGHT_INPUT) ?: SlotSpec()
-        ), CannerBlockEntity.SLOT_RIGHT_INPUT)
 
         // 玩家背包 (8,102) 3行 + 快捷栏 (8,160)
         for (row in 0 until 3) {
@@ -142,7 +132,7 @@ class CannerScreenHandler(
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
-                index == SLOT_OUTPUT_INDEX || index == SLOT_LEFT_EMPTY_INDEX -> {
+                index == SLOT_OUTPUT_INDEX -> {
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
@@ -154,7 +144,7 @@ class CannerScreenHandler(
                     if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
-                index in PLAYER_INV_START..HOTBAR_END -> {
+                index in PLAYER_INV_START until HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                     if (!moved) return ItemStack.EMPTY
@@ -179,16 +169,14 @@ class CannerScreenHandler(
     companion object {
         const val SLOT_SIZE = 18
 
-        const val SLOT_CONTAINER_INDEX = 0
+        const val SLOT_INPUT_INDEX = 0
         const val SLOT_MATERIAL_INDEX = 1
         const val SLOT_OUTPUT_INDEX = 2
         const val SLOT_DISCHARGING_INDEX = 3
         const val SLOT_UPGRADE_INDEX_START = 4
         const val SLOT_UPGRADE_INDEX_END = 7
-        const val SLOT_LEFT_EMPTY_INDEX = 8
-        const val SLOT_RIGHT_INPUT_INDEX = 9
-        const val PLAYER_INV_START = 10
-        const val HOTBAR_END = 46
+        const val PLAYER_INV_START = 8
+        const val HOTBAR_END = 44
         const val BUTTON_ID_MODE_CYCLE = 0
         const val BUTTON_ID_SWAP_TANKS = 1
 

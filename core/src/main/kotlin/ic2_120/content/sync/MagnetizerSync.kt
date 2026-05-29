@@ -35,6 +35,7 @@ class MagnetizerSync(
     var fenceCount by schema.int("FenceCount")
     var effectiveHeight by schema.int("EffectiveHeight", default = BASE_HEIGHT)
     var redstonePowered by schema.int("RedstonePowered")
+    var isWearingMetalBoots by schema.int("IsWearingMetalBoots")
 
     private val flow = EnergyFlowSync(schema, this)
 

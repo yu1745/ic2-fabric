@@ -9,4 +9,6 @@ class CokeKilnSync(schema: SyncSchema) {
 
     var progress by schema.int("Progress")
     var structureValid by schema.int("StructureValid")
+    var fluidAmount by schema.int("FluidAmount")
+    var fluidRawId by schema.int("FluidRawId", default = -1)
 }

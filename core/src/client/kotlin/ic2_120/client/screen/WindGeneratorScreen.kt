@@ -1,20 +1,14 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
 import ic2_120.client.EnergyFormatUtils
-import ic2_120.client.ui.EnergyBar
-import ic2_120.client.ui.GuiBackground
 import ic2_120.client.t
 import ic2_120.content.block.WindGeneratorBlock
-import ic2_120.content.block.machines.WindGeneratorBlockEntity
-import ic2_120.content.screen.WindGeneratorScreenHandler
 import ic2_120.content.screen.GuiSize
-import ic2_120.content.sync.WindGeneratorSync
+import ic2_120.content.screen.WindGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
@@ -25,117 +19,43 @@ class WindGeneratorScreen(
     title: Text
 ) : HandledScreen<WindGeneratorScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-
     init {
         backgroundWidth = GUI_SIZE.width
         backgroundHeight = GUI_SIZE.height
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
-        // 背景绘制已移至 render()，以控制 ui.render 在 super.render 之前执行
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context)
+        super.render(context, mouseX, mouseY, delta)
+
         val left = x
         val top = y
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+
+        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+
+        // 侧边文字
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()
-        val cap = WindGeneratorSync.ENERGY_CAPACITY
-        val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
-        val isGenerating = handler.sync.isGenerating != 0
-
         val inputText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
         val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
         val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(outputText))
         val sideTextX = left - sideTextWidth - 4
-
-        val content: UiScope.() -> Unit = {
-            Column(
-                x = left + 8,
-                y = top + 8,
-                spacing = 6,
-                modifier = Modifier.EMPTY.width(GUI_SIZE.contentWidth)
-            ) {
-                Flex(direction = FlexDirection.ROW, alignItems = AlignItems.CENTER, gap = 8) {
-                    // 风力图标
-                    Image(
-                        texture = Identifier("ic2", "textures/gui/overlay/solar_sun.png"),
-                        width = 16,
-                        height = 16,
-                        u = if (isGenerating) 16f else 0f,
-                        v = 0f,
-                        textureWidth = 32,
-                        textureHeight = 16
-                    )
-                    Text(title.string, color = 0xFFFFFF)
-                    Text("${"%,d".format(energy)} / ${"%,d".format(cap)} EU", color = 0xFFFFFF, shadow = false)
-                }
-                EnergyBar(
-                    energyFraction,
-                    barHeight = 12,
-                )
-
-                Flex(
-                    direction = FlexDirection.ROW,
-                    justifyContent = JustifyContent.CENTER,
-                    alignItems = AlignItems.CENTER,
-                    gap = 4
-                ) {
-                    SlotAnchor(
-                        id = slotAnchorId(WindGeneratorBlockEntity.BATTERY_SLOT),
-                        width = WindGeneratorScreenHandler.SLOT_SIZE,
-                        height = WindGeneratorScreenHandler.SLOT_SIZE
-                    )
-                }
-            }
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = WindGeneratorScreenHandler.PLAYER_INV_START,
-                playerInvY = GUI_SIZE.playerInvY,
-                hotbarY = GUI_SIZE.hotbarY
-            )
-        }
-
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
-            GUI_SIZE.playerInvY,
-            GUI_SIZE.hotbarY,
-            GuiSize.SLOT_SIZE
-        )
-
-        // 再绘制 UI（slot 背景、能量条等）
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-
-        // 最后绘制物品（包括耐久条），确保物品在顶层
-        super.render(context, mouseX, mouseY, delta)
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
+
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
-    }
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
-
     companion object {
+        private val TEXTURE = Identifier("ic2", "textures/gui/guiwindgenerator.png")
+        private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD
+
+        private const val BG_W = 176
+        private const val BG_H = 161
     }
 }

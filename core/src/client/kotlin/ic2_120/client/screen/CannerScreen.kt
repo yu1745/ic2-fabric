@@ -157,12 +157,14 @@ class CannerScreen(
 
         // 额外纹理
         when (mode) {
-            CannerSync.Mode.EMPTY_LIQUID, CannerSync.Mode.BOTTLE_LIQUID -> {
+            CannerSync.Mode.EMPTY_LIQUID -> {
                 context.drawTexture(TEXTURE, left + EXTRA_EB_X, top + EXTRA_EB_Y,
                     EXTRA_EB_U.toFloat(), EXTRA_EB_V.toFloat(), EXTRA_EB_W, EXTRA_EB_H, TEX_SIZE, TEX_SIZE)
             }
-            CannerSync.Mode.ENRICH_LIQUID -> {
-                context.drawTexture(TEXTURE, left + EXTRA_ENRICH_X, top + EXTRA_ENRICH_Y,
+            CannerSync.Mode.BOTTLE_LIQUID -> {
+                context.drawTexture(TEXTURE, left + EXTRA_EB_X, top + EXTRA_EB_Y,
+                    EXTRA_EB_U.toFloat(), EXTRA_EB_V.toFloat(), EXTRA_EB_W, EXTRA_EB_H, TEX_SIZE, TEX_SIZE)
+                context.drawTexture(TEXTURE, left + EXTRA_ENRICH_X, top + EXTRA_ENRICH_Y - 1,
                     EXTRA_ENRICH_U.toFloat(), EXTRA_ENRICH_V.toFloat(), EXTRA_ENRICH_W, EXTRA_ENRICH_H, TEX_SIZE, TEX_SIZE)
             }
             else -> {}

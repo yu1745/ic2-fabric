@@ -160,7 +160,7 @@ object ModFluids {
         registerFluid("biofuel", "biofuel", "biofuel", tintArgb = 0xFF97CA00.toInt())
         registerFluid("biomass", "biomass", "biomass", tintArgb = 0xFF476A3C.toInt())
         // 蒸馏水视觉复用原版水纹理
-        registerFluid("distilled_water", "water_still", "water_flow")
+        registerFluid("distilled_water", "water_still", "water_flow", tintArgb = 0xFF3F76E4.toInt())
         // 建筑泡沫：客户端渲染复用通用流体贴图 + 着色（见 ModFluidClient）
         registerFluid("construction_foam", "fluid_still", "fluid_flow", tintArgb = 0xFFB4B4AF.toInt())
         registerFluid("creosote", "fluid_still", "fluid_flow", tintArgb = 0xFF4E2D14.toInt())
@@ -168,6 +168,10 @@ object ModFluids {
         // 蒸汽和过热蒸汽不能装在桶里（蒸汽单元/过热蒸汽单元代替）
         registerFluid("steam", "fluid_still", "fluid_flow", tintArgb = 0xFFD0D0D0.toInt(), withBucket = false, rises = true)
         registerFluid("superheated_steam", "fluid_still", "fluid_flow", tintArgb = 0xFFFFBEBE.toInt(), withBucket = false, rises = true)
+
+        // 原版水着色（洗矿机、装罐机等机器 GUI 流体渲染使用）
+        fluidTintColors[Fluids.WATER] = 0xFF3F76E4.toInt()
+        fluidTintColors[Fluids.FLOWING_WATER] = 0xFF3F76E4.toInt()
 
         // 注册流体桶的玩家存储查找器，让 AE2 等模组能正确交互
         registerBucketPlayerStorage()

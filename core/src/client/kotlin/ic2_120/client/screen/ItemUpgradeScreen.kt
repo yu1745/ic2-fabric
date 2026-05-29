@@ -1,17 +1,16 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.ui.GuiBackground
 import ic2_120.client.t
-import ic2_120.content.screen.GuiSize
 import ic2_120.content.screen.ItemUpgradeScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.Direction
 
 @ModScreen(handler = "item_upgrade")
@@ -21,140 +20,60 @@ class ItemUpgradeScreen(
     title: Text
 ) : HandledScreen<ItemUpgradeScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-    private val gui = GuiSize.STANDARD
-
     init {
-        backgroundWidth = gui.width
-        backgroundHeight = gui.height
-        titleY = 6
+        backgroundWidth = 176
+        backgroundHeight = 166
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
+    }
+
+    override fun init() {
+        super.init()
+        val client = client ?: return
+
+        addDrawableChild(ButtonWidget.builder(Text.literal(t("gui.ic2_120.item_upgrade.set_filter"))) {
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_SET_FILTER))
+        }.dimensions(x + 27, y + 37, 20, 14).build())
+
+        addDrawableChild(ButtonWidget.builder(Text.literal(t("gui.ic2_120.item_upgrade.cycle_direction_short"))) {
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_CYCLE_DIRECTION))
+        }.dimensions(x + 108, y + 60, 20, 12).build())
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
-        val client = client!!
+        renderBackground(context)
+        super.render(context, mouseX, mouseY, delta)
 
-        val dirOrdinal = handler.directionOrdinal
-        val dirName = if (dirOrdinal in 0..5) {
-            val dir = Direction.entries[dirOrdinal]
-            t("gui.ic2_120.direction.${dir.name.lowercase()}")
-        } else {
-            t("gui.ic2_120.fluid_upgrade.any_direction")
-        }
+        context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+
+        // 过滤文本 (9,18)-(104,32)
         val filterName = if (handler.itemRawId > 0) {
-            val item = Registries.ITEM.get(handler.itemRawId)
-            item.name.string
+            Registries.ITEM.get(handler.itemRawId).name.string
         } else {
             t("gui.ic2_120.item_upgrade.no_filter")
         }
+        val filterText = t("gui.ic2_120.item_upgrade.filter_display", filterName)
+        val filterTextX = x + 9
+        val filterTextY = y + 18 + (14 - textRenderer.fontHeight) / 2
+        context.drawText(textRenderer, filterText, filterTextX, filterTextY, 0x55FF55, false)
 
-        val content: UiScope.() -> Unit = {
-            Flex(
-                x = left + 8,
-                y = top + 18,
-                alignItems = AlignItems.CENTER,
-                gap = 8
-            ) {
-                Text(
-                    t("gui.ic2_120.fluid_upgrade.direction", dirName),
-                    color = 0xFFFFFF
-                )
-                Button(
-                    text = t("gui.ic2_120.fluid_upgrade.cycle_direction_short"),
-                    modifier = Modifier().width(50),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_CYCLE_DIRECTION)
-                        )
-                    }
-                )
-            }
-
-            Flex(
-                x = left + 8,
-                y = top + 38,
-                alignItems = AlignItems.CENTER,
-                gap = 4
-            ) {
-                SlotAnchor(
-                    id = slotAnchorId(ItemUpgradeScreenHandler.SLOT_CONTAINER),
-                    width = GuiSize.SLOT_SIZE,
-                    height = GuiSize.SLOT_SIZE
-                )
-                Button(
-                    text = t("gui.ic2_120.item_upgrade.set_filter"),
-                    modifier = Modifier().width(56),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_SET_FILTER)
-                        )
-                    }
-                )
-                Button(
-                    text = t("gui.ic2_120.item_upgrade.clear_filter"),
-                    modifier = Modifier().width(56),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_CLEAR_FILTER)
-                        )
-                    }
-                )
-            }
-
-            Text(
-                x = left + 8,
-                y = top + 62,
-                text = t("gui.ic2_120.item_upgrade.filter_display", filterName),
-                color = if (handler.itemRawId > 0) 0x55FF55 else 0xAAAAAA,
-                shadow = false
-            )
-
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = ItemUpgradeScreenHandler.PLAYER_INV_START,
-                playerInvY = gui.playerInvY,
-                hotbarY = gui.hotbarY
-            )
+        // 方向文本 (9,59)-(104,73)
+        val dirOrdinal = handler.directionOrdinal
+        val dirName = if (dirOrdinal in 0..5) {
+            t("gui.ic2_120.direction.${Direction.entries[dirOrdinal].name.lowercase()}")
+        } else {
+            t("gui.ic2_120.fluid_upgrade.any_direction")
         }
+        val dirText = t("gui.ic2_120.fluid_upgrade.direction", dirName)
+        context.drawText(textRenderer, dirText, x + 9, y + 59 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
 
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        val inset = GuiBackground.SLOT_ANCHOR_INSET
-        val slotSize = GuiSize.SLOT_SIZE
-        val slot = handler.slots[ItemUpgradeScreenHandler.SLOT_CONTAINER]
-        GuiBackground.drawVanillaLikeSlot(
-            context,
-            x + slot.x - inset,
-            y + slot.y - inset,
-            slotSize,
-            slotSize
-        )
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y, gui.playerInvY, gui.hotbarY, slotSize
-        )
-
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-        super.render(context, mouseX, mouseY, delta)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
+    companion object {
+        private val TEXTURE = Identifier("ic2", "textures/gui/guiupgrade.png")
+        private const val TEX_SIZE = 256
     }
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
 }

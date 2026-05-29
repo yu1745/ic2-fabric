@@ -927,7 +927,7 @@ class ElectricWrench : Item(FabricItemSettings().maxCount(1)), IElectricTool {
 @ModItem(name = "iridium_drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:pickaxes", "minecraft:shovels"])
 class IridiumDrill : ElectricMiningDrillItem(
     FabricItemSettings(),
-    miningToolFactories = listOf({ ItemStack(Items.DIAMOND_PICKAXE) }, { ItemStack(Items.DIAMOND_SHOVEL) }),
+    miningToolFactories = listOf({ ItemStack(Items.NETHERITE_PICKAXE) }, { ItemStack(Items.NETHERITE_SHOVEL) }),
     baseEnergyPerBlock = 800L
 ) {
     override val tier = 3

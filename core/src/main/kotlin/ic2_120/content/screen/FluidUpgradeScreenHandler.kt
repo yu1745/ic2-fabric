@@ -47,6 +47,8 @@ class FluidUpgradeScreenHandler(
 
     /** 方向是否激活 */
     fun isDirectionActive(dirIdx: Int): Boolean = propertyDelegate.get(PROP_DIR_BASE + dirIdx) != 0
+    /** 当前切换方向索引 */
+    val currentDirectionIndex: Int get() = propertyDelegate.get(PROP_DIR_INDEX)
     /** 流体的原始注册 ID（0=无过滤） */
     val fluidRawId: Int get() = propertyDelegate.get(PROP_FLUID)
 
@@ -56,11 +58,13 @@ class FluidUpgradeScreenHandler(
 
         const val BUTTON_SET_FILTER = 0
         const val BUTTON_CLEAR_FILTER = 1
+        const val BUTTON_CYCLE_DIRECTION = 8
         const val BUTTON_TOGGLE_DIR = 10  // 10-15
 
         private const val PROP_DIR_BASE = 0    // 0-5: 6 directions
         private const val PROP_FLUID = 6
-        private const val PROPERTY_COUNT = 7
+        private const val PROP_DIR_INDEX = 7   // 当前切换方向索引
+        private const val PROPERTY_COUNT = 8
 
         const val PLAYER_INV_START = SLOT_CONTAINER_COUNT
         private const val PLAYER_INV_END = PLAYER_INV_START + 27
@@ -77,19 +81,19 @@ class FluidUpgradeScreenHandler(
         addProperties(propertyDelegate)
 
         // 容器槽位
-        addSlot(object : Slot(containerInventory, SLOT_CONTAINER, 0, 0) {
+        addSlot(object : Slot(containerInventory, SLOT_CONTAINER, 8, 35) {
             override fun getMaxItemCount(): Int = 1
         })
 
         // 玩家背包
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
+                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
             }
         }
         // 快捷栏
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 0, 0))
+            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
 
         refreshProperties()
@@ -108,6 +112,10 @@ class FluidUpgradeScreenHandler(
             }
             BUTTON_CLEAR_FILTER -> {
                 FluidPipeUpgradeComponent.writeFilter(upgradeStack, null)
+            }
+            BUTTON_CYCLE_DIRECTION -> {
+                val idx = propertyDelegate.get(PROP_DIR_INDEX)
+                propertyDelegate.set(PROP_DIR_INDEX, (idx + 1) % 6)
             }
             in BUTTON_TOGGLE_DIR until BUTTON_TOGGLE_DIR + 6 -> {
                 val dirIdx = id - BUTTON_TOGGLE_DIR

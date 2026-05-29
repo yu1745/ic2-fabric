@@ -1,17 +1,16 @@
 package ic2_120.client.screen
 
-import ic2_120.client.compose.*
-import ic2_120.client.ui.GuiBackground
 import ic2_120.client.t
 import ic2_120.content.screen.FluidUpgradeScreenHandler
-import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.Direction
 
 @ModScreen(handler = "fluid_upgrade")
@@ -21,181 +20,55 @@ class FluidUpgradeScreen(
     title: Text
 ) : HandledScreen<FluidUpgradeScreenHandler>(handler, playerInventory, title) {
 
-    private val ui = ComposeUI()
-    private val gui = GuiSize.STANDARD
-
     init {
-        backgroundWidth = gui.width
-        backgroundHeight = gui.height
-        titleY = 6
+        backgroundWidth = 176
+        backgroundHeight = 166
     }
 
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
+        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
     }
 
-    override fun drawForeground(context: DrawContext, mouseX: Int, mouseY: Int) {
-        // 标题由 ComposeUI 绘制，不调用 super 避免重复
+    override fun init() {
+        super.init()
+        val client = client ?: return
+
+        addDrawableChild(ButtonWidget.builder(Text.literal(t("gui.ic2_120.fluid_upgrade.set_filter"))) {
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_SET_FILTER))
+        }.dimensions(x + 27, y + 37, 20, 14).build())
+
+        addDrawableChild(ButtonWidget.builder(Text.literal(t("gui.ic2_120.fluid_upgrade.cycle_direction_short"))) {
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_CYCLE_DIRECTION))
+        }.dimensions(x + 108, y + 60, 20, 12).build())
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
-        val client = client!!
+        renderBackground(context)
+        super.render(context, mouseX, mouseY, delta)
 
-        // 当前状态
+        context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+
+        // 流体限制文本 (9,18)-(104,32)
         val filterName = if (handler.fluidRawId > 0) {
             val fluid = Registries.FLUID.get(handler.fluidRawId)
-            val block = fluid.defaultState.blockState.block
-            if (block != null && block.name.string.isNotBlank()) {
-                block.name.string
-            } else {
-                Registries.FLUID.getId(fluid).path
-            }
+            fluid.defaultState.blockState.block.name.string
         } else {
             t("gui.ic2_120.fluid_upgrade.no_filter")
         }
+        val filterText = t("gui.ic2_120.fluid_upgrade.filter_display", filterName)
+        context.drawText(textRenderer, filterText, x + 9, y + 18 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
 
-        val content: UiScope.() -> Unit = {
-            // 标题
-            Text(
-                x = left + gui.width / 2,
-                y = top + 6,
-                text = title.string,
-                color = 0xFFFFFF,
-                center = true,
-                shadow = false
-            )
-            // 第1行：方向标签 + 前3个方向
-            Flex(
-                x = left + 8,
-                y = top + 18,
-                alignItems = AlignItems.CENTER,
-                gap = 4
-            ) {
-                Text(t("gui.ic2_120.fluid_upgrade.direction_label"), color = 0xFFFFFF)
-                for (i in 0..2) {
-                    val active = handler.isDirectionActive(i)
-                    val dirLabel = t("gui.ic2_120.direction.${Direction.entries[i].name.lowercase()}")
-                    Button(
-                        text = if (active) "[$dirLabel]" else " $dirLabel ",
-                        modifier = Modifier().width(30),
-                        onClick = {
-                            client.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_TOGGLE_DIR + i)
-                            )
-                        }
-                    )
-                }
-            }
-            // 第2行：后3个方向
-            Flex(
-                x = left + 8,
-                y = top + 30,
-                alignItems = AlignItems.CENTER,
-                gap = 4
-            ) {
-                Text("  ", color = 0xFFFFFF) // 占位对齐
-                for (i in 3..5) {
-                    val active = handler.isDirectionActive(i)
-                    val dirLabel = t("gui.ic2_120.direction.${Direction.entries[i].name.lowercase()}")
-                    Button(
-                        text = if (active) "[$dirLabel]" else " $dirLabel ",
-                        modifier = Modifier().width(30),
-                        onClick = {
-                            client.networkHandler?.sendPacket(
-                                ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_TOGGLE_DIR + i)
-                            )
-                        }
-                    )
-                }
-            }
+        // 方向文本 (9,59)-(104,73)
+        val dirIdx = handler.currentDirectionIndex
+        val dirName = t("gui.ic2_120.direction.${Direction.entries[dirIdx].name.lowercase()}")
+        val dirText = t("gui.ic2_120.fluid_upgrade.direction", dirName)
+        context.drawText(textRenderer, dirText, x + 9, y + 59 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
 
-            // 第3行：槽位 + 两个过滤按钮
-            Flex(
-                x = left + 8,
-                y = top + 52,
-                alignItems = AlignItems.CENTER,
-                gap = 4
-            ) {
-                SlotAnchor(
-                    id = slotAnchorId(FluidUpgradeScreenHandler.SLOT_CONTAINER),
-                    width = GuiSize.SLOT_SIZE,
-                    height = GuiSize.SLOT_SIZE
-                )
-                Button(
-                    text = t("gui.ic2_120.fluid_upgrade.set_filter"),
-                    modifier = Modifier().width(56),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_SET_FILTER)
-                        )
-                    }
-                )
-                Button(
-                    text = t("gui.ic2_120.fluid_upgrade.clear_filter"),
-                    modifier = Modifier().width(56),
-                    onClick = {
-                        client.networkHandler?.sendPacket(
-                            ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_CLEAR_FILTER)
-                        )
-                    }
-                )
-            }
-
-            // 第4行：当前过滤显示
-            Text(
-                x = left + 8,
-                y = top + 76,
-                text = t("gui.ic2_120.fluid_upgrade.filter_display", filterName),
-                color = if (handler.fluidRawId > 0) 0x55FF55 else 0xAAAAAA,
-                shadow = false
-            )
-
-            // 玩家物品栏
-            playerInventoryAndHotbarSlotAnchors(
-                left = left,
-                top = top,
-                playerInvStart = FluidUpgradeScreenHandler.PLAYER_INV_START,
-                playerInvY = gui.playerInvY,
-                hotbarY = gui.hotbarY
-            )
-        }
-
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
-        applyAnchoredSlots(layout, left, top)
-
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
-        val inset = GuiBackground.SLOT_ANCHOR_INSET
-        val slotSize = GuiSize.SLOT_SIZE
-        // 绘制容器槽位背景
-        val slot = handler.slots[FluidUpgradeScreenHandler.SLOT_CONTAINER]
-        GuiBackground.drawVanillaLikeSlot(
-            context,
-            x + slot.x - inset,
-            y + slot.y - inset,
-            slotSize,
-            slotSize
-        )
-        // 绘制玩家物品栏边框
-        GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y, gui.playerInvY, gui.hotbarY, slotSize
-        )
-
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
-        super.render(context, mouseX, mouseY, delta)
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
 
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean =
-        ui.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button)
-
-    private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
-            val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
-            slot.x = anchor.x - left
-            slot.y = anchor.y - top
-        }
+    companion object {
+        private val TEXTURE = Identifier("ic2", "textures/gui/guiupgrade.png")
+        private const val TEX_SIZE = 256
     }
-
-    private fun slotAnchorId(slotIndex: Int): String = "slot.$slotIndex"
 }
