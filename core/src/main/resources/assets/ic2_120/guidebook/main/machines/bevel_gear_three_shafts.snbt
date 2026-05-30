@@ -1,0 +1,17 @@
+{
+  DataVersion:3465,
+  size:[5,4,5],
+  palette:[
+    {Name:"ic2_120:bevel_gear",Properties:{plane:"xy"}},
+    {Name:"ic2_120:steel_transmission_shaft",Properties:{axis:"x"}},
+    {Name:"ic2_120:steel_transmission_shaft",Properties:{axis:"y"}},
+    {Name:"ic2_120:steel_transmission_shaft",Properties:{axis:"z"}}
+  ],
+  blocks:[
+    {pos:[2,1,2],state:0},
+    {pos:[1,1,2],state:1},
+    {pos:[2,2,2],state:2},
+    {pos:[2,1,1],state:3}
+  ],
+  entities:[]
+}

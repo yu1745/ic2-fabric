@@ -43,6 +43,17 @@ abstract class BaseCableBlock(settings: AbstractBlock.Settings = defaultSettings
     BlockWithEntity(settings),
     Waterloggable {
 
+    init {
+        defaultState = stateManager.defaultState
+            .with(Properties.WATERLOGGED, false)
+            .with(NORTH, false)
+            .with(SOUTH, false)
+            .with(EAST, false)
+            .with(WEST, false)
+            .with(UP, false)
+            .with(DOWN, false)
+    }
+
     // ── BlockState 属性 ─────────────────────────────────────────
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
