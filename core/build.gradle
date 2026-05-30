@@ -53,6 +53,9 @@ tasks.named('runDatagen') {
 }
 
 dependencies {
+	include modImplementation("com.github.yu1745:fabric-guidebook:${project.fabric_guidebook_version}")
+	include implementation("org.yaml:snakeyaml:1.33")
+
 	include modImplementation("teamreborn:energy:${project.energy_api_version}") {
 		exclude group: "net.fabricmc"
 		exclude group: "net.fabricmc.fabric-api"

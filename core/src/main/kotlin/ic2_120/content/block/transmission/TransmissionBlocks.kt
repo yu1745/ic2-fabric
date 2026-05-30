@@ -92,6 +92,10 @@ abstract class BaseTransmissionBlock(
 
     override fun getCodec(): MapCodec<out BlockWithEntity> = TRANSMISSION_CODEC
 
+    init {
+        defaultState = stateManager.defaultState.with(Properties.WATERLOGGED, false)
+    }
+
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         builder.add(Properties.WATERLOGGED)
     }
@@ -175,7 +179,7 @@ abstract class TransmissionShaftBlock(
     val material: ShaftMaterial
 ) : BaseTransmissionBlock() {
     init {
-        defaultState = stateManager.defaultState.with(Properties.AXIS, Direction.Axis.Y)
+        defaultState = defaultState.with(Properties.AXIS, Direction.Axis.Y)
     }
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
@@ -311,7 +315,7 @@ class BevelGearBlock(
     val gearThickness: Float = DEFAULT_GEAR_THICKNESS
 ) : BaseTransmissionBlock() {
     init {
-        defaultState = stateManager.defaultState.with(PLANE, BevelPlane.XZ)
+        defaultState = defaultState.with(PLANE, BevelPlane.XZ)
     }
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
