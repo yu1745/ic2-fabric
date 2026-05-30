@@ -123,6 +123,7 @@ internal fun fluidToFilledCellStack(fluid: Fluid): ItemStack {
         ModFluids.PAHOEHOE_LAVA_STILL, ModFluids.PAHOEHOE_LAVA_FLOWING -> "pahoehoe_lava_cell"
         ModFluids.BIOFUEL_STILL, ModFluids.BIOFUEL_FLOWING -> "biofuel_cell"
         ModFluids.BIOMASS_STILL, ModFluids.BIOMASS_FLOWING -> "biomass_cell"
+        ModFluids.COMPRESSED_AIR_STILL, ModFluids.COMPRESSED_AIR_FLOWING -> "air_cell"
         else -> null
     }
     return if (cellId != null) {
@@ -510,6 +511,7 @@ class EmptyCell : EmptyCellItem(FabricItemSettings()) {
             ModFluids.PAHOEHOE_LAVA_BUCKET -> ItemStack(cellItem("pahoehoe_lava_cell"))
             ModFluids.BIOFUEL_BUCKET -> ItemStack(cellItem("biofuel_cell"))
             ModFluids.BIOMASS_BUCKET -> ItemStack(cellItem("biomass_cell"))
+            ModFluids.COMPRESSED_AIR_BUCKET -> ItemStack(cellItem("air_cell"))
             else -> {
                 // 其他mod流体使用通用fluid_cell
                 bucketToFilledFluidCell(bucketStack)
@@ -786,7 +788,8 @@ object CellAndBucketFluidRegistration {
             ModFluids.WEED_EX_STILL, ModFluids.WEED_EX_FLOWING,
             ModFluids.PAHOEHOE_LAVA_STILL, ModFluids.PAHOEHOE_LAVA_FLOWING,
             ModFluids.BIOFUEL_STILL, ModFluids.BIOFUEL_FLOWING,
-            ModFluids.BIOMASS_STILL, ModFluids.BIOMASS_FLOWING
+            ModFluids.BIOMASS_STILL, ModFluids.BIOMASS_FLOWING,
+            ModFluids.COMPRESSED_AIR_STILL, ModFluids.COMPRESSED_AIR_FLOWING
         )
 
         val ic2MaterialsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(modId, CreativeTab.IC2_MATERIALS.id))

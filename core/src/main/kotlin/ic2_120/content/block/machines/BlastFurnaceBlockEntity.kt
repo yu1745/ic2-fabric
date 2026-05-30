@@ -5,6 +5,8 @@ import ic2_120.content.block.BlastFurnaceBlock
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.heat.IHeatConsumer
 import ic2_120.content.item.AirCell
+import ic2_120.content.item.FluidCellItem
+import ic2_120.content.item.getFluidCellVariant
 import ic2_120.content.item.EjectorUpgrade
 import ic2_120.content.item.PullingUpgrade
 import ic2_120.content.storage.ItemInsertRoute
@@ -18,19 +20,19 @@ import ic2_120.content.screen.BlastFurnaceScreenHandler
 import ic2_120.content.sync.BlastFurnaceSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.EjectorUpgradeComponent
-import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
-import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.upgrade.PullingUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.ModMachineRecipeBinding
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -84,21 +86,11 @@ class BlastFurnaceBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = BlastFurnaceBlock.ACTIVE
     override fun getInventory(): Inventory = this
     override val tier: Int = 1
-
-    // IFluidPipeUpgradeSupport
-    override var fluidPipeProviderEnabled: Boolean = false
-    override var fluidPipeReceiverEnabled: Boolean = false
-    override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
-    override var fluidPipeReceiverFilter: net.minecraft.fluid.Fluid? = null
-    override var fluidPipeProviderSides: MutableSet<Direction> = mutableSetOf()
-    override var fluidPipeReceiverSides: MutableSet<Direction> = mutableSetOf()
-    override var fluidPipeEjectorCount: Int = 0
-    override var fluidPipePullingCount: Int = 0
 
     companion object {
         const val SLOT_INPUT = 0
@@ -229,7 +221,7 @@ class BlastFurnaceBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> isBlastRecipeInput(stack)
-        SLOT_AIR_INPUT -> !stack.isEmpty && stack.item is AirCell
+        SLOT_AIR_INPUT -> !stack.isEmpty && (stack.item is AirCell || isCompressedAirFluidCell(stack))
         SLOT_OUTPUT_STEEL, SLOT_OUTPUT_SLAG, SLOT_OUTPUT_EMPTY -> false
         SLOT_UPGRADE_0, SLOT_UPGRADE_1 -> stack.item is EjectorUpgrade || stack.item is PullingUpgrade
         else -> false
@@ -321,13 +313,6 @@ class BlastFurnaceBlockEntity(
         val outputSteel = getStack(SLOT_OUTPUT_STEEL)
         val outputSlag = getStack(SLOT_OUTPUT_SLAG)
 
-        FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
-        if (fluidPipeProviderEnabled) {
-            FluidPipeUpgradeComponent.ejectFluidToNeighbors(
-                world, pos, airTankInternal, fluidPipeProviderFilter, fluidPipeProviderSides,
-                blockedFace = getHeatTransferFace()
-            )
-        }
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
 
@@ -444,19 +429,59 @@ class BlastFurnaceBlockEntity(
     private fun fillAirTankFromSlot() {
         if (airTankInternal.remainingSpace() < FluidConstants.BUCKET) return
         val airSlot = getStack(SLOT_AIR_INPUT)
-        if (airSlot.isEmpty || airSlot.item !is AirCell) return
-        val emptySlot = getStack(SLOT_OUTPUT_EMPTY)
-        val emptyCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
-        val canAcceptEmpty = emptySlot.isEmpty ||
-            (ItemStack.areItemsEqual(emptySlot, emptyCell) && emptySlot.count + 1 <= emptyCell.maxCount)
-        if (!canAcceptEmpty) return
+        if (airSlot.isEmpty) return
+        val airItem = airSlot.item
 
-        airSlot.decrement(1)
-        if (airSlot.isEmpty) setStack(SLOT_AIR_INPUT, ItemStack.EMPTY)
-        if (emptySlot.isEmpty) setStack(SLOT_OUTPUT_EMPTY, emptyCell)
-        else emptySlot.increment(1)
+        // AirCell / FluidCellItem[compressed_air]：消耗 1 个，返还 empty_cell
+        if (airItem is AirCell || airItem is FluidCellItem) {
+            if (airItem is FluidCellItem && !isCompressedAirFluidCell(airSlot)) return
+            val emptySlot = getStack(SLOT_OUTPUT_EMPTY)
+            val emptyCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
+            val canAcceptEmpty = emptySlot.isEmpty ||
+                (ItemStack.areItemsEqual(emptySlot, emptyCell) && emptySlot.count + 1 <= emptyCell.maxCount)
+            if (!canAcceptEmpty) return
 
-        airTankInternal.tryFillAir(FluidConstants.BUCKET)
+            airSlot.decrement(1)
+            if (airSlot.isEmpty) setStack(SLOT_AIR_INPUT, ItemStack.EMPTY)
+            if (emptySlot.isEmpty) setStack(SLOT_OUTPUT_EMPTY, emptyCell)
+            else emptySlot.increment(1)
+            airTankInternal.tryFillAir(FluidConstants.BUCKET)
+            return
+        }
+
+        // 任意 Fabric Transfer API 流体容器：尝试提取 1 桶 compressed_air
+        val ctx = ContainerItemContext.withConstant(airSlot)
+        val storage = ctx.find(FluidStorage.ITEM) ?: return
+        Transaction.openOuter().use { tx ->
+            for (view in storage) {
+                if (view.isResourceBlank || view.amount < FluidConstants.BUCKET) continue
+                if (!ModFluids.isCompressedAir(view.resource.fluid)) continue
+                val extracted = view.extract(view.resource, FluidConstants.BUCKET, tx)
+                if (extracted < FluidConstants.BUCKET) continue
+                tx.commit()
+                airSlot.decrement(1)
+                val remaining = ctx.itemVariant.toStack(ctx.amount.toInt().coerceAtLeast(0))
+                setStack(SLOT_AIR_INPUT, if (airSlot.isEmpty) ItemStack.EMPTY else remaining)
+                airTankInternal.tryFillAir(FluidConstants.BUCKET)
+                return
+            }
+        }
+    }
+
+    private fun isCompressedAirFluidCell(stack: ItemStack): Boolean {
+        // 先检查本模组 fluid_cell NBT
+        if (stack.item is FluidCellItem) {
+            val variant = stack.getFluidCellVariant() ?: return false
+            return ModFluids.isCompressedAir(variant.fluid)
+        }
+        // 再检查任意 Fabric Transfer API 流体容器
+        val storage = FluidStorage.ITEM.find(stack, null) ?: return false
+        for (view in storage) {
+            if (!view.isResourceBlank && view.amount >= FluidConstants.BUCKET && ModFluids.isCompressedAir(view.resource.fluid)) {
+                return true
+            }
+        }
+        return false
     }
 
     /** HU 不足时温度衰减，达到阈值后温度 -1。温度到 0 后不再衰减。 */
