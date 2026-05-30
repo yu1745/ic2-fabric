@@ -387,13 +387,13 @@ class CondenserBlockEntity(
         val euPerTick = ventCount * CondenserSync.EU_PER_VENT.toLong()
 
         var steamConsumed = 0L
-        val steamAvailableMb = steamTank.amount
+        val steamAvailable = steamTank.amount
         val hasEnergy: Boolean
-        if (steamAvailableMb > 0L && distilledWaterTank.amount < WATER_TANK_CAPACITY) {
+        if (steamAvailable > 0L && distilledWaterTank.amount < WATER_TANK_CAPACITY) {
             // 对齐 ic2_origin: 有散热口时必须消耗 EU，否则不工作（不消耗蒸汽）
             hasEnergy = euPerTick == 0L || sync.consumeEnergy(euPerTick) > 0L
             if (hasEnergy) {
-                val toConsume = minOf(steamAvailableMb, coolingRate.toLong())
+                val toConsume = minOf(steamAvailable, coolingRate.toLong())
                 if (toConsume > 0L && steamTank.amount > 0L) {
                 val consumed = steamTank.amount.coerceAtMost(toConsume)
                 if (consumed > 0L) {
@@ -404,7 +404,8 @@ class CondenserBlockEntity(
                     sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
 
                     // 进度够了产出蒸馏水
-                    while (progress >= CondenserSync.PROGRESS_MAX) {
+                    while (progress >= CondenserSync.PROGRESS_MAX &&
+                        distilledWaterTank.amount + WATER_PER_PROGRESS <= WATER_TANK_CAPACITY) {
                         progress -= CondenserSync.PROGRESS_MAX
                         distilledWaterTank.injectWater(WATER_PER_PROGRESS)
                     }

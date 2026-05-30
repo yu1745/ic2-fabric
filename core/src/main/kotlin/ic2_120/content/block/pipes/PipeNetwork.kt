@@ -47,7 +47,7 @@ class PipeNetwork {
         val key = pos.asLong()
         pipes.add(key)
         val amountPerTick = kotlin.math.floor(
-            block.size.baseBucketsPerSecond * block.material.multiplier * FluidConstants.BUCKET.toDouble() / 20.0
+            block.flowRateBucketsPerSecond * FluidConstants.BUCKET.toDouble() / 20.0
         ).toLong().coerceAtLeast(1L)
         capacityByPipe[key] = amountPerTick
         topologyCache = null

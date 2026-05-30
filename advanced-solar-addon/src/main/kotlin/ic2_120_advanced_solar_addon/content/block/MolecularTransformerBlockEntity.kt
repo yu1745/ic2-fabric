@@ -31,6 +31,7 @@ import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.type
+import ic2_120.content.AdjacentEnergyTransferComponent
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 
 @ModBlockEntity(block = MolecularTransformerBlock::class)
@@ -63,6 +64,8 @@ class MolecularTransformerBlockEntity(
             (recipe.energy - energyUsed).coerceAtLeast(0)
         }
     )
+
+    private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
     val inventory: DefaultedList<ItemStack> = DefaultedList.ofSize(MolecularTransformerBlock.INVENTORY_SIZE, ItemStack.EMPTY)
 
@@ -109,6 +112,8 @@ class MolecularTransformerBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+
+        adjacentEnergyTransfer.tick()
 
         val inputStack = inventory[MolecularTransformerBlock.INPUT_SLOT]
         val outputStack = inventory[MolecularTransformerBlock.OUTPUT_SLOT]

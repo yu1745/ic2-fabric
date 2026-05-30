@@ -330,8 +330,10 @@ class ReplicatorBlockEntity(
         sync.currentCostUb = template.uuCostUb
         sync.progressMaxUb = template.uuCostUb.coerceAtLeast(1)
 
-        if (sync.mode == ReplicatorSync.MODE_SINGLE && singlePulseConsumed && sync.progressUb == 0) {
-            sync.status = ReplicatorSync.STATUS_COMPLETE
+        if (singlePulseConsumed && sync.progressUb == 0) {
+            if (sync.status != ReplicatorSync.STATUS_CANCELLED) {
+                sync.status = ReplicatorSync.STATUS_COMPLETE
+            }
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
@@ -393,8 +395,8 @@ class ReplicatorBlockEntity(
 
     fun cancelWork() {
         resetProgress()
-        singlePulseConsumed = false
-        sync.status = ReplicatorSync.STATUS_IDLE
+        singlePulseConsumed = true
+        sync.status = ReplicatorSync.STATUS_CANCELLED
         markDirty()
     }
 

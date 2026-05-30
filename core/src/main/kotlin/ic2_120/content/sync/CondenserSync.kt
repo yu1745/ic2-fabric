@@ -6,13 +6,9 @@ import ic2_120.content.syncs.SyncSchema
 /**
  * 冷凝器同步数据。
  *
- * 参考 ic2_origin 数值：
  * - EU 存储: 100,000 EU
- * - 蒸汽罐: 100,000 mB
- * - 蒸馏水罐: 1,000 mB
- * - 被动冷却: 100 mB/t
- * - 每个散热口: +100 mB/t, 消耗 2 EU/t
- * - 蒸馏水产率: 100 mB / 10000 进度
+ * - 被动冷却: 100 mB/t (8,100 droplets/t)
+ * - 每个散热口: +100 mB/t (8,100 droplets/t), 消耗 2 EU/t
  */
 class CondenserSync(
     schema: SyncSchema,
@@ -30,19 +26,16 @@ class CondenserSync(
         const val MAX_EXTRACT = 0L
         const val NBT_ENERGY_STORED = "EnergyStored"
 
-        const val STEAM_TANK_CAPACITY = 8_000L
-        const val WATER_TANK_CAPACITY = 8_000L
-
-        /** 被动冷却速率 (mB/t) */
-        const val PASSIVE_COOLING = 100
-        /** 每个散热口的额外冷却 (mB/t) */
-        const val COOLING_PER_VENT = 100
+        /** 被动冷却速率 (droplets/t) = 100 mB/t */
+        const val PASSIVE_COOLING = 8100
+        /** 每个散热口的额外冷却 (droplets/t) = 100 mB/t */
+        const val COOLING_PER_VENT = 8100
         /** 每个散热口的 EU 消耗 (EU/t) */
         const val EU_PER_VENT = 2
         /** 最大散热口数 */
         const val MAX_VENTS = 4
-        /** 蒸馏水产出进度上限 */
-        const val PROGRESS_MAX = 10_000
+        /** 蒸馏水产出进度上限 (droplets) = 10,000 mB */
+        const val PROGRESS_MAX = 810_000
     }
 
     var energy by schema.int("Energy")

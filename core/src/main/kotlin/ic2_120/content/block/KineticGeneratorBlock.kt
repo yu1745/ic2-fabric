@@ -29,6 +29,13 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import net.fabricmc.api.EnvType
+import net.fabricmc.api.Environment
+import net.minecraft.client.item.TooltipContext
+import net.minecraft.item.ItemStack
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
+import net.minecraft.world.BlockView
 import java.util.function.Consumer
 
 @ModBlock(name = "kinetic_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
@@ -49,6 +56,17 @@ class KineticGeneratorBlock : MachineBlock() {
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
+    }
+
+    @Environment(EnvType.CLIENT)
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: BlockView?,
+        tooltip: MutableList<Text>,
+        context: TooltipContext
+    ) {
+        super.appendTooltip(stack, world, tooltip, context)
+        tooltip.add(Text.translatable("tooltip.ic2_120.kinetic_generator.ratio").formatted(Formatting.GRAY))
     }
 
     override fun onUse(

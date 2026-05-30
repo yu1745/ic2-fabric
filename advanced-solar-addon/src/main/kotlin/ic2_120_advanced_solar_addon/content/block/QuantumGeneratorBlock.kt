@@ -161,7 +161,10 @@ class QuantumGeneratorBlockEntity(
         energyMac = energyMac.coerceIn(1, EnergyTier.euPerTickFromTier(variable).toInt())
 
         if (isActive) {
-            sync.generateEnergy(energyMac.toLong())
+            // 始终保持缓冲满，输出速度由 getSideMaxExtract(energyMac) 控制
+            if (sync.amount < sync.capacity) {
+                sync.amount = sync.capacity
+            }
         }
 
         sync.production = energyMac

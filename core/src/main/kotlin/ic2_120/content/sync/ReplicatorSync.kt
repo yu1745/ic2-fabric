@@ -41,6 +41,7 @@ class ReplicatorSync(
         const val STATUS_NO_ENERGY = 6
         const val STATUS_RUNNING = 7
         const val STATUS_COMPLETE = 8
+        const val STATUS_CANCELLED = 9
     }
 
     var energy by schema.int("Energy")

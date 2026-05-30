@@ -165,11 +165,13 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         val posLong = be.pos.asLong()
         val load = filteredLoad(posLong, rawLoad)
         val percent = if (capacity > 0) (load * 100 / capacity).toInt() else 0
+        val loadMbPerTick = dropletsToMb(load)
+        val capacityMbPerTick = dropletsToMb(capacity)
 
         val flowText = Text.literal("")
             .append(Text.translatable("ic2_120.jade.flow_label"))
-            .append(Text.literal("$load / ").setStyle(Style.EMPTY.withColor(Formatting.YELLOW)))
-            .append(Text.literal("${capacity}mb/s = ").setStyle(Style.EMPTY.withColor(Formatting.GRAY)))
+            .append(Text.literal("$loadMbPerTick / ").setStyle(Style.EMPTY.withColor(Formatting.YELLOW)))
+            .append(Text.literal("${capacityMbPerTick} mB/t = ").setStyle(Style.EMPTY.withColor(Formatting.GRAY)))
             .append(Text.literal("${percent}%").setStyle(Style.EMPTY.withColor(flowColor(percent))))
         tooltip.add(flowText)
         if (accessor.serverData.contains("fluidName")) {
@@ -206,9 +208,11 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
 
     override fun getUid(): Identifier = PIPE_FLOW
 
+    private fun dropletsToMb(droplets: Long): Long = droplets * 1000L / FluidConstants.BUCKET
+
     private fun calculateCapacity(block: BasePipeBlock): Long {
         return kotlin.math.floor(
-            block.size.baseBucketsPerSecond * block.material.multiplier * FluidConstants.BUCKET.toDouble() / 20.0
+            block.flowRateBucketsPerSecond * FluidConstants.BUCKET.toDouble() / 20.0
         ).toLong().coerceAtLeast(1L)
     }
 }

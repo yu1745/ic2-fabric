@@ -69,6 +69,9 @@ abstract class BasePipeBlock(
     val material: PipeMaterial,
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(2.0f, 3.0f)
 ) : BlockWithEntity(settings), Waterloggable {
+    open val flowRateBucketsPerSecond: Double
+        get() = size.baseBucketsPerSecond * material.multiplier
+
     init {
         setDefaultState(stateManager.defaultState
             .with(Properties.WATERLOGGED, false)
@@ -195,8 +198,8 @@ abstract class BasePipeBlock(
         context: TooltipContext
     ) {
         super.appendTooltip(stack, world, tooltip, context)
-        val flowPerSec = size.baseBucketsPerSecond * material.multiplier * 1000 // 转换为 mB/s
-        val bucketsPerSec = size.baseBucketsPerSecond * material.multiplier
+        val flowPerSec = flowRateBucketsPerSecond * 1000 // 转换为 mB/s
+        val bucketsPerSec = flowRateBucketsPerSecond
         tooltip.add(Text.translatable(
             "tooltip.ic2_120.pipe.flow_rate",
             "%.1f".format(flowPerSec),
@@ -263,6 +266,12 @@ abstract class BasePipeBlock(
 }
 
 abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeSize.TINY, material) {
+    override val flowRateBucketsPerSecond: Double
+        get() = when (material) {
+            PipeMaterial.BRONZE -> 2.4
+            PipeMaterial.CARBON -> 4.8
+        }
+
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         super.appendProperties(builder)
         builder.add(Properties.FACING)

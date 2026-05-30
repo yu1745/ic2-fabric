@@ -19,6 +19,7 @@ import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.state.StateManager
@@ -33,6 +34,12 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
 import ic2_120.registry.annotation.RecipeProvider
+import net.fabricmc.api.EnvType
+import net.fabricmc.api.Environment
+import net.minecraft.client.item.TooltipContext
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
+import net.minecraft.world.BlockView
 
 @ModBlock(name = "stirling_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
 class StirlingGeneratorBlock : MachineBlock() {
@@ -61,6 +68,18 @@ class StirlingGeneratorBlock : MachineBlock() {
     override fun createScreenHandlerFactory(state: BlockState, world: World, pos: BlockPos): net.minecraft.screen.NamedScreenHandlerFactory? {
         val be = world.getBlockEntity(pos)
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
+    }
+
+    @Environment(EnvType.CLIENT)
+    override fun appendTooltip(
+        stack: ItemStack,
+        world: BlockView?,
+        tooltip: MutableList<Text>,
+        context: TooltipContext
+    ) {
+        super.appendTooltip(stack, world, tooltip, context)
+        tooltip.add(Text.translatable("tooltip.ic2_120.stirling_generator.ratio").formatted(Formatting.GRAY))
+        tooltip.add(Text.translatable("tooltip.ic2_120.stirling_generator.max_output").formatted(Formatting.GRAY))
     }
 
     override fun onUse(

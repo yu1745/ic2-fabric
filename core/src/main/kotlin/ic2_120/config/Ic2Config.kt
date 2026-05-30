@@ -513,7 +513,7 @@ object Ic2Config {
 
     fun getReplicationTemplate(itemId: String): UuTemplateEntry? {
         val cost = getReplicationCostUb(itemId) ?: return null
-        return UuTemplateEntry(itemId, cost)
+        return UuTemplateEntry(itemId)
     }
 
     /**
