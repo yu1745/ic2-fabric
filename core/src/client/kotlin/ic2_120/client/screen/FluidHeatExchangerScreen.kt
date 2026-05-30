@@ -69,7 +69,7 @@ class FluidHeatExchangerScreen(
         val textAreaCY = textAreaY + (40 - 29) / 2
         val scaledTextX = left + 18 + (textAreaW - scaledW) / 2
         context.matrices.push()
-        context.matrices.translate(scaledTextX.toDouble(), (textAreaCY - 3.5).toDouble(), 0.0)
+        context.matrices.translate(scaledTextX.toDouble(), textAreaCY - 3.5, 0.0)
         context.matrices.scale(textScale, textScale, 1f)
         context.drawText(textRenderer, heatText, 0, 0, 0xFF88CCFF.toInt(), false)
         context.matrices.pop()

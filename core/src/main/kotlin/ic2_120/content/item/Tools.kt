@@ -686,7 +686,7 @@ class FrequencyTransmitter : Item(Item.Settings().maxCount(1)) {
             return
         }
 
-        val x = nbt!!.getInt(NBT_BIND_X)
+        val x = nbt.getInt(NBT_BIND_X)
         val y = nbt.getInt(NBT_BIND_Y)
         val z = nbt.getInt(NBT_BIND_Z)
         val dim = nbt.getString(NBT_BIND_DIM).ifBlank { "unknown" }
@@ -1200,8 +1200,10 @@ class NanoSaber : SwordItem(
         return total - 1.0
     }
 
+    @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
     override fun getAttributeModifiers(): AttributeModifiersComponent = DEFAULT_MODIFIERS
 
+    @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
     override fun onCraft(stack: ItemStack, world: World) {
         super.onCraft(stack, world)
         updateAttributeModifiers(stack)

@@ -30,7 +30,6 @@ import net.minecraft.screen.NamedScreenHandlerFactory
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.shape.VoxelShape
@@ -108,6 +107,7 @@ class MolecularTransformerBlock : MachineBlock(
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.INVISIBLE
 
     // BER model is smaller than a full cube, so this block must not occlude neighbor faces.
+    @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
     override fun getCullingShape(state: BlockState, world: BlockView, pos: BlockPos): VoxelShape =
         VoxelShapes.empty()
 }

@@ -97,7 +97,7 @@ class WaterGeneratorScreen(
         if (relX in TANK_X until TANK_X + TANK_W && relY in TANK_Y until TANK_Y + TANK_H) {
             val lines = if (waterDroplets > 0) {
                 val mb = waterDroplets / DROPLETS_PER_MB
-                val capMb = (8 * FluidConstants.BUCKET / DROPLETS_PER_MB).toLong()
+                val capMb = 8 * FluidConstants.BUCKET / DROPLETS_PER_MB
                 listOf(Text.literal("水"), Text.literal("${"%,d".format(mb)} / ${"%,d".format(capMb)} mB"))
             } else {
                 listOf(Text.literal("空"))

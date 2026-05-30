@@ -54,7 +54,8 @@ class QuantumSolarPanelBlock : MachineBlock() {
         state: BlockState,
         world: World,
         pos: BlockPos,
-        player: PlayerEntity,        hit: BlockHitResult
+        player: PlayerEntity,
+        hit: BlockHitResult
     ): ActionResult {
         if (!world.isClient) {
             createScreenHandlerFactory(state, world, pos)?.let { factory ->

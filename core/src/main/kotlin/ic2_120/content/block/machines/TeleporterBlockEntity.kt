@@ -304,7 +304,7 @@ class TeleporterBlockEntity(
         }
 
         val thisDim = world.registryKey.value.toString()
-        if (thisDim != targetDimension || !world.isChunkLoaded(target)) {
+        if (thisDim != targetDimension || !world.isChunkLoaded(target.x shr 4, target.z shr 4)) {
             clearCharging()
             setActiveState(world, pos, state, false)
             endTick(world, pos)
@@ -345,7 +345,7 @@ class TeleporterBlockEntity(
             return
         }
 
-        val distance = sqrt(pos.getSquaredDistance(target).toDouble()).toLong().coerceAtLeast(1L)
+        val distance = sqrt(pos.getSquaredDistance(target)).toLong().coerceAtLeast(1L)
         val weight = computeWeight(entity).coerceAtMost(5100)
         val energyNeed = computeEnergyNeed(weight, distance)
         val availableMfe = simulateAdjacentMfeEnergy(world, pos)

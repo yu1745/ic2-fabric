@@ -51,7 +51,7 @@ class OreWashingPlantScreen(
         val waterCapacityDroplets = FluidConstants.BUCKET * 8
         val waterFraction = if (waterCapacityDroplets > 0) (waterAmountDroplets.toFloat() / waterCapacityDroplets).coerceIn(0f, 1f) else 0f
         val waterAmountMb = waterAmountDroplets / DROPLETS_PER_MB
-        val waterCapacityMb = (waterCapacityDroplets / DROPLETS_PER_MB).toLong()
+        val waterCapacityMb = waterCapacityDroplets / DROPLETS_PER_MB
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val consumeRate = handler.sync.getSyncedConsumedAmount()
 

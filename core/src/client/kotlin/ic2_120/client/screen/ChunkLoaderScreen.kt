@@ -134,7 +134,7 @@ class ChunkLoaderScreen(
         }
 
         // 网格细线（半透明，仅区块边界）
-        val gridColor = 0x33FFFFFF.toInt()
+        val gridColor = 0x33FFFFFF
         for (i in 1 until GRID) {
             val lineX = mapLeft + i * CELL_SIZE
             context.fill(lineX, mapTop, lineX + 1, mapTop + MAP_SIZE, gridColor)

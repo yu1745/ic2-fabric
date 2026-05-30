@@ -133,7 +133,7 @@ class ChunkLoaderBlockEntity(
     fun releaseChunks() {
         if (activeChunkPositions.isEmpty()) return
         val sw = world as? ServerWorld ?: return
-        val cm = sw.chunkManager as? ServerChunkManager ?: return
+        val cm = sw.chunkManager ?: return
         for (chunkPos in activeChunkPositions) {
             cm.removeTicket(ChunkTicketType.FORCED, chunkPos, 0, chunkPos)
         }
@@ -164,7 +164,7 @@ class ChunkLoaderBlockEntity(
             val needed = sync.getChunkPositions(center).toSet()
 
             val sw = world as? ServerWorld
-            val cm = sw?.chunkManager as? ServerChunkManager
+            val cm = sw?.chunkManager
             if (cm != null) {
                 for (cp in needed - activeChunkPositions) {
                     cm.addTicket(ChunkTicketType.FORCED, cp, 0, cp)
