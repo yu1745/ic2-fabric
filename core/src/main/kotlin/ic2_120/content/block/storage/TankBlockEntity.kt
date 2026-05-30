@@ -70,7 +70,7 @@ class TankBlockEntity(
         const val STEEL_CAPACITY_MB = 128000
 
         /** 铱储罐容量 (mB) */
-        const val IRIDIUM_CAPACITY_MB = 102400
+        const val IRIDIUM_CAPACITY_MB = 1024000
 
         private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
 

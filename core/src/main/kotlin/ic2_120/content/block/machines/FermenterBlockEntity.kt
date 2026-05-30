@@ -130,7 +130,8 @@ class FermenterBlockEntity(
             SLOT_INPUT_FILLED_CONTAINER,
             SLOT_INPUT_EMPTY_CONTAINER,
             SLOT_OUTPUT_EMPTY_CONTAINER,
-            SLOT_OUTPUT_FILLED_CONTAINER
+            SLOT_OUTPUT_FILLED_CONTAINER,
+            SLOT_OUTPUT_FERTILIZER
         ),
         markDirty = { markDirty() }
     )

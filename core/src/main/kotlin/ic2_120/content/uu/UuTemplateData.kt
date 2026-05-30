@@ -1,5 +1,6 @@
 package ic2_120.content.uu
 
+import ic2_120.config.Ic2Config
 import ic2_120.editCustomData
 import ic2_120.getCustomData
 import ic2_120.removeCustomData
@@ -15,12 +16,13 @@ const val UU_TEMPLATE_NBT_KEY = "UuTemplate"
 const val UU_TEMPLATE_LIST_NBT_KEY = "UuTemplates"
 
 data class UuTemplateEntry(
-    val itemId: String,
-    val uuCostUb: Int
+    val itemId: String
 ) {
+    /** 服务端白名单中的 UU 费用，不在白名单则返回 0 */
+    val uuCostUb: Int get() = Ic2Config.getReplicationCostUb(itemId) ?: 0
+
     fun toNbt(): NbtCompound = NbtCompound().apply {
         putString("ItemId", itemId)
-        putInt("UuCostUb", uuCostUb.coerceAtLeast(0))
     }
 
     fun displayName(): Text {
@@ -38,7 +40,7 @@ data class UuTemplateEntry(
             if (nbt == null || nbt.isEmpty) return null
             val itemId = nbt.getString("ItemId")
             if (itemId.isBlank()) return null
-            return UuTemplateEntry(itemId, nbt.getInt("UuCostUb").coerceAtLeast(0))
+            return UuTemplateEntry(itemId)
         }
     }
 }

@@ -108,6 +108,7 @@ class SteamKineticGeneratorBlockEntity(
 
 
         fun mbToDroplets(mb: Long): Long = mb * FluidConstants.BUCKET / 1000
+        fun dropletsToMb(droplets: Long): Long = droplets * 1000 / FluidConstants.BUCKET
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -400,56 +401,63 @@ class SteamKineticGeneratorBlockEntity(
         }
 
         // 蒸馏水罐已空 → 解除涡轮阻塞
-        if (distilledWaterTank.availableSpace() >= FluidConstants.BUCKET / 1000 && isTurbineFilledWithWater) {
+        if (distilledWaterTank.availableSpace() >= mbToDroplets(1L) && isTurbineFilledWithWater) {
             isTurbineFilledWithWater = false
         }
 
         lastKuOutput = 0
         var steamConsumed = 0L
+        var steamInputDroplets = 0L
+        var steamInputMb = 0
+        var kuProduced = 0
+        var finalKu = 0
+        var actualKu = 0
 
         // 有涡轮 + 有蒸汽 + 未阻塞
         if (hasTurbine && steamTank.amount > 0L && !isTurbineFilledWithWater) {
             val superheated = isSuperheated
 
             // ---- handleSteam: 消耗全部蒸汽 ----
-            val totalMb = steamTank.amount.toInt().coerceAtLeast(0)
+            steamInputDroplets = steamTank.amount.coerceAtLeast(0L)
+            steamInputMb = dropletsToMb(steamInputDroplets).toInt().coerceAtLeast(0)
             steamTank.amount = 0L
             steamTank.variant = FluidVariant.blank()
             sync.steamAmount = 0
-            steamConsumed = totalMb.toLong()
+            steamConsumed = steamInputMb.toLong()
 
             // KU = totalMb × 2 × (superheated ? 2 : 1)
-            val kuProduced = totalMb * (if (superheated) 4 else 2)
+            kuProduced = steamInputMb * (if (superheated) 4 else 2)
 
             // ----
             if (superheated) {
                 // 过热蒸汽 → 输出等量普通蒸汽（通用弹出）
-                outputSteam(world, pos, totalMb)
+                outputSteam(world, pos, steamInputDroplets)
             } else {
                 // 普通蒸汽 → 10% 冷凝, 90% 输出给冷凝机（特殊方法，只认冷凝机）
-                condensationProgress += totalMb / 10
-                outputCondenserSteam(world, pos, totalMb - totalMb / 10)
+                condensationProgress += steamInputMb / 10
+                outputCondenserSteam(world, pos, steamInputDroplets - steamInputDroplets / 10)
             }
 
             // ---- KU 节流: 蒸馏水罐有水时按比例降低 ----
             val waterFill = distilledWaterTank.amount.toInt().coerceAtLeast(0)
             val kuMultiplier = if (waterFill == 0) 1f
                 else (1f - waterFill.toFloat() / WATER_TANK_CAPACITY.toFloat())
-            val finalKu = (kuProduced * kuMultiplier).toInt().coerceAtLeast(0)
+            finalKu = (kuProduced * kuMultiplier).toInt().coerceAtLeast(0)
 
             // KU 缓冲区
             val kuSpace = (SteamKineticGeneratorSync.MAX_KU_OUTPUT * 2 - kuBuffer).coerceAtLeast(0)
-            val actualKu = minOf(finalKu, kuSpace)
+            actualKu = minOf(finalKu, kuSpace)
             kuBuffer += actualKu
             lastKuOutput = actualKu
 
             // ---- 冷凝产蒸馏水 ----
-            if (condensationProgress >= 100) {
-                if (distilledWaterTank.availableSpace() >= 1) {
+            while (condensationProgress >= SteamKineticGeneratorSync.CONDENSATION_MAX) {
+                if (distilledWaterTank.availableSpace() >= mbToDroplets(1L)) {
                     distilledWaterTank.insertInternal(mbToDroplets(1L))
-                    condensationProgress -= 100
+                    condensationProgress -= SteamKineticGeneratorSync.CONDENSATION_MAX
                 } else {
                     isTurbineFilledWithWater = true
+                    break
                 }
             }
 
@@ -467,11 +475,11 @@ class SteamKineticGeneratorBlockEntity(
             }
         } else if (hasTurbine && steamTank.amount > 0L && isTurbineFilledWithWater) {
             // 蒸馏水满阻塞 → 强制排汽，否则爆炸
-            val totalMb = steamTank.amount.toInt().coerceAtLeast(0)
+            steamInputDroplets = steamTank.amount.coerceAtLeast(0L)
             steamTank.amount = 0L
             steamTank.variant = FluidVariant.blank()
             sync.steamAmount = 0
-            outputSteam(world, pos, totalMb)
+            outputSteam(world, pos, steamInputDroplets)
         }
 
         // 更新同步数据
@@ -484,7 +492,7 @@ class SteamKineticGeneratorBlockEntity(
         sync.waterBlocked = if (isTurbineFilledWithWater) 1 else 0
         sync.hasTurbine = if (hasTurbine) 1 else 0
 
-        val active = hasTurbine && steamTank.amount > 0L && lastKuOutput > 0
+        val active = hasTurbine && lastKuOutput > 0
         setActiveState(world, pos, state, active)
 
         markDirty()
@@ -495,9 +503,9 @@ class SteamKineticGeneratorBlockEntity(
      * 推给任意支持插入的 FluidStorage 邻居。
      * 找不到接收方时 vent（10% 爆炸/tick）。
      */
-    private fun outputSteam(world: World, pos: BlockPos, amountMb: Int) {
-        if (amountMb <= 0) return
-        var remaining = amountMb
+    private fun outputSteam(world: World, pos: BlockPos, droplets: Long) {
+        if (droplets <= 0L) return
+        var remaining = droplets
         val steamVariant = FluidVariant.of(ModFluids.STEAM_STILL)
 
         for (side in Direction.entries) {
@@ -506,10 +514,10 @@ class SteamKineticGeneratorBlockEntity(
             if (neighborStorage == null || !neighborStorage.supportsInsertion()) continue
 
             Transaction.openOuter().use { tx ->
-                val accepted = neighborStorage.insert(steamVariant, remaining.toLong(), tx)
+                val accepted = neighborStorage.insert(steamVariant, remaining, tx)
                 if (accepted > 0) {
                     tx.commit()
-                    remaining -= accepted.toInt()
+                    remaining -= accepted
                 }
             }
         }
@@ -530,9 +538,9 @@ class SteamKineticGeneratorBlockEntity(
      * 只推给 CondenserBlockEntity，不推给其他方块。
      * 找不到接收方时 vent（10% 爆炸/tick）。
      */
-    private fun outputCondenserSteam(world: World, pos: BlockPos, amountMb: Int) {
-        if (amountMb <= 0) return
-        var remaining = amountMb
+    private fun outputCondenserSteam(world: World, pos: BlockPos, droplets: Long) {
+        if (droplets <= 0L) return
+        var remaining = droplets
         val steamVariant = FluidVariant.of(ModFluids.STEAM_STILL)
 
         for (side in Direction.entries) {
@@ -543,10 +551,10 @@ class SteamKineticGeneratorBlockEntity(
             if (neighborStorage == null || !neighborStorage.supportsInsertion()) continue
 
             Transaction.openOuter().use { tx ->
-                val accepted = neighborStorage.insert(steamVariant, remaining.toLong(), tx)
+                val accepted = neighborStorage.insert(steamVariant, remaining, tx)
                 if (accepted > 0) {
                     tx.commit()
-                    remaining -= accepted.toInt()
+                    remaining -= accepted
                 }
             }
         }

@@ -119,10 +119,11 @@ class KineticGeneratorBlockEntity(
         val totalKu = kuRemainder + acceptedKu
         val producedEu = (totalKu / KineticGeneratorSync.KU_PER_EU).toLong()
         kuRemainder = totalKu % KineticGeneratorSync.KU_PER_EU
+        var generatedEu = 0L
         if (producedEu > 0L) {
-            sync.generateEnergy(producedEu)
+            generatedEu = sync.generateEnergy(producedEu)
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            outputEuThisTick += producedEu.toInt()
+            outputEuThisTick += generatedEu.toInt()
         }
         sync.currentKu = inputKuThisTick
         sync.outputEu = outputEuThisTick
@@ -133,8 +134,8 @@ class KineticGeneratorBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
-        adjacentEnergyTransfer.tick()
-        pullKuFromNeighbors(world, pos, this)
+        val transferredEu = adjacentEnergyTransfer.tick()
+        val pulledKu = pullKuFromNeighbors(world, pos, this)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         val hasInputThisTick = lastKuInputTick == world.time
         if (!hasInputThisTick) {

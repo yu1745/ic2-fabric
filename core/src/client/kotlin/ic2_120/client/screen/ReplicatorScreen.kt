@@ -94,7 +94,7 @@ class ReplicatorScreen(
 
         val status = handler.sync.status
         if (status != lastStatus) {
-            if (status == ReplicatorSync.STATUS_RUNNING || status == ReplicatorSync.STATUS_COMPLETE) {
+            if (status == ReplicatorSync.STATUS_RUNNING || status == ReplicatorSync.STATUS_COMPLETE || status == ReplicatorSync.STATUS_CANCELLED) {
                 showTemplateInfo = false
             }
             lastStatus = status
@@ -296,11 +296,13 @@ class ReplicatorScreen(
         ReplicatorSync.STATUS_NO_ENERGY -> t("gui.ic2_120.status_no_energy")
         ReplicatorSync.STATUS_RUNNING -> t("gui.ic2_120.replicator.status_running")
         ReplicatorSync.STATUS_COMPLETE -> t("gui.ic2_120.replicator.status_complete")
+        ReplicatorSync.STATUS_CANCELLED -> t("gui.ic2_120.replicator.status_cancelled")
         else -> t("gui.ic2_120.status_idle")
     }
 
     private fun statusColor(status: Int): Int = when (status) {
         ReplicatorSync.STATUS_COMPLETE -> 0x55FF55
+        ReplicatorSync.STATUS_CANCELLED -> 0xFFAA55
         ReplicatorSync.STATUS_RUNNING -> 0x55AAFF
         ReplicatorSync.STATUS_NO_REDSTONE, ReplicatorSync.STATUS_NO_STORAGE, ReplicatorSync.STATUS_NO_TEMPLATE,
         ReplicatorSync.STATUS_NO_FLUID, ReplicatorSync.STATUS_NO_OUTPUT, ReplicatorSync.STATUS_NO_ENERGY -> 0xFF5555

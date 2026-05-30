@@ -109,6 +109,7 @@ class SteamGeneratorBlockEntity(
 
 
         fun mbToDroplets(mb: Long): Long = mb * FluidConstants.BUCKET / 1000
+        fun dropletsToMb(droplets: Long): Long = droplets * 1000 / FluidConstants.BUCKET
     }
 
     private val syncedData = SyncedData(this)
@@ -129,6 +130,15 @@ class SteamGeneratorBlockEntity(
     /** 上次消耗的水是否为蒸馏水（用于蒸汽积压时回收水） */
     private var consumedWaterIsDistilled: Boolean = false
 
+    private var debugWindowStartTick: Long = Long.MIN_VALUE
+    private var debugTicks: Int = 0
+    private var debugHeatInputHu: Long = 0L
+    private var debugWaterConsumedMb: Long = 0L
+    private var debugSteamProducedDroplets: Long = 0L
+    private var debugSteamExtractedDroplets: Long = 0L
+    private var debugSteamRecoveredDroplets: Long = 0L
+    private var debugSteamExplodedDroplets: Long = 0L
+
     // ==== 流体槽 ====
 
     /** 水输入槽 — 接受水和蒸馏水，不可外部提取 */
@@ -137,7 +147,7 @@ class SteamGeneratorBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = WATER_TANK_CAPACITY
 
         override fun canInsert(variant: FluidVariant): Boolean =
-            ModFluids.isFluid(variant.fluid) && variant.fluid == net.minecraft.fluid.Fluids.WATER
+            ModFluids.isFluid(variant.fluid) && (variant.fluid == net.minecraft.fluid.Fluids.WATER || variant.fluid == ModFluids.DISTILLED_WATER_STILL)
 
         override fun canExtract(variant: FluidVariant): Boolean = false
 
@@ -153,9 +163,8 @@ class SteamGeneratorBlockEntity(
         fun consumeMb(mb: Long): Boolean {
             val droplets = mbToDroplets(mb)
             if (droplets <= 0L || variant.isBlank) return false
-            val actual = minOf(droplets, amount)
-            if (actual <= 0L) return false
-            amount -= actual
+            if (amount < droplets) return false
+            amount -= droplets
             if (amount <= 0L) variant = FluidVariant.blank()
             sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
@@ -184,6 +193,18 @@ class SteamGeneratorBlockEntity(
         override fun canInsert(variant: FluidVariant): Boolean = false  // 只能由机器产出
 
         override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isSteam(variant.fluid)
+
+        override fun extract(resource: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
+            val extracted = super.extract(resource, maxAmount, transaction)
+            if (extracted > 0L) {
+                transaction.addOuterCloseCallback { result ->
+                    if (result.wasCommitted()) {
+                        debugSteamExtractedDroplets += extracted
+                    }
+                }
+            }
+            return extracted
+        }
 
         override fun onFinalCommit() {
             sync.steamAmount = amount.toInt().coerceAtLeast(0)
@@ -348,10 +369,36 @@ class SteamGeneratorBlockEntity(
         // 取出跨 tick 累积的热量用于本 tick 处理
         val heatAvailableThisTick = heatBuffer.coerceAtMost(SteamGeneratorSync.MAX_HEAT_INPUT)
         heatBuffer = 0L
+        debugHeatInputHu += heatAvailableThisTick
 
         // 流体管道输出蒸汽 (默认 fluidPipeProviderEnabled=true, 无需升级)
         FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, steamTank,
             fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
+
+        // 回收上一 tick 排不出去的蒸汽（避免爆炸）
+        val leftoverSteam = steamTank.amount.coerceAtLeast(0L)
+        if (leftoverSteam > 0L) {
+            if (world.random.nextInt(10) == 0) {
+                debugSteamExplodedDroplets += leftoverSteam
+                world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
+                    1f, World.ExplosionSourceType.NONE)
+            } else {
+                val recoveredDroplets = leftoverSteam / SteamGeneratorSync.STEAM_EXPANSION
+                if (recoveredDroplets > 0L) {
+                    val fillFluid = if (consumedWaterIsDistilled) ModFluids.DISTILLED_WATER_STILL
+                        else net.minecraft.fluid.Fluids.WATER
+                    val space = WATER_TANK_CAPACITY - waterTank.amount
+                    val actual = minOf(recoveredDroplets, space)
+                    if (actual > 0L) {
+                        if (waterTank.variant.isBlank) waterTank.variant = FluidVariant.of(fillFluid)
+                        waterTank.amount += actual
+                    }
+                }
+                debugSteamRecoveredDroplets += leftoverSteam
+                steamTank.amount = 0L
+                steamTank.variant = FluidVariant.blank()
+            }
+        }
 
         if (fluidPipeReceiverEnabled) {
             FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, waterTank, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
@@ -405,7 +452,9 @@ class SteamGeneratorBlockEntity(
                             sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
                             consumedWaterIsDistilled = waterTank.isDistilled()
                             if (waterTank.amount <= 0L) waterTank.variant = FluidVariant.blank()
-                            sync.outputMB = ejected.toInt().coerceAtLeast(0) * SteamGeneratorSync.STEAM_EXPANSION
+                            sync.outputMB = (dropletsToMb(ejected) * SteamGeneratorSync.STEAM_EXPANSION)
+                                .coerceIn(0L, Int.MAX_VALUE.toLong())
+                                .toInt()
                             markDirty()
                         }
                     }
@@ -422,18 +471,21 @@ class SteamGeneratorBlockEntity(
                 val heatAvailable = heatAvailableThisTick * HEAT_PER_HU_MILLI
 
                 if (heatAvailable >= heatNeeded && waterTank.amount > 0L) {
+                    systemHeatMilli += heatAvailable
                     // 有足够热量产蒸汽
                     producingSuperheated = systemHeatMilli >= SteamGeneratorSync.SUPERHEATED_THRESHOLD_MILLI
 
                     // 实际消耗水量 = min(进水速率, 可用水量)
-                    val waterToConsume = minOf(inputMB.toLong(), waterTank.amount.toInt().coerceAtLeast(0).toLong())
+                    val waterToConsume = minOf(inputMB.toLong(), dropletsToMb(waterTank.amount))
                     if (waterToConsume > 0L) {
                         consumedWaterIsDistilled = waterTank.isDistilled()
                         if (waterTank.consumeMb(waterToConsume)) {
+                            debugWaterConsumedMb += waterToConsume
                             // 产出蒸汽 = 水量 * 膨胀倍率
                             val steamProduced = waterToConsume * SteamGeneratorSync.STEAM_EXPANSION
                             val steamDroplets = mbToDroplets(steamProduced)
                             steamTank.produceSteam(steamDroplets)
+                            debugSteamProducedDroplets += steamDroplets
                             sync.outputMB = steamProduced.toInt()
 
                             // 冷却 = water × (100 + pressure/220×100) × 0.5, 上限 2000 milli-°C(2°C)
@@ -464,37 +516,7 @@ class SteamGeneratorBlockEntity(
                 10f, World.ExplosionSourceType.NONE)
         }
 
-        // 5. 蒸汽未及时排出 → 对齐 ic2_origin TileEntitySteamGenerator.work()
-        if (sync.outputMB > 0) {
-            // 先尝试排出刚产出的蒸汽
-            FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, steamTank,
-                fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
-            val remainingMb = steamTank.amount.toInt().coerceAtLeast(0)
-            if (remainingMb > 0) {
-                if (world.random.nextInt(10) == 0) {
-                    world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                        1f, World.ExplosionSourceType.NONE)
-                } else {
-                    val waterRecover = remainingMb / SteamGeneratorSync.STEAM_EXPANSION
-                    if (waterRecover > 0) {
-                        val recoveredDroplets = mbToDroplets(waterRecover.toLong())
-                        val fillFluid = if (consumedWaterIsDistilled) ModFluids.DISTILLED_WATER_STILL
-                            else net.minecraft.fluid.Fluids.WATER
-                        val fillVariant = FluidVariant.of(fillFluid)
-                        val space = WATER_TANK_CAPACITY - waterTank.amount
-                        val actual = minOf(recoveredDroplets, space)
-                        if (actual > 0L) {
-                            if (waterTank.variant.isBlank) waterTank.variant = fillVariant
-                            waterTank.amount += actual
-                            sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
-                            markDirty()
-                        }
-                    }
-                }
-            }
-        }
-
-        // 7. 更新同步数据
+        // 6. 更新同步数据
         sync.systemHeatMilli = systemHeatMilli.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
         sync.heatInput = heatAvailableThisTick.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
         sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
@@ -512,7 +534,48 @@ class SteamGeneratorBlockEntity(
             systemHeatMilli <= SteamGeneratorSync.MAX_SYSTEM_HEAT_MILLI
         setActiveState(world, pos, state, active)
 
+        logSteamDebug(world, pos, pressure, inputMB)
+
         markDirty()
+    }
+
+    private fun logSteamDebug(world: World, pos: BlockPos, pressure: Int, inputMB: Int) {
+        if (debugWindowStartTick == Long.MIN_VALUE) {
+            debugWindowStartTick = world.time
+        }
+        debugTicks++
+        if (debugTicks < 100) return
+
+        val ticks = debugTicks.coerceAtLeast(1)
+        val producedMb = dropletsToMb(debugSteamProducedDroplets)
+        val extractedMb = dropletsToMb(debugSteamExtractedDroplets)
+        val recoveredMb = dropletsToMb(debugSteamRecoveredDroplets)
+        val explodedMb = dropletsToMb(debugSteamExplodedDroplets)
+        val avgProduced = producedMb.toDouble() / ticks
+        val avgExtracted = extractedMb.toDouble() / ticks
+        val avgRecovered = recoveredMb.toDouble() / ticks
+        val avgHeat = debugHeatInputHu.toDouble() / ticks
+        val avgWater = debugWaterConsumedMb.toDouble() / ticks
+        val superheated = producingSuperheated
+
+        println(
+            "[SteamGenerator] pos=$pos ticks=$ticks pressure=$pressure inputMB=$inputMB " +
+                "temp=${systemHeatMilli / 1000.0}C superheated=$superheated " +
+                "avgHeatHuT=${"%.2f".format(avgHeat)} avgWaterMbT=${"%.2f".format(avgWater)} " +
+                "avgProducedMbT=${"%.2f".format(avgProduced)} avgExtractedMbT=${"%.2f".format(avgExtracted)} " +
+                "avgRecoveredMbT=${"%.2f".format(avgRecovered)} recoveredMb=$recoveredMb explodedMb=$explodedMb " +
+                "steamTankMb=${dropletsToMb(steamTank.amount)} waterTankMb=${dropletsToMb(waterTank.amount)} " +
+                "calcification=$calcification windowStart=$debugWindowStartTick tick=${world.time}"
+        )
+
+        debugWindowStartTick = world.time
+        debugTicks = 0
+        debugHeatInputHu = 0L
+        debugWaterConsumedMb = 0L
+        debugSteamProducedDroplets = 0L
+        debugSteamExtractedDroplets = 0L
+        debugSteamRecoveredDroplets = 0L
+        debugSteamExplodedDroplets = 0L
     }
 
     /** 获取群系温度（milli-°C），对齐 ic2_origin BiomeUtil.getBiomeTemperature */
