@@ -57,6 +57,7 @@ class HybridSolarPanelBlock : MachineBlock() {
         return be as? NamedScreenHandlerFactory
     }
 
+    @Deprecated("Override without Hand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
     override fun onUse(
         state: BlockState,
         world: World,

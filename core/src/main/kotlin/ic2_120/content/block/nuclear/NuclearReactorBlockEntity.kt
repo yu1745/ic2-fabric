@@ -1040,7 +1040,7 @@ class NuclearReactorBlockEntity(
                 val outputSpaceMb = dropletsToMb(outputSpace)
                 var heatActuallyConverted = 0L
                 // 每秒日志一次，避免刷屏
-                if (world != null && (world!!.time % 20L == 0L)) {
+                if (world.time % 20L == 0L) {
                     LOG.debug(
                         "[冷却液转换] producedHeat=$actualProducedHeat " +
                             "ventDissipatedHeat=$rawVentDissipatedHeat " +

@@ -22,6 +22,7 @@ class OreWashingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<OreWashi
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.ORE_WASHING
     override fun getTitle(): Text = Text.translatable("block.ic2_120.ore_washing_plant")
+    @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon
 

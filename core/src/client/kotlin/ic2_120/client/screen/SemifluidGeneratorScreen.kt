@@ -108,7 +108,7 @@ class SemifluidGeneratorScreen(
         // 获取流体 sprite 和颜色
         val fluid = if (fuelFluidRawId > 0) Registries.FLUID.get(fuelFluidRawId) else null
         val fluidHandler = fluid?.let { FluidRenderHandlerRegistry.INSTANCE.get(it) }
-        val sprites = fluidHandler?.getFluidSprites(null, null, fluid?.defaultState)
+        val sprites = fluidHandler?.getFluidSprites(null, null, fluid.defaultState)
         val sprite = sprites?.getOrNull(0)
         val color = fluid?.let { FluidUtils.getFluidColor(it) } ?: -1
 

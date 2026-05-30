@@ -89,6 +89,7 @@ class MolecularTransformerBlock : MachineBlock(
         return be as? NamedScreenHandlerFactory
     }
 
+    @Deprecated("Override without Hand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
     override fun onUse(
         state: BlockState,
         world: World,
@@ -116,6 +117,7 @@ class MolecularTransformerBlock : MachineBlock(
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.INVISIBLE
 
     // BER model is smaller than a full cube, so this block must not occlude neighbor faces.
+    @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
     override fun getCullingShape(state: BlockState, world: BlockView, pos: BlockPos): VoxelShape =
         VoxelShapes.empty()
 }

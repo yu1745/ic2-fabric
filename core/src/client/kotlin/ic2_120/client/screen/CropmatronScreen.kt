@@ -24,12 +24,12 @@ class CropmatronScreen(
 
     private val waterSprite by lazy {
         MinecraftClient.getInstance()
-            .getSpriteAtlas(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE)
+            .getSpriteAtlas(Identifier("minecraft", "textures/atlas/blocks.png"))
             .apply(WATER_STILL_ID)
     }
     private val weedExSprite by lazy {
         MinecraftClient.getInstance()
-            .getSpriteAtlas(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE)
+            .getSpriteAtlas(Identifier("minecraft", "textures/atlas/blocks.png"))
             .apply(WEED_EX_STILL_ID)
     }
 

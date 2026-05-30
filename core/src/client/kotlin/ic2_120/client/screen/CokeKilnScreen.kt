@@ -90,7 +90,7 @@ class CokeKilnScreen(
             val lines = if (fluidAmount > 0) {
                 val fluid = Registries.FLUID.get(handler.sync.fluidRawId)
                 val mb = fluidAmount / DROPLETS_PER_MB
-                val capMb = (8 * FluidConstants.BUCKET / DROPLETS_PER_MB).toLong()
+                val capMb = 8 * FluidConstants.BUCKET / DROPLETS_PER_MB
                 listOf(Text.literal(fluid.defaultState.blockState.block.name.string),
                     Text.literal("${"%,d".format(mb)} / ${"%,d".format(capMb)} mB"))
             } else {

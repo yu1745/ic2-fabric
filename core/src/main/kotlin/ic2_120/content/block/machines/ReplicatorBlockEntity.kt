@@ -451,7 +451,7 @@ class ReplicatorBlockEntity(
         if (!canMergeIntoSlot(output, emptyResult)) return
 
         Transaction.openOuter().use { tx ->
-            val ctx = ContainerItemContext.withInitial(input)
+            val ctx = ContainerItemContext.withConstant(input)
             val itemStorage = ctx.find(FluidStorage.ITEM) ?: return@use
             for (view in itemStorage) {
                 if (view.amount < FluidConstants.BUCKET || view.resource.isBlank || !isUuMatter(view.resource.fluid)) continue

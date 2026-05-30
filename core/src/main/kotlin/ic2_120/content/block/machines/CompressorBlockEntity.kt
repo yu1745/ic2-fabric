@@ -302,7 +302,7 @@ class CompressorBlockEntity(
 
     private fun extractWaterContainerRemainder(input: ItemStack): ItemStack? {
         if (input.isEmpty) return null
-        val ctx = ContainerItemContext.withInitial(input.copyWithCount(1))
+        val ctx = ContainerItemContext.withConstant(input.copyWithCount(1))
         val itemStorage = ctx.find(FluidStorage.ITEM) ?: return null
         for (view in itemStorage) {
             val resource = view.resource

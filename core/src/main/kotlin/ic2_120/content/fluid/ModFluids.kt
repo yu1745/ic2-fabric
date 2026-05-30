@@ -336,6 +336,7 @@ object ModFluids {
             // 蒸汽自己控制 tick，不自发重调度
         }
 
+        @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
         override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
             if (!newState.isOf(this)) {
                 Ic2Fluid.steamSourceTickCounts.remove(pos.asLong())
@@ -348,12 +349,12 @@ object ModFluids {
                     }
                 }
             }
+            @Suppress("DEPRECATION")
             super.onStateReplaced(state, world, pos, newState, moved)
         }
     }
 
     /**
-     * IC2 抽象流体基类。
      * 行为类似水：非无限、流动速度 4、每格衰减 1、更新间隔 5 tick。
      * 当 rises = true，流体向上流动（蒸汽），10 秒后自动消散。
      */

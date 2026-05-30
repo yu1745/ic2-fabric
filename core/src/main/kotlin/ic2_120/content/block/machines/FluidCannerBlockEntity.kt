@@ -459,7 +459,7 @@ class FluidCannerBlockEntity(
             val emptyResult = getEmptyContainerFor(filled) ?: return
 
             Transaction.openOuter().use { tx ->
-                val ctx = ContainerItemContext.withInitial(filled)
+                val ctx = ContainerItemContext.withConstant(filled)
                 val itemStorage = ctx.find(FluidStorage.ITEM) ?: return@use
                 for (view in itemStorage) {
                     if (view.amount >= FluidConstants.BUCKET && !view.resource.isBlank) {
@@ -548,7 +548,7 @@ class FluidCannerBlockEntity(
                     val filledResult = getFilledContainerFor(inputSlot, fluid) ?: return
 
             Transaction.openOuter().use { tx ->
-                val ctx = ContainerItemContext.withInitial(inputSlot)
+                val ctx = ContainerItemContext.withConstant(inputSlot)
                 val itemStorage = ctx.find(FluidStorage.ITEM) ?: return@use
                 val inserted = itemStorage.insert(variant, FluidConstants.BUCKET, tx)
                 if (inserted == FluidConstants.BUCKET) {

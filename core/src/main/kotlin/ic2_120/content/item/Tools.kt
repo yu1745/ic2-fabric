@@ -659,7 +659,7 @@ class FrequencyTransmitter : Item(FabricItemSettings().maxCount(1)) {
             return
         }
 
-        val x = nbt!!.getInt(NBT_BIND_X)
+        val x = nbt.getInt(NBT_BIND_X)
         val y = nbt.getInt(NBT_BIND_Y)
         val z = nbt.getInt(NBT_BIND_Z)
         val dim = nbt.getString(NBT_BIND_DIM).ifBlank { "unknown" }

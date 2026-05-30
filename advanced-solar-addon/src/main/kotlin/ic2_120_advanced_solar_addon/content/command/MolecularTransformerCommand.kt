@@ -40,7 +40,7 @@ object MolecularTransformerCommand {
                                             return@executes 0
                                         }
 
-                                        val itemId = mainHandStack.item.registryEntry.registryKey().value.toString()
+                                        val itemId = Registries.ITEM.getId(mainHandStack.item).toString()
 
                                         // 添加或更新配方配置并保存
                                         val success = Ic2AdvancedSolarAddonConfig.addOrUpdateRecipeEnergy(itemId, energy)
@@ -83,7 +83,7 @@ object MolecularTransformerCommand {
                                     return@executes 0
                                 }
 
-                                val itemId = mainHandStack.item.registryEntry.registryKey().value.toString()
+                                val itemId = Registries.ITEM.getId(mainHandStack.item).toString()
 
                                 // 从配置中移除并保存
                                 val success = Ic2AdvancedSolarAddonConfig.removeRecipe(itemId)
@@ -123,7 +123,7 @@ object MolecularTransformerCommand {
                                     return@executes 0
                                 }
 
-                                val itemId = mainHandStack.item.registryEntry.registryKey().value.toString()
+                                val itemId = Registries.ITEM.getId(mainHandStack.item).toString()
                                 val currentRecipe = Ic2AdvancedSolarAddonConfig.getRecipeByInput(itemId)
 
                                 if (currentRecipe != null) {

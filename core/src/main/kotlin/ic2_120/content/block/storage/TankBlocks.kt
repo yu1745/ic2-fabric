@@ -70,6 +70,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
 
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
 
+    @Deprecated("Override without Hand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
     override fun onUse(
         state: BlockState,
         world: World,
@@ -226,6 +227,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         stack.orCreateNbt.put("BlockEntityTag", nbt)
     }
 
+    @Deprecated("override deprecated method", level = DeprecationLevel.WARNING)
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.isOf(newState.block)) {
             val blockEntity = world.getBlockEntity(pos)
@@ -243,9 +245,11 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
                 world.spawnEntity(itemEntity)
             }
         }
+        @Suppress("DEPRECATION")
         super.onStateReplaced(state, world, pos, newState, moved)
     }
 
+    @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
     override fun onStacksDropped(state: BlockState, world: ServerWorld, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
         // 不调用 super，防止默认掉落行为
     }
@@ -278,8 +282,10 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         return itemStack
     }
 
+    @Deprecated("Override without BlockState param", level = DeprecationLevel.WARNING)
     override fun hasComparatorOutput(state: BlockState): Boolean = true
 
+    @Deprecated("Override without BlockState param", level = DeprecationLevel.WARNING)
     override fun getComparatorOutput(state: BlockState, world: net.minecraft.world.World, pos: BlockPos): Int {
         val blockEntity = world.getBlockEntity(pos)
         if (blockEntity is TankBlockEntity) {

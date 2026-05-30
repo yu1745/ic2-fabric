@@ -445,7 +445,7 @@ class CannerBlockEntity(
     private fun trySolidCanning(container: ItemStack, material: ItemStack, outputSlot: ItemStack): Boolean {
         if (container.isEmpty || material.isEmpty) return false
         if (container.item != tinCanItem && container.item !is EmptyFuelRodItem) return false
-        val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class) ?: return false
+        val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
         val recipeInventory = SimpleInventory(container.copyWithCount(1), material.copyWithCount(1))
         val match = world?.recipeManager?.getFirstMatch(recipeType, recipeInventory, world) ?: return false
         if (match.isEmpty) return false
@@ -603,7 +603,7 @@ class CannerBlockEntity(
         val container = getStack(SLOT_INPUT)
         val material = getStack(SLOT_MATERIAL)
         val outputSlot = getStack(SLOT_OUTPUT)
-        val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class) ?: return
+        val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
         val recipeInventory = SimpleInventory(container.copyWithCount(1), material.copyWithCount(1))
         val match = world?.recipeManager?.getFirstMatch(recipeType, recipeInventory, world) ?: return
         if (match.isEmpty) return
