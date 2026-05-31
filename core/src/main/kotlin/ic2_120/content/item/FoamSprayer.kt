@@ -119,6 +119,7 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)) {
         }
 
         private fun canPlaceFoamAt(world: World, pos: BlockPos): Boolean {
+            @Suppress("DEPRECATION")
             if (!world.isChunkLoaded(pos)) return false
             if (!world.worldBorder.contains(pos)) return false
             val state = world.getBlockState(pos)
@@ -274,12 +275,12 @@ internal class FoamSprayerFluidStorage(
 
     override fun iterator(): MutableIterator<StorageView<FluidVariant>> {
         if (ctx.itemVariant.item !is FoamSprayerItem) {
-            return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
+            return mutableListOf<StorageView<FluidVariant>>().iterator()
         }
         val stack = ctx.itemVariant.toStack(1)
         val amt = FoamSprayerItem.getFluidAmount(stack)
         if (amt <= 0L) {
-            return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
+            return mutableListOf<StorageView<FluidVariant>>().iterator()
         }
         val variant = FluidVariant.of(ModFluids.CONSTRUCTION_FOAM_STILL)
         val view = object : StorageView<FluidVariant> {

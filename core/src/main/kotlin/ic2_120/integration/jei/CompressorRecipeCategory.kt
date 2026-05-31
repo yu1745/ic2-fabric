@@ -30,6 +30,7 @@ class CompressorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Compress
 
     override fun getTitle(): Text = Text.translatable("block.ic2_120.compressor")
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
 
     override fun getIcon(): IDrawable = icon

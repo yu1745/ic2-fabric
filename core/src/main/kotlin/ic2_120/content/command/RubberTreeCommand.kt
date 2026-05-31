@@ -62,10 +62,7 @@ object RubberTreeCommand {
             return 0
         }
 
-        val world = source.world as? ServerWorld ?: run {
-            source.sendError(Text.literal("此命令只能在服务端执行"))
-            return 0
-        }
+        val world = source.world
 
         source.sendFeedback({ Text.literal("正在搜索 ${radius} 格范围内的橡胶树...") }, true)
 

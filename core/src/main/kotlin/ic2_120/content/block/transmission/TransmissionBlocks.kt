@@ -105,6 +105,7 @@ abstract class BaseTransmissionBlock(
         return defaultState.with(Properties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getStateForNeighborUpdate(
         state: BlockState,
         direction: Direction,
@@ -119,9 +120,10 @@ abstract class BaseTransmissionBlock(
         if (world is net.minecraft.world.World && !world.isClient) {
             KineticNetworkManager.invalidateConnectionCachesAt(world, pos)
         }
-        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
+        return state
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getFluidState(state: BlockState): FluidState =
         if (state.get(Properties.WATERLOGGED)) Fluids.WATER.getStill(false) else Fluids.EMPTY.getDefaultState()
 
@@ -332,6 +334,7 @@ class BevelGearBlock(
             .with(PLANE, plane)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos): Boolean = true
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")

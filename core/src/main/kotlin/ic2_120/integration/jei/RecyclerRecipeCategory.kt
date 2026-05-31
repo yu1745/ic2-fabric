@@ -30,6 +30,7 @@ class RecyclerRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<RecyclerJe
 
     override fun getTitle(): Text = Text.translatable("block.ic2_120.recycler")
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
 
     override fun getIcon(): IDrawable = icon

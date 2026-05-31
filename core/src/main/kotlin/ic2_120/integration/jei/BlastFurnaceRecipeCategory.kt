@@ -28,6 +28,7 @@ class BlastFurnaceRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlastF
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.BLAST_FURNACE
     override fun getTitle(): Text = Text.translatable("block.ic2_120.blast_furnace")
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon
 

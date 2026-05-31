@@ -112,6 +112,7 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         }
 
         val bindPos = BlockPos(nbt.getInt(NBT_BIND_X), nbt.getInt(NBT_BIND_Y), nbt.getInt(NBT_BIND_Z))
+        @Suppress("DEPRECATION")
         if (!world.isChunkLoaded(bindPos)) {
             player.sendMessage(Text.literal("目标坐标区块未加载。"), true)
             return TypedActionResult.fail(stack)

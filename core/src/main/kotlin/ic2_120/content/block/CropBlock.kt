@@ -139,6 +139,7 @@ class CropBlock : BlockWithEntity(
             be.tick(w, p, s)
         }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,

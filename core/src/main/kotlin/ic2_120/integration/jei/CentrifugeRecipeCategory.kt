@@ -30,6 +30,7 @@ class CentrifugeRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Centrifu
 
     override fun getTitle(): Text = Text.translatable("block.ic2_120.centrifuge")
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
 
     override fun getIcon(): IDrawable = icon

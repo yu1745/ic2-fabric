@@ -575,6 +575,7 @@ class SplitterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) :
         super.neighborUpdate(state, world, pos, block, sourcePos, notify)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getStateForNeighborUpdate(
         state: BlockState, direction: Direction, neighborState: BlockState,
         world: WorldAccess, pos: BlockPos, neighborPos: BlockPos
@@ -618,6 +619,7 @@ class LimiterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : 
     override fun getCableMin(): Double = 4.0 / 16.0
     override fun getCableMax(): Double = 12.0 / 16.0
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState, world: World, pos: BlockPos,
         player: PlayerEntity, hit: BlockHitResult

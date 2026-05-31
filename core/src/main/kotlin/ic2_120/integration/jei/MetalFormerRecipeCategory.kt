@@ -27,6 +27,7 @@ class MetalFormerRollingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.METAL_FORMER_ROLLING
     override fun getTitle(): Text = Text.translatable("block.ic2_120.metal_former.rolling")
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon
 
@@ -58,6 +59,7 @@ class MetalFormerCuttingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.METAL_FORMER_CUTTING
     override fun getTitle(): Text = Text.translatable("block.ic2_120.metal_former.cutting")
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon
 
@@ -89,6 +91,7 @@ class MetalFormerExtrudingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategor
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.METAL_FORMER_EXTRUDING
     override fun getTitle(): Text = Text.translatable("block.ic2_120.metal_former.extruding")
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon
 

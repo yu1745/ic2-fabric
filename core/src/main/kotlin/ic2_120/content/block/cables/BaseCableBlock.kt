@@ -78,6 +78,7 @@ abstract class BaseCableBlock(settings: AbstractBlock.Settings = defaultSettings
             .with(DOWN, canConnect(world, pos, Direction.DOWN))
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getStateForNeighborUpdate(
         state: BlockState,
         direction: Direction,
@@ -99,6 +100,7 @@ abstract class BaseCableBlock(settings: AbstractBlock.Settings = defaultSettings
         return state.with(property, connected)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getFluidState(state: BlockState): FluidState =
         if (state.get(Properties.WATERLOGGED)) Fluids.WATER.getStill(false) else Fluids.EMPTY.getDefaultState()
 

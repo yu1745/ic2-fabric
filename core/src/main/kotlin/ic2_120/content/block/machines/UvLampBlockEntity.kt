@@ -161,7 +161,7 @@ class UvLampBlockEntity(
         if (ocCount > 0 && active && world is ServerWorld) {
             val particleTick = (world.time + particleOffset) % PARTICLE_INTERVAL_TICKS
             if (particleTick == 0L) {
-                spawnParticles(world as ServerWorld, pos)
+                spawnParticles(world, pos)
             }
         }
 

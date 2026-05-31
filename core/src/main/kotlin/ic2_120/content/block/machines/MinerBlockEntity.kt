@@ -544,7 +544,7 @@ abstract class BaseMinerBlockEntity(
                         if (sync.running != 0 && isPipeAdjacentTo(targetPos)) {
                             pendingBreakEnergy = 0L
                             advanceCursor(scannerType.scanRadius)
-                            mineBlock(world as ServerWorld, targetPos, blockState)
+                            mineBlock(world, targetPos, blockState)
                             active = true
                             minedThisCycle = true
                         } else {
@@ -616,7 +616,7 @@ abstract class BaseMinerBlockEntity(
 
                 if (sync.consumeEnergy(breakEnergy) > 0L) {
                     advanceCursor(scannerType.scanRadius)
-                    mineBlock(world as ServerWorld, targetPos, blockState)
+                    mineBlock(world, targetPos, blockState)
                     active = true
                     minedThisCycle = true
                 } else {

@@ -28,6 +28,7 @@ class BlockCutterRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlockCu
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.BLOCK_CUTTER
     override fun getTitle(): Text = Text.translatable("block.ic2_120.block_cutter")
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon
 

@@ -30,6 +30,7 @@ class SolidCannerRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<SolidCa
 
     override fun getTitle(): Text = Text.translatable("block.ic2_120.solid_canner")
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
 
     override fun getIcon(): IDrawable = icon
