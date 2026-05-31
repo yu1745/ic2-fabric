@@ -548,6 +548,7 @@ class SplitterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) :
         }
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun neighborUpdate(
         state: BlockState, world: World, pos: BlockPos,
         block: Block, sourcePos: BlockPos, notify: Boolean

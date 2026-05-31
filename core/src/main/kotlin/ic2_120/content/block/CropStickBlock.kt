@@ -88,6 +88,7 @@ class CropStickBlock : BlockWithEntity(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? = null
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos): Boolean {
         val below = world.getBlockState(pos.down())
         return below.block is FarmlandBlock
