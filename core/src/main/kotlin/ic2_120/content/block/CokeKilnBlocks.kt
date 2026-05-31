@@ -46,6 +46,7 @@ class RefractoryBricksBlock : Block(AbstractBlock.Settings.copy(Blocks.BRICKS).s
         if (!world.isClient) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         super.onStateReplaced(state, world, pos, newState, moved)
         if (!world.isClient && !state.isOf(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
@@ -76,6 +77,7 @@ class CokeKilnBlock : MachineBlock(AbstractBlock.Settings.copy(Blocks.BRICKS).st
         if (!world.isClient) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         super.onStateReplaced(state, world, pos, newState, moved)
         if (!world.isClient && !state.isOf(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
@@ -94,6 +96,7 @@ class CokeKilnBlock : MachineBlock(AbstractBlock.Settings.copy(Blocks.BRICKS).st
             be.tick(w, p, s)
         }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
@@ -132,6 +135,7 @@ class CokeKilnGrateBlock : net.minecraft.block.BlockWithEntity(AbstractBlock.Set
         if (!world.isClient) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         super.onStateReplaced(state, world, pos, newState, moved)
         if (!world.isClient && !state.isOf(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
@@ -149,6 +153,7 @@ class CokeKilnGrateBlock : net.minecraft.block.BlockWithEntity(AbstractBlock.Set
 
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState = defaultState.with(FACING, Direction.DOWN)
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
@@ -206,11 +211,13 @@ class CokeKilnHatchBlock : Block(AbstractBlock.Settings.copy(Blocks.BRICKS).stre
         if (!world.isClient) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         super.onStateReplaced(state, world, pos, newState, moved)
         if (!world.isClient && !state.isOf(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,

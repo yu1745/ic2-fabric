@@ -58,6 +58,7 @@ abstract class BaseMinerBlock : MachineBlock() {
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
@@ -72,6 +73,7 @@ abstract class BaseMinerBlock : MachineBlock() {
         return ActionResult.SUCCESS
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.isOf(newState.block) && !moved) {
             val be = world.getBlockEntity(pos)

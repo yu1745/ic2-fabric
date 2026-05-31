@@ -50,7 +50,7 @@ interface IBatteryItem : ITiered {
     fun charge(stack: net.minecraft.item.ItemStack, amount: Long): Long {
         val current = getCurrentCharge(stack)
         val canAccept = maxCapacity - current
-        val toCharge = minOf(amount, canAccept.toLong())
+        val toCharge = minOf(amount, canAccept)
         setCurrentCharge(stack, current + toCharge)
         return toCharge
     }

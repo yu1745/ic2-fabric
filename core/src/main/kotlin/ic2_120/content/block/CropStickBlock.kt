@@ -88,6 +88,7 @@ class CropStickBlock : BlockWithEntity(
         return below.block is FarmlandBlock
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getStateForNeighborUpdate(
         state: BlockState,
         direction: Direction,
@@ -102,6 +103,7 @@ class CropStickBlock : BlockWithEntity(
         return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,

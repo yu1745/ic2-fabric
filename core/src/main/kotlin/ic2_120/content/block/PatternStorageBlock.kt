@@ -62,6 +62,7 @@ class PatternStorageBlock : MachineBlock() {
     ): net.minecraft.screen.NamedScreenHandlerFactory? =
         world.getBlockEntity(pos) as? net.minecraft.screen.NamedScreenHandlerFactory
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,

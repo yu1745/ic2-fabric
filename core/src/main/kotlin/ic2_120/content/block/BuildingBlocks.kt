@@ -338,6 +338,7 @@ class MiningPipeBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.
             .with(DOWN, canConnect(world, pos, Direction.DOWN))
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getStateForNeighborUpdate(
         state: BlockState,
         direction: Direction,

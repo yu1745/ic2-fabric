@@ -65,6 +65,7 @@ class RtHeatGeneratorBlock : MachineBlock() {
         return be as? NamedScreenHandlerFactory
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,

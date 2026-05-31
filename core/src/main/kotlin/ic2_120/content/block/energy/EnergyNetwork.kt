@@ -337,7 +337,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             log.debug("[导线烧毁] 电网输出等级=$outputLevel，可烧毁导线数量=${toBurn.size}（电压等级 < $outputLevel）")
         }
 
-        val burnCount = (toBurn.size * underTierCableBurnRatio).toInt().coerceIn(0, toBurn.size)
+        val burnCount = (toBurn.size * underTierCableBurnRatio).coerceIn(0, toBurn.size)
         if (burnCount <= 0) return
 
         if (ENABLE_CABLE_BURN_LOG) {

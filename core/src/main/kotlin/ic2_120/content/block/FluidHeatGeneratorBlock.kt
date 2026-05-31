@@ -60,6 +60,7 @@ class FluidHeatGeneratorBlock : MachineBlock() {
             .with(Properties.HORIZONTAL_FACING, ctx.horizontalPlayerFacing)
             .with(ACTIVE, false)
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,

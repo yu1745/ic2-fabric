@@ -142,7 +142,7 @@ internal fun bucketToFilledFluidCell(bucketStack: ItemStack): ItemStack? {
         Items.WATER_BUCKET -> Fluids.WATER
         Items.LAVA_BUCKET -> Fluids.LAVA
         else -> {
-            val ctx = ContainerItemContext.withInitial(bucketStack)
+            val ctx = ContainerItemContext.withConstant(bucketStack)
             val storage = ctx.find(FluidStorage.ITEM) ?: return null
             var found: Fluid? = null
             for (view in storage) {
@@ -751,9 +751,9 @@ private class FluidCellStorage(private val ctx: ContainerItemContext) : Storage<
 
     override fun iterator(): MutableIterator<StorageView<FluidVariant>> {
         val current = ctx.itemVariant
-        if (current.item != fluidCell) return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
-        val stored = current.nbt?.getCompound(FLUID_CELL_NBT_KEY)?.let { FluidVariant.fromNbt(it) } ?: return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
-        if (stored.isBlank) return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
+        if (current.item != fluidCell) return mutableListOf<StorageView<FluidVariant>>().iterator()
+        val stored = current.nbt?.getCompound(FLUID_CELL_NBT_KEY)?.let { FluidVariant.fromNbt(it) } ?: return mutableListOf<StorageView<FluidVariant>>().iterator()
+        if (stored.isBlank) return mutableListOf<StorageView<FluidVariant>>().iterator()
         return mutableListOf(object : StorageView<FluidVariant> {
             override fun getResource(): FluidVariant = stored
             override fun getAmount(): Long = FluidConstants.BUCKET

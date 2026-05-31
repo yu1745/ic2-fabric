@@ -30,6 +30,7 @@ class CannerMixingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Canner
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.CANNER_MIXING
     override fun getTitle(): Text = Text.translatable("block.ic2_120.canner.mixing")
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
     override fun getIcon(): IDrawable = icon
 

@@ -226,7 +226,7 @@ class MetalFormerBlockEntity(
         }
 
         // 通过 RecipeManager 查找配方
-        val recipeManager = world?.recipeManager ?: return
+        val recipeManager = world.recipeManager ?: return
         val recipeInput = MetalFormerRecipe.Input(input)
         // 遍历所有匹配该 RecipeType 的配方，找到当前模式对应的
         val recipe = recipeManager.listAllOfType(getRecipeType<MetalFormerRecipe>())

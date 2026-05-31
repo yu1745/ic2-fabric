@@ -80,6 +80,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
             be.tick(w, p, s)
         }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
@@ -146,12 +147,6 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
             return ActionResult.SUCCESS
         }
 
-        if (!world.isClient) {
-            val factory = be as? NamedScreenHandlerFactory
-            if (factory != null) {
-                player.openHandledScreen(factory)
-            }
-        }
         return ActionResult.SUCCESS
     }
 

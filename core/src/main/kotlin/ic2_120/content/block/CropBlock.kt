@@ -117,6 +117,7 @@ class CropBlock : BlockWithEntity(
         if (world.isClient) null
         else checkType(type, CropBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
