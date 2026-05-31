@@ -124,6 +124,7 @@ class UvLampBlock : BlockWithEntity(
         return ActionResult.SUCCESS
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(
         state: BlockState,
         world: World,

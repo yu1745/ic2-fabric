@@ -101,6 +101,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         super.onBreak(world, pos, state, player)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onEntityCollision(state: BlockState, world: World, pos: BlockPos, entity: net.minecraft.entity.Entity) {
         // 不处理碰撞
     }

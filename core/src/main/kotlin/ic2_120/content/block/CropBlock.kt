@@ -82,9 +82,11 @@ class CropBlock : BlockWithEntity(
         .ticksRandomly()
 ) {
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun emitsRedstonePower(state: BlockState): Boolean =
         state.get(CROP_TYPE) == CropType.RED_WHEAT
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getWeakRedstonePower(
         state: BlockState,
         world: net.minecraft.world.BlockView,
@@ -178,6 +180,7 @@ class CropBlock : BlockWithEntity(
         super.onBreak(world, pos, state, player)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStacksDropped(
         state: BlockState,
         world: ServerWorld,

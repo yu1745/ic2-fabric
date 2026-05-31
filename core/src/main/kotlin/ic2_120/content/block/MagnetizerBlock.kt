@@ -75,6 +75,7 @@ class MagnetizerBlock : MachineBlock() {
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =
         super.getPlacementState(ctx)?.with(ACTIVE, false)?.with(Properties.POWERED, false)
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun neighborUpdate(
         state: BlockState,
         world: World,
