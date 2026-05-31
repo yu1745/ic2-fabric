@@ -48,8 +48,8 @@ class SemifluidGeneratorScreen(
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()
 
-        // 能量条位于 (118, 19) — 30×17 水平纹理来自 guiheatsourcegenerator.png (178,2)-(207,18)
-        drawEnergyGauge(context, x + 118, y + 19, energyFrac)
+        // 能量条位于 (120, 19) — 24×16 水平纹理来自 guiheatsourcegenerator.png (178,2)-(202,18)
+        drawEnergyGauge(context, x + 120, y + 19, energyFrac)
 
         // 燃料储量条：区域 (82,23)-(94,69) = 12×46
         drawFuelBar(context, x + 82, y + 23, fuelFrac, handler.sync.fuelFluidRawId)
@@ -65,8 +65,8 @@ class SemifluidGeneratorScreen(
         context.drawText(textRenderer, generateText, sideTextX, y + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, outputText, sideTextX, y + 20, 0xAAAAAA, false)
 
-        // 能量条悬停 (118,19)-(148,36) = 30×17
-        if (mouseX in x + 118 until x + 148 && mouseY in y + 19 until y + 36) {
+        // 能量条悬停 (120,19)-(144,35) = 24×16
+        if (mouseX in x + 120 until x + 144 && mouseY in y + 19 until y + 35) {
             context.drawTooltip(
                 textRenderer,
                 Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
@@ -90,8 +90,8 @@ class SemifluidGeneratorScreen(
     }
 
     private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
-        val barW = 30
-        val barH = 17
+        val barW = 24
+        val barH = 16
         val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
         if (fillW <= 0) return
         context.enableScissor(gx, gy, gx + fillW, gy + barH)

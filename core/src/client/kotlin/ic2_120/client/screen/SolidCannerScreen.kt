@@ -143,8 +143,8 @@ class SolidCannerScreen(
         private const val ENERGY_BAR_V = 3
         private const val ENERGY_BAR_W = 14
         private const val ENERGY_BAR_H = 14
-        private const val ENERGY_BAR_X = 8
-        private const val ENERGY_BAR_Y = 47
+        private const val ENERGY_BAR_X = 9
+        private const val ENERGY_BAR_Y = 45
 
         // 进度条 (179,20)-(201,35) = 22×15
         private const val PROGRESS_U = 179

@@ -42,8 +42,8 @@ class GeneratorScreen(
         val inputRate = handler.sync.getSyncedInsertedAmount()
         val outputRate = handler.sync.getSyncedExtractedAmount()
 
-        // 能量条位于 (78, 35) — 26×17 水平纹理来自 guipowergenerator.png (179,3)-(204,19)
-        drawEnergyGauge(context, x + 78, y + 35, energyFrac)
+        // 能量条位于 (79, 35) — 24×16 水平纹理来自 guipowergenerator.png (178,3)-(202,19)
+        drawEnergyGauge(context, x + 79, y + 35, energyFrac)
 
         // 燃料条位于 (58, 38) — 13×13 垂直纹理来自 guipowergenerator.png (179,22)-(191,34)
         drawFuelGauge(context, x + 57, y + 38, burnFrac)
@@ -59,8 +59,8 @@ class GeneratorScreen(
         context.drawText(textRenderer, generateText, sideTextX, y + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, outputText, sideTextX, y + 20, 0xAAAAAA, false)
 
-        // 能量条悬停 (78,35)-(104,52) = 26×17
-        if (mouseX in x + 78 until x + 104 && mouseY in y + 35 until y + 52) {
+        // 能量条悬停 (79,35)-(103,51) = 24×16
+        if (mouseX in x + 79 until x + 103 && mouseY in y + 35 until y + 51) {
             context.drawTooltip(
                 textRenderer,
                 Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(GeneratorSync.ENERGY_CAPACITY)} EU"),
@@ -72,12 +72,12 @@ class GeneratorScreen(
     }
 
     private fun drawEnergyGauge(context: DrawContext, gx: Int, gy: Int, fraction: Float) {
-        val barW = 26
-        val barH = 17
+        val barW = 24
+        val barH = 16
         val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
         if (fillW <= 0) return
         context.enableScissor(gx, gy, gx + fillW, gy + barH)
-        context.drawTexture(TEXTURE, gx, gy, 179f, 3f, barW, barH, 256, 256)
+        context.drawTexture(TEXTURE, gx, gy, 178f, 3f, barW, barH, 256, 256)
         context.disableScissor()
     }
 

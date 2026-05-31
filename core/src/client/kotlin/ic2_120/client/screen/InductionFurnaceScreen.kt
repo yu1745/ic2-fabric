@@ -155,7 +155,7 @@ class InductionFurnaceScreen(
         private const val ENERGY_BAR_W = 14
         private const val ENERGY_BAR_H = 14
         private const val ENERGY_BAR_X = 37
-        private const val ENERGY_BAR_Y = 36
+        private const val ENERGY_BAR_Y = 35
 
         // 工作进度 (181,23)-(203,38) = 22×15
         private const val PROGRESS_U = 181

@@ -119,7 +119,7 @@ class CropHarvesterScreen(
         private const val ENERGY_BAR_W = 14
         private const val ENERGY_BAR_H = 14
         private const val ENERGY_BAR_X = 16
-        private const val ENERGY_BAR_Y = 37
+        private const val ENERGY_BAR_Y = 36
 
         // uptips
         private const val UPTIPS_X = 4

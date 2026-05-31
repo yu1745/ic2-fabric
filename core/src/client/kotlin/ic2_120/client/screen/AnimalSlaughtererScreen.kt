@@ -145,7 +145,7 @@ class AnimalSlaughtererScreen(
         private const val ENERGY_BAR_W = 14
         private const val ENERGY_BAR_H = 14
         private const val ENERGY_BAR_X = 16
-        private const val ENERGY_BAR_Y = 37
+        private const val ENERGY_BAR_Y = 36
 
         // 剪刀纹理 (180,21)-(198,39) = 18x18
         private const val SHEARS_TEX_U = 180

@@ -143,8 +143,8 @@ class CompressorScreen(
         private const val ENERGY_BAR_V = 4
         private const val ENERGY_BAR_W = 14
         private const val ENERGY_BAR_H = 14
-        private const val ENERGY_BAR_X = 58
-        private const val ENERGY_BAR_Y = 38
+        private const val ENERGY_BAR_X = 59
+        private const val ENERGY_BAR_Y = 36
 
         // 工作进度 (180,22)-(202,37) = 22×15
         private const val PROGRESS_U = 180

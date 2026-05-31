@@ -38,9 +38,9 @@ class ElectricHeatGeneratorScreen(
         // 标题居中于 y=6
         context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
-        // 能量条：纹理区域 (179,3)-(192,16) = 13×13，渲染到 (10,44)，自底向上填充
+        // 能量条：纹理区域 (179,3)-(192,16) = 13×13，渲染到 (10,45)，自底向上填充
         val gaugeX = x + 10
-        val gaugeY = y + 43
+        val gaugeY = y + 44
         val gaugeSize = 13
         drawEnergyGauge(context, gaugeX, gaugeY, energyFrac)
 

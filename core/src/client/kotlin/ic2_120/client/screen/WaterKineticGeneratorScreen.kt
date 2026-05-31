@@ -27,6 +27,7 @@ class WaterKineticGeneratorScreen(
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
         val left = x
@@ -40,9 +41,6 @@ class WaterKineticGeneratorScreen(
 
         // 标题居中于 y=6
         context.drawText(textRenderer, title, left + (176 - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
-
-        // 转子槽提示
-        context.drawText(textRenderer, t("gui.ic2_120.water_kinetic.rotor_slot"), left + 80, top + 12, 0xAAAAAA, false)
 
         // 状态信息（左侧）
         val generatedText = McText.translatable("ic2_120.jade.water_ku_generated", generatedKu).string
