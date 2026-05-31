@@ -110,6 +110,10 @@ class BlastFurnaceBlockEntity(
         private const val NBT_TEMP_PROGRESS = "TempProgress"
         private const val NBT_TEMP_DECAY = "TempDecay"
         private const val NBT_AIR_AMOUNT = "AirAmount"
+        private const val NBT_HU_BUFFER = "HuBuffer"
+
+        /** HU 缓存容量：1280 HU = 16 tick × 80 HU/tick（恰好覆盖 1401 的 1 度温度衰减窗口） */
+        const val HU_BUFFER_CAPACITY: Long = 1280L
 
         @Volatile
         private var fluidLookupRegistered = false
@@ -141,6 +145,7 @@ class BlastFurnaceBlockEntity(
     val sync = BlastFurnaceSync(syncedData)
 
     private var huReceivedThisTick: Long = 0L
+    private var huBuffer: Long = 0L  // HU 缓存，上限 HU_BUFFER_CAPACITY (1280)
     private var temperature: Int = 0
     private var tempProgress: Int = 0
     private var tempDecayProgress: Int = 0
@@ -245,6 +250,7 @@ class BlastFurnaceBlockEntity(
         temperature = nbt.getInt(NBT_TEMPERATURE).coerceIn(0, BlastFurnaceSync.TEMP_MAX)
         tempProgress = nbt.getInt(NBT_TEMP_PROGRESS).coerceAtLeast(0)
         tempDecayProgress = nbt.getInt(NBT_TEMP_DECAY).coerceAtLeast(0)
+        huBuffer = nbt.getLong(NBT_HU_BUFFER).coerceIn(0L, HU_BUFFER_CAPACITY)
         sync.temperature = temperature
         airTankInternal.setStoredAir(nbt.getLong(NBT_AIR_AMOUNT).coerceAtLeast(0L))
     }
@@ -254,6 +260,7 @@ class BlastFurnaceBlockEntity(
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_HU_RECEIVED, huReceivedThisTick)
+        nbt.putLong(NBT_HU_BUFFER, huBuffer)
         nbt.putInt(NBT_TEMPERATURE, temperature)
         nbt.putInt(NBT_TEMP_PROGRESS, tempProgress)
         nbt.putInt(NBT_TEMP_DECAY, tempDecayProgress)
@@ -262,10 +269,18 @@ class BlastFurnaceBlockEntity(
 
     override fun receiveHeatInternal(hu: Long): Long {
         if (hu <= 0L) return 0L
-        huReceivedThisTick += hu
+        val space = (HU_BUFFER_CAPACITY - huBuffer).coerceAtLeast(0L)
+        if (space <= 0L) {
+            // 缓存满，不接受热量
+            heatReceivedLastTick = true
+            return 0L
+        }
+        val accepted = minOf(hu, space)
+        huBuffer += accepted
+        huReceivedThisTick += accepted
         heatReceivedLastTick = true
         markDirty()
-        return hu
+        return accepted
     }
 
     private fun getRecipeForInput(input: ItemStack): BlastFurnaceRecipe? {
@@ -305,7 +320,7 @@ class BlastFurnaceBlockEntity(
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
 
-        sync.huInput = huReceivedThisTick.toInt()
+        sync.huInput = huBuffer.toInt().coerceIn(0, Int.MAX_VALUE)
         sync.temperature = temperature
         sync.heatInput = if (heatReceivedLastTick) 1 else 0
 
@@ -326,40 +341,54 @@ class BlastFurnaceBlockEntity(
         val canWork = temperature >= BlastFurnaceSync.TEMP_WORK_MIN && hasInput && canAcceptOutput
 
         if (canWork) {
-            // HU 不足维持当前温度：暂停工作，触发温度衰减
-            if (huReceivedThisTick < huPerTick) {
+            // HU 不足以维持当前温度：清空缓存，触发温度衰减
+            if (huBuffer < huPerTick) {
+                huBuffer = 0L
                 applyTemperatureDecay()
                 if (temperature < BlastFurnaceSync.TEMP_WORK_MIN && sync.progress != 0) {
                     sync.progress = 0
                     airConsumedThisSteel = 0L
                 }
                 setActiveState(world, pos, state, false)
+                sync.huInput = huBuffer.toInt()
+                huReceivedThisTick = 0L
+                heatReceivedLastTick = false
                 return
             }
 
-            // HU 充足，始终消耗 HU 维持温度（即使空气不足或产物满）
+            // HU 充足，消耗 HU 维持温度
+            huBuffer -= huPerTick
             tempDecayProgress = 0
 
-            // 无材料：重置进度，仅消耗 HU
+            // 无材料：重置进度
             if (!hasInput) {
                 if (sync.progress != 0) sync.progress = 0
                 markDirty()
                 setActiveState(world, pos, state, false)
+                sync.huInput = huBuffer.toInt()
+                huReceivedThisTick = 0L
+                heatReceivedLastTick = false
                 return
             }
 
-            // 产物满：仅消耗 HU
+            // 产物满
             if (!canAcceptOutput) {
                 markDirty()
                 setActiveState(world, pos, state, false)
+                sync.huInput = huBuffer.toInt()
+                huReceivedThisTick = 0L
+                heatReceivedLastTick = false
                 return
             }
 
             // 消耗压缩空气
             if (!consumeAirForTick(progressMax)) {
-                // 空气不足：仅消耗 HU，不推进进度
+                // 空气不足：不推进进度
                 markDirty()
                 setActiveState(world, pos, state, false)
+                sync.huInput = huBuffer.toInt()
+                huReceivedThisTick = 0L
+                heatReceivedLastTick = false
                 return
             }
 
@@ -378,6 +407,9 @@ class BlastFurnaceBlockEntity(
                 airConsumedThisSteel = 0L
                 markDirty()
                 setActiveState(world, pos, state, false)
+                sync.huInput = huBuffer.toInt()
+                huReceivedThisTick = 0L
+                heatReceivedLastTick = false
                 return
             }
 
@@ -389,8 +421,9 @@ class BlastFurnaceBlockEntity(
             if (sync.progress != 0) sync.progress = 0
             airConsumedThisSteel = 0L
 
-            if (huReceivedThisTick >= huPerTick && temperature < BlastFurnaceSync.TEMP_MAX) {
-                // HU 充足：累积温度进度，达到阈值后温度 +1
+            if (huBuffer >= huPerTick && temperature < BlastFurnaceSync.TEMP_MAX) {
+                // HU 充足：消耗 HU，累积温度进度
+                huBuffer -= huPerTick
                 tempDecayProgress = 0
                 tempProgress++
                 val ticksPerTemp = getTicksPerTemp(temperature)
@@ -401,12 +434,14 @@ class BlastFurnaceBlockEntity(
                 }
                 markDirty()
             } else {
-                // HU 不足：温度衰减
+                // HU 不足：清空缓存，温度衰减
+                if (huBuffer > 0L) huBuffer = 0L
                 applyTemperatureDecay()
             }
             setActiveState(world, pos, state, false)
         }
 
+        sync.huInput = huBuffer.toInt()
         huReceivedThisTick = 0L
         heatReceivedLastTick = false
     }
