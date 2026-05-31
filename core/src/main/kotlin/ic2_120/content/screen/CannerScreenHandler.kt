@@ -29,7 +29,7 @@ import ic2_120.registry.annotation.ScreenFactory
 class CannerScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
-    blockInventory: Inventory,
+    private val blockInventory: Inventory,
     private val context: ScreenHandlerContext,
     private val propertyDelegate: PropertyDelegate,
     private val itemStorage: RoutedItemStorage? = null
@@ -100,6 +100,7 @@ class CannerScreenHandler(
     override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos)
+            if (be !== blockInventory) return@get
             if (be is CannerBlockEntity) {
                 when (id) {
                     BUTTON_ID_MODE_CYCLE -> be.cycleMode()
@@ -161,7 +162,9 @@ class CannerScreenHandler(
 
     override fun canUse(player: PlayerEntity): Boolean =
         context.get({ world, pos ->
-            world.getBlockState(pos).block is CannerBlock && player.squaredDistanceTo(
+            world.getBlockState(pos).block is CannerBlock &&
+                (world.isClient || world.getBlockEntity(pos) === blockInventory) &&
+                player.squaredDistanceTo(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)

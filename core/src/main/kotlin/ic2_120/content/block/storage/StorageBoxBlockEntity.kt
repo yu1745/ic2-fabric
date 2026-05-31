@@ -148,10 +148,7 @@ class StorageBoxBlockEntity(
     }
 
     /** 检查玩家是否可以使用此物品栏 */
-    override fun canPlayerUse(player: PlayerEntity): Boolean {
-        return if (world == null || pos == null) false
-        else player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
-    }
+    override fun canPlayerUse(player: PlayerEntity): Boolean = Inventory.canPlayerUse(this, player)
 
     /** 清空物品栏 */
     override fun clear() {
