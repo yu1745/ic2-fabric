@@ -95,5 +95,10 @@ object Ic2JeiRecipeTypes {
     )
 
     val REPLICATOR_UID: Identifier = Identifier.of("ic2_120", "replicating")
-}
 
+    val CANNER_MIXING: RecipeType<CannerMixingJeiRecipe> = RecipeType.create(
+        "ic2_120",
+        "canner_mixing",
+        CannerMixingJeiRecipe::class.java
+    )
+}

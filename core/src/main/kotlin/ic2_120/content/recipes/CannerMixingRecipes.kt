@@ -69,6 +69,9 @@ object CannerMixingRecipes {
         }
     }
 
+    /** 返回所有混合配方（去重） */
+    fun allRecipes(): List<Recipe> = recipes
+
     /** 检查物品是否为混合配方可用材料 */
     fun isMixingMaterial(item: Item): Boolean =
         recipes.any { it.inputSolid == item }

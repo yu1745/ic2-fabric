@@ -4,5 +4,6 @@ import net.minecraft.item.ItemStack
 
 data class CompressorJeiRecipe(
     val input: ItemStack,
-    val output: ItemStack
+    val output: ItemStack,
+    val containerReturn: ItemStack = ItemStack.EMPTY
 )

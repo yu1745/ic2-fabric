@@ -125,3 +125,12 @@ publishing {
 		mavenLocal()
 	}
 }
+
+// ---- JEI 裁取预览工具 ----
+// Java 单文件模式 (JDK 11+)，直接运行 tools/JeiCropPreview.java
+tasks.register('runCropPreview', Exec) {
+	description = '生成 JEI 裁取区域预览图，快速验证槽位是否对齐'
+	group = 'help'
+	workingDir = rootProject.projectDir
+	commandLine 'java', '-Dfile.encoding=UTF-8', 'core/tools/JeiCropPreview.java'
+}

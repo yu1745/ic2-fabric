@@ -12,10 +12,15 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
 /**
- * 金属成型机 JEI 分类 - 辊压模式
+ * 金属成型机 JEI 分类 - 辊压模式 — 使用机器纹理 [guimetalformer.png]。
+ *
+ * 裁取区域 (4, 5) → (150, 83)，覆盖输入槽 (17,17) 与输出槽 (116,35)。
  */
 class MetalFormerRollingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MetalFormerRollingJeiRecipe> {
-    private val background: IDrawable = guiHelper.createBlankDrawable(140, 50)
+    private val background: IDrawable = guiHelper.createDrawable(
+        Identifier.of("ic2", "textures/gui/guimetalformer.png"),
+        4, 5, 146, 78
+    )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
         ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "metal_former")))
     )
@@ -30,18 +35,23 @@ class MetalFormerRollingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<
         recipe: MetalFormerRollingJeiRecipe,
         focuses: IFocusGroup
     ) {
-        builder.addSlot(RecipeIngredientRole.INPUT, 20, 16)
+        builder.addSlot(RecipeIngredientRole.INPUT, 13, 12)
             .addItemStack(recipe.input)
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 100, 16)
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 112, 30)
             .addItemStack(recipe.output)
     }
 }
 
 /**
- * 金属成型机 JEI 分类 - 切割模式
+ * 金属成型机 JEI 分类 - 切割模式 — 使用机器纹理 [guimetalformer.png]。
+ *
+ * 裁取区域 (4, 5) → (150, 83)，覆盖输入槽 (17,17) 与输出槽 (116,35)。
  */
 class MetalFormerCuttingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MetalFormerCuttingJeiRecipe> {
-    private val background: IDrawable = guiHelper.createBlankDrawable(140, 50)
+    private val background: IDrawable = guiHelper.createDrawable(
+        Identifier.of("ic2", "textures/gui/guimetalformer.png"),
+        4, 5, 146, 78
+    )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
         ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "metal_former")))
     )
@@ -56,18 +66,23 @@ class MetalFormerCuttingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<
         recipe: MetalFormerCuttingJeiRecipe,
         focuses: IFocusGroup
     ) {
-        builder.addSlot(RecipeIngredientRole.INPUT, 20, 16)
+        builder.addSlot(RecipeIngredientRole.INPUT, 13, 12)
             .addItemStack(recipe.input)
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 100, 16)
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 112, 30)
             .addItemStack(recipe.output)
     }
 }
 
 /**
- * 金属成型机 JEI 分类 - 挤压模式
+ * 金属成型机 JEI 分类 - 挤压模式 — 使用机器纹理 [guimetalformer.png]。
+ *
+ * 裁取区域 (4, 5) → (150, 83)，覆盖输入槽 (17,17) 与输出槽 (116,35)。
  */
 class MetalFormerExtrudingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MetalFormerExtrudingJeiRecipe> {
-    private val background: IDrawable = guiHelper.createBlankDrawable(140, 50)
+    private val background: IDrawable = guiHelper.createDrawable(
+        Identifier.of("ic2", "textures/gui/guimetalformer.png"),
+        4, 5, 146, 78
+    )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
         ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "metal_former")))
     )
@@ -82,9 +97,9 @@ class MetalFormerExtrudingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategor
         recipe: MetalFormerExtrudingJeiRecipe,
         focuses: IFocusGroup
     ) {
-        builder.addSlot(RecipeIngredientRole.INPUT, 20, 16)
+        builder.addSlot(RecipeIngredientRole.INPUT, 13, 12)
             .addItemStack(recipe.input)
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 100, 16)
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 112, 30)
             .addItemStack(recipe.output)
     }
 }

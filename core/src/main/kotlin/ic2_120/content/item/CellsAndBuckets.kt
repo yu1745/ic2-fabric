@@ -127,6 +127,9 @@ internal fun fluidToFilledCellStack(fluid: Fluid): ItemStack {
         ModFluids.PAHOEHOE_LAVA_STILL, ModFluids.PAHOEHOE_LAVA_FLOWING -> "pahoehoe_lava_cell"
         ModFluids.BIOFUEL_STILL, ModFluids.BIOFUEL_FLOWING -> "biofuel_cell"
         ModFluids.BIOMASS_STILL, ModFluids.BIOMASS_FLOWING -> "biomass_cell"
+        ModFluids.CONSTRUCTION_FOAM_STILL, ModFluids.CONSTRUCTION_FOAM_FLOWING -> "construction_foam_cell"
+        ModFluids.STEAM_STILL, ModFluids.STEAM_FLOWING -> "steam_cell"
+        ModFluids.SUPERHEATED_STEAM_STILL, ModFluids.SUPERHEATED_STEAM_FLOWING -> "superheated_steam_cell"
         ModFluids.COMPRESSED_AIR_STILL, ModFluids.COMPRESSED_AIR_FLOWING -> "air_cell"
         else -> null
     }
@@ -607,6 +610,27 @@ class BiomassCell : ModFluidCell(Item.Settings()) {
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
+/** 建筑泡沫单元 */
+@ModItem(name = "construction_foam_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
+class ConstructionFoamCell : ModFluidCell(Item.Settings()) {
+    override fun getFluid(): Fluid = ModFluids.CONSTRUCTION_FOAM_STILL
+    override fun getEmptyCell(): Item = cellItem("empty_cell")
+}
+
+/** 蒸汽单元 */
+@ModItem(name = "steam_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
+class SteamCell : ModFluidCell(Item.Settings()) {
+    override fun getFluid(): Fluid = ModFluids.STEAM_STILL
+    override fun getEmptyCell(): Item = cellItem("empty_cell")
+}
+
+/** 过热蒸汽单元 */
+@ModItem(name = "superheated_steam_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
+class SuperheatedSteamCell : ModFluidCell(Item.Settings()) {
+    override fun getFluid(): Fluid = ModFluids.SUPERHEATED_STEAM_STILL
+    override fun getEmptyCell(): Item = cellItem("empty_cell")
+}
+
 // ========== 特殊单元（非流体） ==========
 
 @ModItem(name = "air_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
@@ -770,7 +794,8 @@ object CellAndBucketFluidRegistration {
         // ModFluidCell 子类：专用流体单元，需注册 FluidStorage 才能右键储罐添加流体
         val modFluidCellIds = listOf(
             "water_cell", "distilled_water_cell", "lava_cell", "coolant_cell", "hot_coolant_cell",
-            "uu_matter_cell", "weed_ex_cell", "pahoehoe_lava_cell", "biofuel_cell", "biomass_cell"
+            "uu_matter_cell", "weed_ex_cell", "pahoehoe_lava_cell", "biofuel_cell", "biomass_cell",
+            "construction_foam_cell", "steam_cell", "superheated_steam_cell"
         )
         for (id in modFluidCellIds) {
             val item = Registries.ITEM.get(Identifier.of(modId, id))
@@ -798,6 +823,9 @@ object CellAndBucketFluidRegistration {
             ModFluids.PAHOEHOE_LAVA_STILL, ModFluids.PAHOEHOE_LAVA_FLOWING,
             ModFluids.BIOFUEL_STILL, ModFluids.BIOFUEL_FLOWING,
             ModFluids.BIOMASS_STILL, ModFluids.BIOMASS_FLOWING,
+            ModFluids.CONSTRUCTION_FOAM_STILL, ModFluids.CONSTRUCTION_FOAM_FLOWING,
+            ModFluids.STEAM_STILL, ModFluids.STEAM_FLOWING,
+            ModFluids.SUPERHEATED_STEAM_STILL, ModFluids.SUPERHEATED_STEAM_FLOWING,
             ModFluids.COMPRESSED_AIR_STILL, ModFluids.COMPRESSED_AIR_FLOWING
         )
 

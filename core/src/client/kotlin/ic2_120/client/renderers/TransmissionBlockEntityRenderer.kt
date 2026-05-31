@@ -61,7 +61,7 @@ class TransmissionBlockEntityRenderer(
         val state = entity.cachedState
         val isItem = world == null
         val angle = if (isItem) 0.0f
-            else ((world!!.time + tickDelta) * degreesPerTickFromKu(entity.currentKu)) % 360.0f
+            else ((world.time + tickDelta) * degreesPerTickFromKu(entity.currentKu)) % 360.0f
         when (val block = state.block) {
             is TransmissionShaftBlock -> {
                 val axis = if (isItem) Direction.Axis.Y else state.get(Properties.AXIS)
@@ -102,7 +102,7 @@ class TransmissionBlockEntityRenderer(
                     drawGear8Teeth(matrices, vc, light, overlay, secondAxis, pitchRadius, gearFaceWidthHalf, materialColor)
                     matrices.pop()
                 } else {
-                    val renderDirs = bevelRenderDirections(world!!, entity.pos)
+                    val renderDirs = bevelRenderDirections(world, entity.pos)
 
                     if (renderDirs.isEmpty()) {
                         val plane = state.get(BevelGearBlock.PLANE)

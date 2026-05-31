@@ -169,6 +169,7 @@ object ClientScreenRegistrar {
                     }
                 @Suppress("UNCHECKED_CAST")
                 val screenType = type as ScreenHandlerType<ScreenHandler>
+                @Suppress("UNCHECKED_CAST")
                 HandledScreens.register(screenType) { handler, playerInventory, title ->
                     ctor.call(handler, playerInventory, title) as HandledScreen<ScreenHandler>
                 }
