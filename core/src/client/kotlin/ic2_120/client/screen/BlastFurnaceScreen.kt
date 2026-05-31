@@ -47,8 +47,6 @@ class BlastFurnaceScreen(
         val airFrac = airAmountDroplets.toFloat() / AIR_TANK_DROPLETS
         val airAmountMb = airAmountDroplets / DROPLETS_PER_MB
 
-        val huInput = handler.sync.huInput.coerceAtLeast(0)
-
         val canWork = temperature >= BlastFurnaceSync.TEMP_WORK_MIN
         val isWorking = progress > 0
 
@@ -61,8 +59,8 @@ class BlastFurnaceScreen(
         // 热量条（温度）：源 (180,22)-(202,29) 22×7→目标 (71,70)-(82,77) 11×7，自左向右填充
         drawHeatGauge(context, x + 71, y + 70, tempFrac)
 
-        // 热量输入指示器：源 (180,4)-(193,17) 13×13，目标 (96,67)，HU 达标时渲染
-        if (huInput >= getHuPerTick(temperature)) {
+        // 热量输入指示器：源 (180,4)-(193,17) 13×13，目标 (96,67)，升温条件满足时渲染
+        if (handler.sync.warmActive > 0) {
             context.drawTexture(TEXTURE, x + 96, y + 67, 180f, 4f, 13, 13, 256, 256)
         }
 
@@ -123,13 +121,6 @@ class BlastFurnaceScreen(
     }
 
     private fun getProgressMax(temp: Int): Int = BlastFurnaceSync.getProgressMax(temp)
-
-    private fun getHuPerTick(temp: Int): Int = when {
-        temp >= 1601 -> 40
-        temp >= 1501 -> 60
-        temp >= 1401 -> 80
-        else -> 100
-    }
 
     /** 压缩空气流体渲染：区域 (11,11)-(23,58) 12×47，自底向上填充。 */
     private fun drawAirFluid(context: DrawContext, gx: Int, gy: Int, fraction: Float) {

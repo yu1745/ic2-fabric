@@ -60,4 +60,6 @@ class BlastFurnaceSync(schema: SyncSchema) {
     var heatInput by schema.int("HeatInput", default = 0)
     /** 压缩空气储量（droplets），0..648,000 */
     var airAmount by schema.int("AirAmount", default = 0)
+    /** 升温条件是否满足（消费前缓存 >= 当前温度段 HU/tick 需求），1=满足 0=不满足 */
+    var warmActive by schema.int("WarmActive", default = 0)
 }

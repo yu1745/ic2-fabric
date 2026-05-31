@@ -341,6 +341,7 @@ class BlastFurnaceBlockEntity(
 
         val huPerTick = getHuPerTick(temperature)
         val progressMax = getProgressMax(temperature)
+        sync.warmActive = if (huBuffer >= huPerTick) 1 else 0
 
         val hasInput = !input.isEmpty && getRecipeForInput(input) != null
         val canAcceptOutput = canAcceptOutput(outputSteel, outputSlag)
@@ -428,7 +429,7 @@ class BlastFurnaceBlockEntity(
             airConsumedThisSteel = 0L
 
             if (huBuffer >= huPerTick && temperature < BlastFurnaceSync.TEMP_MAX) {
-                // HU 充足：消耗 HU，累积温度进度
+                // HU 充足且未达上限：消耗 HU，累积温度进度
                 huBuffer -= huPerTick
                 tempDecayProgress = 0
                 tempProgress++
@@ -438,6 +439,12 @@ class BlastFurnaceBlockEntity(
                     tempProgress = 0
                     sync.temperature = temperature
                 }
+                markDirty()
+            } else if (huBuffer >= huPerTick) {
+                // 已达温度上限（temperature >= TEMP_MAX）：消耗 HU 维持温度，不衰减
+                huBuffer -= huPerTick
+                tempDecayProgress = 0
+                tempProgress = 0
                 markDirty()
             } else {
                 // HU 不足：清空缓存，温度衰减
