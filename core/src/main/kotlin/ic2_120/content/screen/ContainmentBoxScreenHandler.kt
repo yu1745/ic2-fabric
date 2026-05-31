@@ -39,11 +39,22 @@ class ContainmentBoxScreenHandler(
         }
         for (row in 0 until 3) {
             for (col in 0 until 9) {
-                addSlot(Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18))
+                val inventorySlot = col + row * 9 + 9
+                addSlot(createPlayerSlot(inventorySlot, 8 + col * 18, 84 + row * 18))
             }
         }
         for (col in 0 until 9) {
-            addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
+            addSlot(createPlayerSlot(col, 8 + col * 18, 142))
+        }
+    }
+
+    private fun createPlayerSlot(inventorySlot: Int, x: Int, y: Int): Slot {
+        if (hand != Hand.MAIN_HAND || inventorySlot != playerInventory.selectedSlot) {
+            return Slot(playerInventory, inventorySlot, x, y)
+        }
+        return object : Slot(playerInventory, inventorySlot, x, y) {
+            override fun canInsert(stack: ItemStack): Boolean = false
+            override fun canTakeItems(playerEntity: PlayerEntity): Boolean = false
         }
     }
 

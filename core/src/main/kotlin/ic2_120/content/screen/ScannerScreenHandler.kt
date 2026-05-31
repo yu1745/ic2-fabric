@@ -162,26 +162,27 @@ class ScannerScreenHandler(
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         val slot = slots[index]
         if (!slot.hasStack()) return ItemStack.EMPTY
-        val stack = slot.stack.copy()
+        val stack = slot.stack
+        val original = stack.copy()
         val invEnd = PLAYER_INV_START + 36
 
         return if (index < PLAYER_INV_START + 27) {
             // 背包 → 快捷栏
             if (!insertItem(stack, PLAYER_INV_START + 27, invEnd, false)) ItemStack.EMPTY
             else {
-                slot.onQuickTransfer(stack, stack)
+                slot.onQuickTransfer(stack, original)
                 if (stack.isEmpty) slot.stack = ItemStack.EMPTY
                 else slot.markDirty()
-                stack
+                original
             }
         } else {
             // 快捷栏 → 背包
             if (!insertItem(stack, PLAYER_INV_START, PLAYER_INV_START + 27, false)) ItemStack.EMPTY
             else {
-                slot.onQuickTransfer(stack, stack)
+                slot.onQuickTransfer(stack, original)
                 if (stack.isEmpty) slot.stack = ItemStack.EMPTY
                 else slot.markDirty()
-                stack
+                original
             }
         }
     }
