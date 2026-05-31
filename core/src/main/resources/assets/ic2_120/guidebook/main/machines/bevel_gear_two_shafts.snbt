@@ -1,15 +1,15 @@
 {
-  DataVersion:3465,
-  size:[5,4,3],
-  palette:[
-    {Name:"ic2_120:bevel_gear",Properties:{plane:"xy"}},
-    {Name:"ic2_120:steel_transmission_shaft",Properties:{axis:"x"}},
-    {Name:"ic2_120:steel_transmission_shaft",Properties:{axis:"y"}}
-  ],
-  blocks:[
-    {pos:[2,1,1],state:0},
-    {pos:[1,1,1],state:1},
-    {pos:[2,2,1],state:2}
-  ],
-  entities:[]
+    DataVersion: 3465,
+    size: [2, 1, 2],
+    data: [
+        {pos: [0, 0, 0], state: "ic2_120:carbon_transmission_shaft{axis:z,waterlogged:false}", nbt: {CurrentKu: 2048, id: "ic2_120:transmission"}},
+        {pos: [0, 0, 1], state: "ic2_120:bevel_gear{plane:xz,waterlogged:false}", nbt: {CurrentKu: 2048, id: "ic2_120:transmission"}},
+        {pos: [1, 0, 1], state: "ic2_120:carbon_transmission_shaft{axis:x,waterlogged:false}", nbt: {CurrentKu: 2048, id: "ic2_120:transmission"}}
+    ],
+    entities: [],
+    palette: [
+        "ic2_120:carbon_transmission_shaft{axis:z,waterlogged:false}",
+        "ic2_120:bevel_gear{plane:xz,waterlogged:false}",
+        "ic2_120:carbon_transmission_shaft{axis:x,waterlogged:false}"
+    ]
 }

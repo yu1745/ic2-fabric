@@ -19,11 +19,10 @@ The Helical Gear (Bevel Gear) changes the axis of kinetic power transmission. It
 - Place a bevel gear at the corner of a kinetic shaft line.
 - Power enters from one face and exits from the adjacent face at a 90-degree angle.
 - This allows compact shaft layouts and routing power around corners.
-- The bevel gear itself has the same KU throughput as the lowest-tier shaft in the system.
+- The bevel gear itself has a fixed KU throughput of 2048 KU, equivalent to the steel transmission shaft.
+- Bevel gears can be chained in series using the three-shaft junction pattern, allowing kinetic power to travel along a chain of bevel gears in a single direction until reaching the throughput limit.
 
 ## Shaft layouts
-
-The shaft next to a bevel gear must use the same axis as the side it touches: east or west uses `axis=x`, up or down uses `axis=y`, and north or south uses `axis=z`.
 
 Two-shaft corner:
 
@@ -31,6 +30,8 @@ Two-shaft corner:
   <IsometricCamera yaw="45" pitch="30" />
   <ImportStructure src="bevel_gear_two_shafts.snbt" />
 </GameScene>
+
+**Important:** Only the two layouts shown above are mechanically valid. Any other arrangement will cause the bevel gears to physically jam and lock up — they cannot rotate.
 
 Three-shaft junction:
 
