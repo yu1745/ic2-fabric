@@ -9,6 +9,7 @@ import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
@@ -62,6 +63,9 @@ class BlockCutterScreen(
             )
             context.disableScissor()
         }
+
+        // 升级提示图标 (4,4) 16×16
+        context.drawTexture(UPTIPS, left + UPGRADE_ICON_X, top + UPGRADE_ICON_Y, 0f, 0f, 16, 16, 16, 16)
 
         // 工作进度纹理 (180,51)-(227,70) = 47×19，自左向右
         if (progressFrac > 0f) {
@@ -129,11 +133,29 @@ class BlockCutterScreen(
                 mouseX, mouseY
             )
         }
+
+        // 升级提示悬停
+        if (relX in UPGRADE_ICON_X until UPGRADE_ICON_X + 16 &&
+            relY in UPGRADE_ICON_Y until UPGRADE_ICON_Y + 16
+        ) {
+            val upgradeTooltip = mutableListOf<Text>()
+            upgradeTooltip.add(Text.translatable("gui.ic2_120.upgrade_slots"))
+            for (id in SUPPORTED_UPGRADES) {
+                val item = Registries.ITEM.get(Identifier("ic2_120", id))
+                upgradeTooltip.add(item.name)
+            }
+            context.drawTooltip(textRenderer, upgradeTooltip, mouseX, mouseY)
+        }
     }
 
     companion object {
         private val TEXTURE = Identifier("ic2", "textures/gui/guiblockcuttingmachine.png")
+        private val UPTIPS = Identifier("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
+
+        // 升级提示图标
+        private const val UPGRADE_ICON_X = 4
+        private const val UPGRADE_ICON_Y = 4
 
         // 电量条 (180,3)-(194,17) = 14×14
         private const val ENERGY_BAR_U = 180
@@ -141,7 +163,7 @@ class BlockCutterScreen(
         private const val ENERGY_BAR_W = 14
         private const val ENERGY_BAR_H = 14
         private const val ENERGY_BAR_X = 26
-        private const val ENERGY_BAR_Y = 37
+        private const val ENERGY_BAR_Y = 36
 
         // 工作进度 (180,51)-(227,70) = 47×19
         private const val PROGRESS_U = 180
@@ -158,5 +180,13 @@ class BlockCutterScreen(
         private const val BLADE_WARN_H = 26
         private const val BLADE_WARN_X = 63
         private const val BLADE_WARN_Y = 27
+
+        private val SUPPORTED_UPGRADES = listOf(
+            "overclocker_upgrade",
+            "energy_storage_upgrade",
+            "transformer_upgrade",
+            "ejector_upgrade",
+            "pulling_upgrade"
+        )
     }
 }

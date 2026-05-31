@@ -113,13 +113,13 @@ class MagnetizerScreen(
         private const val BG_H = 161
         private const val SLOT_S = 18
 
-        // 能量条 (180,5)-(194,18) = 14×13 → (10,30)
+        // 能量条 (180,5)-(194,18) = 14×13 → (9,29)
         private const val ENERGY_BAR_U = 180
         private const val ENERGY_BAR_V = 5
         private const val ENERGY_BAR_W = 14
         private const val ENERGY_BAR_H = 13
-        private const val ENERGY_BAR_X = 10
-        private const val ENERGY_BAR_Y = 30
+        private const val ENERGY_BAR_X = 9
+        private const val ENERGY_BAR_Y = 29
 
         // 鞋子槽 (80,32)
         private const val BOOTS_X = 80

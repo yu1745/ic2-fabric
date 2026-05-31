@@ -143,8 +143,8 @@ class ExtractorScreen(
         private const val ENERGY_BAR_V = 4
         private const val ENERGY_BAR_W = 14
         private const val ENERGY_BAR_H = 14
-        private const val ENERGY_BAR_X = 62
-        private const val ENERGY_BAR_Y = 38
+        private const val ENERGY_BAR_X = 63
+        private const val ENERGY_BAR_Y = 36
 
         // 工作进度 (180,25)-(201,39) = 21×14
         private const val PROGRESS_U = 180

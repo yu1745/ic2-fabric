@@ -204,7 +204,7 @@ class FluidCannerScreen(
         private const val ENERGY_BAR_W = 14
         private const val ENERGY_BAR_H = 14
         private const val ENERGY_BAR_X = 9
-        private const val ENERGY_BAR_Y = 35
+        private const val ENERGY_BAR_Y = 34
 
         // 工作进度 (179,21)-(196,34) = 17x13
         private const val PROGRESS_U = 179
