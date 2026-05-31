@@ -12,10 +12,16 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
 /**
- * 简易 JEI 分类：只表达输入、输出与机器类型。
+ * 提取机 JEI 分类 — 使用机器纹理 [guiextractor.png] 作为背景。
+ *
+ * 裁取区域 (33, 5) → (145, 83)，覆盖提取机面板中
+ * 输入槽 (62,16) 与输出槽 (116,35) 所在的工作区域。
  */
 class ExtractorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<ExtractorJeiRecipe> {
-    private val background: IDrawable = guiHelper.createBlankDrawable(140, 54)
+    private val background: IDrawable = guiHelper.createDrawable(
+        Identifier("ic2", "textures/gui/guiextractor.png"),
+        33, 5, 112, 78
+    )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
         ItemStack(Registries.ITEM.get(Identifier("ic2_120", "extractor")))
     )
@@ -33,10 +39,12 @@ class ExtractorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Extractor
         recipe: ExtractorJeiRecipe,
         focuses: IFocusGroup
     ) {
-        builder.addSlot(RecipeIngredientRole.INPUT, 20, 18)
+        // 输入槽 — 与纹理中 (62, 16) 处槽位对齐
+        builder.addSlot(RecipeIngredientRole.INPUT, 29, 11)
             .addItemStack(recipe.input)
 
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 102, 18)
+        // 输出槽 — 与纹理中 (116, 35) 处槽位对齐
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 83, 30)
             .addItemStack(recipe.output)
     }
 }

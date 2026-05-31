@@ -12,10 +12,16 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
 /**
- * 高炉 JEI 分类 - 双输出显示
+ * 高炉 JEI 分类 — 使用机器纹理 [guiblockcutter.png] 上半部分作为背景。
+ *
+ * 裁取区域 (0, 0) → (170, 80)，覆盖高炉面板上半部分，
+ * 包含压缩空气罐、温度条、热源指示、工作指示等区域。
  */
 class BlastFurnaceRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlastFurnaceJeiRecipe> {
-    private val background: IDrawable = guiHelper.createBlankDrawable(140, 50)
+    private val background: IDrawable = guiHelper.createDrawable(
+        Identifier("ic2", "textures/gui/guiblockcutter.png"),
+        0, 0, 170, 80
+    )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
         ItemStack(Registries.ITEM.get(Identifier("ic2_120", "blast_furnace")))
     )
@@ -30,16 +36,11 @@ class BlastFurnaceRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlastF
         recipe: BlastFurnaceJeiRecipe,
         focuses: IFocusGroup
     ) {
-        // 输入槽（左侧）
-        builder.addSlot(RecipeIngredientRole.INPUT, 20, 16)
+        builder.addSlot(RecipeIngredientRole.INPUT, 35, 33)
             .addItemStack(recipe.input)
-
-        // 钢锭输出（右侧中间）
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 100, 8)
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 134, 56)
             .addItemStack(recipe.steelOutput)
-
-        // 炉渣输出（右侧下方）
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 100, 28)
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 152, 56)
             .addItemStack(recipe.slagOutput)
     }
 }

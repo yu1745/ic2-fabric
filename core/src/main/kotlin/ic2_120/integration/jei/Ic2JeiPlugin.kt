@@ -38,7 +38,6 @@ import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.item.ModFluidCell
 import ic2_120.content.item.getFluidCellVariant
 import ic2_120.content.item.setFluidCellVariant
-import ic2_120.content.fluid.ModFluids
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import mezz.jei.api.IModPlugin
 import mezz.jei.api.JeiPlugin
@@ -210,7 +209,8 @@ class Ic2JeiPlugin : IModPlugin {
             for (fluidId in listOf(
                 "water_cell", "distilled_water_cell", "lava_cell",
                 "coolant_cell", "hot_coolant_cell", "uu_matter_cell",
-                "weed_ex_cell", "pahoehoe_lava_cell", "biofuel_cell", "biomass_cell"
+                "weed_ex_cell", "pahoehoe_lava_cell", "biofuel_cell", "biomass_cell",
+                "construction_foam_cell", "steam_cell", "superheated_steam_cell"
             )) {
                 val item = Registries.ITEM.get(Identifier("ic2_120", fluidId))
                 if (item is ModFluidCell) {
@@ -263,7 +263,8 @@ class Ic2JeiPlugin : IModPlugin {
             MetalFormerExtrudingRecipeCategory(registration.jeiHelpers.guiHelper),
             SolidCannerRecipeCategory(registration.jeiHelpers.guiHelper),
             RecyclerRecipeCategory(registration.jeiHelpers.guiHelper),
-            ReplicatorRecipeCategory(registration.jeiHelpers.guiHelper)
+            ReplicatorRecipeCategory(registration.jeiHelpers.guiHelper),
+            CannerMixingRecipeCategory(registration.jeiHelpers.guiHelper)
         )
     }
 
@@ -409,6 +410,7 @@ class Ic2JeiPlugin : IModPlugin {
                 else ReplicatorJeiRecipe(ItemStack(item, 1), uuCostUb)
             }
         registration.addRecipes(Ic2JeiRecipeTypes.REPLICATOR, replicatorRecipes)
+
     }
 
     override fun registerRecipeCatalysts(registration: IRecipeCatalystRegistration) {
@@ -464,6 +466,12 @@ class Ic2JeiPlugin : IModPlugin {
         registration.addRecipeCatalyst(
             ItemStack(Registries.ITEM.get(Identifier("ic2_120", "solid_canner"))),
             Ic2JeiRecipeTypes.SOLID_CANNER
+        )
+
+        // Canner（流体/固体装罐机）
+        registration.addRecipeCatalyst(
+            ItemStack(Registries.ITEM.get(Identifier("ic2_120", "canner"))),
+            Ic2JeiRecipeTypes.CANNER_MIXING
         )
 
         registration.addRecipeCatalyst(

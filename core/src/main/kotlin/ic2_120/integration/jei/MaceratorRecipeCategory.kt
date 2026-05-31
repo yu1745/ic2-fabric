@@ -12,10 +12,16 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
 /**
- * 简易 JEI 分类：只表达输入、输出与机器类型。
+ * 打粉机 JEI 分类 — 使用机器纹理 [scrapboxrecipes.png] 作为背景。
+ *
+ * 裁取区域 (26, 5) → (150, 83)，覆盖打粉机面板中
+ * 输入槽 (42,15) 与输出槽 (116,35) 所在的工作区域。
  */
 class MaceratorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MaceratorJeiRecipe> {
-    private val background: IDrawable = guiHelper.createBlankDrawable(140, 54)
+    private val background: IDrawable = guiHelper.createDrawable(
+        Identifier("ic2", "textures/gui/scrapboxrecipes.png"),
+        26, 5, 124, 78
+    )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
         ItemStack(Registries.ITEM.get(Identifier("ic2_120", "macerator")))
     )
@@ -33,10 +39,12 @@ class MaceratorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Macerator
         recipe: MaceratorJeiRecipe,
         focuses: IFocusGroup
     ) {
-        builder.addSlot(RecipeIngredientRole.INPUT, 20, 18)
+        // 输入槽 — 与纹理中 (42, 15) 处槽位对齐
+        builder.addSlot(RecipeIngredientRole.INPUT, 16, 10)
             .addItemStack(recipe.input)
 
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 102, 18)
+        // 输出槽 — 与纹理中 (116, 35) 处槽位对齐
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 90, 30)
             .addItemStack(recipe.output)
     }
 }

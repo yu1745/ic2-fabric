@@ -124,7 +124,7 @@ class TeleporterBlockEntityRenderer(
         drawRingBand(matrices, vc, fullLight, overlay, radiusOuter * 0.68f, radiusInner * 0.58f, ringY + 0.03f, 120, 250, 255, alpha - 20)
 
         if (progress > 0.7f) {
-            val beamHeight = (target.height + 0.6f).toFloat()
+            val beamHeight = target.height + 0.6f
             drawBeam(matrices, vc, fullLight, overlay, beamHeight, 70, 220, 255, (alpha + 20).coerceAtMost(230))
         }
 
@@ -163,10 +163,10 @@ class TeleporterBlockEntityRenderer(
 
             quadColor(
                 vc, pos, normal, light, overlay,
-                ox0.toFloat(), y, oz0.toFloat(),
-                ox1.toFloat(), y, oz1.toFloat(),
-                ix1.toFloat(), y, iz1.toFloat(),
-                ix0.toFloat(), y, iz0.toFloat(),
+                ox0, y, oz0,
+                ox1, y, oz1,
+                ix1, y, iz1,
+                ix0, y, iz0,
                 red, green, blue, alpha,
                 0f, 1f, 0f
             )

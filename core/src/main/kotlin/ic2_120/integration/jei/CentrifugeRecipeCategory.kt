@@ -12,15 +12,16 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
 /**
- * 热能离心机 JEI 分类 - 支持多输出显示
+ * 热能离心机 JEI 分类 — 使用机器纹理 [guicentrifuge.png] 作为背景。
  *
- * 布局：
- * - 左侧：1个输入槽
- * - 右侧：3个输出槽（垂直排列）
- * - 中间：显示最低热量要求
+ * 裁取区域 (0, 8) → (150, 86)，覆盖离心机面板中
+ * 输入槽 (11,21) 与 3 个输出槽 (124,18/36/54) 所在的工作区域。
  */
 class CentrifugeRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<CentrifugeJeiRecipe> {
-    private val background: IDrawable = guiHelper.createBlankDrawable(140, 70)
+    private val background: IDrawable = guiHelper.createDrawable(
+        Identifier("ic2", "textures/gui/guicentrifuge.png"),
+        0, 11, 150, 72
+    )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
         ItemStack(Registries.ITEM.get(Identifier("ic2_120", "centrifuge")))
     )
@@ -38,14 +39,15 @@ class CentrifugeRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Centrifu
         recipe: CentrifugeJeiRecipe,
         focuses: IFocusGroup
     ) {
-        // 输入槽（左侧）
-        builder.addSlot(RecipeIngredientRole.INPUT, 20, 26)
+        // 输入槽（左侧）— 与纹理中 (11, 21) 处槽位对齐
+        builder.addSlot(RecipeIngredientRole.INPUT, 11, 10)
             .addItemStack(recipe.input)
 
-        // 输出槽（右侧，垂直排列）
+        // 输出槽（右侧，垂直排列）— 与纹理中 (124, 18/36/54) 处槽位对齐
+        val outputY = intArrayOf(7, 25, 43)
         recipe.outputs.forEachIndexed { index, output ->
-            val y = 10 + index * 20
-            builder.addSlot(RecipeIngredientRole.OUTPUT, 102, y)
+            val y = outputY.getOrElse(index) { 10 + index * 18 }
+            builder.addSlot(RecipeIngredientRole.OUTPUT, 124, y)
                 .addItemStack(output)
         }
     }

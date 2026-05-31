@@ -55,7 +55,7 @@ class PumpAttachmentScreen(
         val textX = x + TEXT_AREA_X + (TEXT_AREA_W - scaledW) / 2
         val textCY = y + TEXT_AREA_Y + TEXT_AREA_H / 2
         context.matrices.push()
-        context.matrices.translate(textX.toDouble(), (textCY - 3.5).toDouble(), 0.0)
+        context.matrices.translate(textX.toDouble(), (textCY - 3.5), 0.0)
         context.matrices.scale(textScale, textScale, 1f)
         context.drawText(textRenderer, line, 0, 0, 0xFF20EE7E.toInt(), false)
         context.matrices.pop()

@@ -12,10 +12,16 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
 /**
- * 方块切割机 JEI 分类
+ * 方块切割机 JEI 分类 — 使用机器纹理 [guiblockcuttingmachine.png] 作为背景。
+ *
+ * 裁取区域 (10, 5) → (140, 83)，覆盖切割机面板中
+ * 输入槽 (26,17) 与输出槽 (116,35) 所在的工作区域。
  */
 class BlockCutterRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlockCutterJeiRecipe> {
-    private val background: IDrawable = guiHelper.createBlankDrawable(140, 50)
+    private val background: IDrawable = guiHelper.createDrawable(
+        Identifier("ic2", "textures/gui/guiblockcuttingmachine.png"),
+        10, 5, 130, 78
+    )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
         ItemStack(Registries.ITEM.get(Identifier("ic2_120", "block_cutter")))
     )
@@ -30,12 +36,12 @@ class BlockCutterRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlockCu
         recipe: BlockCutterJeiRecipe,
         focuses: IFocusGroup
     ) {
-        // 输入槽 - ItemStack 带数量，JEI 会正确显示堆叠数量
-        builder.addSlot(RecipeIngredientRole.INPUT, 20, 16)
+        // 输入槽 — 与纹理中 (26, 17) 处槽位对齐
+        builder.addSlot(RecipeIngredientRole.INPUT, 16, 12)
             .addItemStack(recipe.input)
 
-        // 输出槽
-        builder.addSlot(RecipeIngredientRole.OUTPUT, 100, 16)
+        // 输出槽 — 与纹理中 (116, 35) 处槽位对齐
+        builder.addSlot(RecipeIngredientRole.OUTPUT, 106, 30)
             .addItemStack(recipe.output)
     }
 }

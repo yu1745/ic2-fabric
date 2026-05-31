@@ -63,7 +63,7 @@ class GeneratorScreen(
         if (mouseX in x + 78 until x + 104 && mouseY in y + 35 until y + 52) {
             context.drawTooltip(
                 textRenderer,
-                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(GeneratorSync.ENERGY_CAPACITY.toLong())} EU"),
+                Text.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(GeneratorSync.ENERGY_CAPACITY)} EU"),
                 mouseX, mouseY
             )
         }
