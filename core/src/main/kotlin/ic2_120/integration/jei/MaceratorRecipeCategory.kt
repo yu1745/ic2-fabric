@@ -30,6 +30,7 @@ class MaceratorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Macerator
 
     override fun getTitle(): Text = Text.translatable("block.ic2_120.macerator")
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
 
     override fun getIcon(): IDrawable = icon

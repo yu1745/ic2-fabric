@@ -278,9 +278,8 @@ class PumpBlockEntity(
         val progressIncrement = speedMultiplier.toInt().coerceAtLeast(1)
         val energyNeed = (PumpSync.ENERGY_PER_TICK * energyMultiplier).toLong().coerceAtLeast(1L)
 
-        // 检查是否满足泵取条件
         val spaceLeft = tankInternal.capacity - tankInternal.amount
-        val canPump = sync.amount >= energyNeed && spaceLeft >= FluidConstants.BUCKET
+        val canPump = sync.amount >= energyNeed && spaceLeft >= FluidConstants.BUCKET && hasPumpableFluid(world, pos, state)
 
         if (canPump) {
             if (sync.consumeEnergy(energyNeed) > 0L) {
@@ -294,7 +293,7 @@ class PumpBlockEntity(
                 }
                 markDirty()
             }
-        } else if (!canPump) {
+        } else {
             sync.progress = 0
         }
 
@@ -307,24 +306,32 @@ class PumpBlockEntity(
     }
 
     private fun tryPumpOneBucket(world: World, pos: BlockPos, state: BlockState): Boolean {
+        val euNeed = (PumpSync.ENERGY_PER_TICK * PumpSync.PROGRESS_MAX * energyMultiplier).toLong().coerceAtLeast(1L)
+        if (sync.amount < euNeed) return false
+
         val spaceLeft = tankInternal.capacity - tankInternal.amount
         if (spaceLeft < FluidConstants.BUCKET) return false
+
+        if (!hasPumpableFluid(world, pos, state)) return false
 
         val front = state.get(Properties.HORIZONTAL_FACING)
         val positions = (1..3).map { pos.offset(front, it) }
         for (target in positions) {
             val drained = tryDrainFromStorage(world, target, front.opposite)
             if (drained > 0L) {
+                sync.consumeEnergy(euNeed)
+                sync.energy = sync.amount.toInt().coerceAtLeast(0)
                 markDirty()
                 return true
             }
             val drainedWorld = tryDrainFromWorldSource(world, target)
             if (drainedWorld > 0L) {
+                sync.consumeEnergy(euNeed)
+                sync.energy = sync.amount.toInt().coerceAtLeast(0)
                 markDirty()
                 return true
             }
         }
-        sync.progress = 0
         return false
     }
 
@@ -444,5 +451,28 @@ class PumpBlockEntity(
     private fun syncTankState() {
         sync.fluidAmount = tankInternal.amount.toInt().coerceAtLeast(0)
         sync.fluidRawId = if (tankInternal.variant.isBlank) -1 else Registries.FLUID.getRawId(tankInternal.variant.fluid)
+    }
+
+    private fun hasPumpableFluid(world: World, pos: BlockPos, state: BlockState): Boolean {
+        val front = state.get(Properties.HORIZONTAL_FACING)
+        val positions = (1..3).map { pos.offset(front, it) }
+        for (target in positions) {
+            val fluidState = world.getFluidState(target)
+            if (!fluidState.isEmpty && fluidState.isStill) {
+                val fluid = fluidState.fluid
+                if (canAccept(fluid) && !ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, target, ownerUuid, ic2_120.integration.ftbchunks.ClaimProtection.EDIT_FLUID)) {
+                    return true
+                }
+            }
+            val external = FluidStorage.SIDED.find(world, target, front.opposite)
+            if (external != null) {
+                for (view in external) {
+                    if (!view.isResourceBlank && view.amount > 0L && canAccept(view.resource.fluid)) {
+                        return true
+                    }
+                }
+            }
+        }
+        return false
     }
 }

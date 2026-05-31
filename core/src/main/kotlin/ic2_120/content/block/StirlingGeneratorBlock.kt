@@ -82,6 +82,7 @@ class StirlingGeneratorBlock : MachineBlock() {
         tooltip.add(Text.translatable("tooltip.ic2_120.stirling_generator.max_output").formatted(Formatting.GRAY))
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,

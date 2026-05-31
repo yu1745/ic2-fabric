@@ -59,6 +59,7 @@ class ReactorFluidPortBlock(settings: AbstractBlock.Settings = AbstractBlock.Set
     }
     
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,

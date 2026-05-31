@@ -210,6 +210,7 @@ object Ic2_120 : ModInitializer {
 
         // 注册满燃料喷气背包到创造模式
         val jetpackItem = Registries.ITEM.get(Identifier(MOD_ID, "jetpack"))
+        @Suppress("SENSELESS_COMPARISON")
         if (jetpackItem != null) {
             val ic2MaterialsKey =
                 RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_MATERIALS.id))

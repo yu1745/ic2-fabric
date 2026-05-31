@@ -559,8 +559,8 @@ class WindKineticGeneratorBlockEntity(
                 for (second in secondMin..secondMax) {
                     when (axis) {
                         Direction.Axis.X -> mutablePos.set(normal, first, second)
+                        Direction.Axis.Y -> continue
                         Direction.Axis.Z -> mutablePos.set(first, second, normal)
-                        else -> continue
                     }
 
                     if (mutablePos == pos) continue

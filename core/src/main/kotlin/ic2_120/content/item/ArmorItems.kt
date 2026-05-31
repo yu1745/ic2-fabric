@@ -1478,12 +1478,12 @@ internal class CfPackFluidStorage(
 
     override fun iterator(): MutableIterator<StorageView<FluidVariant>> {
         if (ctx.itemVariant.item !is CfPack) {
-            return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
+            return mutableListOf<StorageView<FluidVariant>>().iterator()
         }
         val stack = ctx.itemVariant.toStack(1)
         val amt = CfPack.getFluidAmount(stack)
         if (amt <= 0L) {
-            return mutableListOf<StorageView<FluidVariant>>().iterator() as MutableIterator<StorageView<FluidVariant>>
+            return mutableListOf<StorageView<FluidVariant>>().iterator()
         }
         val variant = FluidVariant.of(ic2_120.content.fluid.ModFluids.CONSTRUCTION_FOAM_STILL)
         val view = object : StorageView<FluidVariant> {

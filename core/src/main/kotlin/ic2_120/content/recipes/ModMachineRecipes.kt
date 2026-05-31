@@ -33,7 +33,7 @@ object ModMachineRecipes {
         val entries = ClassScanner.collectMachineRecipeRegistrations()
         val modId = Ic2_120.MOD_ID
         for (e in entries) {
-            val serializer = e.serializerClass.objectInstance as? RecipeSerializer<*>
+            val serializer = e.serializerClass.objectInstance
                 ?: error("机器配方序列化器 ${e.serializerClass} 必须是 Kotlin object")
             val type = object : RecipeType<Recipe<*>> {
                 override fun toString() = "$modId:${e.id}"

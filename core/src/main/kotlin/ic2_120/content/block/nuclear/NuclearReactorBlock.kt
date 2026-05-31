@@ -76,6 +76,7 @@ class NuclearReactorBlock(settings: AbstractBlock.Settings = AbstractBlock.Setti
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
@@ -92,6 +93,7 @@ class NuclearReactorBlock(settings: AbstractBlock.Settings = AbstractBlock.Setti
         return ActionResult.SUCCESS
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun neighborUpdate(
         state: BlockState,
         world: World,

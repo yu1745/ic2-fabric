@@ -69,6 +69,7 @@ class KineticGeneratorBlock : MachineBlock() {
         tooltip.add(Text.translatable("tooltip.ic2_120.kinetic_generator.ratio").formatted(Formatting.GRAY))
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,

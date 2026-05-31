@@ -52,6 +52,7 @@ class MagnetizerBlock : MachineBlock() {
         return be as? net.minecraft.screen.NamedScreenHandlerFactory
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
@@ -74,6 +75,7 @@ class MagnetizerBlock : MachineBlock() {
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =
         super.getPlacementState(ctx)?.with(ACTIVE, false)?.with(Properties.POWERED, false)
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun neighborUpdate(
         state: BlockState,
         world: World,

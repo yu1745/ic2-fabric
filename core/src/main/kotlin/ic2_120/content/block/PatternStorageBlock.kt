@@ -62,6 +62,7 @@ class PatternStorageBlock : MachineBlock() {
     ): net.minecraft.screen.NamedScreenHandlerFactory? =
         world.getBlockEntity(pos) as? net.minecraft.screen.NamedScreenHandlerFactory
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
@@ -99,6 +100,7 @@ class PatternStorageBlock : MachineBlock() {
         return itemStack
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStacksDropped(state: BlockState, world: ServerWorld, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
         super.onStacksDropped(state, world, pos, tool, dropExperience)
         val be = world.getBlockEntity(pos) as? Inventory ?: return

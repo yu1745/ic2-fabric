@@ -109,6 +109,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
     /**
      * 玩家右键点击打开 GUI
      */
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
@@ -129,6 +130,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
     /**
      * 方块被替换/破坏时掉落带有物品栏的物品（类似潜影盒）
      */
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.isOf(newState.block)) {
             val blockEntity = world.getBlockEntity(pos)

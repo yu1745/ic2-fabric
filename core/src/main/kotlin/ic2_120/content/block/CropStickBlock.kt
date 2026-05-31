@@ -83,11 +83,13 @@ class CropStickBlock : BlockWithEntity(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? = null
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun canPlaceAt(state: BlockState, world: WorldView, pos: BlockPos): Boolean {
         val below = world.getBlockState(pos.down())
         return below.block is FarmlandBlock
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getStateForNeighborUpdate(
         state: BlockState,
         direction: Direction,
@@ -102,6 +104,7 @@ class CropStickBlock : BlockWithEntity(
         return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,

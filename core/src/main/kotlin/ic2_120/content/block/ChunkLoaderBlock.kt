@@ -78,6 +78,7 @@ class ChunkLoaderBlock : MachineBlock() {
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =
         super.getPlacementState(ctx)?.with(ACTIVE, false)
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.isOf(newState.block) && !moved) {
             (world.getBlockEntity(pos) as? ChunkLoaderBlockEntity)?.releaseChunks()

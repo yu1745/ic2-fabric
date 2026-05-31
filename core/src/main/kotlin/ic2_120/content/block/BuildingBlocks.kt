@@ -126,6 +126,7 @@ class FoamBlock : Block(
         builder.add(CURING_SCHEDULED)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
         super.onBlockAdded(state, world, pos, oldState, notify)
         if (world.isClient) return
@@ -135,18 +136,21 @@ class FoamBlock : Block(
         sw.setBlockState(pos, state.with(CURING_SCHEDULED, true), Block.NOTIFY_LISTENERS)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun randomTick(state: BlockState, world: ServerWorld, pos: BlockPos, random: Random) {
         if (state.get(CURING_SCHEDULED)) return
         world.scheduleBlockTick(pos, this, MC_FULL_DAY_TICKS)
         world.setBlockState(pos, state.with(CURING_SCHEDULED, true), Block.NOTIFY_LISTENERS)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun scheduledTick(state: BlockState, world: ServerWorld, pos: BlockPos, random: Random) {
         if (world.getBlockState(pos).block !is FoamBlock) return
         val wall = LightGrayWallBlock::class.instance().defaultState
         world.setBlockState(pos, wall, Block.NOTIFY_ALL)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
@@ -190,6 +194,7 @@ class ReinforcedFoamBlock : Block(
         builder.add(CURING_SCHEDULED)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
         super.onBlockAdded(state, world, pos, oldState, notify)
         if (world.isClient) return
@@ -199,18 +204,21 @@ class ReinforcedFoamBlock : Block(
         sw.setBlockState(pos, state.with(CURING_SCHEDULED, true), Block.NOTIFY_LISTENERS)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun randomTick(state: BlockState, world: ServerWorld, pos: BlockPos, random: Random) {
         if (state.get(CURING_SCHEDULED)) return
         world.scheduleBlockTick(pos, this, MC_FULL_DAY_TICKS)
         world.setBlockState(pos, state.with(CURING_SCHEDULED, true), Block.NOTIFY_LISTENERS)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun scheduledTick(state: BlockState, world: ServerWorld, pos: BlockPos, random: Random) {
         if (world.getBlockState(pos).block !is ReinforcedFoamBlock) return
         val stone = ReinforcedStoneBlock::class.instance().defaultState
         world.setBlockState(pos, stone, Block.NOTIFY_ALL)
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
@@ -338,6 +346,7 @@ class MiningPipeBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.
             .with(DOWN, canConnect(world, pos, Direction.DOWN))
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getStateForNeighborUpdate(
         state: BlockState,
         direction: Direction,
@@ -492,6 +501,7 @@ class BlackWallBlock : Block(AbstractBlock.Settings.copy(Blocks.BLACK_CONCRETE).
 class WoodenScaffoldBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_PLANKS).strength(1.0f).nonOpaque()
 ) : PillarBlock(settings) {
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,
@@ -545,6 +555,7 @@ class ReinforcedWoodenScaffoldBlock(
 class IronScaffoldBlock(
     settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(3.0f).nonOpaque()
 ) : PillarBlock(settings) {
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,

@@ -49,6 +49,7 @@ class ReactorAccessHatchBlock(settings: AbstractBlock.Settings = AbstractBlock.S
         }
     }
 
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
         state: BlockState,
         world: World,

@@ -34,6 +34,7 @@ object TeleporterJadeProvider : IBlockComponentProvider, IServerDataProvider<Blo
         data.putBoolean("hasMfe", be.hasAdjacentMfeOrMfsu(world, pos))
         val thisDim = world.registryKey.value.toString()
         data.putBoolean("sameDim", target != null && thisDim == be.targetDimension)
+        @Suppress("DEPRECATION")
         data.putBoolean("chunkLoaded", target != null && world.isChunkLoaded(target))
         val targetBe = target?.let { world.getBlockEntity(it) as? TeleporterBlockEntity }
         data.putBoolean("targetBeValid", targetBe != null)

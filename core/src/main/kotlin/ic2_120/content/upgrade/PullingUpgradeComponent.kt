@@ -40,7 +40,7 @@ object PullingUpgradeComponent {
                 // 遍历源容器中的所有物品变体
                 for (view in source) {
                     if (view.isResourceBlank()) continue
-                    val variant = view.resource as? ItemVariant ?: continue
+                    val variant = view.resource
                     val item = variant.item
 
                     // 应用过滤

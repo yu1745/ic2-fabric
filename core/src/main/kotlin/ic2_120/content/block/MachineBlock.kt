@@ -69,6 +69,7 @@ abstract class MachineBlock(settings: AbstractBlock.Settings = defaultMachineSet
      * 方块被破坏时，将 BlockEntity 内 Inventory 的物品散落掉落，而非凭空消失。
      * 仅当方块被替换（如挖掉）且未被活塞推动时生效。
      */
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.isOf(newState.block) && !moved) {
             val be = world.getBlockEntity(pos)
@@ -132,6 +133,7 @@ abstract class DirectionalMachineBlock(settings: AbstractBlock.Settings = defaul
      * 方块被破坏时，将 BlockEntity 内 Inventory 的物品散落掉落，而非凭空消失。
      * 仅当方块被替换（如挖掉）且未被活塞推动时生效。
      */
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.isOf(newState.block) && !moved) {
             val be = world.getBlockEntity(pos)
