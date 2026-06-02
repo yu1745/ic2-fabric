@@ -10,7 +10,8 @@
 		"PassiveEntityMixin",
 		"MerchantEntityMixin",
 		"PathAwareEntityMixin",
-		"MobEntityMixin"
+		"MobEntityMixin",
+		"ItemStackLargeCountMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
