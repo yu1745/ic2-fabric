@@ -2,6 +2,7 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.machines.BaseMinerBlockEntity
 import ic2_120.content.block.BaseMinerBlock
+import ic2_120.content.screen.slot.DisplayCountSlot
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotMoveHelper
@@ -21,6 +22,7 @@ import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
+import net.minecraft.screen.slot.SlotActionType
 import ic2_120.registry.annotation.ScreenFactory
 
 @ModScreenHandler(names = ["miner", "advanced_miner"])
@@ -105,9 +107,14 @@ class MinerScreenHandler(
 
     private fun addTrackedSlot(inventory: Inventory, beSlotIndex: Int, x: Int, y: Int, maxItemCount: Int) {
         val base = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
-        val spec = base.copy(maxItemCount = maxItemCount, canInsert = { true })
+        val spec = base.copy(maxItemCount = maxItemCount)
         beSlotToHandlerIndex[beSlotIndex] = slots.size
-        addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
+        val slot = if (beSlotIndex == BaseMinerBlockEntity.SLOT_PIPE) {
+            DisplayCountSlot(inventory, beSlotIndex, x, y, spec)
+        } else {
+            PredicateSlot(inventory, beSlotIndex, x, y, spec)
+        }
+        addSlot(slot)
     }
 
     override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
@@ -133,19 +140,36 @@ class MinerScreenHandler(
             stack = stackInSlot.copy()
             val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
+                beSlot == BaseMinerBlockEntity.SLOT_PIPE -> {
+                    val miner = getMinerBlockEntity() ?: return ItemStack.EMPTY
+                    val moved = miner.takePipes(stackInSlot.maxCount)
+                    if (moved.isEmpty) return ItemStack.EMPTY
+                    stack = moved.copy()
+                    if (!insertItem(moved, playerSlotStart, slots.size, true)) {
+                        miner.insertPipesFromStack(stack, stack.count)
+                        return ItemStack.EMPTY
+                    }
+                    if (!moved.isEmpty) miner.insertPipesFromStack(moved, moved.count)
+                    slot.onQuickTransfer(moved, stack)
+                }
                 beSlot >= 0 -> {
-                    if (!insertItem(stackInSlot, playerSlotStart, slots.size - 1, true)) return ItemStack.EMPTY
+                    if (!insertItem(stackInSlot, playerSlotStart, slots.size, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index >= playerSlotStart -> {
+                    val miner = getMinerBlockEntity()
+                    if (miner != null && miner.insertPipesFromStack(stackInSlot) > 0) {
+                        // Pipe insertion bypasses vanilla merge limits and uses the miner's real 1024-slot capacity.
+                    } else {
                     val storage = itemStorage ?: return ItemStack.EMPTY
                     val moved = SlotMoveHelper.insertFromRoutes(
                         stackInSlot, storage, storage.insertRoutes, beSlotToHandlerIndex, slots
                     )
                     if (!moved) return ItemStack.EMPTY
+                    }
                 }
                 else -> {
-                    if (!insertItem(stackInSlot, playerSlotStart, slots.size - 1, false)) return ItemStack.EMPTY
+                    if (!insertItem(stackInSlot, playerSlotStart, slots.size, false)) return ItemStack.EMPTY
                 }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
@@ -153,6 +177,40 @@ class MinerScreenHandler(
             slot.onTakeItem(player, stackInSlot)
         }
         return stack
+    }
+
+    override fun onSlotClick(slotIndex: Int, button: Int, actionType: SlotActionType, player: PlayerEntity) {
+        val pipeSlotIndex = beSlotToHandlerIndex[BaseMinerBlockEntity.SLOT_PIPE]
+        if (slotIndex == pipeSlotIndex && actionType == SlotActionType.PICKUP) {
+            val miner = getMinerBlockEntity()
+            if (miner != null) {
+                val cursor = cursorStack
+                if (cursor.isEmpty) {
+                    val takeAmount = if (button == 1) 1 else cursor.maxCount
+                    val taken = miner.takePipes(takeAmount)
+                    if (!taken.isEmpty) {
+                        cursorStack = taken
+                        sendContentUpdates()
+                        return
+                    }
+                } else {
+                    val insertAmount = if (button == 1) 1 else cursor.count
+                    if (miner.insertPipesFromStack(cursor, insertAmount) > 0) {
+                        sendContentUpdates()
+                        return
+                    }
+                }
+            }
+        }
+        super.onSlotClick(slotIndex, button, actionType, player)
+    }
+
+    private fun getMinerBlockEntity(): BaseMinerBlockEntity? = try {
+        context.get({ world, pos ->
+            if (world.isClient) null else world.getBlockEntity(pos) as? BaseMinerBlockEntity
+        }, null)
+    } catch (_: NullPointerException) {
+        null
     }
 
     private val playerSlotStart: Int

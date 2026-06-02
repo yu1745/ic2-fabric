@@ -92,6 +92,15 @@ class MinerScreen(
         val sideTextX = left - sideTextWidth - 4
         context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
         context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
+        val cursorText = t("gui.ic2_120.miner.scan_cursor", handler.sync.cursorX, handler.sync.cursorY, handler.sync.cursorZ)
+        val cursorTextWidth = textRenderer.getWidth(cursorText)
+        context.drawText(textRenderer, cursorText, left - cursorTextWidth - 4, top + 32, 0x55FF55, false)
+        if (handler.sync.fluidBlocked != 0) {
+            val fluidText = t("gui.ic2_120.miner.fluid_blocked")
+            val fluidTextWidth = textRenderer.getWidth(fluidText)
+            context.drawText(textRenderer, fluidText, left - fluidTextWidth - 4, top + 44, 0xFF5555, false)
+        }
+        drawPipeCount(context, left, top)
 
         drawMouseoverTooltip(context, mouseX, mouseY)
 
@@ -167,6 +176,21 @@ class MinerScreen(
             }
         }
         return super.mouseClicked(mouseX, mouseY, button)
+    }
+
+    private fun drawPipeCount(context: DrawContext, left: Int, top: Int) {
+        val count = handler.sync.pipeCount
+        if (count <= 1) return
+        val text = count.toString()
+        val slotX = 8
+        val slotY = if (handler.isAdvanced) 44 else 39
+        context.drawTextWithShadow(
+            textRenderer,
+            text,
+            left + slotX + 17 - textRenderer.getWidth(text),
+            top + slotY + 9,
+            0xFFFFFF
+        )
     }
 
     companion object {

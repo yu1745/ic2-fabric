@@ -36,6 +36,8 @@ class MinerSync(
     var cursorY by schema.int("CursorY")
     var cursorZ by schema.int("CursorZ")
     var progressTicks by schema.int("ProgressTicks")
+    var pipeCount by schema.int("PipeCount")
+    var fluidBlocked by schema.int("FluidBlocked", default = 0)
 
     private val flow = EnergyFlowSync(schema, this)
 
