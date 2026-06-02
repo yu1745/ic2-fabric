@@ -9,7 +9,7 @@
       "item": "ic2_120:alloy"
     },
     "s": {
-      "item": "ic2_120:steel_plate"
+      "tag": "ic2_120:compat/plates/steel"
     },
     "x": {
       "item": "ic2_120:machine"

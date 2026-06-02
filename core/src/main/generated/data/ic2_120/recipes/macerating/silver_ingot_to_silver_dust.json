@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:macerating",
   "ingredient": {
-    "item": "ic2_120:silver_ingot"
+    "tag": "ic2_120:compat/ingots/silver"
   },
   "result": {
     "count": 1,

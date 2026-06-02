@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:compressing",
   "ingredient": {
-    "item": "ic2_120:steel_plate"
+    "tag": "ic2_120:compat/plates/steel"
   },
   "input_count": 9,
   "result": {

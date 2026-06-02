@@ -5,6 +5,7 @@ import ic2_120.content.fluid.ModFluids
 import ic2_120.content.recipes.MaterialTagRegistry
 import ic2_120.content.recipes.ModBlockLootTableProvider
 import ic2_120.content.recipes.ModBlockTagProvider
+import ic2_120.content.recipes.ModFluidTagProvider
 import ic2_120.content.recipes.ModItemTagProvider
 import ic2_120.content.recipes.ModRecipeProvider
 import ic2_120.registry.ClassScanner
@@ -46,6 +47,10 @@ object Ic2_120DataGenerator : DataGeneratorEntrypoint {
 		// 注册方块标签生成器（机器方块加入 mineable/pickaxe、needs_iron_tool，使铁镐能正常挖掘）
 		pack.addProvider { output, registriesFuture ->
 			ModBlockTagProvider(output, registriesFuture)
+		}
+		// 流体标签（半流质发电机燃料兼容）
+		pack.addProvider { output, registriesFuture ->
+			ModFluidTagProvider(output, registriesFuture)
 		}
 		// 物品标签（注解 materialTags → c:/forge:/compat:）
 		pack.addProvider { output, registriesFuture ->

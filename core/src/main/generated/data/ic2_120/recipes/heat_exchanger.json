@@ -3,13 +3,13 @@
   "category": "misc",
   "key": {
     "C": {
-      "item": "ic2_120:copper_plate"
+      "tag": "ic2_120:compat/plates/copper"
     },
     "E": {
       "item": "ic2_120:circuit"
     },
     "T": {
-      "item": "ic2_120:tin_plate"
+      "tag": "ic2_120:compat/plates/tin"
     }
   },
   "pattern": [

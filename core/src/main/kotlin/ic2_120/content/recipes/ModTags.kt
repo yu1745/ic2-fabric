@@ -55,6 +55,18 @@ object ModTags {
             val DUSTS_REDSTONE = item("dusts/redstone")
             val DUSTS_LAPIS = item("dusts/lapis")
 
+            val SMALL_DUSTS_IRON = item("small_dusts/iron")
+            val SMALL_DUSTS_COPPER = item("small_dusts/copper")
+            val SMALL_DUSTS_GOLD = item("small_dusts/gold")
+            val SMALL_DUSTS_TIN = item("small_dusts/tin")
+            val SMALL_DUSTS_BRONZE = item("small_dusts/bronze")
+            val SMALL_DUSTS_LEAD = item("small_dusts/lead")
+            val SMALL_DUSTS_SILVER = item("small_dusts/silver")
+            val SMALL_DUSTS_SULFUR = item("small_dusts/sulfur")
+            val SMALL_DUSTS_LITHIUM = item("small_dusts/lithium")
+            val SMALL_DUSTS_OBSIDIAN = item("small_dusts/obsidian")
+            val SMALL_DUSTS_LAPIS = item("small_dusts/lapis")
+
             val GEMS_DIAMOND = item("gems/diamond")
             val GEMS_LAPIS = item("gems/lapis")
 
@@ -65,6 +77,18 @@ object ModTags {
             val RAW_MATERIALS_URANIUM = item("raw_materials/uranium")
 
             val ORES_IRIDIUM = item("ores/iridium")
+
+            val ORES_IRON = item("ores/iron")
+            val ORES_GOLD = item("ores/gold")
+            val ORES_COPPER = item("ores/copper")
+            val ORES_TIN = item("ores/tin")
+            val ORES_LEAD = item("ores/lead")
+            val ORES_URANIUM = item("ores/uranium")
+            val ORES_COAL = item("ores/coal")
+
+            val RAW_MATERIALS_IRON = item("raw_materials/iron")
+            val RAW_MATERIALS_GOLD = item("raw_materials/gold")
+            val RAW_MATERIALS_COPPER = item("raw_materials/copper")
 
             private fun item(path: String): TagKey<Item> =
                 TagKey.of(RegistryKeys.ITEM, Identifier(Ic2_120.MOD_ID, "compat/$path"))
@@ -84,6 +108,14 @@ object ModTags {
 
             private fun block(path: String): TagKey<Block> =
                 TagKey.of(RegistryKeys.BLOCK, Identifier(Ic2_120.MOD_ID, "compat/$path"))
+        }
+
+        object Fluids {
+            val SEMIFLUID_BIOFUEL_EQUIVALENT = fluid("semifluid_generator/biofuel_equivalent")
+            val SEMIFLUID_CREOSOTE_EQUIVALENT = fluid("semifluid_generator/creosote_equivalent")
+
+            private fun fluid(path: String): TagKey<net.minecraft.fluid.Fluid> =
+                TagKey.of(RegistryKeys.FLUID, Identifier(Ic2_120.MOD_ID, "compat/$path"))
         }
     }
 }

@@ -3,7 +3,7 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "ic2_120:copper_dust"
+      "tag": "ic2_120:compat/dusts/copper"
     }
   ],
   "result": {

@@ -9,7 +9,7 @@
       "item": "minecraft:glass"
     },
     "S": {
-      "item": "ic2_120:silver_dust"
+      "tag": "ic2_120:compat/dusts/silver"
     }
   },
   "pattern": [

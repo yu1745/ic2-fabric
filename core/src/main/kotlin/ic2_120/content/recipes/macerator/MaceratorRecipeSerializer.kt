@@ -14,18 +14,8 @@ import net.minecraft.util.JsonHelper
 object MaceratorRecipeSerializer : RecipeSerializer<MaceratorRecipe> {
     override fun read(id: Identifier, json: JsonObject): MaceratorRecipe {
         val ingredientJson = JsonHelper.getObject(json, "ingredient")
-        val item = Identifier(JsonHelper.getString(ingredientJson, "item"))
         val count = JsonHelper.getInt(ingredientJson, "count", 1)
-
-        // 创建支持堆叠数量的Ingredient
-        val ingredient = if (count == 1) {
-            Ingredient.fromJson(ingredientJson)
-        } else {
-            // 对于多个物品，我们使用Ingredient.of()并传入多个ItemStack
-            val itemEntry = Registries.ITEM.get(item)
-            val stacks = (1..count).map { net.minecraft.item.ItemStack(itemEntry) }
-            Ingredient.ofStacks(*stacks.toTypedArray())
-        }
+        val ingredient = Ingredient.fromJson(ingredientJson)
 
         val result = JsonHelper.getObject(json, "result")
         val resultItemId = Identifier(JsonHelper.getString(result, "item"))

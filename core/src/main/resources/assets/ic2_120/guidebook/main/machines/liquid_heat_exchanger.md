@@ -12,34 +12,47 @@ item_ids:
 
 <BlockImage id="ic2_120:liquid_heat_exchanger" scale="4" />
 
-The Liquid Heat Exchanger transfers heat between fluids. It can either heat up a fluid using heat (HU) from a heat source, or cool down a fluid by extracting heat into a cooling fluid. It is an essential component in steam and thermal management systems.
+The Liquid Heat Exchanger turns stored heat fluids into heat units (HU). It consumes **hot coolant** or **lava**, converts that fluid into its cooled form, and sends the released HU into an adjacent heat machine.
 
 ## Operation
 
-The Liquid Heat Exchanger has two fluid tanks and a heat buffer:
+The machine has an input tank and an output tank. Each tank holds **8 buckets**.
 
-- **Hot Fluid Tank**: receives heat from the input fluid
-- **Cold Fluid Tank**: receives the cooled output fluid
-- **Heat Buffer**: stores heat transferred between fluids
+- **Hot coolant -> coolant**
+- **Lava -> pahoehoe lava**
 
-### Heating Mode
+Each bucket of input fluid releases **20,000 HU**. Heat is produced only while the exchanger has a valid heat consumer connected on its heat transfer face and enough room in the output tank for the converted fluid.
 
-When supplied with external heat (HU), the exchanger heats the input fluid. For example, water can be heated into steam.
+## Heat Conductors
 
-### Cooling Mode
+The ten center slots accept **Heat Conductors**. Each conductor allows **10 HU/t**, up to **100 HU/t** with all ten slots filled. The conductors are required; without them the machine stores fluid but outputs no heat.
 
-When supplied with a cooling fluid, the exchanger cools the hot input fluid by transferring heat into the coolant.
+The heat rate controls how fast the input fluid is processed. A full set of conductors consumes one bucket in 200 seconds, because one bucket contains 20,000 HU.
 
 ## Slots
 
-- Top-left: input fluid container (filled)
-- Bottom-left: output fluid container (empty)
-- Top-right: coolant/heat input container
-- Bottom-right: coolant/heat output container
+- Center grid: up to 10 Heat Conductors, one per slot
+- Upgrade row: 3 upgrade slots, including fluid ejector and fluid pulling upgrades
+- Bottom left pair: filled input container in, empty container out
+- Bottom right pair: empty output container in, filled output container out
 
-## Usage
+Input containers may be lava buckets, hot coolant buckets, lava cells, hot coolant cells, or compatible fluid cells. Output containers may be buckets, empty cells, or empty fluid cells, and are filled with coolant or pahoehoe lava.
 
-Connect a heat source (Solid Heat Generator, Fluid Heat Generator, etc.) to the exchanger's heat input. Supply a fluid to be heated via fluid pipes or cells. The heated or cooled fluid can be extracted from the output tank.
+## Fluids and Automation
+
+Fluid pipes can insert hot coolant or lava into the input tank and extract coolant or pahoehoe lava from the output tank from any side. Right-clicking the block with a compatible fluid container also interacts with the tanks before opening the GUI.
+
+Fluid pulling upgrades let the exchanger pull hot coolant or lava from nearby tanks. Fluid ejector upgrades push the cooled output fluid into nearby tanks. Upgrade filters and side settings can be used to keep the hot and cold loops separated.
+
+## Heat Transfer and Use Cases
+
+HU leaves through the exchanger's heat transfer face. The neighboring machine must be a heat consumer with its own heat face pointed back at the exchanger; otherwise the exchanger will not process fluid.
+
+Common links include:
+
+- Reactor Fluid Port -> Liquid Heat Exchanger -> Steam Generator, converting reactor hot coolant into coolant while feeding a boiler
+- Liquid Heat Exchanger -> Stirling Generator, turning hot coolant or lava heat into EU
+- Liquid Heat Exchanger -> Blast Furnace or Fermenter, supplying process heat while returning the cooled fluid for reuse
 
 ## Recipe
 

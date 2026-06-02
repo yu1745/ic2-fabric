@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "F": {
-      "item": "ic2_120:iron_plate"
+      "tag": "ic2_120:compat/plates/iron"
     },
     "X": {
       "item": "ic2_120:uranium_fuel_rod"

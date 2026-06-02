@@ -188,7 +188,7 @@ class GlassFibreCableBlock(
                 .pattern("GGG")
                 .input('G', Items.GLASS)
                 .input('E', EnergiumDust::class.instance())
-                .input('S', SilverDust::class.instance())
+                .input('S', Ingredient.fromTag(ModTags.Compat.Items.DUSTS_SILVER))
                 .criterion(
                     hasItem(EnergiumDust::class.instance()),
                     conditionsFromItem(EnergiumDust::class.instance())
@@ -222,7 +222,7 @@ class InsulatedCopperCableBlock(settings: AbstractBlock.Settings = defaultSettin
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedCopperCableBlock::class.item(), 1)
                 .input(CopperCableBlock::class.item())
-                .input(RubberItem::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(hasItem(CopperCableBlock::class.item()), conditionsFromItem(CopperCableBlock::class.item()))
                 .offerTo(exporter, InsulatedCopperCableBlock::class.id())
             // 剪刀剥离绝缘层
@@ -257,7 +257,7 @@ class InsulatedTinCableBlock(settings: AbstractBlock.Settings = defaultSettings(
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedTinCableBlock::class.item(), 1)
                 .input(TinCableBlock::class.item())
-                .input(RubberItem::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(hasItem(TinCableBlock::class.item()), conditionsFromItem(TinCableBlock::class.item()))
                 .offerTo(exporter, InsulatedTinCableBlock::class.id())
             // 剪刀剥离绝缘层
@@ -295,7 +295,7 @@ class InsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSettings
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedGoldCableBlock::class.item(), 1)
                 .input(GoldCableBlock::class.item())
-                .input(RubberItem::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(hasItem(GoldCableBlock::class.item()), conditionsFromItem(GoldCableBlock::class.item()))
                 .offerTo(exporter, InsulatedGoldCableBlock::class.id())
             // 剪刀剥离绝缘层
@@ -334,14 +334,14 @@ class DoubleInsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSe
             // 直接合成：金导线 + 2 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
                 .input(GoldCableBlock::class.item())
-                .input(RubberItem::class.instance())
-                .input(RubberItem::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(hasItem(GoldCableBlock::class.item()), conditionsFromItem(GoldCableBlock::class.item()))
                 .offerTo(exporter, DoubleInsulatedGoldCableBlock::class.id())
             // 递进合成：1x 绝缘金导线 + 1 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
                 .input(InsulatedGoldCableBlock::class.item())
-                .input(RubberItem::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(
                     hasItem(InsulatedGoldCableBlock::class.item()),
                     conditionsFromItem(InsulatedGoldCableBlock::class.item())
@@ -382,7 +382,7 @@ class InsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSettings
         fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
-                .input(RubberItem::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(hasItem(IronCableBlock::class.item()), conditionsFromItem(IronCableBlock::class.item()))
                 .offerTo(exporter, InsulatedIronCableBlock::class.id())
             // 剪刀剥离绝缘层
@@ -421,14 +421,14 @@ class DoubleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
             // 直接合成：高压导线 + 2 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
-                .input(RubberItem::class.instance())
-                .input(RubberItem::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(hasItem(IronCableBlock::class.item()), conditionsFromItem(IronCableBlock::class.item()))
                 .offerTo(exporter, DoubleInsulatedIronCableBlock::class.id())
             // 递进合成：1x 绝缘高压导线 + 1 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
                 .input(InsulatedIronCableBlock::class.item())
-                .input(RubberItem::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(
                     hasItem(InsulatedIronCableBlock::class.item()),
                     conditionsFromItem(InsulatedIronCableBlock::class.item())
@@ -470,15 +470,15 @@ class TripleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
             // 直接合成：高压导线 + 3 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
-                .input(RubberItem::class.instance())
-                .input(RubberItem::class.instance())
-                .input(RubberItem::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(hasItem(IronCableBlock::class.item()), conditionsFromItem(IronCableBlock::class.item()))
                 .offerTo(exporter, TripleInsulatedIronCableBlock::class.id())
             // 递进合成：2x 绝缘高压导线 + 1 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
                 .input(DoubleInsulatedIronCableBlock::class.item())
-                .input(RubberItem::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(
                     hasItem(DoubleInsulatedIronCableBlock::class.item()),
                     conditionsFromItem(DoubleInsulatedIronCableBlock::class.item())

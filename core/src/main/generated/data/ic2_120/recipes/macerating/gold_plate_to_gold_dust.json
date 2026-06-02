@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:macerating",
   "ingredient": {
-    "item": "ic2_120:gold_plate"
+    "tag": "ic2_120:compat/plates/gold"
   },
   "result": {
     "count": 1,

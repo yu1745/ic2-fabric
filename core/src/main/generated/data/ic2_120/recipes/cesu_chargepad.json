@@ -12,7 +12,7 @@
       "item": "minecraft:stone_pressure_plate"
     },
     "R": {
-      "item": "ic2_120:rubber"
+      "tag": "ic2_120:compat/rubber"
     }
   },
   "pattern": [

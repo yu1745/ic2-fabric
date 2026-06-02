@@ -3,7 +3,7 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "ic2_120:lithium_dust"
+      "tag": "ic2_120:compat/dusts/lithium"
     }
   ],
   "result": {

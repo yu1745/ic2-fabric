@@ -24,7 +24,7 @@ object CannerMixingRecipes {
 
     data class Recipe(
         val inputFluid: Fluid,
-        val inputSolid: Item,
+        val inputSolid: IngredientInput,
         val inputSolidCount: Int,
         val outputFluid: Fluid,
         val inputFluidBuckets: Int = 1
@@ -38,18 +38,18 @@ object CannerMixingRecipes {
 
     private val recipes: List<Recipe> by lazy {
         listOf(
-            Recipe(Fluids.WATER, lapisDust, 8, ModFluids.COOLANT_STILL),
-            Recipe(Fluids.FLOWING_WATER, lapisDust, 8, ModFluids.COOLANT_STILL),
-            Recipe(ModFluids.DISTILLED_WATER_STILL, lapisDust, 1, ModFluids.COOLANT_STILL),
-            Recipe(ModFluids.DISTILLED_WATER_FLOWING, lapisDust, 1, ModFluids.COOLANT_STILL),
-            Recipe(Fluids.WATER, bioChaff, 1, ModFluids.BIOMASS_STILL),
-            Recipe(Fluids.FLOWING_WATER, bioChaff, 1, ModFluids.BIOMASS_STILL),
-            Recipe(Fluids.WATER, cfPowder, 1, ModFluids.CONSTRUCTION_FOAM_STILL),
-            Recipe(Fluids.FLOWING_WATER, cfPowder, 1, ModFluids.CONSTRUCTION_FOAM_STILL),
-            Recipe(Fluids.WATER, grinPowder, 1, ModFluids.WEED_EX_STILL),
-            Recipe(Fluids.FLOWING_WATER, grinPowder, 1, ModFluids.WEED_EX_STILL),
-            Recipe(Fluids.WATER, peatOre, 1, ModFluids.BIOMASS_STILL),
-            Recipe(Fluids.FLOWING_WATER, peatOre, 1, ModFluids.BIOMASS_STILL)
+            Recipe(Fluids.WATER, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 8, ModFluids.COOLANT_STILL),
+            Recipe(Fluids.FLOWING_WATER, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 8, ModFluids.COOLANT_STILL),
+            Recipe(ModFluids.DISTILLED_WATER_STILL, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 1, ModFluids.COOLANT_STILL),
+            Recipe(ModFluids.DISTILLED_WATER_FLOWING, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 1, ModFluids.COOLANT_STILL),
+            Recipe(Fluids.WATER, IngredientInput.item(bioChaff), 1, ModFluids.BIOMASS_STILL),
+            Recipe(Fluids.FLOWING_WATER, IngredientInput.item(bioChaff), 1, ModFluids.BIOMASS_STILL),
+            Recipe(Fluids.WATER, IngredientInput.item(cfPowder), 1, ModFluids.CONSTRUCTION_FOAM_STILL),
+            Recipe(Fluids.FLOWING_WATER, IngredientInput.item(cfPowder), 1, ModFluids.CONSTRUCTION_FOAM_STILL),
+            Recipe(Fluids.WATER, IngredientInput.item(grinPowder), 1, ModFluids.WEED_EX_STILL),
+            Recipe(Fluids.FLOWING_WATER, IngredientInput.item(grinPowder), 1, ModFluids.WEED_EX_STILL),
+            Recipe(Fluids.WATER, IngredientInput.item(peatOre), 1, ModFluids.BIOMASS_STILL),
+            Recipe(Fluids.FLOWING_WATER, IngredientInput.item(peatOre), 1, ModFluids.BIOMASS_STILL)
         )
     }
 
@@ -64,7 +64,7 @@ object CannerMixingRecipes {
         if (materialStack.isEmpty || leftTankFluid == null || leftTankAmount < FluidConstants.BUCKET) return null
         return recipes.find { recipe ->
             fluidsMatch(recipe.inputFluid, leftTankFluid) &&
-            materialStack.item == recipe.inputSolid &&
+            recipe.inputSolid.toIngredient().test(materialStack) &&
             materialStack.count >= recipe.inputSolidCount
         }
     }
@@ -74,7 +74,7 @@ object CannerMixingRecipes {
 
     /** 检查物品是否为混合配方可用材料 */
     fun isMixingMaterial(item: Item): Boolean =
-        recipes.any { it.inputSolid == item }
+        recipes.any { it.inputSolid.toIngredient().test(ItemStack(item)) }
 
     private fun fluidsMatch(recipeFluid: Fluid, tankFluid: Fluid): Boolean {
         if (recipeFluid == tankFluid) return true

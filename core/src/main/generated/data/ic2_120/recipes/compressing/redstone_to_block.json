@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:compressing",
   "ingredient": {
-    "item": "minecraft:redstone"
+    "tag": "ic2_120:compat/dusts/redstone"
   },
   "input_count": 9,
   "result": {

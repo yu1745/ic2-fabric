@@ -38,7 +38,7 @@ class BlastFurnaceRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlastF
         focuses: IFocusGroup
     ) {
         builder.addSlot(RecipeIngredientRole.INPUT, 35, 33)
-            .addItemStack(recipe.input)
+            .addItemStacks(recipe.input)
         builder.addSlot(RecipeIngredientRole.OUTPUT, 134, 56)
             .addItemStack(recipe.steelOutput)
         builder.addSlot(RecipeIngredientRole.OUTPUT, 152, 56)

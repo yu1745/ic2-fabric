@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:macerating",
   "ingredient": {
-    "item": "minecraft:coal_ore"
+    "tag": "ic2_120:compat/ores/coal"
   },
   "result": {
     "count": 2,

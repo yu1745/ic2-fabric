@@ -12,50 +12,54 @@ item_ids:
 
 <BlockImage id="ic2_120:steam_kinetic_generator" p:facing="north" p:active="true" scale="4" />
 
-The Steam Kinetic Generator (steam turbine) consumes steam to produce kinetic energy (KU). It requires a steam turbine item installed in its turbine slot. Regular steam produces 2 KU per mB, while superheated steam produces 4 KU per mB.
+The Steam Kinetic Generator is the KU-producing half of the steam chain. Install a <ItemLink id="ic2_120:steam_turbine" /> in the turbine slot, feed the machine steam or superheated steam, and pull KU from any side.
 
-The turbine also condenses 10% of consumed steam into distilled water, which collects in an internal tank. If the distilled water tank fills up, the turbine becomes blocked and stops producing KU. Steam is output to adjacent condensers or vented if no condenser is available.
+Regular steam produces 2 KU per mB. Superheated steam produces 4 KU per mB, causes half as much turbine wear, and leaves the machine as regular steam.
 
-## Steam Consumption
+## Operation
 
-**KU/t = steamConsumed_mB × KU_per_mB**
+The internal steam tank holds 21,000 mB. Each server tick, if a turbine is installed and the machine is not water-blocked, the generator consumes all steam currently in that tank and adds KU to its internal KU buffer.
 
-The generator draws steam from its internal 21,000 mB steam tank and produces KU proportional to consumption:
+**Raw KU = consumed steam in mB x KU per mB**
 
-- **Regular steam**: 2 KU per mB
-- **Superheated steam**: 4 KU per mB
+The KU buffer holds 4,096 KU, so actual output for that tick is limited by free buffer space. Existing distilled water in the output tank also throttles production: an empty distilled-water tank gives full KU, and a nearly full tank gives only a small fraction.
 
-When using superheated steam, KU output doubles for the same steam consumption rate, and turbine wear is reduced — making it both more powerful and more economical.
+## Steam Handling
 
-### Condensation
+| Input | KU | Fluid after processing | Turbine wear |
+|------|----|------------------------|--------------|
+| Steam | 2 KU/mB | 90% of the input is pushed as steam to adjacent Condensers only | 2 durability per 20 ticks |
+| Superheated Steam | 4 KU/mB | The full input amount is pushed out as regular steam to adjacent fluid storages | 1 durability per 20 ticks |
 
-10% of consumed steam is condensed into distilled water. The distilled water tank has a capacity of 1,000 mB. If the tank fills up, the turbine jams and production stops until distilled water is drained (e.g. by an adjacent condenser or fluid pipe).
+For regular steam, the internal condensate counter gains 1 progress per 10 mB consumed. Every 100 progress creates 1 mB of distilled water in the machine's distilled-water tank. The tank holds 1,000 mB.
+
+If outgoing steam has nowhere to go, the machine vents the leftover steam. Venting has a 10% chance each tick to cause a small explosion, so give the output steam a receiver.
+
+## Water Blocking
+
+The distilled-water tank is an output tank. It can be drained from any side as distilled water, and the machine also actively tries to eject it to adjacent fluid storages.
+
+If the distilled-water tank has no room for the next 1 mB of condensate, the turbine becomes water-blocked. While blocked, it produces no KU; incoming steam is dumped as regular steam instead. Drain at least 1 mB of distilled water to unblock it.
 
 ## Output
 
-- **KU Output**: Variable (up to ~800 KU/t)
-- **Steam Consumption**: Variable (up to 21,000 mB capacity)
-- **Turbine Wear**: every 20 ticks (normal: 2 wear, superheated: 1 wear)
-- **Distilled Water Tank**: 1,000 mB
-- **Tier**: 3
-
-### Steam Types
-
-| Steam Type | KU/mB | Turbine Wear |
-|-----------|-------|-------------|
-| Regular | 2 KU | 2 damage/20 ticks |
-| Superheated | 4 KU | 1 damage/20 ticks |
+- **Steam Tank:** 21,000 mB
+- **Distilled Water Tank:** 1,000 mB
+- **KU Buffer:** 4,096 KU
+- **KU Output:** any side
+- **Fluid I/O:** any side
+- **Tier:** 3
 
 ## Turbine Wear
 
-The steam turbine item wears down gradually during operation. Wear is applied every 20 ticks. Regular steam causes 2 wear per application, while superheated steam causes only 1 wear — meaning superheated steam not only produces more power but also extends turbine lifespan. When fully worn, the turbine breaks and must be replaced.
+The steam turbine has 48 durability. Wear is applied every 20 ticks while the machine is processing steam. Regular steam applies 2 damage each time; superheated steam applies 1. When the turbine reaches its durability limit, it breaks and the slot becomes empty.
 
-## Slots
+## Slots and Automation
 
-- Turbine slot: holds the steam turbine
-- Upgrade slot: supports upgrades
+- **Turbine Slot:** accepts one <ItemLink id="ic2_120:steam_turbine" />
+- **Upgrade Slot:** accepts ejector, pulling, fluid ejector, and fluid pulling upgrades
 
-The Steam Kinetic Generator outputs KU from any side and accepts steam via fluid pipe connections.
+Fluid automation can insert steam or superheated steam and extract distilled water from any side. Item automation can insert a steam turbine into the turbine slot and valid upgrades into the upgrade slot; both slots are also extractable.
 
 ## Recipe
 

@@ -12,61 +12,62 @@ item_ids:
 
 <BlockImage id="ic2_120:water_kinetic_generator" p:facing="north" p:active="true" scale="4" />
 
-The Water Kinetic Generator converts water flow into kinetic energy (KU). It requires a rotor installed in its front face that spins when submerged in water. The rotor must be fully surrounded by water blocks on its front face plane.
+The Water Kinetic Generator is a rotor-driven KU source. Install a <ItemLink id="ic2_120:wooden_rotor" />, <ItemLink id="ic2_120:iron_rotor" />, <ItemLink id="ic2_120:steel_rotor" />, or <ItemLink id="ic2_120:carbon_rotor" /> in its single rotor slot, then build the water around the rotor plane one block in front of the machine.
 
-Flowing water provides 1.5x more power than still water. Different rotor materials provide different power multipliers and radii (smaller than wind rotors). Rotors suffer wear over time and will eventually break.
+The rotor is on the front face. KU is available only from the back face, so place shafts or a <ItemLink id="ic2_120:kinetic_generator" /> behind the machine. The Kinetic Generator must face the incoming kinetic line and converts delivered KU at 4 KU = 1 EU.
 
-KU is output from the back of the machine, which can be connected to kinetic transmission shafts or the Kinetic Generator.
+## Water Setup
 
-## Water Flow Mechanics
+The generator runs only when every sampled point in the rotor's front plane is water. Missing water in that swept area stops generation. If at least one of those water blocks is flowing water, the generator receives the flowing-water bonus.
 
-**KU = floor(64 × rotorMultiplier × flowBonus)**
+- **Still water only**: normal output and normal water-generator wear
+- **Any flowing water in the sampled rotor area**: 1.5x output and 1.5x wear
+- **Missing water in the sampled rotor area**: no KU
 
-The flow bonus depends on whether the water surrounding the rotor is flowing or still:
+The required water area grows with rotor radius. Larger rotors make more KU, but they also need a larger clear water plane in front of the block.
 
-- **Still water**: ×1.0
-- **Flowing water**: ×1.5
+## KU Output
 
-Submersion is evaluated on the plane directly in front of the rotor. All blocks in the rotor's sweep area must be water for the generator to operate.
+**KU/t = floor(64 x rotorMultiplier x waterBonus)**
 
-### Performance Examples (Carbon Rotor)
+| Rotor | Radius | Multiplier | Still Water | Flowing Bonus |
+|-------|--------|------------|-------------|---------------|
+| Wooden | 1.0 | 1x | 64 KU/t | 96 KU/t |
+| Iron | 1.5 | 2x | 128 KU/t | 192 KU/t |
+| Steel | 2.0 | 3x | 192 KU/t | 288 KU/t |
+| Carbon | 2.5 | 4x | 256 KU/t | 384 KU/t |
 
-| Water Type | Flow Bonus | Rotor Mult | KU/t |
-|-----------|-----------|-----------|------|
-| Still | 1.0 | 4× | 256 |
-| Flowing | 1.5 | 4× | 384 |
+The screen shows both generated KU and output KU. Generated KU is what the water and rotor can produce this tick. Output KU is what was actually extracted by an adjacent Kinetic Generator or by the kinetic transmission network. If generated KU is positive but output KU is 0, the machine is spinning but nothing is pulling from its back face.
 
-## Output
+## Placement and Transmission
 
-- **KU Output**: Variable (depends on rotor, water flow)
-- **Rotor Slot**: 1 (wooden, iron, steel, or carbon rotor)
-- **Tier**: 1
-- **Water Flow Bonus**: 1.5× for flowing water
+The Water Kinetic Generator does not store a long-term KU buffer. Each tick it offers the current generated KU from its back side, and any unused KU is gone on the next tick.
 
-### Rotor Specifications
+For a direct Kinetic Generator setup, put the Kinetic Generator directly behind the water machine and point the Kinetic Generator at it. With shafts, remember that path limits and losses apply before the KU reaches the consumer:
 
-| Rotor | Radius | Multiplier |
-|-------|--------|-----------|
-| Wooden | 1.0 | 1× |
-| Iron | 1.5 | 2× |
-| Steel | 2.0 | 3× |
-| Carbon | 2.5 | 4× |
+- <ItemLink id="ic2_120:wood_transmission_shaft" />: 128 KU/t, no path loss
+- <ItemLink id="ic2_120:iron_transmission_shaft" />: 512 KU/t, 2 KU path loss per shaft
+- <ItemLink id="ic2_120:steel_transmission_shaft" />: 2,048 KU/t, 1 KU path loss per shaft
+- <ItemLink id="ic2_120:carbon_transmission_shaft" />: 8,192 KU/t, no path loss
+- <ItemLink id="ic2_120:bevel_gear" />: 2,048 KU/t, 3 KU path loss
 
-Larger radius means the rotor sweeps a wider area and is more likely to be jammed by nearby blocks or other generators.
+Use at least iron shafts for iron rotors and above if you want the full output to survive the line capacity. Steel or carbon shafts leave more room for several sources or longer routes.
 
 ## Rotor Wear
 
-Rotors wear down only while actively generating KU. The wear rate is multiplied by the flow multiplier (1.5× for flowing water). When fully worn, the rotor breaks and must be replaced. Check remaining lifetime in the GUI.
+Rotors lose durability only while the machine is actively generating KU. Water generation applies a base wear rate of 2 durability per tick; flowing water raises that by another 1.5x. When the rotor reaches its limit, it breaks and the slot becomes empty.
+
+The GUI lifetime readout is shown in hours under still-water conditions. Flowing water consumes the same rotor faster, so the real lifetime is about two-thirds of the displayed still-water estimate while the flow bonus is active.
 
 ## Blocking Detection
 
-The rotor will jam if a solid block is within its rotation radius on the front face plane. When jammed, the rotor stops spinning and no KU is generated. Clear the obstructing blocks to resume operation.
+The rotor jams if an opaque full block intersects its blade path, or if another kinetic rotor overlaps the same rotor plane. A jammed rotor stops producing KU but keeps its current rotor installed. Clear the obstruction or move the overlapping generator to resume operation.
 
 ## Slots
 
-- Rotor slot: holds the water rotor
+- Rotor slot: accepts one wooden, iron, steel, or carbon rotor
 
-Right-click with a rotor to install it, or right-click with an empty hand to remove it.
+Right-click the block with a valid rotor to install one quickly. Right-click with an empty hand to remove the installed rotor. Opening the screen also gives access to the same single slot, and shift-clicking valid rotors inserts one item.
 
 ## Recipe
 
@@ -78,4 +79,5 @@ Right-click with a rotor to install it, or right-click with an empty hand to rem
 - <ItemLink id="ic2_120:iron_rotor" />
 - <ItemLink id="ic2_120:steel_rotor" />
 - <ItemLink id="ic2_120:carbon_rotor" />
-- <ItemLink id="ic2_120:wind_meter" />
+- <ItemLink id="ic2_120:kinetic_generator" />
+- <ItemLink id="ic2_120:bevel_gear" />

@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:macerating",
   "ingredient": {
-    "item": "ic2_120:uranium_ore"
+    "tag": "ic2_120:compat/ores/uranium"
   },
   "result": {
     "count": 2,

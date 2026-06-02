@@ -14,7 +14,7 @@ import net.minecraft.item.ItemStack
  */
 data class CannerMixingJeiRecipe(
     val inputFluid: Fluid,
-    val inputSolid: ItemStack,
+    val inputSolid: List<ItemStack>,
     val outputFluid: Fluid,
     val inputFluidCell: ItemStack,
     val outputFluidCell: ItemStack

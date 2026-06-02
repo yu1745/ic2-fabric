@@ -42,7 +42,7 @@ class SolidCannerRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<SolidCa
     ) {
         // 锡罐槽 — 与纹理中 (29, 35) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.INPUT, 4, 14)
-            .addItemStack(recipe.slot0)
+            .addItemStacks(recipe.slot0)
 
         // 食物槽 — 与纹理中 (61, 35) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.INPUT, 36, 14)

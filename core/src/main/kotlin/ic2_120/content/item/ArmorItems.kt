@@ -16,6 +16,7 @@ import ic2_120.content.item.energy.ReBatteryItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.item.energy.chargePlayerInventory
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -417,7 +418,7 @@ class BronzeHelmet : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.HELMET, FabricItemSe
                 ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, BronzeHelmet::class.instance(), 1)
                     .pattern("BBB")
                     .pattern("B B")
-                    .input('B', bronze)
+                    .input('B', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE))
                     .criterion(hasItem(bronze), conditionsFromItem(bronze))
                     .offerTo(exporter, BronzeHelmet::class.id())
             }
@@ -436,7 +437,7 @@ class BronzeChestplate : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.CHESTPLATE, Fabr
                     .pattern("B B")
                     .pattern("BBB")
                     .pattern("BBB")
-                    .input('B', bronze)
+                    .input('B', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE))
                     .criterion(hasItem(bronze), conditionsFromItem(bronze))
                     .offerTo(exporter, BronzeChestplate::class.id())
             }
@@ -455,7 +456,7 @@ class BronzeLeggings : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.LEGGINGS, FabricIt
                     .pattern("BBB")
                     .pattern("B B")
                     .pattern("B B")
-                    .input('B', bronze)
+                    .input('B', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE))
                     .criterion(hasItem(bronze), conditionsFromItem(bronze))
                     .offerTo(exporter, BronzeLeggings::class.id())
             }
@@ -473,7 +474,7 @@ class BronzeBoots : ArmorItem(BRONZE_ARMOR, ArmorItem.Type.BOOTS, FabricItemSett
                 ShapedRecipeJsonBuilder.create(RecipeCategory.COMBAT, BronzeBoots::class.instance(), 1)
                     .pattern("B B")
                     .pattern("B B")
-                    .input('B', bronze)
+                    .input('B', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE))
                     .criterion(hasItem(bronze), conditionsFromItem(bronze))
                     .offerTo(exporter, BronzeBoots::class.id())
             }
@@ -502,7 +503,7 @@ class RubberBoots : ArmorItem(RUBBER_ARMOR, ArmorItem.Type.BOOTS, FabricItemSett
                 .pattern("R R")
                 .pattern("R R")
                 .pattern("RWR")
-                .input('R', rubber)
+                .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .input('W', Items.WHITE_WOOL)
                 .criterion(hasItem(rubber), conditionsFromItem(rubber))
                 .offerTo(exporter, RubberBoots::class.id())
@@ -585,7 +586,7 @@ class HazmatHelmet : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.HELMET, FabricItemSe
                 .pattern("RGR")
                 .pattern("RIR")
                 .input('D', Items.ORANGE_DYE)
-                .input('R', rubber)
+                .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .input('G', Items.GLASS)
                 .input('I', Items.IRON_BARS)
                 .criterion(hasItem(rubber), conditionsFromItem(rubber))
@@ -654,7 +655,7 @@ class HazmatChestplate : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.CHESTPLATE, Fabr
                 .pattern("R R")
                 .pattern("RDR")
                 .pattern("RDR")
-                .input('R', rubber)
+                .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .input('D', Items.ORANGE_DYE)
                 .criterion(hasItem(rubber), conditionsFromItem(rubber))
                 .offerTo(exporter, HazmatChestplate::class.id())
@@ -673,7 +674,7 @@ class HazmatLeggings : ArmorItem(HAZMAT_ARMOR, ArmorItem.Type.LEGGINGS, FabricIt
                 .pattern("RDR")
                 .pattern("R R")
                 .pattern("R R")
-                .input('R', rubber)
+                .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .input('D', Items.ORANGE_DYE)
                 .criterion(hasItem(rubber), conditionsFromItem(rubber))
                 .offerTo(exporter, HazmatLeggings::class.id())

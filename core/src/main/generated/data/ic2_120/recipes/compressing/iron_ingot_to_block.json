@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:compressing",
   "ingredient": {
-    "item": "minecraft:iron_ingot"
+    "tag": "ic2_120:compat/ingots/iron"
   },
   "input_count": 9,
   "result": {

@@ -2,6 +2,7 @@ package ic2_120.content.item
 
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.entity.ModEntities
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.id
@@ -17,6 +18,7 @@ import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
 
@@ -67,7 +69,7 @@ class RubberBoatItem : Ic2BoatItem(ModEntities.RUBBER_BOAT, FabricItemSettings()
                     .pattern("   ")
                     .pattern("R R")
                     .pattern("RRR")
-                    .input('R', rubber)
+                    .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                     .criterion(hasItem(rubber), conditionsFromItem(rubber))
                     .offerTo(exporter, RubberBoatItem::class.id())
             }
@@ -91,7 +93,7 @@ class ElectricBoatItem : Ic2BoatItem(ModEntities.ELECTRIC_BOAT, FabricItemSettin
                     .pattern("IMI")
                     .pattern("IRI")
                     .input('C', cable)
-                    .input('I', plate)
+                    .input('I', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
                     .input('M', motor)
                     .input('R', rotor)
                     .criterion(hasItem(cable), conditionsFromItem(cable))

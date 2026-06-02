@@ -10,6 +10,7 @@ import ic2_120.content.item.SteelPlate
 import ic2_120.content.item.fluidToFilledCellStack
 import ic2_120.content.item.getFluidCellVariant
 import ic2_120.content.item.isFluidCellEmpty
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.RecipeProvider
@@ -35,6 +36,7 @@ import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.BlockItem
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -362,7 +364,7 @@ class BronzeTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.bloc
                     .pattern("PFP")
                     .pattern("F F")
                     .pattern("PFP")
-                    .input('P', plate)
+                    .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_BRONZE))
                     .input('F', cell)
                     .criterion(hasItem(plate), conditionsFromItem(plate))
                     .offerTo(exporter, BronzeTankBlock::class.id())
@@ -386,7 +388,7 @@ class IronTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block.
                     .pattern("PFP")
                     .pattern("F F")
                     .pattern("PFP")
-                    .input('P', plate)
+                    .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
                     .input('F', cell)
                     .criterion(hasItem(plate), conditionsFromItem(plate))
                     .offerTo(exporter, IronTankBlock::class.id())
@@ -410,7 +412,7 @@ class SteelTankBlock : TankBlock(AbstractBlock.Settings.copy(net.minecraft.block
                     .pattern("PFP")
                     .pattern("F F")
                     .pattern("PFP")
-                    .input('P', plate)
+                    .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL))
                     .input('F', cell)
                     .criterion(hasItem(plate), conditionsFromItem(plate))
                     .offerTo(exporter, SteelTankBlock::class.id())

@@ -6,7 +6,7 @@
       "item": "ic2_120:empty_cell"
     },
     "P": {
-      "item": "ic2_120:iron_plate"
+      "tag": "ic2_120:compat/plates/iron"
     }
   },
   "pattern": [

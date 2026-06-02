@@ -6,10 +6,10 @@
       "item": "ic2_120:gold_cable"
     },
     {
-      "item": "ic2_120:rubber"
+      "tag": "ic2_120:compat/rubber"
     },
     {
-      "item": "ic2_120:rubber"
+      "tag": "ic2_120:compat/rubber"
     }
   ],
   "result": {

@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:compressing",
   "ingredient": {
-    "item": "ic2_120:silver_ingot"
+    "tag": "ic2_120:compat/ingots/silver"
   },
   "input_count": 9,
   "result": {

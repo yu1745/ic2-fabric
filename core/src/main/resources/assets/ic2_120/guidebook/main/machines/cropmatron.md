@@ -12,22 +12,46 @@ item_ids:
 
 <BlockImage id="ic2_120:cropmatron" p:facing="north" scale="4" />
 
-The Crop-Matron is an automated farming machine that tends to IC2 crops within a **3x3x3** area centered on the machine. It waters crops, applies weed-ex, and fertilizes crops automatically.
+The Crop-Matron is the maintenance machine for IC2 crop farms. It does not harvest crops. Instead, it periodically scans a flat **9x1x9** crop layer centered on itself and feeds nearby crop sticks or planted crops with fertilizer, water, and Weed-EX protection.
 
-## Energy and Storage
+## Energy
 
-- **EU Storage**: 10,000 EU
-- **Tier**: 1 (LV, 32 EU/packet)
-- **Water Tank**: 8 buckets (for watering and weed-ex mixing)
+- **Storage**: 10,000 EU
+- **Tier**: 1, accepts up to 32 EU/t
+- **Work cycle**: one scan every 10 ticks before upgrades
+- **Scan cost**: 1 EU for each position checked
+- **Application cost**: 10 EU each time it successfully applies fertilizer, crop hydration, Weed-EX, or farmland moisture
 
-## Functions
+Overclocker upgrades shorten the scan interval and increase energy cost. Energy storage upgrades increase the internal EU buffer, transformer upgrades raise the accepted input tier, and fluid pipe upgrades can pull water or Weed-EX from adjacent fluid storage.
 
-The Crop-Matron performs three essential crop maintenance tasks:
+## Range
 
-- **Watering**: Automatically hydrates crops in range, consuming water from its internal tank.
-- **Weed Removal**: Applies weed-ex to eliminate weeds from crop plots. Requires water from the tank.
-- **Fertilizing**: Applies fertilizer to boost crop growth. Fertilizer must be provided in the input slot.
+The machine checks a 9 by 9 square on the **same Y level as the Crop-Matron**. Put the Crop-Matron level with the crop sticks, not one block below them. For each scanned column it also checks the block one level lower and can raise farmland moisture up to 7 when water is available.
 
-## Usage
+The active texture only means the last scan actually applied something. A powered machine with full crops may appear idle because there was nothing to top up.
 
-Place the Crop-Matron at the center of your crop farm. It will automatically maintain crops in a 3x3x3 region around itself. Supply the machine with EU and keep its water tank filled using fluid pipes or buckets. Provide fertilizer in the input slot for automatic fertilization.
+## Tanks and Inputs
+
+- **Water tank**: 8 buckets. Accepts water or distilled water from buckets, cells, universal fluid cells, or fluid insertion.
+- **Weed-EX tank**: 8 buckets. Accepts Weed-EX from buckets, cells, universal fluid cells, or fluid insertion.
+- **Fertilizer slots**: seven slots, accepting IC2 Fertilizer only.
+- **Upgrade slots**: four slots.
+
+Empty buckets and empty cells are placed in the matching output slots. The output slots must have room or the machine will not drain another container.
+
+## Crop Care
+
+- **Fertilizer**: consumes one Fertilizer item when a crop or crop stick can accept nutrients. Machine-applied fertilizer adds nutrient storage in 90-point steps until the crop-side threshold is reached.
+- **Hydration**: fills crop or crop-stick water storage up to 200, consuming water from the water tank.
+- **Weed-EX**: fills crop or crop-stick Weed-EX storage up to 150, consuming Weed-EX from the Weed-EX tank. Weed-EX is protective; it suppresses weed spread and spontaneous weed growth on empty sticks, but it does not instantly remove an existing weed crop.
+- **Farmland moisture**: if a scanned position has no crop-care block, the machine can still hydrate farmland directly below that position.
+
+## Automation Notes
+
+Item automation is routed by item type: upgrades go to the four upgrade slots, water containers to the water input, Weed-EX containers to the Weed-EX input, and Fertilizer to the seven fertilizer slots. Output containers can be extracted by item automation.
+
+Fluid automation is input-only. The exposed fluid storage accepts water/distilled water and Weed-EX but does not allow fluid extraction, so do not use the Crop-Matron as a fluid buffer.
+
+## Crafting
+
+Craft it with circuits in the top corners, a chest in the top center, empty cells beside a machine casing, and a bottom row of crop sticks.

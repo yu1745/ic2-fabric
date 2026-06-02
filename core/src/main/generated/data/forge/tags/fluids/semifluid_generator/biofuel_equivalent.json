@@ -1,0 +1,63 @@
+{
+  "replace": false,
+  "values": [
+    "ic2_120:biofuel",
+    "ic2_120:flowing_biofuel",
+    {
+      "id": "#forge:fuel",
+      "required": false
+    },
+    {
+      "id": "#forge:fuel_oil",
+      "required": false
+    },
+    {
+      "id": "#forge:diesel",
+      "required": false
+    },
+    {
+      "id": "#forge:gasoline",
+      "required": false
+    },
+    {
+      "id": "#forge:refined_fuel",
+      "required": false
+    },
+    {
+      "id": "#forge:fuels/biofuel",
+      "required": false
+    },
+    {
+      "id": "#forge:biofuels",
+      "required": false
+    },
+    {
+      "id": "#forge:fuels/biodiesel",
+      "required": false
+    },
+    {
+      "id": "#forge:fuels/ethanol",
+      "required": false
+    },
+    {
+      "id": "#forge:biofuel",
+      "required": false
+    },
+    {
+      "id": "#forge:biodiesel",
+      "required": false
+    },
+    {
+      "id": "#forge:ethanol",
+      "required": false
+    },
+    {
+      "id": "#forge:plant_oil",
+      "required": false
+    },
+    {
+      "id": "#forge:seed_oil",
+      "required": false
+    }
+  ]
+}

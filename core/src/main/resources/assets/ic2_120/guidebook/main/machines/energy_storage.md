@@ -15,7 +15,7 @@ item_ids:
 
 <BlockImage id="ic2_120:batbox" scale="4" />
 
-Energy storage blocks store EU and output it at a fixed voltage and rate. Higher tiers offer greater capacity and throughput. They can charge batteries and electric tools placed in their charge slot, and automatically output power to adjacent machines and cables.
+Energy storage blocks buffer EU, charge electric items, and output power from their front face. They are also the safest way to separate generators from machines that draw uneven power.
 
 ## Tier Comparison
 
@@ -28,14 +28,19 @@ Energy storage blocks store EU and output it at a fixed voltage and rate. Higher
 
 ## Usage
 
-All energy storage blocks share the following features:
+All storage blocks accept EU only from the five non-front faces and extract EU only from the front face. Rotate the block so the output face points toward the cable or machine you want to feed.
 
-- **Charge Slot**: Place a battery, energy crystal, or electric tool in the top slot to charge it.
-- **Auto Output**: Energy is automatically pushed out to adjacent machines, cables, or storage blocks.
-- **Input**: Power is accepted on any face.
-- **Upgrades**: All tiers support transformer, storage, and overclocker upgrades (except BatBox, which does not accept overclocker upgrades).
+## Slots
 
-Higher-tier storage blocks are required to safely handle higher-voltage power. Connecting a low-voltage storage to a high-voltage source will cause the storage to explode.
+- **Charge slot:** batteries and electric tools with tier less than or equal to the storage tier.
+- **Fuel slot:** redstone adds 800 EU, Energium Dust adds 16,000 EU. Fuel is consumed only when there is enough empty space for the full value.
+- **MFE/MFSU equipment view:** higher-tier screens also expose player equipment charging controls.
+
+Storage blocks do not have upgrade slots. Use transformers when you need to bridge voltage tiers.
+
+## Network Tips
+
+BatBox, CESU, MFE, and MFSU output their tier rate: 32, 128, 512, and 2,048 EU/t. Machines or cables below that tier need a transformer or a lower-tier buffer between them and the storage output. MFE and MFSU are also valid adjacent energy sources for Teleporters, which draw teleport costs directly from nearby storage.
 
 ## Recipes
 

@@ -6,7 +6,7 @@
       "item": "ic2_120:plutonium"
     },
     "X": {
-      "item": "ic2_120:uranium_ingot"
+      "tag": "ic2_120:compat/ingots/uranium"
     }
   },
   "pattern": [

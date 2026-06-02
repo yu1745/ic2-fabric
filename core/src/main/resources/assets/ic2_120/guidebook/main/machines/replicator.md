@@ -16,25 +16,39 @@ The Replicator duplicates items from UU-Matter using stored patterns. It require
 
 ## Energy and Storage
 
-- **EU Storage**: 400,000 EU
-- **Tier**: 3 (HV, 1024 EU/packet)
+- **Energy tier:** 3
+- **Max EU input:** 512 EU/t
+- **EU storage:** 400,000 EU
+- **UU-Matter tank:** 16,000 mB
+- **Base speed:** 5 uB of template cost per tick
+- **Base draw:** 512 EU/t
 
 ## Requirements
 
 To replicate an item, the Replicator needs:
 
-1. **UU-Matter fluid**: Supplied via fluid pipes or directly from an adjacent Matter Generator.
-2. **EU**: Power for the replication process.
-3. **Pattern**: A stored pattern from an adjacent Pattern Storage unit.
+1. **Redstone power:** no redstone means no work.
+2. **UU-Matter:** inserted by pipe from any side except the front face, or drained from UU-Matter buckets/cells in the container input slot.
+3. **EU:** continuous tier 3 power.
+4. **Pattern:** a selected template in a unique adjacent Pattern Storage.
+5. **Output space:** the output slot must be empty or stack with the result.
 
 ## Operation
 
-1. Ensure the Replicator has access to UU-Matter (via fluid pipe or adjacent Matter Generator).
-2. Connect a Pattern Storage unit containing the desired pattern adjacent to the Replicator.
-3. Provide EU power.
-4. Select the item to replicate from the available patterns.
-5. The Replicator consumes UU-Matter and EU to produce the item.
+Select a template from the adjacent Pattern Storage, set single or continuous mode, and power the Replicator with redstone. The machine consumes UU-Matter gradually according to the template's UU cost and adds progress each tick while spending EU. When progress reaches the template cost, one output item is created.
 
-## Usage
+Single mode makes one item and then waits. Continuous mode keeps running while redstone, EU, UU-Matter, a selected template, and output space remain available. The cancel button clears current progress and fluid-consumption remainder.
+
+## Slots and Automation
+
+- **Output slot:** replicated items
+- **Container input:** UU-Matter Bucket, UU-Matter Cell, or filled Fluid Cell containing UU-Matter
+- **Container output:** empty bucket or empty cell after draining
+- **Battery slot:** tier 3 battery discharge
+- **Upgrade slots:** 4 slots
+
+Supported upgrades are Overclocker, Transformer, Energy Storage, Ejector, Pulling, Fluid Ejector, and Fluid Pulling upgrades. Pulling upgrades can pull UU-Matter containers; Fluid Pulling upgrades can pull UU-Matter fluid into the tank; Ejector upgrades can push output items.
+
+## Full Chain
 
 The Replicator is the final step in the UU-Matter production chain: **Matter Generator** produces UU-Matter, **Pattern Scanner** creates patterns, **Pattern Storage** stores them, and the **Replicator** creates the final items. This system allows you to duplicate any scannable item, from basic resources to rare materials.

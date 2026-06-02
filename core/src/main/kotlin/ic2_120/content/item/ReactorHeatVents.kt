@@ -4,6 +4,7 @@ import ic2_120.content.reactor.AbstractDamageableReactorComponent
 import ic2_120.content.reactor.AbstractReactorComponent
 import ic2_120.content.reactor.IReactor
 import ic2_120.content.reactor.IReactorComponent
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -17,6 +18,7 @@ import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
 
@@ -111,7 +113,7 @@ class HeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 6, 0) {
             if (plate != Items.AIR && motor != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, HeatVentItem::class.instance(), 1)
                     .pattern("BIB").pattern("IMI").pattern("BIB")
-                    .input('B', Items.IRON_BARS).input('I', plate).input('M', motor)
+                    .input('B', Items.IRON_BARS).input('I', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON)).input('M', motor)
                     .criterion(hasItem(plate), conditionsFromItem(plate))
                     .offerTo(exporter, HeatVentItem::class.id())
             }
@@ -129,7 +131,7 @@ class ReactorHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 5, 5
             if (plate != Items.AIR && vent != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorHeatVentItem::class.instance(), 1)
                     .pattern("CCC").pattern("CVC").pattern("CCC")
-                    .input('C', plate).input('V', vent)
+                    .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER)).input('V', vent)
                     .criterion(hasItem(vent), conditionsFromItem(vent))
                     .offerTo(exporter, ReactorHeatVentItem::class.id())
             }
@@ -164,7 +166,7 @@ class OverclockedHeatVentItem : ReactorHeatVentBase(FabricItemSettings(), 1000, 
             if (gold != Items.AIR && reactorVent != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, OverclockedHeatVentItem::class.instance(), 1)
                     .pattern(" G ").pattern("GRG").pattern(" G ")
-                    .input('G', gold).input('R', reactorVent)
+                    .input('G', Ingredient.fromTag(ModTags.Compat.Items.PLATES_GOLD)).input('R', reactorVent)
                     .criterion(hasItem(reactorVent), conditionsFromItem(reactorVent))
                     .offerTo(exporter, OverclockedHeatVentItem::class.id())
             }
@@ -218,7 +220,7 @@ class ComponentHeatVentItem(settings: FabricItemSettings = FabricItemSettings())
             if (tin != Items.AIR && vent != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ComponentHeatVentItem::class.instance(), 1)
                     .pattern("TBT").pattern("BVB").pattern("TBT")
-                    .input('T', tin).input('B', Items.IRON_BARS).input('V', vent)
+                    .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN)).input('B', Items.IRON_BARS).input('V', vent)
                     .criterion(hasItem(vent), conditionsFromItem(vent))
                     .offerTo(exporter, ComponentHeatVentItem::class.id())
             }

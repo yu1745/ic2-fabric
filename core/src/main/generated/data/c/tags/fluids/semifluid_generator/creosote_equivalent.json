@@ -1,0 +1,19 @@
+{
+  "replace": false,
+  "values": [
+    "ic2_120:creosote",
+    "ic2_120:flowing_creosote",
+    {
+      "id": "#c:oil",
+      "required": false
+    },
+    {
+      "id": "#c:crude_oil",
+      "required": false
+    },
+    {
+      "id": "#c:creosote",
+      "required": false
+    }
+  ]
+}

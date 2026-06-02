@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:macerating",
   "ingredient": {
-    "item": "ic2_120:raw_uranium"
+    "tag": "ic2_120:compat/raw_materials/uranium"
   },
   "result": {
     "count": 2,

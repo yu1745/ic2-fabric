@@ -4,7 +4,7 @@
   "cookingtime": 200,
   "experience": 0.1,
   "ingredient": {
-    "item": "ic2_120:bronze_dust"
+    "tag": "ic2_120:compat/dusts/bronze"
   },
   "result": "ic2_120:bronze_ingot"
 }

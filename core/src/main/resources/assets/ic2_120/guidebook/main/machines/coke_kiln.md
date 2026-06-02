@@ -14,15 +14,19 @@ item_ids:
 
 <BlockImage id="ic2_120:coke_kiln" scale="4" />
 
-The Coke Kiln is a multiblock steam-age structure that processes coal and wood logs into high-quality coke and charcoal, producing creosote oil as a byproduct.
+The Coke Kiln is a 3x3x3 passive multiblock that cooks solid fuels without EU. It produces items in the kiln block and stores creosote oil in the grate below the structure.
 
 ## Multiblock Structure
 
-The Coke Kiln multiblock is built from the following components:
+Build the kiln around the hatch:
 
-- **Coke Kiln**: The main processing block of the structure.
-- **Coke Kiln Grate**: Forms the base of the kiln structure.
-- **Coke Kiln Hatch**: Provides item I/O access to the kiln for automated feeding and extraction.
+- **Top center:** Coke Kiln Hatch, facing upward.
+- **Middle center:** air.
+- **Bottom center:** Coke Kiln Grate, facing downward.
+- **Middle side centers:** exactly one Coke Kiln block and three Refractory Bricks.
+- **All other shell blocks:** Refractory Bricks.
+
+The Coke Kiln block is the item GUI and item automation point. The grate is the creosote tank and fluid extraction point.
 
 ## Recipes
 
@@ -32,6 +36,7 @@ The Coke Kiln produces two primary recipes:
 |---|---|---|---|
 | Coal (1) | Coke (1) | 500 mB | 1800 ticks (90 seconds) |
 | Log / Wood (1) | Charcoal (1) | 250 mB | 1800 ticks (90 seconds) |
+| Peat Ore (1) | Coal (1) | 125 mB | 1800 ticks (90 seconds) |
 
 - **Coke** burns longer than coal and is an essential ingredient for steel production in the Blast Furnace.
 - **Creosote oil** is used as fuel for the Semifluid Generator and for crafting treated wood products.
@@ -43,8 +48,8 @@ The Coke Kiln has 2 slots:
 - **Input slot** (top): Fuel material (coal or logs)
 - **Output slot** (bottom): Processed coke or charcoal
 
-Creosote oil is automatically extracted from the output tank. Connect fluid pipes to collect the byproduct.
+Creosote is not pushed automatically. The Coke Kiln Grate has an 8 bucket creosote tank that supports extraction only. Right-click the grate with fluid containers, or put a Pump Attachment on a pipe with its front face touching the grate to pull creosote into storage or a Semifluid Generator.
 
 ## Operation
 
-Each operation takes **1800 ticks (90 seconds)**, consuming 1 piece of coal or log and producing the corresponding output along with creosote oil. The kiln processes one item at a time and does not require EU to operate — it runs on its own internal heat mechanism.
+Each operation takes **1800 ticks (90 seconds)**. Progress resets if the multiblock becomes invalid, the input no longer matches a recipe, the item output cannot accept the result, or the grate does not have enough free creosote capacity for the byproduct.

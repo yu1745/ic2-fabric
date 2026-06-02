@@ -6,7 +6,7 @@ import net.minecraft.item.ItemStack
  * 洗矿机 JEI 配方
  */
 data class OreWashingJeiRecipe(
-    val input: ItemStack,
+    val input: List<ItemStack>,
     val outputs: List<ItemStack>,
     val waterConsumptionDroplets: Long
 )

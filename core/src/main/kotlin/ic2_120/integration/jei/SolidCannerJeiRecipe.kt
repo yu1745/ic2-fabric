@@ -8,7 +8,7 @@ import net.minecraft.item.ItemStack
  * 槽位 1：次要材料（食物 / 核燃料）
  */
 data class SolidCannerJeiRecipe(
-    val slot0: ItemStack,
+    val slot0: List<ItemStack>,
     val slot1: List<ItemStack>,
     val output: ItemStack
 )

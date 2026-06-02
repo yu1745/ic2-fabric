@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "#c:ores/gold",
+    "#forge:ores/gold"
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:macerating",
   "ingredient": {
-    "item": "minecraft:raw_copper"
+    "tag": "ic2_120:compat/raw_materials/copper"
   },
   "result": {
     "count": 2,

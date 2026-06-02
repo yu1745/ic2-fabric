@@ -18,7 +18,8 @@ class MaceratorRecipe(
     val inputCount: Int = 1
 ) : Recipe<SimpleInventory> {
     override fun matches(inventory: SimpleInventory, world: World): Boolean {
-        return ingredient.test(inventory.getStack(0))
+        val stack = inventory.getStack(0)
+        return ingredient.test(stack) && stack.count >= inputCount
     }
 
     override fun craft(inventory: SimpleInventory, registryManager: DynamicRegistryManager): ItemStack {

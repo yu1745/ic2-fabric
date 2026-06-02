@@ -1,5 +1,6 @@
 package ic2_120.content.item
 
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -13,6 +14,7 @@ import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
 
@@ -46,7 +48,7 @@ class SteelBlockCuttingBladeItem : Item(FabricItemSettings()), IBlockCuttingBlad
             if (plate != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelBlockCuttingBladeItem::class.instance(), 1)
                     .pattern("AAA").pattern("ABA").pattern("AAA")
-                    .input('A', plate).input('B', Items.IRON_INGOT)
+                    .input('A', Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL)).input('B', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON))
                     .criterion(hasItem(plate), conditionsFromItem(plate))
                     .offerTo(exporter, SteelBlockCuttingBladeItem::class.id())
             }

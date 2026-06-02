@@ -6,7 +6,7 @@
       "item": "ic2_120:insulated_iron_cable"
     },
     {
-      "item": "ic2_120:rubber"
+      "tag": "ic2_120:compat/rubber"
     }
   ],
   "result": {

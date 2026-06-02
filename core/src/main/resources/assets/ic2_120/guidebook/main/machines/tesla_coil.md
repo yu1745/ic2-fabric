@@ -12,16 +12,23 @@ item_ids:
 
 <BlockImage id="ic2_120:tesla_coil" p:facing="north" scale="4" />
 
-The Tesla Coil is an electrical defense device that zaps nearby entities and mobs with lightning, dealing damage on contact.
+The Tesla Coil is a redstone-activated electrical defense block. Once fully charged, it periodically shocks the nearest living target in range.
 
 ## Energy and Storage
 
 - **EU Storage**: 5,000 EU
+- **Input:** 128 EU/t
+- **Minimum operating charge:** 5,000 EU
+- **Shot cost:** 128 EU
+- **Shot interval:** 20 ticks
+- **Range:** 9 blocks
 
 ## Operation
 
-When powered and charged, the Tesla Coil detects entities within its range and discharges a lightning bolt at them, dealing significant damage. Each zap consumes EU from the internal buffer. The coil will continue to attack as long as it has EU stored.
+The coil only fires while it is receiving a redstone signal. It must first reach a full 5,000 EU charge; after that, every second it chooses the nearest living entity in range and discharges into it.
+
+The first hit on a target deals heavy damage, while repeated hits on the same target deal lower follow-up damage. Each strike also wears armor. The coil does not distinguish between hostile mobs and careless players, so keep the redstone control deliberate.
 
 ## Usage
 
-Place Tesla Coils around your base perimeter to defend against hostile mobs. They can also be used for mob farming — position a coil near a mob spawner area to automatically eliminate mobs and collect their drops. Ensure a steady EU supply to keep the coil operational.
+Use a lever, pressure plate, sensor circuit, or redstone safety switch to decide when the coil is allowed to fire. It works well for guarded corridors and mob handling rooms, but it should be isolated from normal walkways unless you enjoy testing armor durability the direct way.

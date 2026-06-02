@@ -7,8 +7,8 @@ import ic2_120.content.block.IGenerator
 import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.energy.canBeCharged
-import ic2_120.content.item.getFluidCellVariant
 import ic2_120.content.item.IUpgradeItem
+import ic2_120.content.recipes.ModTags
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.screen.SemifluidGeneratorScreenHandler
@@ -21,7 +21,6 @@ import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
-import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -35,7 +34,6 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
@@ -50,7 +48,6 @@ import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 import net.minecraft.server.world.ServerWorld
 import ic2_120.content.network.NetworkManager
-import ic2_120.content.network.SemifluidGeneratorFuelStatePacket
 
 @ModBlockEntity(block = SemifluidGeneratorBlock::class)
 class SemifluidGeneratorBlockEntity(
@@ -94,12 +91,8 @@ class SemifluidGeneratorBlockEntity(
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
         const val INVENTORY_SIZE = 7
 
-        val FUEL_PROFILES: Map<net.minecraft.fluid.Fluid, FuelProfile> = mapOf(
-            ModFluids.BIOFUEL_STILL to FuelProfile(euPerBucket = 32_000L, euPerTick = 16L),
-            ModFluids.BIOFUEL_FLOWING to FuelProfile(euPerBucket = 32_000L, euPerTick = 16L),
-            ModFluids.CREOSOTE_STILL to FuelProfile(euPerBucket = 3_200L, euPerTick = 8L),
-            ModFluids.CREOSOTE_FLOWING to FuelProfile(euPerBucket = 3_200L, euPerTick = 8L)
-        )
+        private val BIOFUEL_PROFILE = FuelProfile(euPerBucket = 32_000L, euPerTick = 16L)
+        private val CREOSOTE_PROFILE = FuelProfile(euPerBucket = 3_200L, euPerTick = 8L)
 
         /** 从 ModFluids 注册的 tint 颜色映射取色；无匹配则返回默认橙 */
         fun getFuelArgb(fluid: net.minecraft.fluid.Fluid?): Int {
@@ -120,9 +113,13 @@ class SemifluidGeneratorBlockEntity(
             fluidLookupRegistered = true
         }
 
-        fun isSupportedFuelFluid(fluid: net.minecraft.fluid.Fluid): Boolean = FUEL_PROFILES.containsKey(fluid)
+        fun isSupportedFuelFluid(fluid: net.minecraft.fluid.Fluid): Boolean = getFuelProfile(fluid) != null
 
-        fun getFuelProfile(fluid: net.minecraft.fluid.Fluid): FuelProfile? = FUEL_PROFILES[fluid]
+        fun getFuelProfile(fluid: net.minecraft.fluid.Fluid): FuelProfile? = when {
+            fluid.isIn(ModTags.Compat.Fluids.SEMIFLUID_BIOFUEL_EQUIVALENT) -> BIOFUEL_PROFILE
+            fluid.isIn(ModTags.Compat.Fluids.SEMIFLUID_CREOSOTE_EQUIVALENT) -> CREOSOTE_PROFILE
+            else -> null
+        }
     }
 
     override val tier: Int = GENERATOR_TIER
@@ -353,55 +350,23 @@ class SemifluidGeneratorBlockEntity(
         // 油箱剩余空间不足 1 桶时跳过燃料处理，防止燃料单元被部分抽入后永不消耗（无限燃料 bug）
         val tankTotalCapacity = 8 * FluidConstants.BUCKET
         if (fuelTankInternal.amount <= tankTotalCapacity - FluidConstants.BUCKET) {
-        when {
-            fuelStack.item == ModFluids.BIOFUEL_BUCKET -> {
-                val emptyBucket = ItemStack(Items.BUCKET)
-                if (canInsertEmptyContainer(emptyBucket)) {
-                    val inserted = fuelTankInternal.tryInsertFuel(ModFluids.BIOFUEL_STILL, FluidConstants.BUCKET)
-                    if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyBucket)) {
+            val fuelFluid = fuelStack.getSemifluidFuelFluid()
+            val fuelProfile = fuelFluid?.let { getFuelProfile(it) }
+            if (fuelFluid != null && fuelProfile != null) {
+                val emptyContainer = when (fuelStack.item) {
+                    Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "biofuel_cell")),
+                    Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) ->
+                        ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
+                    else -> fuelStack.item.getRecipeRemainder(fuelStack)
+                }
+                if (canInsertEmptyContainer(emptyContainer)) {
+                    val inserted = fuelTankInternal.tryInsertFuel(fuelFluid, FluidConstants.BUCKET)
+                    if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyContainer)) {
                         fuelStack.decrement(1)
                         if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)
                         markDirty()
                     }
                 }
-            }
-            fuelStack.item == ModFluids.CREOSOTE_BUCKET -> {
-                val emptyBucket = ItemStack(Items.BUCKET)
-                if (canInsertEmptyContainer(emptyBucket)) {
-                    val inserted = fuelTankInternal.tryInsertFuel(ModFluids.CREOSOTE_STILL, FluidConstants.BUCKET)
-                    if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyBucket)) {
-                        fuelStack.decrement(1)
-                        if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)
-                        markDirty()
-                    }
-                }
-            }
-            fuelStack.item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "biofuel_cell")) -> {
-                val emptyCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
-                if (canInsertEmptyContainer(emptyCell)) {
-                    val inserted = fuelTankInternal.tryInsertFuel(ModFluids.BIOFUEL_STILL, FluidConstants.BUCKET)
-                    if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyCell)) {
-                        fuelStack.decrement(1)
-                        if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)
-                        markDirty()
-                    }
-                }
-            }
-            fuelStack.item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) -> {
-                val fluid = fuelStack.getFluidCellVariant()?.fluid
-                val profile = fluid?.let { getFuelProfile(it) }
-                if (fluid != null && profile != null) {
-                    val emptyCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
-                    if (canInsertEmptyContainer(emptyCell)) {
-                        val inserted = fuelTankInternal.tryInsertFuel(fluid, FluidConstants.BUCKET)
-                        if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyCell)) {
-                            fuelStack.decrement(1)
-                            if (fuelStack.isEmpty) setStack(FUEL_SLOT, ItemStack.EMPTY)
-                            markDirty()
-                        }
-                    }
-                }
-            }
             }
         }
 

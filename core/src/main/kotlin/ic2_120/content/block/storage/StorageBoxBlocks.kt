@@ -7,6 +7,7 @@ import ic2_120.content.item.IronCasing
 import ic2_120.content.item.IronPlate
 import ic2_120.content.item.SteelCasing
 import ic2_120.content.item.SteelPlate
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.RecipeProvider
@@ -28,6 +29,7 @@ import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.loot.context.LootContext
 import net.minecraft.loot.context.LootContextParameters
@@ -245,7 +247,7 @@ class BronzeStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks
                     .pattern("PCP")
                     .pattern("C C")
                     .pattern("PCP")
-                    .input('P', plate)
+                    .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_BRONZE))
                     .input('C', casing)
                     .criterion(hasItem(plate), conditionsFromItem(plate))
                     .offerTo(exporter, BronzeStorageBoxBlock::class.id())
@@ -269,7 +271,7 @@ class IronStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.I
                     .pattern("PCP")
                     .pattern("C C")
                     .pattern("PCP")
-                    .input('P', plate)
+                    .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
                     .input('C', casing)
                     .criterion(hasItem(plate), conditionsFromItem(plate))
                     .offerTo(exporter, IronStorageBoxBlock::class.id())
@@ -293,7 +295,7 @@ class SteelStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.
                     .pattern("PCP")
                     .pattern("C C")
                     .pattern("PCP")
-                    .input('P', plate)
+                    .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL))
                     .input('C', casing)
                     .criterion(hasItem(plate), conditionsFromItem(plate))
                     .offerTo(exporter, SteelStorageBoxBlock::class.id())

@@ -3,6 +3,6 @@ package ic2_120.integration.jei
 import net.minecraft.item.ItemStack
 
 data class ExtractorJeiRecipe(
-    val input: ItemStack,
+    val input: List<ItemStack>,
     val output: ItemStack
 )

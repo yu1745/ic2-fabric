@@ -3,7 +3,7 @@
   "category": "building",
   "key": {
     "I": {
-      "item": "ic2_120:silver_ingot"
+      "tag": "ic2_120:compat/ingots/silver"
     }
   },
   "pattern": [

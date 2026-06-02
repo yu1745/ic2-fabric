@@ -98,7 +98,7 @@ class LeadIngot : Item(FabricItemSettings()) {
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .input('I', LeadIngot::class.instance())
+                .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_LEAD))
                 .criterion(hasItem(LeadIngot::class.instance()), conditionsFromItem(LeadIngot::class.instance()))
                 .offerTo(exporter, LeadBlock::class.recipeId("from_ingot"))
 
@@ -151,7 +151,7 @@ class SilverIngot : Item(FabricItemSettings()) {
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .input('I', SilverIngot::class.instance())
+                .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_SILVER))
                 .criterion(hasItem(SilverIngot::class.instance()), conditionsFromItem(SilverIngot::class.instance()))
                 .offerTo(exporter, SilverBlock::class.recipeId("from_ingot"))
 
@@ -186,7 +186,7 @@ class SteelIngot : Item(FabricItemSettings()) {
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .input('I', SteelIngot::class.instance())
+                .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_STEEL))
                 .criterion(hasItem(SteelIngot::class.instance()), conditionsFromItem(SteelIngot::class.instance()))
                 .offerTo(exporter, SteelBlock::class.recipeId("from_ingot"))
         }
@@ -213,7 +213,7 @@ class UraniumIngot : Item(FabricItemSettings()) {
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .input('I', UraniumIngot::class.instance())
+                .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_URANIUM))
                 .criterion(hasItem(UraniumIngot::class.instance()), conditionsFromItem(UraniumIngot::class.instance()))
                 .offerTo(exporter, UraniumBlock::class.recipeId("from_ingot"))
 

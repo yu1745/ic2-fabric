@@ -2,8 +2,8 @@ package ic2_120.content.recipes.orewashing
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
-import ic2_120.registry.instance
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.Item
@@ -19,7 +19,7 @@ import java.util.function.Consumer
 object OreWashingRecipeDatagen {
     data class Entry(
         val name: String,
-        val input: Item,
+        val input: IngredientInput,
         val outputs: List<OutputItem>,
         val waterConsumptionDroplets: Long = FluidConstants.BUCKET
     )
@@ -33,7 +33,7 @@ object OreWashingRecipeDatagen {
         // 粉碎铜矿石
         Entry(
             "crushed_copper",
-            Registries.ITEM.get(Identifier("ic2_120", "crushed_copper")),
+            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_copper"))),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_copper")), 1),
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_copper_dust")), 2),
@@ -44,7 +44,7 @@ object OreWashingRecipeDatagen {
         // 粉碎锡矿石
         Entry(
             "crushed_tin",
-            Registries.ITEM.get(Identifier("ic2_120", "crushed_tin")),
+            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_tin"))),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_tin")), 1),
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_tin_dust")), 2),
@@ -55,7 +55,7 @@ object OreWashingRecipeDatagen {
         // 粉碎铁矿石
         Entry(
             "crushed_iron",
-            Registries.ITEM.get(Identifier("ic2_120", "crushed_iron")),
+            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_iron"))),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_iron")), 1),
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_iron_dust")), 2),
@@ -66,7 +66,7 @@ object OreWashingRecipeDatagen {
         // 粉碎金矿石
         Entry(
             "crushed_gold",
-            Registries.ITEM.get(Identifier("ic2_120", "crushed_gold")),
+            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_gold"))),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_gold")), 1),
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_gold_dust")), 2),
@@ -77,7 +77,7 @@ object OreWashingRecipeDatagen {
         // 粉碎铀矿石（副产物是小撮铅粉）
         Entry(
             "crushed_uranium",
-            Registries.ITEM.get(Identifier("ic2_120", "crushed_uranium")),
+            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_uranium"))),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_uranium")), 1),
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_lead_dust")), 2),
@@ -88,7 +88,7 @@ object OreWashingRecipeDatagen {
         // 粉碎铅矿石（副产物是小撮硫粉*3）
         Entry(
             "crushed_lead",
-            Registries.ITEM.get(Identifier("ic2_120", "crushed_lead")),
+            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_lead"))),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_lead")), 1),
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_sulfur_dust")), 3),
@@ -99,7 +99,7 @@ object OreWashingRecipeDatagen {
         // 粉碎银矿石
         Entry(
             "crushed_silver",
-            Registries.ITEM.get(Identifier("ic2_120", "crushed_silver")),
+            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_silver"))),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_silver")), 1),
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_silver_dust")), 2),
@@ -110,7 +110,7 @@ object OreWashingRecipeDatagen {
         // 沙砾（只有石粉输出）
         Entry(
             "gravel",
-            Registries.ITEM.get(Identifier("minecraft", "gravel")),
+            IngredientInput.item(Registries.ITEM.get(Identifier("minecraft", "gravel"))),
             listOf(
                 OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
             ),
@@ -124,7 +124,7 @@ object OreWashingRecipeDatagen {
         entries.forEach { entry ->
             OreWashingRecipeJsonProvider(
                 recipeId = Identifier("ic2_120", "ore_washing/${entry.name}"),
-                inputItem = entry.input,
+                input = entry.input,
                 outputs = entry.outputs,
                 waterConsumptionDroplets = entry.waterConsumptionDroplets
             ).also(exporter::accept)
@@ -133,19 +133,14 @@ object OreWashingRecipeDatagen {
 
     private class OreWashingRecipeJsonProvider(
         private val recipeId: Identifier,
-        private val inputItem: Item,
+        private val input: IngredientInput,
         private val outputs: List<OutputItem>,
         private val waterConsumptionDroplets: Long
     ) : RecipeJsonProvider {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(OreWashingRecipe::class)}")
+            json.add("ingredient", input.toJson())
 
-            // 输入成分
-            val ingredient = JsonObject()
-            ingredient.addProperty("item", Registries.ITEM.getId(inputItem).toString())
-            json.add("ingredient", ingredient)
-
-            // 输出数组
             val outputsArray = JsonArray()
             outputs.forEach { output ->
                 val outputObj = JsonObject()
@@ -155,7 +150,6 @@ object OreWashingRecipeDatagen {
             }
             json.add("outputs", outputsArray)
 
-            // 水消耗
             json.addProperty("water_consumption_mb", waterConsumptionDroplets)
         }
 

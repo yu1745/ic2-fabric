@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:compressing",
   "ingredient": {
-    "item": "ic2_120:lead_ingot"
+    "tag": "ic2_120:compat/ingots/lead"
   },
   "input_count": 9,
   "result": {

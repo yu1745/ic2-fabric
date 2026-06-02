@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:macerating",
   "ingredient": {
-    "item": "minecraft:gold_ore"
+    "tag": "ic2_120:compat/ores/gold"
   },
   "result": {
     "count": 2,

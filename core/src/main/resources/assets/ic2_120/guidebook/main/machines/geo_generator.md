@@ -12,24 +12,38 @@ item_ids:
 
 <BlockImage id="ic2_120:geo_generator" p:facing="north" p:active="true" scale="4" />
 
-The Geothermal Generator burns lava to produce EU. It accepts lava buckets, lava cells, and fluid pipe connections, storing up to 8 buckets of lava internally. Each bucket of lava burns for 25 seconds (500 ticks) generating a total of 10,000 EU.
+The Geothermal Generator turns ordinary Lava into EU. Its internal lava tank holds **8 buckets**, and each bucket burns for **500 ticks** at **20 EU/t**, for **10,000 EU per bucket**. Lava is consumed gradually, so the generator pauses automatically when its 10,000 EU buffer is full.
 
-It provides a steady 20 EU/t output, making it one of the more powerful early-game generators. When the internal energy buffer is full, lava consumption pauses automatically to avoid waste.
+Only normal Lava is accepted. Pahoehoe Lava, Biofuel, Biomass, hot coolant, and other fluids are ignored.
 
 ## Output
 
 - **EU Output**: 20 EU/t
 - **Energy Storage**: 10,000 EU
 - **Tier**: 1
-- **Lava Consumption**: 2 mB/t (1 bucket per 25 seconds)
+- **Lava Tank**: 8 buckets
+- **Lava Consumption**: 2 mB/t, or 1 bucket every 25 seconds
+- **Fuel Value**: 10,000 EU per bucket
 
 ## Slots
 
-- Fuel slot (top): lava buckets or lava cells
-- Empty container slot (middle): outputs empty buckets or cells after fuel is consumed
-- Battery slot (bottom): chargeable battery or electric tool
+- Fuel slot: Lava Buckets or Lava Cells. The machine empties them into its internal tank only when there is room for a full bucket.
+- Empty container slot: receives Empty Buckets or Empty Cells from the fuel slot.
+- Battery slot: charges one battery or electric tool from the internal EU buffer.
 
-The Geothermal Generator does not accept EU input. It outputs EU from every side except its front face.
+The fuel slot does not process generic fluid cells directly. For generic fluid containers, right-click the block with the container or pipe the Lava in through the fluid interface.
+
+## Automation
+
+Fluid pipes and tanks can insert Lava into the Geothermal Generator from any side. The internal tank is input-only for automation, so adjacent pipes or tanks cannot pull Lava back out of it. This makes the generator a good endpoint for a lava line rather than a shared buffer.
+
+Item automation can insert Lava Buckets or Lava Cells into the fuel slot and chargeable items into the battery slot. Empty Buckets, Empty Cells, fuel items, and the battery slot can be extracted by item automation.
+
+The machine has no upgrade slots. Overclocker, Transformer, Energy Storage, Ejector, Fluid Ejector, and Pulling upgrades do not apply to it.
+
+For a compact lava setup, use a Pump to collect Lava into its own tank, then use the Pump's fluid output automation or an intermediate Tank to feed the Geothermal Generator. A Tank next to the generator is useful because the generator only stores 8 buckets itself while Bronze and Iron Tanks hold 32 buckets.
+
+The Geothermal Generator does not accept EU input. It outputs up to 20 EU/t from every side except its front face, and it can also spend that stored EU charging the item in its battery slot.
 
 ## Recipe
 

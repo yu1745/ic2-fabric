@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:compressing",
   "ingredient": {
-    "item": "minecraft:lapis_lazuli"
+    "tag": "ic2_120:compat/gems/lapis"
   },
   "input_count": 9,
   "result": {

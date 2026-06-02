@@ -40,11 +40,13 @@ import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.type
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
 import java.util.function.Consumer
 import ic2_120.Ic2_120
 import ic2_120.content.item.*
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.id
@@ -431,7 +433,7 @@ class BronzePipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.BRONZE
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzePipeMediumBlock::class.item(), 2)
                 .pattern("XXX").pattern("   ").pattern("XXX")
-                .input('X', BronzePlate::class.instance())
+                .input('X', Ingredient.fromTag(ModTags.Compat.Items.PLATES_BRONZE))
                 .criterion(hasItem(BronzePlate::class.instance()), conditionsFromItem(BronzePlate::class.instance()))
                 .offerTo(exporter, BronzePipeMediumBlock::class.id())
         }
@@ -445,7 +447,7 @@ class BronzePipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.BRONZE) 
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzePipeLargeBlock::class.item(), 1)
                 .pattern("X X").pattern("X X").pattern("X X")
-                .input('X', BronzePlate::class.instance())
+                .input('X', Ingredient.fromTag(ModTags.Compat.Items.PLATES_BRONZE))
                 .criterion(hasItem(BronzePlate::class.instance()), conditionsFromItem(BronzePlate::class.instance()))
                 .offerTo(exporter, BronzePipeLargeBlock::class.id())
         }
@@ -515,7 +517,7 @@ class BronzePumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.BRONZE) {
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzePumpAttachmentBlock::class.item(), 1)
                 .pattern(" P ").pattern(" T ").pattern(" P ")
-                .input('P', BronzePlate::class.instance())
+                .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_BRONZE))
                 .input('T', BronzePipeTinyBlock::class.item())
                 .criterion(hasItem(BronzePipeTinyBlock::class.item()), conditionsFromItem(BronzePipeTinyBlock::class.item()))
                 .offerTo(exporter, BronzePumpAttachmentBlock::class.id())
