@@ -1,0 +1,20 @@
+{
+  "block.buildcraft_addon.redstone_engine": "Redstone Engine",
+  "block.buildcraft_addon.stone_engine": "Stirling Engine",
+  "block.buildcraft_addon.iron_engine": "Combustion Engine",
+  "block.buildcraft_addon.rf_engine": "RF Engine",
+  "block.buildcraft_addon.creative_engine": "Creative Engine",
+  "block.buildcraft_addon.spring": "Spring",
+  "fluid.buildcraft_addon.crude_oil": "Crude Oil",
+  "fluid.buildcraft_addon.oil_residue": "Oil Residue",
+  "fluid.buildcraft_addon.heavy_oil": "Heavy Oil",
+  "fluid.buildcraft_addon.dense_oil": "Dense Oil",
+  "fluid.buildcraft_addon.distilled_oil": "Distilled Oil",
+  "fluid.buildcraft_addon.dense_fuel": "Dense Fuel",
+  "fluid.buildcraft_addon.mixed_heavy_fuel": "Mixed Heavy Fuel",
+  "fluid.buildcraft_addon.light_fuel": "Light Fuel",
+  "fluid.buildcraft_addon.mixed_light_fuel": "Mixed Light Fuel",
+  "fluid.buildcraft_addon.gaseous_fuel": "Gaseous Fuel",
+"block.buildcraft_addon.pump": "Pump",
+  "itemGroup.buildcraft_addon.buildcraft_addon": "BuildCraft Addon"
+}

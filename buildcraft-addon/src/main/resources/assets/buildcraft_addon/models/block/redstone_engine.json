@@ -1,0 +1,28 @@
+{
+  "textures": {
+    "all": "buildcraft_addon:block/engine/wood_side",
+    "particle": "buildcraft_addon:block/engine/wood_side",
+    "trunk_blue": "buildcraft_addon:block/engine/trunk_blue",
+    "trunk_green": "buildcraft_addon:block/engine/trunk_green",
+    "trunk_yellow": "buildcraft_addon:block/engine/trunk_yellow",
+    "trunk_red": "buildcraft_addon:block/engine/trunk_red",
+    "trunk_overheat": "buildcraft_addon:block/engine/trunk_overheat",
+    "chamber": "buildcraft_addon:block/engine/chamber_base",
+    "back": "buildcraft_addon:block/engine/wood_back",
+    "side": "buildcraft_addon:block/engine/wood_side"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 4, 16],
+      "faces": {
+        "down":  { "texture": "#back", "uv": [0, 0, 16, 16], "rotation": 180 },
+        "up":    { "texture": "#back", "uv": [0, 0, 16, 16] },
+        "north": { "texture": "#side", "uv": [0, 0, 16, 4] },
+        "south": { "texture": "#side", "uv": [0, 0, 16, 4] },
+        "west":  { "texture": "#side", "uv": [0, 0, 16, 4], "rotation": 90 },
+        "east":  { "texture": "#side", "uv": [0, 0, 16, 4], "rotation": 270 }
+      }
+    }
+  ]
+}

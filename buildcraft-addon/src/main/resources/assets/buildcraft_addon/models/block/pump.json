@@ -1,0 +1,13 @@
+{
+    "parent": "block/cube",
+    "textures": {
+        "particle": "buildcraft_addon:block/pump/side",
+        "particle": "buildcraft_addon:block/pump/side",
+        "down": "buildcraft_addon:block/pump/bottom",
+        "up": "buildcraft_addon:block/pump/top",
+        "north": "buildcraft_addon:block/pump/side",
+        "east": "buildcraft_addon:block/pump/side",
+        "south": "buildcraft_addon:block/pump/side",
+        "west": "buildcraft_addon:block/pump/side"
+    }
+}

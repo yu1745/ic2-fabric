@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/bedrock",
+  "textures": {
+    "particle": "minecraft:block/bedrock"
+  }
+}

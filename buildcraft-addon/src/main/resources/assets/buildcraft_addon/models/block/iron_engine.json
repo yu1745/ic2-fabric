@@ -1,0 +1,22 @@
+{
+  "textures": {
+    "all": "buildcraft_addon:block/engine/iron/side",
+    "particle": "buildcraft_addon:block/engine/iron/side",
+    "back": "buildcraft_addon:block/engine/iron/back",
+    "side": "buildcraft_addon:block/engine/iron/side"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 4, 16],
+      "faces": {
+        "down":  { "texture": "#back", "uv": [0, 0, 16, 16], "rotation": 180 },
+        "up":    { "texture": "#back", "uv": [0, 0, 16, 16] },
+        "north": { "texture": "#side", "uv": [0, 0, 16, 4] },
+        "south": { "texture": "#side", "uv": [0, 0, 16, 4] },
+        "west":  { "texture": "#side", "uv": [0, 0, 16, 4], "rotation": 90 },
+        "east":  { "texture": "#side", "uv": [0, 0, 16, 4], "rotation": 270 }
+      }
+    }
+  ]
+}

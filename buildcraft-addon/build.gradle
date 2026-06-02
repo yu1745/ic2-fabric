@@ -1,0 +1,33 @@
+version = project.mod_version
+group = project.maven_group
+
+loom {
+    mods {
+        "buildcraft_addon" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+}
+
+fabricApi {
+    configureDataGeneration {
+        client = true
+    }
+}
+
+tasks.named('runDatagen') {
+    jvmArgs '-Dfabric-api.datagen.modid=buildcraft_addon'
+}
+
+dependencies {
+    implementation project(path: ":core", configuration: "namedElements")
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": inputs.properties.version
+    }
+}

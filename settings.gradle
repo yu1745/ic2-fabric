@@ -12,4 +12,5 @@ pluginManagement {
 include 'core'
 include 'advanced-solar-addon'
 include 'advanced-weapons-addon'
+include 'buildcraft-addon'
 

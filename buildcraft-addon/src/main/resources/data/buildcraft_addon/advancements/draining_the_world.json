@@ -1,0 +1,14 @@
+{
+  "display": {
+    "icon": { "item": "buildcraft_addon:pump" },
+    "title": { "text": "抽干世界" },
+    "description": { "text": "用液泵抽取任意流体" },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "pump_any": { "trigger": "minecraft:impossible" }
+  }
+}
