@@ -565,13 +565,19 @@ abstract class BaseMinerBlockEntity(
             ensureAndGetCursorTarget(scannerType.scanRadius)
         }
 
+        var reachedBottom = false
+
         // 垂直管道柱延伸（不受 effective period 限制，每 tick 运行）
         if (cursorInitialized && sync.cursorY < pos.y) {
             val done = ensurePipeColumnReaches(sync.cursorY)
-            if (!done || sync.running == 0) {
-                setActiveState(world, pos, state, sync.running != 0)
+            if (!done) {
+                setActiveState(world, pos, state, false)
                 sync.syncCurrentTickFlow()
                 return
+            }
+            if (sync.running == 0) {
+                // 垂直柱遇到不可破坏方块（基岩），视为到底
+                reachedBottom = true
             }
         }
 
@@ -584,7 +590,7 @@ abstract class BaseMinerBlockEntity(
 
         val effectivePeriod = getEffectivePeriodTicks()
         if (((world.time + workOffset) % effectivePeriod) != 0L) {
-            // 周期间隔中的等待态仍视为”正在工作”。
+            // 周期间隔中的等待态仍视为"正在工作"。
             setActiveState(world, pos, state, true)
             sync.syncCurrentTickFlow()
             return
@@ -593,7 +599,6 @@ abstract class BaseMinerBlockEntity(
         var active = false
         var scannedThisCycle = 0
         var minedThisCycle = false
-        var reachedBottom = false
 
         // 有待挖掘的矿石：每 tick 将充入的能量转入待挖掘池，攒够了再挖
         if (pendingBreakEnergy > 0L) {
@@ -819,7 +824,7 @@ abstract class BaseMinerBlockEntity(
         if (getScannerType(getStack(SLOT_SCANNER)) == null) return
         if (getDrillBreakCost() == null) return
         if (findPipeInInventory() == null) return
-        // 自动恢复按“新一轮”开始，避免沿用缺料前的待挖能量残留。
+        // 自动恢复按"新一轮"开始，避免沿用缺料前的待挖能量残留。
         pendingBreakEnergy = 0L
         sync.running = 1
         markDirty()
@@ -1120,6 +1125,13 @@ abstract class BaseMinerBlockEntity(
         for (y in startY downTo targetY) {
             val checkPos = BlockPos(pos.x, y, pos.z)
             if (serverWorld.getBlockState(checkPos).block is MiningPipeBlock) continue
+
+            // 遇到不可破坏方块（基岩等），视为已到底
+            val state = serverWorld.getBlockState(checkPos)
+            if (!state.isAir && state.block !is MiningPipeBlock && state.getHardness(serverWorld, checkPos) < 0f) {
+                sync.running = 0
+                return true
+            }
 
             if (!tryPlacePipeAt(serverWorld, checkPos)) return false
 
