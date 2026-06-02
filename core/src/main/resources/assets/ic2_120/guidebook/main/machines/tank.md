@@ -15,7 +15,7 @@ item_ids:
 
 <BlockImage id="ic2_120:bronze_tank" scale="4" />
 
-Fluid tanks store liquids in bulk. Right-click with a bucket, cell, or any fluid container to fill or drain. Tanks keep their contents when broken with a wrench and connect to adjacent tanks to form multi-block structures.
+Fluid Tanks are single-block bulk fluid buffers. They accept one fluid type at a time, expose Fabric fluid storage on every side, and keep their contents in the dropped item when broken with a wrench or another correct harvesting tool.
 
 ## Tier Comparison
 
@@ -28,12 +28,14 @@ Fluid tanks store liquids in bulk. Right-click with a bucket, cell, or any fluid
 
 ## Usage
 
-- **Fill**: Right-click with a bucket, cell, or fluid container to deposit fluid into the tank.
-- **Drain**: Right-click with an empty bucket, cell, or container to extract fluid.
-- **Wrenching**: The tank retains its fluid when broken with a wrench.
-- **Multi-block**: Adjacent tanks of the same type connect into a single larger structure, sharing their fluid storage.
-- **Pipe Connection**: Fluid pipes can connect to tanks for automated input and output.
-- **Redstone Comparators**: Tanks output a redstone signal proportional to their fill level.
+- **Fill:** right-click with a filled bucket, mod bucket, filled IC2 cell, or filled universal fluid cell.
+- **Drain:** right-click with an empty bucket, empty cell, or empty universal fluid cell to extract one bucket.
+- **GUI:** right-click with an empty hand or non-fluid item to open the status screen.
+- **Pipes:** any side can insert or extract fluid through the fluid API.
+- **Comparator:** outputs 0 when empty, then 1-15 based on fill level.
+- **Breaking:** creative mode clears contents and drops nothing; a wrench or correct tool drops the tank with its fluid; the wrong tool destroys it without a drop.
+
+Tanks do not merge into a shared multiblock. Place several tanks next to a pipe network if you need more buffer capacity, and use Pump Attachments or fluid pipe upgrades to move fluid between machines and tanks.
 
 ## Recipes
 

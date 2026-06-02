@@ -26,26 +26,26 @@ class BronzeDust : Item(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzeDust::class.instance(), 1).pattern("SSS")
-                .pattern("SSS").pattern("SSS").input('S', SmallBronzeDust::class.instance()).criterion(
+                .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_BRONZE)).criterion(
                     hasItem(SmallBronzeDust::class.instance()), conditionsFromItem(SmallBronzeDust::class.instance())
                 ).offerTo(exporter, BronzeDust::class.recipeId("from_small"))
 
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallBronzeDust::class.instance(), 9)
-                .input(BronzeDust::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_BRONZE))
                 .criterion(hasItem(BronzeDust::class.instance()), conditionsFromItem(BronzeDust::class.instance()))
                 .offerTo(exporter, SmallBronzeDust::class.recipeId("from_normal"))
 
             // 合成配方：3铜粉 + 1锡粉 = 4青铜粉
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, BronzeDust::class.instance(), 4)
-                .input(CopperDust::class.instance())
-                .input(CopperDust::class.instance())
-                .input(CopperDust::class.instance())
-                .input(TinDust::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_COPPER))
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_COPPER))
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_COPPER))
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_TIN))
                 .criterion(hasItem(CopperDust::class.instance()), conditionsFromItem(CopperDust::class.instance()))
                 .offerTo(exporter, BronzeDust::class.recipeId("from_copper_and_tin"))
 
             CookingRecipeJsonBuilder.createSmelting(
-                Ingredient.ofItems(BronzeDust::class.instance()),
+                Ingredient.fromTag(ModTags.Compat.Items.DUSTS_BRONZE),
                 RecipeCategory.MISC,
                 BronzeIngot::class.instance(),
                 0.1f,
@@ -106,17 +106,17 @@ class CopperDust : Item(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CopperDust::class.instance(), 1).pattern("SSS")
-                .pattern("SSS").pattern("SSS").input('S', SmallCopperDust::class.instance()).criterion(
+                .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_COPPER)).criterion(
                     hasItem(SmallCopperDust::class.instance()), conditionsFromItem(SmallCopperDust::class.instance())
                 ).offerTo(exporter, CopperDust::class.recipeId("from_small"))
 
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallCopperDust::class.instance(), 9)
-                .input(CopperDust::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_COPPER))
                 .criterion(hasItem(CopperDust::class.instance()), conditionsFromItem(CopperDust::class.instance()))
                 .offerTo(exporter, SmallCopperDust::class.recipeId("from_normal"))
 
             CookingRecipeJsonBuilder.createSmelting(
-                Ingredient.ofItems(CopperDust::class.instance()),
+                Ingredient.fromTag(ModTags.Compat.Items.DUSTS_COPPER),
                 RecipeCategory.MISC,
                 Items.COPPER_INGOT,
                 0.1f,
@@ -160,17 +160,17 @@ class GoldDust : Item(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, GoldDust::class.instance(), 1).pattern("SSS")
-                .pattern("SSS").pattern("SSS").input('S', SmallGoldDust::class.instance()).criterion(
+                .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_GOLD)).criterion(
                     hasItem(SmallGoldDust::class.instance()), conditionsFromItem(SmallGoldDust::class.instance())
                 ).offerTo(exporter, GoldDust::class.recipeId("from_small"))
 
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallGoldDust::class.instance(), 9)
-                .input(GoldDust::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_GOLD))
                 .criterion(hasItem(GoldDust::class.instance()), conditionsFromItem(GoldDust::class.instance()))
                 .offerTo(exporter, SmallGoldDust::class.recipeId("from_normal"))
 
             CookingRecipeJsonBuilder.createSmelting(
-                Ingredient.ofItems(GoldDust::class.instance()),
+                Ingredient.fromTag(ModTags.Compat.Items.DUSTS_GOLD),
                 RecipeCategory.MISC,
                 Items.GOLD_INGOT,
                 0.1f,
@@ -189,17 +189,17 @@ class IronDust : Item(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronDust::class.instance(), 1).pattern("SSS")
-                .pattern("SSS").pattern("SSS").input('S', SmallIronDust::class.instance()).criterion(
+                .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_IRON)).criterion(
                     hasItem(SmallIronDust::class.instance()), conditionsFromItem(SmallIronDust::class.instance())
                 ).offerTo(exporter, IronDust::class.recipeId("from_small"))
 
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallIronDust::class.instance(), 9)
-                .input(IronDust::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_IRON))
                 .criterion(hasItem(IronDust::class.instance()), conditionsFromItem(IronDust::class.instance()))
                 .offerTo(exporter, SmallIronDust::class.recipeId("from_normal"))
 
             CookingRecipeJsonBuilder.createSmelting(
-                Ingredient.ofItems(IronDust::class.instance()),
+                Ingredient.fromTag(ModTags.Compat.Items.DUSTS_IRON),
                 RecipeCategory.MISC,
                 Items.IRON_INGOT,
                 0.1f,
@@ -218,12 +218,12 @@ class LapisDust : Item(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LapisDust::class.instance(), 1).pattern("SSS")
-                .pattern("SSS").pattern("SSS").input('S', SmallLapisDust::class.instance()).criterion(
+                .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_LAPIS)).criterion(
                     hasItem(SmallLapisDust::class.instance()), conditionsFromItem(SmallLapisDust::class.instance())
                 ).offerTo(exporter, LapisDust::class.recipeId("from_small"))
 
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallLapisDust::class.instance(), 9)
-                .input(LapisDust::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_LAPIS))
                 .criterion(hasItem(LapisDust::class.instance()), conditionsFromItem(LapisDust::class.instance()))
                 .offerTo(exporter, SmallLapisDust::class.recipeId("from_normal"))
         }
@@ -237,17 +237,17 @@ class LeadDust : Item(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LeadDust::class.instance(), 1).pattern("SSS")
-                .pattern("SSS").pattern("SSS").input('S', SmallLeadDust::class.instance()).criterion(
+                .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_LEAD)).criterion(
                     hasItem(SmallLeadDust::class.instance()), conditionsFromItem(SmallLeadDust::class.instance())
                 ).offerTo(exporter, LeadDust::class.recipeId("from_small"))
 
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallLeadDust::class.instance(), 9)
-                .input(LeadDust::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_LEAD))
                 .criterion(hasItem(LeadDust::class.instance()), conditionsFromItem(LeadDust::class.instance()))
                 .offerTo(exporter, SmallLeadDust::class.recipeId("from_normal"))
 
             CookingRecipeJsonBuilder.createSmelting(
-                Ingredient.ofItems(LeadDust::class.instance()),
+                Ingredient.fromTag(ModTags.Compat.Items.DUSTS_LEAD),
                 RecipeCategory.MISC,
                 LeadIngot::class.instance(),
                 0.1f,
@@ -266,12 +266,12 @@ class LithiumDust : Item(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LithiumDust::class.instance(), 1).pattern("SSS")
-                .pattern("SSS").pattern("SSS").input('S', SmallLithiumDust::class.instance()).criterion(
+                .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_LITHIUM)).criterion(
                     hasItem(SmallLithiumDust::class.instance()), conditionsFromItem(SmallLithiumDust::class.instance())
                 ).offerTo(exporter, LithiumDust::class.recipeId("from_small"))
 
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallLithiumDust::class.instance(), 9)
-                .input(LithiumDust::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_LITHIUM))
                 .criterion(hasItem(LithiumDust::class.instance()), conditionsFromItem(LithiumDust::class.instance()))
                 .offerTo(exporter, SmallLithiumDust::class.recipeId("from_normal"))
         }
@@ -285,13 +285,13 @@ class ObsidianDust : Item(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ObsidianDust::class.instance(), 1).pattern("SSS")
-                .pattern("SSS").pattern("SSS").input('S', SmallObsidianDust::class.instance()).criterion(
+                .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_OBSIDIAN)).criterion(
                     hasItem(SmallObsidianDust::class.instance()),
                     conditionsFromItem(SmallObsidianDust::class.instance())
                 ).offerTo(exporter, ObsidianDust::class.recipeId("from_small"))
 
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallObsidianDust::class.instance(), 9)
-                .input(ObsidianDust::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_OBSIDIAN))
                 .criterion(hasItem(ObsidianDust::class.instance()), conditionsFromItem(ObsidianDust::class.instance()))
                 .offerTo(exporter, SmallObsidianDust::class.recipeId("from_normal"))
         }
@@ -309,17 +309,17 @@ class SilverDust : Item(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SilverDust::class.instance(), 1).pattern("SSS")
-                .pattern("SSS").pattern("SSS").input('S', SmallSilverDust::class.instance()).criterion(
+                .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_SILVER)).criterion(
                     hasItem(SmallSilverDust::class.instance()), conditionsFromItem(SmallSilverDust::class.instance())
                 ).offerTo(exporter, SilverDust::class.recipeId("from_small"))
 
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallSilverDust::class.instance(), 9)
-                .input(SilverDust::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_SILVER))
                 .criterion(hasItem(SilverDust::class.instance()), conditionsFromItem(SilverDust::class.instance()))
                 .offerTo(exporter, SmallSilverDust::class.recipeId("from_normal"))
 
             CookingRecipeJsonBuilder.createSmelting(
-                Ingredient.ofItems(SilverDust::class.instance()),
+                Ingredient.fromTag(ModTags.Compat.Items.DUSTS_SILVER),
                 RecipeCategory.MISC,
                 SilverIngot::class.instance(),
                 0.1f,
@@ -342,12 +342,12 @@ class SulfurDust : Item(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SulfurDust::class.instance(), 1).pattern("SSS")
-                .pattern("SSS").pattern("SSS").input('S', SmallSulfurDust::class.instance()).criterion(
+                .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_SULFUR)).criterion(
                     hasItem(SmallSulfurDust::class.instance()), conditionsFromItem(SmallSulfurDust::class.instance())
                 ).offerTo(exporter, SulfurDust::class.recipeId("from_small"))
 
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallSulfurDust::class.instance(), 9)
-                .input(SulfurDust::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_SULFUR))
                 .criterion(hasItem(SulfurDust::class.instance()), conditionsFromItem(SulfurDust::class.instance()))
                 .offerTo(exporter, SmallSulfurDust::class.recipeId("from_normal"))
         }
@@ -361,17 +361,17 @@ class TinDust : Item(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeExporter) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, TinDust::class.instance(), 1).pattern("SSS")
-                .pattern("SSS").pattern("SSS").input('S', SmallTinDust::class.instance())
+                .pattern("SSS").pattern("SSS").input('S', Ingredient.fromTag(ModTags.Compat.Items.SMALL_DUSTS_TIN))
                 .criterion(hasItem(SmallTinDust::class.instance()), conditionsFromItem(SmallTinDust::class.instance()))
                 .offerTo(exporter, TinDust::class.recipeId("from_small"))
 
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, SmallTinDust::class.instance(), 9)
-                .input(TinDust::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_TIN))
                 .criterion(hasItem(TinDust::class.instance()), conditionsFromItem(TinDust::class.instance()))
                 .offerTo(exporter, SmallTinDust::class.recipeId("from_normal"))
 
             CookingRecipeJsonBuilder.createSmelting(
-                Ingredient.ofItems(TinDust::class.instance()),
+                Ingredient.fromTag(ModTags.Compat.Items.DUSTS_TIN),
                 RecipeCategory.MISC,
                 TinIngot::class.instance(),
                 0.1f,
@@ -391,13 +391,13 @@ class HydratedTinDust : Item(Item.Settings()) {
         fun generateRecipes(exporter: RecipeExporter) {
             // 锡粉 + 水桶 -> 氢氧化锡粉 (返回空桶)
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, HydratedTinDust::class.instance(), 1)
-                .input(TinDust::class.instance()).input(Items.WATER_BUCKET)
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_TIN)).input(Items.WATER_BUCKET)
                 .criterion(hasItem(TinDust::class.instance()), conditionsFromItem(TinDust::class.instance()))
                 .offerTo(exporter, HydratedTinDust::class.recipeId("from_bucket"))
 
             // 锡粉 + 水单元 -> 氢氧化锡粉 (返回空单元)
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, HydratedTinDust::class.instance(), 1)
-                .input(TinDust::class.instance()).input(WaterCell::class.instance())
+                .input(Ingredient.fromTag(ModTags.Compat.Items.DUSTS_TIN)).input(WaterCell::class.instance())
                 .criterion(hasItem(TinDust::class.instance()), conditionsFromItem(TinDust::class.instance()))
                 .offerTo(exporter, HydratedTinDust::class.recipeId("from_cell"))
         }
@@ -415,45 +415,45 @@ class EnderPearlDust : Item(Item.Settings())
 // ========== 小撮粉尘类 ==========
 
 /** 小撮青铜粉 */
-@ModItem(name = "small_bronze_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts")
+@ModItem(name = "small_bronze_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/bronze"])
 class SmallBronzeDust : Item(Item.Settings())
 
 /** 小撮铜粉 */
-@ModItem(name = "small_copper_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts")
+@ModItem(name = "small_copper_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/copper"])
 class SmallCopperDust : Item(Item.Settings())
 
 /** 小撮金粉 */
-@ModItem(name = "small_gold_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts")
+@ModItem(name = "small_gold_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/gold"])
 class SmallGoldDust : Item(Item.Settings())
 
 /** 小撮铁粉 */
-@ModItem(name = "small_iron_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts")
+@ModItem(name = "small_iron_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/iron"])
 class SmallIronDust : Item(Item.Settings())
 
 /** 小撮青金石粉 */
-@ModItem(name = "small_lapis_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts")
+@ModItem(name = "small_lapis_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/lapis"])
 class SmallLapisDust : Item(Item.Settings())
 
 /** 小撮铅粉 */
-@ModItem(name = "small_lead_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts")
+@ModItem(name = "small_lead_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/lead"])
 class SmallLeadDust : Item(Item.Settings())
 
 /** 小撮锂粉 */
-@ModItem(name = "small_lithium_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts")
+@ModItem(name = "small_lithium_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/lithium"])
 class SmallLithiumDust : Item(Item.Settings())
 
 /** 小撮黑曜石粉 */
-@ModItem(name = "small_obsidian_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts")
+@ModItem(name = "small_obsidian_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/obsidian"])
 class SmallObsidianDust : Item(Item.Settings())
 
 /** 小撮银粉 */
-@ModItem(name = "small_silver_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts")
+@ModItem(name = "small_silver_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/silver"])
 class SmallSilverDust : Item(Item.Settings())
 
 /** 小撮硫粉 */
-@ModItem(name = "small_sulfur_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts")
+@ModItem(name = "small_sulfur_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/sulfur"])
 class SmallSulfurDust : Item(Item.Settings())
 
 /** 小撮锡粉 */
-@ModItem(name = "small_tin_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts")
+@ModItem(name = "small_tin_dust", tab = CreativeTab.IC2_MATERIALS, group = "small_dusts", materialTags = ["small_dusts/tin"])
 class SmallTinDust : Item(Item.Settings())

@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:metal_forming",
   "ingredient": {
-    "item": "minecraft:gold_ingot"
+    "tag": "ic2_120:compat/ingots/gold"
   },
   "mode": "rolling",
   "result": {

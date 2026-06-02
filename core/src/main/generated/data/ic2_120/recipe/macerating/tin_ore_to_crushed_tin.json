@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:macerating",
   "ingredient": {
-    "item": "ic2_120:tin_ore"
+    "tag": "ic2_120:compat/ores/tin"
   },
   "result": {
     "count": 2,

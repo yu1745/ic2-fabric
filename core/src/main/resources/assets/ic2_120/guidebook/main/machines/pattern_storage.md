@@ -16,18 +16,18 @@ The Pattern Storage stores scanned UU-Matter patterns and acts as a bridge betwe
 
 ## Operation
 
-The Pattern Storage holds digital patterns created by the Pattern Scanner. Once a pattern is stored, any adjacent Replicator can access it to begin replicating items from UU-Matter.
+Pattern Storage holds a list of scanned templates and one selected template. A Pattern Scanner can save a completed scan into it, and a Replicator reads the selected template from a unique adjacent Pattern Storage.
 
-## Placement
+Adding a template that already exists updates that entry and selects it. Removing the selected template shifts selection to a valid remaining entry, or clears selection if the list becomes empty.
 
-- Place the Pattern Storage adjacent to a **Pattern Scanner** to receive scanned patterns.
-- Place the Pattern Storage adjacent to a **Replicator** to make those patterns available for replication.
-- The Pattern Storage can be in range of both simultaneously, acting as a central hub.
+## Crystal Memory
 
-## Usage
+The single item slot accepts Crystal Memory. The storage can import the template stored in a crystal or export its selected template into a crystal. This is useful for moving templates between bases without moving the machine.
 
-1. Scan items with the Pattern Scanner — patterns are automatically transferred to connected Pattern Storage units.
-2. Connect a Replicator to the Pattern Storage to access stored patterns.
-3. Select the desired pattern at the Replicator and begin replication.
+## Placement Rules
 
-Multiple Pattern Storage units can be used to store patterns for a large catalog of items.
+- Put the Pattern Storage adjacent to the Pattern Scanner when saving scans.
+- Put it adjacent to the Replicator when replicating.
+- Avoid placing multiple Pattern Storage blocks adjacent to the same Scanner or Replicator; those machines look for a unique adjacent storage and stop when the choice is ambiguous.
+
+The Pattern Storage does not use EU. Its only automation surface is the Crystal Memory slot, which accepts and extracts Crystal Memory items.

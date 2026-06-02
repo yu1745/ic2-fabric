@@ -4,6 +4,7 @@ import ic2_120.content.reactor.AbstractDamageableReactorComponent
 import ic2_120.content.reactor.AbstractFiniteNeutronReflectorItem
 import ic2_120.content.reactor.AbstractReactorComponent
 import ic2_120.content.reactor.IReactor
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
@@ -17,6 +18,7 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
 
@@ -165,7 +167,7 @@ class ReactorCoolantCellItem : ReactorCoolantCellBase(Item.Settings(), 10_000) {
                 .pattern(" T ")
                 .pattern("TCT")
                 .pattern(" T ")
-                .input('T', TinPlate::class.instance())
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
                 .input('C', CoolantCell::class.instance())
                 .criterion(FabricRecipeProvider.hasItem(TinPlate::class.instance()), FabricRecipeProvider.conditionsFromItem(TinPlate::class.instance()))
                 .offerTo(exporter)
@@ -183,7 +185,7 @@ class TripleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Settings(), 30_
                 .pattern("TTT")
                 .pattern("CCC")
                 .pattern("TTT")
-                .input('T', TinPlate::class.instance())
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
                 .input('C', ReactorCoolantCellItem::class.instance())
                 .criterion(FabricRecipeProvider.hasItem(ReactorCoolantCellItem::class.instance()), FabricRecipeProvider.conditionsFromItem(ReactorCoolantCellItem::class.instance()))
                 .offerTo(exporter)
@@ -201,9 +203,9 @@ class SextupleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Settings(), 6
                 .pattern("TTT")
                 .pattern("SIS")
                 .pattern("TTT")
-                .input('T', TinPlate::class.instance())
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
                 .input('S', TripleReactorCoolantCellItem::class.instance())
-                .input('I', IronPlate::class.instance())
+                .input('I', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
                 .criterion(FabricRecipeProvider.hasItem(TripleReactorCoolantCellItem::class.instance()), FabricRecipeProvider.conditionsFromItem(TripleReactorCoolantCellItem::class.instance()))
                 .offerTo(exporter)
         }
@@ -222,7 +224,7 @@ class ReactorPlatingItem : AbstractReactorComponent(Item.Settings()) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorPlatingItem::class.instance(), 1)
                 .pattern("L")
                 .pattern("A")
-                .input('L', LeadPlate::class.instance())
+                .input('L', Ingredient.fromTag(ModTags.Compat.Items.PLATES_LEAD))
                 .input('A', Alloy::class.instance())
                 .criterion(FabricRecipeProvider.hasItem(LeadPlate::class.instance()), FabricRecipeProvider.conditionsFromItem(LeadPlate::class.instance()))
                 .offerTo(exporter)
@@ -251,7 +253,7 @@ class ReactorHeatPlatingItem : AbstractReactorComponent(Item.Settings()) {
                 .pattern("CCC")
                 .pattern("CPC")
                 .pattern("CCC")
-                .input('C', CopperPlate::class.instance())
+                .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
                 .input('P', ReactorPlatingItem::class.instance())
                 .criterion(FabricRecipeProvider.hasItem(ReactorPlatingItem::class.instance()), FabricRecipeProvider.conditionsFromItem(ReactorPlatingItem::class.instance()))
                 .offerTo(exporter)
@@ -300,9 +302,9 @@ class NeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Settings(),
                 .pattern("TCT")
                 .pattern("CPC")
                 .pattern("TCT")
-                .input('T', TinDust::class.instance())
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.DUSTS_TIN))
                 .input('C', CoalDust::class.instance())
-                .input('P', CopperPlate::class.instance())
+                .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
                 .criterion(
                     FabricRecipeProvider.hasItem(CopperPlate::class.instance()),
                     FabricRecipeProvider.conditionsFromItem(CopperPlate::class.instance())
@@ -322,7 +324,7 @@ class ThickNeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Settin
                 .pattern("CRC")
                 .pattern("RCR")
                 .pattern("CRC")
-                .input('C', CopperPlate::class.instance())
+                .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
                 .input('R', NeutronReflectorItem::class.instance())
                 .criterion(
                     FabricRecipeProvider.hasItem(NeutronReflectorItem::class.instance()),

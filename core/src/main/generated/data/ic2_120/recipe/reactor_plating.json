@@ -6,7 +6,7 @@
       "item": "ic2_120:alloy"
     },
     "L": {
-      "item": "ic2_120:lead_plate"
+      "tag": "ic2_120:compat/plates/lead"
     }
   },
   "pattern": [

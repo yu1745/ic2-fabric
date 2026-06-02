@@ -42,7 +42,7 @@ class CentrifugeRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Centrifu
     ) {
         // 输入槽（左侧）— 与纹理中 (11, 21) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.INPUT, 11, 10)
-            .addItemStack(recipe.input)
+            .addItemStacks(recipe.input)
 
         // 输出槽（右侧，垂直排列）— 与纹理中 (124, 18/36/54) 处槽位对齐
         val outputY = intArrayOf(7, 25, 43)

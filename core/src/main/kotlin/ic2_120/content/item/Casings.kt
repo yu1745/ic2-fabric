@@ -2,6 +2,7 @@ package ic2_120.content.item
 
 import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
+import ic2_120.content.recipes.ModTags
 import ic2_120.content.recipes.crafting.DamageToolShapelessRecipeDatagen
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.id
@@ -32,7 +33,7 @@ class BronzeCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.ofItems(BronzePlate::class.instance())
+                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_BRONZE)
                 )
             )
         }
@@ -52,7 +53,7 @@ class CopperCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.ofItems(CopperPlate::class.instance())
+                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER)
                 )
             )
         }
@@ -72,7 +73,7 @@ class GoldCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.ofItems(GoldPlate::class.instance())
+                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_GOLD)
                 )
             )
         }
@@ -92,7 +93,7 @@ class IronCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.ofItems(IronPlate::class.instance())
+                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON)
                 )
             )
         }
@@ -112,7 +113,7 @@ class LeadCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.ofItems(LeadPlate::class.instance())
+                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_LEAD)
                 )
             )
         }
@@ -132,7 +133,7 @@ class SteelCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.ofItems(SteelPlate::class.instance())
+                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL)
                 )
             )
         }
@@ -152,7 +153,7 @@ class TinCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.ofItems(TinPlate::class.instance())
+                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN)
                 )
             )
         }

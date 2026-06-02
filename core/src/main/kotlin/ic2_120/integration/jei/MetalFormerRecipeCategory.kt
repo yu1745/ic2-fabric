@@ -37,7 +37,7 @@ class MetalFormerRollingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<
         focuses: IFocusGroup
     ) {
         builder.addSlot(RecipeIngredientRole.INPUT, 13, 12)
-            .addItemStack(recipe.input)
+            .addItemStacks(recipe.input)
         builder.addSlot(RecipeIngredientRole.OUTPUT, 112, 30)
             .addItemStack(recipe.output)
     }
@@ -69,7 +69,7 @@ class MetalFormerCuttingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<
         focuses: IFocusGroup
     ) {
         builder.addSlot(RecipeIngredientRole.INPUT, 13, 12)
-            .addItemStack(recipe.input)
+            .addItemStacks(recipe.input)
         builder.addSlot(RecipeIngredientRole.OUTPUT, 112, 30)
             .addItemStack(recipe.output)
     }
@@ -101,7 +101,7 @@ class MetalFormerExtrudingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategor
         focuses: IFocusGroup
     ) {
         builder.addSlot(RecipeIngredientRole.INPUT, 13, 12)
-            .addItemStack(recipe.input)
+            .addItemStacks(recipe.input)
         builder.addSlot(RecipeIngredientRole.OUTPUT, 112, 30)
             .addItemStack(recipe.output)
     }

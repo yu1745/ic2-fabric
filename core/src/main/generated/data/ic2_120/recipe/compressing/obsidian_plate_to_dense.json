@@ -2,7 +2,7 @@
   "type": "ic2_120:compressing",
   "container_return": {},
   "ingredient": {
-    "item": "ic2_120:obsidian_plate"
+    "tag": "ic2_120:compat/plates/obsidian"
   },
   "input_count": 9,
   "result": {

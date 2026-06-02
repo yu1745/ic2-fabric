@@ -42,7 +42,7 @@ class ExtractorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Extractor
     ) {
         // 输入槽 — 与纹理中 (62, 16) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.INPUT, 29, 11)
-            .addItemStack(recipe.input)
+            .addItemStacks(recipe.input)
 
         // 输出槽 — 与纹理中 (116, 35) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.OUTPUT, 83, 30)

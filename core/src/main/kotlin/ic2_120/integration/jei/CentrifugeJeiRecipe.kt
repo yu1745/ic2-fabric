@@ -10,7 +10,7 @@ import net.minecraft.item.ItemStack
  * @param outputs 多个输出物品（最多3个）
  */
 data class CentrifugeJeiRecipe(
-    val input: ItemStack,
+    val input: List<ItemStack>,
     val minHeat: Int,
     val outputs: List<ItemStack>
 )

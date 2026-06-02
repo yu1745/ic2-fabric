@@ -10,6 +10,7 @@ import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeExporter
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
@@ -17,6 +18,7 @@ import ic2_120.content.item.IronPlate
 import ic2_120.content.item.SteelPlate
 import ic2_120.content.item.CarbonPlate
 import ic2_120.content.item.Alloy
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -33,7 +35,7 @@ class MachineCasingBlock : Block(
                 .pattern("III")
                 .pattern("I I")
                 .pattern("III")
-                .input('I', IronPlate::class.instance())
+                .input('I', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, MachineCasingBlock::class.recipeId("from_plates"))
         }
@@ -54,7 +56,7 @@ class AdvancedMachineCasingBlock : Block(
                 .pattern("sgs")
                 .pattern("cxc")
                 .pattern("sgs")
-                .input('s', SteelPlate::class.instance())
+                .input('s', Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL))
                 .input('g', Alloy::class.instance())
                 .input('c', CarbonPlate::class.instance())
                 .input('x', MachineCasingBlock::class.instance())

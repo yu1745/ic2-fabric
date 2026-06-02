@@ -12,24 +12,33 @@ item_ids:
 
 <BlockImage id="ic2_120:solar_distiller" scale="4" />
 
-The Solar Distiller uses sunlight to distill water into purified water or steam. It is a passive machine that operates during daylight without consuming EU or fuel.
+The Solar Distiller is a passive machine that turns water into distilled water. It does not use EU, heat, or fuel, but it is slow and only works under strict daylight conditions.
 
-## Output
+## Operation
 
-The Solar Distiller has an internal fluid tank of **8 buckets (8,000 mB)**. It operates only when the sky is visible and the sun is above the horizon.
+- **Input tank:** 8 buckets of water
+- **Output tank:** 8 buckets of distilled water
+- **Rate:** 1 mB every 80 ticks
+- **Power:** none
+- **Dimension:** Overworld only
 
-- During clear daylight, it distills water at a rate dependent on sunlight intensity.
-- Output is distilled water or steam depending on configuration.
-- The machine stops working at night and during rain or thunderstorms.
+It works only in the Overworld, during daytime from about 333 to 11750 world time, when it is not raining and there are no opaque full blocks above it. If any condition fails, progress resets.
+
+The output is always distilled water. It does not produce steam and has no mode switch.
 
 ## Slots
 
-- Input: water containers (buckets, cells)
-- Output: distilled water or steam containers
+- **Water input:** water buckets, water cells, or universal fluid cells containing water.
+- **Empty output:** empty buckets or empty cells returned from the water input.
+- **Cell input:** empty cells or empty universal fluid cells.
+- **Distilled output:** distilled water cells or filled universal fluid cells.
+- **Upgrade slots:** two slots for fluid ejector and fluid pulling upgrades only.
+
+External fluid access can insert water into the input tank and extract distilled water from the output tank. Fluid pulling upgrades can keep the water tank filled from nearby storage, while fluid ejector upgrades can push distilled water onward.
 
 ## Usage
 
-Place the Solar Distiller where it has direct access to sunlight. Supply water via fluid pipes or by inserting filled cells. Collect the distilled output from the output slot. The machine works best in biomes with high sun exposure (deserts, plains) and at higher altitudes.
+Place the Solar Distiller under open sky and keep it supplied with water. Because the rate is very low, treat it as a passive distilled-water trickle for early cooling loops or battery-water preparation, not as a high-throughput replacement for Condensers in a steam plant.
 
 ## Recipe
 

@@ -49,7 +49,7 @@ class OreWashingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<OreWashi
 
         // 矿物输入槽 — 与纹理中 (104, 16) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.INPUT, 100, 10)
-            .addItemStack(recipe.input)
+            .addItemStacks(recipe.input)
 
         // 输出槽（底部一行 3 个）— 与纹理中 (86/104/122, 61) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.OUTPUT, 82, 55)

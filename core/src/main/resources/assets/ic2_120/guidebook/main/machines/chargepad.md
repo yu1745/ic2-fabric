@@ -15,7 +15,7 @@ item_ids:
 
 <BlockImage id="ic2_120:batbox_chargepad" scale="4" />
 
-Chargepads are walk-over charging stations. Stepping onto a chargepad automatically charges the player's inventory items — batteries, energy crystals, electric tools, and armor. Each tier matches its corresponding energy storage block in capacity and output.
+Chargepads are energy storage blocks with a charging surface. They keep the same capacity, side rules, charge slot, and fuel slot as the matching BatBox, CESU, MFE, or MFSU, then add automatic charging for players standing on top.
 
 ## Tier Comparison
 
@@ -28,10 +28,16 @@ Chargepads are walk-over charging stations. Stepping onto a chargepad automatica
 
 ## Usage
 
-- Stand on the chargepad to have your inventory items charged.
-- Items are charged in order: hotbar, armor, main inventory, offhand.
-- Power is drawn from the chargepad's internal buffer and re-filled from connected energy sources.
-- Chargepads can also transfer power between adjacent machines and cables, functioning like their storage counterparts.
+- Stand in the block space above the chargepad to charge electric items in your inventory and armor slots.
+- The pad charges only items whose tier is less than or equal to the pad tier.
+- Energy is drawn from the pad's internal buffer.
+- Like normal storage blocks, EU enters through the five non-front faces and leaves through the front face.
+- The GUI still has an item charge slot and a fuel slot. Redstone adds 800 EU and Energium Dust adds 16,000 EU when the buffer has room.
+- The active state lights while it is charging a player.
+
+## Layout
+
+Place the output face toward the cable or machine that should receive excess power, and keep the top clear for the player. MFE and MFSU Chargepads can also serve as the adjacent storage block for a Teleporter while still acting as walk-over armor chargers.
 
 ## Recipes
 

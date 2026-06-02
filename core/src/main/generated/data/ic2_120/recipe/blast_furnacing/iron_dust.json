@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:blast_furnacing",
   "ingredient": {
-    "item": "ic2_120:iron_dust"
+    "tag": "ic2_120:compat/dusts/iron"
   },
   "slag_output": {
     "count": 1,

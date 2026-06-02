@@ -2,7 +2,7 @@
   "type": "ic2_120:compressing",
   "container_return": {},
   "ingredient": {
-    "item": "ic2_120:small_lithium_dust"
+    "tag": "ic2_120:compat/small_dusts/lithium"
   },
   "input_count": 9,
   "result": {

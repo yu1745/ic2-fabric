@@ -12,7 +12,7 @@
       "item": "minecraft:iron_bars"
     },
     "R": {
-      "item": "ic2_120:rubber"
+      "tag": "ic2_120:compat/rubber"
     }
   },
   "pattern": [

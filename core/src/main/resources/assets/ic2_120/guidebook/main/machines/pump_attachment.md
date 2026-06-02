@@ -13,22 +13,26 @@ item_ids:
 
 <BlockImage id="ic2_120:bronze_pump_attachment" scale="4" />
 
-Pump attachments are placed on pipe segments to automatically extract fluids from adjacent tanks, machines, or other fluid sources. The carbon variant extracts faster than the bronze variant.
+Pump Attachments are directional pipe blocks that turn one face into a passive extractor. The front plate must touch the tank or machine to drain; the other sides connect back into the pipe network.
 
 ## Comparison
 
 | Type | Extraction Rate |
 |------|-----------------|
-| Bronze Pump Attachment | 1 B/t (1,000 mB/t) |
-| Carbon Pump Attachment | 4 B/t (4,000 mB/t) |
+| Bronze Pump Attachment | 2.4 B/s |
+| Carbon Pump Attachment | 4.8 B/s |
 
 ## Usage
 
-- Place a pump attachment on an existing pipe segment by right-clicking with the attachment item.
-- The pump attachment will extract fluids from any adjacent fluid container (tank, machine, etc.) and push it into the pipe network.
-- No external power is required — the pump operates passively.
-- Multiple pump attachments can be used on the same pipe network to extract from several sources.
-- Sneak-right-click with a wrench to remove the pump attachment.
+- Place the attachment so its front face points into the source storage. Its front face does not connect to normal pipes.
+- The network treats the attachment as a provider only if the touched storage supports extraction.
+- No EU is required.
+- Right-click the attachment to open its filter screen. Click the ghost slot with a filled fluid container to lock the attachment to that fluid; right-click or click with an empty cursor to clear it.
+- A pipe network stalls if multiple pump attachments provide different fluids at the same time. Use filters or separate pipe networks when moving several fluids.
+
+## Network Tips
+
+Use Pump Attachments for tank-to-tank logistics, for example pulling Biofuel from a Fermenter into generators or moving distilled water out of a Condenser. Use the powered Pump instead when the job is removing source blocks from the world.
 
 ## Recipes
 

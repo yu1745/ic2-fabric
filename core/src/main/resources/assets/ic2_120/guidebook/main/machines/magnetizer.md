@@ -12,15 +12,21 @@ item_ids:
 
 <BlockImage id="ic2_120:magnetizer" p:facing="north" scale="4" />
 
-The Magnetizer generates a magnetic field that can attract or repel iron items and entities within range, consuming EU to maintain its effect.
+The Magnetizer is an EU-powered elevator core for Iron Fence shafts. It does not sort iron items or push mobs around; it magnetizes connected iron fences above the machine and pulls players upward along them.
 
 ## Operation
 
-When powered with EU, the Magnetizer creates a magnetic field that interacts with iron-containing items, entities wearing iron armor, and other metallic objects. The field direction (attract or repel) can be configured.
+- **Storage:** 10,000 EU
+- **Input:** 32 EU/t before upgrades
+- **Base reach:** 20 connected Iron Fence blocks above the machine
+- **Overclocker effect:** +4 fence height per overclocker
+- **Energy use:** scales with the effective fence height
+- **Control:** redstone control is supported, including redstone inverter upgrades
 
-## Usage
+Place Iron Fence directly above the Magnetizer and build the fence column in the direction you want to travel. When the machine has EU and is allowed by redstone, it scans the connected fence structure and applies a lift field around it.
 
-- **Attract Mode**: Pulls nearby iron items, entities with iron armor, and metallic objects toward the Magnetizer.
-- **Repel Mode**: Pushes nearby metallic objects away from the Magnetizer.
+Players wearing metal boots are pulled more strongly and get a higher vertical boost. Iron, diamond, netherite, bronze, nano, and quantum boots all count as metal boots. The built-in boots slot mirrors the interacting player's equipped boots so they can be equipped or removed from the machine screen.
 
-The Magnetizer is useful for sorting metallic items, creating item transport systems, or defending areas by repelling armored entities.
+## Layout
+
+Use it as a vertical transport column: Magnetizer at the bottom, Iron Fence above it, and a powered EU connection on the machine. Overclockers extend the usable height, transformer and storage upgrades help with power delivery, and redstone control lets you turn the lift on only when needed.

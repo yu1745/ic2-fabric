@@ -10,6 +10,7 @@ import ic2_120.content.block.DeepslateTinOreBlock
 import ic2_120.content.block.TinBlock
 import ic2_120.content.block.TinOreBlock
 import ic2_120.content.item.RawTin
+import ic2_120.content.recipes.ModTags
 import net.minecraft.data.server.recipe.CookingRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
@@ -40,7 +41,7 @@ class TinIngot : Item(Item.Settings()) {
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .input('I', TinIngot::class.instance())
+                .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_TIN))
                 .criterion(hasItem(TinIngot::class.instance()), conditionsFromItem(TinIngot::class.instance()))
                 .offerTo(exporter, TinBlock::class.recipeId("from_ingot"))
 
@@ -117,7 +118,7 @@ class BronzeIngot : Item(Item.Settings()) {
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .input('I', BronzeIngot::class.instance())
+                .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE))
                 .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
                 .offerTo(exporter, BronzeBlock::class.recipeId("from_ingot"))
         }

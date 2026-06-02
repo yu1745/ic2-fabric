@@ -12,12 +12,20 @@ item_ids:
 
 <BlockImage id="ic2_120:uv_lamp" scale="4" />
 
-The UV Lamp accelerates the growth of nearby crops when powered by EU. It emits ultraviolet light that stimulates plant growth in its vicinity, making it a valuable tool for automated farming setups.
+The UV Lamp accelerates IC2 crop sticks around it, but only when it is fitted with Overclocker Upgrades. Without overclockers it can still consume EU and light as active, but it does not add growth progress.
 
-## Output
+## Operation
 
-- **EU Storage:** 10,000 EU
-- **Effect:** Accelerates crop growth in a radius
+- **Storage:** 10,000 EU
+- **Upgrade slot:** accepts upgrades; Overclocker Upgrades control the lamp effect
+- **Maximum useful overclockers:** 4
+- **Effective tier:** overclocker count + 1
+- **Energy use:** the EU/t value of the effective tier
+- **Crop range:** 3 blocks in each direction
+
+Each overclocker increases both the energy tier and the growth push. On a crop tick, an active lamp adds extra growth points to nearby IC2 crop blocks that are not already mature. More overclockers mean stronger acceleration, but also a higher EU/t requirement and a higher input tier.
+
+Use it above or beside a compact crop-stick field, then feed it from a cable that can handle the tier created by the installed overclockers.
 
 ## Recipe
 

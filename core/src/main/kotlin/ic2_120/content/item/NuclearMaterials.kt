@@ -1,5 +1,6 @@
 package ic2_120.content.item
 
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.id
@@ -11,6 +12,7 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditio
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.Identifier
 import ic2_120.registry.annotation.RecipeProvider
@@ -27,7 +29,7 @@ class Uranium : Item(Item.Settings()) {
                 .pattern("XXX")
                 .pattern("OOO")
                 .pattern("XXX")
-                .input('X', UraniumIngot::class.instance())
+                .input('X', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_URANIUM))
                 .input('O', SmallUranium235::class.instance())
                 .criterion(hasItem(UraniumIngot::class.instance()), conditionsFromItem(UraniumIngot::class.instance()))
                 .offerTo(exporter, Uranium::class.recipeId("1"))
@@ -65,7 +67,7 @@ class Mox : Item(Item.Settings()) {
                 .pattern("XXX")
                 .pattern("OOO")
                 .pattern("XXX")
-                .input('X', UraniumIngot::class.instance())
+                .input('X', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_URANIUM))
                 .input('O', Plutonium::class.instance())
                 .criterion(hasItem(UraniumIngot::class.instance()), conditionsFromItem(UraniumIngot::class.instance()))
                 .offerTo(exporter, Mox::class.recipeId("1"))

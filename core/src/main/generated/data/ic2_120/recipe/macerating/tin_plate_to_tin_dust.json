@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:macerating",
   "ingredient": {
-    "item": "ic2_120:tin_plate"
+    "tag": "ic2_120:compat/plates/tin"
   },
   "result": {
     "count": 1,

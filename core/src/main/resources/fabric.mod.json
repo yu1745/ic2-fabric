@@ -66,8 +66,7 @@
 		"minecraft": "~1.21.1",
 		"java": ">=21",
 		"fabric-api": "*",
-		"fabric-language-kotlin": "*",
-		"fabric_guidebook": ">=0.1.2"
+		"fabric-language-kotlin": "*"
 	},
 	"suggests": {
 		"jade": ">=11.0",

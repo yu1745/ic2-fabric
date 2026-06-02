@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:macerating",
   "ingredient": {
-    "item": "minecraft:raw_gold"
+    "tag": "ic2_120:compat/raw_materials/gold"
   },
   "result": {
     "count": 2,

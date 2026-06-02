@@ -6,7 +6,7 @@ import net.minecraft.item.ItemStack
  * 高炉 JEI 配方
  */
 data class BlastFurnaceJeiRecipe(
-    val input: ItemStack,
+    val input: List<ItemStack>,
     val steelOutput: ItemStack,
     val slagOutput: ItemStack
 )

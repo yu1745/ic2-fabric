@@ -1,6 +1,8 @@
 package ic2_120.integration.jei
 
 import ic2_120.config.Ic2Config
+import ic2_120.editCustomData
+import ic2_120.getCustomData
 import ic2_120.content.recipes.blastfurnace.BlastFurnaceRecipeDatagen
 import ic2_120.content.recipes.blockcutter.BlockCutterRecipeDatagen
 import ic2_120.content.recipes.centrifuge.CentrifugeRecipeDatagen
@@ -13,7 +15,6 @@ import ic2_120.content.item.EmptyTinCanItem
 import ic2_120.content.item.FilledTinCanItem
 import ic2_120.content.recipes.solidcanner.SolidCannerRecipeDatagen
 import ic2_120.registry.instance
-import net.minecraft.component.DataComponentTypes
 import ic2_120.integration.jei.BlastFurnaceJeiRecipe
 import ic2_120.integration.jei.BlastFurnaceRecipeCategory
 import ic2_120.integration.jei.BlockCutterJeiRecipe
@@ -34,6 +35,7 @@ import ic2_120.content.block.storage.EnergyStorageBlock
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.CropSeedBagItem
+import ic2_120.content.recipes.CannerMixingRecipes
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.item.ModFluidCell
@@ -54,10 +56,9 @@ import net.minecraft.fluid.Fluids
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.component.DataComponentTypes
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import ic2_120.editCustomData
-import ic2_120.getCustomData
 
 /**
  * JEI 插件 - 注册电力物品、喷气背包、建筑泡沫喷枪等的空/满变体与子类型
@@ -272,7 +273,7 @@ class Ic2JeiPlugin : IModPlugin {
         val maceratorRecipes = MaceratorRecipeDatagen.allEntries()
             .map { entry ->
                 MaceratorJeiRecipe(
-                    ItemStack(entry.input, entry.inputCount),
+                    entry.input.toItemStacks(entry.inputCount),
                     ItemStack(entry.output, entry.count)
                 )
             }
@@ -282,7 +283,7 @@ class Ic2JeiPlugin : IModPlugin {
         val compressorRecipes = CompressorRecipeDatagen.allEntries()
             .map { entry ->
                 CompressorJeiRecipe(
-                    ItemStack(entry.input, entry.inputCount),
+                    entry.input.toItemStacks(entry.inputCount),
                     ItemStack(entry.output, entry.count),
                     entry.containerReturn
                 )
@@ -293,7 +294,7 @@ class Ic2JeiPlugin : IModPlugin {
         val extractorRecipes = ExtractorRecipeDatagen.allEntries()
             .map { entry ->
                 ExtractorJeiRecipe(
-                    ItemStack(entry.input, 1),
+                    entry.input.toItemStacks(1),
                     ItemStack(entry.output, entry.count)
                 )
             }
@@ -303,7 +304,7 @@ class Ic2JeiPlugin : IModPlugin {
         val centrifugeRecipes = CentrifugeRecipeDatagen.allEntries()
             .map { entry ->
                 CentrifugeJeiRecipe(
-                    ItemStack(entry.input, entry.inputCount),
+                    entry.input.toItemStacks(entry.inputCount),
                     entry.minHeat,
                     entry.outputs.map { ItemStack(it.item, it.count) }
                 )
@@ -314,7 +315,7 @@ class Ic2JeiPlugin : IModPlugin {
         val blastFurnaceRecipes = BlastFurnaceRecipeDatagen.allEntries()
             .map { entry ->
                 BlastFurnaceJeiRecipe(
-                    ItemStack(entry.input, 1),
+                    entry.input.toItemStacks(1),
                     ItemStack(entry.steelOutput, entry.steelCount),
                     ItemStack(entry.slagOutput, entry.slagCount)
                 )
@@ -325,7 +326,7 @@ class Ic2JeiPlugin : IModPlugin {
         val oreWashingRecipes = OreWashingRecipeDatagen.allEntries()
             .map { entry ->
                 OreWashingJeiRecipe(
-                    ItemStack(entry.input, 1),
+                    entry.input.toItemStacks(1),
                     entry.outputs.map { ItemStack(it.item, it.count) },
                     entry.waterConsumptionDroplets
                 )
@@ -336,7 +337,7 @@ class Ic2JeiPlugin : IModPlugin {
         val blockCutterRecipes = BlockCutterRecipeDatagen.allEntries()
             .map { entry ->
                 BlockCutterJeiRecipe(
-                    ItemStack(entry.input, entry.inputCount),
+                    entry.input.toItemStacks(entry.inputCount),
                     ItemStack(entry.output, entry.count)
                 )
             }
@@ -347,7 +348,7 @@ class Ic2JeiPlugin : IModPlugin {
         val rollingRecipes = metalFormerRecipes.filter { it.mode == MetalFormerRecipeDatagen.Mode.ROLLING }
             .map { entry ->
                 MetalFormerRollingJeiRecipe(
-                    ItemStack(entry.input, 1),
+                    entry.input.toItemStacks(1),
                     ItemStack(entry.output, entry.outputCount)
                 )
             }
@@ -356,7 +357,7 @@ class Ic2JeiPlugin : IModPlugin {
         val cuttingRecipes = metalFormerRecipes.filter { it.mode == MetalFormerRecipeDatagen.Mode.CUTTING }
             .map { entry ->
                 MetalFormerCuttingJeiRecipe(
-                    ItemStack(entry.input, 1),
+                    entry.input.toItemStacks(1),
                     ItemStack(entry.output, entry.outputCount)
                 )
             }
@@ -365,7 +366,7 @@ class Ic2JeiPlugin : IModPlugin {
         val extrudingRecipes = metalFormerRecipes.filter { it.mode == MetalFormerRecipeDatagen.Mode.EXTRUDING }
             .map { entry ->
                 MetalFormerExtrudingJeiRecipe(
-                    ItemStack(entry.input, 1),
+                    entry.input.toItemStacks(1),
                     ItemStack(entry.output, entry.outputCount)
                 )
             }
@@ -375,20 +376,37 @@ class Ic2JeiPlugin : IModPlugin {
         val solidCannerRecipes = SolidCannerRecipeDatagen.allEntries()
             .map { entry ->
                 SolidCannerJeiRecipe(
-                    slot0 = ItemStack(entry.slot0Ingredient, entry.slot0Count),
-                    slot1 = listOf(ItemStack(entry.slot1Ingredient, entry.slot1Count)),
+                    slot0 = entry.slot0Ingredient.toItemStacks(entry.slot0Count),
+                    slot1 = entry.slot1Ingredient.toItemStacks(entry.slot1Count),
                     output = ItemStack(entry.outputItem, entry.outputCount)
                 )
             } + Registries.ITEM.mapNotNull { item ->
                 val food = ItemStack(item).get(DataComponentTypes.FOOD) ?: return@mapNotNull null
                 val canCount = food.nutrition.coerceAtLeast(1)
                 SolidCannerJeiRecipe(
-                    slot0 = ItemStack(EmptyTinCanItem::class.instance(), canCount),
+                    slot0 = listOf(ItemStack(EmptyTinCanItem::class.instance(), canCount)),
                     slot1 = listOf(ItemStack(item, 1)),
                     output = ItemStack(FilledTinCanItem::class.instance(), canCount)
                 )
             }
         registration.addRecipes(Ic2JeiRecipeTypes.SOLID_CANNER, solidCannerRecipes)
+
+        val fluidCell = Registries.ITEM.get(Identifier.of("ic2_120", "fluid_cell"))
+        val cannerMixingRecipes = CannerMixingRecipes.allRecipes()
+            .map { recipe ->
+                CannerMixingJeiRecipe(
+                    inputFluid = recipe.inputFluid,
+                    inputSolid = recipe.inputSolid.toItemStacks(recipe.inputSolidCount),
+                    outputFluid = recipe.outputFluid,
+                    inputFluidCell = ItemStack(fluidCell).apply {
+                        setFluidCellVariant(FluidVariant.of(recipe.inputFluid))
+                    },
+                    outputFluidCell = ItemStack(fluidCell).apply {
+                        setFluidCellVariant(FluidVariant.of(recipe.outputFluid))
+                    }
+                )
+            }
+        registration.addRecipes(Ic2JeiRecipeTypes.CANNER_MIXING, cannerMixingRecipes)
 
         val recyclerScrap = Registries.ITEM.get(Identifier.of("ic2_120", "scrap"))
         registration.addRecipes(

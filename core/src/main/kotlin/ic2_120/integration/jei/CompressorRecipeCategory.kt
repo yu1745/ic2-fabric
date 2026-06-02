@@ -42,7 +42,7 @@ class CompressorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Compress
     ) {
         // 输入槽 — 与纹理中 (58, 15) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.INPUT, 28, 10)
-            .addItemStack(recipe.input)
+            .addItemStacks(recipe.input)
 
         // 输出槽 — 与纹理中 (116, 34) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.OUTPUT, 86, 29)

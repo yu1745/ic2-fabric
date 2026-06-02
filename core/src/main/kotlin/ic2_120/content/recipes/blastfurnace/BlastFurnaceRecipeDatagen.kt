@@ -1,12 +1,15 @@
 package ic2_120.content.recipes.blastfurnace
 
+import com.google.gson.JsonObject
+import ic2_120.content.item.IronDust
+import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.instance
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.recipe.Ingredient
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 
@@ -18,7 +21,7 @@ import net.minecraft.util.Identifier
 object BlastFurnaceRecipeDatagen {
     data class Entry(
         val name: String,
-        val input: Item,
+        val input: IngredientInput,
         val steelOutput: Item,
         val steelCount: Int = 1,
         val slagOutput: Item,
@@ -26,22 +29,19 @@ object BlastFurnaceRecipeDatagen {
     )
 
     private val entries = listOf(
-        Entry("iron_dust", Registries.ITEM.get(Identifier.of("ic2_120", "iron_dust")),
+        Entry("iron_dust", IngredientInput.tag(ModTags.Compat.Items.DUSTS_IRON, IronDust::class.instance()),
             Registries.ITEM.get(Identifier.of("ic2_120", "steel_ingot")), 1,
             Registries.ITEM.get(Identifier.of("ic2_120", "slag")), 1),
-        Entry("crushed_iron", Registries.ITEM.get(Identifier.of("ic2_120", "crushed_iron")),
+        Entry("crushed_iron", IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "crushed_iron"))),
             Registries.ITEM.get(Identifier.of("ic2_120", "steel_ingot")), 1,
             Registries.ITEM.get(Identifier.of("ic2_120", "slag")), 1),
-        Entry("purified_iron", Registries.ITEM.get(Identifier.of("ic2_120", "purified_iron")),
+        Entry("purified_iron", IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "purified_iron"))),
             Registries.ITEM.get(Identifier.of("ic2_120", "steel_ingot")), 1,
             Registries.ITEM.get(Identifier.of("ic2_120", "slag")), 1),
-        Entry("iron_ingot", Items.IRON_INGOT,
+        Entry("iron_ingot", IngredientInput.tag(ModTags.Compat.Items.INGOTS_IRON, Items.IRON_INGOT),
             Registries.ITEM.get(Identifier.of("ic2_120", "steel_ingot")), 1,
             Registries.ITEM.get(Identifier.of("ic2_120", "slag")), 1),
-        Entry("iron_ore", Items.IRON_ORE,
-            Registries.ITEM.get(Identifier.of("ic2_120", "steel_ingot")), 1,
-            Registries.ITEM.get(Identifier.of("ic2_120", "slag")), 1),
-        Entry("deepslate_iron_ore", Items.DEEPSLATE_IRON_ORE,
+        Entry("iron_ore", IngredientInput.tag(ModTags.Compat.Items.ORES_IRON, Items.IRON_ORE),
             Registries.ITEM.get(Identifier.of("ic2_120", "steel_ingot")), 1,
             Registries.ITEM.get(Identifier.of("ic2_120", "slag")), 1)
     )
@@ -51,13 +51,16 @@ object BlastFurnaceRecipeDatagen {
     fun generateRecipes(exporter: RecipeExporter) {
         entries.forEach { entry ->
             val id = Identifier.of("ic2_120", "blast_furnacing/${entry.name}")
-            val recipe = BlastFurnaceRecipe(
-                id = id,
-                ingredient = Ingredient.ofItems(entry.input),
-                steelOutput = ItemStack(entry.steelOutput, entry.steelCount),
-                slagOutput = ItemStack(entry.slagOutput, entry.slagCount)
+            exporter.accept(
+                id,
+                BlastFurnaceRecipe(
+                    id,
+                    entry.input.toIngredient(),
+                    ItemStack(entry.steelOutput, entry.steelCount),
+                    ItemStack(entry.slagOutput, entry.slagCount)
+                ),
+                null
             )
-            exporter.accept(id, recipe, null)
         }
     }
 }

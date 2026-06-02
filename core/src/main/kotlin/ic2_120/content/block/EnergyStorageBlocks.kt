@@ -15,6 +15,7 @@ import ic2_120.content.block.storage.EnergyStorageBlockEntity
 import ic2_120.content.block.storage.EnergyStorageBlock.EnergyStorageBlockItem
 import ic2_120.content.block.storage.EnergyStorageConfig
 import ic2_120.content.item.energy.ReBatteryItem
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.RecipeProvider
@@ -33,6 +34,7 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Item
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.registry.tag.ItemTags
 import net.minecraft.state.StateManager
@@ -94,7 +96,7 @@ class CesuBlock : EnergyStorageBlock(EnergyStorageConfig.CESU) {
                     .pattern("WTW")
                     .pattern("BBB")
                     .pattern("WWW")
-                    .input('W', plate)
+                    .input('W', Ingredient.fromTag(ModTags.Compat.Items.PLATES_BRONZE))
                     .input('T', copperCable)
                     .input('B', battery)
                     .criterion(hasItem(battery), conditionsFromItem(battery))
@@ -234,7 +236,7 @@ class BatBoxChargepadBlock : ChargepadBlock(EnergyStorageConfig.BATBOX_CHARGEPAD
                     .pattern("RBR")
                     .input('C', circuit)
                     .input('P', Items.STONE_PRESSURE_PLATE)
-                    .input('R', rubber)
+                    .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                     .input('B', base)
                     .criterion(hasItem(base), conditionsFromItem(base))
                     .offerTo(exporter, BatBoxChargepadBlock::class.id())
@@ -268,7 +270,7 @@ class CesuChargepadBlock : ChargepadBlock(EnergyStorageConfig.CESU_CHARGEPAD) {
                     .pattern("RBR")
                     .input('C', circuit)
                     .input('P', Items.STONE_PRESSURE_PLATE)
-                    .input('R', rubber)
+                    .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                     .input('B', base)
                     .criterion(hasItem(base), conditionsFromItem(base))
                     .offerTo(exporter, CesuChargepadBlock::class.id())
@@ -302,7 +304,7 @@ class MfeChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFE_CHARGEPAD) {
                     .pattern("RBR")
                     .input('C', circuit)
                     .input('P', Items.STONE_PRESSURE_PLATE)
-                    .input('R', rubber)
+                    .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                     .input('B', base)
                     .criterion(hasItem(base), conditionsFromItem(base))
                     .offerTo(exporter, MfeChargepadBlock::class.id())
@@ -337,7 +339,7 @@ class MfsuChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFSU_CHARGEPAD) {
                     .pattern("RBR")
                     .input('C', circuit)
                     .input('P', Items.STONE_PRESSURE_PLATE)
-                    .input('R', rubber)
+                    .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                     .input('B', base)
                     .criterion(hasItem(base), conditionsFromItem(base))
                     .offerTo(exporter, MfsuChargepadBlock::class.id())

@@ -7,6 +7,7 @@ import ic2_120.content.item.Alloy
 import ic2_120.content.item.Resin
 import ic2_120.content.item.RubberItem
 import ic2_120.content.item.Treetap
+import ic2_120.content.recipes.ModTags
 import ic2_120.content.recipes.crafting.ConsumeTreetapShapedRecipeDatagen
 import ic2_120.registry.annotation.ModBlock
 import net.minecraft.block.AbstractBlock
@@ -27,6 +28,7 @@ import net.minecraft.block.ShapeContext
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
 import net.minecraft.sound.SoundEvents
@@ -288,7 +290,7 @@ class RubberSheetBlock : Block(
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RubberSheetBlock::class.item(), 3)
                 .pattern("xxx")
                 .pattern("xxx")
-                .input('x', rubber)
+                .input('x', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(hasItem(rubber), conditionsFromItem(rubber))
                 .offerTo(exporter, RubberSheetBlock::class.id())
         }
@@ -589,7 +591,7 @@ class IronScaffoldBlock(
                 .pattern("PPP")
                 .pattern("FFF")
                 .pattern("PPP")
-                .input('P', ironPlate)
+                .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
                 .input('F', ironFence)
                 .criterion(hasItem(ironPlate), conditionsFromItem(ironPlate))
                 .criterion(hasItem(ironFence), conditionsFromItem(ironFence))

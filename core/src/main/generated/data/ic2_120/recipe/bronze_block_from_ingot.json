@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "I": {
-      "item": "ic2_120:bronze_ingot"
+      "tag": "ic2_120:compat/ingots/bronze"
     }
   },
   "pattern": [

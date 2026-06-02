@@ -11,6 +11,7 @@ import ic2_120.registry.type
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.item.energy.BatteryItemBase
 import ic2_120.content.item.energy.ReBatteryItem
+import ic2_120.content.recipes.ModTags
 import ic2_120.content.recipes.crafting.BatteryEnergyShapedRecipeDatagen
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
@@ -21,6 +22,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.component.type.FoodComponent
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
@@ -38,13 +40,13 @@ class EmptyTinCanItem : Item(Item.Settings()) {
 
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 16)
                 .pattern("TTT").pattern("T T").pattern("TTT")
-                .input('T', tinIngot)
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_TIN))
                 .criterion(hasItem(tinIngot), conditionsFromItem(tinIngot))
                 .offerTo(exporter, EmptyTinCanItem::class.recipeId("from_ingots_8"))
 
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 4)
                 .pattern(" T ").pattern("T T").pattern("TTT")
-                .input('T', tinIngot)
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_TIN))
                 .criterion(hasItem(tinIngot), conditionsFromItem(tinIngot))
                 .offerTo(exporter, EmptyTinCanItem::class.recipeId("from_ingots_6"))
         }

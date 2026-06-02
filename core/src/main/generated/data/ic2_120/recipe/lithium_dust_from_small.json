@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "S": {
-      "item": "ic2_120:small_lithium_dust"
+      "tag": "ic2_120:compat/small_dusts/lithium"
     }
   },
   "pattern": [

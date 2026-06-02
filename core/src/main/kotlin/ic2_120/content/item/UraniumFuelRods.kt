@@ -5,6 +5,7 @@ import ic2_120.content.reactor.AbstractDamageableReactorComponent
 import ic2_120.content.reactor.AbstractReactorComponent
 import ic2_120.content.reactor.IReactor
 import ic2_120.content.reactor.IReactorComponent
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.id
@@ -16,6 +17,7 @@ import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
@@ -152,7 +154,7 @@ class DualUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_00
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, DualUraniumFuelRodItem::class.instance(), 1)
                 .pattern("XFX")
                 .input('X', UraniumFuelRodItem::class.instance())
-                .input('F', IronPlate::class.instance())
+                .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, DualUraniumFuelRodItem::class.id())
         }
@@ -171,8 +173,8 @@ class QuadUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_00
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, QuadUraniumFuelRodItem::class.instance(), 1)
                 .pattern(" X ").pattern("CFC").pattern(" X ")
                 .input('X', DualUraniumFuelRodItem::class.instance())
-                .input('F', IronPlate::class.instance())
-                .input('C', CopperPlate::class.instance())
+                .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
+                .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, QuadUraniumFuelRodItem::class.id())
 
@@ -180,8 +182,8 @@ class QuadUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_00
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, QuadUraniumFuelRodItem::class.instance(), 1)
                 .pattern("XFX").pattern("CFC").pattern("XFX")
                 .input('X', UraniumFuelRodItem::class.instance())
-                .input('F', IronPlate::class.instance())
-                .input('C', CopperPlate::class.instance())
+                .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
+                .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, Identifier.of(Ic2_120.MOD_ID, "quad_uranium_fuel_rod_from_single"))
         }
@@ -301,7 +303,7 @@ class MoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 1) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, DualMoxFuelRodItem::class.instance(), 1)
                 .pattern("XFX")
                 .input('X', MoxFuelRodItem::class.instance())
-                .input('F', IronPlate::class.instance())
+                .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, DualMoxFuelRodItem::class.id())
         }
@@ -320,8 +322,8 @@ class DualMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 2) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, QuadMoxFuelRodItem::class.instance(), 1)
                 .pattern(" X ").pattern("CFC").pattern(" X ")
                 .input('X', DualMoxFuelRodItem::class.instance())
-                .input('F', IronPlate::class.instance())
-                .input('C', CopperPlate::class.instance())
+                .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
+                .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, QuadMoxFuelRodItem::class.id())
 
@@ -329,8 +331,8 @@ class DualMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 2) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, QuadMoxFuelRodItem::class.instance(), 1)
                 .pattern("XFX").pattern("CFC").pattern("XFX")
                 .input('X', MoxFuelRodItem::class.instance())
-                .input('F', IronPlate::class.instance())
-                .input('C', CopperPlate::class.instance())
+                .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
+                .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, Identifier.of(Ic2_120.MOD_ID, "quad_mox_fuel_rod_from_single"))
         }

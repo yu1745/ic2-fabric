@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:macerating",
   "ingredient": {
-    "item": "ic2_120:lapis_plate"
+    "tag": "ic2_120:compat/plates/lapis"
   },
   "result": {
     "count": 1,

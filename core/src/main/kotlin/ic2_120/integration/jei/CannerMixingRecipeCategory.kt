@@ -46,7 +46,7 @@ class CannerMixingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Canner
 
         // 材料物品 — 中间材料槽
         builder.addSlot(RecipeIngredientRole.INPUT, 47, 35)
-            .addItemStack(recipe.inputSolid)
+            .addItemStacks(recipe.inputSolid)
 
         // 输出流体 — 右侧流体罐
         builder.addSlot(RecipeIngredientRole.OUTPUT, 88, 38)

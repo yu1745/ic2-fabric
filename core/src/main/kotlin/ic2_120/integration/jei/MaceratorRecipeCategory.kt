@@ -42,11 +42,10 @@ class MaceratorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Macerator
     ) {
         // 输入槽 — 与纹理中 (42, 15) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.INPUT, 16, 10)
-            .addItemStack(recipe.input)
+            .addItemStacks(recipe.input)
 
         // 输出槽 — 与纹理中 (116, 35) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.OUTPUT, 90, 30)
             .addItemStack(recipe.output)
     }
 }
-

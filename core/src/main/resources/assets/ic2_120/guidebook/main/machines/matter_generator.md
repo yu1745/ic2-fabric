@@ -12,24 +12,33 @@ item_ids:
 
 <BlockImage id="ic2_120:matter_generator" p:facing="north" scale="4" />
 
-The Matter Generator consumes massive amounts of EU to produce **UU-Matter**, the fundamental substance used to replicate any material. Adding scrap speeds up the process by reducing the EU cost per millibucket.
+The Matter Generator consumes huge amounts of EU to produce **UU-Matter** for the Replicator. It only runs while powered by redstone and while its internal tank has room.
 
 ## Operation
 
-The Matter Generator converts EU into UU-Matter fluid. The conversion is slow and energy-intensive without scrap:
+- **Energy tier:** 3
+- **EU storage:** 4,000,000 EU
+- **UU-Matter tank:** 10,000 mB
+- **Without Scrap:** 1,000,000 EU per mB
+- **With Scrap:** 166,667 EU and 34 Scrap per mB
 
-- **Without scrap**: High EU cost per mB of UU-Matter
-- **With scrap**: Scrap reduces the EU required per mB, significantly accelerating production
+Scrap is consumed as progress advances, so even a partial stack helps, but a continuous Recycler feed keeps the machine in its boosted rate.
 
-## Inputs
+## Slots
 
-- **EU** (primary input): Consumed continuously during operation
-- **Scrap** (optional): Inserted into the input slot to boost production speed
+- **Scrap slot:** accepts Scrap only
+- **Container input:** Empty Cell, empty Fluid Cell, or bucket
+- **Container output:** UU-Matter Cell, filled Fluid Cell, or UU-Matter Bucket
+- **Upgrade slots:** 4 slots
 
-## Output
+The tank is output-only to pipes. Empty containers in the input slot are filled from the tank when at least one bucket of UU-Matter is available.
 
-The machine produces liquid **UU-Matter**, which is stored in its internal tank and can be extracted using fluid pipes or buckets. UU-Matter is the key ingredient for the Replicator to duplicate items.
+## Automation and Upgrades
 
-## Usage
+Item automation can insert Scrap, empty containers, and supported upgrades. The Scrap slot, container input, and container output are extractable.
 
-Feed a constant supply of EU into the Matter Generator. For best efficiency, also supply scrap — this can be produced by running common items through a Recycler. The produced UU-Matter can be piped directly to an adjacent Replicator or stored in tanks for later use.
+Supported upgrades are Transformer, Energy Storage, Ejector, Pulling, Fluid Ejector, and Fluid Pulling upgrades. Overclockers are not accepted. Fluid Ejector upgrades can push UU-Matter to tanks or a Replicator; Fluid Pulling upgrades usually have no useful input because the internal tank rejects external insertion.
+
+## Replication Chain
+
+The usual chain is Recycler -> Matter Generator -> Replicator. Keep Scrap flowing from the Recycler, power the Matter Generator with redstone, and pipe UU-Matter into a Replicator or storage tank.

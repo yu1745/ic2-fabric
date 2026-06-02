@@ -6,6 +6,6 @@ import net.minecraft.item.ItemStack
  * 方块切割机 JEI 配方
  */
 data class BlockCutterJeiRecipe(
-    val input: ItemStack,
+    val input: List<ItemStack>,
     val output: ItemStack
 )

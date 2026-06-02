@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:blast_furnacing",
   "ingredient": {
-    "item": "minecraft:iron_ore"
+    "tag": "ic2_120:compat/ores/iron"
   },
   "slag_output": {
     "count": 1,

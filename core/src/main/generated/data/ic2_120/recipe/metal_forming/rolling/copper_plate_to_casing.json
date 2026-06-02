@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:metal_forming",
   "ingredient": {
-    "item": "ic2_120:copper_plate"
+    "tag": "ic2_120:compat/plates/copper"
   },
   "mode": "rolling",
   "result": {

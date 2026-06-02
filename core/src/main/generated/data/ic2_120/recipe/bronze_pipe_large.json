@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "X": {
-      "item": "ic2_120:bronze_plate"
+      "tag": "ic2_120:compat/plates/bronze"
     }
   },
   "pattern": [

@@ -3,10 +3,10 @@
   "category": "misc",
   "key": {
     "C": {
-      "item": "ic2_120:copper_plate"
+      "tag": "ic2_120:compat/plates/copper"
     },
     "F": {
-      "item": "ic2_120:iron_plate"
+      "tag": "ic2_120:compat/plates/iron"
     },
     "X": {
       "item": "ic2_120:uranium_fuel_rod"

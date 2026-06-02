@@ -6,10 +6,10 @@
       "item": "ic2_120:coal_dust"
     },
     "P": {
-      "item": "ic2_120:copper_plate"
+      "tag": "ic2_120:compat/plates/copper"
     },
     "T": {
-      "item": "ic2_120:tin_dust"
+      "tag": "ic2_120:compat/dusts/tin"
     }
   },
   "pattern": [

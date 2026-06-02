@@ -4,6 +4,7 @@ import ic2_120.content.block.MvTransformerBlock
 import ic2_120.content.block.cables.DoubleInsulatedGoldCableBlock
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.item.energy.ReBatteryItem
+import ic2_120.content.recipes.ModTags
 import ic2_120.content.recipes.crafting.ConsumeTreetapShapedRecipeDatagen
 import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
@@ -23,6 +24,7 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.registry.tag.ItemTags
 import net.fabricmc.api.Environment
@@ -252,7 +254,7 @@ class RedstoneInverterUpgrade : Item(Item.Settings()), IUpgradeItem {
                 .pattern("T T")
                 .pattern(" L ")
                 .pattern("T T")
-                .input('T', tin)
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
                 .input('L', Items.LEVER)
                 .criterion(hasItem(tin), conditionsFromItem(tin))
                 .offerTo(exporter)
@@ -279,7 +281,7 @@ class EjectorUpgrade : ItemFilterUpgradeItem() {
                 .pattern("T T")
                 .pattern(" P ")
                 .pattern("T T")
-                .input('T', tin)
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
                 .input('P', Items.PISTON)
                 .criterion(hasItem(tin), conditionsFromItem(tin))
                 .offerTo(exporter)
@@ -309,7 +311,7 @@ class PullingUpgrade : ItemFilterUpgradeItem() {
                 .pattern("T T")
                 .pattern(" H ")
                 .pattern("T T")
-                .input('T', tin)
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
                 .input('H', hopper)
                 .criterion(hasItem(hopper), conditionsFromItem(hopper))
                 .offerTo(exporter)
@@ -337,7 +339,7 @@ class FluidEjectorUpgrade : FluidFilterUpgradeItem() {
                 .pattern("T T")
                 .pattern(" M ")
                 .pattern("T T")
-                .input('T', tin)
+                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
                 .input('M', motor)
                 .criterion(hasItem(motor), conditionsFromItem(motor))
                 .offerTo(exporter)

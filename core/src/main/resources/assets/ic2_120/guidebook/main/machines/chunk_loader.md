@@ -12,17 +12,20 @@ item_ids:
 
 <BlockImage id="ic2_120:chunk_loader" p:facing="north" scale="4" />
 
-The Chunk Loader keeps a **3x3** chunk area (9 chunks total) loaded and ticking even when no players are nearby, ensuring your machines continue operating and farms keep running.
+The Chunk Loader keeps selected chunks loaded and ticking when no players are nearby. It uses a **9x9 selection grid** centered on its own chunk, and can keep up to **25 chunks** active at once.
 
 ## Energy and Storage
 
 - **EU Storage**: 10,000 EU
-- **Cost**: 1 EU per chunk per tick (9 EU/t total for the full 3x3 area)
+- **Max input**: 32 EU/t
+- **Cost**: 1 EU per loaded chunk per tick
 
 ## Operation
 
-When powered, the Chunk Loader keeps all chunks in a 3x3 square centered on its own chunk loaded into memory. This allows machines, crops, and other tile entities in the area to continue processing regardless of player proximity.
+The center chunk is always selected and cannot be toggled off. Use the GUI to toggle other chunks in the 9x9 grid. The machine refuses to enable more than 25 chunks.
+
+Every tick, it consumes EU equal to the number of selected chunks. If it cannot pay the full cost, or if no chunks are selected, it releases all forced chunk tickets and turns inactive.
 
 ## Usage
 
-Place the Chunk Loader in the chunk you wish to keep loaded. Supply continuous EU power — if the internal buffer runs out, the chunks will unload. The machine consumes 1 EU/t per chunk, for a total of 9 EU/t when all 9 chunks are active. Use this to keep remote mining operations, crop farms, and processing lines running at all times.
+Place the Chunk Loader in the center of the area you care about, select only the chunks that contain active machines or farms, and provide enough LV power for the selected count. A full 25-chunk setup costs 25 EU/t continuously; the default single center chunk costs 1 EU/t.

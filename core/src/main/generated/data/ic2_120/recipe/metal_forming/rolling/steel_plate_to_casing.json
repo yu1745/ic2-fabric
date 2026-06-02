@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:metal_forming",
   "ingredient": {
-    "item": "ic2_120:steel_plate"
+    "tag": "ic2_120:compat/plates/steel"
   },
   "mode": "rolling",
   "result": {

@@ -4,6 +4,7 @@ import com.mojang.serialization.MapCodec
 import ic2_120.content.item.CarbonPlate
 import ic2_120.content.item.IronPlate
 import ic2_120.content.item.SteelPlate
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.RecipeProvider
@@ -29,6 +30,7 @@ import net.minecraft.fluid.FluidState
 import net.minecraft.fluid.Fluids
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.registry.tag.ItemTags
 import net.minecraft.state.StateManager
@@ -273,7 +275,7 @@ class IronTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.IRON) {
                 .pattern("xxx")
                 .pattern("   ")
                 .pattern("xxx")
-                .input('x', IronPlate::class.instance())
+                .input('x', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, IronTransmissionShaftBlock::class.recipeId("from_plates"))
         }
@@ -289,7 +291,7 @@ class SteelTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.STEEL) 
                 .pattern("xxx")
                 .pattern("   ")
                 .pattern("xxx")
-                .input('x', SteelPlate::class.instance())
+                .input('x', Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL))
                 .criterion(hasItem(SteelPlate::class.instance()), conditionsFromItem(SteelPlate::class.instance()))
                 .offerTo(exporter, SteelTransmissionShaftBlock::class.recipeId("from_plates"))
         }
@@ -478,7 +480,7 @@ class BevelGearBlock(
                 .pattern("s s")
                 .pattern("s s")
                 .pattern("sss")
-                .input('s', SteelPlate::class.instance())
+                .input('s', Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL))
                 .criterion(hasItem(SteelPlate::class.instance()), conditionsFromItem(SteelPlate::class.instance()))
                 .offerTo(exporter, BevelGearBlock::class.recipeId("from_plates"))
         }

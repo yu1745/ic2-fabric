@@ -53,7 +53,8 @@ tasks.named('runDatagen') {
 }
 
 dependencies {
-	include modImplementation("com.github.yu1745:fabric-guidebook:${project.fabric_guidebook_version}")
+	// Fabric Guidebook 0.1.2 only declares Minecraft 1.20.1 support.
+	// Keep guidebook resources in assets, but do not load/include the mod on 1.21.1 until it is ported.
 	include implementation("org.yaml:snakeyaml:1.33")
 
 	include modImplementation("teamreborn:energy:${project.energy_api_version}") {

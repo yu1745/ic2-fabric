@@ -39,7 +39,7 @@ class BlockCutterRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<BlockCu
     ) {
         // 输入槽 — 与纹理中 (26, 17) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.INPUT, 16, 12)
-            .addItemStack(recipe.input)
+            .addItemStacks(recipe.input)
 
         // 输出槽 — 与纹理中 (116, 35) 处槽位对齐
         builder.addSlot(RecipeIngredientRole.OUTPUT, 106, 30)

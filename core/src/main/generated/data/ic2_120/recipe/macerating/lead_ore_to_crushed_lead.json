@@ -1,7 +1,7 @@
 {
   "type": "ic2_120:macerating",
   "ingredient": {
-    "item": "ic2_120:lead_ore"
+    "tag": "ic2_120:compat/ores/lead"
   },
   "result": {
     "count": 2,

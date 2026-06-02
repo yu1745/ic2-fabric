@@ -4,7 +4,7 @@
   "cookingtime": 200,
   "experience": 0.1,
   "ingredient": {
-    "item": "ic2_120:tin_dust"
+    "tag": "ic2_120:compat/dusts/tin"
   },
   "result": {
     "id": "ic2_120:tin_ingot"

@@ -15,7 +15,9 @@ import net.minecraft.block.Blocks
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
+import ic2_120.content.recipes.ModTags
 
 /**
  * 核反应堆压力容器。
@@ -30,7 +32,7 @@ class ReactorVesselBlock(settings: AbstractBlock.Settings = AbstractBlock.Settin
             if (leadPlate != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorVesselBlock::class.item(), 4)
                     .pattern("LSL").pattern("SLS").pattern("LSL")
-                    .input('L', leadPlate)
+                    .input('L', Ingredient.fromTag(ModTags.Compat.Items.PLATES_LEAD))
                     .input('S', Items.STONE)
                     .criterion(hasItem(leadPlate), conditionsFromItem(leadPlate))
                     .offerTo(exporter, ReactorVesselBlock::class.id())

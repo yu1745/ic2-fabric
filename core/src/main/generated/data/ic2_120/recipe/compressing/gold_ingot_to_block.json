@@ -2,7 +2,7 @@
   "type": "ic2_120:compressing",
   "container_return": {},
   "ingredient": {
-    "item": "minecraft:gold_ingot"
+    "tag": "ic2_120:compat/ingots/gold"
   },
   "input_count": 9,
   "result": {

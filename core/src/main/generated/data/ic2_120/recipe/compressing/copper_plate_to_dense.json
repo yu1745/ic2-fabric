@@ -2,7 +2,7 @@
   "type": "ic2_120:compressing",
   "container_return": {},
   "ingredient": {
-    "item": "ic2_120:copper_plate"
+    "tag": "ic2_120:compat/plates/copper"
   },
   "input_count": 9,
   "result": {

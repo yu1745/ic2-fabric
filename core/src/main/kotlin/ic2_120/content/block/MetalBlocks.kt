@@ -1,6 +1,7 @@
 package ic2_120.content.block
 
 import ic2_120.content.item.*
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.RecipeProvider
@@ -17,6 +18,7 @@ import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Items
+import net.minecraft.recipe.Ingredient
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.util.math.Direction
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
@@ -38,7 +40,7 @@ class TinBlock : Block(
             if (ingot != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, TinBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
-                    .input('I', ingot)
+                    .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_TIN))
                     .criterion(hasItem(ingot), conditionsFromItem(ingot))
                     .offerTo(exporter, TinBlock::class.id())
             }
@@ -60,7 +62,7 @@ class BronzeBlock : Block(
             if (ingot != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, BronzeBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
-                    .input('I', ingot)
+                    .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE))
                     .criterion(hasItem(ingot), conditionsFromItem(ingot))
                     .offerTo(exporter, BronzeBlock::class.id())
             }
@@ -150,7 +152,7 @@ class LeadBlock : Block(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(
             if (ingot != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, LeadBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
-                    .input('I', ingot)
+                    .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_LEAD))
                     .criterion(hasItem(ingot), conditionsFromItem(ingot))
                     .offerTo(exporter, LeadBlock::class.id())
             }
@@ -167,7 +169,7 @@ class SteelBlock : Block(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength
             if (ingot != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, SteelBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
-                    .input('I', ingot)
+                    .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_STEEL))
                     .criterion(hasItem(ingot), conditionsFromItem(ingot))
                     .offerTo(exporter, SteelBlock::class.id())
             }
@@ -184,7 +186,7 @@ class UraniumBlock : Block(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).streng
             if (ingot != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, UraniumBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
-                    .input('I', ingot)
+                    .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_URANIUM))
                     .criterion(hasItem(ingot), conditionsFromItem(ingot))
                     .offerTo(exporter, UraniumBlock::class.id())
             }
@@ -201,7 +203,7 @@ class SilverBlock : Block(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strengt
             if (ingot != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, SilverBlock::class.item(), 1)
                     .pattern("III").pattern("III").pattern("III")
-                    .input('I', ingot)
+                    .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_SILVER))
                     .criterion(hasItem(ingot), conditionsFromItem(ingot))
                     .offerTo(exporter, SilverBlock::class.id())
             }
