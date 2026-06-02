@@ -99,6 +99,13 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
         private val MAGIC_GEN_NUMBER = 0xD046B4E40C7D07CFuL.toLong()
         private const val MAX_CHUNK_RADIUS = 5
 
+        // BC 噪声斑块参数（GenLayerAddOilDesert / GenLayerAddOilOcean）
+        private const val OIL_DESERT_SCALE = 0.001
+        private const val OIL_DESERT_THRESHOLD = 0.7
+        private const val OIL_OCEAN_SCALE = 0.0005
+        private const val OIL_OCEAN_THRESHOLD = 0.9
+        private const val OFFSET_RANGE = 500000
+
         // 排除的维度（BC 原版）
         private val excludedDimensionIds = setOf(-1, 1) // 下界、末地
 
@@ -112,6 +119,11 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
         private const val LARGE_SPOUT_MAX = 20
         private const val SMALL_SPOUT_MIN = 6
         private const val SMALL_SPOUT_MAX = 12
+
+        // 噪声偏移量缓存（同世界种子同偏移）
+        private var cachedNoiseSeed = Long.MIN_VALUE
+        private var noiseXOff = 0
+        private var noiseZOff = 0
     }
 
     private enum class GenType { LARGE, MEDIUM, LAKE, NONE }
@@ -119,27 +131,30 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
     override fun generate(context: FeatureContext<DefaultFeatureConfig>): Boolean {
         val world = context.world
         val origin = context.origin
-        val rand = context.random
 
         val chunkX = origin.x shr 4
         val chunkZ = origin.z shr 4
 
-        // BC: 排除维度（下界 -1、末地 1）
-        // 通过 FeatureContext 传入的 StructureWorldAccess 运行时为 ServerWorld
+        // BC: 排除维度
         if (world is net.minecraft.world.World) {
             val dimId = world.registryKey.value
             if (dimId.toString().contains("the_nether") || dimId.toString().contains("the_end")) return false
         }
 
+        // 当前区块边界：所有 setBlock 限制在此范围内，消除 "far chunk" 警告
+        val genMin = BlockPos(chunkX * 16, world.bottomY, chunkZ * 16)
+        val genMax = genMin.add(15, world.height - 1, 15)
+
         for (cdx in -MAX_CHUNK_RADIUS..MAX_CHUNK_RADIUS) {
             for (cdz in -MAX_CHUNK_RADIUS..MAX_CHUNK_RADIUS) {
-                generateAt(world, chunkX + cdx, chunkZ + cdz)
+                val isCenter = cdx == 0 && cdz == 0
+                generateAt(world, chunkX + cdx, chunkZ + cdz, genMin, genMax, isCenter)
             }
         }
         return true
     }
 
-    private fun generateAt(world: StructureWorldAccess, cx: Int, cz: Int) {
+    private fun generateAt(world: StructureWorldAccess, cx: Int, cz: Int, genMin: BlockPos, genMax: BlockPos, isCenter: Boolean = false) {
         // BC: 确定性随机（同种子同坐标必出相同结构）
         // StructureWorldAccess 运行时为 ServerWorld，可安全访问种子
         val wSeed = if (world is net.minecraft.world.World) world.seed else 0L
@@ -153,19 +168,32 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
         val dim = world.dimension
         if (dim == net.minecraft.world.World.END && (Math.abs(x) < 1200 || Math.abs(z) < 1200)) return
 
-        // BC: 按生物群系计算概率加成
+        // BC: 按生物群系 + 噪声斑块计算概率加成
         val biomeKey = world.getBiome(BlockPos(x, 0, z)).key
         var bonus = 1.0
-        // 简单内置生物群系加成：沙漠/恶地/海洋等
+        var oilBiome = false // surfaceDepositBiomes (3x + 允许 LAKE)
         if (biomeKey.isPresent) {
             val id = biomeKey.get().value.toString()
-            // excessiveBiomes: 沙漠、恶地等 → x30
-            if (id.contains("desert") || id.contains("badlands") || id.contains("mesa")) {
-                bonus *= 30.0
-            }
-            // surfaceDepositBiomes: 海洋、沼泽等 → x3
-            if (id.contains("ocean") || id.contains("swamp") || id.contains("mangrove")) {
-                bonus *= 3.0
+            val isDesert = id.contains("desert") || id.contains("badlands") || id.contains("mesa")
+            val isOcean = id.contains("ocean") || id.contains("swamp") || id.contains("mangrove")
+
+            if (isDesert || isOcean) {
+                // 缓存噪声偏移量（基于世界种子，同种子同偏移，匹配 BC GenLayerBiomeReplacer）
+                if (cachedNoiseSeed != wSeed) {
+                    val randOff = java.util.Random(wSeed)
+                    noiseXOff = randOff.nextInt(OFFSET_RANGE) - OFFSET_RANGE / 2
+                    noiseZOff = randOff.nextInt(OFFSET_RANGE) - OFFSET_RANGE / 2
+                    cachedNoiseSeed = wSeed
+                }
+
+                if (isDesert) {
+                    val noise = SimplexNoise.noise((x + noiseXOff) * OIL_DESERT_SCALE, (z + noiseZOff) * OIL_DESERT_SCALE)
+                    if (noise > OIL_DESERT_THRESHOLD) bonus *= 30.0
+                }
+                if (isOcean) {
+                    val noise = SimplexNoise.noise((x + noiseXOff) * OIL_OCEAN_SCALE, (z + noiseZOff) * OIL_OCEAN_SCALE)
+                    if (noise > OIL_OCEAN_THRESHOLD) bonus *= 30.0
+                }
             }
         }
 
@@ -173,12 +201,14 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
         val type = when {
             rand.nextDouble() < LARGE_PROB * bonus -> GenType.LARGE
             rand.nextDouble() < MEDIUM_PROB * bonus -> GenType.MEDIUM
-            rand.nextDouble() < LAKE_PROB * bonus -> GenType.LAKE
+            oilBiome && rand.nextDouble() < LAKE_PROB * bonus -> GenType.LAKE
             else -> return
         }
 
-        val chunkMin = BlockPos(cx * 16, 0, cz * 16)
-        val chunkMax = chunkMin.add(15, world.height - 1, 15)
+        if (isCenter) {
+            val surfaceY = world.getTopY(Heightmap.Type.WORLD_SURFACE_WG, x, z) - 1
+            BuildCraftAddon.LOGGER.info("OilWellFeature.generateAt() -> {} at chunk [{}, {}], center (x={}, y={}, z={})", type, cx, cz, x, surfaceY, z)
+        }
 
         // BC: 结构参数
         val lakeRadius: Int
@@ -196,37 +226,37 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
         val pattern = createTendrilPattern(rand, lakeRadius, tendrilRadius)
         val startPos = BlockPos(x, 62, z).add(-tendrilRadius, 0, -tendrilRadius)
         val depth = if (rand.nextDouble() < 0.5) 1 else 2
-        totalOilCount += generateTendril(world, pattern, startPos, depth, chunkMin, chunkMax)
+        totalOilCount += generateTendril(world, pattern, startPos, depth, genMin, genMax)
 
         if (type != GenType.LAKE) {
+            // wellY = 距 world.bottomY 的偏移（BC 原版底部为 Y=0，wellY 即绝对 Y）
             val wellY = 20 + rand.nextInt(10)
 
             // BC: 地下油藏球体
             val sphereRadius = if (type == GenType.LARGE) 8 + rand.nextInt(9) else 4 + rand.nextInt(4)
-            totalOilCount += generateSphere(world, BlockPos(x, wellY, z), sphereRadius, chunkMin, chunkMax)
+            totalOilCount += generateSphere(world, BlockPos(x, world.bottomY + wellY, z), sphereRadius, genMin, genMax)
 
             // BC: 喷口
             if (type == GenType.LARGE) {
                 val spoutHeight = if (LARGE_SPOUT_MAX > LARGE_SPOUT_MIN) {
                     LARGE_SPOUT_MIN + rand.nextInt(LARGE_SPOUT_MAX - LARGE_SPOUT_MIN)
                 } else LARGE_SPOUT_MIN
-                totalOilCount += generateSpout(world, BlockPos(x, wellY, z), spoutHeight, 1, chunkMin, chunkMax)
+                totalOilCount += generateSpout(world, BlockPos(x, world.bottomY + wellY, z), spoutHeight, 1, genMin, genMax)
 
-                // BC: 管道到基岩上方（1.18+ 基岩在 bottomY，油管延伸到 bottomY+2）
-                val tubeBottom = world.bottomY + 2
-                totalOilCount += generateTube(world, BlockPos(x, tubeBottom, z), wellY - tubeBottom, 1, chunkMin, chunkMax)
+                // BC: 管道从底部+2 延伸到球体高度（wellY = 距离底部的偏移）
+                val tubeBottom = world.bottomY + 1
+                totalOilCount += generateTube(world, BlockPos(x, tubeBottom, z), wellY, 1, genMin, genMax)
 
-                // BC: Spring 方块在基岩上方（1.18+ 基岩在 bottomY）
-                val springY = world.bottomY + 1
-                val springPos = BlockPos(x, springY, z)
-                if (inChunk(springPos, chunkMin, chunkMax)) {
+                // BC: Spring 方块在底部
+                val springPos = BlockPos(x, world.bottomY, z)
+                if (inChunk(springPos, genMin, genMax)) {
                     placeOilSpring(world, springPos, totalOilCount)
                 }
             } else {
                 val spoutHeight = if (SMALL_SPOUT_MAX > SMALL_SPOUT_MIN) {
                     SMALL_SPOUT_MIN + rand.nextInt(SMALL_SPOUT_MAX - SMALL_SPOUT_MIN)
                 } else SMALL_SPOUT_MIN
-                totalOilCount += generateSpout(world, BlockPos(x, wellY, z), spoutHeight, 0, chunkMin, chunkMax)
+                totalOilCount += generateSpout(world, BlockPos(x, world.bottomY + wellY, z), spoutHeight, 0, genMin, genMax)
             }
         }
     }
@@ -296,19 +326,19 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
                 if (!pattern[px][pz]) continue
                 val wp = startPos.add(px, 0, pz)
                 if (!inChunk(wp, min, max)) continue
-                val sy = world.getTopY(Heightmap.Type.OCEAN_FLOOR_WG, wp.x, wp.z) - 1
-                if (sy <= 0) continue
+                val topY = world.getTopY(Heightmap.Type.WORLD_SURFACE_WG, wp.x, wp.z) - 1
+                if (topY <= 0) continue
 
                 // BC: 清除地表上方空气
                 for (dy in 0..4) {
-                    val ap = BlockPos(wp.x, sy + dy, wp.z)
+                    val ap = BlockPos(wp.x, topY + dy, wp.z)
                     if (inChunk(ap, min, max)) {
                         world.setBlockState(ap, Blocks.AIR.defaultState, Block.NOTIFY_LISTENERS)
                     }
                 }
                 // BC: 放置原油
                 for (dy in 0 until depth) {
-                    val op = BlockPos(wp.x, sy - dy, wp.z)
+                    val op = BlockPos(wp.x, topY - dy, wp.z)
                     if (inChunk(op, min, max) && canReplaceForOil(world, op)) {
                         world.setBlockState(op, ModFluids.CRUDE_OIL_BLOCK.defaultState, Block.NOTIFY_LISTENERS)
                         count++
@@ -343,14 +373,9 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
     // ========== 喷口（BC 原版 1:1） ==========
 
     private fun generateSpout(world: StructureWorldAccess, start: BlockPos, height: Int, radius: Int, min: BlockPos, max: BlockPos): Int {
-        // BC: 找到地表高度
-        var surfaceY = start.y
-        for (y in start.y until world.height) {
-            val pos = BlockPos(start.x, y, start.z)
-            val state = world.getBlockState(pos)
-            if (!state.isAir && !state.fluidState.isEmpty) break
-            if (state.blocksMovement()) { surfaceY = y; break }
-        }
+        // BC: 使用高度图找到地表（从顶向下，与 BC 原版一致）
+        val surfaceY = world.getTopY(Heightmap.Type.WORLD_SURFACE_WG, start.x, start.z) - 1
+        if (surfaceY <= start.y) return 0
 
         var count = 0
         // BC: 从球体到地表的柱体
@@ -402,10 +427,8 @@ class OilWellFeature(codec: Codec<DefaultFeatureConfig>) : Feature<DefaultFeatur
     // ========== 工具方法 ==========
 
     private fun canReplaceForOil(world: StructureWorldAccess, pos: BlockPos): Boolean {
-        val s = world.getBlockState(pos)
-        return s.isAir || s.isOf(Blocks.STONE) || s.isOf(Blocks.DEEPSLATE) ||
-                s.isOf(Blocks.GRAVEL) || s.isOf(Blocks.SAND) || s.isOf(Blocks.DIRT) ||
-                s.isOf(Blocks.GRASS_BLOCK) || s.isOf(Blocks.SANDSTONE)
+        // BC: ReplaceType.ALWAYS — 无条件替换任何方块（含矿石、tuff、granite、流体等）
+        return true
     }
 
     private fun inChunk(pos: BlockPos, min: BlockPos, max: BlockPos): Boolean =

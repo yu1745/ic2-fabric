@@ -92,9 +92,7 @@ class SpringBlock : Block(
     }
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
-        return if (state.get(SPRING_TYPE) == SpringType.OIL) {
-            OilSpringBlockEntity(pos, state)
-        } else null
+        return OilSpringBlockEntity(pos, state)
     }
 
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? = null
