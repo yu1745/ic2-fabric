@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "spring_type=water": { "model": "buildcraft_addon:block/spring" },
+    "spring_type=oil": { "model": "buildcraft_addon:block/spring" }
+  }
+}

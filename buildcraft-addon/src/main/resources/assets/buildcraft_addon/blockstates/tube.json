@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "buildcraft_addon:block/tube" }
+  }
+}

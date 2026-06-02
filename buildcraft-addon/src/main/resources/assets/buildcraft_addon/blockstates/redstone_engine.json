@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=up":    { "model": "buildcraft_addon:block/redstone_engine", "uvlock": true },
+    "facing=down":  { "model": "buildcraft_addon:block/redstone_engine", "x": 180, "uvlock": true },
+    "facing=north": { "model": "buildcraft_addon:block/redstone_engine", "x": 270, "uvlock": true },
+    "facing=south": { "model": "buildcraft_addon:block/redstone_engine", "x": 90, "uvlock": true },
+    "facing=west":  { "model": "buildcraft_addon:block/redstone_engine", "x": 90, "y": 90, "uvlock": true },
+    "facing=east":  { "model": "buildcraft_addon:block/redstone_engine", "x": 90, "y": 270, "uvlock": true }
+  }
+}

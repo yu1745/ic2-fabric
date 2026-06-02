@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": { "item": "buildcraft_addon:spring" },
+    "title": { "text": "黑色黄金" },
+    "description": { "text": "抽干一座大型油井" },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "buildcraft_addon:oil_platform",
+  "criteria": {
+    "drain_well": { "trigger": "minecraft:impossible" }
+  }
+}

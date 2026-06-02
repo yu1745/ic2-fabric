@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "buildcraft_addon",
+  "version": "${version}",
+  "name": "BuildCraft Addon",
+  "description": "BuildCraft machines addon for IC2 Fabric",
+  "authors": ["stardust"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      {
+        "value": "buildcraft_addon.BuildCraftAddon",
+        "adapter": "kotlin"
+      }
+    ],
+    "client": [
+      {
+        "value": "buildcraft_addon.client.BuildCraftAddonClient",
+        "adapter": "kotlin"
+      }
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*",
+    "fabric-language-kotlin": "*",
+    "ic2_120": "*"
+  }
+}

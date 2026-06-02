@@ -1,0 +1,15 @@
+{
+  "display": {
+    "icon": { "item": "buildcraft_addon:pump" },
+    "title": { "text": "石油平台" },
+    "description": { "text": "抽取原油" },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "buildcraft_addon:draining_the_world",
+  "criteria": {
+    "pump_oil": { "trigger": "minecraft:impossible" }
+  }
+}
