@@ -10,6 +10,7 @@ import net.minecraft.fluid.FlowableFluid
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.FluidState
 import net.minecraft.fluid.Fluids
+import net.minecraft.item.BucketItem
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
@@ -125,6 +126,13 @@ object ModFluids {
             FluidBlock(still, blockSettings)
         )
 
+        // 3. 注册桶
+        val bucket = Registry.register(
+            Registries.ITEM, BuildCraftAddon.id("${name}_bucket"),
+            BucketItem(still, Item.Settings().maxCount(1))
+        )
+        BcOilFluid.bucketLookup[name] = bucket
+
         when (name) {
             "crude_oil" -> { CRUDE_OIL_STILL = still; CRUDE_OIL_FLOWING = flowing; CRUDE_OIL_BLOCK = block }
             "oil_residue" -> { OIL_RESIDUE_STILL = still; OIL_RESIDUE_FLOWING = flowing; OIL_RESIDUE_BLOCK = block }
@@ -147,6 +155,7 @@ object ModFluids {
 
         companion object {
             val fluidLookup = mutableMapOf<String, Pair<Fluid, Fluid>>()
+            val bucketLookup = mutableMapOf<String, Item>()
         }
 
         protected abstract val fluidName: String
@@ -155,7 +164,7 @@ object ModFluids {
 
         override fun getStill(): Fluid = ref.first
         override fun getFlowing(): Fluid = ref.second
-        override fun getBucketItem(): Item = Items.AIR
+        override fun getBucketItem(): Item = bucketLookup[fluidName] ?: Items.AIR
         override fun toBlockState(state: FluidState): BlockState {
             val block = Registries.BLOCK.get(Identifier.of(BuildCraftAddon.MOD_ID, fluidName))
             return block.defaultState.with(FluidBlock.LEVEL, getBlockStateLevel(state))
