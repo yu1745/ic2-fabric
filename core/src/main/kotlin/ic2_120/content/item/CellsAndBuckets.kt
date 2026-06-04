@@ -140,6 +140,31 @@ internal fun fluidToFilledCellStack(fluid: Fluid): ItemStack {
     }
 }
 
+/**
+ * 根据流体返回该流体的满桶 ItemStack。
+ * 若该流体没有注册的桶（如原版水/熔岩之外未注册的），返回 null。
+ */
+internal fun fluidToBucketStack(fluid: Fluid): ItemStack? {
+    val bucket = when (fluid) {
+        Fluids.WATER, Fluids.FLOWING_WATER -> Items.WATER_BUCKET
+        Fluids.LAVA, Fluids.FLOWING_LAVA -> Items.LAVA_BUCKET
+        ModFluids.DISTILLED_WATER_STILL, ModFluids.DISTILLED_WATER_FLOWING -> ModFluids.DISTILLED_WATER_BUCKET
+        ModFluids.COOLANT_STILL, ModFluids.COOLANT_FLOWING -> ModFluids.COOLANT_BUCKET
+        ModFluids.HOT_COOLANT_STILL, ModFluids.HOT_COOLANT_FLOWING -> ModFluids.HOT_COOLANT_BUCKET
+        ModFluids.UU_MATTER_STILL, ModFluids.UU_MATTER_FLOWING -> ModFluids.UU_MATTER_BUCKET
+        ModFluids.WEED_EX_STILL, ModFluids.WEED_EX_FLOWING -> ModFluids.WEED_EX_BUCKET
+        ModFluids.PAHOEHOE_LAVA_STILL, ModFluids.PAHOEHOE_LAVA_FLOWING -> ModFluids.PAHOEHOE_LAVA_BUCKET
+        ModFluids.BIOFUEL_STILL, ModFluids.BIOFUEL_FLOWING -> ModFluids.BIOFUEL_BUCKET
+        ModFluids.BIOMASS_STILL, ModFluids.BIOMASS_FLOWING -> ModFluids.BIOMASS_BUCKET
+        ModFluids.CONSTRUCTION_FOAM_STILL, ModFluids.CONSTRUCTION_FOAM_FLOWING -> ModFluids.CONSTRUCTION_FOAM_BUCKET
+        ModFluids.STEAM_STILL, ModFluids.STEAM_FLOWING -> ModFluids.STEAM_BUCKET
+        ModFluids.SUPERHEATED_STEAM_STILL, ModFluids.SUPERHEATED_STEAM_FLOWING -> ModFluids.SUPERHEATED_STEAM_BUCKET
+        ModFluids.COMPRESSED_AIR_STILL, ModFluids.COMPRESSED_AIR_FLOWING -> ModFluids.COMPRESSED_AIR_BUCKET
+        else -> null
+    }
+    return bucket?.takeIf { it !== Items.AIR }?.let { ItemStack(it) }
+}
+
 /** 将桶物品转为满流体单元 ItemStack（供 UseBlockCallback 等使用） */
 internal fun bucketToFilledFluidCell(bucketStack: ItemStack): ItemStack? {
     val fluid = when (bucketStack.item) {

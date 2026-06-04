@@ -53,10 +53,16 @@ class CannerMixingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Canner
             .addFluidStack(recipe.outputFluid, FluidConstants.BUCKET)
             .setFluidRenderer(FluidConstants.BUCKET, false, 12, 47)
 
-        // Keep JEI item lookup connected to the filled cells while rendering the visible slots as tanks.
+        // Keep JEI item lookup connected to the filled cells AND buckets while rendering the visible slots as tanks.
         builder.addInvisibleIngredients(RecipeIngredientRole.INPUT)
-            .addItemStack(recipe.inputFluidCell)
+            .addItemStacks(buildList {
+                recipe.inputFluidCell?.let { add(it) }
+                recipe.inputBucket?.let { add(it) }
+            })
         builder.addInvisibleIngredients(RecipeIngredientRole.OUTPUT)
-            .addItemStack(recipe.outputFluidCell)
+            .addItemStacks(buildList {
+                recipe.outputFluidCell?.let { add(it) }
+                recipe.outputBucket?.let { add(it) }
+            })
     }
 }

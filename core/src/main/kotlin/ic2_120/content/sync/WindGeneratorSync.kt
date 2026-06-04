@@ -30,8 +30,8 @@ class WindGeneratorSync(
         /** 整机总输出上限（EU/t），理论极限约 11.46 */
         const val MAX_EXTRACT = 20L
         const val NBT_ENERGY_STORED = "EnergyStored"
-        /** 最小输出能量（EU），积累到此值后才输出，减少线损 */
-        const val MIN_OUTPUT_ENERGY = 32L  // LV 等级单次输出量
+        /** 最小输出能量（EU），积累到此值后才输出，与 MAX_EXTRACT 相等以保证完整周期清零 */
+        const val MIN_OUTPUT_ENERGY = MAX_EXTRACT
     }
 
     var energy by schema.int("Energy")

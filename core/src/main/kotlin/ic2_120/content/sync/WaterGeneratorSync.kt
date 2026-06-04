@@ -38,8 +38,8 @@ class WaterGeneratorSync(
         const val EU_PER_BURN_TICK = 1L
         /** 周围每个水方块增加的 EU/t（0.01，用百分之一表示） */
         const val EU_PER_TICK_PER_WATER_BLOCK_CENT = 1  // 1/100 = 0.01 EU/t
-        /** 最小输出能量（EU），积累到此值后才输出，减少线损 */
-        const val MIN_OUTPUT_ENERGY = 32L  // LV 等级单次输出量
+        /** 最小输出能量（EU），积累到此值后才输出，与 MAX_EXTRACT 相等以保证完整周期清零 */
+        const val MIN_OUTPUT_ENERGY = MAX_EXTRACT
     }
 
     var energy by schema.int("Energy")
