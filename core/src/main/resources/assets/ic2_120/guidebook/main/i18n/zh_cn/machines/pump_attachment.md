@@ -15,6 +15,12 @@ item_ids:
 
 泵附件是带方向的管道方块，会把其中一面变成被动抽取口。前方贴片必须贴住要抽取的储罐或机器，其他侧面则接回管道网络。
 
+## 方块视图
+
+| 青铜泵附件 | 碳纤维泵附件 |
+|:----------:|:------------:|
+| <BlockImage id="ic2_120:bronze_pump_attachment" scale="2" /> | <BlockImage id="ic2_120:carbon_pump_attachment" scale="2" /> |
+
 ## 对比
 
 | 类型 | 抽取速率 |
@@ -36,5 +42,6 @@ item_ids:
 
 ## 配方
 
-<Recipe id="ic2_120:bronze_pump_attachment" />
-<Recipe id="ic2_120:carbon_pump_attachment" />
+| 青铜泵附件 | 碳纤维泵附件 |
+|:----------:|:------------:|
+| <Recipe id="ic2_120:bronze_pump_attachment" /> | <Recipe id="ic2_120:carbon_pump_attachment" /> |

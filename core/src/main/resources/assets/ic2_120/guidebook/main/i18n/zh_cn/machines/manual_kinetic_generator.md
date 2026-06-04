@@ -24,12 +24,10 @@ item_ids:
 
 ### 摇杆材质
 
-| 材质 | KU/t |
-|------|------|
-| 木制 | 64 |
-| 铁制 | 128 |
-| 钢制 | 256 |
-| 碳纤维 | 512 |
+| 木制 | 铁制 | 钢制 | 碳纤维 |
+|:---:|:---:|:---:|:---:|
+| <ItemImage id="ic2_120:wooden_crank_handle" scale="2" /> | <ItemImage id="ic2_120:iron_crank_handle" scale="2" /> | <ItemImage id="ic2_120:steel_crank_handle" scale="2" /> | <ItemImage id="ic2_120:carbon_crank_handle" scale="2" /> |
+| 64 KU/t | 128 KU/t | 256 KU/t | 512 KU/t |
 
 ## 摇杆机制
 

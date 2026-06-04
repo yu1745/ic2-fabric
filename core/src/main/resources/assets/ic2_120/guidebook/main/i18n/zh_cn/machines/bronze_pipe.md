@@ -17,6 +17,14 @@ item_ids:
 
 青铜管道用于在储罐和机器之间输送流体。它们有四种尺寸，具有不同的吞吐能力。青铜管道会自动连接相邻的储罐、机器和其他管道。
 
+## 方块视图
+
+| 微型 | 小型 |
+|:----:|:----:|
+| <BlockImage id="ic2_120:bronze_pipe_tiny" scale="2" /> | <BlockImage id="ic2_120:bronze_pipe_small" scale="2" /> |
+| 中型 | 大型 |
+| <BlockImage id="ic2_120:bronze_pipe_medium" scale="2" /> | <BlockImage id="ic2_120:bronze_pipe_large" scale="2" /> |
+
 ## 尺寸对比
 
 | 尺寸 | 吞吐量 | 用途 |
@@ -36,7 +44,8 @@ item_ids:
 
 ## 配方
 
-<Recipe id="ic2_120:bronze_pipe_tiny" />
-<Recipe id="ic2_120:bronze_pipe_small" />
-<Recipe id="ic2_120:bronze_pipe_medium" />
-<Recipe id="ic2_120:bronze_pipe_large" />
+| 微型 | 小型 |
+|:----:|:----:|
+| <Recipe id="ic2_120:bronze_pipe_tiny" /> | <Recipe id="ic2_120:bronze_pipe_small" /> |
+| 中型 | 大型 |
+| <Recipe id="ic2_120:bronze_pipe_medium" /> | <Recipe id="ic2_120:bronze_pipe_large" /> |

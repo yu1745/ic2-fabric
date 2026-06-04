@@ -17,6 +17,12 @@ item_ids:
 
 充电座是带顶部充电面的储电设备。它和对应等级的储电箱、CESU、MFE 或 MFSU 拥有相同容量、分面输入输出规则、充电槽和燃料槽，并额外支持给站在上方的玩家自动充电。
 
+## 方块视图
+
+| 储电箱充电座 | CESU 充电座 | MFE 充电座 | MFSU 充电座 |
+|:----------:|:---------:|:---------:|:---------:|
+| <BlockImage id="ic2_120:batbox_chargepad" scale="2" /> | <BlockImage id="ic2_120:cesu_chargepad" scale="2" /> | <BlockImage id="ic2_120:mfe_chargepad" scale="2" /> | <BlockImage id="ic2_120:mfsu_chargepad" scale="2" /> |
+
 ## 等级对比
 
 | 等级 | 名称 | 容量 | 输出 | 电压 |

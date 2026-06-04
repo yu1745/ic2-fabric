@@ -17,6 +17,12 @@ item_ids:
 
 Energy storage blocks buffer EU, charge electric items, and output power from their front face. They are also the safest way to separate generators from machines that draw uneven power.
 
+## Block View
+
+| BatBox | CESU | MFE | MFSU |
+|:-----:|:----:|:---:|:----:|
+| <BlockImage id="ic2_120:batbox" scale="2" /> | <BlockImage id="ic2_120:cesu" scale="2" /> | <BlockImage id="ic2_120:mfe" scale="2" /> | <BlockImage id="ic2_120:mfsu" scale="2" /> |
+
 ## Tier Comparison
 
 | Tier | Name | Capacity | Output | Voltage |
@@ -44,7 +50,8 @@ BatBox, CESU, MFE, and MFSU output their tier rate: 32, 128, 512, and 2,048 EU/t
 
 ## Recipes
 
-<Recipe id="ic2_120:batbox" />
-<Recipe id="ic2_120:cesu" />
-<Recipe id="ic2_120:mfe" />
-<Recipe id="ic2_120:mfsu" />
+| BatBox | CESU |
+|:------:|:----:|
+| <Recipe id="ic2_120:batbox" /> | <Recipe id="ic2_120:cesu" /> |
+| MFE | MFSU |
+| <Recipe id="ic2_120:mfe" /> | <Recipe id="ic2_120:mfsu" /> |

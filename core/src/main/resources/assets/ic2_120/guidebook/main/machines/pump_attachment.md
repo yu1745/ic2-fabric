@@ -15,6 +15,12 @@ item_ids:
 
 Pump Attachments are directional pipe blocks that turn one face into a passive extractor. The front plate must touch the tank or machine to drain; the other sides connect back into the pipe network.
 
+## Block View
+
+| Bronze Pump Attachment | Carbon Pump Attachment |
+|:----------------------:|:----------------------:|
+| <BlockImage id="ic2_120:bronze_pump_attachment" scale="2" /> | <BlockImage id="ic2_120:carbon_pump_attachment" scale="2" /> |
+
 ## Comparison
 
 | Type | Extraction Rate |
@@ -36,5 +42,6 @@ Use Pump Attachments for tank-to-tank logistics, for example pulling Biofuel fro
 
 ## Recipes
 
-<Recipe id="ic2_120:bronze_pump_attachment" />
-<Recipe id="ic2_120:carbon_pump_attachment" />
+| Bronze Pump Attachment | Carbon Pump Attachment |
+|:----------------------:|:----------------------:|
+| <Recipe id="ic2_120:bronze_pump_attachment" /> | <Recipe id="ic2_120:carbon_pump_attachment" /> |

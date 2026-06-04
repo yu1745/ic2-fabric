@@ -52,6 +52,19 @@ HU leaves through the firebox's single heat-transfer face, not through every sid
 
 Common consumers include the **Steam Generator**, **Stirling Generator**, **Blast Furnace**, and **Fermenter**. If the faces are not aligned, the firebox stays inactive and does not consume Biofuel.
 
+## Typical Setup: Fermenter Loop
+
+The most common automatic setup is the Liquid Fuel Firebox sitting face-to-face against a <ItemLink id="ic2_120:fermenter" />, with one fluid upgrade bridging the two:
+
+- Place the Fermenter and the Liquid Fuel Firebox directly next to each other so their fluid ports share a face.
+- Install **either** a **Fluid Ejector Upgrade** in the Fermenter **or** a **Fluid Pulling Upgrade** in the Liquid Fuel Firebox. Both upgrades do the same job in this setup — push the Fermenter's Biofuel output into the firebox. Pick one, never both at once.
+- Keep the Fermenter heated by a separate heat source, since the firebox's own heat face is pointed at the Fermenter and is not available for an external heater.
+- Keep a steady supply of biomass going into the Fermenter, and a place to collect the empty buckets, fertilizer, and filled fertilizer the Fermenter produces.
+
+A single Fermenter produces Biofuel at **10 mB/t**, and a single Liquid Fuel Firebox consumes Biofuel at **10 mB/t**. One Fermenter feeding one firebox is therefore a closed 1:1 loop with no net Biofuel. To get a real net surplus, scale up the Fermenter bank and let the firebox run on a fraction of the production.
+
+**A typical working setup is about ten Fermenters around one Liquid Fuel Firebox.** The firebox burns the 10 mB/t it needs and the other ~90 mB/t of Biofuel becomes the net output. That surplus is usually piped to a bank of <ItemLink id="ic2_120:semifluid_generator" /> machines, since Biofuel is a registered semifluid fuel. A ten-Fermenter bank averages around **5.5 Semifluid Generators** of headroom (Biofuel surplus ÷ each generator's 16 mB/t draw), with the exact count depending on rounding and what the Fermenters are doing that minute.
+
 ## Recipe
 
 <Recipe id="ic2_120:fluid_heat_generator" />

@@ -44,6 +44,10 @@ A Solid Heat Generator supplies **20 HU/t**, producing **10 EU/t** through the S
 
 For fluid or reactor heat loops, place the Liquid Heat Exchanger's heat face against the Stirling Generator's heat face. Fill the exchanger with Heat Conductors so it can output the desired HU/t, then take EU from the Stirling Generator's sides or back.
 
+## See Also
+
+For higher efficiency, run the heat through a Steam Generator → <ItemLink id="ic2_120:steam_kinetic_generator" /> chain. When fed **superheated steam**, the Steam Kinetic Generator converts the same heat into EU at **1.5× the rate** of the Stirling Generator. See the Steam Kinetic Generator page for the chain setup.
+
 ## Recipe
 
 <Recipe id="ic2_120:stirling_generator" />

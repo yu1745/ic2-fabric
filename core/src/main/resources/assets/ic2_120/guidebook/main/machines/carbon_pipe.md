@@ -17,6 +17,14 @@ item_ids:
 
 Carbon pipes are advanced fluid transport pipes with significantly higher throughput than bronze pipes. They are crafted from carbon fiber and are ideal for high-volume fluid systems.
 
+## Block View
+
+| Tiny | Small |
+|:----:|:-----:|
+| <BlockImage id="ic2_120:carbon_pipe_tiny" scale="2" /> | <BlockImage id="ic2_120:carbon_pipe_small" scale="2" /> |
+| Medium | Large |
+| <BlockImage id="ic2_120:carbon_pipe_medium" scale="2" /> | <BlockImage id="ic2_120:carbon_pipe_large" scale="2" /> |
+
 ## Size Comparison
 
 | Size | Throughput | Use Case |
@@ -36,7 +44,8 @@ Carbon pipes are advanced fluid transport pipes with significantly higher throug
 
 ## Recipes
 
-<Recipe id="ic2_120:carbon_pipe_tiny" />
-<Recipe id="ic2_120:carbon_pipe_small" />
-<Recipe id="ic2_120:carbon_pipe_medium" />
-<Recipe id="ic2_120:carbon_pipe_large" />
+| Tiny | Small |
+|:----:|:-----:|
+| <Recipe id="ic2_120:carbon_pipe_tiny" /> | <Recipe id="ic2_120:carbon_pipe_small" /> |
+| Medium | Large |
+| <Recipe id="ic2_120:carbon_pipe_medium" /> | <Recipe id="ic2_120:carbon_pipe_large" /> |

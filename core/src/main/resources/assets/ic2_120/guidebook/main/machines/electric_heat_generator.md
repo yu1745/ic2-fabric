@@ -21,7 +21,7 @@ The conversion rate is **1 EU = 1 HU**. Heat output depends on the installed coi
 - 1 coil: **10 HU/t**
 - 10 coils: **100 HU/t**
 
-The machine has **10 coil slots**, and each slot accepts one <ItemLink id="ic2_120:coil" />. It has an internal **10,000 EU** buffer, accepts up to **2,048 EU/t** from the EU network, and does not output EU.
+The machine has **10 coil slots**, and each slot accepts one `coil`. It has an internal **10,000 EU** buffer, accepts up to **2,048 EU/t** from the EU network, and does not output EU.
 
 Heat is not buffered inside the Electric Heat Generator. Each tick, it consumes only enough EU for the heat it can generate from the installed coils, then immediately tries to send that HU to the connected heat consumer. Any HU that is generated but not accepted by the consumer is lost.
 

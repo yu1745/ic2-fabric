@@ -24,7 +24,7 @@ The environmental mode scans the **3x3x3** cube around the machine, excluding th
 - **Water Container Yield**: 500 EU per bucket, cell, or compatible fluid cell
 - **Environmental Output**: 0.01 EU/t per nearby water block, up to 0.26 EU/t
 - **Energy Storage**: 10,000 EU
-- **Maximum EU Extraction**: 20 EU/t, once at least 32 EU is buffered
+- **Maximum EU Extraction**: 20 EU/t, once at least 20 EU is buffered
 - **Tier**: 1
 
 ## Slots

@@ -35,6 +35,15 @@ For regular steam, the internal condensate counter gains 1 progress per 10 mB co
 
 If outgoing steam has nowhere to go, the machine vents the leftover steam. Venting has a 10% chance each tick to cause a small explosion, so give the output steam a receiver.
 
+## Layout for Superheated Steam
+
+The Steam Kinetic Generator pushes its processed steam out through **all six faces** — it does not favor a particular side. It only ever inserts into fluid containers that touch the machine; there is no internal output buffer beyond the 21,000 mB input tank.
+
+- For **regular steam**, only adjacent <ItemLink id="ic2_120:condenser" /> blocks are accepted as receivers.
+- For **superheated steam**, any adjacent fluid storage — tank, pipe, condenser — is accepted.
+
+To make the most of superheated steam, place a Condenser or a fluid tank **directly against the Steam Kinetic Generator on at least one face**. Steam is pushed to whichever neighboring container has room first, so giving it any touching face is enough to avoid venting (and the 10%-per-tick explosion chance that comes with it). The generator's own `facing` is for KU output only; it does not affect which side steam leaves from.
+
 ## Water Blocking
 
 The distilled-water tank is an output tank. It can be drained from any side as distilled water, and the machine also actively tries to eject it to adjacent fluid storages.
