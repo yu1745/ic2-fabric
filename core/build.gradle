@@ -80,6 +80,15 @@ dependencies {
 	include implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.jackson_version}")
 }
 
+sourceSets {
+	client {
+		java {
+			// Depends on Fabric Guidebook compiler classes; restore after Guidebook is ported to 1.21.1.
+			exclude 'ic2_120/tools/GuidebookValidationTool.java'
+		}
+	}
+}
+
 tasks.register("generateBuildInfo") {
 	inputs.property("ciRunNumber", ciRunNumberProvider)
 	inputs.property("githubRepository", githubRepositoryProvider)
