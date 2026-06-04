@@ -2,6 +2,7 @@ package buildcraft_addon.content.blockentity
 
 import buildcraft_addon.content.block.RFEngineBlock
 import buildcraft_addon.content.screen.RFEngineScreenHandler
+import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
@@ -48,7 +49,7 @@ class RFEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory, Inventory {
+) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory, Inventory, IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         RFEngineBlockEntity::class.type(), pos, state
@@ -60,6 +61,7 @@ class RFEngineBlockEntity(
         const val HEAT_RATE = 0.06
         const val COOLDOWN_RATE = 0.01
         const val MAX_RF = 10000
+        const val MJ_TO_KU = 128
 
         // BC 原版:
         // baseOutputMJ = 4 (MjAPI.MJ * 4)
@@ -134,6 +136,31 @@ class RFEngineBlockEntity(
     var currentStage: PowerStage = PowerStage.BLUE
         private set
 
+    // === 动能输出 ===
+    var pendingOutputKu: Int = 0
+        private set
+
+    override fun canOutputKuTo(side: Direction): Boolean = side == currentDirection
+
+    override fun getStoredKu(side: Direction): Int =
+        if (canOutputKuTo(side)) pendingOutputKu.coerceAtLeast(0) else 0
+
+    override fun getKuCapacity(side: Direction): Int =
+        if (canOutputKuTo(side)) Int.MAX_VALUE else 0
+
+    override fun getMaxExtractableKu(side: Direction): Int =
+        if (canOutputKuTo(side)) pendingOutputKu.coerceAtLeast(0) else 0
+
+    override fun extractKu(side: Direction, amount: Int, simulate: Boolean): Int {
+        if (!canOutputKuTo(side) || amount <= 0) return 0
+        val extracted = minOf(amount, pendingOutputKu.coerceAtLeast(0))
+        if (!simulate && extracted > 0) {
+            pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
+            markDirty()
+        }
+        return extracted
+    }
+
     fun getHeatLevel(): Float = ((heat - MIN_HEAT) / (MAX_HEAT_RF - MIN_HEAT)).toFloat()
 
     private fun computePowerStage(): PowerStage {
@@ -179,6 +206,7 @@ class RFEngineBlockEntity(
         val world = world ?: return
         if (world.isClient) return
         currentDirection = cachedState.get(Properties.FACING)
+        pendingOutputKu = 0
 
         isBurning = false
 
@@ -193,9 +221,8 @@ class RFEngineBlockEntity(
                 heat = MAX_HEAT_RF
             }
 
-            // TODO: 接入 IC2 动能系统后在此处添加能量产出
-            // mjGenerated = rfToConsume * mjPerRf
-            // addPower(mjGenerated)
+            // 接入 IC2 动能系统：基础 4 MJ/t = 512 KU/t
+            pendingOutputKu = 4 * MJ_TO_KU
         }
 
         // 冷却
@@ -263,6 +290,7 @@ class RFEngineBlockEntity(
         nbt.putBoolean("isRedstonePowered", isRedstonePowered)
         nbt.putBoolean("isBurning", isBurning)
         nbt.putInt("powerStage", currentStage.ordinal)
+        nbt.putInt("pendingOutputKu", pendingOutputKu)
         nbt.putInt("currentRF", currentRF)
         val invNbt = NbtCompound()
         for (i in 0..3) {
@@ -286,6 +314,7 @@ class RFEngineBlockEntity(
         isBurning = nbt.getBoolean("isBurning")
         val stageIdx = nbt.getInt("powerStage")
         currentStage = PowerStage.entries.getOrElse(stageIdx) { PowerStage.BLUE }
+        pendingOutputKu = nbt.getInt("pendingOutputKu").coerceAtLeast(0)
         currentRF = nbt.getInt("currentRF")
         if (nbt.contains("upgradeInventory")) {
             val invNbt = nbt.getCompound("upgradeInventory")

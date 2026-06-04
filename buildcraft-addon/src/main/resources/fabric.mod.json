@@ -19,6 +19,12 @@
         "value": "buildcraft_addon.client.BuildCraftAddonClient",
         "adapter": "kotlin"
       }
+    ],
+    "jade": [
+      {
+        "value": "buildcraft_addon.integration.jade.IC2BuildCraftJadePlugin",
+        "adapter": "kotlin"
+      }
     ]
   },
   "depends": {

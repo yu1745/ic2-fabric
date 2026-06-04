@@ -1,6 +1,7 @@
 package buildcraft_addon.content.blockentity
 
 import buildcraft_addon.content.block.CreativeEngineBlock
+import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.minecraft.block.BlockState
@@ -32,7 +33,7 @@ class CreativeEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state) {
+) : BlockEntity(type, pos, state), IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         CreativeEngineBlockEntity::class.type(), pos, state
@@ -41,6 +42,7 @@ class CreativeEngineBlockEntity(
     companion object {
         // BC 原版输出档位（单位：MJ/tick）
         val OUTPUT_LEVELS = listOf(1, 2, 4, 8, 16, 32, 64, 128, 256)
+        const val MJ_TO_KU = 128
     }
 
     // === 输出档位 ===
@@ -63,6 +65,31 @@ class CreativeEngineBlockEntity(
 
     var currentStage: PowerStage = PowerStage.BLACK
         private set
+
+    // === 动能输出 ===
+    var pendingOutputKu: Int = 0
+        private set
+
+    override fun canOutputKuTo(side: Direction): Boolean = side == currentDirection
+
+    override fun getStoredKu(side: Direction): Int =
+        if (canOutputKuTo(side)) pendingOutputKu.coerceAtLeast(0) else 0
+
+    override fun getKuCapacity(side: Direction): Int =
+        if (canOutputKuTo(side)) Int.MAX_VALUE else 0
+
+    override fun getMaxExtractableKu(side: Direction): Int =
+        if (canOutputKuTo(side)) pendingOutputKu.coerceAtLeast(0) else 0
+
+    override fun extractKu(side: Direction, amount: Int, simulate: Boolean): Int {
+        if (!canOutputKuTo(side) || amount <= 0) return 0
+        val extracted = minOf(amount, pendingOutputKu.coerceAtLeast(0))
+        if (!simulate && extracted > 0) {
+            pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
+            markDirty()
+        }
+        return extracted
+    }
 
     // 创造引擎无热量系统，始终返回 BLACK
 
@@ -102,8 +129,7 @@ class CreativeEngineBlockEntity(
         currentDirection = cachedState.get(Properties.FACING)
 
         if (isRedstonePowered) {
-            // TODO: 接入 IC2 动能系统后在此处添加能量产出
-            // addPower(getCurrentOutputMJ())
+            pendingOutputKu = getCurrentOutputMJ() * MJ_TO_KU
         }
 
         tickPiston()
@@ -144,6 +170,7 @@ class CreativeEngineBlockEntity(
         nbt.putInt("direction", currentDirection.ordinal)
         nbt.putBoolean("isRedstonePowered", isRedstonePowered)
         nbt.putInt("outputIndex", outputIndex)
+        nbt.putInt("pendingOutputKu", pendingOutputKu)
     }
 
     override fun readNbt(nbt: NbtCompound) {
@@ -154,5 +181,6 @@ class CreativeEngineBlockEntity(
         currentDirection = Direction.entries.getOrElse(dirIdx) { Direction.UP }
         isRedstonePowered = nbt.getBoolean("isRedstonePowered")
         outputIndex = nbt.getInt("outputIndex")
+        pendingOutputKu = nbt.getInt("pendingOutputKu").coerceAtLeast(0)
     }
 }

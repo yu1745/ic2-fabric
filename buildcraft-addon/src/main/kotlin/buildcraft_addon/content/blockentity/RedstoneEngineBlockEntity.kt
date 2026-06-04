@@ -1,6 +1,7 @@
 package buildcraft_addon.content.blockentity
 
 import buildcraft_addon.content.block.RedstoneEngineBlock
+import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.minecraft.block.BlockState
@@ -20,7 +21,7 @@ class RedstoneEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state) {
+) : BlockEntity(type, pos, state), IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         RedstoneEngineBlockEntity::class.type(), pos, state
@@ -29,6 +30,7 @@ class RedstoneEngineBlockEntity(
     companion object {
         const val MIN_HEAT = 20.0
         const val MAX_HEAT = 250.0
+        const val MJ_TO_KU = 128
 
         fun pistonSpeed(stage: PowerStage): Float {
             return when (stage) {
@@ -48,9 +50,32 @@ class RedstoneEngineBlockEntity(
     var currentDirection: Direction = Direction.UP
     var isRedstonePowered: Boolean = false
     var isPumping: Boolean = false
+    var pendingOutputKu: Int = 0
 
     var currentStage: PowerStage = PowerStage.BLUE
         private set
+
+    // === IKineticMachinePort ===
+    override fun canOutputKuTo(side: Direction): Boolean = side == currentDirection
+
+    override fun getStoredKu(side: Direction): Int =
+        if (canOutputKuTo(side)) pendingOutputKu.coerceAtLeast(0) else 0
+
+    override fun getKuCapacity(side: Direction): Int =
+        if (canOutputKuTo(side)) Int.MAX_VALUE else 0
+
+    override fun getMaxExtractableKu(side: Direction): Int =
+        if (canOutputKuTo(side)) pendingOutputKu.coerceAtLeast(0) else 0
+
+    override fun extractKu(side: Direction, amount: Int, simulate: Boolean): Int {
+        if (!canOutputKuTo(side) || amount <= 0) return 0
+        val extracted = minOf(amount, pendingOutputKu.coerceAtLeast(0))
+        if (!simulate && extracted > 0) {
+            pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
+            markDirty()
+        }
+        return extracted
+    }
 
     fun getHeatLevel(): Float {
         return ((heat - MIN_HEAT) / (MAX_HEAT - MIN_HEAT)).toFloat()
@@ -102,6 +127,8 @@ class RedstoneEngineBlockEntity(
         if (world.isClient) return
         currentDirection = cachedState.get(Properties.FACING)
 
+        pendingOutputKu = 0
+
         if (isRedstonePowered) {
             if (world.time % 16L == 0L && getHeatLevel() < 0.8f) {
                 heat += 4.0
@@ -114,6 +141,9 @@ class RedstoneEngineBlockEntity(
         }
 
         currentStage = computePowerStage()
+        if (isRedstonePowered && currentStage == PowerStage.RED) {
+            pendingOutputKu = MJ_TO_KU
+        }
         tickPiston()
         markDirty()
     }
@@ -165,6 +195,7 @@ class RedstoneEngineBlockEntity(
         nbt.putInt("direction", currentDirection.ordinal)
         nbt.putBoolean("isPumping", isPumping)
         nbt.putInt("powerStage", currentStage.ordinal)
+        nbt.putInt("pendingOutputKu", pendingOutputKu)
     }
 
     override fun readNbt(nbt: NbtCompound) {
@@ -177,5 +208,6 @@ class RedstoneEngineBlockEntity(
         isPumping = nbt.getBoolean("isPumping")
         val stageIdx = nbt.getInt("powerStage")
         currentStage = PowerStage.entries.getOrElse(stageIdx) { PowerStage.BLUE }
+        pendingOutputKu = nbt.getInt("pendingOutputKu").coerceAtLeast(0)
     }
 }

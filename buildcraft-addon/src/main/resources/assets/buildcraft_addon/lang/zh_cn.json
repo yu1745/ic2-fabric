@@ -36,5 +36,21 @@
   "item.buildcraft_addon.light_fuel_bucket": "轻燃油桶",
   "item.buildcraft_addon.mixed_light_fuel_bucket": "混合轻燃油桶",
   "item.buildcraft_addon.gaseous_fuel_bucket": "气态燃油桶",
-  "itemGroup.buildcraft_addon.buildcraft_addon": "BuildCraft 附属"
+  "itemGroup.buildcraft_addon.buildcraft_addon": "BuildCraft 附属",
+  "buildcraft_addon.jade.engine_heat": "热量: %s°C",
+  "buildcraft_addon.jade.engine_output_ku": "输出: %s KU/t",
+  "buildcraft_addon.jade.engine_idle": "待机中",
+  "buildcraft_addon.jade.engine_fuel_time": "燃料: %s / %s 秒",
+  "buildcraft_addon.jade.engine_fuel_power": "燃料功率: %s MJ/t (%s KU/t)",
+  "buildcraft_addon.jade.engine_fuel_tank": "燃料罐: %s / 10000 mB",
+  "buildcraft_addon.jade.engine_coolant": "冷却液: %s mB",
+  "buildcraft_addon.jade.engine_no_coolant": "冷却液: 空!",
+  "buildcraft_addon.jade.engine_rf": "RF: %s / 10000",
+  "buildcraft_addon.jade.creative_output": "档位 %s/9 — %s MJ/t (%s KU/t)",
+  "buildcraft_addon.jade.creative_standby": "档位 %s/9 — 待机（需红石信号）",
+  "buildcraft_addon.jade.pump_active": "运行中",
+  "buildcraft_addon.jade.pump_blocked": "阻塞（储罐已满）",
+  "buildcraft_addon.jade.pump_idle": "待机中（需动能输入 128 KU/t）",
+  "buildcraft_addon.jade.pump_fluid": "储罐: %s %s / %s 桶",
+  "buildcraft_addon.jade.pump_empty": "储罐: 空"
 }
