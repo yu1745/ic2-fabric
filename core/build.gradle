@@ -135,3 +135,36 @@ tasks.register('runCropPreview', Exec) {
 	workingDir = rootProject.projectDir
 	commandLine 'java', '-Dfile.encoding=UTF-8', 'core/tools/JeiCropPreview.java'
 }
+
+tasks.register('validateGuidebook', JavaExec) {
+	description = '暂时禁用：Fabric Guidebook 1.21.1 适配完成后再启用校验'
+	group = 'verification'
+	enabled = false
+
+	def runDir = layout.buildDirectory.dir('guidebookValidation')
+	def assetRoots = rootProject.subprojects
+			.collect { it.file('src/main/resources/assets') }
+			.findAll { it.exists() }
+	inputs.files(assetRoots)
+
+	dependsOn(tasks.named('compileClientJava'))
+	workingDir = runDir.get().asFile
+	classpath = sourceSets.client.runtimeClasspath
+	mainClass = 'ic2_120.tools.GuidebookValidationTool'
+	args rootProject.projectDir.absolutePath
+
+	doFirst {
+		runDir.get().asFile.mkdirs()
+	}
+}
+
+tasks.register('printGuidebookDevCommand') {
+	description = '打印 Fabric Guidebook 的实时预览 watch 命令'
+	group = 'help'
+
+	doLast {
+		def guideRoot = file('src/main/resources/assets/ic2_120/guidebook/main').absolutePath.replace('\\', '/')
+		println '/fabricguidebook dev watch ic2_120:main ' + guideRoot
+		println '/fabricguidebook dev stop ic2_120:main'
+	}
+}

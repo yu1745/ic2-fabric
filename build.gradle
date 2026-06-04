@@ -53,6 +53,7 @@ subprojects {
 		implementation("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}")
 		implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${project.jackson_version}")
 		// Fabric Guidebook is kept out of 1.21.1 runtime until the addon is ported.
+		modCompileOnly("maven.modrinth:jade:${project.jade_version}")
 	}
 
 	tasks.withType(JavaCompile).configureEach {
