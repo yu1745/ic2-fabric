@@ -95,6 +95,8 @@
 
 若只改文档，可跳过编译；若改 Kotlin/资源/注册链路，不可跳过。
 - **涉及配方（`@RecipeProvider` / `generateRecipes`）修改时**，必须先执行 `./gradlew :core:runDatagen` 重新生成 data json，再 `./gradlew build`。否则配方变更不会生效。
+- Guidebook 文档改动后，优先执行 `./gradlew :core:validateGuidebook`，它会用 Fabric Guidebook 的 `PageCompiler.parse` 校验页面与链接。
+- 需要实时预览 Guidebook 时，先执行 `./gradlew :core:printGuidebookDevCommand`，按输出的 `/fabricguidebook dev watch ...` 命令在游戏内开启热重载。
 
 - 若遇到 Gradle lock（如 `gradle-*.zip.lck`）导致构建或 datagen 失败，直接删除对应 `.lck` 文件后重试：
   - Linux: `rm -f ~/.gradle/wrapper/dists/gradle-*.zip.lck`
