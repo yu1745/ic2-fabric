@@ -2,6 +2,7 @@ package buildcraft_addon.content.blockentity
 
 import buildcraft_addon.content.block.StoneEngineBlock
 import buildcraft_addon.content.screen.StoneEngineScreenHandler
+import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import io.netty.buffer.Unpooled
@@ -50,7 +51,7 @@ class StoneEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf> {
+) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory<PacketByteBuf>, IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         StoneEngineBlockEntity::class.type(), pos, state
@@ -61,6 +62,7 @@ class StoneEngineBlockEntity(
         const val MAX_HEAT = 250.0
         const val IDEAL_HEAT = 100.0
         const val SLOT_FUEL = 0
+        const val MJ_TO_KU = 128
     }
 
     // === Screen 同步 ===
@@ -115,6 +117,31 @@ class StoneEngineBlockEntity(
 
     var currentStage: PowerStage = PowerStage.BLUE
         private set
+
+    // === 动能输出 ===
+    var pendingOutputKu: Int = 0
+        private set
+
+    override fun canOutputKuTo(side: Direction): Boolean = side == currentDirection
+
+    override fun getStoredKu(side: Direction): Int =
+        if (canOutputKuTo(side)) pendingOutputKu.coerceAtLeast(0) else 0
+
+    override fun getKuCapacity(side: Direction): Int =
+        if (canOutputKuTo(side)) Int.MAX_VALUE else 0
+
+    override fun getMaxExtractableKu(side: Direction): Int =
+        if (canOutputKuTo(side)) pendingOutputKu.coerceAtLeast(0) else 0
+
+    override fun extractKu(side: Direction, amount: Int, simulate: Boolean): Int {
+        if (!canOutputKuTo(side) || amount <= 0) return 0
+        val extracted = minOf(amount, pendingOutputKu.coerceAtLeast(0))
+        if (!simulate && extracted > 0) {
+            pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
+            markDirty()
+        }
+        return extracted
+    }
 
     fun getHeatLevel(): Float = ((heat - MIN_HEAT) / (MAX_HEAT - MIN_HEAT)).toFloat()
 
@@ -206,6 +233,7 @@ class StoneEngineBlockEntity(
         val world = world ?: return
         if (world.isClient) return
         currentDirection = cachedState.get(Properties.FACING)
+        pendingOutputKu = 0
 
         // 燃料消耗
         if (isRedstonePowered) {
@@ -224,8 +252,8 @@ class StoneEngineBlockEntity(
             } else if (heat < MAX_HEAT * 0.85) {
                 heat += 0.05
             }
-            // TODO: 接入 IC2 动能系统后在此处添加能量产出
-            // addPower(getCurrentOutput())
+            // 接入 IC2 动能系统：每 tick 产出 1 MJ = 128 KU
+            pendingOutputKu = MJ_TO_KU
         } else {
             if (heat > MIN_HEAT) {
                 heat -= 0.1
@@ -300,6 +328,7 @@ class StoneEngineBlockEntity(
         nbt.putInt("totalBurnTime", totalBurnTime)
         nbt.putBoolean("isRedstonePowered", isRedstonePowered)
         nbt.putInt("powerStage", currentStage.ordinal)
+        nbt.putInt("pendingOutputKu", pendingOutputKu)
         val fuelStack = inventory[SLOT_FUEL]
         if (!fuelStack.isEmpty) {
             nbt.put("fuel", fuelStack.encode(lookup))
@@ -318,6 +347,7 @@ class StoneEngineBlockEntity(
         isRedstonePowered = nbt.getBoolean("isRedstonePowered")
         val stageIdx = nbt.getInt("powerStage")
         currentStage = PowerStage.entries.getOrElse(stageIdx) { PowerStage.BLUE }
+        pendingOutputKu = nbt.getInt("pendingOutputKu").coerceAtLeast(0)
         if (nbt.contains("fuel")) {
             inventory[SLOT_FUEL] = ItemStack.fromNbt(lookup, nbt.getCompound("fuel")).orElse(ItemStack.EMPTY)
         }

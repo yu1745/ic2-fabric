@@ -65,9 +65,11 @@ class PumpBlock : BlockWithEntity(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : BlockEntity> getTicker(world: World, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? {
-        return if (!world.isClient) {
+        return if (world.isClient) {
+            BlockEntityTicker { _, _, _, be -> (be as PumpBlockEntity).clientTick(1) }
+        } else {
             BlockEntityTicker { _, _, _, be -> (be as PumpBlockEntity).serverTick() }
-        } else null
+        }
     }
 
     override fun getPickStack(world: WorldView, pos: BlockPos, state: BlockState): ItemStack {

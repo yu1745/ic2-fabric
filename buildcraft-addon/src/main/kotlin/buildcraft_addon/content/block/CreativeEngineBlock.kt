@@ -58,7 +58,11 @@ class CreativeEngineBlock : BlockWithEntity(
     ): ActionResult {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? CreativeEngineBlockEntity ?: return ActionResult.PASS
-            be.rotateToNextFacing(state.get(Properties.FACING))
+            if (player.isSneaking) {
+                be.cycleOutput()
+            } else {
+                be.rotateToNextFacing(state.get(Properties.FACING))
+            }
         }
         return ActionResult.SUCCESS
     }

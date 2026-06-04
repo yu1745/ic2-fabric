@@ -2,6 +2,7 @@ package buildcraft_addon.content.blockentity
 
 import buildcraft_addon.content.block.IronEngineBlock
 import buildcraft_addon.content.screen.IronEngineScreenHandler
+import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import io.netty.buffer.Unpooled
@@ -46,7 +47,7 @@ class IronEngineBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory<PacketByteBuf> {
+) : BlockEntity(type, pos, state), ExtendedScreenHandlerFactory<PacketByteBuf>, IKineticMachinePort {
 
     constructor(pos: BlockPos, state: BlockState) : this(
         IronEngineBlockEntity::class.type(), pos, state
@@ -61,6 +62,7 @@ class IronEngineBlockEntity(
         const val MAX_FLUID = 10000
         const val HEAT_PER_MJ = 0.0023
         const val PENALTY_COOLING_TICKS = 10
+        const val MJ_TO_KU = 128
 
         // BC 原版燃料表（BCEnergyRecipes.java）
         // fuelPower[fluid] = powerPerCycle (MJ/tick), totalBurningTime (ticks/1000mB)
@@ -105,6 +107,31 @@ class IronEngineBlockEntity(
 
     var currentStage: PowerStage = PowerStage.BLUE
         private set
+
+    // === 动能输出 ===
+    var pendingOutputKu: Int = 0
+        private set
+
+    override fun canOutputKuTo(side: Direction): Boolean = side == currentDirection
+
+    override fun getStoredKu(side: Direction): Int =
+        if (canOutputKuTo(side)) pendingOutputKu.coerceAtLeast(0) else 0
+
+    override fun getKuCapacity(side: Direction): Int =
+        if (canOutputKuTo(side)) Int.MAX_VALUE else 0
+
+    override fun getMaxExtractableKu(side: Direction): Int =
+        if (canOutputKuTo(side)) pendingOutputKu.coerceAtLeast(0) else 0
+
+    override fun extractKu(side: Direction, amount: Int, simulate: Boolean): Int {
+        if (!canOutputKuTo(side) || amount <= 0) return 0
+        val extracted = minOf(amount, pendingOutputKu.coerceAtLeast(0))
+        if (!simulate && extracted > 0) {
+            pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
+            markDirty()
+        }
+        return extracted
+    }
 
     fun getHeatLevel(): Float = ((heat - MIN_HEAT) / (MAX_HEAT - MIN_HEAT)).toFloat()
 
@@ -233,6 +260,7 @@ class IronEngineBlockEntity(
         val world = world ?: return
         if (world.isClient) return
         currentDirection = cachedState.get(Properties.FACING)
+        pendingOutputKu = 0
 
         isBurning = false
 
@@ -254,8 +282,8 @@ class IronEngineBlockEntity(
                 // 残留物产出（仅脏燃料）
                 // TODO: 按燃料类型产出残留物
 
-                // TODO: 接入 IC2 动能系统后在此处添加能量产出
-                // addPower(currentPowerPerCycle)
+                // 接入 IC2 动能系统：按燃料 MJ 输出 KU
+                pendingOutputKu = (currentPowerPerCycle * MJ_TO_KU).toInt()
             }
         }
 
@@ -313,6 +341,7 @@ class IronEngineBlockEntity(
         nbt.putBoolean("isRedstonePowered", isRedstonePowered)
         nbt.putBoolean("isBurning", isBurning)
         nbt.putInt("powerStage", currentStage.ordinal)
+        nbt.putInt("pendingOutputKu", pendingOutputKu)
         nbt.putInt("fuelAmount", fuelAmount)
         nbt.putString("fuelType", fuelType)
         nbt.putInt("coolantAmount", coolantAmount)
@@ -334,6 +363,7 @@ class IronEngineBlockEntity(
         isBurning = nbt.getBoolean("isBurning")
         val stageIdx = nbt.getInt("powerStage")
         currentStage = PowerStage.entries.getOrElse(stageIdx) { PowerStage.BLUE }
+        pendingOutputKu = nbt.getInt("pendingOutputKu").coerceAtLeast(0)
         fuelAmount = nbt.getInt("fuelAmount")
         fuelType = nbt.getString("fuelType")
         coolantAmount = nbt.getInt("coolantAmount")

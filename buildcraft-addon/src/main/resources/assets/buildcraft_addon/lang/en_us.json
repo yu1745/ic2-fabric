@@ -36,5 +36,21 @@
   "item.buildcraft_addon.light_fuel_bucket": "Light Fuel Bucket",
   "item.buildcraft_addon.mixed_light_fuel_bucket": "Mixed Light Fuel Bucket",
   "item.buildcraft_addon.gaseous_fuel_bucket": "Gaseous Fuel Bucket",
-  "itemGroup.buildcraft_addon.buildcraft_addon": "BuildCraft Addon"
+  "itemGroup.buildcraft_addon.buildcraft_addon": "BuildCraft Addon",
+  "buildcraft_addon.jade.engine_heat": "Heat: %s°C",
+  "buildcraft_addon.jade.engine_output_ku": "Output: %s KU/t",
+  "buildcraft_addon.jade.engine_idle": "Idle",
+  "buildcraft_addon.jade.engine_fuel_time": "Fuel: %s / %s sec",
+  "buildcraft_addon.jade.engine_fuel_power": "Fuel Power: %s MJ/t (%s KU/t)",
+  "buildcraft_addon.jade.engine_fuel_tank": "Fuel Tank: %s / 10000 mB",
+  "buildcraft_addon.jade.engine_coolant": "Coolant: %s mB",
+  "buildcraft_addon.jade.engine_no_coolant": "Coolant: Empty!",
+  "buildcraft_addon.jade.engine_rf": "RF: %s / 10000",
+  "buildcraft_addon.jade.creative_output": "Level %s/9 — %s MJ/t (%s KU/t)",
+  "buildcraft_addon.jade.creative_standby": "Level %s/9 — Standby (needs redstone)",
+  "buildcraft_addon.jade.pump_active": "Running",
+  "buildcraft_addon.jade.pump_blocked": "Blocked (tank full)",
+  "buildcraft_addon.jade.pump_idle": "Idle (needs 128 KU/t)",
+  "buildcraft_addon.jade.pump_fluid": "Tank: %s %s / %s buckets",
+  "buildcraft_addon.jade.pump_empty": "Tank: Empty"
 }
