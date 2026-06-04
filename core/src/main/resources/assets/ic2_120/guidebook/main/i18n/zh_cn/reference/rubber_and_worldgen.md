@@ -23,8 +23,6 @@ item_ids:
   - ic2_120:rubber_sign
   - ic2_120:resin
   - ic2_120:rubber
-  - ic2_120:treetap
-  - ic2_120:electric_treetap
   - ic2_120:tin_ore
   - ic2_120:deepslate_tin_ore
   - ic2_120:lead_ore

@@ -4,20 +4,7 @@ navigation:
   parent: index.md
   position: 214
   icon: ic2_120:re_battery
-item_ids:
-  - ic2_120:re_battery
-  - ic2_120:advanced_re_battery
-  - ic2_120:energy_crystal
-  - ic2_120:lapotron_crystal
-  - ic2_120:single_use_battery
-  - ic2_120:re_battery_wireless
-  - ic2_120:advanced_re_battery_wireless
-  - ic2_120:energy_crystal_wireless
-  - ic2_120:lapotron_crystal_wireless
-  - ic2_120:batpack
-  - ic2_120:advanced_batpack
-  - ic2_120:energy_pack
-  - ic2_120:lappack
+item_ids: []
 ---
 
 # Batteries and Mobile Power

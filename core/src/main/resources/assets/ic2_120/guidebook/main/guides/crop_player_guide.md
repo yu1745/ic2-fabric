@@ -10,7 +10,6 @@ item_ids:
   - ic2_120:cropnalyzer
   - ic2_120:fertilizer
   - ic2_120:weed_ex
-  - ic2_120:weeding_spade
   - minecraft:wheat_seeds
   - minecraft:beetroot_seeds
   - minecraft:melon_seeds
