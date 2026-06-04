@@ -25,13 +25,13 @@ class SolarGeneratorSync(
     companion object {
         /** 电力缓存容量（EU） */
         const val ENERGY_CAPACITY = 400L
-        /** 整机总输出（EU/t），1 EU/t */
-        const val MAX_EXTRACT = 1L
+        /** 整机总输出（EU/t），攒 10 EU 一次发 10 EU，节奏干净 */
+        const val MAX_EXTRACT = 10L
         const val NBT_ENERGY_STORED = "EnergyStored"
         /** 每 tick 产生 EU */
         const val EU_PER_TICK = 1L
-        /** 最小输出能量（EU），积累到此值后才输出，减少线损 */
-        const val MIN_OUTPUT_ENERGY = 32L  // LV 等级单次输出量
+        /** 最小输出能量（EU），积累到此值后才输出，与 MAX_EXTRACT 相等以保证完整周期清零 */
+        const val MIN_OUTPUT_ENERGY = MAX_EXTRACT
     }
 
     var energy by schema.int("Energy")

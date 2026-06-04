@@ -392,19 +392,16 @@ class Ic2JeiPlugin : IModPlugin {
             }
         registration.addRecipes(Ic2JeiRecipeTypes.SOLID_CANNER, solidCannerRecipes)
 
-        val fluidCell = Registries.ITEM.get(Identifier("ic2_120", "fluid_cell"))
         val cannerMixingRecipes = CannerMixingRecipes.allRecipes()
             .map { recipe ->
                 CannerMixingJeiRecipe(
                     inputFluid = recipe.inputFluid,
                     inputSolid = recipe.inputSolid.toItemStacks(recipe.inputSolidCount),
                     outputFluid = recipe.outputFluid,
-                    inputFluidCell = ItemStack(fluidCell).apply {
-                        setFluidCellVariant(FluidVariant.of(recipe.inputFluid))
-                    },
-                    outputFluidCell = ItemStack(fluidCell).apply {
-                        setFluidCellVariant(FluidVariant.of(recipe.outputFluid))
-                    }
+                    inputFluidCell = ic2_120.content.item.fluidToFilledCellStack(recipe.inputFluid),
+                    outputFluidCell = ic2_120.content.item.fluidToFilledCellStack(recipe.outputFluid),
+                    inputBucket = ic2_120.content.item.fluidToBucketStack(recipe.inputFluid),
+                    outputBucket = ic2_120.content.item.fluidToBucketStack(recipe.outputFluid)
                 )
             }
         registration.addRecipes(Ic2JeiRecipeTypes.CANNER_MIXING, cannerMixingRecipes)
