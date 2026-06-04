@@ -22,7 +22,7 @@ item_ids:
 | 储电箱 | CESU | MFE | MFSU |
 |:----:|:----:|:---:|:----:|
 | <BlockImage id="ic2_120:batbox" scale="2" /> | <BlockImage id="ic2_120:cesu" scale="2" /> | <BlockImage id="ic2_120:mfe" scale="2" /> | <BlockImage id="ic2_120:mfsu" scale="2" /> |
-
+ 
 ## 等级对比
 
 | 等级 | 名称 | 容量 | 输出 | 电压 |

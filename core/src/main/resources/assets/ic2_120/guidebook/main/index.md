@@ -169,3 +169,51 @@ This guide is provided by IC2 and rendered by Fabric Guidebook.
 
 - [Advanced Solar Addon](machines/advanced_solar.md)
 - [Storage Box](machines/storage_box.md)
+
+## Equipment
+
+### Armor Sets
+
+- [Bronze Armor](items/bronze_armor.md)
+- [Hazmat Suit](items/hazmat_armor.md)
+- [Nano Armor](items/nano_armor.md)
+- [Quantum Armor](items/quantum_armor.md)
+
+### Head Equipment
+
+- [Solar Helmet](items/solar_helmet.md)
+- [Night Vision Goggles](items/night_vision_goggles.md)
+
+### Chest Equipment
+
+- [Composite (Alloy) Chestplate](items/alloy_chestplate.md)
+- [BatPack Family](items/batpack.md)
+- [Jetpack](items/jetpack.md)
+- [CF Pack](items/cf_pack.md)
+
+### Foot Equipment
+
+- [Rubber Boots](items/rubber_boots.md)
+
+### Batteries and Power
+
+- [Re-Battery Family](items/re_battery.md)
+- [Energy Crystal and Lapotron Crystal](items/energy_crystal.md)
+- [Mining Laser](items/mining_laser.md)
+
+### Electric Tools
+
+- [Drills](items/drills.md) — Mining Drill / Diamond Drill / Iridium Drill
+- [Chainsaw](items/chainsaw.md)
+- [Nano Saber](items/nano_saber.md)
+- [Wrenches](items/wrenches.md) — Wrench / Electric Wrench
+- [Treetaps](items/treetaps.md) — Treetap / Electric Treetap
+- [Scanners](items/scanners.md) — OD Scanner / OV Scanner
+
+### Boats
+
+- [Boats](items/boats.md) — Rubber / Broken Rubber / Carbon / Electric Boat
+
+### Hand Tools
+
+- [Bronze Tools](items/bronze_tools.md) — Pickaxe / Axe / Shovel / Hoe / Sword / Weeding Spade

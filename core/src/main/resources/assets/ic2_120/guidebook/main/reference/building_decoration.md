@@ -14,7 +14,6 @@ item_ids:
   - ic2_120:cf_powder
   - ic2_120:pellet
   - ic2_120:foam_sprayer
-  - ic2_120:cf_pack
   - ic2_120:wooden_scaffold
   - ic2_120:reinforced_wooden_scaffold
   - ic2_120:iron_scaffold

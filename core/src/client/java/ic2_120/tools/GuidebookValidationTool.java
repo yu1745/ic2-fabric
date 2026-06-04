@@ -21,6 +21,8 @@ public final class GuidebookValidationTool {
     private static final Pattern MARKDOWN_LINK = Pattern.compile("\\[[^\\]]+\\]\\(([^)]+)\\)");
     private static final Pattern BLOCKQUOTE_LINE = Pattern.compile("(?m)^>");
     private static final Pattern JSON_STRING_PROPERTY = Pattern.compile("\"%s\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern BLOCK_IMAGE_TAG = Pattern.compile("<BlockImage\\s+id=\"([^\"]+)\"");
+    private static final Pattern ITEM_IMAGE_TAG = Pattern.compile("<ItemImage\\s+id=\"([^\"]+)\"");
 
     private GuidebookValidationTool() {
     }
@@ -127,6 +129,7 @@ public final class GuidebookValidationTool {
             validateWithGuidebookParser(definition.root(), definition.namespace(), page, itemIdOwners, errors);
             validateRelativeLinks(definition.root(), page, errors);
             validateUnsupportedMarkdown(definition.root(), page, errors);
+            validateItemsPageImageTag(definition.root(), page, errors);
         }
 
         return pages.size();
@@ -237,6 +240,39 @@ public final class GuidebookValidationTool {
             }
             errors.add(rel + ":" + line + ": blockquote syntax is not supported by Fabric Guidebook");
         }
+    }
+
+    /**
+     * Pages under {@code items/} (or {@code i18n/<lang>/items/}) are the equipment reference pages.
+     * They must render items as {@code <ItemImage>}; using {@code <BlockImage>} for an item id
+     * will silently fail at runtime in the Fabric Guidebook viewer. We catch the common mistake
+     * here so the error is reported at build time, where it is easy to fix.
+     */
+    private static void validateItemsPageImageTag(Path root, Path page, List<String> errors) throws IOException {
+        String rel = slash(root.relativize(page));
+        // match both the English tree and every i18n locale tree
+        if (!rel.contains("/items/") && !rel.startsWith("items/")) {
+            return;
+        }
+
+        String content = Files.readString(page, StandardCharsets.UTF_8);
+        Matcher blockImage = BLOCK_IMAGE_TAG.matcher(content);
+        while (blockImage.find()) {
+            int line = lineOf(content, blockImage.start());
+            errors.add(rel + ":" + line
+                    + ": <BlockImage> used in items/ page; use <ItemImage> for item ids (id="
+                    + blockImage.group(1) + ")");
+        }
+    }
+
+    private static int lineOf(String content, int offset) {
+        int line = 1;
+        for (int i = 0; i < offset; i++) {
+            if (content.charAt(i) == '\n') {
+                line++;
+            }
+        }
+        return line;
     }
 
     private static String pageIdPath(String rel) {
