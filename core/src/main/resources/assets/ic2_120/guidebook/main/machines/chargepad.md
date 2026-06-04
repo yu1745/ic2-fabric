@@ -17,6 +17,12 @@ item_ids:
 
 Chargepads are energy storage blocks with a charging surface. They keep the same capacity, side rules, charge slot, and fuel slot as the matching BatBox, CESU, MFE, or MFSU, then add automatic charging for players standing on top.
 
+## Block View
+
+| BatBox Chargepad | CESU Chargepad | MFE Chargepad | MFSU Chargepad |
+|:---------------:|:-------------:|:-------------:|:-------------:|
+| <BlockImage id="ic2_120:batbox_chargepad" scale="2" /> | <BlockImage id="ic2_120:cesu_chargepad" scale="2" /> | <BlockImage id="ic2_120:mfe_chargepad" scale="2" /> | <BlockImage id="ic2_120:mfsu_chargepad" scale="2" /> |
+
 ## Tier Comparison
 
 | Tier | Name | Capacity | Output | Voltage |

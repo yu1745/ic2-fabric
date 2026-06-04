@@ -40,7 +40,7 @@ Place the Wind Mill high up and keep the area around it clear. Obstacles are cou
 | Rain | 1.2x |
 | Thunderstorm | 1.5x |
 
-The Wind Mill stores generated EU in its internal buffer first. It only allows external extraction when the buffer has at least 32 EU, which helps avoid tiny trickle packets. Energy can leave from any side except the front face.
+The Wind Mill stores generated EU in its internal buffer first. It only allows external extraction when the buffer has at least 20 EU, which helps avoid tiny trickle packets. Energy can leave from any side except the front face.
 
 ## Slots
 

@@ -6,6 +6,7 @@ navigation:
   icon: ic2_120:miner
 item_ids:
   - ic2_120:miner
+  - ic2_120:mining_pipe
 ---
 
 # 采矿机

@@ -15,10 +15,12 @@ IndustrialCraft 2 Experimental 的 Minecraft 1.20.1 Fabric 移植版本，使用
 
 ## 文档分区
 
-### 玩家文档
+### 玩家文档（游戏内 Guidebook）
 
-- [模组特性（玩家向）](player-docs/README.md)
-- [作物系统玩家指南](player-docs/crop-player-guide.md)
+玩家向文档统一维护在游戏内任务书/Guidebook：
+
+- `core/src/main/resources/assets/ic2_120/guidebook/main/index.md`
+- `core/src/main/resources/assets/ic2_120/guidebook/main/i18n/zh_cn/index.md`
 
 ### 开发者文档（docs/）
 
@@ -83,7 +85,6 @@ ic2-fabric/
 │   ├── client/kotlin/   # 客户端专用代码
 │   ├── main/java/       # 通用/服务端 Mixin 类
 │   └── client/java/     # 客户端 Mixin 类
-├── player-docs/         # 玩家向文档
 ├── docs/                # 技术文档
 └── assets/              # 模组资源（模型、纹理、语言文件等）
 ```

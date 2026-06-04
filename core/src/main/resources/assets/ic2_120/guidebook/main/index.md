@@ -9,6 +9,40 @@ navigation:
 
 This guide is provided by IC2 and rendered by Fabric Guidebook.
 
+## Player Guides
+
+- [Crop System Guide](guides/crop_player_guide.md)
+- [Mining Laser](guides/mining_laser.md)
+- [Power Generation and Storage](guides/power_generation.md)
+- [Recall Scroll](guides/recall_scroll.md)
+- [Machine Upgrades](guides/upgrades.md)
+
+## Systems
+
+- [EU Energy System](systems/eu_energy.md)
+- [Fluid Pipe System](systems/fluid_pipes.md)
+- [Heat System](systems/heat_system.md)
+- [Kinetic Transmission](systems/kinetic_transmission.md)
+- [Machine System](systems/machines.md)
+- [Nuclear Reactor System](systems/nuclear_reactor.md)
+
+## Reference
+
+- [Machine Catalog](reference/machine_catalog.md)
+- [Materials and Ores](reference/materials_ores.md)
+- [Building and Decoration](reference/building_decoration.md)
+- [Tools and Armor](reference/tools_armor.md)
+- [EU Cables and Transformers](reference/eu_cables.md)
+- [Batteries and Mobile Power](reference/energy_items.md)
+- [Fluids, Cells, and Buckets](reference/fluids_cells.md)
+- [Nuclear Blocks and Components](reference/nuclear_components.md)
+- [Rubber Trees and World Resources](reference/rubber_and_worldgen.md)
+- [Crop Items and Drinks](reference/crop_items.md)
+- [Item and Block Index](reference/item_block_index.md)
+- [Crop Harvest Reference](reference/crop_harvest.md)
+- [Creative Tabs](reference/creative_tabs.md)
+- [Version and Dependencies](reference/version_deps.md)
+
 ## Machines
 
 ### Generators
@@ -130,3 +164,8 @@ This guide is provided by IC2 and rendered by Fabric Guidebook.
 ### Steam Structures
 
 - [Coke Kiln](machines/coke_kiln.md)
+
+### Addons
+
+- [Advanced Solar Addon](machines/advanced_solar.md)
+- [Storage Box](machines/storage_box.md)

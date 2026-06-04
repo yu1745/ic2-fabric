@@ -18,7 +18,15 @@ The Solid Heat Generator burns solid fuel into Heat Units (HU). It is a small, d
 
 When it has a valid heat consumer connected, the Solid Heat Generator burns fuel at **20 HU/t**. Heat is produced and offered immediately each tick; the machine has **no heat buffer**. Any HU that is not accepted by the connected machine during that tick is lost.
 
-Supported fuels are **Coal**, **Charcoal**, and **Coke**. Their furnace burn time is divided by 4 for this machine, so one coal or charcoal burns for **400 ticks** and provides **8,000 HU** total.
+Supported fuels are **Coal**, **Charcoal**, and **Coke**. The machine divides each fuel's furnace burn time by 4 before counting ticks:
+
+| Fuel | Furnace ticks | Burns for | Total HU |
+|------|---------------|-----------|----------|
+| Coal | 1,600 | 400 ticks (20 s) | 8,000 HU |
+| Charcoal | 1,600 | 400 ticks (20 s) | 8,000 HU |
+| Coke | 3,200 | 800 ticks (40 s) | 16,000 HU |
+
+Coke lasts twice as long as coal or charcoal and is the most efficient per item.
 
 The generator does not start burning unless its heat face is connected to a valid heat consumer.
 

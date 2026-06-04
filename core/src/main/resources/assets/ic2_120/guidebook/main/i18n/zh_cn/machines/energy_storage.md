@@ -17,6 +17,12 @@ item_ids:
 
 储电设备用于缓冲 EU、给电动物品充电，并从正面输出电力。它们也是把发电端和用电端隔开的可靠缓冲，适合处理机器耗电波动。
 
+## 方块视图
+
+| 储电箱 | CESU | MFE | MFSU |
+|:----:|:----:|:---:|:----:|
+| <BlockImage id="ic2_120:batbox" scale="2" /> | <BlockImage id="ic2_120:cesu" scale="2" /> | <BlockImage id="ic2_120:mfe" scale="2" /> | <BlockImage id="ic2_120:mfsu" scale="2" /> |
+
 ## 等级对比
 
 | 等级 | 名称 | 容量 | 输出 | 电压 |
@@ -44,7 +50,8 @@ item_ids:
 
 ## 配方
 
-<Recipe id="ic2_120:batbox" />
-<Recipe id="ic2_120:cesu" />
-<Recipe id="ic2_120:mfe" />
-<Recipe id="ic2_120:mfsu" />
+| BatBox | CESU |
+|:------:|:----:|
+| <Recipe id="ic2_120:batbox" /> | <Recipe id="ic2_120:cesu" /> |
+| MFE | MFSU |
+| <Recipe id="ic2_120:mfe" /> | <Recipe id="ic2_120:mfsu" /> |

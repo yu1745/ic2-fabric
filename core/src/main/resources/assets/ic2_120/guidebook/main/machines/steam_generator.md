@@ -14,14 +14,16 @@ item_ids:
 
 The Steam Generator is a boiler for the heat system. It accepts up to 1,200 HU/t from adjacent heat generators and combines that heat with water to make either steam or superheated steam. It does not use EU directly.
 
-Water can be normal water or distilled water. Both work as boiler feed, but normal water adds scale as it is consumed. At 100,000 mB of scale the boiler is calcified and stops accepting heat; use distilled water for continuous operation.
+Water can be normal water or distilled water. Both work as boiler feed, but normal water leaves scale behind as it is evaporated. After the boiler has evaporated 100,000 mB of normal water in total, it calcifies and stops accepting heat; use distilled water for continuous operation.
+
+> **Note:** Calcification is not stored in the dropped machine. Breaking and replacing a calcified Steam Generator resets the counter, so the returned machine is clean again. The water and steam tanks also empty, and any leftover heat is lost. Pick up a calcified generator only if you want to start over.
 
 ## Controls
 
 The GUI has two adjustable settings:
 
 - **Feed rate**: 0-1,000 mB/t, default 100 mB/t. This is the maximum water the boiler will consume each tick.
-- **Pressure valve**: 0-300 bar, default 100 bar. Higher pressure raises the effective boiling temperature.
+- **Pressure valve**: 0-300 bar, default 100 bar. Higher pressure raises the boiler's boiling point. At 0 bar it starts boiling at 100°C; at 220 bar it needs about 374°C; at 300 bar it needs about 474°C.
 
 At 0 bar and below 100°C, the machine behaves like a pass-through for water instead of boiling it. With pressure set above 0, or once the boiler is already at least 100°C, it tries to boil the configured feed rate.
 

@@ -24,12 +24,10 @@ Different crank materials provide different KU output. The generated KU is outpu
 
 ### Crank Materials
 
-| Crank | KU/t |
-|-------|------|
-| Wooden | 64 |
-| Iron | 128 |
-| Steel | 256 |
-| Carbon | 512 |
+| Wooden | Iron | Steel | Carbon |
+|:-----:|:----:|:-----:|:------:|
+| <ItemImage id="ic2_120:wooden_crank_handle" scale="2" /> | <ItemImage id="ic2_120:iron_crank_handle" scale="2" /> | <ItemImage id="ic2_120:steel_crank_handle" scale="2" /> | <ItemImage id="ic2_120:carbon_crank_handle" scale="2" /> |
+| 64 KU/t | 128 KU/t | 256 KU/t | 512 KU/t |
 
 ## Cranking Mechanics
 

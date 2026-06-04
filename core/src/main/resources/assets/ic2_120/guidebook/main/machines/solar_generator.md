@@ -21,10 +21,10 @@ Generation only runs in the Overworld from 6:20 AM to 5:45 PM. Rain or thunder s
 - **Generation**: 1 EU/t while all sunlight conditions are met
 - **Internal storage**: 400 EU
 - **Output tier**: 1
-- **External output**: 1 EU/t from every side except the front face
+- **External output**: bursts of up to 10 EU/t, delivered every ~10 ticks on average, from every side except the front face
 - **Input**: none
 
-The Solar Generator stores energy first. Cable output starts only after the buffer has at least 32 EU, then continues at 1 EU/t while energy remains. This makes it useful as a trickle charger for BatBoxes, nearby machines, or a small LV cable line, but it cannot accept EU from another source.
+The Solar Generator stores energy first. Cable output starts only after the buffer has at least 10 EU, then the generator releases 10 EU in a single burst and resumes accumulating. The effective long-term rate is still 1 EU/t, but delivery happens in larger, less frequent packets that pass LV line-loss checks more reliably. This makes it useful as a trickle charger for BatBoxes, nearby machines, or a small LV cable line, but it cannot accept EU from another source.
 
 ## Sunlight Conditions
 

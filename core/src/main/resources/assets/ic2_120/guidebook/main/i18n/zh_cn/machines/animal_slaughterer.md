@@ -40,6 +40,6 @@ item_ids:
 
 ## 升级与自动化
 
-支持的升级为 <ItemLink id="ic2_120:energy_storage_upgrade" />、<ItemLink id="ic2_120:transformer_upgrade" /> 和 <ItemLink id="ic2_120:ejector_upgrade" />。每个储能升级增加 10,000 EU 容量；变压升级提高可接受电压等级和输入上限；弹出升级会从 15 个输出槽向相邻容器输出物品，并使用升级自身配置的过滤物品和方向。
+支持的升级为 <ItemLink id="ic2_120:energy_storage_upgrade" />、<ItemLink id="ic2_120:transformer_upgrade" /> 和 <ItemLink id="ic2_120:ejector_upgrade" />。每个储能升级增加 10,000 EU 容量；高压升级提高可接受电压等级和输入上限；弹出升级会从 15 个输出槽向相邻容器输出物品，并使用升级自身配置的过滤物品和方向。
 
 物品自动化可以向升级槽插入升级、向电池槽插入电池、向剪刀槽插入剪刀。输出槽不是有效输入目标。自动化可以从输出槽、升级槽、电池槽和剪刀槽提取物品，因此如果不希望管道抽走工具或升级，请在外部管道上设置过滤。

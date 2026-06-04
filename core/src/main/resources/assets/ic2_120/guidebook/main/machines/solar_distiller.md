@@ -26,6 +26,17 @@ It works only in the Overworld, during daytime from about 333 to 11750 world tim
 
 The output is always distilled water. It does not produce steam and has no mode switch.
 
+## Real-Time Yield
+
+The 1 mB every 80 ticks figure is small on its own, so it is worth translating it into wall-clock numbers:
+
+- One full bucket of distilled water = 1,000 mB = 80,000 ticks of running.
+- 80,000 ticks is 4,000 seconds, or roughly **67 minutes of continuous running** if the machine could run all day.
+- It cannot. The daylight window is only 11,417 ticks (about 570 seconds) per Overworld day, and rain or an obstructed sky cuts that to zero.
+- A typical clear Overworld day produces about **142 mB** of distilled water, so a single Solar Distiller needs roughly **7 in-game days of clear weather** to fill one bucket.
+
+In other words, a single Solar Distiller is best treated as a slow background source — convenient for keeping a battery's water cell topped up, not a replacement for a Condenser in any serious steam setup.
+
 ## Slots
 
 - **Water input:** water buckets, water cells, or universal fluid cells containing water.

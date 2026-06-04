@@ -17,6 +17,14 @@ item_ids:
 
 Bronze pipes transport fluids between tanks and machines. They come in four sizes with different throughput capacities. Bronze pipes connect automatically to adjacent tanks, machines, and other pipes.
 
+## Block View
+
+| Tiny | Small |
+|:----:|:-----:|
+| <BlockImage id="ic2_120:bronze_pipe_tiny" scale="2" /> | <BlockImage id="ic2_120:bronze_pipe_small" scale="2" /> |
+| Medium | Large |
+| <BlockImage id="ic2_120:bronze_pipe_medium" scale="2" /> | <BlockImage id="ic2_120:bronze_pipe_large" scale="2" /> |
+
 ## Size Comparison
 
 | Size | Throughput | Use Case |
@@ -36,7 +44,8 @@ Bronze pipes transport fluids between tanks and machines. They come in four size
 
 ## Recipes
 
-<Recipe id="ic2_120:bronze_pipe_tiny" />
-<Recipe id="ic2_120:bronze_pipe_small" />
-<Recipe id="ic2_120:bronze_pipe_medium" />
-<Recipe id="ic2_120:bronze_pipe_large" />
+| Tiny | Small |
+|:----:|:-----:|
+| <Recipe id="ic2_120:bronze_pipe_tiny" /> | <Recipe id="ic2_120:bronze_pipe_small" /> |
+| Medium | Large |
+| <Recipe id="ic2_120:bronze_pipe_medium" /> | <Recipe id="ic2_120:bronze_pipe_large" /> |

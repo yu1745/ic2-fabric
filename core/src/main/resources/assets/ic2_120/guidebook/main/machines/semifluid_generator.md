@@ -12,7 +12,7 @@ item_ids:
 
 <BlockImage id="ic2_120:semifluid_generator" p:facing="north" p:active="true" scale="4" />
 
-The Semifluid Generator turns stored liquid fuel into EU. In this build it accepts **Biofuel** and **Creosote** only; Biomass must be processed in a Fermenter first.
+The Semifluid Generator turns stored liquid fuel into EU. It accepts two fuel families: the Biofuel family and the Creosote family. In practical terms, this means refined biofuel-type liquids and crude-oil/creosote-type liquids. Biomass still must be processed in a Fermenter first.
 
 Fuel can be supplied with buckets, IC2 cells, generic filled fluid cells, adjacent fluid storage, or fluid pipe automation. The machine keeps one internal fuel tank and burns from that tank whenever its EU buffer has room.
 
@@ -27,16 +27,16 @@ Fuel can be supplied with buckets, IC2 cells, generic filled fluid cells, adjace
 
 ### Fuel Values
 
-| Fuel | EU/t | EU/Bucket |
-|------|------|-----------|
-| Biofuel | 16 | 32,000 |
-| Creosote Oil | 8 | 3,200 |
+| Fuel family | EU/t | EU/Bucket |
+|-------------|------|-----------|
+| Refined fuel family | 16 | 32,000 |
+| Crude oil / creosote family | 8 | 3,200 |
 
 The active texture is shown only while the fuel tank contains a valid fuel and the EU buffer is not full.
 
 ## Inventory
 
-- **Fuel slot**: Biofuel Bucket, Creosote Bucket, Biofuel Cell, or a filled Fluid Cell containing Biofuel or Creosote.
+- **Fuel slot**: any bucket, cell, or filled fluid cell from the refined fuel family or the crude oil / creosote family.
 - **Empty container slot**: receives empty buckets or empty cells after a full bucket of fuel is moved into the internal tank.
 - **Battery slot**: charges batteries and electric tools from the generator's EU buffer.
 - **Upgrade slots**: accepts upgrade items, but this machine only applies fluid pipe behavior. Overclocker, transformer, and energy storage upgrades do not change its generation rate, output limit, tier, or buffer.
@@ -45,13 +45,13 @@ The fuel slot is processed only when the internal tank has at least one full buc
 
 ## Automation
 
-The internal fuel tank is exposed as a fluid input on every side and can accept only Biofuel or Creosote. Place a tank or fluid pipe next to the generator to push fuel into it directly.
+The internal fuel tank is exposed as a fluid input on every side and accepts fuel from either family. Place a tank or fluid pipe next to the generator to push fuel into it directly.
 
-A **Fluid Pulling Upgrade** lets the generator actively pull fuel from adjacent fluid storage. Configure the upgrade with a Biofuel or Creosote filter if several fluids are nearby. A **Fluid Ejector Upgrade** has no useful output here because the generator's fuel tank is not extractable.
+A **Fluid Pulling Upgrade** lets the generator actively pull fuel from adjacent fluid storage. Configure the upgrade for the fuel family you want if several fluids are nearby. A **Fluid Ejector Upgrade** has no useful output here because the generator's fuel tank is not extractable.
 
-For renewable Biofuel, feed Biomass into a Fermenter, supply heat to the Fermenter, then move its Biofuel output into this generator with tanks, pipes, or a fluid pulling upgrade. Tanks are useful as a buffer between the Fermenter and the generator so the generator can keep running while the Fermenter works in batches.
+For renewable fuel, feed Biomass into a Fermenter, supply heat to the Fermenter, then move its Biofuel output into this generator with tanks, pipes, or a fluid pulling upgrade. Tanks are useful as a buffer between the Fermenter and the generator so the generator can keep running while the Fermenter works in batches.
 
-Creosote from the Coke Kiln can be buffered in a tank and fed the same way.
+Creosote from the Coke Kiln can be buffered in a tank and fed the same way. If another mod adds another liquid that behaves like one of these two families, it will work here as well.
 
 ## Recipe
 

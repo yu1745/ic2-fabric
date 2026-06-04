@@ -9,6 +9,40 @@ navigation:
 
 本指南由 IC2 提供内容，并由 Fabric Guidebook 渲染。
 
+## 玩家指南
+
+- [作物系统指南](guides/crop_player_guide.md)
+- [采矿镭射枪](guides/mining_laser.md)
+- [发电与储电](guides/power_generation.md)
+- [传送卷轴](guides/recall_scroll.md)
+- [机器升级系统](guides/upgrades.md)
+
+## 系统
+
+- [EU 能量系统](systems/eu_energy.md)
+- [流体管道系统](systems/fluid_pipes.md)
+- [热能系统](systems/heat_system.md)
+- [动能系统](systems/kinetic_transmission.md)
+- [机器系统](systems/machines.md)
+- [核反应堆系统](systems/nuclear_reactor.md)
+
+## 参考
+
+- [机器总览](reference/machine_catalog.md)
+- [材料与矿石](reference/materials_ores.md)
+- [建筑与装饰](reference/building_decoration.md)
+- [工具与防护装备](reference/tools_armor.md)
+- [EU 电缆与变压](reference/eu_cables.md)
+- [电池与移动供电](reference/energy_items.md)
+- [流体、单元与桶](reference/fluids_cells.md)
+- [核电方块与组件](reference/nuclear_components.md)
+- [橡胶树与世界资源](reference/rubber_and_worldgen.md)
+- [作物物品与饮品](reference/crop_items.md)
+- [物品与方块总索引](reference/item_block_index.md)
+- [作物收获产出参考](reference/crop_harvest.md)
+- [创意栏](reference/creative_tabs.md)
+- [版本与依赖](reference/version_deps.md)
+
 ## 机器
 
 ### 发电机
@@ -130,3 +164,8 @@ navigation:
 ### 蒸汽结构
 
 - [焦炭窑](machines/coke_kiln.md)
+
+### 附属内容
+
+- [高级太阳能附属](machines/advanced_solar.md)
+- [储物箱](machines/storage_box.md)

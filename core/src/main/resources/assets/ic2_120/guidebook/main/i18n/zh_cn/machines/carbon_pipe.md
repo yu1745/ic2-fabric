@@ -17,6 +17,14 @@ item_ids:
 
 碳纤维管道是一种先进的流体输送管道，吞吐量显著高于青铜管道。它们由碳纤维制成，是大流量流体系统的理想选择。
 
+## 方块视图
+
+| 微型 | 小型 |
+|:----:|:----:|
+| <BlockImage id="ic2_120:carbon_pipe_tiny" scale="2" /> | <BlockImage id="ic2_120:carbon_pipe_small" scale="2" /> |
+| 中型 | 大型 |
+| <BlockImage id="ic2_120:carbon_pipe_medium" scale="2" /> | <BlockImage id="ic2_120:carbon_pipe_large" scale="2" /> |
+
 ## 尺寸对比
 
 | 尺寸 | 吞吐量 | 用途 |
@@ -36,7 +44,8 @@ item_ids:
 
 ## 配方
 
-<Recipe id="ic2_120:carbon_pipe_tiny" />
-<Recipe id="ic2_120:carbon_pipe_small" />
-<Recipe id="ic2_120:carbon_pipe_medium" />
-<Recipe id="ic2_120:carbon_pipe_large" />
+| 微型 | 小型 |
+|:----:|:----:|
+| <Recipe id="ic2_120:carbon_pipe_tiny" /> | <Recipe id="ic2_120:carbon_pipe_small" /> |
+| 中型 | 大型 |
+| <Recipe id="ic2_120:carbon_pipe_medium" /> | <Recipe id="ic2_120:carbon_pipe_large" /> |
