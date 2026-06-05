@@ -33,11 +33,11 @@ class ItemUpgradeScreen(
         super.init()
         val client = client ?: return
 
-        addDrawableChild(ButtonWidget.builder(Text.literal(t("gui.ic2_120.item_upgrade.set_filter"))) {
+        addDrawableChild(ButtonWidget.builder(Text.empty()) {
             client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_SET_FILTER))
         }.dimensions(x + 27, y + 37, 20, 14).build())
 
-        addDrawableChild(ButtonWidget.builder(Text.literal(t("gui.ic2_120.item_upgrade.cycle_direction_short"))) {
+        addDrawableChild(ButtonWidget.builder(Text.empty()) {
             client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_CYCLE_DIRECTION))
         }.dimensions(x + 108, y + 60, 20, 12).build())
     }
@@ -69,7 +69,24 @@ class ItemUpgradeScreen(
         val dirText = t("gui.ic2_120.fluid_upgrade.direction", dirName)
         context.drawText(textRenderer, dirText, x + 9, y + 59 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
 
+        // 7px 按钮文字覆盖
+        draw7pxText(context, x + 27, y + 37, 20, 14, t("gui.ic2_120.item_upgrade.set_filter"))
+        draw7pxText(context, x + 108, y + 60, 20, 12, t("gui.ic2_120.item_upgrade.cycle_direction_short"))
+
         drawMouseoverTooltip(context, mouseX, mouseY)
+    }
+
+    private fun draw7pxText(context: DrawContext, bx: Int, by: Int, bw: Int, bh: Int, text: String) {
+        val scale = 7f / textRenderer.fontHeight
+        val textW = textRenderer.getWidth(text)
+        val scaledW = textW * scale
+        val textX = bx + (bw - scaledW) / 2f
+        val textY = by + (bh - 7f) / 2f
+        context.matrices.push()
+        context.matrices.translate(textX.toDouble(), textY.toDouble(), 0.0)
+        context.matrices.scale(scale, scale, 1f)
+        context.drawText(textRenderer, text, 0, 0, 0xFFFFFFFF.toInt(), false)
+        context.matrices.pop()
     }
 
     companion object {

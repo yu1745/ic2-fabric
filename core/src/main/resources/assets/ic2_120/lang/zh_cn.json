@@ -1056,7 +1056,7 @@
   "gui.ic2_120.miner.mode_switch": "模式切换",
   "gui.ic2_120.miner.silk_on": "精准采集模式",
   "gui.ic2_120.miner.silk_off": "非精准采集模式",
-  "gui.ic2_120.miner.reset_tooltip": "点击后采矿机将停止工作并重置扫描游标",
+  "gui.ic2_120.miner.reset_tooltip": "点击重置扫描游标并停止工作",
   "gui.ic2_120.miner.uptips": "可支持的升级:",
   "gui.ic2_120.miner.uptips_advanced": "可支持的升级:",
   "gui.ic2_120.crop_harvester.uptips": "可支持的升级:",

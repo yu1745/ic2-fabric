@@ -2,7 +2,6 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.machines.BaseMinerBlockEntity
 import ic2_120.content.block.BaseMinerBlock
-import ic2_120.content.screen.slot.DisplayCountSlot
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.screen.slot.SlotMoveHelper
@@ -55,10 +54,16 @@ class MinerScreenHandler(
             addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_PIPE, 8, 44, 1024)
             addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_DISCHARGING, 8, 80)
 
-            // 过滤槽 3×5
+            // 过滤槽 3×5（仅玩家可交互放置，每格限制1个）
             for (i in 0 until 15) {
-                addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_FILTER_START + i,
-                    36 + (i % 5) * 18, 44 + (i / 5) * 18)
+                val beIndex = BaseMinerBlockEntity.SLOT_ITEM_START + i
+                val spec = SlotSpec(
+                    maxItemCount = 1,
+                    canInsert = { stack -> stack.item is net.minecraft.item.BlockItem },
+                    canTake = { true }
+                )
+                beSlotToHandlerIndex[beIndex] = slots.size
+                addSlot(PredicateSlot(blockInventory, beIndex, 36 + (i % 5) * 18, 44 + (i / 5) * 18, spec))
             }
 
             // 升级槽 4个
@@ -81,13 +86,18 @@ class MinerScreenHandler(
             addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_PIPE, 8, 39, 1024)
             addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_SCANNER, 8, 57)
 
+            // 物品槽 5×3，起始 (32, 21)
             for (i in 0 until 15) {
-                addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_FILTER_START + i,
-                    44 + (i % 5) * 18, 21 + (i / 5) * 18)
+                addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_ITEM_START + i,
+                    32 + (i % 5) * 18, 21 + (i / 5) * 18)
             }
 
-            addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_UPGRADE_INDICES[0], 152, 21)
-            addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_DISCHARGING, 152, 57)
+            // 升级槽 ×3，竖向排列
+            for (i in 0 until 3) {
+                addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_NORMAL_UPGRADE_INDICES[i],
+                    152, 21 + i * 18)
+            }
+            addTrackedSlot(blockInventory, BaseMinerBlockEntity.SLOT_DISCHARGING, 128, 57)
 
             for (row in 0 until 3) {
                 for (col in 0 until 9) {
@@ -110,11 +120,7 @@ class MinerScreenHandler(
         val base = itemStorage?.deriveSlotSpec(beSlotIndex) ?: SlotSpec()
         val spec = base.copy(maxItemCount = maxItemCount)
         beSlotToHandlerIndex[beSlotIndex] = slots.size
-        val slot = if (beSlotIndex == BaseMinerBlockEntity.SLOT_PIPE) {
-            DisplayCountSlot(inventory, beSlotIndex, x, y, spec)
-        } else {
-            PredicateSlot(inventory, beSlotIndex, x, y, spec)
-        }
+        val slot = PredicateSlot(inventory, beSlotIndex, x, y, spec)
         addSlot(slot)
     }
 
@@ -215,7 +221,7 @@ class MinerScreenHandler(
     }
 
     private val playerSlotStart: Int
-        get() = if (isAdvanced) 22 else 20
+        get() = if (isAdvanced) 22 else 22
 
     override fun canUse(player: PlayerEntity): Boolean =
         context.get({ world, pos ->

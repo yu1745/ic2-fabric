@@ -11,6 +11,7 @@ import ic2_120.content.item.AdvancedScannerItem
 import ic2_120.content.item.DiamondDrill
 import ic2_120.content.item.Drill
 import ic2_120.content.item.EjectorUpgrade
+import ic2_120.content.item.EnergyStorageUpgrade
 import ic2_120.content.item.FluidEjectorUpgrade
 import ic2_120.content.item.FluidPullingUpgrade
 import ic2_120.content.item.IridiumDrill
@@ -135,16 +136,16 @@ abstract class BaseMinerBlockEntity(
         const val SLOT_SCANNER = 0
         const val SLOT_DRILL = 1
         const val SLOT_DISCHARGING = 2
-        const val SLOT_FILTER_START = 3
-        const val FILTER_SLOT_COUNT = 15
-        const val SLOT_FILTER_END = SLOT_FILTER_START + FILTER_SLOT_COUNT - 1
-        const val SLOT_UPGRADE_0 = SLOT_FILTER_END + 1
-        const val SLOT_UPGRADE_1 = SLOT_FILTER_END + 2
-        const val SLOT_UPGRADE_2 = SLOT_FILTER_END + 3
-        const val SLOT_UPGRADE_3 = SLOT_FILTER_END + 4
-        val SLOT_FILTER_INDICES = (SLOT_FILTER_START..SLOT_FILTER_END).toList().toIntArray()
+        const val SLOT_ITEM_START = 3
+        const val ITEM_SLOT_COUNT = 15
+        const val SLOT_ITEM_END = SLOT_ITEM_START + ITEM_SLOT_COUNT - 1
+        const val SLOT_UPGRADE_0 = SLOT_ITEM_END + 1
+        const val SLOT_UPGRADE_1 = SLOT_ITEM_END + 2
+        const val SLOT_UPGRADE_2 = SLOT_ITEM_END + 3
+        const val SLOT_UPGRADE_3 = SLOT_ITEM_END + 4
+        val SLOT_ITEM_INDICES = (SLOT_ITEM_START..SLOT_ITEM_END).toList().toIntArray()
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
-        val SLOT_MIXED_UPGRADE_INDICES = SLOT_UPGRADE_INDICES + SLOT_FILTER_INDICES
+        val SLOT_NORMAL_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2)
         const val SLOT_OUTPUT_0 = SLOT_UPGRADE_3 + 1
         const val SLOT_OUTPUT_1 = SLOT_UPGRADE_3 + 2
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT_0, SLOT_OUTPUT_1)
@@ -152,6 +153,9 @@ abstract class BaseMinerBlockEntity(
         const val INVENTORY_SIZE = SLOT_PIPE + 1
         const val PIPE_SLOT_MAX_COUNT = 1024
         const val MAX_CACHE_ITEMS = 64
+        const val ADVANCED_MAX_SCAN_RADIUS = 32
+        const val ADVANCED_MIN_Y = -63
+        const val NORMAL_MIN_Y = 0
 
         const val MAX_PIPES_PER_SECOND = 4
         const val PIPE_PLACE_INTERVAL = 20 / MAX_PIPES_PER_SECOND  // = 5 ticks
@@ -177,6 +181,8 @@ abstract class BaseMinerBlockEntity(
         private const val MAX_RECOVERY_SEARCH_NODES = 16384
         private const val NBT_TANK_AMOUNT = "TankAmount"
         private const val NBT_TANK_FLUID = "TankFluid"
+        private const val NBT_REDSTONE_CHANGE_REQUIRED = "RedstoneChangeRequired"
+        private const val NBT_LAST_REDSTONE_ACTIVE = "LastRedstoneActive"
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -185,17 +191,33 @@ abstract class BaseMinerBlockEntity(
         inventory = inventory,
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
-        insertRoutes = listOf(
-            ItemInsertRoute(SLOT_MIXED_UPGRADE_INDICES, matcher = { isAllowedUpgrade(it) }),
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(SLOT_SCANNER), matcher = { isValid(SLOT_SCANNER, it) }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(SLOT_DRILL), matcher = { isValid(SLOT_DRILL, it) }, maxPerSlot = 1),
-            ItemInsertRoute(intArrayOf(SLOT_PIPE), matcher = { isValid(SLOT_PIPE, it) }, maxPerSlot = PIPE_SLOT_MAX_COUNT),
-            ItemInsertRoute(SLOT_FILTER_INDICES, matcher = { !it.isEmpty })
-        ),
-        extractSlots = IntArray(INVENTORY_SIZE) { it },
+        insertRoutes = buildList {
+            add(ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { isAllowedUpgrade(it) }))
+            add(ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1))
+            add(ItemInsertRoute(intArrayOf(SLOT_SCANNER), matcher = { isValid(SLOT_SCANNER, it) }, maxPerSlot = 1))
+            add(ItemInsertRoute(intArrayOf(SLOT_DRILL), matcher = { isValid(SLOT_DRILL, it) }, maxPerSlot = 1))
+            // 普通采矿机：物品槽允许外部管道插入；高级采矿机：过滤槽不允许外部插入/抽出
+            if (!acceptsAdvancedScanner) {
+                add(ItemInsertRoute(SLOT_ITEM_INDICES, matcher = { isValidForItemSlot(it) }))
+            }
+            add(ItemInsertRoute(intArrayOf(SLOT_PIPE), matcher = { it.item === MiningPipeBlock::class.item() }, maxPerSlot = PIPE_SLOT_MAX_COUNT))
+        },
+        extractSlots = (if (!acceptsAdvancedScanner) (SLOT_ITEM_START..SLOT_ITEM_END).toList().toIntArray() else intArrayOf())
+            + SLOT_UPGRADE_INDICES
+            + intArrayOf(SLOT_SCANNER, SLOT_DRILL, SLOT_DISCHARGING)
+            + SLOT_OUTPUT_INDICES
+            + intArrayOf(SLOT_PIPE),
         markDirty = { markDirty() }
     )
+    val pipeStorage = PipeSlotStorage(
+        inventory = inventory,
+        slotIndex = SLOT_PIPE,
+        capacity = PIPE_SLOT_MAX_COUNT,
+        pipeItem = { MiningPipeBlock::class.item() },
+        markDirty = { markDirty() }
+    )
+    @RegisterItemStorage
+    val combinedItemStorage = CombinedMinerItemStorage(itemStorage, pipeStorage)
     private val workOffset = Random.nextInt(20)
     private var cursorInitialized = false
     private var pendingBreakEnergy: Long = 0L
@@ -228,6 +250,8 @@ abstract class BaseMinerBlockEntity(
     val itemCache = mutableListOf<ItemStack>()
     var cacheItemCount = 0
     val syncedData = SyncedData(this)
+    private var redstoneChangeRequired = false
+    private var lastRedstoneActive = false
 
     /** 内部流体储罐（1桶容量），用于储存采矿管遇到的流体。 */
     private val fluidTankInternal = object : SingleVariantStorage<FluidVariant>() {
@@ -265,6 +289,10 @@ abstract class BaseMinerBlockEntity(
         { TransformerUpgradeComponent.maxInsertForTier(baseTier + voltageTierBonus) }
     )
 
+    init {
+        sync.cursorY = pos.y - 1
+    }
+
     /** 从扫描器电池消耗能量（仅用于扫描非矿石方块）。 */
     private fun consumeScannerEnergy(amount: Long): Long {
         if (!acceptsAdvancedScanner) return sync.consumeEnergy(amount)
@@ -297,6 +325,7 @@ abstract class BaseMinerBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
+    override fun getMaxCountPerStack(): Int = PIPE_SLOT_MAX_COUNT
     override fun removeStack(slot: Int, amount: Int): ItemStack = Inventories.splitStack(inventory, slot, amount)
     override fun removeStack(slot: Int): ItemStack = Inventories.removeStack(inventory, slot)
     override fun clear() = inventory.clear()
@@ -309,6 +338,7 @@ abstract class BaseMinerBlockEntity(
         val slotMax = when (slot) {
             SLOT_SCANNER, SLOT_DRILL, SLOT_DISCHARGING -> 1
             SLOT_PIPE -> PIPE_SLOT_MAX_COUNT
+            in SLOT_ITEM_START..SLOT_ITEM_END -> if (acceptsAdvancedScanner) 1 else maxCountPerStack
             else -> maxCountPerStack
         }
         if (stack.count > slotMax) stack.count = slotMax
@@ -364,11 +394,11 @@ abstract class BaseMinerBlockEntity(
             }
             SLOT_DRILL -> stack.item is Drill || stack.item is DiamondDrill || stack.item is IridiumDrill
             SLOT_DISCHARGING -> stack.item is IBatteryItem
-            in SLOT_FILTER_START..SLOT_FILTER_END -> {
-                isAllowedUpgrade(stack) || if (acceptsAdvancedScanner) {
+            in SLOT_ITEM_START..SLOT_ITEM_END -> {
+                if (acceptsAdvancedScanner) {
                     stack.item is net.minecraft.item.BlockItem
                 } else {
-                    stack.item !== MiningPipeBlock::class.item()
+                    isValidForItemSlot(stack)
                 }
             }
             in SLOT_UPGRADE_INDICES -> isAllowedUpgrade(stack)
@@ -385,8 +415,19 @@ abstract class BaseMinerBlockEntity(
             item is OverclockerUpgrade || item is TransformerUpgrade || item is RedstoneInverterUpgrade ||
                 item is EjectorUpgrade || item is FluidEjectorUpgrade
         } else {
-            item is EjectorUpgrade || item is PullingUpgrade || item is FluidEjectorUpgrade || item is FluidPullingUpgrade
+            item is OverclockerUpgrade || item is EnergyStorageUpgrade || item is TransformerUpgrade ||
+                item is EjectorUpgrade || item is PullingUpgrade || item is FluidEjectorUpgrade || item is FluidPullingUpgrade
         }
+    }
+
+    /** 物品槽验证：拒绝管道、升级组件、钻头、扫描仪、电池。 */
+    private fun isValidForItemSlot(stack: ItemStack): Boolean {
+        if (stack.isEmpty) return false
+        return stack.item !== MiningPipeBlock::class.item()
+            && stack.item !is IUpgradeItem
+            && stack.item !is Drill && stack.item !is DiamondDrill && stack.item !is IridiumDrill
+            && stack.item !is OdScannerItem && stack.item !is AdvancedScannerItem
+            && stack.item !is IBatteryItem
     }
 
     override fun getScreenOpeningData(player: ServerPlayerEntity): PacketByteBuf {
@@ -453,6 +494,8 @@ abstract class BaseMinerBlockEntity(
                 fluidTankInternal.insertBucket(fluid)
             }
         }
+        redstoneChangeRequired = nbt.getBoolean(NBT_REDSTONE_CHANGE_REQUIRED)
+        lastRedstoneActive = nbt.getBoolean(NBT_LAST_REDSTONE_ACTIVE)
     }
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
@@ -488,6 +531,8 @@ abstract class BaseMinerBlockEntity(
         } else {
             nbt.putString(NBT_TANK_FLUID, "")
         }
+        nbt.putBoolean(NBT_REDSTONE_CHANGE_REQUIRED, redstoneChangeRequired)
+        nbt.putBoolean(NBT_LAST_REDSTONE_ACTIVE, lastRedstoneActive)
     }
 
     override fun toInitialChunkDataNbt(lookup: RegistryWrapper.WrapperLookup): NbtCompound = createNbt(lookup)
@@ -499,10 +544,10 @@ abstract class BaseMinerBlockEntity(
 
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
         sync.pipeCount = getPipeCount()
-        OverclockerUpgradeComponent.apply(this, SLOT_MIXED_UPGRADE_INDICES, this)
-        EnergyStorageUpgradeComponent.apply(this, SLOT_MIXED_UPGRADE_INDICES, this)
-        TransformerUpgradeComponent.apply(this, SLOT_MIXED_UPGRADE_INDICES, this)
-        FluidPipeUpgradeComponent.apply(this, SLOT_MIXED_UPGRADE_INDICES)
+        OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
 
         // 流体弹出升级：将储罐中的流体排到相邻方块
         if (fluidPipeProviderEnabled) {
@@ -534,7 +579,29 @@ abstract class BaseMinerBlockEntity(
         // 高级采矿机：需要红石信号才会工作，红石反转升级可反转信号
         if (acceptsAdvancedScanner) {
             val hasPower = world.isReceivingRedstonePower(pos)
-            val hasInverter = SLOT_MIXED_UPGRADE_INDICES.any { getStack(it).item is RedstoneInverterUpgrade }
+            val hasInverter = SLOT_UPGRADE_INDICES.any { getStack(it).item is RedstoneInverterUpgrade }
+
+            // 红石变化等待：重置后需检测红石信号变化才重新开始
+            if (redstoneChangeRequired) {
+                if (hasPower != lastRedstoneActive) {
+                    // 红石信号变化，清除等待并重新开始
+                    redstoneChangeRequired = false
+                    manualStoppedForRecovery = false
+                    sync.running = 1
+                    pendingBreakEnergy = 0L
+                    sync.cursorY = pos.y - 1
+                    cursorInitialized = false
+                    cursorIndex = 0
+                    resetPathFailState()
+                } else {
+                    sync.running = 0
+                    setActiveState(world, pos, state, false)
+                    sync.syncCurrentTickFlow()
+                    return
+                }
+            }
+            lastRedstoneActive = hasPower
+
             val shouldRun = if (hasInverter) !hasPower else hasPower
             if (!shouldRun) {
                 sync.running = 0
@@ -557,12 +624,13 @@ abstract class BaseMinerBlockEntity(
             sync.syncCurrentTickFlow()
             return
         }
+        val scanRadius = if (acceptsAdvancedScanner) ADVANCED_MAX_SCAN_RADIUS else scannerType.scanRadius
 
         observeCursorStall(world, "pre_tick")
 
         // 先确保游标初始化，再进行任何依赖 cursorY 的补管逻辑。
         if (!cursorInitialized) {
-            ensureAndGetCursorTarget(scannerType.scanRadius)
+            ensureAndGetCursorTarget(scanRadius)
         }
 
         var reachedBottom = false
@@ -623,7 +691,7 @@ abstract class BaseMinerBlockEntity(
                         ensurePipeReachesPosition(targetPos)
                         if (sync.running != 0 && isPipeAdjacentTo(targetPos)) {
                             pendingBreakEnergy = 0L
-                            advanceCursor(scannerType.scanRadius)
+                            advanceCursor(scanRadius)
                             mineBlock(world, targetPos, blockState)
                             active = true
                             minedThisCycle = true
@@ -645,9 +713,10 @@ abstract class BaseMinerBlockEntity(
 
         // 每个工作周期可连续扫描多个格子，但最多只执行一次有效挖掘。
         while (sync.running != 0) {
-            val targetPos = ensureAndGetCursorTarget(scannerType.scanRadius)
+            val targetPos = ensureAndGetCursorTarget(scanRadius)
 
-            if (sync.running == 0 || targetPos.y < world.bottomY || targetPos.y < -64) {
+            val minY = if (acceptsAdvancedScanner) ADVANCED_MIN_Y else NORMAL_MIN_Y
+            if (sync.running == 0 || targetPos.y < world.bottomY || targetPos.y < minY) {
                 sync.running = 0
                 reachedBottom = true
                 break
@@ -675,7 +744,7 @@ abstract class BaseMinerBlockEntity(
                     PipeReachResult.UNREACHABLE -> {
                         logDecision(world, "pipe_path_unreachable", targetPos)
                         if (recordPathFailAndShouldSkip(targetPos)) {
-                            advanceCursor(scannerType.scanRadius)
+                            advanceCursor(scanRadius)
                         }
                         if (sync.running == 0) break
                         break
@@ -685,7 +754,7 @@ abstract class BaseMinerBlockEntity(
                 if (!isPipeAdjacentTo(targetPos)) {
                     // 路径被非空气方块阻挡，无法铺设管道，跳过此方块
                     logDecision(world, "pipe_not_adjacent_after_path", targetPos)
-                    advanceCursor(scannerType.scanRadius)
+                    advanceCursor(scanRadius)
                     break
                 }
 
@@ -696,7 +765,7 @@ abstract class BaseMinerBlockEntity(
                 val breakEnergy = (breakCost * silkMultiplier / 2L * energyMultiplier).toLong().coerceAtLeast(1L)
 
                 if (sync.consumeEnergy(breakEnergy) > 0L) {
-                    advanceCursor(scannerType.scanRadius)
+                    advanceCursor(scanRadius)
                     mineBlock(world, targetPos, blockState)
                     active = true
                     minedThisCycle = true
@@ -714,7 +783,7 @@ abstract class BaseMinerBlockEntity(
                 break
             }
 
-            advanceCursor(scannerType.scanRadius)
+            advanceCursor(scanRadius)
             scannedThisCycle++
         }
 
@@ -747,6 +816,7 @@ abstract class BaseMinerBlockEntity(
         recyclingPipes = false
         lastRecycledCursorY = Int.MAX_VALUE
         pendingPipeRecovery.clear()
+        redstoneChangeRequired = false
         sync.cursorX = 0
         sync.cursorZ = 0
         sync.cursorY = pos.y - 1
@@ -774,10 +844,9 @@ abstract class BaseMinerBlockEntity(
         resetPathFailState()
         buildPipeRecoveryQueue(serverWorld)
         recoveringPipes = pendingPipeRecovery.isNotEmpty()
-        if (!recoveringPipes && acceptsAdvancedScanner) {
-            // 没有管道需要回收，高级采矿机直接恢复工作
-            manualStoppedForRecovery = false
-            sync.running = 1
+        if (acceptsAdvancedScanner && recoveringPipes) {
+            // 高级采矿机：有管道需回收，回收完成后等待红石信号变化后重新开始
+            redstoneChangeRequired = true
         }
         markDirty()
     }
@@ -819,8 +888,8 @@ abstract class BaseMinerBlockEntity(
     private fun tryAutoResumeAfterPipeRefill() {
         if (sync.running != 0) return
         if (manualStoppedForRecovery) return
-        if (!cursorInitialized) return
-        if (sync.cursorY < -64) return
+        val minY = if (acceptsAdvancedScanner) ADVANCED_MIN_Y else NORMAL_MIN_Y
+        if (sync.cursorY < minY) return
         if (getScannerType(getStack(SLOT_SCANNER)) == null) return
         if (getDrillBreakCost() == null) return
         if (findPipeInInventory() == null) return
@@ -862,7 +931,8 @@ abstract class BaseMinerBlockEntity(
             cursorInitialized = true
         }
         if (sync.cursorY > pos.y - 1) sync.cursorY = pos.y - 1
-        if (sync.cursorY < -64) sync.cursorY = -64
+        val minY = if (acceptsAdvancedScanner) ADVANCED_MIN_Y else NORMAL_MIN_Y
+        if (sync.cursorY < minY) sync.cursorY = minY
         val totalPositions = (2 * range + 1) * (2 * range + 1)
         if (cursorIndex >= totalPositions) cursorIndex = 0
         val (x, z) = spiralXY(cursorIndex, range)
@@ -936,7 +1006,8 @@ abstract class BaseMinerBlockEntity(
             val completedY = sync.cursorY
             sync.cursorY -= 1
             cursorIndex = 0
-            if (sync.cursorY < -64) {
+            val minY = if (acceptsAdvancedScanner) ADVANCED_MIN_Y else NORMAL_MIN_Y
+            if (sync.cursorY < minY) {
                 sync.running = 0
             }
             // 高级采矿机：每层完成后立即回收水平管道，仅保留中心柱
@@ -997,8 +1068,17 @@ abstract class BaseMinerBlockEntity(
 
         recoveringPipes = false
         if (acceptsAdvancedScanner) {
+            // 回收完成，重置游标到初始位置
+            sync.cursorX = 0
+            sync.cursorZ = 0
+            sync.cursorY = pos.y - 1
+            cursorInitialized = false
+            cursorIndex = 0
+            pendingBreakEnergy = 0L
+            resetPathFailState()
             manualStoppedForRecovery = false
-            sync.running = 1
+            // 已回收完成，有管道可用，清除红石等待；下一 tick 若红石已激活则直接开始
+            redstoneChangeRequired = false
         }
         if (recyclingPipes) {
             recyclingPipes = false
@@ -1518,7 +1598,7 @@ abstract class BaseMinerBlockEntity(
 
         if (!acceptsAdvancedScanner) return true  // 普通采矿机无过滤，挖所有矿石
 
-        val filters = (SLOT_FILTER_START..SLOT_FILTER_END)
+        val filters = (SLOT_ITEM_START..SLOT_ITEM_END)
             .map { getStack(it) }
             .mapNotNull { stack -> stack.item as? net.minecraft.item.BlockItem }
             .toSet()
@@ -1551,18 +1631,10 @@ abstract class BaseMinerBlockEntity(
             tryEjectCache(world)
         } else {
             for (drop in drops) {
-                insertIntoOutputBuffer(drop)
+                insertItemIntoSlots(drop, SLOT_ITEM_INDICES)
             }
 
-            EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_MIXED_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
-
-            for (slot in SLOT_OUTPUT_INDICES) {
-                val remaining = getStack(slot)
-                if (!remaining.isEmpty) {
-                    ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), remaining.copy())
-                    setStack(slot, ItemStack.EMPTY)
-                }
-            }
+            EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_ITEM_INDICES)
         }
 
         markDirty()
@@ -1682,9 +1754,10 @@ abstract class BaseMinerBlockEntity(
         return state.isToolRequired.not() || tool.isSuitableFor(state)
     }
 
-    private fun insertIntoOutputBuffer(stack: ItemStack) {
+    /** 将物品插入指定槽位数组，溢出掉落地面。 */
+    private fun insertItemIntoSlots(stack: ItemStack, slots: IntArray) {
         var remaining = stack.copy()
-        for (slot in SLOT_OUTPUT_INDICES) {
+        for (slot in slots) {
             if (remaining.isEmpty) break
             val existing = getStack(slot)
             if (existing.isEmpty) {
