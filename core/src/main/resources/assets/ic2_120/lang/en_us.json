@@ -1069,7 +1069,7 @@
   "gui.ic2_120.miner.mode_switch": "Switch Mode",
   "gui.ic2_120.miner.silk_on": "Silk Touch Mode",
   "gui.ic2_120.miner.silk_off": "Normal Mode",
-  "gui.ic2_120.miner.reset_tooltip": "Stop mining and reset scan cursor",
+  "gui.ic2_120.miner.reset_tooltip": "Click to reset scan cursor and stop working",
   "gui.ic2_120.miner.uptips": "Supported Upgrades:",
   "gui.ic2_120.miner.uptips_advanced": "Supported Upgrades:",
   "gui.ic2_120.crop_harvester.uptips": "Supported Upgrades:",

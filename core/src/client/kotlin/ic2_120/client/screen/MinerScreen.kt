@@ -100,8 +100,6 @@ class MinerScreen(
             val fluidTextWidth = textRenderer.getWidth(fluidText)
             context.drawText(textRenderer, fluidText, left - fluidTextWidth - 4, top + 44, 0xFF5555, false)
         }
-        drawPipeCount(context, left, top)
-
         drawMouseoverTooltip(context, mouseX, mouseY)
 
         val relX = mouseX - left
@@ -149,6 +147,9 @@ class MinerScreen(
             if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE && relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE) {
                 context.drawTooltip(textRenderer, listOf(
                     Text.translatable("gui.ic2_120.miner.uptips"),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.overclocker_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
+                    Text.literal("§7").append(Text.translatable("item.ic2_120.transformer_upgrade")),
                     Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
                     Text.literal("§7").append(Text.translatable("item.ic2_120.pulling_upgrade")),
                     Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_ejector_upgrade")),
@@ -178,21 +179,6 @@ class MinerScreen(
         return super.mouseClicked(mouseX, mouseY, button)
     }
 
-    private fun drawPipeCount(context: DrawContext, left: Int, top: Int) {
-        val count = handler.sync.pipeCount
-        if (count <= 1) return
-        val text = count.toString()
-        val slotX = 8
-        val slotY = if (handler.isAdvanced) 44 else 39
-        context.drawTextWithShadow(
-            textRenderer,
-            text,
-            left + slotX + 17 - textRenderer.getWidth(text),
-            top + slotY + 9,
-            0xFFFFFF
-        )
-    }
-
     companion object {
         private val TEX_ORDINARY = Identifier("ic2", "textures/gui/guiminer.png")
         private val TEX_ADVANCED = Identifier("ic2", "textures/gui/guiadvminer.png")
@@ -202,10 +188,10 @@ class MinerScreen(
         private const val UPTIPS_Y = 4
         private const val UPTIPS_SIZE = 16
 
-        // 普通: 电量条 (179,2)-(193,17) = 14x15, 渲染至 153,40
+        // 普通: 电量条 (179,2)-(193,17) = 14x15, 渲染至 130,42
         private const val ORD_EB_U = 179; private const val ORD_EB_V = 2
         private const val ORD_EB_W = 14; private const val ORD_EB_H = 15
-        private const val ORD_EB_X = 152; private const val ORD_EB_Y = 39
+        private const val ORD_EB_X = 129; private const val ORD_EB_Y = 40
 
         // 高级: 电量条 (179,3)-(193,18) = 14x15, 渲染至 10,64
         private const val ADV_EB_U = 179; private const val ADV_EB_V = 3
