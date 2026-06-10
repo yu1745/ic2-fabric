@@ -7,6 +7,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.intprovider.IntProvider
 import net.minecraft.util.math.random.Random
 import net.minecraft.world.TestableWorld
+import net.minecraft.world.gen.feature.TreeFeature
 import net.minecraft.world.gen.foliage.BlobFoliagePlacer
 import net.minecraft.world.gen.foliage.FoliagePlacer
 import net.minecraft.world.gen.foliage.FoliagePlacerType
@@ -75,7 +76,7 @@ class RubberTreeFoliagePlacer(
         // 确保顶两层中心叶子存在
         for (y in topYs) {
             val centerPos = BlockPos(center.x, y, center.z)
-            if (!placer.hasPlacedBlock(centerPos)) {
+            if (!placer.hasPlacedBlock(centerPos) && TreeFeature.canReplace(world, centerPos)) {
                 forced++
                 placer.placeBlock(centerPos, config.foliageProvider.get(random, centerPos))
             }
