@@ -934,7 +934,6 @@ class ElectricJetpack : ElectricArmorItem(
     FabricItemSettings().maxCount(1)
 ) {
     companion object {
-        private const val FLIGHT_ENABLED_KEY = "FlightEnabled"
         private const val FLIGHT_REMAINDER_KEY = "ElectricJetpackFlightRemainder"
 
         val maxCapacity: Long
@@ -972,19 +971,6 @@ class ElectricJetpack : ElectricArmorItem(
 
     override fun getDamageReduction(): Float = 0f
 
-    fun isFlightEnabled(stack: ItemStack): Boolean =
-        stack.orCreateNbt.getBoolean(FLIGHT_ENABLED_KEY)
-
-    fun setFlightEnabled(stack: ItemStack, enabled: Boolean) {
-        stack.orCreateNbt.putBoolean(FLIGHT_ENABLED_KEY, enabled)
-    }
-
-    fun toggleFlightEnabled(stack: ItemStack): Boolean {
-        val enabled = !isFlightEnabled(stack)
-        setFlightEnabled(stack, enabled)
-        return enabled
-    }
-
     fun consumeFlightEnergyPerTick(stack: ItemStack): Boolean {
         val energy = getEnergy(stack)
         if (energy <= 0) return false
@@ -1011,8 +997,6 @@ class ElectricJetpack : ElectricArmorItem(
     ) {
         super.appendTooltip(stack, world, tooltip, context)
 
-        val enabled = isFlightEnabled(stack)
-
         // 计算剩余飞行时间（秒）
         val energy = getEnergy(stack)
         val remainingSeconds = if (energy > 0 && maxCapacity > 0) {
@@ -1028,9 +1012,7 @@ class ElectricJetpack : ElectricArmorItem(
             "${remainingSeconds.toInt()}秒"
         }
 
-        tooltip.add(Text.literal("飞行: ").append(
-            Text.translatable(if (enabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
-        ).append(Text.literal(" | 剩余: $timeText")).formatted(Formatting.GRAY))
+        tooltip.add(Text.literal("剩余飞行: $timeText").formatted(Formatting.GRAY))
     }
 }
 

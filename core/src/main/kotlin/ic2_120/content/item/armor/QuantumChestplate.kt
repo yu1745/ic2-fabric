@@ -49,7 +49,6 @@ import java.util.function.Consumer
 class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)) {
 
     companion object {
-        private const val FLIGHT_KEY = "QuantumFlightEnabled"
         private const val FLIGHT_REMAINDER_KEY = "QuantumChestplateFlightRemainder"
 
         val flightCostPerTick: Double
@@ -79,20 +78,6 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
             return true
         }
 
-        fun toggleFlight(stack: ItemStack): Boolean {
-            val nbt = stack.orCreateNbt
-            val enabled = !nbt.getBoolean(FLIGHT_KEY)
-            nbt.putBoolean(FLIGHT_KEY, enabled)
-            return enabled
-        }
-
-        fun isFlightEnabled(stack: ItemStack): Boolean =
-            stack.orCreateNbt.getBoolean(FLIGHT_KEY)
-
-        fun setFlightEnabled(stack: ItemStack, enabled: Boolean) {
-            stack.orCreateNbt.putBoolean(FLIGHT_KEY, enabled)
-        }
-
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val alloy = Alloy::class.instance()
@@ -120,7 +105,6 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
 
     override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.World?, tooltip: MutableList<Text>, context: net.minecraft.client.item.TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
-        val flightEnabled = stack.orCreateNbt.getBoolean(FLIGHT_KEY)
         val energy = getEnergy(stack)
 
         val remainingSeconds = if (energy > 0) {
@@ -134,10 +118,7 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
             "${remainingSeconds.toInt()}秒"
         }
 
-        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_chestplate.flight",
-            Text.translatable(if (flightEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off"),
-            timeText
-        ).formatted(Formatting.GRAY))
+        tooltip.add(Text.translatable("tooltip.ic2_120.quantum_chestplate.flight_time", timeText).formatted(Formatting.GRAY))
         val pct = "%.0f".format(getDamageReduction() * 100)
         tooltip.add(Text.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(Formatting.GRAY))
     }

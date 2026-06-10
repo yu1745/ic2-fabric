@@ -8,10 +8,7 @@ import ic2_120.content.item.IridiumDrill
 import ic2_120.content.item.MiningLaserItem
 import ic2_120.content.item.MiningLaserServerSuppress
 import ic2_120.content.item.NightVisionGoggles
-import ic2_120.content.item.ElectricJetpack
-import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.NanoHelmet
-import ic2_120.content.item.armor.QuantumChestplate
 import ic2_120.content.item.armor.QuantumHelmet
 import ic2_120.content.item.armor.QuantumLeggings
 import ic2_120.content.item.armor.QuantumBoots
@@ -36,9 +33,7 @@ object NetworkManager {
     private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
     val TOGGLE_NIGHT_VISION_GOGGLES_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_night_vision_goggles")
     val TOGGLE_NANO_VISION_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_nano_vision")
-    val TOGGLE_QUANTUM_FLIGHT_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_flight")
     val TOGGLE_IRIDIUM_SILK_TOUCH_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_iridium_silk_touch")
-    val TOGGLE_JETPACK_FLIGHT_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_jetpack_flight")
     val TOGGLE_FOAM_SPRAYER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
     val TOGGLE_MINING_LASER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
     val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
@@ -99,18 +94,6 @@ object NetworkManager {
             }
         }
 
-        ServerPlayNetworking.registerGlobalReceiver(TOGGLE_QUANTUM_FLIGHT_PACKET) { server, player, _, _, _ ->
-            server.execute {
-                val stack = player.getEquippedStack(EquipmentSlot.CHEST)
-                if (stack.item is QuantumChestplate) {
-                    val enabled = QuantumChestplate.toggleFlight(stack)
-                    player.sendMessage(Text.translatable(
-                        if (enabled) "message.ic2_120.quantum_chestplate.flight_on" else "message.ic2_120.quantum_chestplate.flight_off"
-                    ), true)
-                }
-            }
-        }
-
         ServerPlayNetworking.registerGlobalReceiver(TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET) { server, player, _, _, _ ->
             server.execute {
                 val stack = player.getEquippedStack(EquipmentSlot.LEGS)
@@ -147,25 +130,6 @@ object NetworkManager {
                     player.sendMessage(Text.translatable(
                         if (enabled) "message.ic2_120.iridium_drill.silk_touch_on" else "message.ic2_120.iridium_drill.silk_touch_off"
                     ), true)
-                }
-            }
-        }
-
-        ServerPlayNetworking.registerGlobalReceiver(TOGGLE_JETPACK_FLIGHT_PACKET) { server, player, _, _, _ ->
-            server.execute {
-                val stack = player.getEquippedStack(EquipmentSlot.CHEST)
-                if (stack.item is JetpackItem || stack.item is ElectricJetpack) {
-                    val enabled = when (val item = stack.item) {
-                        is JetpackItem -> JetpackItem.toggleFlightEnabled(stack)
-                        is ElectricJetpack -> item.toggleFlightEnabled(stack)
-                        else -> false
-                    }
-                    val messageKey = if (enabled) {
-                        "message.ic2_120.jetpack.flight_on"
-                    } else {
-                        "message.ic2_120.jetpack.flight_off"
-                    }
-                    player.sendMessage(Text.translatable(messageKey), true)
                 }
             }
         }

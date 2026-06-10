@@ -3,15 +3,31 @@ package ic2_120.content.player
 import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.QuantumChestplate
+import ic2_120.content.item.energy.IElectricTool
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
 import net.minecraft.server.MinecraftServer
+import java.util.UUID
 
+/**
+ * 喷气背包/电力喷气背包/量子胸甲的飞行管理（服务端 tick）。
+ *
+ * 设计上完全复用 Minecraft 的创造模式飞行代码：
+ *
+ * - 服务端只负责根据玩家装备的胸甲是否可飞行，授予/剥夺 [net.minecraft.entity.player.PlayerAbilities.allowFlying]。
+ * - 玩家按下/松开空格、Shift 时的起降/悬停、双击空格切换飞行等行为，全部由
+ *   [net.minecraft.client.network.ClientPlayerEntity.tickMovement] 内部的 `abilityResyncCountdown`
+ *   双击检测与 [net.minecraft.entity.LivingEntity.travel] 内的飞行分支处理。
+ * - 玩家通过双击空格或落地在客户端切换 `flying` 后，vanilla 客户端会发出
+ *   [net.minecraft.network.packet.c2s.play.UpdatePlayerAbilitiesC2SPacket]，服务器照单接受即可。
+ *   本管理器不主动把 `flying` 拉到 `true`，从而保留原版创造飞行的起停行为。
+ *
+ * 因此本类没有任何手写的「按键按下/抬起」检测或额外状态机：玩家穿上一件可飞行的胸甲，就相当于
+ * 进入了「带飞行权限的生存模式」，与创造模式完全一致——燃料还够就等效创造，燃料耗尽立刻变回生存。
+ */
 object FlightManager {
-    private const val JETPACK_HOVER_KEY = "IsHover"
-    private val jetpackGrantedPlayers = mutableSetOf<java.util.UUID>()
+    private val abilitySnapshots = mutableMapOf<UUID, FlightAbilitySnapshot>()
 
     fun tick(server: MinecraftServer) {
         for (world in server.worlds) {
@@ -22,181 +38,95 @@ object FlightManager {
     }
 
     private fun tickPlayer(player: PlayerEntity) {
-        val chestStack = player.getEquippedStack(EquipmentSlot.CHEST)
+        // 创造/旁观模式的飞行由游戏模式自己处理，不要插手
+        if (player.isCreative || player.isSpectator) {
+            abilitySnapshots.remove(player.uuid)
+            return
+        }
 
-        if (chestStack.item is JetpackItem) {
-            // 从量子胸甲切换到喷气背包时，清理残留的量子飞行状态
-            if (!player.isCreative && !player.isSpectator
-                && player.abilities.allowFlying && !jetpackGrantedPlayers.contains(player.uuid)) {
-                disableQuantumFlight(player)
-            }
-            handleJetpackFlight(player, chestStack)
+        val chest = player.getEquippedStack(EquipmentSlot.CHEST)
+        val source = flightSource(chest)
+        // 燃料/能量是否充足？边界：刚从「有」变「无」时这一 tick 不能「先开再关」，
+        // 否则会发两次 abilities 包让客户端闪一下，所以先做预检再决定授权。
+        if (source == null || !source.hasEnergy(chest)) {
+            restorePreviousFlightState(player)
             return
         }
-        if (chestStack.item is ElectricJetpack) {
-            if (!player.isCreative && !player.isSpectator
-                && player.abilities.allowFlying && !jetpackGrantedPlayers.contains(player.uuid)) {
-                disableQuantumFlight(player)
-            }
-            handleElectricJetpackFlight(player, chestStack)
-            return
-        }
-        disableJetpackFlight(player, null)
-        handleQuantumFlight(player, chestStack)
-        // 不穿量子胸甲时清理残留的量子飞行状态（非创造/旁观模式）
-        if (chestStack.item !is QuantumChestplate
-            && !player.isCreative && !player.isSpectator) {
-            disableQuantumFlight(player)
+
+        grantFlightPermission(player)
+
+        // 真正在飞的时候才消耗燃料/能量。耗尽时由上面的 !hasEnergy 分支在下一 tick 收回飞行权限。
+        if (player.abilities.flying) {
+            source.consume(chest)
         }
     }
 
-    private fun handleJetpackFlight(player: PlayerEntity, jetpackStack: ItemStack) {
-        val nbt = jetpackStack.orCreateNbt
-
-        if (player.isCreative || player.isSpectator || !JetpackItem.isFlightEnabled(jetpackStack)) {
-            disableJetpackFlight(player, nbt)
-            return
-        }
-        if (player.isOnGround || player.isTouchingWater || player.isClimbing
-            || (jetpackGrantedPlayers.contains(player.uuid) && !player.abilities.flying)) {
-            JetpackItem.setFlightEnabled(jetpackStack, false)
-            disableJetpackFlight(player, nbt)
-            return
+    private fun grantFlightPermission(player: PlayerEntity) {
+        abilitySnapshots.getOrPut(player.uuid) {
+            FlightAbilitySnapshot(
+                allowFlying = player.abilities.allowFlying,
+                flying = player.abilities.flying
+            )
         }
 
-        if (!JetpackItem.consumeFuelPerTick(jetpackStack)) {
-            JetpackItem.setFlightEnabled(jetpackStack, false)
-            disableJetpackFlight(player, nbt)
-            return
-        }
-        enableJetpackFlight(player, nbt)
+        if (player.abilities.allowFlying) return
+
+        player.abilities.allowFlying = true
+        player.sendAbilitiesUpdate()
     }
 
-    private fun handleElectricJetpackFlight(player: PlayerEntity, jetpackStack: ItemStack) {
-        val jetpack = jetpackStack.item as ElectricJetpack
-        val nbt = jetpackStack.orCreateNbt
+    private fun restorePreviousFlightState(player: PlayerEntity) {
+        val snapshot = abilitySnapshots.remove(player.uuid) ?: return
 
-        if (player.isCreative || player.isSpectator || !jetpack.isFlightEnabled(jetpackStack)) {
-            disableJetpackFlight(player, nbt)
-            return
-        }
-        if (player.isOnGround || player.isTouchingWater || player.isClimbing
-            || (jetpackGrantedPlayers.contains(player.uuid) && !player.abilities.flying)) {
-            jetpack.setFlightEnabled(jetpackStack, false)
-            disableJetpackFlight(player, nbt)
-            return
-        }
-        if (!jetpack.consumeFlightEnergyPerTick(jetpackStack)) {
-            jetpack.setFlightEnabled(jetpackStack, false)
-            disableJetpackFlight(player, nbt)
-            return
-        }
-
-        enableJetpackFlight(player, nbt)
-    }
-
-    private fun enableJetpackFlight(player: PlayerEntity, nbt: NbtCompound) {
         var changed = false
-        if (!player.abilities.allowFlying) {
-            player.abilities.allowFlying = true
+        if (player.abilities.flying != snapshot.flying) {
+            player.abilities.flying = snapshot.flying
             changed = true
         }
-        if (!player.abilities.flying) {
-            player.abilities.flying = true
+        if (player.abilities.allowFlying != snapshot.allowFlying) {
+            player.abilities.allowFlying = snapshot.allowFlying
             changed = true
         }
         if (changed) {
             player.sendAbilitiesUpdate()
         }
-        nbt.putBoolean(JETPACK_HOVER_KEY, true)
-        jetpackGrantedPlayers.add(player.uuid)
     }
 
-    private fun disableJetpackFlight(player: PlayerEntity, nbt: NbtCompound?) {
-        if (!jetpackGrantedPlayers.contains(player.uuid) && (nbt == null || !nbt.getBoolean(JETPACK_HOVER_KEY))) {
-            return
-        }
+    private data class FlightAbilitySnapshot(
+        val allowFlying: Boolean,
+        val flying: Boolean
+    )
 
-        if (!player.isCreative && !player.isSpectator) {
-            var changed = false
-            if (player.abilities.flying) {
-                player.abilities.flying = false
-                changed = true
-            }
-            if (player.abilities.allowFlying) {
-                player.abilities.allowFlying = false
-                changed = true
-            }
-            if (changed) {
-                player.sendAbilitiesUpdate()
-            }
-        }
-
-        nbt?.putBoolean(JETPACK_HOVER_KEY, false)
-        jetpackGrantedPlayers.remove(player.uuid)
+    private fun flightSource(stack: ItemStack): FlightSource? = when (val item = stack.item) {
+        is JetpackItem -> JetpackSource
+        is ElectricJetpack -> ElectricJetpackSource
+        is QuantumChestplate -> QuantumSource
+        else -> null
     }
 
-    private fun handleQuantumFlight(player: PlayerEntity, chestStack: ItemStack) {
-        val chestplate = chestStack.item as? QuantumChestplate ?: return
-        val nbt = chestStack.orCreateNbt
-        val flightEnabled = QuantumChestplate.isFlightEnabled(chestStack)
-        val isActive = player.abilities.allowFlying
+    private interface FlightSource {
+        /** 当前是否还有燃料/能量可供飞行。 */
+        fun hasEnergy(stack: ItemStack): Boolean
+        /** 消耗一次 tick 的飞行燃料/能量；调用前应确保 [hasEnergy] 为 true。 */
+        fun consume(stack: ItemStack)
+    }
 
-        if (player.isCreative || player.isSpectator || (player.abilities.flying && !isActive)) {
-            return
-        }
+    private object JetpackSource : FlightSource {
+        override fun hasEnergy(stack: ItemStack): Boolean = JetpackItem.getFuel(stack) > 0
+        override fun consume(stack: ItemStack) { JetpackItem.consumeFuelPerTick(stack) }
+    }
 
-        if (!flightEnabled) {
-            if (isActive) {
-                disableQuantumFlight(player)
-            }
-            return
-        }
-
-        val currentEnergy = chestplate.getEnergy(chestStack)
-        if (currentEnergy <= 0) {
-            QuantumChestplate.setFlightEnabled(chestStack, false)
-            disableQuantumFlight(player)
-            return
-        }
-
-        // 落地/攀爬时自动关闭飞行。入水不关闭，允许从水里起飞。
-        // 同时检测 flying 状态被游戏自动关闭的情况（飞行模式下落地时 isOnGround 可能滞后）。
-        if (player.isOnGround || player.isClimbing
-            || (isActive && !player.abilities.flying)) {
-            QuantumChestplate.setFlightEnabled(chestStack, false)
-            if (isActive) {
-                disableQuantumFlight(player)
-            }
-            return
-        }
-
-        if (!QuantumChestplate.consumeFlightEnergyPerTick(chestStack)) {
-            QuantumChestplate.setFlightEnabled(chestStack, false)
-            disableQuantumFlight(player)
-            return
-        }
-        if (!player.abilities.allowFlying || !player.abilities.flying) {
-            player.abilities.allowFlying = true
-            player.abilities.flying = true
-            player.sendAbilitiesUpdate()
+    private object ElectricJetpackSource : FlightSource {
+        override fun hasEnergy(stack: ItemStack): Boolean =
+            (stack.item as ElectricJetpack).getEnergy(stack) > 0
+        override fun consume(stack: ItemStack) {
+            (stack.item as ElectricJetpack).consumeFlightEnergyPerTick(stack)
         }
     }
 
-    private fun disableQuantumFlight(player: PlayerEntity) {
-        if (!player.isCreative && !player.isSpectator) {
-            var changed = false
-            if (player.abilities.flying) {
-                player.abilities.flying = false
-                changed = true
-            }
-            if (player.abilities.allowFlying) {
-                player.abilities.allowFlying = false
-                changed = true
-            }
-            if (changed) {
-                player.sendAbilitiesUpdate()
-            }
-        }
+    private object QuantumSource : FlightSource {
+        override fun hasEnergy(stack: ItemStack): Boolean =
+            stack.orCreateNbt.getLong(IElectricTool.ENERGY_KEY) > 0
+        override fun consume(stack: ItemStack) { QuantumChestplate.consumeFlightEnergyPerTick(stack) }
     }
 }
