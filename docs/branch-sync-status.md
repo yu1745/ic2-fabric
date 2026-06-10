@@ -1,6 +1,6 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-05-31
+最后更新：2026-06-10
 
 分叉点：`c5e247c`
 
@@ -10,7 +10,7 @@
 
 ## 总览
 
-同步跟踪表共 **165 个条目**，**125 个已同步，40 个待同步**。
+同步跟踪表共 **193 个条目**，**125 个已同步，68 个待同步**。
 已同步条目 `#1-#125` 归档在 `branch-sync-archive.md`；未同步条目不归档，即使主表超过 20 行。
 
 ## 逐 commit 状态
@@ -57,6 +57,34 @@
 | 163 | `742b5414` | feat: 启用 CI 发版 + 更新斜齿轮 guidebook 文档与 3D 预览 | ❌ | 待同步 |
 | 164 | `4c7063f4` | feat: JEI 配方背景使用机器纹理 + Canner 流体渲染 + 新增流体单元 | ❌ | 待同步 |
 | 165 | `0f483fa6` | fix: 加固容器 GUI 交互防止刷物品 | ❌ | 待同步 |
+| 166 | `1d6ade59` | docs: record pending container screen sync | ❌ | 待同步 |
+| 167 | `c66c6a3d` | feat: 高炉增加 1280 HU 缓存机制，消除 1401 温度边界工作抽搐 | ❌ | 待同步 |
+| 168 | `96034c3f` | fix: 消除 compileKotlin 编译警告（废弃覆盖/API调用/多余转换） | ❌ | 待同步 |
+| 169 | `7eb01c05` | fix: 泵无流体预检 + 手摇动能发生机物品贴图对齐 | ❌ | 待同步 |
+| 170 | `42420fcd` | fix: 补充 Block 类废弃覆盖警告抑制 | ❌ | 待同步 |
+| 171 | `6d768271` | feat: 动能发生机贴图迁移到 ic2_120 命名空间 + 新增贴图 | ❌ | 待同步 |
+| 172 | `b20656f8` | Merge branch 'main' of https://github.com/yu1745/ic2-fabric | ❌ | 待同步 |
+| 173 | `649ae57f` | fix: 校准机器 GUI 能量条/进度条纹理坐标与像素偏移，BlockCutter 增加升级提示图标 | ❌ | 待同步 |
+| 174 | `e8b64aa3` | feat: 高炉 HU 指示灯条件改为升温条件满足时渲染 + 达温上限维持 HU 消耗 | ❌ | 待同步 |
+| 175 | `847596a5` | feat: add tag-based recipe and fluid compat | ❌ | 待同步 |
+| 176 | `4949b6a8` | feat: 采矿机自动回收管道 + 缺管时回收旁支复用 + 流体阻塞提示 + 游标坐标显示 | ❌ | 待同步 |
+| 177 | `3baafd6b` | fix: 采矿机到底判定改为检测基岩（不可破坏方块）而非硬编码 Y 值 | ❌ | 待同步 |
+| 178 | `1d480e3f` | feat: 添加 BuildCraftAddon 模块 — 引擎/液泵/流体/世界生成 | ❌ | 待同步 |
+| 179 | `c5453125` | @ feat: 石油世界生成噪声斑块 + 流体桶注册 + Spring 方块修复 | ❌ | 待同步 |
+| 180 | `c16943b9` | build: 添加 Jade 依赖 + Guidebook 校验/preview 任务 | ❌ | 待同步 |
+| 181 | `80db3a36` | feat(buildcraft-addon): 引擎接入 IC2 动能系统(IKineticMachinePort) + 泵 A*/BFS 重写 + 油井 Spring/Tube + Jade 集成 | ❌ | 待同步 |
+| 182 | `cc4d210b` | fix(core): Jade 管道流量改 mB/s + 太阳能/水能/风能 MIN/MAX 对齐 + JEI 流体绑定单元与桶 | ❌ | 待同步 |
+| 183 | `03aa4708` | feat(core): 添加 Guidebook 校验工具(供 validateGuidebook 任务调用) | ❌ | 待同步 |
+| 184 | `6d199717` | docs: 迁移玩家文档至游戏内 Guidebook + 删除旧 player-docs/ + 更新 README 指向 | ❌ | 待同步 |
+| 185 | `8bdfada5` | docs(guidebook): 将装备/工具/物品等引用从 reference/ 拆分到独立 items/ 页面 + 添加 Build-Time 校验规则 | ❌ | 待同步 |
+| 186 | `9855d47d` | feat(core): 升级GUI按钮7px文字 + 高级采矿机过滤槽锁定 | ❌ | 待同步 |
+| 187 | `9f3aa882` | refactor(core): 喷气背包/量子胸甲飞行改用原版创造模式机制 | ❌ | 待同步 |
+| 188 | `6c90259b` | fix(core): 橡胶树苗生长空间检查避免被既有木材挤掉 | ❌ | 待同步 |
+| 189 | `ab6773ed` | build: 升级 fabric_guidebook 至 0.1.4 + AGENTS.md / docs/README.md 文档入口 | ❌ | 待同步 |
+| 190 | `afc9168a` | chore(deploy): mod-sync-fabric 后台同步 mod 索引与重启并发 | ❌ | 待同步 |
+| 191 | `8d982aa6` | fix(core): 橡胶树叶块放置前检查 TreeFeature.canReplace 避免与既有方块冲突 | ❌ | 待同步 |
+| 192 | `9e78e92a` | docs(guidebook): 批量文档润色 + 新增 scrap_box 物品条目 + lang 微调 | ❌ | 待同步 |
+| 193 | `5e86c0d0` | docs(pitfalls): 新增 Kotlin LSP 工具链踩坑记录 | ❌ | 待同步 |
 
 ## 同步历史
 
@@ -101,3 +129,4 @@
 - 2026-05-15：同步 commits 98-112——全机器 RoutedItemStorage 驱动 quickMove 迁移 + 洗矿机修复 + 流体热交换机 UI + 橡胶树叶 tag。批量 cherry-pick + 解决多处冲突 + 1.21.1 API 适配（Identifier.of、ExtendedScreenHandlerFactory\<PacketByteBuf\>、getScreenOpeningData、readNbt/writeNbt WrapperLookup、Inventories、ItemStack.areEqual、RecipeInput、DataComponentTypes.FOOD）+ datagen 刷新 |
 - 2026-05-16：同步 commits 113-117——压缩机输入槽修复 + 复制机 CustomPayload 迁移 + 能量水晶粉 + 绝缘导线/耐压 tooltip + 电路板/粘性活塞。cherry-pick + 适配 1.21.1 API（SelectTemplatePayload、SingleStackRecipeInput、RecipeExporter、Identifier.of）+ datagen 刷新 |
 - 2026-05-18：批量同步 commits 119-124——蒸汽系统 + 压缩机配方容器返还 + 流体管道重构 + BER 光照 + GUI 传统纹理 + 移除 deploy-enabled。cherry-pick + 解决多处冲突 + 适配 1.21.1 API（FluidVariant CODEC、ExtendedScreenHandlerFactory getScreenOpeningData、validateTicker、ItemStack.fromNbt/encode、onUse 无 Hand、appendTooltip TooltipType）+ datagen 刷新 |
+- 2026-06-10：更新同步状态表——添加 commits 166-193（28 个 main 上 0f483fa6 之后、1.21.1 上均未同步的 commit：包括 1d6ade59 docs: pending container screen sync、c66c6a3d 高炉 1280 HU 缓存、BuildCraftAddon 模块（1d480e3f/c5453125/80db3a36/c16943b9）、Jade 集成（cc4d210b/03aa4708）、采矿机基岩判定+自动回收（3baafd6b/4949b6a8）、高炉 HU 机制（e8b64aa3/c66c6a3d）、贴图迁移（6d768271）、编译警告消除（96034c3f/42420fcd/7eb01c05）、能量条校准（649ae57f）、Guidebook 迁移（6d199717/8bdfada5/9855d47d）、飞行改原版创造模式（9f3aa882）、橡胶树修复（6c90259b/8d982aa6）、fabric_guidebook 升级（ab6773ed）、mod-sync-fabric 后台同步（afc9168a）、Guidebook 文档润色+Kotlin LSP 踩坑（9e78e92a/5e86c0d0）等），全部待同步至 1.21.1 |
