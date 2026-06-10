@@ -63,3 +63,29 @@ The current version implements a `KU` network independent from the EU grid.
 - Iron: `24` hours
 - Steel: `48` hours
 - Carbon: `168` hours
+
+## Components
+
+The kinetic transmission system uses the following components:
+
+### Crank Handles
+- [Wooden Crank Handle](../machines/wooden_crank_handle.md)
+- [Iron Crank Handle](../machines/iron_crank_handle.md)
+- [Steel Crank Handle](../machines/steel_crank_handle.md)
+- [Carbon Crank Handle](../machines/carbon_crank_handle.md)
+
+### Rotors
+- [Wooden Rotor](../machines/wooden_rotor.md)
+- [Iron Rotor](../machines/iron_rotor.md)
+- [Steel Rotor](../machines/steel_rotor.md)
+- [Carbon Rotor](../machines/carbon_rotor.md)
+
+### Transmission Shafts
+- [Wood Transmission Shaft](../machines/wood_transmission_shaft.md)
+- [Iron Transmission Shaft](../machines/iron_transmission_shaft.md)
+- [Steel Transmission Shaft](../machines/steel_transmission_shaft.md)
+- [Carbon Fibre Transmission Shaft](../machines/carbon_transmission_shaft.md)
+
+### Other
+- [Helical Gear](../machines/bevel_gear.md) — changes rotation direction
+- [Wind Meter](../machines/wind_meter.md) — measures wind speed for wind generators

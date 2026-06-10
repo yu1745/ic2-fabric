@@ -10,6 +10,8 @@ item_ids:
 
 # Steel Crank Handle
 
+<ItemImage id="ic2_120:steel_crank_handle" scale="4" />
+
 The Steel Crank Handle is a high-tier crank used in the Manual Kinetic Generator. When installed, it allows the generator to produce 256 KU/t while being cranked.
 
 It provides substantial kinetic output for advanced power generation needs.

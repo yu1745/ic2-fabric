@@ -38,6 +38,8 @@ item_ids:
   - ic2_120:green_wall
   - ic2_120:red_wall
   - ic2_120:black_wall
+  - ic2_120:itnt
+  - ic2_120:coin
 ---
 
 # 建筑与装饰
@@ -64,5 +66,10 @@ item_ids:
 - 木质脚手架和铁质脚手架用于临时施工。
 - 强化木质脚手架和强化铁质脚手架更适合长期结构。
 - 采矿管道属于[采矿机](../machines/miner.md)的工作链路，不是普通流体管道。
+
+## 杂项物品
+
+- <ItemLink id="ic2_120:itnt" />（工业 TNT）——比原版 TNT 威力大得多的爆炸物。爆炸半径和伤害显著更高，适合大规模拆除和采矿。使用时请格外小心。
+- <ItemLink id="ic2_120:coin" />（工业硬币）——通过 <ItemLink id="ic2_120:metal_former" />（挤出模式）将铁外壳加工而成的工业货币。硬币在某些 IC2 配方中使用。
 
 相关页面：[流体、单元与桶](fluids_cells.md)

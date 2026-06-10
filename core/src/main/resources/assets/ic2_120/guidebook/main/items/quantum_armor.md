@@ -15,58 +15,63 @@ item_ids:
 
 <ItemImage id="ic2_120:quantum_helmet" scale="4" />
 
-**Status: planned / not yet implemented in this version.** The four Quantum Armor items are registered and craftable, but the full energy-driven combat mechanics, flight, super-jump, and status-immunity behaviors described below are **planned mechanics for an upcoming release** and are not active in the current build. For now, Quantum Armor behaves as the highest-tier vanilla-style armor in the mod: maximum protection, 25x durability, and the highest toughness and knockback resistance of any IC2 set.
+Quantum Armor is IC2's end-game armor. It makes the player a self-contained power armored unit: a 10 million EU buffer per piece, strong damage reduction, environmental support, and movement augmentations. The chestplate also works as the final flight pack, using the same creative-style flight controls as the Jetpack and Electric Jetpack.
 
-Quantum Armor is IC2's end-game armor. It is meant to make the player a self-contained power armored unit: a 10 million EU buffer per piece, on-hit damage absorption, environmental immunities, and movement augmentations.
-
-## Block View
+## Item View
 
 | Quantum Helmet | Quantum Chestplate | Quantum Leggings | Quantum Boots |
-|:---:|:---:|:---:|:---:|:---:|
+|:---:|:---:|:---:|:---:|
 | <ItemImage id="ic2_120:quantum_helmet" scale="2" /> | <ItemImage id="ic2_120:quantum_chestplate" scale="2" /> | <ItemImage id="ic2_120:quantum_leggings" scale="2" /> | <ItemImage id="ic2_120:quantum_boots" scale="2" /> |
 
 ## Stats
 
-| Slot | Item | Armor | Durability Multiplier | Toughness | Knockback Resistance | Repair Ingredient |
-|------|------|:---:|:---:|:---:|:---:|---|
-| Helmet | quantum_helmet | 4 | 25x | 3.0 | 0.4 | <ItemLink id="ic2_120:iridium_ingot" /> |
-| Chestplate | quantum_chestplate | 9 | 25x | 3.0 | 0.4 | <ItemLink id="ic2_120:iridium_ingot" /> |
-| Leggings | quantum_leggings | 6 | 25x | 3.0 | 0.4 | <ItemLink id="ic2_120:iridium_ingot" /> |
-| Boots | quantum_boots | 4 | 25x | 3.0 | 0.4 | <ItemLink id="ic2_120:iridium_ingot" /> |
+| Slot | Item | Armor | Toughness | Knockback Resistance | EU Capacity | Tier | Powered Reduction |
+|------|------|:---:|:---:|:---:|:---:|:---:|:---:|
+| Helmet | quantum_helmet | 4 | 3.0 | 0.4 | 10,000,000 EU | 4 | 15% |
+| Chestplate | quantum_chestplate | 9 | 3.0 | 0.4 | 10,000,000 EU | 4 | 45% |
+| Leggings | quantum_leggings | 6 | 3.0 | 0.4 | 10,000,000 EU | 4 | 30% |
+| Boots | quantum_boots | 4 | 3.0 | 0.4 | 10,000,000 EU | 4 | 10% |
 
 The 3.0 toughness and 0.4 knockback resistance stack additively with vanilla modifiers from other sources.
 
-## Planned Mechanics (Not Yet Active)
+## Active Mechanics
 
-The following behaviors are part of the design for Quantum Armor and **will be implemented in a future version**:
+- **Energy buffer** — each piece holds `10,000,000 EU` (`10 MEU`). Charge from IC2 power sources that can charge armor or high-tier electric items.
+- **Damage reduction** — each piece contributes its configured damage reduction while charged; the chestplate shows its reduction value in the tooltip. A full set totals **100% powered damage reduction** (15% + 45% + 30% + 10%), granting complete damage immunity when all pieces are charged.
+- **Quantum Helmet** — night vision support and helmet utility features.
+- **Quantum Chestplate** — creative-style flight while charged, plus the chestplate's protective role.
+- **Quantum Leggings** — speed boost support.
+- **Quantum Boots** — jump boost and fall-protection support.
 
-- **Energy buffer** — each piece holds `10,000,000 EU` (`10 MEU`). Charge from any IC2 power source targeting the worn armor.
-- **Piercing damage reduction** — per-piece damage absorption: Helmet 15%, Chestplate 44%, Leggings 30%, Boots 15%. Together, the set can absorb essentially all incoming damage as long as the buffers are charged.
-- **On-hit EU cost** — each piece that contributes to a hit consumes at least `900 EU` per hit, plus `30 EU` per point of damage the piece absorbs.
-- **Full-set status immunities** — eliminates poison, wither, and radiation damage while the full set is worn.
-- **Quantum Helmet** — water breathing (refills the air meter automatically while worn), night vision (`Alt+M` toggle), and passive hunger saturation refill.
-- **Quantum Chestplate** — flight (creative-style flight while the buffer is charged) and full fire immunity.
-- **Quantum Leggings** — `3x` sprint speed and `9x` faster movement on ice.
-- **Quantum Boots** — fall damage reduction (similar to Nano Boots but stronger) and **Ctrl+Space super-jump** (hold both keys to charge a jump of up to 9 blocks, costing `1,000 EU` per use).
+## Quantum Flight
 
-Until the mechanics ship, the set is best treated as the highest-tier baseline armor in the mod — the 25x durability and 3.0 toughness make it the toughest non-netherite-style set available.
+The <ItemLink id="ic2_120:quantum_chestplate" /> is the highest-tier flight chestplate.
 
-## How to Use (Current Build)
+- **Storage:** 10,000,000 EU by default.
+- **Duration:** 1,200 seconds of active flight on a full charge by default.
+- **Controls:** double-tap jump to start or stop flying, jump to rise, sneak to descend.
+- **Shutdown:** landing turns flying off through vanilla client logic. Removing the chestplate or draining the buffer restores the flight state you had before equipping it.
+- **Water:** entering water does not cancel creative flight in vanilla, so a still-flying quantum chestplate continues consuming EU until flying is toggled off, the player lands, or the buffer drains.
+
+## How to Use
 
 - Equip all four pieces to maximize protection. The 0.4 knockback resistance makes the player very hard to push around in PvE.
-- Repair each piece with <ItemLink id="ic2_120:iridium_ingot" /> in an anvil or crafting grid.
-- EU charging is accepted by the items' NBT data; the combat, flight, and super-jump features are not yet wired up.
+- Keep every piece charged; Quantum Armor is maintained by EU charging, not by vanilla durability repair.
+- Keep the chestplate charged before long flights; it is crafted from an Electric Jetpack and replaces it as the end-game flight option.
 
 ## Crafting
 
-<Recipe id="ic2_120:quantum_helmet" />
-<Recipe id="ic2_120:quantum_chestplate" />
-<Recipe id="ic2_120:quantum_leggings" />
-<Recipe id="ic2_120:quantum_boots" />
+| Quantum Helmet | Quantum Chestplate |
+|:---:|:---:|
+| <Recipe id="ic2_120:quantum_helmet" /> | <Recipe id="ic2_120:quantum_chestplate" /> |
+| Quantum Leggings | Quantum Boots |
+| <Recipe id="ic2_120:quantum_leggings" /> | <Recipe id="ic2_120:quantum_boots" /> |
 
 ## Related
 
 - [Tools and Armor reference](../reference/tools_armor.md)
 - [Batteries and Mobile Power](../reference/energy_items.md)
 - [Nano Armor](nano_armor.md) — the tier below Quantum
-- [Jetpacks and Electric Jetpack](../reference/energy_items.md) — alternative flight options
+- [Jetpacks and Electric Jetpack](jetpack.md) — earlier flight options
+- [Night Vision Goggles](night_vision_goggles.md) — standalone night vision item; Quantum Helmet includes the same system
+- [Composite Chestplate](alloy_chestplate.md) — alternative energy chestplate with jetpack-compatible flight

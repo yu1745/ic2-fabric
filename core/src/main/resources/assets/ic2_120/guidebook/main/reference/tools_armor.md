@@ -82,7 +82,7 @@ Some machines allow the wrench to configure their functional mode.
 
 ### Hazmat Suit Set
 
-Provides radiation protection and electrical insulation.
+Provides radiation protection.
 
 | Slot | Item | Armor | Durability Multiplier |
 |------|------|-------|-----------------------|
@@ -93,7 +93,6 @@ Provides radiation protection and electrical insulation.
 
 **Set effects**:
 - Immunity to nuclear radiation damage when core temperature > 7,000
-- Blocks electrocution damage from exposed cables
 - **Hazmat Helmet**: underwater breathing (consumes compressed air units from the inventory)
 
 ### Bronze Armor Set
@@ -146,7 +145,7 @@ A mobile power storage device worn in the chestplate slot. When worn, it automat
 
 ### Night Vision Goggles
 
-A head-mounted device that provides night vision. Alt+M to toggle, 1 EU/tick to maintain.
+A head-mounted device that provides night vision. Alt+N to toggle, 1 EU/tick to maintain.
 
 ### Jetpacks and Construction Backpacks
 

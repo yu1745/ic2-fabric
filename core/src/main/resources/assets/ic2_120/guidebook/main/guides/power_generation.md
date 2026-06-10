@@ -17,6 +17,8 @@ item_ids:
 
 # Power Generation and Storage
 
+<BlockImage id="ic2_120:generator" scale="4" />
+
 ## Generators
 
 ### Generator
@@ -48,6 +50,7 @@ item_ids:
 
 - Converts the kinetic energy of water into KU, which a Kinetic Generator then turns into EU
 - Requires flowing water
+- See [Water Mill](../machines/water_generator.md) for details
 
 ### Wind Kinetic Generator
 
@@ -56,16 +59,24 @@ See [Kinetic System](../systems/kinetic_transmission.md)
 - **Kinetic output**: varies with altitude and weather
 - **Carbon rotor baseline**: y=150 + clear weather + gustFactor=1.0 → 512 KU/t = 128 EU/t
 - **Max KU/t**: 2048 KU/t = 512 EU/t
+- See [Wind Kinetic Generator](../machines/wind_kinetic_generator.md) for details
 
 ### Semifluid Generator
 
 - **Fuels**: two families — refined fuel-oil and crude-oil / creosote
 - **EU per mB**: refined fuel-oil is higher; crude-oil / creosote is lower
+- See [Semifluid Generator](../machines/semifluid_generator.md) for details
+
+### Steam Kinetic Generator
+
+- Converts steam into kinetic energy (KU), which a Kinetic Generator then turns into EU
+- See [Steam Kinetic Generator](../machines/steam_kinetic_generator.md) for details
 
 ### RT Generator (Radioisotope Thermoelectric Generator)
 
 - **Heat-driven**: receives HU and converts it to EU
 - **1 HU = 1 EU**
+- See [RT Generator](../machines/rt_generator.md) for details
 
 ### Creative Generator
 

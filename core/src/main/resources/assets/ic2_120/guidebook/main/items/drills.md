@@ -16,7 +16,13 @@ item_ids:
 
 The Drill family is a three-tier line of electric mining tools that replace the vanilla pickaxe and shovel in one slot. Each tier is an `IElectricTool`: it never loses vanilla durability, draws its power from an internal EU buffer, and registers in both the `minecraft:pickaxes` and `minecraft:shovels` item tags so it can mine any block that a tool of the corresponding material would. When the buffer runs dry, the tool degrades to the slowest base mining speed rather than breaking.
 
-## Overview
+## Item View
+
+| Drill | Diamond Drill | Iridium Drill |
+|:-----:|:-------------:|:-------------:|
+| <ItemImage id="ic2_120:drill" scale="2" /> | <ItemImage id="ic2_120:diamond_drill" scale="2" /> | <ItemImage id="ic2_120:iridium_drill" scale="2" /> |
+
+## Stats
 
 | Drill | Tier | Capacity | Per-Block EU Cost | Pickaxe Behavior | Shovel Behavior | Special |
 |-------|:----:|---------:|------------------:|------------------|-----------------|---------|
@@ -25,12 +31,6 @@ The Drill family is a three-tier line of electric mining tools that replace the 
 | <ItemLink id="ic2_120:iridium_drill" /> | 3 | 1,000,000 EU | 800 EU (Silk Touch mode: 8,000 EU) | Netherite pickaxe | Netherite shovel | Right-click toggles Silk Touch; 10x EU in that mode |
 
 The Drill and Diamond Drill share tier 1 and 10,000 EU capacity — the difference is what they can mine and how fast. The Iridium Drill is a separate tier-3 tool with a 100x larger buffer and netherite-level head, plus a Silk Touch toggle that costs ten times the usual EU per block.
-
-## Block View
-
-| Drill | Diamond Drill | Iridium Drill |
-|:-----:|:-------------:|:-------------:|
-| <ItemImage id="ic2_120:drill" scale="2" /> | <ItemImage id="ic2_120:diamond_drill" scale="2" /> | <ItemImage id="ic2_120:iridium_drill" scale="2" /> |
 
 ## How to Use
 
@@ -68,8 +68,6 @@ The three drills form a straight upgrade chain: Drill → Diamond Drill (head up
 | <Recipe id="ic2_120:drill" /> | <Recipe id="ic2_120:diamond_drill" /> |
 | Iridium Drill | |
 | <Recipe id="ic2_120:iridium_drill" /> | |
-
-The Drill combines iron plates around a Power Unit (`" I " / "III" / "IPI"`). The Diamond Drill is a head swap on the Drill using diamonds (`" D " / "DVD"`). The Iridium Drill wraps a Diamond Drill in reinforced Iridium plates and an Energy Crystal (`" R " / "RDR" / " E "`).
 
 ## Related
 

@@ -27,7 +27,7 @@ For ores and raw metals, one input becomes two crushed ore items. Those crushed 
 
 The machine only starts when the input stack matches a macerating recipe and the output slot can accept the full result. If the input is missing, the recipe is invalid, or the output is blocked, progress resets to 0.
 
-## Recipes
+## Recipe
 
 Notable recipe groups include:
 

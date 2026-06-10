@@ -14,7 +14,7 @@ item_ids:
 
 The Rubber Boots are a hybrid utility item: they are armor, a power generator, and a key component of the [Hazmat Suit](hazmat_armor.md) set. They are craftable very early in the game from <ItemLink id="ic2_120:rubber" />, and they remain useful from the early game all the way through end-game builds because they passively charge anything in the player's inventory as they walk.
 
-## Block View
+## Item View
 
 <ItemImage id="ic2_120:rubber_boots" scale="4" />
 
@@ -36,10 +36,8 @@ While worn, the boots monitor how far the player walks. For every `1.0 m` of hor
 - The charge priority matches IC2's standard ordering: top-tier batteries first, then lower tiers, then partially drained items.
 - Walking across a single block is typically enough to trigger one charge cycle.
 
-### Mobility and Insulation Effects
+### Mobility and Set Effects
 
-- **Slip-resistant descent** — falling onto the boots from any height negates fall damage in the same way vanilla feather falling does. The boots are treated as a soft, cushioned surface.
-- **Electrical insulation** — touching exposed, uninsulated cables does not deal shock damage. This is the same effect the [Hazmat Suit](hazmat_armor.md) provides, because Rubber Boots are the boots slot of that set.
 - **Set bonus with Hazmat** — when worn alongside the three Hazmat pieces, the player receives full radiation immunity and underwater breathing on the Hazmat Helmet.
 
 ### When Charging Stops

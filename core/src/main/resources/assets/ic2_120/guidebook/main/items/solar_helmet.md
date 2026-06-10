@@ -14,7 +14,7 @@ item_ids:
 
 The Solar Helmet is a wearable charging device. While worn in the helmet slot during daytime with an unobstructed sky overhead, it trickle-charges any chargeable EU item in the player's inventory at `1 EU/t` (one EU per tick). It also grants the player a passive `Solar Generating` status effect while the charge is flowing.
 
-## Block View
+## Item View
 
 <ItemImage id="ic2_120:solar_helmet" scale="4" />
 

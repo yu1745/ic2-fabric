@@ -16,25 +16,25 @@ The <ItemLink id="ic2_120:mining_laser" /> is a high-drain, ranged mining tool t
 
 This page is a brief overview. For the full description of every mode, the projectile rules, the random ignite mechanic, and entity damage scaling, see the dedicated [Mining Laser Guide](../guides/mining_laser.md).
 
-## Overview
+## Item View
+
+| Mining Laser |
+|:---:|
+| <ItemImage id="ic2_120:mining_laser" scale="2" /> |
+
+## Stats
 
 The Mining Laser is a hand-held item with a large internal EU buffer. It charges from any compatible battery in the player's inventory, then discharges the buffer in bursts when the player right-clicks. A single buffer holds enough EU for many shots in the lower-power modes and fewer shots in the high-power modes.
 
 | Property | Value |
 |----------|------|
-| Tier | 4 (Lapotron Crystal) |
+| Tier | 3 (Energy Crystal) |
 | Internal buffer | Configurable; default is large, set in `Ic2Config` |
 | EU per shot | Varies by mode (see dedicated guide) |
-| Charge source | Any Lapotron-tier battery or higher in inventory |
+| Charge source | Any Energy Crystal-tier battery or higher in inventory |
 | Operation | Right-click to fire; **Mode Switch** + right-click to cycle modes |
 
 Default values can be tuned in the mod's `Ic2Config`; check the config file for the exact buffer size for the build you are playing.
-
-## Block View
-
-| Mining Laser |
-|:---:|
-| <ItemImage id="ic2_120:mining_laser" scale="2" /> |
 
 ## Modes (Summary)
 

@@ -45,7 +45,7 @@ Chargepads are energy storage blocks with a charging surface. They keep the same
 
 Place the output face toward the cable or machine that should receive excess power, and keep the top clear for the player. MFE and MFSU Chargepads can also serve as the adjacent storage block for a Teleporter while still acting as walk-over armor chargers.
 
-## Recipes
+## Recipe
 
 <Recipe id="ic2_120:batbox_chargepad" />
 <Recipe id="ic2_120:cesu_chargepad" />

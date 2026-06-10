@@ -10,6 +10,8 @@ item_ids:
 
 # Carbon Rotor
 
+<ItemImage id="ic2_120:carbon_rotor" scale="4" />
+
 The Carbon Rotor is the best-tier rotor used in Wind Kinetic Generators and Water Kinetic Generators.
 
 - **Wind**: Radius 5, Multiplier 4&times;

@@ -8,6 +8,8 @@ navigation:
 
 # Storage Box
 
+<BlockImage id="ic2_120:iron_storage_box" scale="4" />
+
 The Storage Box is a pure bulk item storage block. It comes in 5 material tiers, with capacity increasing per tier. It does **not consume EU, does not support upgrades, and is not involved in any machine mechanics** — it is purely for storing items.
 
 ## Five Tier Comparison

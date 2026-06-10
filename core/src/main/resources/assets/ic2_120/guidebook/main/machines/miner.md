@@ -50,3 +50,7 @@ When a pipe route crosses water or lava, the Miner removes the fluid and stores 
 ## Usage
 
 Place the Miner above the area to search, give it EU, an OD Scanner, a drill, and plenty of mining pipes. Put a chest or other item inventory beside it and configure an Ejector Upgrade if you want the ore drops captured instead of dropped on the ground.
+
+## Related
+
+- [OD Scanner / OV Scanner](../items/scanners.md) — electric scanners for Miner and Advanced Miner

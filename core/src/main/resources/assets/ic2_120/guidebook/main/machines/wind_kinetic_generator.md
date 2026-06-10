@@ -109,7 +109,7 @@ The <ItemLink id="ic2_120:kinetic_generator" /> pulls KU through its front face 
 
 ## Related
 
-- <ItemLink id="ic2_120:wind_meter" />
+- <ItemLink id="ic2_120:wind_meter" /> — [Wind Meter](wind_meter.md)
 - <ItemLink id="ic2_120:kinetic_generator" />
 - <ItemLink id="ic2_120:wooden_rotor" />
 - <ItemLink id="ic2_120:iron_rotor" />

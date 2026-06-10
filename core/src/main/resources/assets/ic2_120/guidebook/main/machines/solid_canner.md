@@ -25,7 +25,7 @@ The Solid Canning Machine combines a solid container item with a solid filling i
 
 Progress resets when either input is missing, the inputs no longer match a valid recipe, there are not enough required items, or the output slot cannot accept the result.
 
-## Recipes
+## Recipe
 
 Machine recipes load nuclear fuel:
 
@@ -50,6 +50,6 @@ Supported upgrades are Overclocker, Transformer, Energy Storage, Ejector, and Pu
 
 External item automation routes Empty Tin Cans and Empty Fuel Rods to the container slot, valid food or fuel ingredients to the filler slot, batteries to the battery slot, and upgrades to the upgrade slots. Only the output slot is exposed for normal extraction.
 
-## Machine Recipe
+## Recipe
 
 <Recipe id="ic2_120:solid_canner" />

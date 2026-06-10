@@ -20,7 +20,7 @@ The machine accepts regular steam and superheated steam into its steam tank. Eve
 
 Without heat vents the Condenser still works passively at 100 mB/t and does not consume EU. Each installed heat vent adds another 100 mB/t of cooling and costs 2 EU/t while steam is being processed.
 
-## Tanks And Power
+## Tanks and Power
 
 - **Steam tank:** 8,000 mB, accepts steam and superheated steam
 - **Distilled water tank:** 8,000 mB, outputs distilled water

@@ -28,7 +28,7 @@ Heat is a threshold, not a consumed ingredient. With a valid recipe inserted, th
 
 The machine only starts when the input stack matches a centrifuging recipe, the current heat is high enough, and every required output can fit. If the input is missing, the recipe is invalid, the heat is too low, or an output is blocked, it stops; blocked outputs reset progress to 0.
 
-## Recipes
+## Recipe
 
 Centrifuge recipes are in the `ic2_120:centrifuging` recipe category and can consume more than one input item. Each operation can produce up to three outputs: the first output goes to the top output slot, the second to the middle output slot, and the third to the lower output slot.
 

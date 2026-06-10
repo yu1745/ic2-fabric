@@ -14,19 +14,17 @@ item_ids:
 
 The <ItemLink id="ic2_120:nano_saber" /> is a tier-3 electric sword. Right-click to toggle it on or off; while active and powered, it cuts for a heavy 21 damage per hit. When inactive, or active but out of EU, it degrades to a vanilla sword with 5 damage.
 
-## Overview
-
-The Nano Saber combines a 160,000 EU internal buffer with a 0-vanilla-durability `ToolMaterial` and an attack-speed modifier of -2.4. The `NanoSaberActive` NBT boolean tracks whether the saber is currently lit up. Damage is computed dynamically: `5.0` when inactive or empty, `21.0` when active with at least 1 EU in the buffer.
-
-There is no vanilla durability bar; the only thing the bar shows is the EU buffer. When the EU is gone, the saber still swings — it just stops doing tier-3 damage and falls back to its inactive damage value.
-
-## Block View
+## Item View
 
 | Nano Saber |
 |:----------:|
 | <ItemImage id="ic2_120:nano_saber" scale="2" /> |
 
 ## Stats
+
+The Nano Saber combines a 160,000 EU internal buffer with a 0-vanilla-durability `ToolMaterial` and an attack-speed modifier of -2.4. The `NanoSaberActive` NBT boolean tracks whether the saber is currently lit up. Damage is computed dynamically: `5.0` when inactive or empty, `21.0` when active with at least 1 EU in the buffer.
+
+There is no vanilla durability bar; the only thing the bar shows is the EU buffer. When the EU is gone, the saber still swings — it just stops doing tier-3 damage and falls back to its inactive damage value.
 
 | Property | Value |
 |----------|-------|

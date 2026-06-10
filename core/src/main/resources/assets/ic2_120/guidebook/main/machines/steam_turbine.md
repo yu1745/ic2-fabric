@@ -10,6 +10,8 @@ item_ids:
 
 # Steam Turbine
 
+<ItemImage id="ic2_120:steam_turbine" scale="4" />
+
 The Steam Turbine is a consumable item used in the Steam Kinetic Generator. It has 48 base durability and wears down as the generator operates. Regular steam causes 2 wear per 20 ticks, while superheated steam causes only 1 wear.
 
 The turbine must be installed in the turbine slot of a Steam Kinetic Generator.

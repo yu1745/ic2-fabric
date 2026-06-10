@@ -15,7 +15,7 @@ item_ids:
 
 The Scanners are a two-tier family of prospecting tools used to locate ore deposits in the world. Both share a single GUI: hold the scanner, right-click to open the screen, and press the "Scan" button to spend energy and burn one use. The OD Scanner covers a 13×13 footprint down to bedrock-layer depth, while the OV Scanner widens that to 25×25 and reaches deeper — but at a much steeper EU cost per scan.
 
-## Block View
+## Item View
 
 | OD Scanner | OV Scanner |
 |:----------:|:----------:|
@@ -61,9 +61,6 @@ The OD Scanner is the gating material for the OV Scanner, so plan your tier-1 pr
 | OD Scanner | OV Scanner |
 |:----------:|:----------:|
 | <Recipe id="ic2_120:scanner" /> | <Recipe id="ic2_120:advanced_scanner" /> |
-
-- **OD Scanner:** glowstone dust over a circuit, with a Re-Battery in the center and insulated copper cables filling the bottom row (`gCg / ibi / ccc`).
-- **OV Scanner:** glowstone dust flanking an advanced circuit, an Energy Crystal in the middle, insulated gold cables, and an OD Scanner as the core (`gCg / gAg / iIi`).
 
 ## Related
 

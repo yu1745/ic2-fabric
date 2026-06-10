@@ -93,6 +93,32 @@ Nuclear power is built from the reactor block, external ports, and internal comp
 - Neutron Reflectors reflect pulses from adjacent fuel rods; the Iridium Neutron Reflector never wears out.
 - Redstone Condensator and Lapis Condensator absorb heat, but require their respective materials to repair.
 
+## Containment Box
+
+The Containment Box is a storage block for safely holding depleted fuel rods and other radioactive items. It has no special mechanics beyond providing a thematic container for nuclear waste.
+
+## Fuel Cycle
+
+The nuclear fuel chain follows a cyclic process:
+
+1. **Mining**: Mine uranium ore (Y −64 to Y 63) and process through the Macerator to obtain Crushed Uranium Ore.
+2. **Enrichment**: Run Crushed Uranium Ore through the Thermal Centrifuge to obtain **Uranium-235** and **Uranium-238**.
+3. **Fuel Rod Crafting**: Combine Uranium-235 and Uranium-238 (1:1 ratio) to craft Fuel Rods. Fuel Rods come in three sizes: Single, Dual (2× output), and Quad (4× output).
+4. **Reactor Operation**: Place fuel rods in a Nuclear Reactor. They generate EU and heat during operation. Heat must be managed with cooling components (Coolant Cells, Heat Vents, Heat Exchangers).
+5. **Depletion**: After running for a set number of reactor ticks, fuel rods become Depleted Fuel Rods (of the same size).
+6. **Reprocessing**: Run Depleted Fuel Rods through the Thermal Centrifuge to recover **Uranium-238**, **Small Pile of Plutonium**, and **Iron Dust**.
+7. **MOX Fuel**: Combine Plutonium with Uranium-238 to craft **MOX Fuel Rods**. MOX rods produce more EU the hotter the reactor runs — a risk/reward tradeoff.
+
+The cycle then repeats from step 4 with the new fuel rods.
+
+### Key Ratios
+
+| Process | Input | Output |
+|---------|-------|--------|
+| Centrifuge (crushed uranium) | 1 Crushed Uranium | 1 Small Uranium-235 + 3 Small Uranium-238 |
+| Centrifuge (depleted uranium rod) | 1 Depleted Uranium Rod | 1 Small Plutonium + 4 Small Uranium-238 + Iron Dust |
+| Centrifuge (depleted dual/quad) | 1 Depleted Dual/Quad Rod | Scaled output (×2 or ×4) |
+
 ## Safety Checklist
 
 - When bringing up a new design, idle-check the cooling layout first, then add fuel gradually.

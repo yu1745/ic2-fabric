@@ -10,6 +10,8 @@ item_ids:
 
 # 蒸汽涡轮叶片
 
+<ItemImage id="ic2_120:steam_turbine_blade" scale="4" />
+
 蒸汽涡轮叶片是用于组装蒸汽涡轮的合成材料。多个叶片组合可形成一个完整的涡轮。
 
 ## 配方
