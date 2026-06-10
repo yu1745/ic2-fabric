@@ -26,7 +26,7 @@ import org.lwjgl.glfw.GLFW
  * - Alt+L：量子护腿神行
  * - Alt+J：量子靴子大跳
  *
- * 飞行（量子胸甲/喷气背包）使用双击空格触发，见 [FlightDoubleTapHandler]。
+ * 飞行（量子胸甲/喷气背包）复用原版创造飞行的双击空格触发。
  * M 键用于铱钻头、夜视仪、采矿镭射等手持设备，量子套不共用。
  */
 @Environment(EnvType.CLIENT)

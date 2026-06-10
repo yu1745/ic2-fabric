@@ -24,8 +24,6 @@ open class JetpackItem : ArmorItem(
 
     companion object {
         private const val FUEL_KEY = "Fuel"
-        private const val IS_HOVER_KEY = "IsHover"
-        private const val FLIGHT_ENABLED_KEY = "FlightEnabled"
         private const val FUEL_REMAINDER_KEY = "FuelRemainder"
 
         @JvmStatic
@@ -53,24 +51,6 @@ open class JetpackItem : ArmorItem(
             stack.editCustomData { it.putLong(FUEL_KEY, fuel.coerceIn(0L, maxFuel)) }
         }
 
-        @JvmStatic
-        fun isHovering(stack: ItemStack): Boolean =
-            stack.getCustomData()?.getBoolean(IS_HOVER_KEY) ?: false
-
-        @JvmStatic
-        fun setHovering(stack: ItemStack, hovering: Boolean) {
-            stack.editCustomData { it.putBoolean(IS_HOVER_KEY, hovering) }
-        }
-
-        @JvmStatic
-        fun isFlightEnabled(stack: ItemStack): Boolean =
-            stack.getCustomData()?.getBoolean(FLIGHT_ENABLED_KEY) ?: false
-
-        @JvmStatic
-        fun setFlightEnabled(stack: ItemStack, enabled: Boolean) {
-            stack.editCustomData { it.putBoolean(FLIGHT_ENABLED_KEY, enabled) }
-        }
-
         /**
          * 使用余数累加器精确消耗燃料（支持小数消耗速率）
          * @return true 如果消耗成功，false 如果燃料不足
@@ -93,13 +73,6 @@ open class JetpackItem : ArmorItem(
             stack.editCustomData { it.putDouble(FUEL_REMAINDER_KEY, remainder - toConsume) }
             return true
         }
-
-        @JvmStatic
-        fun toggleFlightEnabled(stack: ItemStack): Boolean {
-            val enabled = !isFlightEnabled(stack)
-            setFlightEnabled(stack, enabled)
-            return enabled
-        }
     }
 
     override fun appendTooltip(
@@ -112,7 +85,6 @@ open class JetpackItem : ArmorItem(
 
         val fuel = getFuel(stack)
         val ratio = if (maxFuel > 0) fuel.toDouble() / maxFuel else 0.0
-        val flightEnabled = isFlightEnabled(stack)
 
         // 计算剩余飞行时间（秒）
         val remainingSeconds = if (fuel > 0 && maxFuel > 0) {
@@ -129,9 +101,7 @@ open class JetpackItem : ArmorItem(
         }
 
         tooltip.add(Text.literal("燃料: %,d / %,d mB (%.1f%%)".format(fuel, maxFuel, ratio * 100)))
-        tooltip.add(Text.literal("飞行: ").append(
-            Text.translatable(if (flightEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off")
-        ).append(Text.literal(" | 剩余: $timeText")).formatted(Formatting.GRAY))
+        tooltip.add(Text.literal("剩余飞行: $timeText").formatted(Formatting.GRAY))
     }
 
     override fun isItemBarVisible(stack: ItemStack): Boolean = true

@@ -3,16 +3,21 @@ package ic2_120.content.player
 import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.QuantumChestplate
+import ic2_120.content.item.energy.IElectricTool
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.server.MinecraftServer
-import ic2_120.editCustomData
-import ic2_120.getCustomData
+import java.util.UUID
 
+/**
+ * 喷气背包/电力喷气背包/量子胸甲的飞行管理（服务端 tick）。
+ *
+ * 服务端只根据胸甲是否可飞行来授予或剥夺 vanilla 飞行权限；双击空格、
+ * 起飞/停止等行为交给原版 PlayerAbilities 流程处理。
+ */
 object FlightManager {
-    private const val JETPACK_HOVER_KEY = "IsHover"
-    private val jetpackGrantedPlayers = mutableSetOf<java.util.UUID>()
+    private val abilitySnapshots = mutableMapOf<UUID, FlightAbilitySnapshot>()
 
     fun tick(server: MinecraftServer) {
         for (world in server.worlds) {
@@ -23,178 +28,93 @@ object FlightManager {
     }
 
     private fun tickPlayer(player: PlayerEntity) {
-        val chestStack = player.getEquippedStack(EquipmentSlot.CHEST)
+        if (player.isCreative || player.isSpectator) {
+            abilitySnapshots.remove(player.uuid)
+            return
+        }
 
-        if (chestStack.item is JetpackItem) {
-            // 从量子胸甲切换到喷气背包时，清理残留的量子飞行状态
-            if (!player.isCreative && !player.isSpectator
-                && player.abilities.allowFlying && !jetpackGrantedPlayers.contains(player.uuid)) {
-                disableQuantumFlight(player)
-            }
-            handleJetpackFlight(player, chestStack)
+        val chest = player.getEquippedStack(EquipmentSlot.CHEST)
+        val source = flightSource(chest)
+        if (source == null || !source.hasEnergy(chest)) {
+            restorePreviousFlightState(player)
             return
         }
-        if (chestStack.item is ElectricJetpack) {
-            if (!player.isCreative && !player.isSpectator
-                && player.abilities.allowFlying && !jetpackGrantedPlayers.contains(player.uuid)) {
-                disableQuantumFlight(player)
-            }
-            handleElectricJetpackFlight(player, chestStack)
-            return
-        }
-        disableJetpackFlight(player, null)
-        handleQuantumFlight(player, chestStack)
-        // 不穿量子胸甲时清理残留的量子飞行状态（非创造/旁观模式）
-        if (chestStack.item !is QuantumChestplate
-            && !player.isCreative && !player.isSpectator) {
-            disableQuantumFlight(player)
+
+        grantFlightPermission(player)
+
+        if (player.abilities.flying) {
+            source.consume(chest)
         }
     }
 
-    private fun handleJetpackFlight(player: PlayerEntity, jetpackStack: ItemStack) {
-        if (player.isCreative || player.isSpectator || !JetpackItem.isFlightEnabled(jetpackStack)) {
-            disableJetpackFlight(player, jetpackStack)
-            return
-        }
-        if (player.isOnGround || player.isTouchingWater || player.isClimbing
-            || (jetpackGrantedPlayers.contains(player.uuid) && !player.abilities.flying)) {
-            JetpackItem.setFlightEnabled(jetpackStack, false)
-            disableJetpackFlight(player, jetpackStack)
-            return
+    private fun grantFlightPermission(player: PlayerEntity) {
+        abilitySnapshots.getOrPut(player.uuid) {
+            FlightAbilitySnapshot(
+                allowFlying = player.abilities.allowFlying,
+                flying = player.abilities.flying
+            )
         }
 
-        if (!JetpackItem.consumeFuelPerTick(jetpackStack)) {
-            JetpackItem.setFlightEnabled(jetpackStack, false)
-            disableJetpackFlight(player, jetpackStack)
-            return
-        }
-        enableJetpackFlight(player, jetpackStack)
+        if (player.abilities.allowFlying) return
+
+        player.abilities.allowFlying = true
+        player.sendAbilitiesUpdate()
     }
 
-    private fun handleElectricJetpackFlight(player: PlayerEntity, jetpackStack: ItemStack) {
-        val jetpack = jetpackStack.item as ElectricJetpack
+    private fun restorePreviousFlightState(player: PlayerEntity) {
+        val snapshot = abilitySnapshots.remove(player.uuid) ?: return
 
-        if (player.isCreative || player.isSpectator || !jetpack.isFlightEnabled(jetpackStack)) {
-            disableJetpackFlight(player, jetpackStack)
-            return
-        }
-        if (player.isOnGround || player.isTouchingWater || player.isClimbing
-            || (jetpackGrantedPlayers.contains(player.uuid) && !player.abilities.flying)) {
-            jetpack.setFlightEnabled(jetpackStack, false)
-            disableJetpackFlight(player, jetpackStack)
-            return
-        }
-        if (!jetpack.consumeFlightEnergyPerTick(jetpackStack)) {
-            jetpack.setFlightEnabled(jetpackStack, false)
-            disableJetpackFlight(player, jetpackStack)
-            return
-        }
-
-        enableJetpackFlight(player, jetpackStack)
-    }
-
-    private fun enableJetpackFlight(player: PlayerEntity, stack: ItemStack) {
         var changed = false
-        if (!player.abilities.allowFlying) {
-            player.abilities.allowFlying = true
+        if (player.abilities.flying != snapshot.flying) {
+            player.abilities.flying = snapshot.flying
             changed = true
         }
-        if (!player.abilities.flying) {
-            player.abilities.flying = true
+        if (player.abilities.allowFlying != snapshot.allowFlying) {
+            player.abilities.allowFlying = snapshot.allowFlying
             changed = true
         }
         if (changed) {
             player.sendAbilitiesUpdate()
         }
-        stack.editCustomData { it.putBoolean(JETPACK_HOVER_KEY, true) }
-        jetpackGrantedPlayers.add(player.uuid)
     }
 
-    private fun disableJetpackFlight(player: PlayerEntity, stack: ItemStack?) {
-        val hovering = stack?.getCustomData()?.getBoolean(JETPACK_HOVER_KEY) == true
-        if (!jetpackGrantedPlayers.contains(player.uuid) && !hovering) {
-            return
-        }
+    private data class FlightAbilitySnapshot(
+        val allowFlying: Boolean,
+        val flying: Boolean
+    )
 
-        if (!player.isCreative && !player.isSpectator) {
-            var changed = false
-            if (player.abilities.flying) {
-                player.abilities.flying = false
-                changed = true
-            }
-            if (player.abilities.allowFlying) {
-                player.abilities.allowFlying = false
-                changed = true
-            }
-            if (changed) {
-                player.sendAbilitiesUpdate()
-            }
-        }
-
-        stack?.editCustomData { it.putBoolean(JETPACK_HOVER_KEY, false) }
-        jetpackGrantedPlayers.remove(player.uuid)
+    private fun flightSource(stack: ItemStack): FlightSource? = when (stack.item) {
+        is JetpackItem -> JetpackSource
+        is ElectricJetpack -> ElectricJetpackSource
+        is QuantumChestplate -> QuantumSource
+        else -> null
     }
 
-    private fun handleQuantumFlight(player: PlayerEntity, chestStack: ItemStack) {
-        val chestplate = chestStack.item as? QuantumChestplate ?: return
-        val flightEnabled = QuantumChestplate.isFlightEnabled(chestStack)
-        val isActive = player.abilities.allowFlying
+    private interface FlightSource {
+        fun hasEnergy(stack: ItemStack): Boolean
+        fun consume(stack: ItemStack)
+    }
 
-        if (player.isCreative || player.isSpectator || (player.abilities.flying && !isActive)) {
-            return
-        }
-
-        if (!flightEnabled) {
-            if (isActive) {
-                disableQuantumFlight(player)
-            }
-            return
-        }
-
-        val currentEnergy = chestplate.getEnergy(chestStack)
-        if (currentEnergy <= 0) {
-            QuantumChestplate.setFlightEnabled(chestStack, false)
-            disableQuantumFlight(player)
-            return
-        }
-
-        // 落地/攀爬时自动关闭飞行。入水不关闭，允许从水里起飞。
-        // 同时检测 flying 状态被游戏自动关闭的情况（飞行模式下落地时 isOnGround 可能滞后）。
-        if (player.isOnGround || player.isClimbing
-            || (isActive && !player.abilities.flying)) {
-            QuantumChestplate.setFlightEnabled(chestStack, false)
-            if (isActive) {
-                disableQuantumFlight(player)
-            }
-            return
-        }
-
-        if (!QuantumChestplate.consumeFlightEnergyPerTick(chestStack)) {
-            QuantumChestplate.setFlightEnabled(chestStack, false)
-            disableQuantumFlight(player)
-            return
-        }
-        if (!player.abilities.allowFlying || !player.abilities.flying) {
-            player.abilities.allowFlying = true
-            player.abilities.flying = true
-            player.sendAbilitiesUpdate()
+    private object JetpackSource : FlightSource {
+        override fun hasEnergy(stack: ItemStack): Boolean = JetpackItem.getFuel(stack) > 0
+        override fun consume(stack: ItemStack) {
+            JetpackItem.consumeFuelPerTick(stack)
         }
     }
 
-    private fun disableQuantumFlight(player: PlayerEntity) {
-        if (!player.isCreative && !player.isSpectator) {
-            var changed = false
-            if (player.abilities.flying) {
-                player.abilities.flying = false
-                changed = true
-            }
-            if (player.abilities.allowFlying) {
-                player.abilities.allowFlying = false
-                changed = true
-            }
-            if (changed) {
-                player.sendAbilitiesUpdate()
-            }
+    private object ElectricJetpackSource : FlightSource {
+        override fun hasEnergy(stack: ItemStack): Boolean =
+            (stack.item as ElectricJetpack).getEnergy(stack) > 0
+
+        override fun consume(stack: ItemStack) {
+            (stack.item as ElectricJetpack).consumeFlightEnergyPerTick(stack)
+        }
+    }
+
+    private object QuantumSource : FlightSource {
+        override fun hasEnergy(stack: ItemStack): Boolean = IElectricTool.getEnergy(stack) > 0
+        override fun consume(stack: ItemStack) {
+            QuantumChestplate.consumeFlightEnergyPerTick(stack)
         }
     }
 }

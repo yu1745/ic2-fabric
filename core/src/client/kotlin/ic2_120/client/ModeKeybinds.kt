@@ -17,7 +17,7 @@ import org.lwjgl.glfw.GLFW
  * - 泡沫喷枪：按住 **Alt** 并**按下**此键（边沿触发）切换（见 [register] 内 ClientTickEvents）。
  * - 采矿镭射枪：**按住**此键并**右键**切换模式（见 [MiningLaserModeHandler]）。
  *
- * 飞行（量子胸甲/喷气背包）使用双击空格触发，见 [FlightDoubleTapHandler]。
+ * 飞行（量子胸甲/喷气背包）复用原版创造飞行的双击空格触发。
  * 量子套夜视(Alt+N) 使用 ArmorKeybinds。
  */
 @Environment(EnvType.CLIENT)

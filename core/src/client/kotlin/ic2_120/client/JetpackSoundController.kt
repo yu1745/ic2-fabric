@@ -13,6 +13,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.random.Random
 import org.slf4j.LoggerFactory
 
+
 object JetpackSoundController {
     private val logger = LoggerFactory.getLogger("ic2_120/JetpackSoundController")
     private val JETPACK_SOUND_ID = Identifier.of(Ic2_120.MOD_ID, "item.jetpack.loop")
@@ -58,11 +59,7 @@ object JetpackSoundController {
         if (player.isOnGround || player.isTouchingWater || player.isClimbing) return false
 
         val chest = player.getEquippedStack(EquipmentSlot.CHEST)
-        return when (val item = chest.item) {
-            is JetpackItem -> JetpackItem.isFlightEnabled(chest)
-            is ElectricJetpack -> item.isFlightEnabled(chest)
-            else -> false
-        }
+        return chest.item is JetpackItem || chest.item is ElectricJetpack
     }
 
     private class JetpackLoopSoundInstance(

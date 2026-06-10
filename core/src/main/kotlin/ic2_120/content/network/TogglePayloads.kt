@@ -23,29 +23,11 @@ object ToggleNanoVisionPayload : CustomPayload {
     override fun getId() = ID
 }
 
-object ToggleQuantumFlightPayload : CustomPayload {
-    val ID = CustomPayload.Id<ToggleQuantumFlightPayload>(Ic2_120.id("toggle_quantum_flight"))
-    val CODEC: PacketCodec<PacketByteBuf, ToggleQuantumFlightPayload> = PacketCodec.of(
-        { _, _ -> },
-        { ToggleQuantumFlightPayload }
-    )
-    override fun getId() = ID
-}
-
 object ToggleIridiumSilkTouchPayload : CustomPayload {
     val ID = CustomPayload.Id<ToggleIridiumSilkTouchPayload>(Ic2_120.id("toggle_iridium_silk_touch"))
     val CODEC: PacketCodec<PacketByteBuf, ToggleIridiumSilkTouchPayload> = PacketCodec.of(
         { _, _ -> },
         { ToggleIridiumSilkTouchPayload }
-    )
-    override fun getId() = ID
-}
-
-object ToggleJetpackFlightPayload : CustomPayload {
-    val ID = CustomPayload.Id<ToggleJetpackFlightPayload>(Ic2_120.id("toggle_jetpack_flight"))
-    val CODEC: PacketCodec<PacketByteBuf, ToggleJetpackFlightPayload> = PacketCodec.of(
-        { _, _ -> },
-        { ToggleJetpackFlightPayload }
     )
     override fun getId() = ID
 }

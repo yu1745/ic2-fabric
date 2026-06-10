@@ -8,24 +8,21 @@ import ic2_120.content.item.IridiumDrill
 import ic2_120.content.item.MiningLaserItem
 import ic2_120.content.item.MiningLaserServerSuppress
 import ic2_120.content.item.NightVisionGoggles
-import ic2_120.content.item.ElectricJetpack
-import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.armor.NanoHelmet
-import ic2_120.content.item.armor.QuantumChestplate
+import ic2_120.content.item.armor.QuantumBoots
 import ic2_120.content.item.armor.QuantumHelmet
 import ic2_120.content.item.armor.QuantumLeggings
-import ic2_120.content.item.armor.QuantumBoots
+import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.entity.EquipmentSlot
+import net.minecraft.network.PacketByteBuf
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.text.Text
 import net.minecraft.util.Hand
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.network.PacketByteBuf
-import io.netty.buffer.Unpooled
 
 object NetworkManager {
     private val REACTOR_HEAT_INFO_PACKET = Identifier.of(Ic2_120.MOD_ID, "reactor_heat_info")
@@ -36,9 +33,7 @@ object NetworkManager {
     private val TELEPORTER_VISUAL_STATE_PACKET = TeleporterVisualStatePacket.ID
     val TOGGLE_NIGHT_VISION_GOGGLES_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_night_vision_goggles")
     val TOGGLE_NANO_VISION_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_nano_vision")
-    val TOGGLE_QUANTUM_FLIGHT_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_quantum_flight")
     val TOGGLE_IRIDIUM_SILK_TOUCH_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_iridium_silk_touch")
-    val TOGGLE_JETPACK_FLIGHT_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_jetpack_flight")
     val TOGGLE_FOAM_SPRAYER_MODE_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
     val TOGGLE_MINING_LASER_MODE_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
     val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = Identifier.of(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
@@ -59,7 +54,7 @@ object NetworkManager {
         ServerPlayNetworking.registerGlobalReceiver(ToggleNanoVisionPayload.ID) { _, context ->
             val player = context.player()
             val stack = player.getEquippedStack(EquipmentSlot.HEAD)
-            when (val item = stack.item) {
+            when (stack.item) {
                 is NanoHelmet -> {
                     val enabled = NanoHelmet.toggleNightVision(stack)
                     player.sendMessage(Text.translatable(
@@ -72,17 +67,6 @@ object NetworkManager {
                         if (enabled) "message.ic2_120.quantum_helmet.nv_on" else "message.ic2_120.quantum_helmet.nv_off"
                     ), true)
                 }
-            }
-        }
-
-        ServerPlayNetworking.registerGlobalReceiver(ToggleQuantumFlightPayload.ID) { _, context ->
-            val player = context.player()
-            val stack = player.getEquippedStack(EquipmentSlot.CHEST)
-            if (stack.item is QuantumChestplate) {
-                val enabled = QuantumChestplate.toggleFlight(stack)
-                player.sendMessage(Text.translatable(
-                    if (enabled) "message.ic2_120.quantum_chestplate.flight_on" else "message.ic2_120.quantum_chestplate.flight_off"
-                ), true)
             }
         }
 
@@ -123,24 +107,6 @@ object NetworkManager {
             }
         }
 
-        ServerPlayNetworking.registerGlobalReceiver(ToggleJetpackFlightPayload.ID) { _, context ->
-            val player = context.player()
-            val stack = player.getEquippedStack(EquipmentSlot.CHEST)
-            if (stack.item is JetpackItem || stack.item is ElectricJetpack) {
-                val enabled = when (val item = stack.item) {
-                    is JetpackItem -> JetpackItem.toggleFlightEnabled(stack)
-                    is ElectricJetpack -> item.toggleFlightEnabled(stack)
-                    else -> false
-                }
-                val messageKey = if (enabled) {
-                    "message.ic2_120.jetpack.flight_on"
-                } else {
-                    "message.ic2_120.jetpack.flight_off"
-                }
-                player.sendMessage(Text.translatable(messageKey), true)
-            }
-        }
-
         ServerPlayNetworking.registerGlobalReceiver(ToggleFoamSprayerModePayload.ID) { _, context ->
             val player = context.player()
             for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
@@ -176,7 +142,6 @@ object NetworkManager {
             }
         }
 
-        // 模板选择 C2S 包：绕过 ButtonClickC2SPacket 的 buttonId byte 限制
         ServerPlayNetworking.registerGlobalReceiver(SelectTemplatePayload.ID) { payload, context ->
             val player = context.player()
             val be = player.world.getBlockEntity(payload.pos)
@@ -240,19 +205,15 @@ object NetworkManager {
     }
 
     private fun registerPayloadTypes() {
-        // C2S toggle payloads
         PayloadTypeRegistry.playC2S().register(ToggleNightVisionGogglesPayload.ID, ToggleNightVisionGogglesPayload.CODEC)
         PayloadTypeRegistry.playC2S().register(ToggleNanoVisionPayload.ID, ToggleNanoVisionPayload.CODEC)
-        PayloadTypeRegistry.playC2S().register(ToggleQuantumFlightPayload.ID, ToggleQuantumFlightPayload.CODEC)
         PayloadTypeRegistry.playC2S().register(ToggleQuantumLeggingsSpeedPayload.ID, ToggleQuantumLeggingsSpeedPayload.CODEC)
         PayloadTypeRegistry.playC2S().register(ToggleQuantumBootsJumpPayload.ID, ToggleQuantumBootsJumpPayload.CODEC)
         PayloadTypeRegistry.playC2S().register(ToggleIridiumSilkTouchPayload.ID, ToggleIridiumSilkTouchPayload.CODEC)
-        PayloadTypeRegistry.playC2S().register(ToggleJetpackFlightPayload.ID, ToggleJetpackFlightPayload.CODEC)
         PayloadTypeRegistry.playC2S().register(ToggleFoamSprayerModePayload.ID, ToggleFoamSprayerModePayload.CODEC)
         PayloadTypeRegistry.playC2S().register(ToggleMiningLaserModePayload.ID, ToggleMiningLaserModePayload.CODEC)
         PayloadTypeRegistry.playC2S().register(SelectTemplatePayload.ID, SelectTemplatePayload.CODEC)
 
-        // S2C sync payloads
         PayloadTypeRegistry.playS2C().register(ReactorHeatInfoPacket.ID, ReactorHeatInfoPacket.CODEC)
         PayloadTypeRegistry.playS2C().register(BandwidthHudPacket.ID, BandwidthHudPacket.CODEC)
         PayloadTypeRegistry.playS2C().register(WindRotorStatePacket.ID, WindRotorStatePacket.CODEC)
