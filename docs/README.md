@@ -17,6 +17,7 @@
 - `docs/guides/machine-composition-reuse.md`
 - `docs/guides/item-implemented.md`
 - `docs/guides/recall-scroll.md`
+- `docs/guides/branch-cherry-pick-guide.md`（main → 1.21.1 迁移 cherry-pick 必读）
 
 ### systems（子系统设计）
 
