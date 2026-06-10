@@ -80,7 +80,9 @@
 - DrawContext 参考：`docs/ui/drawcontext-methods.md`
 - 坐标换算：`docs/ui/canner-ui-coordinates.md`
 - Compose 子文档：`docs/compose-ui/*.md`
-- 踩坑记录：`docs/pitfalls/common-pitfalls.md`
+- 踩坑记录：
+  - 代码层面：`docs/pitfalls/common-pitfalls.md`
+  - 工具链（Kotlin LSP）：`docs/pitfalls/lsp-pitfalls.md` — `goToImplementation` 必须把 `character` 偏移 +2~5；`prepareCallHierarchy` / `incomingCalls` / `outgoingCalls` 在 JB 官方 Kotlin LSP（`2.4.0-dev-3554`）未实现，翻 jar 确认是协议层缺失，不要换偏移浪费时间。
 
 ## 7. 提交前验证
 

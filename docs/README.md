@@ -67,7 +67,8 @@
 
 ### pitfalls（踩坑记录）
 
-- `docs/pitfalls/common-pitfalls.md`
+- `docs/pitfalls/common-pitfalls.md` — 代码层面踩坑（BlockWithEntity、SlotSpec 等）
+- `docs/pitfalls/lsp-pitfalls.md` — 工具链踩坑（Kotlin LSP 调用陷阱）
 
 ### archive（归档/TODO）
 
