@@ -1138,7 +1138,7 @@
 
   "tooltip.ic2_120.quantum_boots.jump": "Jump Boost: %s | Remaining: %s",
   "tooltip.ic2_120.quantum_leggings.speed": "Speed: %s | Remaining: %s",
-  "tooltip.ic2_120.quantum_chestplate.flight": "Flight: %s | Remaining: %s",
+  "tooltip.ic2_120.quantum_chestplate.flight_time": "Flight remaining: %s",
   "tooltip.ic2_120.quantum_helmet.night_vision": "Night Vision: %s | Remaining: %s",
   "tooltip.ic2_120.nano_helmet.night_vision": "Night Vision: %s | Remaining: %s",
 

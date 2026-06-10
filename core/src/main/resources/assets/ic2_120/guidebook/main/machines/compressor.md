@@ -28,7 +28,7 @@ The Compressor turns loose materials into dense blocks, plates, crystals, and ot
 - Battery slot: accepts one battery item and discharges it into the machine buffer.
 - Four upgrade slots: accept machine upgrades.
 
-## Recipes
+## Recipe
 
 Notable recipe groups include:
 

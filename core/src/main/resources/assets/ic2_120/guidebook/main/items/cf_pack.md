@@ -14,7 +14,7 @@ item_ids:
 
 The CF Pack (Construction Foam Backpack) is the chestplate-slot fluid reservoir for the <ItemLink id="ic2_120:foam_sprayer" />. Wear it and the sprayer in your main hand stays topped up automatically, so you can keep building long foam walls without going back to a tank or a fluid pipe.
 
-## Block View
+## Item View
 
 | CF Pack |
 |:------:|
@@ -26,12 +26,11 @@ The CF Pack (Construction Foam Backpack) is the chestplate-slot fluid reservoir 
 |----------|-------|
 | Slot | Chestplate |
 | Armor | 2 |
-| Durability multiplier | 8x |
-| Repair material | <ItemLink id="ic2_120:carbon_fibre" /> |
+| Vanilla durability | None (`isDamageable = false`) |
 | Internal capacity | 80 buckets of Construction Foam (`CAPACITY_DROPLETS = 80 * BUCKET`) |
 | Accepted fluid | Construction Foam only |
 
-The CF Pack is a chestplate, not a tool, so it sits in the armor slot. It does not provide any electric power or other utility beyond its fluid storage.
+The CF Pack is a chestplate, not a tool, so it sits in the armor slot. It does not take vanilla damage and has no anvil repair recipe — the only "wear" is foam being consumed. It does not provide any electric power or other utility beyond its fluid storage.
 
 ## How to Use
 
@@ -52,25 +51,9 @@ While the CF Pack is equipped, every tick it tries to fill any <ItemLink id="ic2
 
 The CF Pack exposes a `FluidStorage` interface so external automation can fill or drain it. The interface is filtered to **Construction Foam only** — any other fluid offered is rejected. This makes the CF Pack safe to attach to a generic fluid pipe without worrying about cross-contamination.
 
-### Tooltip
-
-```
-CF Pack
-Construction Foam: 0.00 buckets / 80 buckets
-Refills Foam Sprayer in inventory while worn
-```
-
-The bucket count is computed from `CAPACITY_DROPLETS` and updates as foam is added or drawn.
-
 ## Crafting
 
 <Recipe id="ic2_120:cf_pack" />
-
-**Pattern key** (3x3, left to right, top to bottom):
-
-- **Top row:** `x o x` — **x** = Foam Sprayer, **o** = Circuit
-- **Middle row:** `y z y` — **y** = Empty Cell, **z** = Iron Casing
-- **Bottom row:** `y _ y` — **y** = Empty Cell (centre bottom is empty)
 
 ## Related
 

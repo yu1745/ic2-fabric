@@ -10,6 +10,8 @@ item_ids:
 
 # Iron Rotor
 
+<ItemImage id="ic2_120:iron_rotor" scale="4" />
+
 The Iron Rotor is a mid-tier rotor used in Wind Kinetic Generators and Water Kinetic Generators.
 
 - **Wind**: Radius 3, Multiplier 2&times;

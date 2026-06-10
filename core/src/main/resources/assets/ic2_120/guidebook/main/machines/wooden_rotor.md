@@ -10,6 +10,8 @@ item_ids:
 
 # Wooden Rotor
 
+<ItemImage id="ic2_120:wooden_rotor" scale="4" />
+
 The Wooden Rotor is a basic rotor used in Wind Kinetic Generators and Water Kinetic Generators.
 
 - **Wind**: Radius 2, Multiplier 1&times;

@@ -14,7 +14,7 @@ item_ids:
 
 The Chainsaw is a tier-1 electric logging tool that combines the cutting power of a diamond axe with a built-in EU buffer. It is the dedicated counterpart to the mining drill: where the drill bores stone, the chainsaw fells wood. Every block of log, wood, or other axe-mineable material it touches is broken for a flat 250 EU, with no vanilla durability cost.
 
-## Block View
+## Item View
 
 | Chainsaw |
 |:--------:|
@@ -59,19 +59,6 @@ When the buffer drops below 250 EU, the chainsaw can no longer afford the per-bl
 The chainsaw is built from iron plates wrapped around a power unit — a classic early-game electric tool recipe.
 
 <Recipe id="ic2_120:chainsaw" />
-
-| Slot | Ingredient |
-|:----:|------------|
-| `I`  | Iron Plate  |
-| `P`  | Power Unit  |
-
-Pattern:
-
-```
- II
-III
-PI 
-```
 
 ## Related
 

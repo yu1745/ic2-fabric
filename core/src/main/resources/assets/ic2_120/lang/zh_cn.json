@@ -1125,7 +1125,7 @@
 
   "tooltip.ic2_120.quantum_boots.jump": "大跳: %s | 剩余: %s次",
   "tooltip.ic2_120.quantum_leggings.speed": "神行: %s | 剩余: %s",
-  "tooltip.ic2_120.quantum_chestplate.flight": "飞行: %s | 剩余: %s",
+  "tooltip.ic2_120.quantum_chestplate.flight_time": "飞行剩余: %s",
   "tooltip.ic2_120.quantum_helmet.night_vision": "夜视: %s | 剩余: %s",
   "tooltip.ic2_120.nano_helmet.night_vision": "夜视: %s | 剩余: %s",
 

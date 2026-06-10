@@ -57,3 +57,8 @@ The slot accepts chargeable items through the GUI, shift-click, or item automati
 ## Recipe
 
 <Recipe id="ic2_120:wind_generator" />
+
+## Related
+
+- [Wind Kinetic Generator](wind_kinetic_generator.md) — rotor-based KU wind generator
+- [Wind Meter](wind_meter.md) — measures wind speed

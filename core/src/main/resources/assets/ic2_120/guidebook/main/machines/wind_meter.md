@@ -10,6 +10,8 @@ item_ids:
 
 # Wind Meter
 
+<ItemImage id="ic2_120:wind_meter" scale="4" />
+
 The Wind Meter is a handheld tool that measures the current wind speed when right-clicked. It displays the effective wind speed at the player's current location, accounting for height-based wind distribution, gust factor, and weather multiplier.
 
 Use the Wind Meter to find optimal positions for Wind Kinetic Generators and Wind Mills.

@@ -15,7 +15,13 @@ item_ids:
 
 The Wrench family is IC2's two-tier line of machine-configuration tools. Every IC2 machine with multiple facings — cable connectors, machine input/output sides, kinetic-shaft directions — uses a wrench to rotate it, and machines that allow wrenching drop their full contents (with the right sneak-click) instead of just the machine block. The hand Wrench does this with bronze durability; the Electric Wrench does it forever, powered by EU.
 
-## Overview
+## Item View
+
+| Wrench | Electric Wrench |
+|:------:|:---------------:|
+| <ItemImage id="ic2_120:wrench" scale="2" /> | <ItemImage id="ic2_120:electric_wrench" scale="2" /> |
+
+## Stats
 
 | Type | Durability or Capacity | Use | Repair | Crafting |
 |------|------------------------|-----|--------|----------|
@@ -23,12 +29,6 @@ The Wrench family is IC2's two-tier line of machine-configuration tools. Every I
 | <ItemLink id="ic2_120:electric_wrench" /> (electric tool) | 10,000 EU internal buffer; **no vanilla durability** | Same as hand Wrench; functionally unlimited uses | Recharge with any tier-1 EU source | Wrench + Small Power Unit |
 
 The two wrenches share the same function list. The electric version trades the 120-use wear budget for an EU buffer, so you never have to carry spares — just keep it topped up.
-
-## Block View
-
-| Wrench | Electric Wrench |
-|:------:|:---------------:|
-| <ItemImage id="ic2_120:wrench" scale="2" /> | <ItemImage id="ic2_120:electric_wrench" scale="2" /> |
 
 ## How to Use
 
@@ -62,8 +62,6 @@ Both wrenches are 3x3 shaped recipes.
 | Wrench | Electric Wrench |
 |:------:|:---------------:|
 | <Recipe id="ic2_120:wrench" /> | <Recipe id="ic2_120:electric_wrench" /> |
-
-The hand Wrench is built from bronze ingots in a hollow cross (`"B B" / "BBB" / " B "`). The Electric Wrench is the hand Wrench wrapped around a Small Power Unit (`" W " / " P " / "   "`).
 
 ## Related
 

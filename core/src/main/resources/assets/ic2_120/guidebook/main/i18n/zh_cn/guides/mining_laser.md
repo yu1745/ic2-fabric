@@ -8,6 +8,8 @@ navigation:
 
 # 采矿镭射枪 (Mining Laser)
 
+<ItemImage id="ic2_120:mining_laser" scale="4" />
+
 远程采矿武器，发射可视弹射体破坏方块或攻击实体。使用 EU 电量，满电 200,000 EU。
 
 ## 基本操作

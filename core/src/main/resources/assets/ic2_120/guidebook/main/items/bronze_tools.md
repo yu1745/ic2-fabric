@@ -19,13 +19,7 @@ item_ids:
 
 The Bronze Tools are IC2's entry-tier hand tools, sharing a single `BronzeToolMaterial`. They match iron-tier mining level and enchantability but mine at stone-tier speed, making them a useful bridge between stone and iron when bronze is your first smeltable alloy. The Weeding Spade is grouped with the bronze set because it is built from a bronze ingot and a stick, and it serves the farm side of the same progression.
 
-## Overview
-
-**Shared BronzeToolMaterial:** Durability 250, mining speed multiplier 4.0 (stone-tier), base attack damage 2.0, mining level 2 (iron-tier), enchantability 10, repair ingredient any bronze-tagged ingot.
-
-The five core tools (pickaxe, axe, shovel, hoe, sword) take their final attack-damage and attack-speed values from a per-tool modifier on top of the material's base. The Weeding Spade is a separate Item with its own 120 durability and is not a `ToolMaterial` tool.
-
-## Block View
+## Item View
 
 | Bronze Pickaxe | Bronze Axe | Bronze Shovel |
 |:--------------:|:----------:|:-------------:|
@@ -34,6 +28,10 @@ The five core tools (pickaxe, axe, shovel, hoe, sword) take their final attack-d
 | <ItemImage id="ic2_120:bronze_hoe" scale="2" /> | <ItemImage id="ic2_120:bronze_sword" scale="2" /> | <ItemImage id="ic2_120:weeding_spade" scale="2" /> |
 
 ## Stats
+
+**Shared BronzeToolMaterial:** Durability 250, mining speed multiplier 4.0 (stone-tier), base attack damage 2.0, mining level 2 (iron-tier), enchantability 10, repair ingredient any bronze-tagged ingot.
+
+The five core tools (pickaxe, axe, shovel, hoe, sword) take their final attack-damage and attack-speed values from a per-tool modifier on top of the material's base. The Weeding Spade is a separate Item with its own 120 durability and is not a `ToolMaterial` tool.
 
 | Tool | Mining Level | Durability | Base Attack | Attack Speed | Repair |
 |------|:------------:|:----------:|:-----------:|:------------:|--------|
@@ -90,15 +88,6 @@ All five bronze tools use the standard Minecraft tool shape with a Bronze Ingot 
 | <Recipe id="ic2_120:bronze_pickaxe" /> | <Recipe id="ic2_120:bronze_axe" /> | <Recipe id="ic2_120:bronze_shovel" /> |
 | Bronze Hoe | Bronze Sword | Weeding Spade |
 | <Recipe id="ic2_120:bronze_hoe" /> | <Recipe id="ic2_120:bronze_sword" /> | <Recipe id="ic2_120:weeding_spade" /> |
-
-**Pattern notes:**
-
-- Pickaxe: `MMM / _S_ / _S_` (top row three bronze, middle and bottom column a stick)
-- Axe: `MM / MS / _S` (mirror of standard axe)
-- Shovel: `M / S / S`
-- Hoe: `MM / _S / _S`
-- Sword: `M / M / S`
-- Weeding Spade: `M / S` (two-row: bronze on top, stick below)
 
 The `INGOTS_BRONZE` tag is used in place of a single Bronze Ingot item, so any bronze-producing mod's bronze ingot works in every recipe above.
 

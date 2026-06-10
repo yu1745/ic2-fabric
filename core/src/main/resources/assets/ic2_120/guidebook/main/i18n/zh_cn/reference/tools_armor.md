@@ -10,27 +10,6 @@ item_ids:
   - ic2_120:frequency_transmitter
   - ic2_120:obscurator
   - ic2_120:tool_box
-  - ic2_120:bronze_helmet
-  - ic2_120:bronze_chestplate
-  - ic2_120:bronze_leggings
-  - ic2_120:bronze_boots
-  - ic2_120:hazmat_helmet
-  - ic2_120:hazmat_chestplate
-  - ic2_120:hazmat_leggings
-  - ic2_120:rubber_boots
-  - ic2_120:nano_helmet
-  - ic2_120:nano_chestplate
-  - ic2_120:nano_leggings
-  - ic2_120:nano_boots
-  - ic2_120:quantum_helmet
-  - ic2_120:quantum_chestplate
-  - ic2_120:quantum_leggings
-  - ic2_120:quantum_boots
-  - ic2_120:alloy_chestplate
-  - ic2_120:solar_helmet
-  - ic2_120:night_vision_goggles
-  - ic2_120:jetpack
-  - ic2_120:electric_jetpack
   - ic2_120:jetpack_attachment_plate
 ---
 
@@ -103,7 +82,7 @@ item_ids:
 
 ### 防化服套装
 
-提供辐射防护和触电绝缘。
+提供辐射防护。
 
 | 部位 | 物品 | 护甲值 | 耐久倍率 |
 |------|------|--------|---------|
@@ -114,7 +93,6 @@ item_ids:
 
 **套装效果**：
 - 免疫堆温 > 7,000 时的核辐射伤害
-- 阻止裸露导线造成的电击伤害
 - **防化头盔**：水下呼吸（消耗背包中的压缩空气单元）
 
 ### 青铜护甲套装
@@ -167,7 +145,7 @@ IC2 顶级能量护甲，单件容量 10,000,000 EU。
 
 ### 夜视镜
 
-提供夜视功能的头戴式装备，Alt+M 开关，1 EU/tick 维持。
+提供夜视功能的头戴式装备，Alt+N 开关，1 EU/tick 维持。
 
 ### 喷气与建筑背包
 
@@ -181,4 +159,3 @@ IC2 顶级能量护甲，单件容量 10,000,000 EU。
 复合胸甲提供高胸甲防护，适合不需要电池背包或喷气背包时使用。
 
 相关页面：[电池与移动供电](energy_items.md)、[橡胶树与世界资源](rubber_and_worldgen.md)
-

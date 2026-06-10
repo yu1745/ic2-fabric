@@ -17,7 +17,7 @@ The Treetap and Electric Treetap extract <ItemLink id="ic2_120:resin" /> from th
 
 Rubber trees spawn in the world as a special resource — see [World Resources and Rubber Trees](../reference/rubber_and_worldgen.md) for the spawn rules, log shape, and where to find them.
 
-## Block View
+## Item View
 
 | Treetap | Electric Treetap |
 |:-------:|:----------------:|
@@ -55,8 +55,6 @@ The Electric Treetap exposes a tier-1 EU port, so any of the following will refi
 | Treetap | Electric Treetap |
 |:-------:|:----------------:|
 | <Recipe id="ic2_120:treetap" /> | <Recipe id="ic2_120:electric_treetap" /> |
-
-The Treetap recipe is a simple three-row wooden shape (`" P " / "PPP" / "P  "`, where `P` is any planks tag entry) — cheap, with no metal cost. The Electric Treetap recipe wraps a Treetap around a <ItemLink id="ic2_120:small_power_unit" /> in a `"   " / " T " / " P "` pattern, and the Treetap is consumed on craft.
 
 ## Related
 

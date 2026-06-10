@@ -37,7 +37,7 @@ Fluid Tanks are single-block bulk fluid buffers. They accept one fluid type at a
 
 Tanks do not merge into a shared multiblock. Place several tanks next to a pipe network if you need more buffer capacity, and use Pump Attachments or fluid pipe upgrades to move fluid between machines and tanks.
 
-## Recipes
+## Recipe
 
 <Recipe id="ic2_120:bronze_tank" />
 <Recipe id="ic2_120:iron_tank" />

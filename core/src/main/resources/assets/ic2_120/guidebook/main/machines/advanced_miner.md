@@ -58,3 +58,7 @@ If pipe placement reaches water or lava, the miner removes the fluid into an int
 Drops go into a small internal cache, not visible output slots. Each tick the miner tries to insert cached items into adjacent inventories on any side. If the cache reaches 64 items, mining stops until automation makes room.
 
 Item automation can insert valid upgrades, a battery, a scanner, mining pipes, and block filters. Drops leave through the automatic adjacent-inventory insertion, so keep storage or item transport directly next to the miner. Accepted Advanced Miner upgrades are Overclocker, Transformer, Redstone Inverter, Ejector, and Fluid Ejector; the fluid ejector is what moves the internal water or lava tank.
+
+## Related
+
+- [OD Scanner / OV Scanner](../items/scanners.md) — electric scanners for Miner and Advanced Miner

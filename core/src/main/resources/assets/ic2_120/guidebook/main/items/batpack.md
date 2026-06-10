@@ -17,7 +17,7 @@ item_ids:
 
 The BatPack Family is a four-tier line of battery backpacks worn in the chestplate slot. Each tier is a mobile EU buffer that automatically tops up the electric tools in your inventory, so you can swap a discharged drill for a fresh one without leaving the field. The capacity, voltage tier, and auto-charge ceiling scale together.
 
-## Block View
+## Item View
 
 | BatPack | Advanced BatPack | Energy Pack | LapPack |
 |:------:|:----------------:|:-----------:|:-------:|

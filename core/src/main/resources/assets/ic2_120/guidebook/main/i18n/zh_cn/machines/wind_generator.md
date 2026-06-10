@@ -57,3 +57,8 @@ item_ids:
 ## 配方
 
 <Recipe id="ic2_120:wind_generator" />
+
+## 相关
+
+- [风力动能发生机](wind_kinetic_generator.md)——基于转子的 KU 风力发电机
+- [风速仪](wind_meter.md)——测量风速

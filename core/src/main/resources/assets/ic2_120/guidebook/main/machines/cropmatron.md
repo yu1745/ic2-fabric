@@ -54,4 +54,4 @@ Fluid automation is input-only. The exposed fluid storage accepts water/distille
 
 ## Crafting
 
-Craft it with circuits in the top corners, a chest in the top center, empty cells beside a machine casing, and a bottom row of crop sticks.
+<Recipe id="ic2_120:cropmatron" />

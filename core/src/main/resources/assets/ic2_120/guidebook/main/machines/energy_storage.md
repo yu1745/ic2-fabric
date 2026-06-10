@@ -48,7 +48,7 @@ Storage blocks do not have upgrade slots. Use transformers when you need to brid
 
 BatBox, CESU, MFE, and MFSU output their tier rate: 32, 128, 512, and 2,048 EU/t. Machines or cables below that tier need a transformer or a lower-tier buffer between them and the storage output. MFE and MFSU are also valid adjacent energy sources for Teleporters, which draw teleport costs directly from nearby storage.
 
-## Recipes
+## Recipe
 
 | BatBox | CESU |
 |:------:|:----:|

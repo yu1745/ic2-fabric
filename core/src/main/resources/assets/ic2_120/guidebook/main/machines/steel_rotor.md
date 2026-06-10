@@ -10,6 +10,8 @@ item_ids:
 
 # Steel Rotor
 
+<ItemImage id="ic2_120:steel_rotor" scale="4" />
+
 The Steel Rotor is a high-tier rotor used in Wind Kinetic Generators and Water Kinetic Generators.
 
 - **Wind**: Radius 4, Multiplier 3&times;

@@ -17,7 +17,7 @@ item_ids:
 
 The Boats family is a four-vessel set of watercraft built from IC2 materials. Three of them — Rubber, Broken Rubber, and Carbon — are vanilla-style rowboats with different hulls and handling, while the Electric Boat is an mEU-powered craft for fast, motor-assisted travel. All four are placeable on water and ridden the same way as a vanilla boat.
 
-## Block View
+## Item View
 
 | Rubber Boat | Broken Rubber Boat | Carbon Boat | Electric Boat |
 |:-----------:|:------------------:|:-----------:|:-------------:|
@@ -25,12 +25,12 @@ The Boats family is a four-vessel set of watercraft built from IC2 materials. Th
 
 ## Stats
 
-| Type | Material | Speed Tier | Recipe | Notes |
-|------|----------|:----------:|--------|-------|
-| Rubber Boat | Rubber | Vanilla-style | `"   " / "R R" / "RRR"` (R = Rubber) | Basic watercraft, the baseline rowboat |
-| Broken Rubber Boat | Rubber (damaged) | Vanilla-style | No shaped recipe — only repaired back to Rubber Boat | Repair material for a damaged Rubber Boat |
-| Carbon Boat | Carbon Plate | Vanilla-style | `"   " / "P P" / "PPP"` (P = Carbon Plate) | Carbon-fiber lightweight hull |
-| Electric Boat | Iron Plate + Insulated Copper Cable + Electric Motor + Iron Rotor | Electric (mEU-driven) | `"CCC" / "IMI" / "IRI"` (C = Insulated Copper Cable, I = Iron Plate, M = Electric Motor, R = Iron Rotor) | Faster than the other three, but more expensive to build |
+| Type | Material | Speed Tier | Notes |
+|------|----------|:----------:|-------|
+| Rubber Boat | Rubber | Vanilla-style | Basic watercraft, the baseline rowboat |
+| Broken Rubber Boat | Rubber (damaged) | Vanilla-style | Repair material for a damaged Rubber Boat |
+| Carbon Boat | Carbon Plate | Vanilla-style | Carbon-fiber lightweight hull |
+| Electric Boat | Iron Plate + Insulated Copper Cable + Electric Motor + Iron Rotor | Electric (mEU-driven) | Faster than the other three, but more expensive to build |
 
 The first three are pure hulls with no power system on board. The Electric Boat carries an actual electric motor and rotor, and is described as motor-driven and faster than the other three. Specific speed/handling values are defined on the spawned entity (see Related section); if you need exact numbers, refer to the entity behavior in `ModEntities` rather than the item itself.
 

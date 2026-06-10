@@ -10,6 +10,8 @@ item_ids:
 
 # Steam Turbine Blade
 
+<ItemImage id="ic2_120:steam_turbine_blade" scale="4" />
+
 The Steam Turbine Blade is a crafting component used to assemble the Steam Turbine. Multiple blades are combined to form a complete turbine.
 
 ## Recipe

@@ -37,6 +37,8 @@ item_ids:
   - ic2_120:green_wall
   - ic2_120:red_wall
   - ic2_120:black_wall
+  - ic2_120:itnt
+  - ic2_120:coin
 ---
 
 # Building and Decoration
@@ -63,5 +65,10 @@ Rubber Trees provide a full set of wood blocks: Rubber Log, Rubber Wood, Strippe
 - Wooden Scaffold and Iron Scaffold are for temporary construction work.
 - Reinforced Wooden Scaffold and Reinforced Iron Scaffold are better suited for long-term structures.
 - Mining Pipes belong to the [Miner](../machines/miner.md) working chain, not the regular fluid pipes.
+
+## Miscellaneous Items
+
+- <ItemLink id="ic2_120:itnt" /> (Industrial TNT) — A much more powerful explosive than vanilla TNT. It has a significantly higher blast radius and deals more damage, making it useful for large-scale demolition and mining. Handle with care.
+- <ItemLink id="ic2_120:coin" /> (Industrial Coin) — Industrial Currency crafted from iron casings via the <ItemLink id="ic2_120:metal_former" /> (Extruding mode). Coins are used in certain IC2 recipes.
 
 Related page: [Fluids, Cells, and Buckets](fluids_cells.md)

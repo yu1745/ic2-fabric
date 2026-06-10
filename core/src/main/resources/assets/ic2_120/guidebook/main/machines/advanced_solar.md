@@ -8,6 +8,8 @@ navigation:
 
 # Advanced Solar Addon
 
+<BlockImage id="ic2_120:advanced_solar" scale="4" />
+
 This addon module for Industrial Craft 2 (IC2) provides 4 solar generators, 1 molecular transformer, and 1 ultimate generator.
 
 ---

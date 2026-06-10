@@ -29,7 +29,7 @@ It also has a gravel recipe, which washes gravel into Stone Dust.
 
 The machine only works when the input has an ore washing recipe, all recipe output slots can accept their full results, it has enough EU, and the tank has enough water for the next slice of progress. If the input is missing, invalid, or blocked by full output slots, progress resets to 0.
 
-## Recipes
+## Recipe
 
 Each crushed ore recipe consumes 1,000 mB of water and produces one purified crushed ore, one stone dust, and a secondary byproduct:
 

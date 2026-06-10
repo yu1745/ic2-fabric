@@ -40,7 +40,7 @@ Pump Attachments are directional pipe blocks that turn one face into a passive e
 
 Use Pump Attachments for tank-to-tank logistics, for example pulling Biofuel from a Fermenter into generators or moving distilled water out of a Condenser. Use the powered Pump instead when the job is removing source blocks from the world.
 
-## Recipes
+## Recipe
 
 | Bronze Pump Attachment | Carbon Pump Attachment |
 |:----------------------:|:----------------------:|

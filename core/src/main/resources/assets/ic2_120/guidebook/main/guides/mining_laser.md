@@ -8,6 +8,8 @@ navigation:
 
 # Mining Laser
 
+<ItemImage id="ic2_120:mining_laser" scale="4" />
+
 A long-range mining weapon that fires a visible projectile to break blocks or attack entities. Runs on EU, with a full charge of 200,000 EU.
 
 ## Basic Controls

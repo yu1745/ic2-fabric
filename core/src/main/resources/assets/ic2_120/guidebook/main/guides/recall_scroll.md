@@ -8,6 +8,8 @@ navigation:
 
 # Recall Scroll
 
+<ItemImage id="ic2_120:recall_scroll" scale="4" />
+
 ## Purpose
 
 A Recall Scroll can be bound to a Teleporter, letting you teleport directly back to that Teleporter from anywhere in the field.

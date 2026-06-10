@@ -17,7 +17,7 @@ item_ids:
 
 The Bronze Armor set is IC2's baseline four-piece protection. It is the first metal-tier armor the player will likely craft, sitting roughly between vanilla leather and iron. Bronze is cheap to make, repairs with <ItemLink id="ic2_120:bronze_ingot" />, and offers the same `8x` durability multiplier across all four slots.
 
-## Block View
+## Item View
 
 | Bronze Helmet | Bronze Chestplate | Bronze Leggings | Bronze Boots |
 |:---:|:---:|:---:|:---:|
@@ -56,3 +56,4 @@ Each piece follows the standard Minecraft helmet/chestplate/leggings/boots shape
 - [Batteries and Mobile Power](../reference/energy_items.md)
 - [Hazmat Suit](hazmat_armor.md) — radiation and electrical insulation
 - [Solar Helmet](solar_helmet.md) — helmet-slot power generation
+- [Bronze Tools](bronze_tools.md) — matching bronze-tier tools

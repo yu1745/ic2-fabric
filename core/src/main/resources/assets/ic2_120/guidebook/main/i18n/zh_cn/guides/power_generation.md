@@ -17,6 +17,8 @@ item_ids:
 
 # 发电与储电
 
+<BlockImage id="ic2_120:generator" scale="4" />
+
 ## 发电机
 
 ### 火力发电机 (Generator)
@@ -48,6 +50,7 @@ item_ids:
 
 - 将水的动能转化为 KU，再由动能发电机转化为 EU
 - 需要水流驱动
+- 详见 [水力发电机](../machines/water_generator.md)
 
 ### 风力发电机 (Wind Kinetic Generator)
 
@@ -56,16 +59,24 @@ item_ids:
 - **动能输出**：根据高度和天气变化
 - **碳转子标定输出**：y=150 + 晴天 + gustFactor=1.0 → 512 KU/t = 128 EU/t
 - **最大 KU/t**：2048 KU/t = 512 EU/t
+- 详见 [风力动能发生机](../machines/wind_kinetic_generator.md)
 
 ### 流体燃料发电机 (Semifluid Generator)
 
 - **燃料**：两类，精炼燃油系和原油/杂酚油系
 - **每 mB 发电量**：精炼燃油系更高，原油/杂酚油系较低
+- 详见 [流体燃料发电机](../machines/semifluid_generator.md)
+
+### 蒸汽动能发电机 (Steam Kinetic Generator)
+
+- 将蒸汽转化为动能（KU），再由动能发电机转化为 EU
+- 详见 [蒸汽动能发电机](../machines/steam_kinetic_generator.md)
 
 ### RT 发电机 (RT Generator / Radioisotope Thermoelectric Generator)
 
 - **热量驱动**：接收 HU 并转换为 EU
 - **1 HU = 1 EU**
+- 详见 [RT 发电机](../machines/rt_generator.md)
 
 ### 创意发电机 (Creative Generator)
 

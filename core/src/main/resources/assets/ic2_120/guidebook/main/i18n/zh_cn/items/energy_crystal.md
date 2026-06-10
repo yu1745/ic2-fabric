@@ -17,22 +17,22 @@ item_ids:
 
 <ItemLink id="ic2_120:energy_crystal" /> 与 <ItemLink id="ic2_120:lapotron_crystal" /> 是 IC2 中两个最高等级的手持可充电电池。它们是模组中耗电最高的电动装备（采矿镭射枪、喷气背包及类似终期工具）的标准电源。
 
-## 概述
+## 物品视图
+
+| 能量水晶 | 兰波顿水晶 |
+|:---:|:---:|
+| <ItemImage id="ic2_120:energy_crystal" scale="2" /> | <ItemImage id="ic2_120:lapotron_crystal" scale="2" /> |
+
+## 属性
 
 两种水晶在可于任意储电方块中充电这一点上与充电电池相同，但它们被设计用于持续的高功率放电。一颗兰波顿水晶充满后，足以让采矿镭射枪在多次挖掘隧道后才需要再次充电。
 
 | 物品 | 等级 | 最大 EU | 说明 |
 |------|:---:|---:|-------|
-| <ItemLink id="ic2_120:energy_crystal" /> | 3 | 可配置 | 中后期电池，是能量背包的升级材料。 |
-| <ItemLink id="ic2_120:lapotron_crystal" /> | 4 | 可配置 | 最高等级的手持电池，是兰波顿背包的升级材料。 |
+| <ItemLink id="ic2_120:energy_crystal" /> | 3 | 1,000,000 EU | 中后期电池，是能量背包的升级材料。 |
+| <ItemLink id="ic2_120:lapotron_crystal" /> | 4 | 10,000,000 EU | 最高等级的手持电池，是兰波顿背包的升级材料。 |
 
-默认值可在模组的 `Ic2Config` 中调整；具体容量与传输速率请查看对应版本配置文件。包含充电电池系列的标准阶梯见 [电池与移动供电](../reference/energy_items.md)。
-
-## 方块视图
-
-| 能量水晶 | 兰波顿水晶 |
-|:---:|:---:|
-| <ItemImage id="ic2_120:energy_crystal" scale="2" /> | <ItemImage id="ic2_120:lapotron_crystal" scale="2" /> |
+包含充电电池系列的标准阶梯见 [电池与移动供电](../reference/energy_items.md)。
 
 ## 使用方式
 

@@ -8,6 +8,8 @@ navigation:
 
 # 召回卷轴
 
+<ItemImage id="ic2_120:recall_scroll" scale="4" />
+
 ## 用途
 
 召回卷轴可以绑定传送机，让你在野外直接传送回绑定的传送机位置。

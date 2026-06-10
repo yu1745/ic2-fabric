@@ -42,3 +42,9 @@ Supported upgrades are Transformer, Energy Storage, Ejector, Pulling, Fluid Ejec
 ## Replication Chain
 
 The usual chain is Recycler -> Matter Generator -> Replicator. Keep Scrap flowing from the Recycler, power the Matter Generator with redstone, and pipe UU-Matter into a Replicator or storage tank.
+
+## UU-Matter Chain
+
+- [Pattern Scanner](uu_scanner.md) — scans items into patterns for the Replicator
+- [Pattern Storage](pattern_storage.md) — stores scanned patterns
+- [Replicator](replicator.md) — consumes UU-Matter and patterns to produce items

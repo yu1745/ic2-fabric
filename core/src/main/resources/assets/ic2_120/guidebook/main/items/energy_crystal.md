@@ -17,22 +17,22 @@ item_ids:
 
 The <ItemLink id="ic2_120:energy_crystal" /> and the <ItemLink id="ic2_120:lapotron_crystal" /> are IC2's two highest-tier hand-held rechargeable batteries. They are the standard power source for the most energy-hungry electric gear in the mod — the mining laser, jetpack, and similar end-game tools.
 
-## Overview
+## Item View
+
+| Energy Crystal | Lapotron Crystal |
+|:---:|:---:|
+| <ItemImage id="ic2_120:energy_crystal" scale="2" /> | <ItemImage id="ic2_120:lapotron_crystal" scale="2" /> |
+
+## Stats
 
 Both crystals behave like a Re-Battery in the sense that they can be charged in any energy storage block, but they are designed for sustained high-throughput discharge. A single Lapotron Crystal can run a mining laser through many tunnels between charges.
 
 | Item | Tier | Max EU | Notes |
 |------|:---:|---:|-------|
-| <ItemLink id="ic2_120:energy_crystal" /> | 3 | Configurable | Mid-to-late game cell. The upgrade ingredient for the Energy Pack. |
-| <ItemLink id="ic2_120:lapotron_crystal" /> | 4 | Configurable | Highest-tier hand-held cell. The upgrade ingredient for the LapPack. |
+| <ItemLink id="ic2_120:energy_crystal" /> | 3 | 1,000,000 EU | Mid-to-late game cell. The upgrade ingredient for the Energy Pack. |
+| <ItemLink id="ic2_120:lapotron_crystal" /> | 4 | 10,000,000 EU | Highest-tier hand-held cell. The upgrade ingredient for the LapPack. |
 
-Default values can be tuned in the mod's `Ic2Config`; check the config file for the exact capacity and transfer rate for the build you are playing. For the canonical tier ladder including the Re-Battery family, see [Batteries and Mobile Power](../reference/energy_items.md).
-
-## Block View
-
-| Energy Crystal | Lapotron Crystal |
-|:---:|:---:|
-| <ItemImage id="ic2_120:energy_crystal" scale="2" /> | <ItemImage id="ic2_120:lapotron_crystal" scale="2" /> |
+For the canonical tier ladder including the Re-Battery family, see [Batteries and Mobile Power](../reference/energy_items.md).
 
 ## How to Use
 

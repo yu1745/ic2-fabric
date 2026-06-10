@@ -217,3 +217,7 @@ This guide is provided by IC2 and rendered by Fabric Guidebook.
 ### Hand Tools
 
 - [Bronze Tools](items/bronze_tools.md) — Pickaxe / Axe / Shovel / Hoe / Sword / Weeding Spade
+
+### Miscellaneous
+
+- [Scrap Box](items/scrap_box.md)

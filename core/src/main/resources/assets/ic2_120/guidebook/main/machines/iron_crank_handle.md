@@ -10,6 +10,8 @@ item_ids:
 
 # Iron Crank Handle
 
+<ItemImage id="ic2_120:iron_crank_handle" scale="4" />
+
 The Iron Crank Handle is a mid-tier crank used in the Manual Kinetic Generator. When installed, it allows the generator to produce 128 KU/t while being cranked.
 
 It offers a significant upgrade over the wooden variant, providing double the kinetic output for medium-scale power needs.

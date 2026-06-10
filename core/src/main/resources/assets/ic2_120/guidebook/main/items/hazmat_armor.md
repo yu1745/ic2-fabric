@@ -14,9 +14,9 @@ item_ids:
 
 <ItemImage id="ic2_120:hazmat_helmet" scale="4" />
 
-The Hazmat Suit is a three-piece set (helmet, chestplate, leggings) paired with the [Rubber Boots](rubber_boots.md) for the fourth slot. It is not designed for combat — its purpose is to keep you alive in dangerous environments: nuclear reactors, exposed uninsulated cables, and underwater.
+The Hazmat Suit is a three-piece set (helmet, chestplate, leggings) paired with the [Rubber Boots](rubber_boots.md) for the fourth slot. It is not designed for combat — its purpose is to keep you alive in dangerous environments: nuclear reactors and underwater.
 
-## Block View
+## Item View
 
 | Hazmat Helmet | Hazmat Chestplate | Hazmat Leggings | Rubber Boots |
 |:---:|:---:|:---:|:---:|
@@ -38,14 +38,13 @@ The boots slot is shared with the [Rubber Boots](rubber_boots.md) page — wear 
 Wearing all four pieces (Helmet + Chestplate + Leggings + Rubber Boots) grants:
 
 - **Radiation immunity** — fully negates radiation damage while inside or near active nuclear reactors and irradiated zones.
-- **Electrical insulation** — touching exposed, uninsulated cables no longer deals shock damage.
 - **Hazmat Helmet: emergency underwater breathing** — when the player's air bubble drops to **60 ticks (3 seconds) or less**, the helmet automatically consumes a <ItemLink id="ic2_120:air_cell" /> (compressed air unit) from the inventory to refill the air meter. If the inventory has no air cells, the player still drowns as normal.
 
 The set bonus does **not** require a full metal suit underneath; the rubber provides all the protection. You can wear other armor pieces *over* the Hazmat Suit visually, but the bonus only checks for the four Hazmat slots.
 
 ## How to Use
 
-- Always pair the three Hazmat pieces with [Rubber Boots](rubber_boots.md) in the boots slot — without them, the radiation and shock immunity will not engage.
+- Always pair the three Hazmat pieces with [Rubber Boots](rubber_boots.md) in the boots slot — without them, the radiation immunity will not engage.
 - Carry a stack of <ItemLink id="ic2_120:air_cell" /> when exploring flooded reactor chambers or deep underwater builds.
 - Repair is done with <ItemLink id="ic2_120:rubber" /> in an anvil or crafting grid.
 - The set has very low combat armor values (1/3/2/1) — swap to a combat set when leaving the danger zone.

@@ -42,7 +42,7 @@ Carbon pipes are advanced fluid transport pipes with significantly higher throug
 - Right-click the pipe with a wrench to configure connection sides.
 - Carbon pipes are more durable than bronze pipes and resistant to higher temperatures.
 
-## Recipes
+## Recipe
 
 | Tiny | Small |
 |:----:|:-----:|

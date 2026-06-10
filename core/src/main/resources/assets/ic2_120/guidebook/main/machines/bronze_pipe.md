@@ -42,7 +42,7 @@ Bronze pipes transport fluids between tanks and machines. They come in four size
 - Right-click the pipe with a wrench to configure connection sides.
 - Pipes retain their contents when broken.
 
-## Recipes
+## Recipe
 
 | Tiny | Small |
 |:----:|:-----:|

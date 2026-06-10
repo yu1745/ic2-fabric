@@ -10,6 +10,8 @@ item_ids:
 
 # Carbon Crank Handle
 
+<ItemImage id="ic2_120:carbon_crank_handle" scale="4" />
+
 The Carbon Crank Handle is the highest-tier crank used in the Manual Kinetic Generator. When installed, it allows the generator to produce 512 KU/t while being cranked.
 
 It delivers the maximum possible kinetic output, suitable for the most demanding manual power generation setups.

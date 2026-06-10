@@ -69,6 +69,6 @@ Item automation routes valid containers to the left slot, valid materials to the
 
 Supported upgrades are Overclocker, Transformer, Energy Storage, Ejector, Pulling, Fluid Ejector, and Fluid Pulling upgrades. Overclockers speed operations while increasing EU use. Transformer and Energy Storage upgrades raise voltage tolerance and internal storage. Item Ejector/Pulling upgrades work on item slots; fluid upgrades work on the tanks as described above.
 
-## Machine Recipe
+## Recipe
 
 <Recipe id="ic2_120:canner" />

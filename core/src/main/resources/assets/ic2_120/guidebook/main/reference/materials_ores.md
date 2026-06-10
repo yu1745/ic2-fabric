@@ -102,9 +102,10 @@ item_ids:
 
 ## World Resources
 
-- **Ores**: tin, lead, uranium, peat, plus the corresponding deepslate variants.
-- **Rare resources**: iridium ore, iridium shards, reinforced iridium plate — key late-game materials for energy storage and nuclear components.
+- **Ores**: tin, lead, uranium, peat, plus the corresponding deepslate variants. See [Rubber Trees and World Resources](rubber_and_worldgen.md) for Y-level ranges and generation details.
+- **Rare resources**: iridium ore, iridium shards, reinforced iridium plate — key late-game materials for energy storage and nuclear components. Iridium does **not** generate as a world ore; it is found in dungeon/village chests or crafted from shards via the Compressor. See the chest loot table on the [World Resources](rubber_and_worldgen.md) page.
 - **Rubber**: rubber trees provide sticky resin, which can be processed into rubber.
+- **Silver**: silver ore does **not** generate in the world. Silver is obtained as a byproduct of ore processing — macerate and centrifuge copper, lead, or gold ores to extract silver dust.
 
 ## Metals and Base Materials
 
@@ -120,8 +121,9 @@ item_ids:
 
 ## Processing Chain
 
-- Raw ore can be fed into the Macerator, Ore Washing Plant, Thermal Centrifuge chain to improve yield or extract by-products.
+- Raw ore can be fed into the Macerator, Ore Washing Plant, Thermal Centrifuge chain to improve yield or extract by-products. See [Macerator](../machines/macerator.md), [Ore Washing Plant](../machines/ore_washing_plant.md), and [Thermal Centrifuge](../machines/centrifuge.md).
 - Crushed ore can be washed further into Purified Crushed Ore.
+- Centrifuging crushed/purified ores also yields byproduct dusts, including silver (from copper and gold) and sulfur (from many ore types).
 - Dusts, ingots, plates, casings, and dense plates are the intermediate items used by most machines and tools.
 - The Forge Hammer turns ingots into plates, and plates into casings.
 - The Plate Cutting Shears cut plates into cables, and strip insulation off cables.

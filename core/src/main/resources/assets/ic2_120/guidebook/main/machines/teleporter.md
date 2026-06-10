@@ -43,7 +43,7 @@ Use the Teleporter GUI to choose the activation volume:
 
 After a successful jump, both the source and target Teleporters enter a 20 tick cooldown.
 
-## Cost And Charge Time
+## Cost and Charge Time
 
 The cost is based on entity weight and straight-line distance between the two Teleporter blocks:
 
@@ -57,10 +57,14 @@ Weights are:
 
 Charging takes `40 + distance / 20` ticks, clamped between 40 and 120 ticks. Overclocker Upgrades in the two upgrade slots shorten this charging time, but it still cannot go below 40 ticks.
 
-## Slots And Automation
+## Slots and Automation
 
 The GUI has two upgrade slots. They accept upgrade items; in current Teleporter behavior, Overclocker Upgrades affect the pre-teleport charging time. Automated item insertion is routed only into these upgrade slots, and extraction is allowed from them.
 
 ## Practical Setup
 
 Put an MFE, MFSU, or matching chargepad directly beside the source Teleporter, keep it charged, link the pair with a Frequency Transmitter, then drive the source with a redstone signal. For two-way travel, power and provide adjacent storage at both ends, because each end becomes the source when sending entities back.
+
+## Related
+
+- [Recall Scroll](../guides/recall_scroll.md) — single-use personal teleportation item

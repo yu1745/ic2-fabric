@@ -20,19 +20,17 @@ The Re-Battery line is IC2's entry-level rechargeable EU storage. There are two 
 
 For the full tier table that also covers the higher-tier Energy Crystal and Lapotron Crystal, see [Batteries and Mobile Power](../reference/energy_items.md).
 
-## Overview
+## Stats
 
 The Re-Battery family is the cheapest way to get mobile EU. Rechargeable variants can be drained and refilled indefinitely; the single-use variant is a one-shot cell that disappears when empty.
 
 | Item | Tier | Max EU | Notes |
 |------|:---:|---:|-------|
-| <ItemLink id="ic2_120:single_use_battery" /> | 1 | Configurable | One-shot cell. Discharges in any normal battery slot and is destroyed when empty. |
-| <ItemLink id="ic2_120:re_battery" /> | 1 | Configurable | Basic rechargeable. The first reliable mobile EU source for early-game tools. |
-| <ItemLink id="ic2_120:advanced_re_battery" /> | 2 | Configurable | Higher-capacity rechargeable. Carries the mid-game electric tools without frequent recharges. |
+| <ItemLink id="ic2_120:single_use_battery" /> | 1 | 10,000 EU | One-shot cell. Discharges in any normal battery slot and is destroyed when empty. |
+| <ItemLink id="ic2_120:re_battery" /> | 1 | 10,000 EU | Basic rechargeable. The first reliable mobile EU source for early-game tools. |
+| <ItemLink id="ic2_120:advanced_re_battery" /> | 2 | 100,000 EU | Higher-capacity rechargeable. Carries the mid-game electric tools without frequent recharges. |
 
-Default values can be tuned in the mod's `Ic2Config`; check the config file for the exact capacity and transfer rate for the build you are playing.
-
-## Block View
+## Item View
 
 | Single-Use Battery | Re-Battery | Advanced Re-Battery |
 |:---:|:---:|:---:|

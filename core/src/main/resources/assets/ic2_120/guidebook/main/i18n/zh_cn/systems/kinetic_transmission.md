@@ -64,3 +64,29 @@ navigation:
 - 钢：`48` 小时
 - 碳：`168` 小时
 
+## 组件
+
+动能传动系统使用以下组件：
+
+### 曲柄
+- [木曲柄](../machines/wooden_crank_handle.md)
+- [铁曲柄](../machines/iron_crank_handle.md)
+- [钢曲柄](../machines/steel_crank_handle.md)
+- [碳曲柄](../machines/carbon_crank_handle.md)
+
+### 转子
+- [木转子](../machines/wooden_rotor.md)
+- [铁转子](../machines/iron_rotor.md)
+- [钢转子](../machines/steel_rotor.md)
+- [碳转子](../machines/carbon_rotor.md)
+
+### 传动轴
+- [木制传动轴](../machines/wood_transmission_shaft.md)
+- [铁制传动轴](../machines/iron_transmission_shaft.md)
+- [钢制传动轴](../machines/steel_transmission_shaft.md)
+- [碳纤维传动轴](../machines/carbon_transmission_shaft.md)
+
+### 其他
+- [伞齿轮](../machines/bevel_gear.md)——改变旋转方向
+- [风速仪](../machines/wind_meter.md)——测量风力发电机附近的风速
+

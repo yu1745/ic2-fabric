@@ -14,7 +14,7 @@ item_ids:
 
 The Night Vision Goggles are a helmet-slot head-mounted device that grants the player Night Vision on demand. They are powered by an internal EU buffer rather than vanilla durability, so they keep working as long as the buffer is charged.
 
-## Block View
+## Item View
 
 | Night Vision Goggles |
 |:-------------------:|
@@ -44,7 +44,7 @@ The internal capacity and per-tick drain are read from `Ic2Config.current.armor.
 
 ### Toggling Night Vision
 
-- **Client / server interaction** — the exact key binding is provided by the goggles' UI handler. Default behaviour is right-click or the assigned hotkey to flip the `NIGHT_VISION_ENABLED` flag.
+- **Client / server interaction** — the exact key binding is provided by the goggles' UI handler. Default behaviour is **Alt+N** (the `toggleVisionKey`) to flip the `NIGHT_VISION_ENABLED` flag.
 - When enabled, the goggles apply the Night Vision status effect to the wearer. The effect is re-applied every `NIGHT_VISION_DURATION_TICKS` ticks (220 ticks, or 11 seconds) so the player never sees the effect pulse off.
 - The remaining operational time is shown in the item's tooltip, computed as `maxEnergy / euPerTick` for a full charge and updated live.
 
@@ -61,24 +61,9 @@ This is a safety override, not a configuration option — it cannot be disabled 
 
 The goggles set `isDamageable = false`, so they do not take vanilla damage and never show a durability bar. The only "wear" they experience is the EU buffer draining while night vision is active.
 
-### Tooltip
-
-```
-Night Vision Goggles
-EU: 30000 / 30000
-Night Vision: Enabled
-Time remaining: 25m 0s
-```
-
 ## Crafting
 
 <Recipe id="ic2_120:night_vision_goggles" />
-
-**Pattern key** (3x3):
-
-- **Top row:** `H B H` — **H** = Advanced Heat Exchanger, **B** = Advanced Re-Battery
-- **Middle row:** `L G L` — **L** = Luminator Flat, **G** = Reinforced Glass
-- **Bottom row:** `R C R` — **R** = Rubber, **C** = Advanced Circuit
 
 ## Related
 

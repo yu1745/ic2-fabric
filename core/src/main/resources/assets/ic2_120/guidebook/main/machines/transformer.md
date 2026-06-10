@@ -43,7 +43,7 @@ The front face accepts high-tier EU and the other five faces output the lower ti
 
 Place transformers between mismatched cable and machine tiers. For example, put an LV Transformer in step-down mode between a CESU/MV line and LV machines, with the front face toward the MV side.
 
-## Recipes
+## Recipe
 
 <Recipe id="ic2_120:lv_transformer" />
 <Recipe id="ic2_120:mv_transformer" />

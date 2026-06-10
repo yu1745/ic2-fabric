@@ -12,11 +12,7 @@ item_ids:
 
 <ItemImage id="ic2_120:alloy_chestplate" scale="4" />
 
-复合胸甲（也称为合金胸甲）是一件单槽位、高防护的胸甲部件。它不需要作为套装穿戴——并没有其他“复合”部件——它单独占据胸甲槽位，因此在不需要[电池背包 / 能量背包 / 锂能量背包](../reference/energy_items.md)或[喷气背包](../reference/energy_items.md)的场景下，它是自然而然的选择。
-
-## 方块视图
-
-<ItemImage id="ic2_120:alloy_chestplate" scale="4" />
+复合胸甲（也称为合金胸甲）是一件单槽位、高防护的胸甲部件。它不需要作为套装穿戴——并没有其他”复合”部件——它单独占据胸甲槽位，因此在不需要[电池背包 / 能量背包 / 锂能量背包](../reference/energy_items.md)或[喷气背包](../reference/energy_items.md)的场景下，它是自然而然的选择。
 
 ## 属性
 

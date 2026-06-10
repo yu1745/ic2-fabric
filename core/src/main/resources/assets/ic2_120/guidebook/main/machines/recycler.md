@@ -54,3 +54,7 @@ External item automation can insert valid inputs, insert batteries, insert upgra
 ## Recipe
 
 <Recipe id="ic2_120:recycler" />
+
+## Related
+
+- [Scrap Box](../items/scrap_box.md) — right-click to open for a random item; made from Scrap

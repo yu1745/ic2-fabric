@@ -35,7 +35,7 @@ The machine starts only when the input matches a cutting recipe, the output slot
 
 Blade hardness must be strictly greater than the recipe material hardness. That means an iron blade handles wood, stone, copper, tin, lapis, deepslate, and similar recipes below 5.0; a steel blade also handles 5.0 metal blocks such as iron, gold, bronze, and lead; and the diamond blade is needed for the steel block recipe. The generated obsidian recipe has hardness 50.0, so the current diamond blade is still not hard enough for it.
 
-## Recipes
+## Recipe
 
 Notable recipe groups include:
 

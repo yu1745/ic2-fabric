@@ -10,6 +10,8 @@ item_ids:
 
 # Wooden Crank Handle
 
+<ItemImage id="ic2_120:wooden_crank_handle" scale="4" />
+
 The Wooden Crank Handle is a basic crank used in the Manual Kinetic Generator. When installed, it allows the generator to produce 64 KU/t while being cranked.
 
 It is the lowest-tier crank, suitable for early-game kinetic power needs.

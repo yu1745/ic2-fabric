@@ -14,10 +14,6 @@ item_ids:
 
 The Composite Chestplate (also called the Alloy Chestplate) is a single-slot, high-protection chest piece. It does not need to be worn as a set — there are no other "Composite" pieces — and it sits in the chestplate slot by itself, making it the natural choice when you do not want a [BatPack / Energy Pack / LapPack](../reference/energy_items.md) or a [Jetpack](../reference/energy_items.md) in that slot.
 
-## Block View
-
-<ItemImage id="ic2_120:alloy_chestplate" scale="4" />
-
 ## Stats
 
 | Slot | Item | Armor | Durability Multiplier | Repair Ingredient |

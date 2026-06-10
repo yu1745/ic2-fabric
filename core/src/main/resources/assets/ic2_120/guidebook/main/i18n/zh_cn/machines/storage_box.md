@@ -8,6 +8,8 @@ navigation:
 
 # 储物箱 (Storage Box)
 
+<BlockImage id="ic2_120:iron_storage_box" scale="4" />
+
 储物箱是一种纯粹的大容量物品存储方块，有 5 个材质等级，容量逐级提升。它们**不消耗 EU、不支持升级、不涉及任何机器机制**——就是用来放东西的。
 
 ## 五种规格对比
