@@ -33,6 +33,9 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
 
         // 树苗生长保持原版行为，避免为了世界生成避让逻辑把玩家种下的树“挪位”或删掉周围树木。
         if (isSaplingGrowth(runtimeContext)) {
+            if (!hasClearSaplingGrowthArea(runtimeContext, runtimeContext.origin)) {
+                return false
+            }
             return Feature.TREE.generate(runtimeContext)
         }
 
@@ -55,6 +58,26 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
 
     private fun isSaplingGrowth(context: FeatureContext<TreeFeatureConfig>): Boolean =
         context.world.getBlockState(context.origin).block is RubberSaplingBlock
+
+    private fun hasClearSaplingGrowthArea(context: FeatureContext<TreeFeatureConfig>, origin: BlockPos): Boolean {
+        val world = context.world
+        val config = Ic2Config.current.worldgen.rubberTree.normalized()
+        val radius = (config.foliageRadius + 1).coerceAtLeast(1)
+        val height = config.baseHeight + config.heightRandA + config.heightRandB + config.foliageHeight + 2
+
+        for (x in -radius..radius) {
+            for (z in -radius..radius) {
+                for (y in 1..height) {
+                    val state = world.getBlockState(origin.add(x, y, z))
+                    if (state.isIn(BlockTags.LOGS)) {
+                        return false
+                    }
+                }
+            }
+        }
+
+        return true
+    }
 
     private fun findOverlappingTreeBlocks(context: FeatureContext<TreeFeatureConfig>, origin: BlockPos): List<BlockPos>? {
         val world = context.world
