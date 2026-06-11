@@ -1,6 +1,6 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-06-10
+最后更新：2026-06-11
 
 分叉点：`c5e247c`
 
@@ -10,43 +10,13 @@
 
 ## 总览
 
-同步跟踪表共 **193 个条目**，**125 个已同步，68 个待同步**。
-已同步条目 `#1-#125` 归档在 `branch-sync-archive.md`；未同步条目不归档，即使主表超过 20 行。
+同步跟踪表共 **193 个条目**，**155 个已同步，38 个待同步**。
+已同步条目 `#1-#155` 归档在 `branch-sync-archive.md`；未同步条目不归档，即使主表超过 20 行。
 
 ## 逐 commit 状态
 
 | # | Commit | 说明 | 在 1.21.1？ | 备注 |
 |---|--------|------|:-----------:|------|
-| 126 | `4ee9b03e` | feat: 核爆炸对齐 IC2 原版——自定义射线投射+分tick方块摧毁 | ❌ | 待同步 |
-| 127 | `88fe5847` | feat: 核爆炸全分tick+严格数值对齐+全服公告+冷却 | ❌ | 待同步 |
-| 128 | `f9841c26` | docs: TODO 添加特斯拉线圈电鱼 | ❌ | 待同步 |
-| 129 | `6e412bcf` | feat: 高炉GUI改为传统纹理渲染 + 温度/HU/压缩空气机制重做 | ❌ | 待同步 |
-| 130 | `b0ae678f` | fix: 高炉缺失压缩空气纹理源 | ❌ | 待同步 |
-| 131 | `e159a492` | 部分GUI更新 + 高炉更改（PR #2） | ❌ | 待同步 |
-| 132 | `e0d5114e` | fix: 恢复 PR 中误删的 steam 流体常量和类 + 修复 BlastFurnace typo | ❌ | 待同步 |
-| 133 | `90605282` | feat: 流体系统重构——Map 查表替代 when、颜色单一数据源、JEI 排除自动同步 | ❌ | 待同步 |
-| 134 | `7845b2fa` | feat: 钻头同时支持镐+铲双工具 + @ModItem 新增 tags 参数 | ❌ | 待同步 |
-| 135 | `59c2b646` | GUI全面更新：铁炉/电炉/感应炉/储电箱/太阳能蒸馏机/方块切割机改用PNG纹理渲染 | ❌ | 待同步 |
-| 136 | `e860b5d4` | GUI 版本更新：纹理修复 + 变压器/能量存储/机器 GUI 更新 | ❌ | 待同步 |
-| 137 | `3377e9e6` | fix: 补上冲突解决时误删的 Ic2Fluid 结束大括号 | ❌ | 待同步 |
-| 138 | `06235b00` | 新增压缩机/提取机/回收机/固体装罐机PNG GUI + 多机器电量条/流体槽悬停提示 | ❌ | 待同步 |
-| 139 | `8d619cab` | 压缩机/提取机/收集机/固体装罐机等多机器储能/流体槽新增GUI及提示文本 | ❌ | 待同步 |
-| 140 | `961dcf2e` | docs: 新增 19 份机器玩家文档，重写流体管道系统文档 | ❌ | 待同步 |
-| 141 | `7299140f` | 更新了部分GUI 优化了高炉程序（PR #12） | ❌ | 待同步 |
-| 142 | `ebd14a81` | 更新了部分GUI 以及优化了高炉程序 | ❌ | 待同步 |
-| 143 | `ea30898b` | feat: 全面GUI重构 + 流体/气体系统区分 + 储罐系统 + 离心机配方修正 | ❌ | 待同步 |
-| 144 | `19bf0da8` | feat: 采矿机流体处理 + 高级采矿机逐层回收管道 + 核电日志降级 | ❌ | 待同步 |
-| 145 | `e58e819d` | docs: 更新同步状态表——添加 commits 129-144，归档 105-124 | ❌ | 待同步 |
-| 146 | `7e78eeda` | 高级太阳能相关机器重构、GUI更新 | ❌ | 待同步 |
-| 147 | `ab7a2cfd` | Merge pull request #13 from yu1745/feat/macerator-gui-texture | ❌ | 待同步 |
-| 148 | `4ea41f63` | fix: 流体管道输入水被拒——isFluid 排除 WATER + canInsert/canExtract 误改 + simulateInsertion 精度 | ❌ | 待同步 |
-| 149 | `801f453f` | 部分GUI交互更新 | ❌ | 待同步 |
-| 150 | `336efb20` | GUI交互更新 | ❌ | 待同步 |
-| 151 | `019e3ea6` | fix: 泵不吸流体——canInsert=false 阻断内部insert + 迁移ic2翻译到ic2_120 | ❌ | 待同步 |
-| 152 | `ca0c1a89` | ci: 启用 GitHub Actions 构建与发布工作流 | ❌ | 待同步 |
-| 153 | `ad08a51f` | refactor: 传送机GUI重构 + OD/OV扫描仪GUI重构 + build.yml注释化 | ❌ | 待同步 |
-| 154 | `fcb99f05` | fix: 流体槽屏幕同步 + 压缩空气相关更新 | ❌ | 待同步 |
-| 155 | `ba742b49` | refactor: 高炉空气单位mB→droplets + 风力计客户端化 + 流体着色修复 | ❌ | 待同步 |
 | 156 | `560e5cff` | refactor: 全机器流体单位mB→Fabric droplet/bucket原生重构 | ❌ | 待同步 |
 | 157 | `75b07ee0` | refactor: ComposeUI→HandledScreen迁移 + 通用装罐机/磁化机/焦炉功能增强 + 流体着色与显示修复 | ❌ | 待同步 |
 | 158 | `5613b0fa` | fix: OD/OV扫描仪tooltip中扫描半径修正为扫描范围 | ❌ | 待同步 |
@@ -130,3 +100,4 @@
 - 2026-05-16：同步 commits 113-117——压缩机输入槽修复 + 复制机 CustomPayload 迁移 + 能量水晶粉 + 绝缘导线/耐压 tooltip + 电路板/粘性活塞。cherry-pick + 适配 1.21.1 API（SelectTemplatePayload、SingleStackRecipeInput、RecipeExporter、Identifier.of）+ datagen 刷新 |
 - 2026-05-18：批量同步 commits 119-124——蒸汽系统 + 压缩机配方容器返还 + 流体管道重构 + BER 光照 + GUI 传统纹理 + 移除 deploy-enabled。cherry-pick + 解决多处冲突 + 适配 1.21.1 API（FluidVariant CODEC、ExtendedScreenHandlerFactory getScreenOpeningData、validateTicker、ItemStack.fromNbt/encode、onUse 无 Hand、appendTooltip TooltipType）+ datagen 刷新 |
 - 2026-06-10：更新同步状态表——添加 commits 166-193（28 个 main 上 0f483fa6 之后、1.21.1 上均未同步的 commit：包括 1d6ade59 docs: pending container screen sync、c66c6a3d 高炉 1280 HU 缓存、BuildCraftAddon 模块（1d480e3f/c5453125/80db3a36/c16943b9）、Jade 集成（cc4d210b/03aa4708）、采矿机基岩判定+自动回收（3baafd6b/4949b6a8）、高炉 HU 机制（e8b64aa3/c66c6a3d）、贴图迁移（6d768271）、编译警告消除（96034c3f/42420fcd/7eb01c05）、能量条校准（649ae57f）、Guidebook 迁移（6d199717/8bdfada5/9855d47d）、飞行改原版创造模式（9f3aa882）、橡胶树修复（6c90259b/8d982aa6）、fabric_guidebook 升级（ab6773ed）、mod-sync-fabric 后台同步（afc9168a）、Guidebook 文档润色+Kotlin LSP 踩坑（9e78e92a/5e86c0d0）等），全部待同步至 1.21.1 |
+- 2026-06-11：同步 commits 126-155 到 1.21.1，并归档到 `branch-sync-archive.md`。其中 `91740f2e docs: update branch sync status` 为纯同步状态提交，迁移过程中跳过；当前下一条待迁移为 `560e5cff` |

@@ -116,3 +116,33 @@
 | 123 | `152ca7ab` | feat: 多台机器GUI从ComposeUI改为传统纹理渲染 | ✅ | cherry-pick + Screen conflict 解决（取 HEAD 版本）|
 | 124 | `33a52f58` | chore: 移除 .deploy-enabled 引用（文件已删除） | ✅ | cherry-pick 无冲突 |
 | 125 | `7f74eecc` | feat: 风力计配方+粗矿块反向分解+发电机燃料过滤修复 | ✅ | cherry-pick + 适配 1.21.1 RecipeExporter/CraftingRecipeCategory（tools→equipment）+ datagen 刷新 |
+| 126 | `4ee9b03e` | feat: 核爆炸对齐 IC2 原版——自定义射线投射+分tick方块摧毁 | ✅ | cherry-pick 到 1.21.1：`6a7ca573` |
+| 127 | `88fe5847` | feat: 核爆炸全分tick+严格数值对齐+全服公告+冷却 | ✅ | cherry-pick 到 1.21.1：`9308ae38` |
+| 128 | `f9841c26` | docs: TODO 添加特斯拉线圈电鱼 | ✅ | cherry-pick 到 1.21.1：`d1b8ba04` |
+| 129 | `6e412bcf` | feat: 高炉GUI改为传统纹理渲染 + 温度/HU/压缩空气机制重做 | ✅ | cherry-pick 到 1.21.1：`bca45109` |
+| 130 | `b0ae678f` | fix: 高炉缺失压缩空气纹理源 | ✅ | cherry-pick 到 1.21.1：`4e2c2426` |
+| 131 | `e159a492` | 部分GUI更新 + 高炉更改（PR #2） | ✅ | 已迁移到 1.21.1，含 GUI/高炉相关冲突适配 |
+| 132 | `e0d5114e` | fix: 恢复 PR 中误删的 steam 流体常量和类 + 修复 BlastFurnace typo | ✅ | cherry-pick 到 1.21.1：`fb1b8f13` |
+| 133 | `90605282` | feat: 流体系统重构——Map 查表替代 when、颜色单一数据源、JEI 排除自动同步 | ✅ | cherry-pick 到 1.21.1：`b06d5b99` |
+| 134 | `7845b2fa` | feat: 钻头同时支持镐+铲双工具 + @ModItem 新增 tags 参数 | ✅ | cherry-pick 到 1.21.1：`d37c4f70` |
+| 135 | `59c2b646` | GUI全面更新：铁炉/电炉/感应炉/储电箱/太阳能蒸馏机/方块切割机改用PNG纹理渲染 | ✅ | cherry-pick 到 1.21.1：`c3808d61` |
+| 136 | `e860b5d4` | GUI 版本更新：纹理修复 + 变压器/能量存储/机器 GUI 更新 | ✅ | 已迁移到 1.21.1，含上游 GUI 资源补齐 |
+| 137 | `3377e9e6` | fix: 补上冲突解决时误删的 Ic2Fluid 结束大括号 | ✅ | 已迁移到 1.21.1 |
+| 138 | `06235b00` | 新增压缩机/提取机/回收机/固体装罐机PNG GUI + 多机器电量条/流体槽悬停提示 | ✅ | cherry-pick 到 1.21.1：`c337a608` |
+| 139 | `8d619cab` | 压缩机/提取机/收集机/固体装罐机等多机器储能/流体槽新增GUI及提示文本 | ✅ | 已迁移到 1.21.1 |
+| 140 | `961dcf2e` | docs: 新增 19 份机器玩家文档，重写流体管道系统文档 | ✅ | cherry-pick 到 1.21.1：`fc567b65` |
+| 141 | `7299140f` | 更新了部分GUI 优化了高炉程序（PR #12） | ✅ | 已迁移到 1.21.1，含 GUI/高炉相关冲突适配 |
+| 142 | `ebd14a81` | 更新了部分GUI 以及优化了高炉程序 | ✅ | cherry-pick 到 1.21.1：`67eca288` |
+| 143 | `ea30898b` | feat: 全面GUI重构 + 流体/气体系统区分 + 储罐系统 + 离心机配方修正 | ✅ | cherry-pick 到 1.21.1：`7af80f85` |
+| 144 | `19bf0da8` | feat: 采矿机流体处理 + 高级采矿机逐层回收管道 + 核电日志降级 | ✅ | cherry-pick 到 1.21.1：`7cb43d83` |
+| 145 | `e58e819d` | docs: 更新同步状态表——添加 commits 129-144，归档 105-124 | ✅ | 同步状态记录，本次按已处理归档 |
+| 146 | `7e78eeda` | 高级太阳能相关机器重构、GUI更新 | ✅ | cherry-pick 到 1.21.1：`e6a82d3a` |
+| 147 | `ab7a2cfd` | Merge pull request #13 from yu1745/feat/macerator-gui-texture | ✅ | merge 内容已由前后功能提交覆盖并迁移 |
+| 148 | `4ea41f63` | fix: 流体管道输入水被拒——isFluid 排除 WATER + canInsert/canExtract 误改 + simulateInsertion 精度 | ✅ | cherry-pick 到 1.21.1：`1f57ee5c` |
+| 149 | `801f453f` | 部分GUI交互更新 | ✅ | cherry-pick 到 1.21.1：`9178a4b9` |
+| 150 | `336efb20` | GUI交互更新 | ✅ | cherry-pick 到 1.21.1：`9bd9e2ac` |
+| 151 | `019e3ea6` | fix: 泵不吸流体——canInsert=false 阻断内部insert + 迁移ic2翻译到ic2_120 | ✅ | cherry-pick 到 1.21.1：`0ba1e500` |
+| 152 | `ca0c1a89` | ci: 启用 GitHub Actions 构建与发布工作流 | ✅ | cherry-pick 到 1.21.1：`f5bcff58` |
+| 153 | `ad08a51f` | refactor: 传送机GUI重构 + OD/OV扫描仪GUI重构 + build.yml注释化 | ✅ | cherry-pick 到 1.21.1：`df3b69c7` |
+| 154 | `fcb99f05` | fix: 流体槽屏幕同步 + 压缩空气相关更新 | ✅ | cherry-pick 到 1.21.1：`92be2cbc` + 适配 1.21.1 FluidVariant NBT/ContainerItemContext API |
+| 155 | `ba742b49` | refactor: 高炉空气单位mB→droplets + 风力计客户端化 + 流体着色修复 | ✅ | cherry-pick 到 1.21.1：`9ca5a277` + 解决 ChunkLoader/Cropnalyzer/WindMeter/GUI PNG 冲突 |
