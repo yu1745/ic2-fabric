@@ -156,5 +156,12 @@
 | 163 | `742b5414` | feat: 启用 CI 发版 + 更新斜齿轮 guidebook 文档与 3D 预览 | ✅ | cherry-pick 到 1.21.1：`5aef4298`（后续 1.21.1 提交 `b1591091` 重新注释化 CI） |
 | 164 | `4c7063f4` | feat: JEI 配方背景使用机器纹理 + Canner 流体渲染 + 新增流体单元 | ✅ | cherry-pick 到 1.21.1：`123d2b10` + JEI 背景纹理与流体单元 1.21.1 适配 |
 | 165 | `0f483fa6` | fix: 加固容器 GUI 交互防止刷物品 | ✅ | cherry-pick 到 1.21.1：`dee9a00f`（exact patch match） |
+| 166 | `1d6ade59` | docs: record pending container screen sync | ⏭️ | 纯同步状态记录，后续状态表已覆盖，未单独迁移 |
 | 167 | `c66c6a3d` | feat: 高炉增加 1280 HU 缓存机制，消除 1401 温度边界工作抽搐 | ✅ | cherry-pick 到 1.21.1：`83e4380b` + 适配 1.21.1 BlastFurnaceBlockEntity 接口泛型 |
 | 168 | `96034c3f` | fix: 消除 compileKotlin 编译警告（废弃覆盖/API调用/多余转换） | ✅ | cherry-pick 到 1.21.1：`4219800b` + 适配 1.21.1 注解/API 调用 |
+| 169 | `7eb01c05` | fix: 泵无流体预检 + 手摇动能发生机物品贴图对齐 | ✅ | cherry-pick 到 1.21.1：`b2328985` |
+| 170 | `42420fcd` | fix: 补充 Block 类废弃覆盖警告抑制 | ✅ | cherry-pick 到 1.21.1：`0d0a0349` |
+| 171 | `6d768271` | feat: 动能发生机贴图迁移到 ic2_120 命名空间 + 新增贴图 | ✅ | cherry-pick 到 1.21.1：`fb2b9550` |
+| 172 | `b20656f8` | Merge branch main of https://github.com/yu1745/ic2-fabric | ⏭️ | merge commit，无需单独迁移；内容已由相邻功能提交覆盖 |
+| 173 | `649ae57f` | fix: 校准机器 GUI 能量条/进度条纹理坐标与像素偏移，BlockCutter 增加升级提示图标 | ✅ | cherry-pick 到 1.21.1：`36a49259` |
+| 174 | `e8b64aa3` | feat: 高炉 HU 指示灯条件改为升温条件满足时渲染 + 达温上限维持 HU 消耗 | ✅ | cherry-pick 到 1.21.1：`68b35985` |
