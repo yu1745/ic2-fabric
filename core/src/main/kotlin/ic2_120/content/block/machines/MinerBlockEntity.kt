@@ -500,7 +500,11 @@ abstract class BaseMinerBlockEntity(
 
     override fun writeNbt(nbt: NbtCompound, lookup: RegistryWrapper.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        Inventories.writeNbt(nbt, inventory, lookup)
+        val inventoryForNbt = DefaultedList.ofSize(inventory.size, ItemStack.EMPTY)
+        for (i in inventory.indices) {
+            inventoryForNbt[i] = if (i == SLOT_PIPE) ItemStack.EMPTY else inventory[i]
+        }
+        Inventories.writeNbt(nbt, inventoryForNbt, lookup)
         nbt.putInt(
             NBT_PIPE_SLOT_COUNT,
             getPipeCount()
