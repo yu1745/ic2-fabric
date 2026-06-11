@@ -146,3 +146,15 @@
 | 153 | `ad08a51f` | refactor: 传送机GUI重构 + OD/OV扫描仪GUI重构 + build.yml注释化 | ✅ | cherry-pick 到 1.21.1：`df3b69c7` |
 | 154 | `fcb99f05` | fix: 流体槽屏幕同步 + 压缩空气相关更新 | ✅ | cherry-pick 到 1.21.1：`92be2cbc` + 适配 1.21.1 FluidVariant NBT/ContainerItemContext API |
 | 155 | `ba742b49` | refactor: 高炉空气单位mB→droplets + 风力计客户端化 + 流体着色修复 | ✅ | cherry-pick 到 1.21.1：`9ca5a277` + 解决 ChunkLoader/Cropnalyzer/WindMeter/GUI PNG 冲突 |
+| 156 | `560e5cff` | refactor: 全机器流体单位mB→Fabric droplet/bucket原生重构 | ✅ | cherry-pick 到 1.21.1：`0557afcc` |
+| 157 | `75b07ee0` | refactor: ComposeUI→HandledScreen迁移 + 通用装罐机/磁化机/焦炉功能增强 + 流体着色与显示修复 | ✅ | cherry-pick 到 1.21.1：`a615d36a` + 适配 1.21.1 `appendTooltip` 签名 |
+| 158 | `5613b0fa` | fix: OD/OV扫描仪tooltip中扫描半径修正为扫描范围 | ✅ | cherry-pick 到 1.21.1：`93c84cb9`（exact patch match） |
+| 159 | `1dd7edc4` | fix: 消除Kotlin编译警告（废弃覆盖/冗余转换/不必要安全调用） | ✅ | cherry-pick 到 1.21.1：`7bb3d163` + 适配 1.21.1 注解/属性接口 |
+| 160 | `8e613c1a` | feat: 压缩空气单元统一为 air_cell + 高炉支持任意 FluidStorage 容器 | ✅ | cherry-pick 到 1.21.1：`95cb2bb7` + 适配 1.21.1 `FluidStorage` 抽象 |
+| 161 | `cd1f176b` | feat: 蒸汽系统修复 + UU模板安全 + 发电机tooltip + 复制机取消/状态 | ✅ | cherry-pick 到 1.21.1：`c11c1d39` |
+| 162 | `43f60963` | feat: 集成 Fabric Guidebook + 修复 guidebook 页面链接与 Recipe ID | ✅ | cherry-pick 到 1.21.1：`c9eee5fb` + 适配 1.21.1 RecipeExporter 签名 |
+| 163 | `742b5414` | feat: 启用 CI 发版 + 更新斜齿轮 guidebook 文档与 3D 预览 | ✅ | cherry-pick 到 1.21.1：`5aef4298`（后续 1.21.1 提交 `b1591091` 重新注释化 CI） |
+| 164 | `4c7063f4` | feat: JEI 配方背景使用机器纹理 + Canner 流体渲染 + 新增流体单元 | ✅ | cherry-pick 到 1.21.1：`123d2b10` + JEI 背景纹理与流体单元 1.21.1 适配 |
+| 165 | `0f483fa6` | fix: 加固容器 GUI 交互防止刷物品 | ✅ | cherry-pick 到 1.21.1：`dee9a00f`（exact patch match） |
+| 167 | `c66c6a3d` | feat: 高炉增加 1280 HU 缓存机制，消除 1401 温度边界工作抽搐 | ✅ | cherry-pick 到 1.21.1：`83e4380b` + 适配 1.21.1 BlastFurnaceBlockEntity 接口泛型 |
+| 168 | `96034c3f` | fix: 消除 compileKotlin 编译警告（废弃覆盖/API调用/多余转换） | ✅ | cherry-pick 到 1.21.1：`4219800b` + 适配 1.21.1 注解/API 调用 |
