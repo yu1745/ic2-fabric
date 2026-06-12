@@ -60,6 +60,13 @@ dependencies {
 	modCompileOnly("dev.ftb.mods:ftb-chunks-fabric:${project.ftb_chunks_version}") { transitive = false }
 	modCompileOnly("dev.ftb.mods:ftb-library-fabric:${project.ftb_library_version}") { transitive = false }
 	modCompileOnly("dev.ftb.mods:ftb-teams-fabric:${project.ftb_teams_version}") { transitive = false }
+
+	// mcdebug: compile-time reference to com.mcdebug.test.* (McDebugTest,
+	// McDebugTests, McDebugTestApi, Pos) for @McDebugTests-annotated test
+	// objects. Using modCompileOnly with a flatdir repo so Loom properly
+	// remaps the artifact; the mcdebug jar is already in core/run/mods/
+	// at runtime, so we only need compile access here.
+	modCompileOnly("com.mcdebug:mcdebug:0.4.2")
 	modCompileOnly("dev.architectury:architectury-fabric:${project.architectury_version}")
 
 	// ModMenu + Cloth Config: GUI 配置编辑（软依赖，需要同时安装）

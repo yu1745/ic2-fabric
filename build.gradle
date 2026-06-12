@@ -16,6 +16,8 @@ allprojects {
 		maven { url "https://maven.terraformersmc.com/releases/" }
 		maven { url "https://jitpack.io" }
 		flatDir { dir rootProject.file('libs') }
+		// mcdebug: jar published to ../mcdebug/build/libs/ by its own build
+		flatDir { dir rootProject.file('../mcdebug/build/libs') }
 	}
 }
 
