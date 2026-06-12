@@ -7,6 +7,10 @@ pluginManagement {
 		mavenCentral()
 		gradlePluginPortal()
 	}
+	// Pull the com.mcdebug plugin from the sibling mcdebug project so we
+	// can iterate on the test runner without publishing to a maven repo.
+	// Once mcdebug releases, switch this to a maven { url = ... } block.
+	includeBuild('../mcdebug')
 }
 
 include 'core'

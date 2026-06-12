@@ -1,3 +1,7 @@
+plugins {
+	id 'com.mcdebug' // provided by ../mcdebug via includeBuild in settings.gradle
+}
+
 version = project.mod_version
 group = project.maven_group
 
@@ -158,4 +162,12 @@ tasks.register('printGuidebookDevCommand') {
 
 tasks.named('check') {
 	dependsOn(tasks.named('validateGuidebook'))
+}
+
+// mcdebug: scan ic2_120 (this mod's main package) for @McDebugTests
+// annotated block classes. Addon packages can be appended here as
+// they're moved under test coverage.
+mcdebug {
+	scanPackages = ['ic2_120']
+	runServerTask = 'core:runServer'
 }
