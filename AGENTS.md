@@ -10,6 +10,7 @@
 - **main → 1.21.1 迁移 cherry-pick：`docs/guides/branch-cherry-pick-guide.md`（每次 cherry-pick 前必读，否则必踩坑）**
 - 新机器实现：`docs/guides/machine-implementation-guide.md`
 - 机器组合复用：`docs/guides/machine-composition-reuse.md`（减少 container/slot/sync 重复代码）
+- mcdebug 测试编写：`docs/guides/mcdebug-test-guide.md`（test 矩阵、15s 硬约束、overclocker/tier 隐藏限制、slot 速查、踩过的坑）
 - 新物品实现：`docs/guides/item-implemented.md`
 - 传送卷轴：`docs/guides/recall-scroll.md`
 - 注解注册系统：`docs/registry/CLASS_BASED_REGISTRY.md`
