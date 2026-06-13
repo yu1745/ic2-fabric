@@ -43,6 +43,10 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+
+# node
+
+node_modules/
 .claude/
 
 # deploy

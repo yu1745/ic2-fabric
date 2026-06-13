@@ -1,6 +1,5 @@
 package ic2_120.content.block
 
-import com.mcdebug.test.McDebugTestPackages
 import ic2_120.content.block.MachineCasingBlock
 import ic2_120.content.block.cables.InsulatedTinCableBlock
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
@@ -137,7 +136,6 @@ abstract class TransformerBlock : DirectionalMachineBlock() {
 }
 
 @ModBlock(name = "lv_transformer", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "transformer")
-@McDebugTestPackages("ic2_120.tests.transformer")
 class LvTransformerBlock : TransformerBlock() {
     override fun createTransformerBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         LvTransformerBlockEntity(pos, state)

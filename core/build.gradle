@@ -1,7 +1,3 @@
-plugins {
-	id 'com.mcdebug' version '0.4.10'
-}
-
 version = project.mod_version
 group = project.maven_group
 
@@ -61,9 +57,6 @@ dependencies {
 	modCompileOnly("dev.ftb.mods:ftb-library-fabric:${project.ftb_library_version}") { transitive = false }
 	modCompileOnly("dev.ftb.mods:ftb-teams-fabric:${project.ftb_teams_version}") { transitive = false }
 
-	// mcdebug: compile-time reference to com.mcdebug.test.* for mcdebug test
-	// objects. Runtime jar is resolved from the released GitHub tag via JitPack.
-	modCompileOnly("com.github.yu1745.mcdebug:mcdebug:0.4.10")
 	modRuntimeOnly("com.github.yu1745.mcdebug:mcdebug:0.4.10")
 	modCompileOnly("dev.architectury:architectury-fabric:${project.architectury_version}")
 
@@ -169,10 +162,104 @@ tasks.named('check') {
 	dependsOn(tasks.named('validateGuidebook'))
 }
 
-// mcdebug: scan ic2_120 (this mod's main package) for @McDebugTests
-// annotated block classes. Addon packages can be appended here as
-// they're moved under test coverage.
-mcdebug {
-	scanPackages = ['ic2_120']
-	runServerTask = 'core:runServer'
+// mcdebugTest: 拉起 dev MC server + 跑 TS 测试 + 清理。
+//
+// 为什么不直接 `dependsOn core:runServer`：
+//   Loom 的 `runServer` 是前台阻塞任务（JavaExec 派生，main 线程跑到 server
+//   退出才返回），Gradle 的 dependsOn 会把依赖任务跑完才跑当前任务，加上
+//   runServer 永远不返回 ⇒ mcdebugTest 永远不会开始。
+//
+// 现在的做法：复用 Loom 已经算好的 `runServer` 配置（main class、classpath、
+// JVM args、工作目录），把它**原样转发给一个 `java` 子进程**，这样：
+//   - mcdebugTest 仍然一次命令完成"启动 + 测试 + 清理"；
+//   - 不再嵌套 `./gradlew core:runServer` 那个二级 Gradle daemon，少一次
+//     Gradle 冷启动（实测 ~5–10s 提速）；
+//   - server 生命周期完全在我们手里（destroy + 超时 force-kill）。
+tasks.register('mcdebugTest') {
+	description = 'Run TypeScript mcdebug tests against a dev MC server'
+	group = 'verification'
+	dependsOn(tasks.named('classes'))
+
+	doLast {
+		def portFile = layout.projectDirectory.file('run/mcdebug/port').asFile
+		if (portFile.exists()) {
+			portFile.delete()
+		}
+
+		def logFile = layout.buildDirectory.file('mcdebugTest/server.log').get().asFile
+		logFile.parentFile.mkdirs()
+
+		// 1. 抽取 Loom 已配好的 runServer 启动参数。
+		//    Loom 把 server 的 workingDir 设为 `core/run/`（AbstractRunTask 里
+		//    `new File(projectDir, runDir)`，runDir = "run"），eula/world 都在
+		//    那里。我们直接把 java 子进程的 cwd 切到 `core/run/`，再把 Loom 的
+		//    DLI 配置 / encoding / `-Dfabric.dli.main` 全部带上即可。
+		def runServer = tasks.named('runServer').get()
+		def mainClass = runServer.mainClass.get()
+		def classpath = runServer.classpath.asPath
+
+		// 过滤掉 `@argFile` —— 我们直接用 `-cp` 传 classpath，不再走 arg file，
+		// 避免 arg file 解析顺序与位置参数冲突。
+		def jvmArgs = runServer.jvmArgs.findAll { !it.startsWith('@') }
+
+		// 关键：用当前进程真实启动时用的 `java` 可执行文件（也就是 Gradle
+		// daemon 自己的 JVM），而不是 PATH 里的 `java`，也不是拼 `java.home`。
+		//   - `ProcessHandle.current()` 拿到的是 daemon 进程；
+		//   - `.info().command()` 返回 daemon 启动时调用的那个 `java` 的
+		//     绝对路径 —— 这是最贴近 Loom `runServer` 实际使用的 JVM 的来源，
+		//     跟 `org.gradle.java.home` / launcher JVM / PATH 都不耦合。
+		// 避免换机器后 `PATH java` ≠ Gradle java 引发 `--add-opens` /
+		// module 行为错位。
+		def javaBin = java.lang.ProcessHandle.current().info().command().orElseThrow {
+			new GradleException("Cannot resolve current JVM executable path")
+		}
+
+		logger.lifecycle("Starting MC server in-process (main=${mainClass}, java=${javaBin})...")
+
+		def cmd = [javaBin, '-cp', classpath] + jvmArgs + [mainClass, '--nogui']
+		def server = new ProcessBuilder(cmd)
+				.directory(layout.projectDirectory.dir('run').asFile)
+				.redirectErrorStream(true)
+				.start()
+
+		def logThread = Thread.startDaemon('mcdebug-server-log-drain') {
+			logFile.withOutputStream { out ->
+				server.inputStream.transferTo(out)
+			}
+		}
+
+		try {
+			def deadline = System.currentTimeMillis() + 120_000L
+			while (System.currentTimeMillis() < deadline && !portFile.exists()) {
+				Thread.sleep(500)
+			}
+			if (!portFile.exists()) {
+				throw new GradleException("MC server didn't write ${portFile} within 120s. Inspect server log: ${logFile}")
+			}
+
+			def testProcess = new ProcessBuilder('pnpm', 'exec', 'tsx', 'core/test/mcdebug/run.ts')
+					.directory(rootProject.projectDir)
+					.redirectErrorStream(true)
+			testProcess.environment().put('MCDEBUG_TEST_PARALLELISM', providers.environmentVariable('MCDEBUG_TEST_PARALLELISM').orElse('128').get())
+			def testRun = testProcess.start()
+			testRun.inputStream.withReader('UTF-8') { reader ->
+				String line
+				while ((line = reader.readLine()) != null) {
+					logger.lifecycle(line)
+				}
+			}
+			def testExit = testRun.waitFor()
+			if (testExit != 0) {
+				throw new GradleException("mcdebug TS tests failed with exit code ${testExit}")
+			}
+		} finally {
+			logger.lifecycle('Stopping MC server...')
+			server.destroy()
+			if (!server.waitFor(10, java.util.concurrent.TimeUnit.SECONDS)) {
+				logger.warn('MC server did not stop in 10s, force-killing')
+				server.destroyForcibly()
+			}
+			logThread.join(1000)
+		}
+	}
 }

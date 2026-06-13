@@ -8,13 +8,6 @@ pluginManagement {
 		gradlePluginPortal()
 		maven { url = 'https://jitpack.io' }
 	}
-	resolutionStrategy {
-		eachPlugin {
-			if (requested.id.id == 'com.mcdebug') {
-				useModule("com.github.yu1745.mcdebug:gradle-plugin:${requested.version}")
-			}
-		}
-	}
 }
 
 include 'core'

@@ -1,6 +1,5 @@
 package ic2_120.content.block
 
-import com.mcdebug.test.McDebugTestPackages
 import ic2_120.Ic2_120
 import ic2_120.content.block.machines.SolidCannerBlockEntity
 import ic2_120.content.item.Circuit
@@ -42,7 +41,6 @@ import ic2_120.registry.annotation.RecipeProvider
  * 操作时间：10 秒，2 EU/t，单次 400 EU
  */
 @ModBlock(name = "solid_canner", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
-@McDebugTestPackages("ic2_120.tests.solid_canner")
 class SolidCannerBlock : MachineBlock() {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =

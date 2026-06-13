@@ -1,0 +1,20 @@
+{
+  "name": "ic2-fabric-mcdebug-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "mcdebug:test": "tsx core/test/mcdebug/run.ts",
+    "mcdebug:typecheck": "tsc -p core/test/mcdebug/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@yu1745/mcdebug": "github:yu1745/mcdebug#main&path:/mcdebug-client"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
