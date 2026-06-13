@@ -1,5 +1,6 @@
 package ic2_120.content.block
 
+import com.mcdebug.test.McDebugTestPackages
 import ic2_120.content.block.machines.CentrifugeBlockEntity
 import ic2_120.content.item.Coil
 import ic2_120.content.item.ElectricMotor
@@ -39,6 +40,7 @@ import ic2_120.registry.annotation.RecipeProvider
  * 能量等级：2 (MV)
  */
 @ModBlock(name = "centrifuge", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
+@McDebugTestPackages("ic2_120.tests.centrifuge")
 class CentrifugeBlock : MachineBlock() {
 
     override fun getCasingDrop() = AdvancedMachineCasingBlock::class.item()

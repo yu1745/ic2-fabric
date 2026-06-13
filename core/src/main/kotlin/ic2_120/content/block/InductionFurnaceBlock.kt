@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import com.mcdebug.test.McDebugTestPackages
+
 import ic2_120.content.block.machines.InductionFurnaceBlockEntity
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
@@ -33,6 +35,7 @@ import ic2_120.registry.annotation.RecipeProvider
  * 能量等级：2（MV, 最高 128 EU/t）
  */
 @ModBlock(name = "induction_furnace", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
+@McDebugTestPackages("ic2_120.tests.induction_furnace")
 class InductionFurnaceBlock : MachineBlock() {
 
     override fun getCasingDrop() = AdvancedMachineCasingBlock::class.item()

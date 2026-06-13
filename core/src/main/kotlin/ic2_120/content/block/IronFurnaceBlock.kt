@@ -1,6 +1,7 @@
 package ic2_120.content.block
 
-import com.mcdebug.test.McDebugTests
+import com.mcdebug.test.McDebugTestPackages
+
 import ic2_120.Ic2_120
 import ic2_120.content.block.machines.IronFurnaceBlockEntity
 import ic2_120.registry.CreativeTab
@@ -9,8 +10,6 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.type
-import ic2_120.tests.IronFurnacePlaceTest
-import ic2_120.tests.IronFurnaceSmeltTest
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
@@ -45,7 +44,7 @@ import ic2_120.registry.annotation.RecipeProvider
  * - 工作时不发光
  */
 @ModBlock(name = "iron_furnace", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
-@McDebugTests(IronFurnacePlaceTest::class, IronFurnaceSmeltTest::class)
+@McDebugTestPackages("ic2_120.tests.iron_furnace")
 class IronFurnaceBlock : MachineBlock() {
 
     override fun getCasingDrop() = asItem()

@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import com.mcdebug.test.McDebugTestPackages
+
 import ic2_120.content.block.machines.RecyclerBlockEntity
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
@@ -33,6 +35,7 @@ import java.util.function.Consumer
  * 能量等级：1
  */
 @ModBlock(name = "recycler", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
+@McDebugTestPackages("ic2_120.tests.recycler")
 class RecyclerBlock : MachineBlock() {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =

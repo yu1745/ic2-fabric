@@ -199,7 +199,7 @@ class MaceratorBlockEntity(
             return
         }
 
-        val recipeInventory = SimpleInventory(input.copyWithCount(1))
+        val recipeInventory = SimpleInventory(input)
         val match = world.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), recipeInventory, world)
         if (match.isEmpty) {
             if (sync.progress != 0) sync.progress = 0

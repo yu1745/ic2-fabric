@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import com.mcdebug.test.McDebugTestPackages
+
 import ic2_120.content.block.machines.GeneratorBlockEntity
 import ic2_120.content.item.IronPlate
 import ic2_120.content.item.energy.ReBatteryItem
@@ -35,6 +37,7 @@ import java.util.function.Consumer
  * 火力发电机方块。燃烧燃料产生 EU，支持 facing 与 active 状态。
  */
 @ModBlock(name = "generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
+@McDebugTestPackages("ic2_120.tests.generator")
 class GeneratorBlock : MachineBlock() {
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         GeneratorBlockEntity(pos, state)

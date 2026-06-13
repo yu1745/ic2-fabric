@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import com.mcdebug.test.McDebugTestPackages
+
 import ic2_120.content.block.cables.DoubleInsulatedGoldCableBlock
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.block.cables.InsulatedTinCableBlock
@@ -46,6 +48,7 @@ import java.util.function.Consumer
 // ============== Block Definitions ==============
 
 @ModBlock(name = "batbox", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
+@McDebugTestPackages("ic2_120.tests.energy_storage")
 class BatBoxBlock : EnergyStorageBlock(EnergyStorageConfig.BATBOX) {
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.BatBoxBlockEntity(pos, state)

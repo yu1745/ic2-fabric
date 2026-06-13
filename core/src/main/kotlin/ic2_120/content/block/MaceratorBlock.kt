@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import com.mcdebug.test.McDebugTestPackages
+
 import ic2_120.content.block.machines.MaceratorBlockEntity
 import ic2_120.content.item.Circuit
 import ic2_120.content.recipes.macerator.MaceratorRecipeDatagen
@@ -37,6 +39,7 @@ import ic2_120.registry.annotation.RecipeProvider
  * 能量等级：1
  */
 @ModBlock(name = "macerator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
+@McDebugTestPackages("ic2_120.tests.macerator")
 class MaceratorBlock : MachineBlock() {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =

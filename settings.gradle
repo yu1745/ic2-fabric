@@ -6,15 +6,18 @@ pluginManagement {
 		}
 		mavenCentral()
 		gradlePluginPortal()
+		maven { url = 'https://jitpack.io' }
 	}
-	// Pull the com.mcdebug plugin from the sibling mcdebug project so we
-	// can iterate on the test runner without publishing to a maven repo.
-	// Once mcdebug releases, switch this to a maven { url = ... } block.
-	includeBuild('../mcdebug')
+	resolutionStrategy {
+		eachPlugin {
+			if (requested.id.id == 'com.mcdebug') {
+				useModule("com.github.yu1745.mcdebug:gradle-plugin:${requested.version}")
+			}
+		}
+	}
 }
 
 include 'core'
 include 'advanced-solar-addon'
 include 'advanced-weapons-addon'
 include 'buildcraft-addon'
-
