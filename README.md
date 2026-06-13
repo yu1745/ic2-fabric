@@ -31,7 +31,7 @@ IndustrialCraft 2 Experimental 的 Minecraft 1.20.1 Fabric 移植版本，使用
 - 📦 基于 Fabric Loader 和 Fabric API
 - 🔧 使用 Kotlin 2.3.10 开发
 - ⚡ 类级别注解注册系统，简化模组开发
-- 🎨 自定义 ComposeUI 声明式 GUI 系统
+- 🎨 内嵌自研 ComposeUI 声明式 GUI 系统
 - 🔌 EU 能量网络系统
 - 🏭 完整的工业机器套件（发电机、加工机器、储能设备等）
 
@@ -42,116 +42,55 @@ IndustrialCraft 2 Experimental 的 Minecraft 1.20.1 Fabric 移植版本，使用
 - Fabric Loader
 - Fabric API
 
-## 构建命令
-
-**重要**: 所有 Gradle 命令不要添加 `--no-daemon` 参数，以利用 Gradle Daemon 加快构建速度。
-
-```bash
-# 构建模组
-./gradlew build
-
-# 清理构建
-./gradlew clean build
-
-# 运行客户端
-./gradlew runClient
-
-# Windows 中文乱码修复: 使用 runClient.bat（会先设置控制台为 UTF-8 再启动客户端）
-./runClient.bat
-
-# 运行服务端
-./gradlew runServer
-
-# 生成源码
-./gradlew genSources
-
-# 生成数据
-./gradlew runDatagen
-```
-
 ## 技术栈
 
 - **Kotlin** 2.3.10 - 主要开发语言
 - **Fabric Loom** - Gradle 构建插件
 - **Fabric API** - Minecraft 模组 API
-- **ComposeUI** - 自定义声明式 GUI 系统
+- **ComposeUI** - 内嵌自研声明式 GUI DSL（基于 DrawContext，非 JetBrains Compose）
+- **[mcdebug](https://github.com/yu1745/mcdebug)** - 游戏内方块/机器自动化测试工具（拉起 dev 服务端跑 TS 测试）
 
 ## 项目结构
 
+多模块 Gradle 项目，`core` 为本体，其余为附属模组：
+
 ```
 ic2-fabric/
-├── src/
-│   ├── main/kotlin/     # 通用/服务端代码
-│   ├── client/kotlin/   # 客户端专用代码
-│   ├── main/java/       # 通用/服务端 Mixin 类
-│   └── client/java/     # 客户端 Mixin 类
-├── docs/                # 技术文档
-└── assets/              # 模组资源（模型、纹理、语言文件等）
+├── core/                    # 模组本体（IC2 主内容、能量/流体/动能网络、机器、GUI）
+│   └── src/{main,client}/   #   main=通用/服务端, client=客户端（kotlin + java）
+├── advanced-solar-addon/    # 高级太阳能附属
+├── advanced-weapons-addon/  # 高级武器附属
+├── buildcraft-addon/        # BuildCraft 联动（引擎/液泵/石油世界生成）
+├── addon-template/          # 附属模组模板（不参与构建）
+├── docs/                    # 技术文档
+├── libs/                    # 本地依赖
+├── scripts/                 # 辅助脚本
+└── tests/                   # 测试（含 mcdebug 机器/方块测试）
 ```
 
 ## 开发者文档入口
 
-完整目录与分类见 [docs/README.md](docs/README.md)。常用入口：
+> 文档主索引的单一来源是 [`AGENTS.md`](AGENTS.md)（= `CLAUDE.md`，§1/§5/§6 含 guides/systems/ui/registry/pitfalls 全量索引与硬性约束）。下面只列人类起步常用入口：
 
-- [类级别注解注册系统](docs/registry/CLASS_BASED_REGISTRY.md) - 使用注解和枚举的自动注册系统
-- [同步系统](docs/systems/sync-system.md) - 客户端/服务端属性同步
-- [能量流同步](docs/systems/energy-flow-sync.md) - 机器间能量流动与同步逻辑
-- [能量网络系统](docs/systems/energy-network.md) - EU 能量传输与存储
-- [升级系统](docs/systems/upgrade-system.md) - 机器升级与效果机制
-- [配置系统](docs/systems/config-system.md) - 配置文件结构、加载与热重载
-- [槽位规格系统](docs/ui/slot-spec-system.md) - 机器 GUI 槽位定义与约束
-- [机器组合复用](docs/guides/machine-composition-reuse.md) - 机器逻辑组合与可复用设计
 - [机器实现指南](docs/guides/machine-implementation-guide.md) - 完整的 Block → BlockEntity → ScreenHandler → Screen 实现流程
-- [核电系统](docs/systems/nuclear-power.md) - 核能相关机制与实现说明
-- [热能系统](docs/systems/heat-system.md) - HU 加热与传热机制
-- [流体系统](docs/systems/fluid-system.md) - 流体管道、泵附件与传输规则
-- [动能传动系统](docs/systems/kinetic-transmission.md) - 机械传动轴、锥齿轮与 KU 传输
-- [作物杂交系统](docs/systems/crop-hybrid-system.md) - 作物育种、属性遗传与杂交规则
-- [已实现物品清单](docs/guides/item-implemented.md) - 当前已落地的物品列表
-- [物品与方块清单](docs/item-block-list.md) - 基于注解扫描生成的全量注册项列表
-- [配方实现状态](docs/recipe-status.md) - 已实现合成配方覆盖情况
+- [类级别注解注册系统](docs/registry/CLASS_BASED_REGISTRY.md) - 使用注解和枚举的自动注册系统
+- [机器组合复用](docs/guides/machine-composition-reuse.md) - 机器逻辑组合与可复用设计
 - [ComposeUI 声明式 GUI](docs/ui/compose-ui.md) - GUI 布局与绘制系统
-- [DrawContext 绘制方法参考](docs/ui/drawcontext-methods.md) - 绘制 API 说明
-- [Assets 清单](docs/inventory/assets-inventory.md) - 模组方块/物品资源清单
-- [JEI 集成](docs/systems/jei-integration.md) - JEI 类别、催化剂与配方展示集成
-- [声音系统](docs/systems/sound-system.md) - 机器音效播放与同步机制
-- [方块变体系统](docs/registry/block-variants.md) - 方块状态与模型变体
-- [唯一礼物物品防复制 TODO](docs/archive/unique-gift-item-anti-dup-todo.md) - 防复制方案草案与待办
+- [能量网络系统](docs/systems/energy-network.md) - EU 能量传输与存储
+- [流体系统](docs/systems/fluid-system.md) - 流体管道、泵附件与传输规则
+- [已实现物品清单](docs/guides/item-implemented.md) - 当前已落地的物品列表
 
-## 相比原版未实现部分
+## 暂不实现的功能
 
-本移植版本相比原版 IC2，以下功能尚未实现或正在开发中：
+以下功能明确不在本移植的计划内，建议搭配对应模组使用：
 
-### 🔧 动能发电系统（已初步实现）
-- **状态**：动能传动与发电主链路已打通，后续持续补全机型与配方
-- **已完成**：
-  - 传动轴方块（木制、铁制、钢制、碳纤维）
-  - 伞齿轮方块（90度转向）
-  - 视觉渲染（BER）
-  - 机械动能网络（分配和传递动能）
-  - 动能发电机动能转电能逻辑
-- **待实现**：
-  - 除风力动能发生机之外其他动能发生机
-  - 相关合成配方
+### 🏔️ 地形改造系列（建议使用 Create）
+- 地形转换机（Terraformer）及各类模板（耕地、森林、沙漠、蘑菇等）、建筑模板
 
-### 🏔️ 地形改造系列机器（将不会实现，请使用 Create）
-- 地形转换机（Terraformer）
-- 各种地形改造模板（耕地、森林、沙漠、蘑菇等）
-- 建筑模板
+### 📦 物流系列（建议使用 AE2）
+- 物品缓冲器、高级物品分配器、电动分拣机、物流管道与过滤器
 
-### 💨 蒸汽系列机器
-- 蒸汽发电机（Steam Generator）
-- 蒸汽动能发电机（Steam Kinetic Generator）
-- 蒸汽再压机（Steam Repressurizer）
-- 蒸汽相关流体与配方
-
-### 📦 物流系列机器（将不会实现，请使用 AE2）
-- 物品缓冲器（Item Buffer）
-- 高级物品分配器（Weighted Item Distributor）
-- 电动分拣机（Sorting Machine）
-- 物流管道与过滤器
-
-> **注意**：以上功能会逐步实现，具体进度可查看项目 Issue 和 Pull Request。
+> 蒸汽系列、高炉、动能发电（风/水/手摇/拴绳动能发生机）等均已实现，玩法与配方详见游戏内 Guidebook。
 
 ## 贡献
 
@@ -163,7 +102,7 @@ ic2-fabric/
 
 本项目是基于 IndustrialCraft 2（IC2）的逆向工程项目。IC2 原版模组**并非开源软件**，其源代码和资源未经官方授权公开使用。
 
-本仓库中 `src/main/resources/assets/ic2` 与 `src/main/resources/assets/minecraft` 目录下的资产（包括但不限于模型、纹理、语言文件、配方与相关数据）均为通过逆向分析方式整理得到，仅用于兼容性研究与技术验证，不代表获得任何 IC2 原项目、Minecraft 原项目或相关权利人的授权。
+本仓库中 `core/src/main/resources/assets/ic2` 与 `core/src/main/resources/assets/minecraft` 目录下的资产（包括但不限于模型、纹理、语言文件、配方与相关数据）均为通过逆向分析方式整理得到，仅用于兼容性研究与技术验证，不代表获得任何 IC2 原项目、Minecraft 原项目或相关权利人的授权。
 
 本项目仅供**学习和研究目的**，不得用于商业用途。如果您是 IC2 的版权持有者并认为本项目侵犯了您的权益，请联系我们进行处理。
 
@@ -178,6 +117,7 @@ ic2-fabric/
 ## 版本与依赖
 
 - 游戏版本：Minecraft `1.20.1`
-- 加载器：Fabric
-- 依赖：Fabric API、Fabric Language Kotlin（Energy API 已内置）
+- 加载器：Fabric Loader `0.18.4`
+- 依赖：Fabric API、Fabric Language Kotlin `1.13.9+kotlin.2.3.10`（Energy API 已内置）
+- 模组版本：`1.0.0`
 - 兼容：Sinytra Connector（可在 Forge + Connector 环境运行）

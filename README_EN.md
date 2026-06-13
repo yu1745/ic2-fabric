@@ -1,7 +1,5 @@
 # IC2-120
 
-# IC2-120
-
 <big>[English](README_EN.md) | [简体中文](README.md)</big>
 
 > **⚠️ Required: Installation** To use this mod, you must copy **both files** from the release to your Minecraft mods folder:
@@ -20,7 +18,7 @@ IndustrialCraft 2 Minecraft 1.20.1 Fabric port, written in Kotlin.
 - 📦 Based on Fabric Loader and Fabric API
 - 🔧 Developed with Kotlin 2.3.10
 - ⚡ Class-level annotation registration system for streamlined mod development
-- 🎨 Custom ComposeUI declarative GUI system
+- 🎨 Embedded in-house ComposeUI declarative GUI DSL
 - 🔌 EU energy network system
 - 🏭 Complete industrial machine suite (generators, processing machines, storage devices, etc.)
 
@@ -31,116 +29,55 @@ IndustrialCraft 2 Minecraft 1.20.1 Fabric port, written in Kotlin.
 - Fabric Loader
 - Fabric API
 
-## Build Commands
-
-**Important**: Do not add the `--no-daemon` parameter to any Gradle commands to leverage the Gradle Daemon for faster builds.
-
-```bash
-# Build the mod
-./gradlew build
-
-# Clean build
-./gradlew clean build
-
-# Run client
-./gradlew runClient
-
-# Windows Chinese character fix: use runClient.bat (sets console to UTF-8 before launching)
-./runClient.bat
-
-# Run server
-./gradlew runServer
-
-# Generate sources
-./gradlew genSources
-
-# Generate data
-./gradlew runDatagen
-```
-
 ## Tech Stack
 
 - **Kotlin** 2.3.10 - Primary development language
 - **Fabric Loom** - Gradle build plugin
 - **Fabric API** - Minecraft mod API
-- **ComposeUI** - Custom declarative GUI system
+- **ComposeUI** - Embedded in-house declarative GUI DSL (built on DrawContext, not JetBrains Compose)
+- **[mcdebug](https://github.com/yu1745/mcdebug)** - In-game automated block/machine testing tool (spins up a dev server to run TS tests)
 
 ## Project Structure
 
+Multi-module Gradle project; `core` is the main mod, the rest are add-ons:
+
 ```
 ic2-fabric/
-├── src/
-│   ├── main/kotlin/     # Common/server-side code
-│   ├── client/kotlin/   # Client-side code
-│   ├── main/java/       # Common/server-side Mixin classes
-│   └── client/java/     # Client Mixin classes
-├── docs/                # Technical documentation
-└── assets/              # Mod resources (models, textures, lang files, etc.)
+├── core/                    # Main mod (IC2 content, energy/fluid/kinetic networks, machines, GUI)
+│   └── src/{main,client}/   #   main=common/server, client=client-side (kotlin + java)
+├── advanced-solar-addon/    # Advanced Solar Panels add-on
+├── advanced-weapons-addon/  # Advanced Weapons add-on
+├── buildcraft-addon/        # BuildCraft integration (engines/pumps/oil worldgen)
+├── addon-template/          # Add-on template (not part of the build)
+├── docs/                    # Technical documentation
+├── libs/                    # Local dependencies
+├── scripts/                 # Helper scripts
+└── tests/                   # Tests (incl. mcdebug machine/block tests)
 ```
 
 ## Documentation
 
-Full index and categories: [docs/README.md](docs/README.md). Common entries:
+> The single source for the doc index is [`AGENTS.md`](AGENTS.md) (= `CLAUDE.md`; §1/§5/§6 hold the full guides/systems/ui/registry/pitfalls index and hard rules). Below are common human-facing entry points only:
 
-- [Class-based Annotation Registration System](docs/registry/CLASS_BASED_REGISTRY.md) - Automatic registration using annotations and enums
-- [Synchronization System](docs/systems/sync-system.md) - Client/server property synchronization
-- [Energy Flow Synchronization](docs/systems/energy-flow-sync.md) - Energy flow and sync logic between machines
-- [Energy Network System](docs/systems/energy-network.md) - EU energy transmission and storage
-- [Upgrade System](docs/systems/upgrade-system.md) - Machine upgrades and effect mechanics
-- [Slot Specification System](docs/ui/slot-spec-system.md) - Machine GUI slot definitions and constraints
-- [Machine Composition Reuse](docs/guides/machine-composition-reuse.md) - Machine logic composition and reusable design
 - [Machine Implementation Guide](docs/guides/machine-implementation-guide.md) - Complete Block → BlockEntity → ScreenHandler → Screen workflow
-- [Nuclear Power System](docs/systems/nuclear-power.md) - Nuclear-related mechanics and implementation
-- [Heat System](docs/systems/heat-system.md) - HU heating and heat transfer mechanics (Chinese)
-- [Fluid System](docs/systems/fluid-system.md) - Fluid pipes, pump attachments, and transmission rules (Chinese)
-- [Transmission Shaft System](docs/archive/transmission_shaft.md) - Mechanical shafts and bevel gears (Chinese)
-- [Implemented Items List](docs/guides/item-implemented.md) - List of currently implemented items
+- [Class-based Annotation Registration System](docs/registry/CLASS_BASED_REGISTRY.md) - Automatic registration using annotations and enums
+- [Machine Composition Reuse](docs/guides/machine-composition-reuse.md) - Machine logic composition and reusable design
 - [ComposeUI Declarative GUI](docs/ui/compose-ui.md) - GUI layout and rendering system
-- [DrawContext Rendering Methods Reference](docs/ui/drawcontext-methods.md) - Rendering API documentation
-- [Assets Inventory](docs/inventory/assets-inventory.md) - Mod block/item resource inventory
-- [Biome Colored Blocks](docs/registry/biome-colored-blocks.md) - Implementing biome-color-changing blocks
-- [Block Variants System](docs/registry/block-variants.md) - Block states and model variants
-- [Unique Gift Item Anti-Duplication TODO](docs/archive/unique-gift-item-anti-dup-todo.md) - Anti-duplication draft and todos
+- [Energy Network System](docs/systems/energy-network.md) - EU energy transmission and storage
+- [Fluid System](docs/systems/fluid-system.md) - Fluid pipes, pump attachments, and transmission rules (Chinese)
+- [Implemented Items List](docs/guides/item-implemented.md) - List of currently implemented items
 
-## Unimplemented Features (Compared to Original IC2)
+## Features Not Planned
 
-Compared to the original IC2, the following features are not yet implemented or are under development:
+The following are intentionally out of scope for this port; use the suggested mods instead:
 
-### 🔧 Kinetic Power Generation System (In Development)
-- **Status**: Basic framework completed, mechanical transmission logic pending
-- **Completed**:
-  - Transmission shaft blocks (wood, iron, steel, carbon fiber)
-  - Bevel gear block (90-degree direction change)
-  - Visual rendering (BER)
-- **To Be Implemented**:
-  - Mechanical kinetic energy transmission system (speed/torque calculation)
-  - Generator kinetic-to-electric energy conversion logic
-  - Related crafting recipes
+### 🏔️ Terraforming Series (use Create)
+- Terraformer and its templates (cultivation, forestation, desertification, mushroom, etc.), construction templates
 
-### 🏔️ Terraforming Series Machines
-- Terraformer
-- Various terraforming templates (cultivation, forestation, desertification, mushroom, etc.)
-- Construction templates
+### 📦 Logistics Series (use AE2)
+- Item Buffer, Weighted Item Distributor, Sorting Machine, logistics pipes and filters
 
-### 💨 Steam Series Machines
-- Steam Generator
-- Steam Kinetic Generator
-- Steam Repressurizer
-- Steam-related fluids and recipes
-
-### 📦 Logistics Series Machines
-- Item Buffer
-- Weighted Item Distributor
-- Sorting Machine
-- Logistics pipes and filters
-
-### 🔥 Blast Furnace Multiblock Structure
-- Blast Furnace multiblock structure
-- Refractory bricks
-- High-temperature smelting logic
-- Steel production system
-
-> **Note**: The above features will be implemented gradually. For specific progress, please check project Issues and Pull Requests.
+> Steam machines, the Blast Furnace, and kinetic generation (wind/water/manual/leash kinetic generators) are all implemented; see the in-game Guidebook for usage and recipes.
 
 ## Contributing
 
@@ -152,7 +89,7 @@ Issues and Pull Requests are welcome!
 
 This project is a reverse engineering project based on IndustrialCraft 2 (IC2). The original IC2 mod is **not open-source software**, and its source code and assets are not officially authorized for public use.
 
-The assets in this repository under `src/main/resources/assets/ic2` and `src/main/resources/assets/minecraft` directories (including but not limited to models, textures, language files, recipes, and related data) were organized through reverse engineering and are intended for compatibility research and technical verification only. This does not imply any authorization from the original IC2 project, Minecraft project, or related rights holders.
+The assets in this repository under `core/src/main/resources/assets/ic2` and `core/src/main/resources/assets/minecraft` directories (including but not limited to models, textures, language files, recipes, and related data) were organized through reverse engineering and are intended for compatibility research and technical verification only. This does not imply any authorization from the original IC2 project, Minecraft project, or related rights holders.
 
 This project is for **learning and research purposes only** and must not be used for commercial purposes. If you are a copyright holder of IC2 and believe this project infringes on your rights, please contact us.
 
@@ -163,3 +100,11 @@ Except as otherwise required by law, the authors and contributors of this reposi
 - [Fabric Official Documentation](https://fabricmc.net/wiki/)
 - [Fabric API GitHub](https://github.com/FabricMC/fabric)
 - [Minecraft 1.20.1 Version](https://www.minecraft.net/)
+
+## Versions & Dependencies
+
+- Game: Minecraft `1.20.1`
+- Loader: Fabric Loader `0.18.4`
+- Dependencies: Fabric API, Fabric Language Kotlin `1.13.9+kotlin.2.3.10` (Energy API bundled)
+- Mod version: `1.0.0`
+- Compatibility: Sinytra Connector (runs under Forge + Connector)

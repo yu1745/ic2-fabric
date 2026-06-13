@@ -6,13 +6,14 @@
 
 ## 1. 先看这里
 
-- 文档总入口：`docs/README.md`
+- 辅助资料（assets 清单 / Fabric API 报告 / 归档）：`docs/README.md`
 - **main → 1.21.1 迁移 cherry-pick：`docs/guides/branch-cherry-pick-guide.md`（每次 cherry-pick 前必读，否则必踩坑）**
 - 新机器实现：`docs/guides/machine-implementation-guide.md`
 - 机器组合复用：`docs/guides/machine-composition-reuse.md`（减少 container/slot/sync 重复代码）
 - mcdebug 测试编写：各子项目 `test/mcdebug/run.ts` + `docs/guides/mcdebug-test-guide.md`（TS dispatcher、test 矩阵、15s 硬约束、slot 速查、踩过的坑）
 - 新物品实现：`docs/guides/item-implemented.md`
 - 传送卷轴：`docs/guides/recall-scroll.md`
+- 方块掉落机制选型：`docs/guides/block-drop-pathways.md`（破坏掉落途径全景，新增方块时对照）
 - 注解注册系统：`docs/registry/CLASS_BASED_REGISTRY.md`
 
 ## 2. 硬性约束
@@ -62,7 +63,7 @@
 ## 5. 子系统文档位置
 
 - 电网与能量流速：`docs/systems/energy-network.md`、`docs/systems/energy-flow-sync.md`
-- 流体：`docs/systems/fluid-system.md`
+- 流体：`docs/systems/fluid-system.md`、`docs/systems/fluid-registration-and-cells.md`
 - 热能：`docs/systems/heat-system.md`
 - 动能传输：`docs/systems/kinetic-transmission.md`
 - 核电：`docs/systems/nuclear-power.md`
@@ -108,9 +109,10 @@
 
 ## 8. 设计原则
 
+- **文档主索引以本文件（AGENTS.md / CLAUDE.md）为单一来源**：guides/systems/ui/registry/pitfalls 索引只在 §1/§5/§6 维护；`docs/README.md` 仅收录低频辅助资料（assets 清单、统计报告、归档），不重复主索引。新增文档只需登记到本文件。
 - 优先复用已有组件与模式，避免引入第二套实现。
 - 优先使用机器组合模式复用（见 `docs/guides/machine-composition-reuse.md`）以避免重复的 container/slot/sync 代码。
-- 发现规则冲突时：以 `docs/README.md` 导航到对应主文档修正，而不是在 AGENTS.md 堆细节。
+- 发现规则冲突时：以对应主文档（`docs/{guides|systems|ui|registry}`）为准修正，不在 AGENTS.md 堆细节。
 - 新增规范时，优先写入对应 `docs/{guides|systems|ui|registry}`，AGENTS.md 只保留摘要与入口。
 
 ## 9. 分支同步管理
