@@ -364,7 +364,30 @@ class SteamGeneratorBlockEntity(
         heatBuffer = 0L
         debugHeatInputHu += heatAvailableThisTick
 
-        // 流体管道输出蒸汽 (默认 fluidPipeProviderEnabled=true, 无需升级)
+        // 脸对脸全量直推蒸汽：相邻的流体容器（轮机/管道）不限速一次性收走。
+        // ejectFluidToNeighbors 受 fluidTransferRate(ejectorCount) 限速（默认 50mB/t），
+        // 但产汽量（inputMB × 100 膨胀）常大于该速率，剩余蒸汽被回收/爆炸造成蒸馏水损耗。
+        // 脸对脸相邻时机器之间应无传输瓶颈，故先全量直推，再由 eject 兜底剩余。
+        if (steamTank.amount > 0L && !steamTank.variant.isBlank) {
+            val steamVariant = steamTank.variant
+            for (side in Direction.entries) {
+                if (steamTank.amount <= 0L) break
+                val neighborStorage = FluidStorage.SIDED.find(world, pos.offset(side), side.opposite) ?: continue
+                if (!neighborStorage.supportsInsertion()) continue
+                Transaction.openOuter().use { tx ->
+                    val accepted = neighborStorage.insert(steamVariant, steamTank.amount, tx)
+                    if (accepted > 0L) {
+                        tx.commit()
+                        steamTank.amount -= accepted
+                        debugSteamExtractedDroplets += accepted
+                        if (steamTank.amount <= 0L) steamTank.variant = FluidVariant.blank()
+                    }
+                }
+            }
+            sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
+        }
+
+        // 流体管道输出蒸汽兜底 (默认 fluidPipeProviderEnabled=true, 无需升级)
         FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, steamTank,
             fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
 

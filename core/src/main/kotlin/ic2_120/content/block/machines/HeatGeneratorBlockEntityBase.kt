@@ -53,12 +53,9 @@ abstract class HeatGeneratorBlockEntityBase(
         val neighborPos = pos.offset(myFace)
         val neighbor = world.getBlockEntity(neighborPos) as? IHeatConsumer ?: return 0L
 
-        // 只有双方传热面相对贴合才允许传热
-        val neighborFace = neighbor.getHeatTransferFace()
-        if (neighborFace != myFace.opposite) {
-            return 0L
-        }
-
+        // 推热给 facing 方向的相邻 IHeatConsumer，不要求双方 facing 相对。
+        // 原版 ic2_origin 要求 neighborFace == myFace.opposite，导致一个消费者
+        // 只能配一个热源；放宽后多个热源贴不同面即可共同加热（如多电加热机叠供锅炉）。
         // receiveHeat 的 fromSide 以"接收方视角"表示，因此要传邻居看到的入热面
         val transferred = neighbor.receiveHeat(availableHu, myFace.opposite).coerceIn(0L, availableHu)
         lastOutputHeat = transferred
@@ -70,9 +67,7 @@ abstract class HeatGeneratorBlockEntityBase(
         val myFace = getHeatTransferFace()
         val neighborPos = pos.offset(myFace)
         val neighbor = world.getBlockEntity(neighborPos) as? IHeatConsumer ?: return false
-
-        val neighborFace = neighbor.getHeatTransferFace()
-        return neighborFace == myFace.opposite
+        return true
     }
 
     protected fun tickHeatMachine(world: World, pos: BlockPos, state: BlockState) {
