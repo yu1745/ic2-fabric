@@ -1,6 +1,6 @@
 # 分支同步状态：main ↔ 1.21.1
 
-最后更新：2026-06-11
+最后更新：2026-06-15
 
 分叉点：`c5e247c`
 
@@ -85,3 +85,4 @@
 - 2026-06-11：同步 commits 126-155 到 1.21.1，并归档到 `branch-sync-archive.md`。其中 `91740f2e docs: update branch sync status` 为纯同步状态提交，迁移过程中跳过；当前下一条待迁移为 `560e5cff` |
 - 2026-06-11：对比 main ↔ 1.21.1 后批量更新——commits #156-#168（除 #166 文档）实际已通过 cherry-pick 存在于 1.21.1（带 API 适配），已迁移到 `branch-sync-archive.md` 并附等效 1.21.1 SHA（`0557afcc`/`a615d36a`/`93c84cb9`/`7bb3d163`/`95cb2bb7`/`c11c1d39`/`c9eee5fb`/`5aef4298`/`123d2b10`/`dee9a00f`/`83e4380b`/`4219800b`）；同步状态表从 155/193 收敛为 167/193，剩余 26 条 #166 + #169-#193 待 cherry-pick。1.21.1 端额外提交 `b1591091 chore: 注释化 build.yml,与 main 保持一致`（重新注释化 1.21.1 的 CI workflow 以与 main 状态对齐）
 - 2026-06-11：完成剩余迁移——#169-#193 全部 cherry-pick 到 1.21.1，#194 `e04f4bcc` 迁移指南同步到 1.21.1；#166 纯同步状态记录、#172 merge commit 跳过。`./gradlew build` 在 1.21.1 通过；同步状态收敛为 192/194 已同步、2/194 跳过、0 待同步。
+- 2026-06-15：❌ commit fd46b6f0——蒸汽梯次链优化（锅炉全量直推蒸汽 + 多热源 facing 放宽 + mcdebug 蒸汽梯次链测试）。涉及 SteamGeneratorBlockEntity/HeatGeneratorBlockEntityBase 核心热传导逻辑，cherry-pick 到 1.21.1 时需确认 FluidStorage/Transaction API 无变化 |
