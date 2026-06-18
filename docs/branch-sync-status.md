@@ -10,8 +10,8 @@
 
 ## 总览
 
-同步跟踪表共 **197 个条目**，**192 个已同步，2 个跳过，3 个封存期新增（🔒 未同步到 1.21.1）**。
-已同步/跳过条目 `#1-#175` 归档在 `branch-sync-archive.md`；主表保留最近 20 条 `#176-#197`。
+同步跟踪表共 **198 个条目**，**192 个已同步，2 个跳过，4 个封存期新增（🔒 未同步到 1.21.1）**。
+已同步/跳过条目 `#1-#176` 归档在 `branch-sync-archive.md`；主表保留最近 20 条 `#177-#198`。
 
 > 🔒 **1.21.1 分支自 2026-06-18 起封存，不再主动双向同步**。此后 main 上的新 commit 标记为 🔒（未同步到 1.21.1），仍登记以便未来解封追溯。详见 AGENTS.md §9。
 
@@ -19,7 +19,6 @@
 
 | # | Commit | 说明 | 在 1.21.1？ | 备注 |
 |---|--------|------|:-----------:|------|
-| 176 | `4949b6a8` | feat: 采矿机自动回收管道 + 缺管时回收旁支复用 + 流体阻塞提示 + 游标坐标显示 | ✅ | cherry-pick 到 1.21.1：`6b23697b` |
 | 177 | `3baafd6b` | fix: 采矿机到底判定改为检测基岩（不可破坏方块）而非硬编码 Y 值 | ✅ | cherry-pick 到 1.21.1：`3b47dbd7` |
 | 178 | `1d480e3f` | feat: 添加 BuildCraftAddon 模块 — 引擎/液泵/流体/世界生成 | ✅ | cherry-pick 到 1.21.1：`054a3175` + 适配 1.21.1 API/Remapper/Guidebook 依赖排除 |
 | 179 | `c5453125` | @ feat: 石油世界生成噪声斑块 + 流体桶注册 + Spring 方块修复 | ✅ | cherry-pick 到 1.21.1：`b0489025` |
@@ -41,6 +40,7 @@
 | 195 | `fd46b6f0` | feat: 蒸汽梯次链优化（锅炉全量直推蒸汽 + 多热源 + mcdebug 测试） | 🔒 | 涉及 SteamGeneratorBlockEntity/HeatGeneratorBlockEntityBase 核心热传导逻辑，若未来解封需确认 FluidStorage/Transaction API 无变化 |
 | 196 | `684f6882` | docs: 记录蒸汽梯次链优化的分支同步状态 | ⏭️ | 纯同步状态记录，未单独迁移 |
 | 197 | `cd95416d` | refactor(core): 橡胶树叶着色改为预烤纹理，移除运行时 ColorProvider | 🔒 | 纹理 PNG 二进制跨分支通用；若未来解封，scripts/generate_rubber_leaves.py 的 JAR_PATH 需改指向 1.21.1 client jar |
+| 198 | `571acdb1` | refactor(core): 泥炭矿着色改为预烤纹理，移除运行时 ColorProvider | 🔒 | 纹理 PNG 跨分支通用；若未来解封，scripts/generate_peat_ore.py 源纹理路径（assets/ic2/）在 1.21.1 一致，可直接重跑 |
 
 ## 同步历史
 
@@ -91,3 +91,4 @@
 - 2026-06-11：完成剩余迁移——#169-#193 全部 cherry-pick 到 1.21.1，#194 `e04f4bcc` 迁移指南同步到 1.21.1；#166 纯同步状态记录、#172 merge commit 跳过。`./gradlew build` 在 1.21.1 通过；同步状态收敛为 192/194 已同步、2/194 跳过、0 待同步。
 - 2026-06-15：❌ commit fd46b6f0——蒸汽梯次链优化（锅炉全量直推蒸汽 + 多热源 facing 放宽 + mcdebug 蒸汽梯次链测试）。涉及 SteamGeneratorBlockEntity/HeatGeneratorBlockEntityBase 核心热传导逻辑，cherry-pick 到 1.21.1 时需确认 FluidStorage/Transaction API 无变化 |
 - 2026-06-18：🔒 **1.21.1 分支封存，停止主动双向同步**。AGENTS.md §9 重写：§9.1 简化为「只登记不同步」，新增 🔒 标记表示封存期新增的 commit（未同步到 1.21.1）；§9.3 cherry-pick 注意事项标注为「解封后参考」。同步状态表继续登记每个 main commit。本批补登 #195（`fd46b6f0` 蒸汽梯次链）、#197（`cd95416d` 橡胶树叶预烤纹理），归档 #175 到 `branch-sync-archive.md`。 |
+- 2026-06-18：登记 #198（`571acdb1` 泥炭矿预烤纹理，移除 PeatOreColorProvider），标记 🔒。归档 #176 到 `branch-sync-archive.md`，主表保持 20 条上限。总览更新为 192 已同步 / 2 跳过 / 4 封存期新增。 |

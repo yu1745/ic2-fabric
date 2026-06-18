@@ -166,3 +166,4 @@
 | 173 | `649ae57f` | fix: 校准机器 GUI 能量条/进度条纹理坐标与像素偏移，BlockCutter 增加升级提示图标 | ✅ | cherry-pick 到 1.21.1：`36a49259` |
 | 174 | `e8b64aa3` | feat: 高炉 HU 指示灯条件改为升温条件满足时渲染 + 达温上限维持 HU 消耗 | ✅ | cherry-pick 到 1.21.1：`68b35985` |
 | 175 | `847596a5` | feat: add tag-based recipe and fluid compat | ✅ | cherry-pick 到 1.21.1：`2608e788` |
+| 176 | `4949b6a8` | feat: 采矿机自动回收管道 + 缺管时回收旁支复用 + 流体阻塞提示 + 游标坐标显示 | ✅ | cherry-pick 到 1.21.1：`6b23697b` |
