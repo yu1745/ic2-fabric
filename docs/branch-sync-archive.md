@@ -172,3 +172,4 @@
 | 179 | `c5453125` | @ feat: 石油世界生成噪声斑块 + 流体桶注册 + Spring 方块修复 | ✅ | cherry-pick 到 1.21.1：`b0489025` |
 | 180 | `c16943b9` | build: 添加 Jade 依赖 + Guidebook 校验/preview 任务 | ✅ | cherry-pick 到 1.21.1：`63cb92cc`；保留 Guidebook 校验任务但在 1.21.1 暂禁用 |
 | 181 | `80db3a36` | feat(buildcraft-addon): 引擎接入 IC2 动能系统(IKineticMachinePort) + 泵 A*/BFS 重写 + 油井 Spring/Tube + Jade 集成 | ✅ | cherry-pick 到 1.21.1：`71407517` + 适配 BlockEntity NBT/ScreenOpeningData/renderer API |
+| 182 | `cc4d210b` | fix(core): Jade 管道流量改 mB/s + 太阳能/水能/风能 MIN/MAX 对齐 + JEI 流体绑定单元与桶 | ✅ | cherry-pick 到 1.21.1：`f18bc4a3` + 解决 JEI 冲突 |
