@@ -507,8 +507,6 @@ object ClassScanner {
                 val entries = rawEntries
                     .sortedWith(compareBy({ it.group }, { it.itemId.toString() }))
 
-                logger.info("物品栏 {} 包含 {} 个物品: {}", name, entries.size, entries.map { it.itemId })
-
                 // 解析图标：根据 iconResource（优先）或 iconItem 创建图标
                 val iconStackSupplier: () -> ItemStack
                 when {
