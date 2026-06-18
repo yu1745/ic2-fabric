@@ -4,6 +4,10 @@
 
 ## 1. 创建方块类（使用注解注册）
 
+> ⚠️ **历史变更**：橡胶树叶（`rubber_leaves`）曾经是本机制的代表范例（灰度 `oak_leaves` 纹理 + 运行时金黄绿 tint）。
+> 现已改为**预烤纹理**：用 `scripts/generate_rubber_leaves.py` 离线把 `灰度 × tintColor(0xc4b848)` 烤进 `assets/ic2_120/textures/block/rubber_leaves.png`，模型不带 `tintindex`，不再注册 ColorProvider。
+> 如需创建随生物群系动态变色的方块，继续参考下面的范式；当前仍在用 tint 的范例见 `PeatOreColorProvider.kt`、`PipeColorProvider.kt`。
+
 本项目使用**类级别注解自动注册系统**，创建方块非常简单：
 
 ```kotlin
@@ -16,98 +20,60 @@ import net.minecraft.block.AbstractBlock.Settings
 import net.minecraft.block.Blocks
 
 @ModBlock(
-    name = "rubber_leaves",
+    name = "peat_ore",
     registerItem = true,
     tab = CreativeTab.IC2_MATERIALS,
-    group = "wood",
-    transparent = false
+    group = "resource"
 )
-class RubberLeavesBlock : Block(
-    AbstractBlock.Settings.copy(Blocks.OAK_LEAVES)
-        .strength(0.2f)
-        .nonOpaque()
-        .allowsSpawning { _, _, _, _ -> true }
+class PeatOreBlock : Block(
+    AbstractBlock.Settings.copy(Blocks.STONE)
+        .strength(3.0f)
 )
 ```
 
 **说明**：
 - `@ModBlock` 注解会自动注册方块和物品
-- `Settings.copy(Blocks.OAK_LEAVES)` 复制原版方块的属性
+- `Settings.copy(Blocks.STONE)` 复制原版方块的属性
 - 使用 `CreativeTab` 枚举而非字符串
 - 使用注册表获取方块和物品实例，而非类引用
-- 项目已有实现参考：`RubberLeavesBlock.kt` 和 `RubberLeavesColorProvider.kt`
+- 项目已有实现参考：`PeatOreColorProvider.kt`（固定色 tint）、`PipeColorProvider.kt`（按 NBT 动态色 tint）
 
 ## 2. 注册颜色提供器（客户端）
 
 在客户端入口点注册 `BlockColorProvider`：
 
-**文件位置**：`src/client/kotlin/ic2_120/client/colorprovider/RubberLeavesColorProvider.kt`
+**文件位置**：`src/client/kotlin/ic2_120/client/colorprovider/PeatOreColorProvider.kt`
 
 ```kotlin
 package ic2_120.client.colorprovider
 
 import ic2_120.Ic2_120
 import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry
-import net.minecraft.client.color.world.BiomeColors
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 
-object RubberLeavesColorProvider {
-    private const val DEFAULT_RUBBER_LEAVES_COLOR = 0xc4b848  // 金黄绿色
+object PeatOreColorProvider {
+    /** 深褐色，用于将锡矿石纹理染成泥炭色 */
+    private const val PEAT_COLOR = 0x4A3728
 
     fun register() {
-        val block = Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "rubber_leaves"))
-        val item = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "rubber_leaves"))
+        val block = Registries.BLOCK.get(Identifier(Ic2_120.MOD_ID, "peat_ore"))
+        val item = Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "peat_ore"))
 
-        // 方块颜色提供器
-        ColorProviderRegistry.BLOCK.register({ _, world, pos, _ ->
-            if (world != null && pos != null) {
-                val baseBrightness = BiomeColors.getFoliageColor(world, pos)
-                applyBiomeBrightness(DEFAULT_RUBBER_LEAVES_COLOR, baseBrightness)
-            } else {
-                DEFAULT_RUBBER_LEAVES_COLOR
-            }
-        }, block)
-
-        // 物品颜色提供器
-        ColorProviderRegistry.ITEM.register({ _, _ ->
-            DEFAULT_RUBBER_LEAVES_COLOR
-        }, item)
-    }
-
-    private fun applyBiomeBrightness(baseColor: Int, targetBrightness: Int): Int {
-        val targetRGB = targetBrightness and 0xFFFFFF
-        val currentRGB = baseColor and 0xFFFFFF
-
-        val currentBrightness = getLuminance(currentRGB)
-        val targetLuminance = getLuminance(targetRGB)
-
-        return when {
-            currentBrightness == 0 -> baseColor
-            else -> {
-                val r = ((currentRGB ushr 16) * targetLuminance / currentBrightness).coerceAtMost(255)
-                val g = ((currentRGB ushr 8 and 0xFF) * targetLuminance / currentBrightness).coerceAtMost(255)
-                val b = ((currentRGB and 0xFF) * targetLuminance / currentBrightness).coerceAtMost(255)
-                (r shl 16) or (g shl 8) or b
-            }
-        }
-    }
-
-    private fun getLuminance(rgb: Int): Int {
-        val r = (rgb ushr 16) and 0xFF
-        val g = (rgb ushr 8) and 0xFF
-        val b = rgb and 0xFF
-        return (r * 299 + g * 587 + b * 114) / 1000
+        ColorProviderRegistry.BLOCK.register({ _, _, _, _ -> PEAT_COLOR }, block)
+        ColorProviderRegistry.ITEM.register({ _, _ -> PEAT_COLOR }, item)
     }
 }
 ```
+
+> 若需要随生物群系动态变色（草方块/树叶风格），把上面的固定色 lambda 换成调用 `BiomeColors.getFoliageColor(world, pos)` / `getGrassColor(...)` 即可（注意 `world`/`pos` 可能为 null）。
 
 **在客户端入口调用**：
 
 ```kotlin
 // src/client/kotlin/ic2_120/Ic2_120Client.kt
 override fun onInitializeClient() {
-    RubberLeavesColorProvider.register()
+    PeatOreColorProvider.register()
     // ... 其他客户端注册
 }
 ```
