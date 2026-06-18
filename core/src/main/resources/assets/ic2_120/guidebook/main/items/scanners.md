@@ -36,7 +36,7 @@ Both scanners are **not damageable** — they have no vanilla durability bar. Th
 
 ### Charging
 
-Scanners cannot self-charge. Place one in the input slot of any tier-appropriate EU storage block — BatBox, CESU, MFE, MFSU, or a Charging Pad — and let the block top it up. You can also right-click a charged Energy Crystal / Lapotron Crystal in your inventory while the scanner sits next to it, mirroring the standard electric-tool recharge loop.
+Scanners cannot self-charge. Place one in the input slot of any tier-appropriate EU storage block — BatBox, CESU, MFE, MFSU, or a Charging Pad — and let the block top it up.
 
 The OD Scanner accepts any tier-1 source (single battery, BatBox); the OV Scanner requires tier-3 hardware (Energy Crystal and above, MFE/MFSU).
 

@@ -62,8 +62,7 @@ item_ids:
 
 ### 充电
 
-- 纳米剑暴露一个 3 级 EU 接口。可从任意 3 级电源为其补充：例如 <ItemLink id="ic2_120:energy_crystal" /> 充电、<ItemLink id="ic2_120:mfe" />，或物品栏中相应等级的电池。
-- 当剑放在快捷栏中时，在物品栏中右键 <ItemLink id="ic2_120:energy_crystal" /> 即可将 EU 从水晶泵入剑中。
+- 纳米剑暴露一个 3 级 EU 接口。可从任意 3 级电源为其补充：<ItemLink id="ic2_120:mfe" />、<ItemLink id="ic2_120:energy_crystal" />、3 级电池背包，或物品栏中相应等级的电池。
 
 ## 配方
 

@@ -53,7 +53,7 @@ The hand Wrench has 120 durability and behaves like a vanilla tool — every mac
 
 ### Electric Wrench Power
 
-The Electric Wrench is an `IElectricTool` at tier 1 with a 10,000 EU buffer and **no vanilla durability**. It is treated as an electric tool rather than a wearable battery, so it shows the energy bar above the durability bar. Charge it from a charger, a charging pad, a BatBox/CESU, or an Energy Crystal's right-click. The electric version is functionally unlimited — keep it powered and it never wears out.
+The Electric Wrench is an `IElectricTool` at tier 1 with a 10,000 EU buffer and **no vanilla durability**. It is treated as an electric tool rather than a wearable battery, so it shows the energy bar above the durability bar. Charge it from a charger, a charging pad, or a BatBox/CESU. The electric version is functionally unlimited — keep it powered and it never wears out.
 
 ## Crafting
 

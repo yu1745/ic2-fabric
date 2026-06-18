@@ -39,7 +39,7 @@ The chainsaw is **not damageable**. It has no vanilla durability bar and no anvi
 ### Equipping and Charging
 
 - Place the Chainsaw in your hotbar as you would any tool.
-- Recharge it from any tier-1-compatible EU source: a BatPack, a BatBox, a charging pad, an Energy Crystal's right-click, or any cable that can output tier-1 voltage.
+- Recharge it from any tier-1-compatible EU source: a BatPack, a BatBox, a charging pad, or any cable that can output tier-1 voltage.
 - The energy bar appears above the hotbar slot and fills as EU is added. At full charge you carry 30,000 EU, which is enough for 120 blocks of continuous chopping.
 
 ### Felling Trees

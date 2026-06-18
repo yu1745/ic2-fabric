@@ -42,7 +42,7 @@ Battery backpacks are **not damageable** — they have no vanilla durability and
 
 - Place the BatPack in the chestplate slot.
 - The backpack exposes a `FluidStorage`-like energy port: any EU source capable of filling a tier-appropriate battery can fill the backpack.
-- Use a charger, a charging pad, a BatBox/CESU/MFE/MFSU, or the Energy Crystal's right-click to charge it in your inventory.
+- Use a charger, a charging pad, or a BatBox/CESU/MFE/MFSU to charge it in your inventory.
 
 ### Auto-Charge Loop
 

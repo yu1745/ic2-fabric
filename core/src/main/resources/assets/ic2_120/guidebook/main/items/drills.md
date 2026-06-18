@@ -46,7 +46,7 @@ The drill family does **not** consume vanilla durability; all wear is paid in EU
 - If the buffer is below that cost, the tool still mines, but the mining speed falls back to `1.0` — the slow hand-equivalent — instead of the powered rate.
 - The energy bar above the durability bar shows the buffer level for every drill in the family.
 
-Charge any drill the same way you charge a hand-held battery: a charger, charging pad, BatBox/CESU/MFE/MFSU, or an Energy Crystal's right-click will fill the buffer directly.
+Charge any drill the same way you charge a hand-held battery: a charger, charging pad, or a BatBox/CESU/MFE/MFSU will fill the buffer directly.
 
 ### Iridium Drill Mode Switching
 
