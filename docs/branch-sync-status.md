@@ -10,8 +10,8 @@
 
 ## 总览
 
-同步跟踪表共 **186 个有效条目**（编号 #1–#199，其中 #74–#86 为历史空洞），**179 个已同步，3 个跳过，4 个封存期新增（🔒 未同步到 1.21.1）**。
-已同步/跳过条目 `#1-#177` 归档在 `branch-sync-archive.md`；主表保留最近 20 条 `#178-#199`。
+同步跟踪表共 **188 个有效条目**（编号 #1–#201，其中 #74–#86 为历史空洞），**179 个已同步，4 个跳过，5 个封存期新增（🔒 未同步到 1.21.1）**。
+已同步/跳过条目 `#1-#181` 归档在 `branch-sync-archive.md`；主表保留最近 20 条 `#182-#201`。
 
 > 🔒 **1.21.1 分支自 commit #194（`e04f4bcc`）之后封存，不再主动双向同步**。#195 起的 main commit 全部标记为 🔒（未同步到 1.21.1），仍登记以便未来解封追溯。封存边界即"最后一个已同步 commit"，#194 之前（含）均为 ✅/⏭️。详见 AGENTS.md §9。
 
@@ -19,10 +19,6 @@
 
 | # | Commit | 说明 | 在 1.21.1？ | 备注 |
 |---|--------|------|:-----------:|------|
-| 178 | `1d480e3f` | feat: 添加 BuildCraftAddon 模块 — 引擎/液泵/流体/世界生成 | ✅ | cherry-pick 到 1.21.1：`054a3175` + 适配 1.21.1 API/Remapper/Guidebook 依赖排除 |
-| 179 | `c5453125` | @ feat: 石油世界生成噪声斑块 + 流体桶注册 + Spring 方块修复 | ✅ | cherry-pick 到 1.21.1：`b0489025` |
-| 180 | `c16943b9` | build: 添加 Jade 依赖 + Guidebook 校验/preview 任务 | ✅ | cherry-pick 到 1.21.1：`63cb92cc`；保留 Guidebook 校验任务但在 1.21.1 暂禁用 |
-| 181 | `80db3a36` | feat(buildcraft-addon): 引擎接入 IC2 动能系统(IKineticMachinePort) + 泵 A*/BFS 重写 + 油井 Spring/Tube + Jade 集成 | ✅ | cherry-pick 到 1.21.1：`71407517` + 适配 BlockEntity NBT/ScreenOpeningData/renderer API |
 | 182 | `cc4d210b` | fix(core): Jade 管道流量改 mB/s + 太阳能/水能/风能 MIN/MAX 对齐 + JEI 流体绑定单元与桶 | ✅ | cherry-pick 到 1.21.1：`f18bc4a3` + 解决 JEI 冲突 |
 | 183 | `03aa4708` | feat(core): 添加 Guidebook 校验工具(供 validateGuidebook 任务调用) | ✅ | cherry-pick 到 1.21.1：`903d3ef2`；校验工具源码保留但 client Java 临时排除编译 |
 | 184 | `6d199717` | docs: 迁移玩家文档至游戏内 Guidebook + 删除旧 player-docs/ + 更新 README 指向 | ✅ | cherry-pick 到 1.21.1：`1160e6d7` |
@@ -41,6 +37,8 @@
 | 197 | `cd95416d` | refactor(core): 橡胶树叶着色改为预烤纹理，移除运行时 ColorProvider | 🔒 | 纹理 PNG 二进制跨分支通用；若未来解封，scripts/generate_rubber_leaves.py 的 JAR_PATH 需改指向 1.21.1 client jar |
 | 198 | `571acdb1` | refactor(core): 泥炭矿着色改为预烤纹理，移除运行时 ColorProvider | 🔒 | 纹理 PNG 跨分支通用；若未来解封，scripts/generate_peat_ore.py 源纹理路径（assets/ic2/）在 1.21.1 一致，可直接重跑 |
 | 199 | `eec419e9` | refactor(core): 清理扫描仪「可配置 XYZ 范围」残留死代码 | 🔒 | 纯清理无功能变化，1.21.1 若存在相同残留可对照清理 |
+| 200 | `04c64c28` | feat(core): 树类作物产物对齐 IC2 origin（主产物改为原木 + 25% 同种树苗 + 橡树额外 25% 苹果） | 🔒 | 作物收获逻辑（CropBlock.createGainStacks + CropSystem.harvestItems），无 API 差异，1.21.1 若解封可对照修改 |
+| 201 | `46a0fad1` | Merge: 树类作物产物对齐 IC2 origin | ⏭️ | merge commit，内容即 #200，未单独迁移 |
 
 ## 同步历史
 
@@ -93,3 +91,4 @@
 - 2026-06-18：🔒 **1.21.1 分支封存，停止主动双向同步**——封存边界定义为「最后一个已同步 commit #194（`e04f4bcc`）」，#195 起的 main commit 全部标记 🔒（未同步到 1.21.1）。AGENTS.md §9 重写：§9.1 简化为「只登记不同步」；§9.3 cherry-pick 注意事项标注为「解封后参考」。同步状态表继续登记每个 main commit。本批补登 #195（`fd46b6f0` 蒸汽梯次链）、#197（`cd95416d` 橡胶树叶预烤纹理）。 |
 - 2026-06-18：登记 #198（`571acdb1` 泥炭矿预烤纹理，移除 PeatOreColorProvider），标记 🔒。归档 #176 到 `branch-sync-archive.md`，主表保持 20 条上限。总览更新为 192 已同步 / 2 跳过 / 4 封存期新增。 |
 - 2026-06-18：登记 #199（`eec419e9` 清理扫描仪「可配置 XYZ 范围」残留死代码），标记 🔒。归档 #177 到 `branch-sync-archive.md`。总览更新为 192 已同步 / 2 跳过 / 5 封存期新增。 |
+- 2026-06-18：登记 #200（`04c64c28` 树类作物产物对齐 IC2 origin：主产物从树苗改为对应原木，25% 同种树苗，橡树额外 25% 苹果）标记 🔒，以及 #201（`46a0fad1` merge commit）⏭️。归档 #178-#181 到 `branch-sync-archive.md`，主表收敛为 20 条（#182-#201）。总览更新为 179 已同步 / 4 跳过 / 5 封存期新增。

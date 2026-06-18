@@ -168,3 +168,7 @@
 | 175 | `847596a5` | feat: add tag-based recipe and fluid compat | ✅ | cherry-pick 到 1.21.1：`2608e788` |
 | 176 | `4949b6a8` | feat: 采矿机自动回收管道 + 缺管时回收旁支复用 + 流体阻塞提示 + 游标坐标显示 | ✅ | cherry-pick 到 1.21.1：`6b23697b` |
 | 177 | `3baafd6b` | fix: 采矿机到底判定改为检测基岩（不可破坏方块）而非硬编码 Y 值 | ✅ | cherry-pick 到 1.21.1：`3b47dbd7` |
+| 178 | `1d480e3f` | feat: 添加 BuildCraftAddon 模块 — 引擎/液泵/流体/世界生成 | ✅ | cherry-pick 到 1.21.1：`054a3175` + 适配 1.21.1 API/Remapper/Guidebook 依赖排除 |
+| 179 | `c5453125` | @ feat: 石油世界生成噪声斑块 + 流体桶注册 + Spring 方块修复 | ✅ | cherry-pick 到 1.21.1：`b0489025` |
+| 180 | `c16943b9` | build: 添加 Jade 依赖 + Guidebook 校验/preview 任务 | ✅ | cherry-pick 到 1.21.1：`63cb92cc`；保留 Guidebook 校验任务但在 1.21.1 暂禁用 |
+| 181 | `80db3a36` | feat(buildcraft-addon): 引擎接入 IC2 动能系统(IKineticMachinePort) + 泵 A*/BFS 重写 + 油井 Spring/Tube + Jade 集成 | ✅ | cherry-pick 到 1.21.1：`71407517` + 适配 BlockEntity NBT/ScreenOpeningData/renderer API |
