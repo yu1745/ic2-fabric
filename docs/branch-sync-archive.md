@@ -167,3 +167,4 @@
 | 174 | `e8b64aa3` | feat: 高炉 HU 指示灯条件改为升温条件满足时渲染 + 达温上限维持 HU 消耗 | ✅ | cherry-pick 到 1.21.1：`68b35985` |
 | 175 | `847596a5` | feat: add tag-based recipe and fluid compat | ✅ | cherry-pick 到 1.21.1：`2608e788` |
 | 176 | `4949b6a8` | feat: 采矿机自动回收管道 + 缺管时回收旁支复用 + 流体阻塞提示 + 游标坐标显示 | ✅ | cherry-pick 到 1.21.1：`6b23697b` |
+| 177 | `3baafd6b` | fix: 采矿机到底判定改为检测基岩（不可破坏方块）而非硬编码 Y 值 | ✅ | cherry-pick 到 1.21.1：`3b47dbd7` |
