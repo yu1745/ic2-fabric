@@ -78,7 +78,7 @@ class ScannerScreenHandler(
 
         val type = OdScannerItem.getScannerType(stack)
         val rangeY = maxOf(1, player.blockPos.y - type.deepY)
-        val energyCost = computeEnergyCost(type, type.scanRadius, rangeY, type.scanRadius)
+        val energyCost = computeEnergyCost(type, rangeY)
 
         if (!sync.consumeEnergy(energyCost)) {
             player.sendMessage(
@@ -139,13 +139,12 @@ class ScannerScreenHandler(
 
         val stack = player.mainHandStack
         val type = OdScannerItem.getScannerType(stack)
-        val rangeX = type.scanRadius
-        val rangeZ = type.scanRadius
+        val radius = type.scanRadius
         val minY = maxOf(world.bottomY, type.deepY)
         val maxY = center.y
 
-        for (dx in -rangeX..rangeX) {
-            for (dz in -rangeZ..rangeZ) {
+        for (dx in -radius..radius) {
+            for (dz in -radius..radius) {
                 for (y in minY..maxY) {
                     val pos = center.add(dx, 0, dz).withY(y)
                     val state = world.getBlockState(pos)
@@ -198,10 +197,18 @@ class ScannerScreenHandler(
         const val PLAYER_INV_START = 0
         const val BUTTON_ID_SCAN = 0
 
+        /**
+         * 根据实际扫描体积计算能量消耗。
+         *
+         * X/Z 范围恒为 [ScannerType.scanRadius]，仅 Y 维度随玩家高度（[rangeY]）变化。
+         * - 玩家位于地表时，实际体积 v ≥ 基准立方体 v0，倍数为 1.0（即 [ScannerType.energyPerScan]）；
+         * - 玩家接近基岩层（y 小）时实际体积缩小，倍数上升（最高 10×），惩罚浅层扫描。
+         */
         @JvmStatic
-        fun computeEnergyCost(type: ScannerType, rangeX: Int, rangeY: Int, rangeZ: Int): Int {
-            val v = (rangeX * 2 + 1).toDouble() * (rangeY * 2 + 1) * (rangeZ * 2 + 1)
+        fun computeEnergyCost(type: ScannerType, rangeY: Int): Int {
             val side = type.scanRadius * 2 + 1
+            // X/Z 固定为 scanRadius，实际体积 = side² × (rangeY*2+1)
+            val v = (side * side).toDouble() * (rangeY * 2 + 1)
             val v0 = (side * side * side).toDouble()
             val multiplier = if (v >= v0) 1.0 else 10.0 - 9.0 * (v / v0)
             return (type.energyPerScan * multiplier).toInt().coerceAtLeast(1)
