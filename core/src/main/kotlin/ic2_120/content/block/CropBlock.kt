@@ -733,34 +733,35 @@ class CropBlockEntity(
             CropType.PLUMBISCUS -> listOf(ItemStack(SmallLeadDust::class.instance(), 1))
             CropType.AURELIA -> listOf(ItemStack(SmallGoldDust::class.instance(), 1))
             CropType.SHINING -> listOf(ItemStack(SmallSilverDust::class.instance(), 1))
+            // 树类作物：主产物对齐 IC2 origin（原木），25% 同种树苗，橡树额外 25% 苹果
             CropType.OAK_SAPLING -> {
-                val out = mutableListOf(ItemStack(Items.OAK_SAPLING))
+                val out = mutableListOf(ItemStack(Items.OAK_LOG))
                 if (world.random.nextInt(100) >= 75) out += ItemStack(Items.OAK_SAPLING)
                 if (world.random.nextInt(100) >= 75) out += ItemStack(Items.APPLE)
                 out
             }
             CropType.SPRUCE_SAPLING -> {
-                val out = mutableListOf(ItemStack(Items.SPRUCE_SAPLING))
+                val out = mutableListOf(ItemStack(Items.SPRUCE_LOG))
                 if (world.random.nextInt(100) >= 75) out += ItemStack(Items.SPRUCE_SAPLING)
                 out
             }
             CropType.BIRCH_SAPLING -> {
-                val out = mutableListOf(ItemStack(Items.BIRCH_SAPLING))
+                val out = mutableListOf(ItemStack(Items.BIRCH_LOG))
                 if (world.random.nextInt(100) >= 75) out += ItemStack(Items.BIRCH_SAPLING)
                 out
             }
             CropType.JUNGLE_SAPLING -> {
-                val out = mutableListOf(ItemStack(Items.JUNGLE_SAPLING))
+                val out = mutableListOf(ItemStack(Items.JUNGLE_LOG))
                 if (world.random.nextInt(100) >= 75) out += ItemStack(Items.JUNGLE_SAPLING)
                 out
             }
             CropType.ACACIA_SAPLING -> {
-                val out = mutableListOf(ItemStack(Items.ACACIA_SAPLING))
+                val out = mutableListOf(ItemStack(Items.ACACIA_LOG))
                 if (world.random.nextInt(100) >= 75) out += ItemStack(Items.ACACIA_SAPLING)
                 out
             }
             CropType.DARK_OAK_SAPLING -> {
-                val out = mutableListOf(ItemStack(Items.DARK_OAK_SAPLING))
+                val out = mutableListOf(ItemStack(Items.DARK_OAK_LOG))
                 if (world.random.nextInt(100) >= 75) out += ItemStack(Items.DARK_OAK_SAPLING)
                 out
             }
