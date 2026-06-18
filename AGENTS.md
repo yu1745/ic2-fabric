@@ -117,36 +117,38 @@
 
 ## 9. 分支同步管理
 
-本项目维护 `main`（1.20.1）和 `1.21.1` 两个分支，commit 必须双向同步。
+> 🔒 **1.21.1 分支自 2026-06-18 起封存**：不再主动双向同步。
+> - `main`（1.20.1）为唯一活跃开发分支；新 commit **不**再 cherry-pick 到 1.21.1。
+> - **同步状态表仍继续登记**每个 main commit（带 🔒 标记表示「封存期新增，未同步到 1.21.1」），以便未来解封时能完整追溯。
+> - 1.21.1 分支保留，`docs/migration-1.20.1-to-1.21.1.md`、`docs/guides/branch-cherry-pick-guide.md` 作为历史参考保留。
+> - 下列 §9.1（旧的双向同步流程）与 §9.3（cherry-pick 注意事项）仅在**未来解封时**才需要执行，当前封存期**跳过**。
 
-### 9.1 提交 → 同步的完整流程（严格按顺序执行）
+### 9.1 提交后登记流程（封存期适用）
 
 1. 在 main 上完成功能开发，`git commit`（一次性干净提交，禁止修修补补的 fixup commit）
-2. 立即记录同步状态：在 `docs/branch-sync-status.md` 末尾添加新条目，需标注 ❌ （未同步）
-3. `git commit` 同步状态更新（**单独提交，不与功能 commit 混在一起**）
-4. 切换到 1.21.1：`git checkout 1.21.1`
-5. Cherry-pick：`git cherry-pick <功能 commit 的 SHA>`
-6. 解决冲突后，**必须跑 datagen（全项目）**：`./gradlew runDatagen`
-7. `git add -A && git commit`（提交 datagen 刷新结果）
-8. 切回 main：`git checkout main`
-9. 更新同步状态：将之前标记 ❌ 的条目改为 ✅，确保总览计数正确
-10. `git commit` 同步状态更新（**单独提交**）
+2. 在 `docs/branch-sync-status.md` 末尾追加新条目，标记 🔒（封存期新增，未同步）+ 备注
+3. 必要时归档：主表超过 20 行则把最旧的移入 `docs/branch-sync-archive.md`，并更新总览计数
+4. `git commit` 同步状态更新（**单独提交，不与功能 commit 混在一起**）
 
-**重要：必须按照 commit 先后顺序逐一同步，不可跳过或乱序。**
+> 解封后的同步流程（原双向 cherry-pick 流程）见 `docs/guides/branch-cherry-pick-guide.md` 顶部归档说明。
 
 ### 9.2 同步状态表
 
 - 文件：`docs/branch-sync-status.md`
-- 记录格式：commit SHA、说明、是否已在 1.21.1（✅/❌）、备注
-- **总览计数必须与逐 commit 清单保持一致**（示例：共 25 个 commit，24 个已同步，1 个待同步 → 不要写成"全部已同步"）
+- 记录格式：commit SHA、说明、状态标记（见下）、备注
+- 状态标记：
+  - ✅ 已同步到 1.21.1（封存前的历史 commit）
+  - ⏭️ 跳过（纯状态记录 / merge commit，无需单独迁移）
+  - 🔒 封存期新增，未同步到 1.21.1（2026-06-18 起）
+- **总览计数必须与逐 commit 清单保持一致**
 - **保留最近 20 个 commit，超出的归档到 `docs/branch-sync-archive.md`**
   - 每次更新同步状态表时检查行数，若超过 20 行，将最旧的移入 `docs/branch-sync-archive.md`（追加到归档文件末尾）
   - 归档格式与主表一致（含表头），保留 `#` 编号
   - 主表的总览计数仍包含已归档的 commit
 
-### 9.3 Cherry-pick 注意事项
+### 9.3 Cherry-pick 注意事项（封存期不执行，解封后参考）
 
-> ⚠️ **执行 §9.1 步骤 5 之前必读 `docs/guides/branch-cherry-pick-guide.md`**——基于 193 条历史同步条目归纳的 5 大类真实坑（API 重命名、NBT/DataComponent、CustomPayload 网络包、datagen 路径、merge commit / PR 误删 / 单源真相），每类都有 entry 编号做证据。读完再动手能避免 80% 重复踩坑。
+> ⚠️ **未来解封后执行 cherry-pick 之前必读 `docs/guides/branch-cherry-pick-guide.md`**——基于 193 条历史同步条目归纳的 5 大类真实坑（API 重命名、NBT/DataComponent、CustomPayload 网络包、datagen 路径、merge commit / PR 误删 / 单源真相），每类都有 entry 编号做证据。读完再动手能避免 80% 重复踩坑。
 > 配套：API 细节查询表见 `docs/migration-1.20.1-to-1.21.1.md`（Identifier.of、validateTicker、RecipeExporter、onUse 无 Hand、CustomPayload 等的具体写法）。
 
 1. 1.21.1 的 data 目录使用单数（`advancement/`、`recipe/`、`loot_table/`），main 使用复数（`advancements/`、`recipes/`、`loot_tables/`）
