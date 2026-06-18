@@ -173,3 +173,4 @@
 | 180 | `c16943b9` | build: 添加 Jade 依赖 + Guidebook 校验/preview 任务 | ✅ | cherry-pick 到 1.21.1：`63cb92cc`；保留 Guidebook 校验任务但在 1.21.1 暂禁用 |
 | 181 | `80db3a36` | feat(buildcraft-addon): 引擎接入 IC2 动能系统(IKineticMachinePort) + 泵 A*/BFS 重写 + 油井 Spring/Tube + Jade 集成 | ✅ | cherry-pick 到 1.21.1：`71407517` + 适配 BlockEntity NBT/ScreenOpeningData/renderer API |
 | 182 | `cc4d210b` | fix(core): Jade 管道流量改 mB/s + 太阳能/水能/风能 MIN/MAX 对齐 + JEI 流体绑定单元与桶 | ✅ | cherry-pick 到 1.21.1：`f18bc4a3` + 解决 JEI 冲突 |
+| 183 | `03aa4708` | feat(core): 添加 Guidebook 校验工具(供 validateGuidebook 任务调用) | ✅ | cherry-pick 到 1.21.1：`903d3ef2`；校验工具源码保留但 client Java 临时排除编译 |

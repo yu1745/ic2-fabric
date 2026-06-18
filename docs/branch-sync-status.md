@@ -10,8 +10,8 @@
 
 ## 总览
 
-同步跟踪表共 **189 个有效条目**（编号 #1–#202，其中 #74–#86 为历史空洞），**179 个已同步，4 个跳过，6 个封存期新增（🔒 未同步到 1.21.1）**。
-已同步/跳过条目 `#1-#182` 归档在 `branch-sync-archive.md`；主表保留最近 20 条 `#183-#202`。
+同步跟踪表共 **190 个有效条目**（编号 #1–#203，其中 #74–#86 为历史空洞），**179 个已同步，4 个跳过，7 个封存期新增（🔒 未同步到 1.21.1）**。
+已同步/跳过条目 `#1-#183` 归档在 `branch-sync-archive.md`；主表保留最近 20 条 `#184-#203`。
 
 > 🔒 **1.21.1 分支自 commit #194（`e04f4bcc`）之后封存，不再主动双向同步**。#195 起的 main commit 全部标记为 🔒（未同步到 1.21.1），仍登记以便未来解封追溯。封存边界即"最后一个已同步 commit"，#194 之前（含）均为 ✅/⏭️。详见 AGENTS.md §9。
 
@@ -19,7 +19,6 @@
 
 | # | Commit | 说明 | 在 1.21.1？ | 备注 |
 |---|--------|------|:-----------:|------|
-| 183 | `03aa4708` | feat(core): 添加 Guidebook 校验工具(供 validateGuidebook 任务调用) | ✅ | cherry-pick 到 1.21.1：`903d3ef2`；校验工具源码保留但 client Java 临时排除编译 |
 | 184 | `6d199717` | docs: 迁移玩家文档至游戏内 Guidebook + 删除旧 player-docs/ + 更新 README 指向 | ✅ | cherry-pick 到 1.21.1：`1160e6d7` |
 | 185 | `8bdfada5` | docs(guidebook): 将装备/工具/物品等引用从 reference/ 拆分到独立 items/ 页面 + 添加 Build-Time 校验规则 | ✅ | cherry-pick 到 1.21.1：`182542b0` |
 | 186 | `9855d47d` | feat(core): 升级GUI按钮7px文字 + 高级采矿机过滤槽锁定 | ✅ | cherry-pick 到 1.21.1：`d9903f12` + 适配 `ItemStack.areItemsAndComponentsEqual` |
@@ -39,6 +38,7 @@
 | 200 | `04c64c28` | feat(core): 树类作物产物对齐 IC2 origin（主产物改为原木 + 25% 同种树苗 + 橡树额外 25% 苹果） | 🔒 | 作物收获逻辑（CropBlock.createGainStacks + CropSystem.harvestItems），无 API 差异，1.21.1 若解封可对照修改 |
 | 201 | `46a0fad1` | Merge: 树类作物产物对齐 IC2 origin | ⏭️ | merge commit，内容即 #200，未单独迁移 |
 | 202 | `b180d03f` | refactor(core): 移除能量水晶/蓝波顿水晶右键一键充电视行为 | 🔒 | BatteryItems.kt 删除 EnergyCrystalItem.use() / LapotronCrystalItem.use() 重写；同步更新 6 个 items/ 页面与 reference/energy_items.md。无 Item API 差异，1.21.1 若解封可对照修改 |
+| 203 | `20a61e53` | refactor(core): 移除 ClassScanner per-tab 物品列表启动日志 | 🔒 | ClassScanner.kt 删除 `registerCreativeTabs` 中「物品栏 X 包含 N 个物品: [...]」logger.info；保留「已注册创造模式物品栏: {}」注册摘要。纯日志瘦身，无 API 变化，1.21.1 若解封可对照修改 |
 
 ## 同步历史
 
@@ -93,3 +93,4 @@
 - 2026-06-18：登记 #199（`eec419e9` 清理扫描仪「可配置 XYZ 范围」残留死代码），标记 🔒。归档 #177 到 `branch-sync-archive.md`。总览更新为 192 已同步 / 2 跳过 / 5 封存期新增。 |
 - 2026-06-18：登记 #200（`04c64c28` 树类作物产物对齐 IC2 origin：主产物从树苗改为对应原木，25% 同种树苗，橡树额外 25% 苹果）标记 🔒，以及 #201（`46a0fad1` merge commit）⏭️。归档 #178-#181 到 `branch-sync-archive.md`，主表收敛为 20 条（#182-#201）。总览更新为 179 已同步 / 4 跳过 / 5 封存期新增。
 - 2026-06-18：登记 #202（`b180d03f` 移除能量水晶/蓝波顿水晶右键一键充电视行为）标记 🔒。归档 #182 到 `branch-sync-archive.md`，主表收敛为 20 条（#183-#202）。总览更新为 179 已同步 / 4 跳过 / 6 封存期新增。
+- 2026-06-18：登记 #203（`20a61e53` 移除 ClassScanner per-tab 物品列表启动日志）标记 🔒。归档 #183 到 `branch-sync-archive.md`，主表保持 20 条（#184-#203）。总览更新为 179 已同步 / 4 跳过 / 7 封存期新增。同步 AGENTS.md §9：主表容量 20 不变，改为「每累积 10 个新 commit 触发一次批量归档，一次性归档 10 条最旧的」；下次归档触发点为 #213。
