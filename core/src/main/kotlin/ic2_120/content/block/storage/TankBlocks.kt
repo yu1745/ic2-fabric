@@ -160,7 +160,11 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         val storage = FluidStorage.ITEM.find(held, null) ?: return ActionResult.PASS
         for (view in storage) {
             if (view.isResourceBlank || view.amount < FluidConstants.BUCKET) continue
-            val inserted = be.fluidTank.insert(view.resource, FluidConstants.BUCKET, null)
+            var inserted = 0L
+            Transaction.openOuter().use { tx ->
+                inserted = be.fluidTank.insert(view.resource, FluidConstants.BUCKET, tx)
+                if (inserted >= FluidConstants.BUCKET) tx.commit() else tx.abort()
+            }
             if (inserted >= FluidConstants.BUCKET) {
                 if (!player.abilities.creativeMode) {
                     held.decrement(1)
@@ -200,7 +204,11 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         } ?: return ActionResult.PASS
         if (variant.isBlank) return ActionResult.PASS
 
-        val inserted = be.fluidTank.insert(variant, FluidConstants.BUCKET, null)
+        var inserted = 0L
+        Transaction.openOuter().use { tx ->
+            inserted = be.fluidTank.insert(variant, FluidConstants.BUCKET, tx)
+            if (inserted >= FluidConstants.BUCKET) tx.commit() else tx.abort()
+        }
         if (inserted >= FluidConstants.BUCKET) {
             if (!player.abilities.creativeMode) {
                 held.decrement(1)

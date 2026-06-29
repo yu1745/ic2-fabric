@@ -201,7 +201,13 @@ class FluidCellItem : Item(FabricItemSettings()), FluidModificationItem {
 
         val fluid = stack.getFluidCellVariant()?.fluid ?: return ActionResult.PASS
 
-        // 注意：与 FluidStorage 的交互已在 UseBlockCallback 中处理，这里只处理放置流体到世界
+        // 先尝试与方块的 FluidStorage 交互（如流体储罐），命中则优先交给储罐接管，
+        // 否则才会走下方 placeFluid 把流体放置到世界。
+        val sided = FluidStorage.SIDED.find(world, pos, context.side)
+        if (sided != null && FluidStorageUtil.interactWithFluidStorage(sided, player, hand)) {
+            return ActionResult.SUCCESS
+        }
+
         // 放置流体到世界
         val hitResult = BlockHitResult(context.hitPos, context.side, pos, context.hitsInsideBlock())
         if (placeFluid(player, world, pos, hitResult)) {
@@ -428,7 +434,13 @@ abstract class ModFluidCell(settings: FabricItemSettings) : Item(settings), Flui
         val stack = player.getStackInHand(hand)
         if (world.isClient) return ActionResult.SUCCESS
 
-        // 注意：与 FluidStorage 的交互已在 UseBlockCallback 中处理，这里只处理放置流体到世界
+        // 先尝试与方块的 FluidStorage 交互（如流体储罐），命中则优先交给储罐接管，
+        // 否则才会走下方 placeFluid 把流体放置到世界。
+        val sided = FluidStorage.SIDED.find(world, pos, context.side)
+        if (sided != null && FluidStorageUtil.interactWithFluidStorage(sided, player, hand)) {
+            return ActionResult.SUCCESS
+        }
+
         // 放置流体到世界
         val hitResult = BlockHitResult(context.hitPos, context.side, pos, context.hitsInsideBlock())
         if (placeFluid(player, world, pos, hitResult)) {
