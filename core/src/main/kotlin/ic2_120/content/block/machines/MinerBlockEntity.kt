@@ -645,6 +645,7 @@ abstract class BaseMinerBlockEntity(
         cursorIndex = 0
         pendingBreakEnergy = 0L
         resetPathFailState()
+        lastRecycledCursorY = Int.MAX_VALUE
     }
 
     /**
@@ -954,7 +955,7 @@ abstract class BaseMinerBlockEntity(
     }
 
     /** 触发终局回收并返回新状态（供 runScanMineLoop 到底时调用）。 */
-    private fun startPipeRecoveryAndGetState(): MinerState = startPipeRecovery()
+    private fun startPipeRecoveryAndGetState(): MinerState = startPipeRecoveryInternal()
 
     fun toggleMode() {
         sync.mode = if (sync.mode == 0) 1 else 0
@@ -980,11 +981,16 @@ abstract class BaseMinerBlockEntity(
         markDirty()
     }
 
+    /** 玩家手动触发终局回收（UI 按钮）。返回值忽略，内部状态由 startPipeRecoveryInternal 设置。 */
+    fun startPipeRecovery() {
+        startPipeRecoveryInternal()
+    }
+
     /**
      * 触发终局管道回收。返回回收后的目标状态。
      * 普通机：到底或玩家手动；高级机：玩家手动。
      */
-    internal fun startPipeRecovery(): MinerState {
+    private fun startPipeRecoveryInternal(): MinerState {
         val serverWorld = world as? ServerWorld ?: return minerState
         pendingBreakEnergy = 0L
         knownPipePositions.clear()
@@ -1180,7 +1186,7 @@ abstract class BaseMinerBlockEntity(
      * manualStoppedForRecovery/redstoneChangeRequired）。
      * 转移只通过 tick() 的 when 分支返回值发生（外部入口方法除外，见 spec §3）。
      */
-    internal enum class MinerState {
+    private enum class MinerState {
         /** 等待自动恢复（普通机）；或红石未激活（高级机）。 */
         IDLE,
         /** 仅高级机：管道回收完成，等红石信号变化才重启。 */
