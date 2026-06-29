@@ -103,7 +103,8 @@ navigation:
 
 | 机器 | 文件 | 说明 |
 |------|------|------|
-| [核反应堆](../machines/nuclear_reactor.md) | nuclear-reactor.md | 反应堆 + 反应仓、容器、流体接口、红石接口 |
+| [核反应堆](../machines/nuclear_reactor.md) | nuclear-reactor.md | 反应堆 + 反应仓（EU 模式） |
+| [流体冷却反应堆](../machines/nuclear_reactor_fluid_mode.md) | nuclear-reactor-fluid-mode.md | 压力容器、流体接口、访问接口、红石接口（热模式） |
 
 ## UU 物质
 
@@ -140,5 +141,4 @@ navigation:
 - [升级系统](../guides/upgrades.md) - 升级槽说明
 - [动能系统](../systems/kinetic_transmission.md) - KU 传动详情
 - [热能系统](../systems/heat_system.md) - HU 热量
-- [核反应堆](../systems/nuclear_reactor.md) - 核电系统
 

@@ -81,7 +81,7 @@ Because heat cannot be buffered, any heat produced while the back face has no co
 
 ## Working with the Nuclear Reactor
 
-The main use of the heat system is feeding heat into a nuclear reactor (heat mode):
+The main use of the heat system is feeding heat into a nuclear reactor (fluid mode):
 
 - The Fluid Heat Generator is a good fit for continuous biofuel operation
 - The Electric Heat Generator is a good fit for a high-voltage grid (pair it with Transformer Upgrades)

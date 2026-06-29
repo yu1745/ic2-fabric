@@ -1247,6 +1247,8 @@
   "gui.ic2_120.condenser.no_power_warning": "未安装散热片时可免费被动冷却，安装后必须供电方可运行",
   "death.attack.ic2_120.steam": "%1$s被蒸汽烫死了",
   "death.attack.ic2_120.steam.player": "%1$s在与%2$s战斗时被蒸汽烫死了",
+  "death.attack.nuclear_heat": "%1$s被核反应堆烫死了",
+  "death.attack.nuclear_heat.player": "%1$s在与%2$s战斗时被核反应堆烫死了",
   "chat.ic2_120.nuclear_explosion.title": "§4⚠ §c核反应堆爆炸！",
   "chat.ic2_120.nuclear_explosion.detail": "§c%1$s §7的核反应堆在 §c%2$s §7爆炸了！",
   "chat.ic2_120.nuclear_explosion.blocks_removed": "§7共移除 §c%1$d §7个方块。",

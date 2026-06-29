@@ -200,7 +200,7 @@ class NuclearReactorScreen(
     private fun drawTextOverlay(context: DrawContext) {
         val scale = 7f / 9f
         if (isThermal) {
-            val heatOutput = handler.sync.thermalHeatOutput
+            val heatOutput = handler.sync.thermalHeatOutput / 20
             val text = "HU输出：$heatOutput HU/t"
             val tw = textRenderer.getWidth(text)
             val areaCenterX = (TH_TEXT_X1 + TH_TEXT_X2) / 2

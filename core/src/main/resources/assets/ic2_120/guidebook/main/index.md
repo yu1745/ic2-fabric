@@ -24,7 +24,6 @@ This guide is provided by IC2 and rendered by Fabric Guidebook.
 - [Heat System](systems/heat_system.md)
 - [Kinetic Transmission](systems/kinetic_transmission.md)
 - [Machine System](systems/machines.md)
-- [Nuclear Reactor System](systems/nuclear_reactor.md)
 
 ## Reference
 

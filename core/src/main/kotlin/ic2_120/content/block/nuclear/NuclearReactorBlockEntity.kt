@@ -1176,7 +1176,7 @@ class NuclearReactorBlockEntity(
                 totalHeatDissipated
             }
             sync.thermalHeatOutput = if (isThermalMode()) {
-                (thermalEffectiveDissipatedHu * 2L).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
+                thermalEffectiveDissipatedHu.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
             } else {
                 0
             }

@@ -1260,6 +1260,8 @@
   "gui.ic2_120.condenser.no_power_warning": "Passive cooling is free; heat vents require EU to operate",
   "death.attack.ic2_120.steam": "%1$s was scalded to death by steam",
   "death.attack.ic2_120.steam.player": "%1$s was scalded to death by steam whilst fighting %2$s",
+  "death.attack.nuclear_heat": "%1$s was burned to death by a nuclear reactor",
+  "death.attack.nuclear_heat.player": "%1$s was burned to death by a nuclear reactor whilst fighting %2$s",
   "chat.ic2_120.nuclear_explosion.title": "§4⚠ §cNuclear Reactor Explosion!",
   "chat.ic2_120.nuclear_explosion.detail": "§c%1$s§7's nuclear reactor exploded at §c%2$s§7!",
   "chat.ic2_120.nuclear_explosion.blocks_removed": "§7Removed §c%1$d §7blocks.",

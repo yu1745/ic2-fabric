@@ -103,7 +103,8 @@ This index contains detailed documentation for every machine.
 
 | Machine | File | Notes |
 |------|------|------|
-| [Nuclear Reactor](../machines/nuclear_reactor.md) | nuclear-reactor.md | Reactor + chamber, vessel, fluid port, redstone port |
+| [Nuclear Reactor](../machines/nuclear_reactor.md) | nuclear-reactor.md | Reactor + chamber (electric mode) |
+| [Fluid-Cooled Reactor](../machines/nuclear_reactor_fluid_mode.md) | nuclear-reactor-fluid-mode.md | Vessel, fluid port, access hatch, redstone port (fluid mode) |
 
 ## UUMatter
 
@@ -140,4 +141,3 @@ This index contains detailed documentation for every machine.
 - [Upgrade System](../guides/upgrades.md) - upgrade slot details
 - [Kinetic System](../systems/kinetic_transmission.md) - KU transmission details
 - [Heat System](../systems/heat_system.md) - HU heat
-- [Nuclear Reactor](../systems/nuclear_reactor.md) - nuclear system

@@ -24,7 +24,6 @@ navigation:
 - [热能系统](systems/heat_system.md)
 - [动能系统](systems/kinetic_transmission.md)
 - [机器系统](systems/machines.md)
-- [核反应堆系统](systems/nuclear_reactor.md)
 
 ## 参考
 

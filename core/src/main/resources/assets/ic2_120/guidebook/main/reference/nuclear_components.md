@@ -53,7 +53,7 @@ item_ids:
 
 # Nuclear Blocks and Components
 
-Nuclear power is built from the reactor block, external ports, and internal components. Read the [Nuclear Reactor System](../systems/nuclear_reactor.md) overview first, then use this page as a component reference.
+Nuclear power is built from the reactor block, external ports, and internal components. Read the [Nuclear Reactor](../machines/nuclear_reactor.md) overview first, then use this page as a component reference.
 
 ## Reactor Blocks
 
@@ -62,7 +62,7 @@ Nuclear power is built from the reactor block, external ports, and internal comp
 | Nuclear Reactor | The main block; holds fuel rods and cooling components |
 | Reactor Chamber | Extends the reactor's interior space |
 | Reactor Access Hatch | Automated input / output of reactor items |
-| Reactor Fluid Port | In heat mode, inputs coolant and outputs hot coolant |
+| Reactor Fluid Port | In fluid mode, inputs coolant and outputs hot coolant |
 | Reactor Redstone Port | Use redstone to control or read reactor state |
 | Reactor Pressure Vessel | The structural shell used in heat-mode reactors |
 

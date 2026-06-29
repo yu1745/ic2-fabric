@@ -1,0 +1,15 @@
+{
+    DataVersion: 3465,
+    size: [2, 1, 2],
+    data: [
+        {pos: [0, 0, 0], state: "ic2_120:reactor_chamber{facing:east}", nbt: {id: "ic2_120:reactor_chamber"}},
+        {pos: [0, 0, 1], state: "ic2_120:reactor_chamber{facing:east}", nbt: {id: "ic2_120:reactor_chamber"}},
+        {pos: [1, 0, 0], state: "ic2_120:nuclear_reactor{active:false,facing:east}", nbt: {ActualHeatDissipated_High: 0, ActualHeatDissipated_Low: 0, AvgConsume_High: 0, AvgConsume_Low: 0, AvgExtract_High: 0, AvgExtract_Low: 0, AvgInserted_High: 0, AvgInserted_Low: 0, Capacity_High: 0, Capacity_Low: 45, EnergyStored: 0L, Energy_High: 0, Energy_Low: 0, HeatStored: 0, InputCoolant: {fluid: "minecraft:empty"}, InputCoolantAmount: 0L, InputCoolantMb_High: 0, InputCoolantMb_Low: 0, IsThermalMode_High: 0, IsThermalMode_Low: 0, Items: [], LastModeCheckTick: 637000L, LayoutLocked: 0b, LayoutLocked_High: 0, LayoutLocked_Low: 0, OutputHotCoolant: {fluid: "minecraft:empty"}, OutputHotCoolantAmount: 0L, OutputHotCoolantMb_High: 0, OutputHotCoolantMb_Low: 0, OwnerUUID: [I; -1362492993, 590231458, -1738843752, 666051178], PendingEnergyOutput: 0L, RedstoneInverted: 0b, Temperature_High: 0, Temperature_Low: 0, ThermalHeatOutput_High: 0, ThermalHeatOutput_Low: 0, ThermalMode: 0b, TickOffset: 0, TotalHeatDissipated_High: 0, TotalHeatDissipated_Low: 0, TotalHeatProduced_High: 0, TotalHeatProduced_Low: 0, id: "ic2_120:nuclear_reactor"}},
+        {pos: [1, 0, 1], state: "ic2_120:reactor_chamber{facing:east}", nbt: {id: "ic2_120:reactor_chamber"}}
+    ],
+    entities: [],
+    palette: [
+        "ic2_120:reactor_chamber{facing:east}",
+        "ic2_120:nuclear_reactor{active:false,facing:east}"
+    ]
+}
