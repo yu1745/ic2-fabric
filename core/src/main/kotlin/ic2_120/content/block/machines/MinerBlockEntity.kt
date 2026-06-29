@@ -587,37 +587,37 @@ abstract class BaseMinerBlockEntity(
                     cursorInitialized = false
                     cursorIndex = 0
                     resetPathFailState()
-                } else {
-                    sync.running = 0
-                    setActiveState(world, pos, state, false)
-                    sync.syncCurrentTickFlow()
-                    return
-                }
-            }
-            lastRedstoneActive = hasPower
-
-            val shouldRun = if (hasInverter) !hasPower else hasPower
-            if (!shouldRun) {
+            } else {
                 sync.running = 0
                 setActiveState(world, pos, state, false)
                 sync.syncCurrentTickFlow()
                 return
             }
         }
+        lastRedstoneActive = hasPower
 
-        tryAutoResumeAfterPipeRefill()
-        if (sync.running == 0) {
+        val shouldRun = if (hasInverter) !hasPower else hasPower
+        if (!shouldRun) {
+            sync.running = 0
             setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
         }
+    }
 
-        val scannerType = getScannerType(getStack(SLOT_SCANNER))
-        if (scannerType == null) {
-            setActiveState(world, pos, state, false)
-            sync.syncCurrentTickFlow()
-            return
-        }
+    tryAutoResumeAfterPipeRefill()
+    if (sync.running == 0) {
+        setActiveState(world, pos, state, false)
+        sync.syncCurrentTickFlow()
+        return
+    }
+
+    val scannerType = getScannerType(getStack(SLOT_SCANNER))
+    if (scannerType == null) {
+        setActiveState(world, pos, state, false)
+        sync.syncCurrentTickFlow()
+        return
+    }
         val scanRadius = if (acceptsAdvancedScanner) ADVANCED_MAX_SCAN_RADIUS else scannerType.scanRadius
 
         observeCursorStall(world, "pre_tick")
@@ -841,6 +841,12 @@ abstract class BaseMinerBlockEntity(
         if (acceptsAdvancedScanner && recoveringPipes) {
             // 高级采矿机：有管道需回收，回收完成后等待红石信号变化后重新开始
             redstoneChangeRequired = true
+        } else if (acceptsAdvancedScanner) {
+            // 队列为空：无需回收，避免 manualStoppedForRecovery 永久锁死恢复路径。
+            // 撤销本次 startPipeRecovery 设置的停机态，交由下一 tick 的红石门控决定是否工作。
+            manualStoppedForRecovery = false
+            redstoneChangeRequired = false
+            sync.running = 1
         }
         markDirty()
     }
