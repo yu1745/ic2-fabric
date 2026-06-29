@@ -612,12 +612,15 @@ abstract class BaseMinerBlockEntity(
     private fun tickPipeRecovering(world: ServerWorld, pos: BlockPos, state: BlockState): MinerState {
         val processed = processPipeRecoveryTick(world)
         setActiveState(world, pos, state, processed)
-        return if (processed) {
-            MinerState.PIPE_RECOVERING  // 队列仍非空，继续
-        } else {
-            // 队列空：回收完毕，重置游标
-            resetCursorForRecovery()
-            if (acceptsAdvancedScanner) MinerState.REDSTONE_WAITING else MinerState.IDLE
+        // processPipeRecoveryTick 在「管道槽满（暂停）」与「队列空（完成）」两种情况都返回 false，
+        // 用 pendingPipeRecovery.isNotEmpty() 区分：暂停时自环不退出，完成时才重置游标并转移。
+        return when {
+            processed -> MinerState.PIPE_RECOVERING  // 本 tick 回收了一格，继续
+            pendingPipeRecovery.isNotEmpty() -> MinerState.PIPE_RECOVERING  // 槽满，暂停：下 tick 重试
+            else -> {  // 队列空：回收完毕，重置游标
+                resetCursorForRecovery()
+                if (acceptsAdvancedScanner) MinerState.REDSTONE_WAITING else MinerState.IDLE
+            }
         }
     }
 
@@ -628,11 +631,12 @@ abstract class BaseMinerBlockEntity(
     private fun tickPipeRecycling(world: ServerWorld, pos: BlockPos, state: BlockState): MinerState {
         val processed = processPipeRecoveryTick(world)
         setActiveState(world, pos, state, processed)
-        return if (processed) {
-            MinerState.PIPE_RECYCLING
-        } else {
-            // 回收完毕，恢复采矿（原行为：sync.running 仍为 1）
-            MinerState.SCANNING
+        // 同 tickPipeRecovering：用 pendingPipeRecovery.isNotEmpty() 区分「槽满暂停」与「队列空完成」。
+        // 注意：回收完成时不重置游标（仅 tickPipeRecovering 重置）。
+        return when {
+            processed -> MinerState.PIPE_RECYCLING  // 本 tick 回收了一格，继续
+            pendingPipeRecovery.isNotEmpty() -> MinerState.PIPE_RECYCLING  // 槽满，暂停：下 tick 重试
+            else -> MinerState.SCANNING  // 回收完毕，恢复采矿（原行为：sync.running 仍为 1）
         }
     }
 
@@ -783,8 +787,15 @@ abstract class BaseMinerBlockEntity(
         if (cursorInitialized && sync.cursorY < pos.y) {
             val done = ensurePipeColumnReaches(sync.cursorY)
             if (!done) {
+                // ensurePipeColumnReaches → tryPlacePipeAt 可能已设置回收/停机侧信道。
+                // 侧信道在 tickScanning 顶部重置、在子阶段间同 tick 传播，此处需就地翻译为状态转移，
+                // 否则本子阶段返回 SCANNING 自环，下 tick 顶部重置会丢弃请求导致 livelock。
                 setActiveState(world, pos, state, false)
-                return MinerState.SCANNING  // 自环，下 tick 继续
+                return when {
+                    pipeRecyclingRequested -> MinerState.PIPE_RECYCLING
+                    haltRequested -> MinerState.IDLE
+                    else -> MinerState.SCANNING  // 自环，下 tick 继续
+                }
             }
             // verticalHitBedrock 已由 ensurePipeColumnReaches 在遇基岩时设置，
             // 这里不再读 sync.running（新状态机不读它做控制）。
@@ -838,6 +849,10 @@ abstract class BaseMinerBlockEntity(
             val blockState = world.getBlockState(targetPos)
             if (!blockState.isAir && shouldMine(world, targetPos, blockState) && canMineWithCurrentDrill(blockState)) {
                 ensurePipeReachesPosition(targetPos)
+                // ensurePipeReachesPosition → tryPlacePipeAt 可能已设置回收/停机侧信道：
+                // 必须在继续挖矿前翻译为状态转移，否则返回 SCANNING 自环、下 tick 顶部重置会丢弃请求。
+                if (pipeRecyclingRequested) return MinerState.PIPE_RECYCLING
+                if (haltRequested) return MinerState.IDLE
                 if (isPipeAdjacentTo(targetPos)) {
                     pendingBreakEnergy = 0L
                     advanceCursor(scanRadius)
