@@ -17,12 +17,17 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.DoorBlock
 import net.minecraft.block.PillarBlock
+import net.minecraft.block.Waterloggable
+import net.minecraft.fluid.Fluid
+import net.minecraft.fluid.FluidState
+import net.minecraft.fluid.Fluids
+import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
 import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
 import net.minecraft.state.property.Properties
 import net.minecraft.util.math.Direction
-import net.minecraft.item.ItemPlacementContext
 import net.minecraft.world.WorldAccess
 import net.minecraft.block.ShapeContext
 import net.minecraft.entity.Entity
@@ -322,23 +327,25 @@ class WoolSheetBlock : Block(
 
 @ModBlock(name = "mining_pipe", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "building")
 class MiningPipeBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(3.0f)) :
-    Block(settings) {
+    Block(settings), Waterloggable {
 
     init {
         defaultState = defaultState
             .with(NORTH, false).with(SOUTH, false)
             .with(EAST, false).with(WEST, false)
             .with(UP, false).with(DOWN, false)
+            .with(WATERLOGGED, false)
     }
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         super.appendProperties(builder)
-        builder.add(NORTH, SOUTH, EAST, WEST, UP, DOWN)
+        builder.add(NORTH, SOUTH, EAST, WEST, UP, DOWN, WATERLOGGED)
     }
 
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState {
         val world = ctx.world
         val pos = ctx.blockPos
+        val fluidState = world.getFluidState(pos)
         return defaultState
             .with(NORTH, canConnect(world, pos, Direction.NORTH))
             .with(SOUTH, canConnect(world, pos, Direction.SOUTH))
@@ -346,6 +353,7 @@ class MiningPipeBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.
             .with(WEST, canConnect(world, pos, Direction.WEST))
             .with(UP, canConnect(world, pos, Direction.UP))
             .with(DOWN, canConnect(world, pos, Direction.DOWN))
+            .with(WATERLOGGED, fluidState.fluid == Fluids.WATER)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -357,8 +365,38 @@ class MiningPipeBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.
         pos: BlockPos,
         neighborPos: BlockPos
     ): BlockState {
+        // 与原版含水方块一致：含水时调度水 tick，不在这里反推 WATERLOGGED。
+        if (state.get(WATERLOGGED)) {
+            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+        }
         return state.with(propertyFor(direction), canConnect(world, pos, direction))
     }
+
+    // ── 含水（Waterloggable）：让流水「填入」而非破坏管道 ──
+    // 否则管道的细管碰撞箱不 blocksMovement()，会被流水当掉落物冲走（同红石/火把）。
+
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun getFluidState(state: BlockState): FluidState =
+        if (state.get(WATERLOGGED)) Fluids.WATER.getStill(false) else Fluids.EMPTY.getDefaultState()
+
+    override fun canFillWithFluid(world: BlockView, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
+        !state.get(WATERLOGGED) && fluid == Fluids.WATER
+
+    override fun tryFillWithFluid(
+        world: WorldAccess,
+        pos: BlockPos,
+        state: BlockState,
+        fluidState: FluidState
+    ): Boolean {
+        if (!canFillWithFluid(world, pos, state, fluidState.fluid)) return false
+        if (!state.get(WATERLOGGED)) {
+            world.setBlockState(pos, state.with(WATERLOGGED, true), Block.NOTIFY_ALL)
+            world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+        }
+        return true
+    }
+
+    override fun tryDrainFluid(world: WorldAccess, pos: BlockPos, state: BlockState): ItemStack = ItemStack.EMPTY
 
     private fun canConnect(world: WorldAccess, pos: BlockPos, direction: Direction): Boolean {
         val neighborPos = pos.offset(direction)
@@ -411,6 +449,7 @@ class MiningPipeBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.
         val WEST: BooleanProperty = Properties.WEST
         val UP: BooleanProperty = Properties.UP
         val DOWN: BooleanProperty = Properties.DOWN
+        val WATERLOGGED: BooleanProperty = Properties.WATERLOGGED
 
         fun propertyFor(direction: Direction): BooleanProperty = when (direction) {
             Direction.NORTH -> NORTH
