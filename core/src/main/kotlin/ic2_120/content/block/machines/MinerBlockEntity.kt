@@ -492,8 +492,18 @@ abstract class BaseMinerBlockEntity(
                 fluidTankInternal.insertBucket(fluid)
             }
         }
-        redstoneChangeRequired = nbt.getBoolean(NBT_REDSTONE_CHANGE_REQUIRED)
         lastRedstoneActive = nbt.getBoolean(NBT_LAST_REDSTONE_ACTIVE)
+        // 状态机初始化：优先读新 key，其次旧 boolean 推导（向前兼容）
+        minerState = when {
+            nbt.contains(NBT_MINER_STATE) -> {
+                val name = nbt.getString(NBT_MINER_STATE)
+                MinerState.entries.firstOrNull { it.name == name } ?: MinerState.IDLE
+            }
+            nbt.getBoolean(NBT_REDSTONE_CHANGE_REQUIRED) || nbt.getBoolean(NBT_MANUAL_STOPPED_FOR_RECOVERY) -> {
+                if (acceptsAdvancedScanner) MinerState.REDSTONE_WAITING else MinerState.IDLE
+            }
+            else -> MinerState.IDLE
+        }
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -529,8 +539,10 @@ abstract class BaseMinerBlockEntity(
         } else {
             nbt.putString(NBT_TANK_FLUID, "")
         }
-        nbt.putBoolean(NBT_REDSTONE_CHANGE_REQUIRED, redstoneChangeRequired)
         nbt.putBoolean(NBT_LAST_REDSTONE_ACTIVE, lastRedstoneActive)
+        nbt.putString(NBT_MINER_STATE, minerState.name)
+        // 旧 key 写固定值，向前兼容旧版本加载（新代码读时优先 NBT_MINER_STATE）
+        nbt.putBoolean(NBT_REDSTONE_CHANGE_REQUIRED, false)
     }
 
     override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
