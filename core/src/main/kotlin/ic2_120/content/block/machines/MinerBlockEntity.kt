@@ -179,6 +179,7 @@ abstract class BaseMinerBlockEntity(
         private const val NBT_TANK_FLUID = "TankFluid"
         private const val NBT_REDSTONE_CHANGE_REQUIRED = "RedstoneChangeRequired"
         private const val NBT_LAST_REDSTONE_ACTIVE = "LastRedstoneActive"
+        private const val NBT_MINER_STATE = "MinerState"
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
@@ -248,6 +249,9 @@ abstract class BaseMinerBlockEntity(
     val syncedData = SyncedData(this)
     private var redstoneChangeRequired = false
     private var lastRedstoneActive = false
+
+    /** 状态机权威字段。见 [MinerState]。 */
+    private var minerState: MinerState = MinerState.IDLE
 
     /** 内部流体储罐（1桶容量），用于储存采矿管遇到的流体。 */
     private val fluidTankInternal = object : SingleVariantStorage<FluidVariant>() {
@@ -1042,6 +1046,24 @@ abstract class BaseMinerBlockEntity(
 
     private fun getPipeEnergyCost(): Long {
         return getDrillBreakCost() ?: DEFAULT_PIPE_ENERGY
+    }
+
+    /**
+     * 采矿机显式状态机。替换原散落 boolean（recoveringPipes/recyclingPipes/
+     * manualStoppedForRecovery/redstoneChangeRequired）。
+     * 转移只通过 tick() 的 when 分支返回值发生（外部入口方法除外，见 spec §3）。
+     */
+    private enum class MinerState {
+        /** 等待自动恢复（普通机）；或红石未激活（高级机）。 */
+        IDLE,
+        /** 仅高级机：管道回收完成，等红石信号变化才重启。 */
+        REDSTONE_WAITING,
+        /** 终局回收（普通机到底 / 玩家手动 / 高级机回收）。 */
+        PIPE_RECOVERING,
+        /** 仅普通机：缺管时回收分支管道。 */
+        PIPE_RECYCLING,
+        /** 正常工作：扫描+挖掘，内部含 pendingBreakEnergy 子阶段。 */
+        SCANNING
     }
 
     private enum class PipeReachResult {
