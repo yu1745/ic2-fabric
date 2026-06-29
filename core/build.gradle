@@ -237,7 +237,10 @@ tasks.register('mcdebugTest') {
 				throw new GradleException("MC server didn't write ${portFile} within 120s. Inspect server log: ${logFile}")
 			}
 
-			def testProcess = new ProcessBuilder('pnpm', 'exec', 'tsx', 'core/test/mcdebug/run.ts')
+			// Windows 下 Java ProcessBuilder 不会按 PATHEXT 自动补 .CMD 后缀，
+			// 直接用 'pnpm' 会报 CreateProcess error=2。显式选 pnpm.CMD（Windows）/ pnpm（Unix）。
+			def pnpmBin = org.gradle.internal.os.OperatingSystem.current().windows ? 'pnpm.CMD' : 'pnpm'
+			def testProcess = new ProcessBuilder(pnpmBin, 'exec', 'tsx', 'core/test/mcdebug/run.ts')
 					.directory(rootProject.projectDir)
 					.redirectErrorStream(true)
 			testProcess.environment().put('MCDEBUG_TEST_PARALLELISM', providers.environmentVariable('MCDEBUG_TEST_PARALLELISM').orElse('128').get())
