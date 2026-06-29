@@ -270,6 +270,10 @@ object Ic2_120 : ModInitializer {
         UuReplicationCommand.register()
         ItemIdCommand.register()
 
+        // [TEMP] 半流质发电机燃料 dump：启动后遍历所有流体过真实匹配逻辑并打日志。
+        // 测完删掉本行 + content/debug/SemifluidFuelDump.kt
+        ic2_120.content.debug.SemifluidFuelDump.register()
+
         logger.info("IC2 1.20 模组已加载（类注解驱动自动注册）")
     }
 
