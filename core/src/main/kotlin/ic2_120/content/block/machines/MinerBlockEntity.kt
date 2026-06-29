@@ -235,9 +235,6 @@ abstract class BaseMinerBlockEntity(
     private var lastPathFailTargetY: Int = Int.MIN_VALUE
     private var lastPathFailTargetZ: Int = Int.MIN_VALUE
     private var sameTargetPathFailCount: Int = 0
-    private var recoveringPipes: Boolean = false
-    private var manualStoppedForRecovery: Boolean = false
-    private var recyclingPipes: Boolean = false
     private var lastRecycledCursorY: Int = Int.MAX_VALUE
     private val pendingPipeRecovery = ArrayDeque<BlockPos>()
     private val knownPipePositions = HashSet<BlockPos>()
@@ -247,11 +244,17 @@ abstract class BaseMinerBlockEntity(
     val itemCache = mutableListOf<ItemStack>()
     var cacheItemCount = 0
     val syncedData = SyncedData(this)
-    private var redstoneChangeRequired = false
     private var lastRedstoneActive = false
 
     /** 状态机权威字段。见 [MinerState]。 */
     private var minerState: MinerState = MinerState.IDLE
+
+    /** tickScanning 侧信道：垂直管柱遇到基岩。见 ensureCursorAndVerticalPipe。 */
+    private var verticalHitBedrock = false
+    /** tickScanning 侧信道：tryPlacePipeAt 链请求触发分支管道回收。 */
+    private var pipeRecyclingRequested = false
+    /** tickScanning 侧信道：tryPlacePipeAt 链请求停机（无管可铺且无可回收）。 */
+    private var haltRequested = false
 
     /** 内部流体储罐（1桶容量），用于储存采矿管遇到的流体。 */
     private val fluidTankInternal = object : SingleVariantStorage<FluidVariant>() {
@@ -461,7 +464,6 @@ abstract class BaseMinerBlockEntity(
         cursorIndex = nbt.getInt(NBT_CURSOR_INDEX)
         lastRecycledCursorY = nbt.getInt(NBT_LAST_RECYCLED_CURSOR_Y)
         pendingBreakEnergy = nbt.getLong(NBT_PENDING_BREAK_ENERGY)
-        manualStoppedForRecovery = nbt.getBoolean(NBT_MANUAL_STOPPED_FOR_RECOVERY)
         itemCache.clear()
         cacheItemCount = 0
         val cacheNbt = nbt.getList("ItemCache", 10)
@@ -520,7 +522,6 @@ abstract class BaseMinerBlockEntity(
         nbt.putInt(NBT_LAST_RECYCLED_CURSOR_Y, lastRecycledCursorY)
         nbt.putInt(NBT_PIPE_DEPTH, lastPlacedPipeY)
         nbt.putLong(NBT_PENDING_BREAK_ENERGY, pendingBreakEnergy)
-        nbt.putBoolean(NBT_MANUAL_STOPPED_FOR_RECOVERY, manualStoppedForRecovery)
         val cacheNbt = net.minecraft.nbt.NbtList()
         for (stack in itemCache) {
             if (!stack.isEmpty) cacheNbt.add(stack.writeNbt(NbtCompound()))
@@ -543,6 +544,7 @@ abstract class BaseMinerBlockEntity(
         nbt.putString(NBT_MINER_STATE, minerState.name)
         // 旧 key 写固定值，向前兼容旧版本加载（新代码读时优先 NBT_MINER_STATE）
         nbt.putBoolean(NBT_REDSTONE_CHANGE_REQUIRED, false)
+        nbt.putBoolean(NBT_MANUAL_STOPPED_FOR_RECOVERY, false)
     }
 
     override fun toInitialChunkDataNbt(): NbtCompound = createNbt()
@@ -551,7 +553,30 @@ abstract class BaseMinerBlockEntity(
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
         if (world.isClient) return
+        val serverWorld = world as? ServerWorld ?: return
 
+        // 公共预处理（每 tick 必做，与状态无关）—— spec §4.1
+        tickCommonPre(world, pos)
+
+        // 状态分派：转移只通过返回值发生（spec §3 约束 1）
+        minerState = when (minerState) {
+            MinerState.PIPE_RECOVERING  -> tickPipeRecovering(serverWorld, pos, state)
+            MinerState.PIPE_RECYCLING   -> tickPipeRecycling(serverWorld, pos, state)
+            MinerState.REDSTONE_WAITING -> tickRedstoneWaiting(world, pos, state)
+            MinerState.IDLE             -> tickIdle(world, pos, state, serverWorld)
+            MinerState.SCANNING         -> tickScanning(serverWorld, pos, state)
+        }
+
+        // 派生 sync.running（spec §3 约束 2）—— 状态机内部不读它做控制
+        sync.running = if (minerState == MinerState.SCANNING) 1 else 0
+        sync.syncCurrentTickFlow()
+    }
+
+    /**
+     * 公共预处理：每 tick 必做，与状态无关（spec §4.1）。
+     * 对应原 tick() 第 539-563 行。
+     */
+    private fun tickCommonPre(world: World, pos: BlockPos) {
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
         sync.pipeCount = getPipeCount()
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
@@ -572,162 +597,279 @@ abstract class BaseMinerBlockEntity(
         chargeScanner()
         sync.fluidBlocked = 0
 
+        // 高级采矿机：缓存弹出
         if (acceptsAdvancedScanner) {
             tryEjectCache(world as? ServerWorld ?: return)
         }
 
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
+    }
 
-        val serverWorld = world as? ServerWorld ?: return
-        if (recoveringPipes || recyclingPipes) {
-            val recovered = processPipeRecoveryTick(serverWorld)
-            setActiveState(world, pos, state, recovered)
-            sync.syncCurrentTickFlow()
-            return
+    /**
+     * PIPE_RECOVERING 状态：终局回收（普通机到底 / 玩家手动 / 高级机回收）。spec §4.2。
+     * @return 下一状态（PIPE_RECOVERING 自环 / IDLE 普通机回收完 / REDSTONE_WAITING 高级机回收完）
+     */
+    private fun tickPipeRecovering(world: ServerWorld, pos: BlockPos, state: BlockState): MinerState {
+        val processed = processPipeRecoveryTick(world)
+        setActiveState(world, pos, state, processed)
+        return if (processed) {
+            MinerState.PIPE_RECOVERING  // 队列仍非空，继续
+        } else {
+            // 队列空：回收完毕，重置游标
+            resetCursorForRecovery()
+            if (acceptsAdvancedScanner) MinerState.REDSTONE_WAITING else MinerState.IDLE
         }
+    }
 
-        // 高级采矿机：需要红石信号才会工作，红石反转升级可反转信号
-        if (acceptsAdvancedScanner) {
-            val hasPower = world.isReceivingRedstonePower(pos)
-            val hasInverter = SLOT_UPGRADE_INDICES.any { getStack(it).item is RedstoneInverterUpgrade }
-
-            // 红石变化等待：重置后需检测红石信号变化才重新开始
-            if (redstoneChangeRequired) {
-                if (hasPower != lastRedstoneActive) {
-                    // 红石信号变化，清除等待并重新开始
-                    redstoneChangeRequired = false
-                    manualStoppedForRecovery = false
-                    sync.running = 1
-                    pendingBreakEnergy = 0L
-                    sync.cursorY = pos.y - 1
-                    cursorInitialized = false
-                    cursorIndex = 0
-                    resetPathFailState()
-            } else {
-                sync.running = 0
-                setActiveState(world, pos, state, false)
-                sync.syncCurrentTickFlow()
-                return
-            }
+    /**
+     * PIPE_RECYCLING 状态：仅普通机，缺管时回收分支管道。spec §4.3。
+     * @return 下一状态（PIPE_RECYCLING 自环 / SCANNING 回收完恢复挖矿）
+     */
+    private fun tickPipeRecycling(world: ServerWorld, pos: BlockPos, state: BlockState): MinerState {
+        val processed = processPipeRecoveryTick(world)
+        setActiveState(world, pos, state, processed)
+        return if (processed) {
+            MinerState.PIPE_RECYCLING
+        } else {
+            // 回收完毕，恢复采矿（原行为：sync.running 仍为 1）
+            MinerState.SCANNING
         }
-        lastRedstoneActive = hasPower
+    }
 
-        val shouldRun = if (hasInverter) !hasPower else hasPower
-        if (!shouldRun) {
-            sync.running = 0
+    /** 重置游标到初始位置（回收完成 / 重启扫描时调用）。 */
+    private fun resetCursorForRecovery() {
+        sync.cursorX = 0
+        sync.cursorZ = 0
+        sync.cursorY = pos.y - 1
+        cursorInitialized = false
+        cursorIndex = 0
+        pendingBreakEnergy = 0L
+        resetPathFailState()
+    }
+
+    /**
+     * REDSTONE_WAITING 状态：仅高级机，管道回收完成后等红石信号变化才重启。spec §4.4。
+     * @return 下一状态（SCANNING 信号变化 / REDSTONE_WAITING 自环）
+     */
+    private fun tickRedstoneWaiting(world: World, pos: BlockPos, state: BlockState): MinerState {
+        val hasPower = currentRedstonePower(world, pos)
+        if (hasPower != lastRedstoneActive) {
+            // 红石信号变化，重启
+            lastRedstoneActive = hasPower
+            resetCursorForRecovery()
             setActiveState(world, pos, state, false)
-            sync.syncCurrentTickFlow()
-            return
+            return MinerState.SCANNING
         }
-    }
-
-    tryAutoResumeAfterPipeRefill()
-    if (sync.running == 0) {
         setActiveState(world, pos, state, false)
-        sync.syncCurrentTickFlow()
-        return
+        return MinerState.REDSTONE_WAITING
     }
 
-    val scannerType = getScannerType(getStack(SLOT_SCANNER))
-    if (scannerType == null) {
+    /**
+     * 高级机红石门控：计算是否应该工作（含红石反转升级）。spec §4.4/§4.5。
+     * @return true = 红石条件满足，可工作
+     */
+    private fun isRedstoneActiveForWork(world: World, pos: BlockPos): Boolean {
+        if (!acceptsAdvancedScanner) return true  // 普通机无红石门控
+        val hasPower = world.isReceivingRedstonePower(pos)
+        val hasInverter = SLOT_UPGRADE_INDICES.any { getStack(it).item is RedstoneInverterUpgrade }
+        return if (hasInverter) !hasPower else hasPower
+    }
+
+    /** 读取当前红石信号原始值（用于 REDSTONE_WAITING 检测变化）。 */
+    private fun currentRedstonePower(world: World, pos: BlockPos): Boolean =
+        world.isReceivingRedstonePower(pos)
+
+    /**
+     * IDLE 态自动恢复判定（替换原 tryAutoResumeAfterPipeRefill）。spec §4.5。
+     * @return true = 满足恢复条件，可转 SCANNING
+     */
+    private fun tryAutoResume(): Boolean {
+        val minY = if (acceptsAdvancedScanner) ADVANCED_MIN_Y else NORMAL_MIN_Y
+        if (sync.cursorY < minY) return false
+        if (getScannerType(getStack(SLOT_SCANNER)) == null) return false
+        if (getDrillBreakCost() == null) return false
+        if (findPipeInInventory() == null) return false
+        // 自动恢复按"新一轮"开始，避免沿用缺料前的待挖能量残留
+        pendingBreakEnergy = 0L
+        return true
+    }
+
+    /**
+     * IDLE 状态：等待自动恢复（普通机）；或红石未激活（高级机）。spec §4.5。
+     * @return 下一状态（IDLE 自环 / SCANNING 恢复）
+     */
+    private fun tickIdle(world: World, pos: BlockPos, state: BlockState, serverWorld: ServerWorld): MinerState {
+        // 红石门控（仅高级机）：红石未激活则自环
+        if (!isRedstoneActiveForWork(world, pos)) {
+            lastRedstoneActive = currentRedstonePower(world, pos)
+            setActiveState(world, pos, state, false)
+            return MinerState.IDLE
+        }
+
+        // 自动恢复
+        if (tryAutoResume()) {
+            setActiveState(world, pos, state, false)
+            return MinerState.SCANNING
+        }
+
         setActiveState(world, pos, state, false)
-        sync.syncCurrentTickFlow()
-        return
+        return MinerState.IDLE
     }
-        val scanRadius = if (acceptsAdvancedScanner) ADVANCED_MAX_SCAN_RADIUS else scannerType.scanRadius
 
+    /**
+     * SCANNING 状态：正常工作。按子阶段顺序判定，首个返回非 null 即转移。spec §4.6。
+     * 子方法返回 MinerState?：非 null = 发生转移，null = 继续下一子阶段。
+     * 例外：checkScanner 返回 Int?（scanRadius），null = 应回 IDLE。
+     */
+    private fun tickScanning(world: ServerWorld, pos: BlockPos, state: BlockState): MinerState {
+        // 侧信道重置（每 tick 进入 SCANNING 时清零，防止跨 tick 残留）
+        pipeRecyclingRequested = false
+        haltRequested = false
+        verticalHitBedrock = false
+
+        // 4.6.1 红石再检查（仅高级机）—— 非 null 即转移
+        checkRedstoneStillActive(world, pos, state)?.let { return it }
+
+        // 4.6.2 扫描器存在性 —— checkScanner 返回 scanRadius（Int），null = 回 IDLE
+        val scanRadius = checkScanner(world, pos, state)
+        if (scanRadius == null) return MinerState.IDLE
+
+        // 4.6.3 stall 观察（诊断，不转移）
         observeCursorStall(world, "pre_tick")
 
-        // 先确保游标初始化，再进行任何依赖 cursorY 的补管逻辑。
+        // 4.6.4 游标初始化 + 垂直管柱延伸 —— 非 null 即转移
+        //      「是否到底」通过侧信道 verticalHitBedrock 传递
+        ensureCursorAndVerticalPipe(world, pos, state, scanRadius)?.let { return it }
+
+        // 4.6.5 能量预算预检查（仅普通机）
+        checkScanEnergyBudget(world, pos, state)?.let { return it }
+
+        // 4.6.6 周期节流
+        checkPeriodThrottle(world, pos, state)?.let { return it }
+
+        // 4.6.7 攒能子阶段（需 scanRadius 推进游标）
+        tickPendingBreakEnergy(world, pos, state, scanRadius)?.let { return it }
+
+        // 4.6.8 主扫描/挖掘循环
+        return runScanMineLoop(world, pos, state, scanRadius, verticalHitBedrock)
+    }
+
+    /** 4.6.1：高级机每 tick 复查红石，断开立即回 IDLE。 */
+    private fun checkRedstoneStillActive(world: ServerWorld, pos: BlockPos, state: BlockState): MinerState? {
+        if (!acceptsAdvancedScanner) return null
+        if (isRedstoneActiveForWork(world, pos)) return null
+        lastRedstoneActive = currentRedstonePower(world, pos)
+        setActiveState(world, pos, state, false)
+        return MinerState.IDLE
+    }
+
+    /** 4.6.2：扫描器不在位则回 IDLE。返回 scanRadius 或 null（转移）。 */
+    private fun checkScanner(world: ServerWorld, pos: BlockPos, state: BlockState): Int? {
+        val scannerType = getScannerType(getStack(SLOT_SCANNER)) ?: run {
+            setActiveState(world, pos, state, false)
+            return null  // 调用方据此 return IDLE
+        }
+        return if (acceptsAdvancedScanner) ADVANCED_MAX_SCAN_RADIUS else scannerType.scanRadius
+    }
+
+    /** 4.6.4：游标初始化 + 垂直管柱延伸。返回 MinerState? = 转移目标（null=继续）。
+     *  「到底」通过侧信道 verticalHitBedrock 传递（ensurePipeColumnReaches 内设置）。 */
+    private fun ensureCursorAndVerticalPipe(world: ServerWorld, pos: BlockPos, state: BlockState, scanRadius: Int): MinerState? {
+        verticalHitBedrock = false
         if (!cursorInitialized) {
             ensureAndGetCursorTarget(scanRadius)
         }
-
-        var reachedBottom = false
-
-        // 垂直管道柱延伸（不受 effective period 限制，每 tick 运行）
         if (cursorInitialized && sync.cursorY < pos.y) {
             val done = ensurePipeColumnReaches(sync.cursorY)
             if (!done) {
                 setActiveState(world, pos, state, false)
-                sync.syncCurrentTickFlow()
-                return
+                return MinerState.SCANNING  // 自环，下 tick 继续
             }
-            if (sync.running == 0) {
-                // 垂直柱遇到不可破坏方块（基岩），视为到底
-                reachedBottom = true
-            }
+            // verticalHitBedrock 已由 ensurePipeColumnReaches 在遇基岩时设置，
+            // 这里不再读 sync.running（新状态机不读它做控制）。
         }
+        return null  // 继续
+    }
 
+    /** 4.6.5：普通机扫描能量不足则自环等待。 */
+    private fun checkScanEnergyBudget(world: ServerWorld, pos: BlockPos, state: BlockState): MinerState? {
+        if (acceptsAdvancedScanner) return null
         val scanCost = (MinerSync.SCAN_ENERGY_PER_STEP * energyMultiplier).toLong().coerceAtLeast(1L)
-        if (!acceptsAdvancedScanner && sync.amount < scanCost) {
+        if (sync.amount < scanCost) {
             setActiveState(world, pos, state, false)
-            sync.syncCurrentTickFlow()
-            return
+            return MinerState.SCANNING  // 自环等能量
         }
+        return null
+    }
 
+    /** 4.6.6：周期间隔等待态仍亮灯。 */
+    private fun checkPeriodThrottle(world: ServerWorld, pos: BlockPos, state: BlockState): MinerState? {
         val effectivePeriod = getEffectivePeriodTicks()
         if (((world.time + workOffset) % effectivePeriod) != 0L) {
-            // 周期间隔中的等待态仍视为"正在工作"。
-            setActiveState(world, pos, state, true)
-            sync.syncCurrentTickFlow()
-            return
+            setActiveState(world, pos, state, true)  // 等待态视为工作中
+            return MinerState.SCANNING
+        }
+        return null
+    }
+
+    /** 4.6.7：有待挖掘能量时攒能。返回非 null = 本 tick 结束（自环 SCANNING）。
+     *  scanRadius 由 tickScanning 传入（推进游标需要）。 */
+    private fun tickPendingBreakEnergy(world: ServerWorld, pos: BlockPos, state: BlockState, scanRadius: Int): MinerState? {
+        if (pendingBreakEnergy <= 0L) return null  // 无待挖，继续主循环
+
+        val drillBreakCost = getDrillBreakCost()
+        if (drillBreakCost == null) {
+            pendingBreakEnergy = 0L
+            return null  // 继续主循环
         }
 
+        val silkMultiplier = if (sync.silkTouch != 0 && acceptsAdvancedScanner) MinerSync.SILK_TOUCH_MULTIPLIER else 2L
+        val breakEnergy = (drillBreakCost * silkMultiplier / 2L * energyMultiplier).toLong().coerceAtLeast(1L)
+
+        val toReserve = minOf(sync.amount, breakEnergy - pendingBreakEnergy)
+        if (toReserve > 0L) {
+            sync.consumeEnergy(toReserve)
+            pendingBreakEnergy += toReserve
+        }
+
+        if (pendingBreakEnergy >= breakEnergy) {
+            val targetPos = pos.add(sync.cursorX, sync.cursorY - pos.y, sync.cursorZ)
+            val blockState = world.getBlockState(targetPos)
+            if (!blockState.isAir && shouldMine(world, targetPos, blockState) && canMineWithCurrentDrill(blockState)) {
+                ensurePipeReachesPosition(targetPos)
+                if (isPipeAdjacentTo(targetPos)) {
+                    pendingBreakEnergy = 0L
+                    advanceCursor(scanRadius)
+                    mineBlock(world, targetPos, blockState)
+                    sync.energy = sync.amount.toInt().coerceAtLeast(0)
+                    setActiveState(world, pos, state, true)
+                    return MinerState.SCANNING
+                } else {
+                    pendingBreakEnergy = 0L
+                }
+            } else {
+                pendingBreakEnergy = 0L
+            }
+        } else {
+            sync.energy = sync.amount.toInt().coerceAtLeast(0)
+            setActiveState(world, pos, state, true)
+            return MinerState.SCANNING  // 仍在攒能
+        }
+        sync.energy = sync.amount.toInt().coerceAtLeast(0)
+        setActiveState(world, pos, state, false)
+        return MinerState.SCANNING
+    }
+
+    /** 4.6.8：主扫描/挖掘循环。返回最终转移目标。 */
+    private fun runScanMineLoop(world: ServerWorld, pos: BlockPos, state: BlockState, scanRadius: Int, reachedBottomIn: Boolean): MinerState {
         var active = false
         var scannedThisCycle = 0
-        var minedThisCycle = false
+        var reachedBottom = reachedBottomIn
 
-        // 有待挖掘的矿石：每 tick 将充入的能量转入待挖掘池，攒够了再挖
-        if (pendingBreakEnergy > 0L) {
-            val drillBreakCost = getDrillBreakCost()
-            if (drillBreakCost == null) {
-                pendingBreakEnergy = 0L
-            } else {
-                val silkMultiplier = if (sync.silkTouch != 0 && acceptsAdvancedScanner) MinerSync.SILK_TOUCH_MULTIPLIER else 2L
-                val breakEnergy = (drillBreakCost * silkMultiplier / 2L * energyMultiplier).toLong().coerceAtLeast(1L)
-
-                val toReserve = minOf(sync.amount, breakEnergy - pendingBreakEnergy)
-                if (toReserve > 0L) {
-                    sync.consumeEnergy(toReserve)
-                    pendingBreakEnergy += toReserve
-                }
-
-                if (pendingBreakEnergy >= breakEnergy) {
-                    val targetPos = pos.add(sync.cursorX, sync.cursorY - pos.y, sync.cursorZ)
-                    val blockState = world.getBlockState(targetPos)
-                    if (!blockState.isAir && shouldMine(world, targetPos, blockState) && canMineWithCurrentDrill(blockState)) {
-                        // 确保管道仍然到位（可能在等待能量期间被破坏）
-                        ensurePipeReachesPosition(targetPos)
-                        if (sync.running != 0 && isPipeAdjacentTo(targetPos)) {
-                            pendingBreakEnergy = 0L
-                            advanceCursor(scanRadius)
-                            mineBlock(world, targetPos, blockState)
-                            active = true
-                            minedThisCycle = true
-                        } else {
-                            pendingBreakEnergy = 0L
-                        }
-                    } else {
-                        pendingBreakEnergy = 0L
-                    }
-                } else {
-                    active = true
-                }
-            }
-            sync.energy = sync.amount.toInt().coerceAtLeast(0)
-            setActiveState(world, pos, state, active)
-            sync.syncCurrentTickFlow()
-            return
-        }
-
-        // 每个工作周期可连续扫描多个格子，但最多只执行一次有效挖掘。
-        while (sync.running != 0) {
+        while (true) {
             val targetPos = ensureAndGetCursorTarget(scanRadius)
-
             val minY = if (acceptsAdvancedScanner) ADVANCED_MIN_Y else NORMAL_MIN_Y
-            if (sync.running == 0 || targetPos.y < world.bottomY || targetPos.y < minY) {
-                sync.running = 0
+            if (targetPos.y < world.bottomY || targetPos.y < minY) {
                 reachedBottom = true
                 break
             }
@@ -736,33 +878,30 @@ abstract class BaseMinerBlockEntity(
 
             // 高级采矿机：缓存满则停止
             if (acceptsAdvancedScanner && cacheItemCount >= MAX_CACHE_ITEMS) {
-                sync.running = 0
-                break
+                sync.energy = sync.amount.toInt().coerceAtLeast(0)
+                setActiveState(world, pos, state, active || scannedThisCycle > 0)
+                return MinerState.IDLE
             }
 
-            // 先检查是否可挖掘（不消耗扫描能量）
+            // 先检查是否可挖掘
             if (shouldMine(world, targetPos, blockState) && canMineWithCurrentDrill(blockState)) {
-                // 确保管道延伸到目标方块位置（每 tick 最多铺 MAX_PIPES_PER_TICK 格）
+                // 确保管道延伸到目标方块
                 when (ensurePipeReachesPosition(targetPos)) {
-                    PipeReachResult.REACHED -> {
-                    }
+                    PipeReachResult.REACHED -> {}
                     PipeReachResult.RETRY_LATER -> {
                         logDecision(world, "pipe_path_not_ready", targetPos)
-                        if (sync.running == 0) break
-                        break  // 管道铺设已达本 tick 上限或能量不足，下一 tick 继续
+                        break  // 下一 tick 继续
                     }
                     PipeReachResult.UNREACHABLE -> {
                         logDecision(world, "pipe_path_unreachable", targetPos)
                         if (recordPathFailAndShouldSkip(targetPos)) {
                             advanceCursor(scanRadius)
                         }
-                        if (sync.running == 0) break
                         break
                     }
                 }
 
                 if (!isPipeAdjacentTo(targetPos)) {
-                    // 路径被非空气方块阻挡，无法铺设管道，跳过此方块
                     logDecision(world, "pipe_not_adjacent_after_path", targetPos)
                     advanceCursor(scanRadius)
                     break
@@ -778,9 +917,8 @@ abstract class BaseMinerBlockEntity(
                     advanceCursor(scanRadius)
                     mineBlock(world, targetPos, blockState)
                     active = true
-                    minedThisCycle = true
                 } else {
-                    // 能量不足，将现有能量转入待挖掘池，下一 tick 继续攒
+                    // 能量不足，转入待挖掘池，下一 tick 继续攒
                     pendingBreakEnergy = sync.amount
                     if (pendingBreakEnergy > 0L) sync.consumeEnergy(pendingBreakEnergy)
                 }
@@ -788,6 +926,7 @@ abstract class BaseMinerBlockEntity(
             }
 
             // 非矿石方块，消耗扫描能量并前进
+            val scanCost = (MinerSync.SCAN_ENERGY_PER_STEP * energyMultiplier).toLong().coerceAtLeast(1L)
             if (consumeScannerEnergy(scanCost) <= 0L) {
                 logDecision(world, "insufficient_scan_energy", targetPos)
                 break
@@ -798,16 +937,24 @@ abstract class BaseMinerBlockEntity(
         }
 
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
-        // 只要本周期执行了扫描，即视为工作中（不仅限于挖掘/抽液瞬间）。
         setActiveState(world, pos, state, active || scannedThisCycle > 0)
 
-        // 普通采矿机挖到底后自动回收管道
-        if (reachedBottom && !acceptsAdvancedScanner && !recoveringPipes) {
-            startPipeRecovery()
+        // tryPlacePipeAt 链的侧信道：检查是否请求回收/停机
+        if (pipeRecyclingRequested) return MinerState.PIPE_RECYCLING
+        if (haltRequested) return MinerState.IDLE
+
+        // 到底处理：仅普通机自动回收管道（原 789 行 `if (reachedBottom && !acceptsAdvancedScanner && !recoveringPipes)`）。
+        // 高级机不在此触发终局回收——它靠每层 recoverLayerPipes 循环挖矿，不"到底"。
+        if (reachedBottom && !acceptsAdvancedScanner) {
+            return startPipeRecoveryAndGetState()
         }
 
-        sync.syncCurrentTickFlow()
+        // 缺料检测：原代码主循环不直接判缺料，依赖下 tick。返回 SCANNING，下 tick 由子阶段判定。
+        return MinerState.SCANNING
     }
+
+    /** 触发终局回收并返回新状态（供 runScanMineLoop 到底时调用）。 */
+    private fun startPipeRecoveryAndGetState(): MinerState = startPipeRecovery()
 
     fun toggleMode() {
         sync.mode = if (sync.mode == 0) 1 else 0
@@ -820,13 +967,9 @@ abstract class BaseMinerBlockEntity(
     }
 
     fun restartScan() {
-        sync.running = 1
-        manualStoppedForRecovery = false
-        recoveringPipes = false
-        recyclingPipes = false
+        minerState = MinerState.SCANNING
         lastRecycledCursorY = Int.MAX_VALUE
         pendingPipeRecovery.clear()
-        redstoneChangeRequired = false
         sync.cursorX = 0
         sync.cursorZ = 0
         sync.cursorY = pos.y - 1
@@ -834,53 +977,47 @@ abstract class BaseMinerBlockEntity(
         cursorIndex = 0
         pendingBreakEnergy = 0L
         resetPathFailState()
-        markDirty()
-    }
-
-    fun startPipeRecovery() {
-        val serverWorld = world as? ServerWorld ?: return
-        sync.running = 0
-        manualStoppedForRecovery = acceptsAdvancedScanner // 普通模式保留旧行为
-        recyclingPipes = false
-        lastRecycledCursorY = Int.MAX_VALUE
-        pendingBreakEnergy = 0L
-        sync.cursorX = 0
-        sync.cursorZ = 0
-        sync.cursorY = pos.y - 1
-        cursorInitialized = false
-        cursorIndex = 0
-        knownPipePositions.clear()
-        pipeCacheDirty = true
-        resetPathFailState()
-        buildPipeRecoveryQueue(serverWorld)
-        recoveringPipes = pendingPipeRecovery.isNotEmpty()
-        if (acceptsAdvancedScanner && recoveringPipes) {
-            // 高级采矿机：有管道需回收，回收完成后等待红石信号变化后重新开始
-            redstoneChangeRequired = true
-        } else if (acceptsAdvancedScanner) {
-            // 队列为空：无需回收，避免 manualStoppedForRecovery 永久锁死恢复路径。
-            // 撤销本次 startPipeRecovery 设置的停机态，交由下一 tick 的红石门控决定是否工作。
-            manualStoppedForRecovery = false
-            redstoneChangeRequired = false
-            sync.running = 1
-        }
         markDirty()
     }
 
     /**
-     * 普通采矿机缺管时自动回收已铺设的分支管道（优先回收 Y 最高的）。
-     * 仅回收 Y > cursorY 的非中心柱管道，避免死循环。
-     * 如果回收队列为空（无可回收管道），则停机。
+     * 触发终局管道回收。返回回收后的目标状态。
+     * 普通机：到底或玩家手动；高级机：玩家手动。
      */
-    private fun triggerPipeRecycling() {
-        if (acceptsAdvancedScanner) { sync.running = 0; return }
-        if (recoveringPipes || recyclingPipes) return
-        // 防死循环：如果游标没有前进过就不再重复回收
-        if (sync.cursorY >= lastRecycledCursorY) { sync.running = 0; return }
+    internal fun startPipeRecovery(): MinerState {
+        val serverWorld = world as? ServerWorld ?: return minerState
+        pendingBreakEnergy = 0L
+        knownPipePositions.clear()
+        pipeCacheDirty = true
+        resetPathFailState()
+        buildPipeRecoveryQueue(serverWorld)
+
+        val newState = if (pendingPipeRecovery.isNotEmpty()) {
+            MinerState.PIPE_RECOVERING
+        } else {
+            // 队列空：无管可回收。普通机回 IDLE；高级机也回 IDLE（交红石门控），避免锁死。
+            MinerState.IDLE
+        }
+        minerState = newState
+        markDirty()
+        return newState
+    }
+
+    /**
+     * 普通机缺管时尝试触发分支管道回收。
+     * @return true = 已触发回收（调用方应转 PIPE_RECYCLING）；false = 未触发
+     *
+     * 本方法不改 minerState（遵守 spec §5.3 约束：由调用层 tryPlacePipeAt 链
+     * 通过 pipeRecyclingRequested / haltRequested 侧信道翻译成状态转移）。
+     */
+    private fun triggerPipeRecycling(): Boolean {
+        if (acceptsAdvancedScanner) return false  // 仅普通机
+        // 防死循环：游标未前进过则不再回收
+        if (sync.cursorY >= lastRecycledCursorY) return false
         lastRecycledCursorY = sync.cursorY
-        buildPipeRecyclingQueue(world as? ServerWorld ?: return)
-        recyclingPipes = pendingPipeRecovery.isNotEmpty()
-        if (!recyclingPipes) { sync.running = 0 }
+        val serverWorld = world as? ServerWorld ?: return false
+        buildPipeRecyclingQueue(serverWorld)
+        return pendingPipeRecovery.isNotEmpty()
     }
 
     /**
@@ -895,24 +1032,6 @@ abstract class BaseMinerBlockEntity(
             .filter { world.getBlockState(it).block is MiningPipeBlock }
             .sortedWith(compareByDescending<BlockPos> { it.y }.thenByDescending { abs(it.x - pos.x) + abs(it.z - pos.z) })
         for (pos in candidates) pendingPipeRecovery.add(pos)
-    }
-
-    /**
-     * 缺管停机后，若输入条件恢复（扫描器/钻头/采矿管齐全）则自动继续。
-     * 仅在游标仍处于有效扫描区间时恢复，避免越界完成态被误拉起。
-     */
-    private fun tryAutoResumeAfterPipeRefill() {
-        if (sync.running != 0) return
-        if (manualStoppedForRecovery) return
-        val minY = if (acceptsAdvancedScanner) ADVANCED_MIN_Y else NORMAL_MIN_Y
-        if (sync.cursorY < minY) return
-        if (getScannerType(getStack(SLOT_SCANNER)) == null) return
-        if (getDrillBreakCost() == null) return
-        if (findPipeInInventory() == null) return
-        // 自动恢复按"新一轮"开始，避免沿用缺料前的待挖能量残留。
-        pendingBreakEnergy = 0L
-        sync.running = 1
-        markDirty()
     }
 
     private fun getCurrentBaseCapacity(): Long {
@@ -1022,11 +1141,7 @@ abstract class BaseMinerBlockEntity(
             val completedY = sync.cursorY
             sync.cursorY -= 1
             cursorIndex = 0
-            val minY = if (acceptsAdvancedScanner) ADVANCED_MIN_Y else NORMAL_MIN_Y
-            if (sync.cursorY < minY) {
-                sync.running = 0
-            }
-            // 高级采矿机：每层完成后立即回收水平管道，仅保留中心柱
+            // 越界（到底）由调用方通过 cursorY < minY 检测，不再设 sync.running
             if (acceptsAdvancedScanner) {
                 recoverLayerPipes(completedY, range)
             }
@@ -1065,7 +1180,7 @@ abstract class BaseMinerBlockEntity(
      * manualStoppedForRecovery/redstoneChangeRequired）。
      * 转移只通过 tick() 的 when 分支返回值发生（外部入口方法除外，见 spec §3）。
      */
-    private enum class MinerState {
+    internal enum class MinerState {
         /** 等待自动恢复（普通机）；或红石未激活（高级机）。 */
         IDLE,
         /** 仅高级机：管道回收完成，等红石信号变化才重启。 */
@@ -1084,6 +1199,14 @@ abstract class BaseMinerBlockEntity(
         UNREACHABLE
     }
 
+    /**
+     * 处理管道回收队列的一格。
+     * @return true = 本 tick 回收了一格（队列可能仍非空）；false = 队列已空，回收完毕
+     *
+     * 注意：本方法只处理「回收一格」的副作用（setBlockState AIR + 入管槽），
+     * 不再改 minerState / 旧 boolean。转移由调用方（tickPipeRecovering /
+     * tickPipeRecycling）根据返回值决定。spec §4.2/§4.3。
+     */
     private fun processPipeRecoveryTick(world: ServerWorld): Boolean {
         // 管道槽满时暂停回收，等待槽位空出来后继续。
         if (!canAcceptRecoveredPipe()) return false
@@ -1100,25 +1223,7 @@ abstract class BaseMinerBlockEntity(
             return true
         }
 
-        recoveringPipes = false
-        if (acceptsAdvancedScanner) {
-            // 回收完成，重置游标到初始位置
-            sync.cursorX = 0
-            sync.cursorZ = 0
-            sync.cursorY = pos.y - 1
-            cursorInitialized = false
-            cursorIndex = 0
-            pendingBreakEnergy = 0L
-            resetPathFailState()
-            manualStoppedForRecovery = false
-            // 已回收完成，有管道可用，清除红石等待；下一 tick 若红石已激活则直接开始
-            redstoneChangeRequired = false
-        }
-        if (recyclingPipes) {
-            recyclingPipes = false
-            // 回收完成，恢复采矿（sync.running 仍为 1）
-        }
-        markDirty()
+        // 队列空：回收完毕。游标/状态重置由调用方做。
         return false
     }
 
@@ -1209,7 +1314,11 @@ abstract class BaseMinerBlockEntity(
         if (sync.consumeEnergy(pipeEnergy) <= 0L) return false
 
         findPipeInInventory() ?: run {
-            triggerPipeRecycling()
+            if (triggerPipeRecycling()) {
+                pipeRecyclingRequested = true
+            } else {
+                haltRequested = true
+            }
             return false
         }
         takePipes(1)
@@ -1240,10 +1349,10 @@ abstract class BaseMinerBlockEntity(
             val checkPos = BlockPos(pos.x, y, pos.z)
             if (serverWorld.getBlockState(checkPos).block is MiningPipeBlock) continue
 
-            // 遇到不可破坏方块（基岩等），视为已到底
+            // 遇到不可破坏方块（基岩等），视为已到底（通过侧信道传递，不设 sync.running）
             val state = serverWorld.getBlockState(checkPos)
             if (!state.isAir && state.block !is MiningPipeBlock && state.getHardness(serverWorld, checkPos) < 0f) {
-                sync.running = 0
+                verticalHitBedrock = true
                 return true
             }
 
