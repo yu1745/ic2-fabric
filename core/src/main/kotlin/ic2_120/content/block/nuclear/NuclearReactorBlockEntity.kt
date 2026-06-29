@@ -9,12 +9,7 @@ import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.MachineBlock
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.fluid.ModFluids
-import ic2_120.content.item.FluidCellItem
 import ic2_120.content.item.ReactorHeatVentBase
-import ic2_120.content.item.fluidToFilledCellStack
-import ic2_120.content.item.getFluidCellVariant
-import ic2_120.content.item.isFluidCellEmpty
-import ic2_120.content.item.setFluidCellVariant
 import ic2_120.content.reactor.IBaseReactorComponent
 import ic2_120.content.reactor.IReactor
 import ic2_120.content.reactor.IReactorComponent
@@ -35,6 +30,7 @@ import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import org.slf4j.LoggerFactory
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -58,7 +54,6 @@ import net.minecraft.inventory.Inventory
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
@@ -101,7 +96,10 @@ class NuclearReactorBlockEntity(
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
-            ItemInsertRoute((0 until MAX_SLOTS).toList().toIntArray(), matcher = { !it.isEmpty && it.item is IBaseReactorComponent }, maxPerSlot = 1)
+            ItemInsertRoute((0 until MAX_SLOTS).toList().toIntArray(), matcher = { !it.isEmpty && it.item is IBaseReactorComponent }, maxPerSlot = 1),
+            // 流体输入槽允许整组容器堆叠（每 tick 逐个处理），不设 maxPerSlot
+            ItemInsertRoute(intArrayOf(SLOT_COOLANT_INPUT), matcher = { isValid(SLOT_COOLANT_INPUT, it) }),
+            ItemInsertRoute(intArrayOf(SLOT_HOT_COOLANT_INPUT), matcher = { isValid(SLOT_HOT_COOLANT_INPUT, it) })
         ),
         extractSlots = IntArray(INVENTORY_SIZE) { it },
         markDirty = { markDirty() }
@@ -319,8 +317,8 @@ class NuclearReactorBlockEntity(
             }
         }
         inventory[slot] = stack
-        // 反应堆组件不可堆叠，强制封顶为 1
-        if (stack.count > 1) stack.count = 1
+        // 反应堆组件网格槽不可堆叠，强制封顶为 1（流体交互槽允许整组容器堆叠）
+        if (slot < MAX_SLOTS && stack.count > 1) stack.count = 1
         if (slot < MAX_SLOTS && !ItemStack.canCombine(oldStack, stack)) {
             inventoryChangedSinceLastCycle = true
             val oldId = Registries.ITEM.getId(oldStack.item)
@@ -350,10 +348,11 @@ class NuclearReactorBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return true
-        // 槽位已有物品时拒绝插入：防止漏斗 merge 路径直接 increment() 绕过 setStack
-        if (slot < INVENTORY_SIZE && !getStack(slot).isEmpty) return false
-        // 布局锁定：空槽不允许插入，只允许与锁定类型匹配的物品
-        if (layoutLocked) {
+        // 反应堆组件网格槽：槽位已有物品时拒绝插入，防止漏斗 merge 路径直接 increment() 绕过 setStack
+        // 流体交互槽允许整组堆叠（同种容器），故不在此拦截
+        if (slot < MAX_SLOTS && !getStack(slot).isEmpty) return false
+        // 布局锁定：仅作用于反应堆组件网格槽，流体交互槽不受布局锁定影响
+        if (layoutLocked && slot < MAX_SLOTS) {
             val lockedItem = getLockedItemForSlot(slot)
             if (lockedItem == null) return false
             if (stack.item !== lockedItem) return false
@@ -362,8 +361,22 @@ class NuclearReactorBlockEntity(
             if (stack.item !is IBaseReactorComponent) return false
             if (!(stack.item as IBaseReactorComponent).canBePlacedIn(stack, this)) return false
             if (slot >= currentCapacity()) return false
+            return true
         }
-        return true
+        // 流体交互槽（81-84）：仅接受对应方向的容器，输出槽不接受玩家直接放入；
+        // 输入槽允许整组堆叠（同种容器），但已装不同物品时不接受
+        return when (slot) {
+            SLOT_COOLANT_INPUT -> isCoolantInputContainer(stack) && canStackInFluidInputSlot(slot, stack)
+            SLOT_HOT_COOLANT_INPUT -> isHotCoolantInputContainer(stack) && canStackInFluidInputSlot(slot, stack)
+            SLOT_COOLANT_OUTPUT, SLOT_HOT_COOLANT_OUTPUT -> false
+            else -> false
+        }
+    }
+
+    /** 流体输入槽允许整组堆叠：空槽或已有同种容器时才接受新容器 */
+    private fun canStackInFluidInputSlot(slot: Int, stack: ItemStack): Boolean {
+        val current = getStack(slot)
+        return current.isEmpty || ItemStack.areItemsEqual(current, stack)
     }
 
     override fun writeScreenOpeningData(player: net.minecraft.server.network.ServerPlayerEntity, buf: PacketByteBuf) {
@@ -493,7 +506,7 @@ class NuclearReactorBlockEntity(
         val delta = sync.temperature - old
         cycleSetHeatDeltaTotal += delta
         if (sync.isThermalMode == 1 && delta != 0) {
-            LOG.info(
+            LOG.debug(
                 "[热量轨迹] type=setHeat delta={} old={} new={} pass={} heatRun={} slot=({}, {}) component={}",
                 delta,
                 old,
@@ -513,7 +526,7 @@ class NuclearReactorBlockEntity(
         val applied = sync.temperature - old
         cycleAddHeatTotal += applied
         if (sync.isThermalMode == 1 && applied != 0) {
-            LOG.info(
+            LOG.debug(
                 "[热量轨迹] type=addHeat req={} applied={} old={} new={} pass={} heatRun={} slot=({}, {}) component={}",
                 amount,
                 applied,
@@ -552,7 +565,7 @@ class NuclearReactorBlockEntity(
         emitHeatBuffer += heat
         cycleEmitHeatTotal += heat
         if (sync.isThermalMode == 1 && heat != 0) {
-            LOG.info(
+            LOG.debug(
                 "[热量轨迹] type=emitHeat delta={} emitBufferNow={} pass={} heatRun={} slot=({}, {}) component={}",
                 heat,
                 emitHeatBuffer,
@@ -767,83 +780,109 @@ class NuclearReactorBlockEntity(
         val input = getStack(SLOT_COOLANT_INPUT)
         if (input.isEmpty) return
 
-        val parsed = resolveCoolantInput(input) ?: return
-        val space = inputTank.capacity - inputTank.amount
-        if (space < FluidConstants.BUCKET) return
+        // 逐个处理整组容器，直到储罐满 / 输出槽满 / 容器耗尽
+        // 注意：必须用 withInitial（真实 backing storage）而非 withConstant（只读探测），
+        // 否则 ctx.itemVariant 在 extract/exchange 后仍是初始满容器，无法得到排空后的容器。
+        while (inputTank.capacity - inputTank.amount >= FluidConstants.BUCKET && !input.isEmpty) {
+            val single = input.copyWithCount(1)
+            val ctx = ContainerItemContext.withInitial(single)
+            val itemStorage = ctx.find(FluidStorage.ITEM) ?: break
+            var doneThisItem = false
+            Transaction.openOuter().use { tx ->
+                for (view in itemStorage) {
+                    if (view.amount < FluidConstants.BUCKET || view.resource.isBlank) continue
+                    if (!isCoolantFluid(view.resource.fluid)) continue
+                    val extracted = view.extract(view.resource, FluidConstants.BUCKET, tx)
+                    if (extracted < FluidConstants.BUCKET) continue
+                    val inserted = inputTank.insert(FluidVariant.of(ModFluids.COOLANT_STILL), extracted, tx)
+                    if (inserted < extracted) continue
 
-        val emptyOutput = getStack(SLOT_COOLANT_OUTPUT)
-        if (!canMergeIntoSlot(emptyOutput, parsed.emptyContainer)) return
+                    val emptyContainer = ctx.itemVariant.toStack(ctx.amount.toInt().coerceAtLeast(0))
+                    val emptyOutput = getStack(SLOT_COOLANT_OUTPUT)
+                    if (!canMergeIntoSlot(emptyOutput, emptyContainer)) return@use
 
-        val tx = Transaction.openOuter()
-        val inserted = inputTank.insert(FluidVariant.of(ModFluids.COOLANT_STILL), FluidConstants.BUCKET, tx)
-        if (inserted < FluidConstants.BUCKET) {
-            tx.abort()
-            return
+                    input.decrement(1)
+                    setStack(SLOT_COOLANT_INPUT, input)
+                    if (emptyOutput.isEmpty) setStack(SLOT_COOLANT_OUTPUT, emptyContainer.copy())
+                    else emptyOutput.increment(1)
+                    markDirty()
+                    tx.commit()
+                    doneThisItem = true
+                    break
+                }
+            }
+            if (!doneThisItem) break
         }
-        tx.commit()
-
-        input.decrement(1)
-        if (input.isEmpty) setStack(SLOT_COOLANT_INPUT, ItemStack.EMPTY)
-        if (emptyOutput.isEmpty) setStack(SLOT_COOLANT_OUTPUT, parsed.emptyContainer.copy())
-        else emptyOutput.increment(1)
-        markDirty()
     }
 
     private fun fillHotCoolantOutput() {
-        if (outputTank.amount < FluidConstants.BUCKET) return
-
+        // 逐个处理整组空容器，直到储罐空 / 输出槽满 / 容器耗尽
         val emptyInput = getStack(SLOT_HOT_COOLANT_INPUT)
-        if (emptyInput.isEmpty) return
+        while (outputTank.amount >= FluidConstants.BUCKET && !emptyInput.isEmpty) {
+            val single = emptyInput.copyWithCount(1)
+            val ctx = ContainerItemContext.withInitial(single)
+            val itemStorage = ctx.find(FluidStorage.ITEM) ?: break
+            if (!itemStorage.supportsInsertion()) break
 
-        val filled = resolveHotCoolantOutput(emptyInput) ?: return
+            val variant = FluidVariant.of(ModFluids.HOT_COOLANT_STILL)
+            var doneThisItem = false
+            Transaction.openOuter().use { tx ->
+                val inserted = itemStorage.insert(variant, FluidConstants.BUCKET, tx)
+                if (inserted < FluidConstants.BUCKET) return@use
+                val extracted = outputTank.extract(variant, inserted, tx)
+                if (extracted < inserted) return@use
 
-        val filledOutput = getStack(SLOT_HOT_COOLANT_OUTPUT)
-        if (!canMergeIntoSlot(filledOutput, filled)) return
+                val filled = ctx.itemVariant.toStack(ctx.amount.toInt().coerceAtLeast(0))
+                if (filled.isEmpty) return@use
 
-        val tx = Transaction.openOuter()
-        val extracted = outputTank.extract(FluidVariant.of(ModFluids.HOT_COOLANT_STILL), FluidConstants.BUCKET, tx)
-        if (extracted < FluidConstants.BUCKET) {
-            tx.abort()
-            return
-        }
-        tx.commit()
+                val filledOutput = getStack(SLOT_HOT_COOLANT_OUTPUT)
+                if (!canMergeIntoSlot(filledOutput, filled)) return@use
 
-        emptyInput.decrement(1)
-        if (emptyInput.isEmpty) setStack(SLOT_HOT_COOLANT_INPUT, ItemStack.EMPTY)
-        if (filledOutput.isEmpty) setStack(SLOT_HOT_COOLANT_OUTPUT, filled.copy())
-        else filledOutput.increment(1)
-        markDirty()
-    }
-
-    private fun resolveCoolantInput(stack: ItemStack): CoolantInputInfo? {
-        val emptyCell = ItemStack(Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")))
-        return when {
-            stack.item == ModFluids.COOLANT_BUCKET -> CoolantInputInfo(ItemStack(Items.BUCKET))
-            stack.item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "coolant_cell")) -> CoolantInputInfo(emptyCell)
-            stack.item is FluidCellItem && stack.getFluidCellVariant()?.fluid?.let {
-                it == ModFluids.COOLANT_STILL || it == ModFluids.COOLANT_FLOWING
-            } == true -> CoolantInputInfo(emptyCell)
-            else -> null
+                emptyInput.decrement(1)
+                setStack(SLOT_HOT_COOLANT_INPUT, emptyInput)
+                if (filledOutput.isEmpty) setStack(SLOT_HOT_COOLANT_OUTPUT, filled.copy())
+                else filledOutput.increment(1)
+                markDirty()
+                tx.commit()
+                doneThisItem = true
+            }
+            if (!doneThisItem) break
         }
     }
 
-    private fun resolveHotCoolantOutput(emptyContainer: ItemStack): ItemStack? {
-        return when {
-            emptyContainer.item == Items.BUCKET -> ItemStack(ModFluids.HOT_COOLANT_BUCKET)
-            emptyContainer.item == Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) ->
-                fluidToFilledCellStack(ModFluids.HOT_COOLANT_STILL)
-            emptyContainer.item is FluidCellItem && emptyContainer.isFluidCellEmpty() ->
-                ItemStack(emptyContainer.item).apply { setFluidCellVariant(FluidVariant.of(ModFluids.HOT_COOLANT_STILL)) }
-            else -> null
+    /** 冷却液输入槽可接受的容器：含 ≥1 桶冷却液的任意 Fabric 流体容器（支持其他 mod） */
+    private fun isCoolantInputContainer(stack: ItemStack): Boolean {
+        if (stack.isEmpty) return false
+        val ctx = ContainerItemContext.withConstant(stack)
+        val itemStorage = ctx.find(FluidStorage.ITEM) ?: return false
+        for (view in itemStorage) {
+            if (view.amount >= FluidConstants.BUCKET && !view.resource.isBlank && isCoolantFluid(view.resource.fluid)) {
+                return true
+            }
         }
+        return false
     }
+
+    /** 热冷却液输入槽可接受的容器：空的、且可接受流体注入的任意 Fabric 流体容器（支持其他 mod） */
+    private fun isHotCoolantInputContainer(stack: ItemStack): Boolean {
+        if (stack.isEmpty) return false
+        val ctx = ContainerItemContext.withConstant(stack)
+        val itemStorage = ctx.find(FluidStorage.ITEM) ?: return false
+        if (!itemStorage.supportsInsertion()) return false
+        // 必须是空的（容器内无流体）
+        for (view in itemStorage) {
+            if (!view.resource.isBlank && view.amount > 0L) return false
+        }
+        return true
+    }
+
+    private fun isCoolantFluid(fluid: net.minecraft.fluid.Fluid): Boolean =
+        fluid == ModFluids.COOLANT_STILL || fluid == ModFluids.COOLANT_FLOWING
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
         return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
     }
-
-    private data class CoolantInputInfo(val emptyContainer: ItemStack)
 
     private data class VentBackfillResult(
         val targetCount: Int,
