@@ -1,0 +1,39 @@
+{
+    DataVersion: 3465,
+    size: [3, 3, 3],
+    data: [
+        {pos: [0, 0, 0], state: "ic2_120:refractory_bricks"},
+        {pos: [0, 0, 1], state: "ic2_120:refractory_bricks"},
+        {pos: [0, 0, 2], state: "ic2_120:refractory_bricks"},
+        {pos: [1, 0, 0], state: "ic2_120:refractory_bricks"},
+        {pos: [1, 0, 1], state: "ic2_120:coke_kiln_grate{facing:down}", nbt: {CreosoteTank: {Amount: 0L, Variant: {fluid: "minecraft:empty"}}, id: "ic2_120:coke_kiln_grate"}},
+        {pos: [1, 0, 2], state: "ic2_120:refractory_bricks"},
+        {pos: [2, 0, 0], state: "ic2_120:refractory_bricks"},
+        {pos: [2, 0, 1], state: "ic2_120:refractory_bricks"},
+        {pos: [2, 0, 2], state: "ic2_120:refractory_bricks"},
+        {pos: [0, 1, 0], state: "ic2_120:refractory_bricks"},
+        {pos: [0, 1, 1], state: "ic2_120:refractory_bricks"},
+        {pos: [0, 1, 2], state: "ic2_120:refractory_bricks"},
+        {pos: [1, 1, 0], state: "ic2_120:refractory_bricks"},
+        {pos: [1, 1, 2], state: "ic2_120:refractory_bricks"},
+        {pos: [2, 1, 0], state: "ic2_120:refractory_bricks"},
+        {pos: [2, 1, 1], state: "ic2_120:coke_kiln{facing:east}", nbt: {FluidAmount_High: 0, FluidAmount_Low: 0, FluidRawId_High: 65535, FluidRawId_Low: 65535, Items: [], Progress: 0, Progress_High: 0, Progress_Low: 0, StructureValid_High: 0, StructureValid_Low: 1, id: "ic2_120:coke_kiln"}},
+        {pos: [2, 1, 2], state: "ic2_120:refractory_bricks"},
+        {pos: [0, 2, 0], state: "ic2_120:refractory_bricks"},
+        {pos: [0, 2, 1], state: "ic2_120:refractory_bricks"},
+        {pos: [0, 2, 2], state: "ic2_120:refractory_bricks"},
+        {pos: [1, 2, 0], state: "ic2_120:refractory_bricks"},
+        {pos: [1, 2, 1], state: "ic2_120:coke_kiln_hatch{facing:up}"},
+        {pos: [1, 2, 2], state: "ic2_120:refractory_bricks"},
+        {pos: [2, 2, 0], state: "ic2_120:refractory_bricks"},
+        {pos: [2, 2, 1], state: "ic2_120:refractory_bricks"},
+        {pos: [2, 2, 2], state: "ic2_120:refractory_bricks"}
+    ],
+    entities: [],
+    palette: [
+        "ic2_120:refractory_bricks",
+        "ic2_120:coke_kiln_hatch{facing:up}",
+        "ic2_120:coke_kiln_grate{facing:down}",
+        "ic2_120:coke_kiln{facing:east}"
+    ]
+}

@@ -28,6 +28,11 @@ item_ids:
 
 焦炭窑主体方块提供物品 GUI 和物品自动化接口。炉篦则是杂酚油储罐和流体抽取接口。
 
+<GameScene zoom="6" interactive={true} fullWidth={true}>
+  <IsometricCamera yaw="45" pitch="30" />
+  <ImportStructure src="coke_kiln_structure.snbt" />
+</GameScene>
+
 ## 配方
 
 焦炭窑支持两种主要配方：
