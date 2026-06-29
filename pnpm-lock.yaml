@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@yu1745/mcdebug':
         specifier: github:yu1745/mcdebug#main&path:/mcdebug-client
-        version: https://codeload.github.com/yu1745/mcdebug/tar.gz/1e46e302f3654229bd2ec6d00ea70c75befbae41#path:/mcdebug-client
+        version: https://codeload.github.com/yu1745/mcdebug/tar.gz/7611e2870012a98f18c394a900b71932cb72bdf8#path:/mcdebug-client
     devDependencies:
       '@types/node':
         specifier: ^22.10.2
@@ -183,9 +183,9 @@ packages:
   '@types/node@22.19.21':
     resolution: {integrity: sha512-VMeFBSCKQKmm2swI2kW51SFusDqekC6q9trBCvJ/JliDchFSuoYYKN7yVNjPthP1HKZcx3U1gI/wTcEBjEFKTA==}
 
-  '@yu1745/mcdebug@https://codeload.github.com/yu1745/mcdebug/tar.gz/1e46e302f3654229bd2ec6d00ea70c75befbae41#path:/mcdebug-client':
-    resolution: {gitHosted: true, integrity: sha512-ONiOhss5K2esZ8VpDCil0NlwtQfIQEuwIH5JmtVB3oJ64/zWszu2S9fv0FpCmsdoQi3ngWbuGxnYrbWeIuqhqg==, tarball: https://codeload.github.com/yu1745/mcdebug/tar.gz/1e46e302f3654229bd2ec6d00ea70c75befbae41}
-    version: 0.4.11
+  '@yu1745/mcdebug@https://codeload.github.com/yu1745/mcdebug/tar.gz/7611e2870012a98f18c394a900b71932cb72bdf8#path:/mcdebug-client':
+    resolution: {path: /mcdebug-client, tarball: https://codeload.github.com/yu1745/mcdebug/tar.gz/7611e2870012a98f18c394a900b71932cb72bdf8}
+    version: 0.4.12
     engines: {node: '>=20'}
     hasBin: true
 
@@ -300,7 +300,7 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@yu1745/mcdebug@https://codeload.github.com/yu1745/mcdebug/tar.gz/1e46e302f3654229bd2ec6d00ea70c75befbae41#path:/mcdebug-client':
+  '@yu1745/mcdebug@https://codeload.github.com/yu1745/mcdebug/tar.gz/7611e2870012a98f18c394a900b71932cb72bdf8#path:/mcdebug-client':
     dependencies:
       commander: 12.1.0
 
