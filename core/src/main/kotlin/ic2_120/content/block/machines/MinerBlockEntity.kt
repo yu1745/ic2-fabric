@@ -1135,7 +1135,7 @@ abstract class BaseMinerBlockEntity(
 
         if (sameTargetPathFailCount < MAX_SAME_TARGET_PATH_FAILS) return false
 
-        logger.warn(
+        logger.debug(
             "[{}] skip unreachable target after {} path fails at ({}, {}, {})",
             blockKey,
             sameTargetPathFailCount,
@@ -1479,7 +1479,7 @@ abstract class BaseMinerBlockEntity(
         }
         val csUs = (System.nanoTime() - _csNs) / 1_000
         if (csUs >= 1000 || rawStartCount > 100 || knownPipePositions.size > 500) {
-            logger.info("[{}] collectPipeStarts: cached={} found={}/{} elapsed={}us target=({},{},{})",
+            logger.debug("[{}] collectPipeStarts: cached={} found={}/{} elapsed={}us target=({},{},{})",
                 blockKey, knownPipePositions.size, starts.size, rawStartCount, csUs, targetPos.x, targetPos.y, targetPos.z)
         }
         return starts
@@ -1545,7 +1545,7 @@ abstract class BaseMinerBlockEntity(
                 reversed.reverse()
                 val pfUs = (System.nanoTime() - _pfNs) / 1_000
                 if (pfUs >= 500 || explored > 500) {
-                    logger.info("[{}] A* found: explored={} starts={} elapsed={}us target=({},{},{})",
+                    logger.debug("[{}] A* found: explored={} starts={} elapsed={}us target=({},{},{})",
                         blockKey, explored, starts.size, pfUs, targetPos.x, targetPos.y, targetPos.z)
                 }
                 return reversed
@@ -1569,7 +1569,7 @@ abstract class BaseMinerBlockEntity(
 
         val pfUs = (System.nanoTime() - _pfNs) / 1_000
         if (pfUs >= 2000 || explored > 2000) {
-            logger.info("[{}] A* fail: explored={}/{} starts={} elapsed={}us target=({},{},{})",
+            logger.debug("[{}] A* fail: explored={}/{} starts={} elapsed={}us target=({},{},{})",
                 blockKey, explored, MAX_PATH_SEARCH_NODES, starts.size, pfUs,
                 targetPos.x, targetPos.y, targetPos.z)
         }
@@ -1593,7 +1593,7 @@ abstract class BaseMinerBlockEntity(
     private fun logPathPerf(reason: String, targetPos: BlockPos, startNs: Long, extra: String = "") {
         val us = (System.nanoTime() - startNs) / 1_000
         if (us >= 2000) {
-            logger.info("[{}] ensurePipe: {} elapsed={}us target=({},{},{}){}",
+            logger.debug("[{}] ensurePipe: {} elapsed={}us target=({},{},{}){}",
                 blockKey, reason, us, targetPos.x, targetPos.y, targetPos.z,
                 if (extra.isNotEmpty()) " $extra" else "")
         }
@@ -1695,7 +1695,7 @@ abstract class BaseMinerBlockEntity(
 
         if (stallTicks >= STALL_TICKS_LOG_THRESHOLD && world.time - lastStallLogTick >= STALL_LOG_INTERVAL_TICKS) {
             val target = pos.add(sync.cursorX, sync.cursorY - pos.y, sync.cursorZ)
-            logger.warn(
+            logger.debug(
                 "[{}] cursor stalled={}ticks phase={} cursor=({}, {}, {}) target=({}, {}, {}) energy={} pendingBreak={} pipeCount={} running={} scanner={} drill={}",
                 blockKey,
                 stallTicks,
@@ -1719,7 +1719,7 @@ abstract class BaseMinerBlockEntity(
 
     private fun logDecision(world: World, reason: String, targetPos: BlockPos) {
         if (world.time - lastDecisionLogTick < 10L) return
-        logger.info(
+        logger.debug(
             "[{}] reason={} cursor=({}, {}, {}) target=({}, {}, {}) energy={} pendingBreak={} pipeCount={} running={}",
             blockKey,
             reason,
