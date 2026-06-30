@@ -49,7 +49,9 @@ The mode button switches between blacklist and whitelist. Silk Touch can also be
 
 The miner lays a vertical pipe column downward, then builds short pipe paths so a pipe is adjacent to each target ore before mining it. Pipe placement is limited to 4 pipes per second and consumes one Mining Pipe plus pipe energy each time.
 
-When a layer is finished, the Advanced Miner automatically recovers horizontal branch pipes into the pipe slot and keeps the central column. The recover button stops the scan, gathers connected mining pipes, then resumes if possible.
+When a layer is finished, the Advanced Miner automatically recovers that layer's horizontal branch pipes into the pipe slot and keeps the central column, as long as the pipe slot has space. If the pipe slot is full (for example because adjacent storage isn't pulling drops or pipes away fast enough), that layer's branch pipes stay where they are until space frees up and the next recovery pass collects them.
+
+The recover button stops the scan and gathers every connected mining pipe. After recovery finishes the machine halts, and it only restarts when the redstone signal changes state once (turn it off and on again, or vice versa).
 
 If pipe placement reaches water or lava, the miner removes the fluid into an internal 1 bucket tank. Add a **Fluid Ejector Upgrade** to push stored fluid into neighboring tanks or fluid handlers.
 

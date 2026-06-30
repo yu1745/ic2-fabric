@@ -21,7 +21,7 @@ Install an **OD Scanner**, a charged **Mining Drill**, **Diamond Drill**, or **I
 
 Only ore-like blocks are mined: blocks whose registry path contains `ore`, ancient debris, and any extra blocks listed in the Miner config. Machine blocks are ignored. Stone, dirt, and other non-ore blocks are scanned through, not mined for output.
 
-When ore is found, the Miner first extends a pipe column downward, then routes mining pipes through passable or breakable blocks until a pipe is adjacent to the target. It does not place a pipe inside the ore block itself. Pipe placement is rate-limited to 4 pipes per second and costs EU per pipe. If the machine runs out of mining pipes, it stops and resumes automatically after more pipes are inserted.
+When ore is found, the Miner first extends a pipe column downward, then routes mining pipes through passable or breakable blocks until a pipe is adjacent to the target. It does not place a pipe inside the ore block itself. Pipe placement is rate-limited to 4 pipes per second and costs EU per pipe. If the machine runs out of mining pipes, it first tries to recycle the horizontal branch pipes it has already laid to replenish its stock; it only halts when even those branches have nothing left to recover. After more pipes are supplied, it resumes automatically as long as the scan cursor is still valid.
 
 Breaking ore costs EU separately from scanning and pipe placement. A Mining Drill uses the lower break cost; a Diamond Drill or Iridium Drill lets the Miner harvest blocks that require diamond-level tools but costs more EU per mined block. The drill item itself is used as the tool profile for drops; it is not discharged directly by the Miner.
 
@@ -35,7 +35,7 @@ The restart button starts the scan over from the top of the area. The pipe recov
 
 ## Output and Fluids
 
-Drops first enter the two internal output slots. With an **Ejector Upgrade**, the Miner tries to push those drops into adjacent item inventories using the upgrade's filter and side setting. Any drops left in the output slots after that attempt are spawned at the Miner, so place an inventory next to it and use an ejector upgrade for clean automation.
+Drops first enter the 15 item slots on the machine's front face. With an **Ejector Upgrade**, the Miner tries to push those drops into adjacent item inventories using the upgrade's filter and side setting. Any drops left in the item slots after that attempt are spawned at the Miner, so place an inventory next to it and use an ejector upgrade for clean automation.
 
 When a pipe route crosses water or lava, the Miner removes the fluid and stores up to one bucket internally. If that tank is full, pipe placement waits. A **Fluid Ejector Upgrade** can empty the internal tank into adjacent fluid storage.
 
@@ -45,7 +45,7 @@ When a pipe route crosses water or lava, the Miner removes the fluid and stores 
 - **OD Scanner**: Required; defines the 13x13 scan area.
 - **Drill**: Mining Drill, Diamond Drill, or Iridium Drill.
 - **Mining Pipes**: Required; consumed while laying the pipe network and recovered by the recovery action.
-- **Upgrades**: The basic Miner uses its single visible upgrade slot for automation upgrades such as Ejector and Fluid Ejector.
+- **Upgrades**: The basic Miner has 3 upgrade slots and supports Overclocker, Energy Storage, Transformer, Ejector, Pulling, Fluid Ejector, and Fluid Pulling upgrades.
 
 ## Usage
 

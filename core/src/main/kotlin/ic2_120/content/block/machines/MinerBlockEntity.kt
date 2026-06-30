@@ -149,7 +149,6 @@ abstract class BaseMinerBlockEntity(
         const val INVENTORY_SIZE = SLOT_PIPE + 1
         const val PIPE_SLOT_MAX_COUNT = 1024
         const val MAX_CACHE_ITEMS = 64
-        const val ADVANCED_MAX_SCAN_RADIUS = 32
         const val ADVANCED_MIN_Y = -63
         const val NORMAL_MIN_Y = 0
 
@@ -774,7 +773,9 @@ abstract class BaseMinerBlockEntity(
             setActiveState(world, pos, state, false)
             return null  // 调用方据此 return IDLE
         }
-        return if (acceptsAdvancedScanner) ADVANCED_MAX_SCAN_RADIUS else scannerType.scanRadius
+        // 扫描范围始终跟随放入的扫描仪类型（OD=6→13×13，OV=12→25×25），
+        // 普通机与高级机一致，不再为高级机写死更大半径。
+        return scannerType.scanRadius
     }
 
     /** 4.6.4：游标初始化 + 垂直管柱延伸。返回 MinerState? = 转移目标（null=继续）。
