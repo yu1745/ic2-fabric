@@ -43,9 +43,7 @@ item_ids:
   - ic2_120:uranium
   - ic2_120:uranium_235
   - ic2_120:uranium_238
-  - ic2_120:uranium_pellet
   - ic2_120:mox
-  - ic2_120:mox_pellet
   - ic2_120:plutonium
   - ic2_120:rtg_pellet
   - ic2_120:containment_box

@@ -3,7 +3,7 @@ navigation:
   title: Storage Box
   parent: index.md
   position: 206
-  icon: ic2_120:storage_box
+  icon: ic2_120:iron_storage_box
 ---
 
 # Storage Box

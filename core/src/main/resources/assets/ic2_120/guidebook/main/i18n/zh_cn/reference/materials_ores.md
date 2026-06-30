@@ -11,7 +11,6 @@ item_ids:
   - ic2_120:steel_ingot
   - ic2_120:uranium_ingot
   - ic2_120:bronze_ingot
-  - ic2_120:refined_iron_ingot
   - ic2_120:raw_tin
   - ic2_120:raw_lead
   - ic2_120:raw_uranium

@@ -20,7 +20,6 @@ item_ids:
   - ic2_120:rubber_pressure_plate
   - ic2_120:rubber_fence
   - ic2_120:rubber_fence_gate
-  - ic2_120:rubber_sign
   - ic2_120:resin
   - ic2_120:rubber
   - ic2_120:tin_ore

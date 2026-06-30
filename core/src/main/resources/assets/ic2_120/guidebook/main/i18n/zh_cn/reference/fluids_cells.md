@@ -22,8 +22,6 @@ item_ids:
   - ic2_120:pahoehoe_lava_cell
   - ic2_120:coolant_bucket
   - ic2_120:hot_coolant_bucket
-  - ic2_120:steam_bucket
-  - ic2_120:superheated_steam_bucket
   - ic2_120:biomass_bucket
   - ic2_120:biofuel_bucket
   - ic2_120:uu_matter_bucket

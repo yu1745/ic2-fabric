@@ -3,12 +3,12 @@ navigation:
   title: 高级太阳能附属 (Advanced Solar Addon)
   parent: index.md
   position: 205
-  icon: ic2_120:advanced_solar
+  icon: ic2_120_advanced_solar_addon:advanced_solar_panel
 ---
 
 # 高级太阳能附属 (Advanced Solar Addon)
 
-<BlockImage id="ic2_120:advanced_solar" scale="4" />
+<BlockImage id="ic2_120_advanced_solar_addon:advanced_solar_panel" scale="4" />
 
 本模组为工业时代 2 (IC2) 的附属模组，提供 4 个太阳能发电机、1 个能量转换器和 1 个终极发电机。
 

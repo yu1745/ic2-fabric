@@ -3,12 +3,12 @@ navigation:
   title: Advanced Solar Addon
   parent: index.md
   position: 205
-  icon: ic2_120:advanced_solar
+  icon: ic2_120_advanced_solar_addon:advanced_solar_panel
 ---
 
 # Advanced Solar Addon
 
-<BlockImage id="ic2_120:advanced_solar" scale="4" />
+<BlockImage id="ic2_120_advanced_solar_addon:advanced_solar_panel" scale="4" />
 
 This addon module for Industrial Craft 2 (IC2) provides 4 solar generators, 1 molecular transformer, and 1 ultimate generator.
 

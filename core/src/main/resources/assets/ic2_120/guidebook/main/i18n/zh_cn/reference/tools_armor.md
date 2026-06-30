@@ -10,7 +10,6 @@ item_ids:
   - ic2_120:frequency_transmitter
   - ic2_120:obscurator
   - ic2_120:tool_box
-  - ic2_120:jetpack_attachment_plate
 ---
 
 # 工具与防护装备

@@ -12,7 +12,6 @@ item_ids:
   - ic2_120:foam
   - ic2_120:reinforced_foam
   - ic2_120:cf_powder
-  - ic2_120:pellet
   - ic2_120:foam_sprayer
   - ic2_120:wooden_scaffold
   - ic2_120:reinforced_wooden_scaffold
@@ -37,7 +36,6 @@ item_ids:
   - ic2_120:green_wall
   - ic2_120:red_wall
   - ic2_120:black_wall
-  - ic2_120:itnt
   - ic2_120:coin
 ---
 

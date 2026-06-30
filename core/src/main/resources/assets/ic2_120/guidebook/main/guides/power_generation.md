@@ -10,7 +10,6 @@ item_ids:
   - minecraft:lava_bucket
   - ic2_120:coal_fuel_dust
   - ic2_120:plant_ball
-  - ic2_120:compressed_plants
   - ic2_120:bio_chaff
   - ic2_120:bio_cell
 ---
