@@ -29,22 +29,6 @@
     "facing=west,active=true": {
       "model": "ic2:block/machine/processing/advanced/blast_furnace_active",
       "y": 270
-    },
-    "facing=up,active=false": {
-      "model": "ic2:block/machine/processing/advanced/blast_furnace",
-      "x": -90
-    },
-    "facing=up,active=true": {
-      "model": "ic2:block/machine/processing/advanced/blast_furnace_active",
-      "x": -90
-    },
-    "facing=down,active=false": {
-      "model": "ic2:block/machine/processing/advanced/blast_furnace",
-      "x": 90
-    },
-    "facing=down,active=true": {
-      "model": "ic2:block/machine/processing/advanced/blast_furnace_active",
-      "x": 90
     }
   }
 }

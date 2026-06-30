@@ -29,6 +29,22 @@
     "facing=west,active=true": {
       "model": "ic2_120:block/manual_kinetic_generator",
       "y": 270
+    },
+    "facing=up,active=false": {
+      "model": "ic2_120:block/manual_kinetic_generator",
+      "x": 270
+    },
+    "facing=up,active=true": {
+      "model": "ic2_120:block/manual_kinetic_generator",
+      "x": 270
+    },
+    "facing=down,active=false": {
+      "model": "ic2_120:block/manual_kinetic_generator",
+      "x": 90
+    },
+    "facing=down,active=true": {
+      "model": "ic2_120:block/manual_kinetic_generator",
+      "x": 90
     }
   }
 }
