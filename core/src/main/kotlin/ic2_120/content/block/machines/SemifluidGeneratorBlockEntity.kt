@@ -115,10 +115,15 @@ class SemifluidGeneratorBlockEntity(
 
         fun isSupportedFuelFluid(fluid: net.minecraft.fluid.Fluid): Boolean = getFuelProfile(fluid) != null
 
-        fun getFuelProfile(fluid: net.minecraft.fluid.Fluid): FuelProfile? = when {
-            fluid.isIn(ModTags.Compat.Fluids.SEMIFLUID_BIOFUEL_EQUIVALENT) -> BIOFUEL_PROFILE
-            fluid.isIn(ModTags.Compat.Fluids.SEMIFLUID_CREOSOTE_EQUIVALENT) -> CREOSOTE_PROFILE
-            else -> null
+        fun getFuelProfile(fluid: net.minecraft.fluid.Fluid): FuelProfile? {
+            // Fluid.isIn(TagKey) 与 Fluid.getRegistryEntry() 在 1.20.1 均已 @Deprecated，
+            // 改用未废弃的 FluidState.isIn（其内部委托 RegistryEntry.isIn）。
+            val state = fluid.defaultState
+            return when {
+                state.isIn(ModTags.Compat.Fluids.SEMIFLUID_BIOFUEL_EQUIVALENT) -> BIOFUEL_PROFILE
+                state.isIn(ModTags.Compat.Fluids.SEMIFLUID_CREOSOTE_EQUIVALENT) -> CREOSOTE_PROFILE
+                else -> null
+            }
         }
     }
 

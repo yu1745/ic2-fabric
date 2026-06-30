@@ -74,6 +74,8 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
 
     override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
 
+    // AbstractBlock.onBlockAdded 在 1.20.1 标记为 @Deprecated（Mojang 设计：override 是预期用法，详见其 javadoc）。
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
         super.onBlockAdded(state, world, pos, oldState, notify)
         if (!world.isClient && state.get(NATURAL) && hasNoRubberFaces(state)) {

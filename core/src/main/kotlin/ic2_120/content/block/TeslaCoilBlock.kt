@@ -56,6 +56,8 @@ class TeslaCoilBlock : MachineBlock() {
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState? =
         super.getPlacementState(ctx)?.with(ACTIVE, false)?.with(Properties.POWERED, false)
 
+    // AbstractBlock.neighborUpdate 在 1.20.1 标记为 @Deprecated（Mojang 设计：override 是预期用法，详见其 javadoc）。
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun neighborUpdate(
         state: BlockState,
         world: World,

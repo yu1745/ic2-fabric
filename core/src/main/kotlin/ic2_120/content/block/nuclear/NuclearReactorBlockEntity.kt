@@ -776,6 +776,8 @@ class NuclearReactorBlockEntity(
         fillHotCoolantOutput()
     }
 
+    @Suppress("DEPRECATION") // ContainerItemContext.withInitial 被 fabric 标记 forRemoval，但其替代 withConstant 是只读探测，
+    // 无法反映 extract/exchange 后排空的容器；此处需要真实可变 backing，故保留 withInitial。
     private fun handleCoolantInput() {
         val input = getStack(SLOT_COOLANT_INPUT)
         if (input.isEmpty) return
@@ -815,6 +817,7 @@ class NuclearReactorBlockEntity(
         }
     }
 
+    @Suppress("DEPRECATION") // 同 handleCoolantInput：需要 withInitial 的真实可变 backing，withConstant 只读探测不适用。
     private fun fillHotCoolantOutput() {
         // 逐个处理整组空容器，直到储罐空 / 输出槽满 / 容器耗尽
         val emptyInput = getStack(SLOT_HOT_COOLANT_INPUT)

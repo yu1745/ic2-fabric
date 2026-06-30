@@ -16,6 +16,7 @@ import kotlin.reflect.KClass
 /**
  * 获取 Block 单例实例
  */
+@Suppress("UNCHECKED_CAST") // ClassScanner 以 Block::class 为 key 存储，调用方保证类型一致
 fun <T : Block> KClass<T>.instance(): T =
     ClassScanner.getBlockInstance(this) as T
 
@@ -37,6 +38,7 @@ fun <T : Block> KClass<T>.item(): Item =
 /**
  * 获取 Item 单例实例
  */
+@Suppress("UNCHECKED_CAST") // 同上：ClassScanner 以 Item::class 为 key 存储，调用方保证类型一致
 fun <T : Item> KClass<T>.instance(): T =
     ClassScanner.getItemInstance(this) as T
 

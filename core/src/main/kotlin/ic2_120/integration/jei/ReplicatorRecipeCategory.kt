@@ -22,6 +22,9 @@ class ReplicatorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<Replicat
 
     override fun getTitle(): Text = Text.translatable("block.ic2_120.replicator")
 
+    // JEI 15.20.0 起 getBackground() 已 @Deprecated(forRemoval)，替代方案需 override draw()，
+    // 但 draw() 形参 DrawContext 是 client-only 类，无法在主源集引用，故沿用 getBackground() + suppress。
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getBackground(): IDrawable = background
 
     override fun getIcon(): IDrawable = icon

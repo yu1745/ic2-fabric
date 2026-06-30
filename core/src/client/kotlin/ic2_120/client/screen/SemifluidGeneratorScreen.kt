@@ -171,7 +171,8 @@ class SemifluidGeneratorScreen(
     private fun supportedFluids(tag: TagKey<Fluid>): List<Fluid> {
         val fluids = mutableListOf<Fluid>()
         Registries.FLUID.forEach { fluid ->
-            if (fluid.isIn(tag) && !isFlowingVariant(fluid)) fluids.add(fluid)
+            // Fluid.isIn(TagKey) 在 1.20.1 已 @Deprecated，改用未废弃的 FluidState.isIn。
+            if (fluid.defaultState.isIn(tag) && !isFlowingVariant(fluid)) fluids.add(fluid)
         }
         return fluids.sortedBy { Registries.FLUID.getId(it).toString() }
     }
