@@ -130,7 +130,6 @@ This index contains detailed documentation for every machine.
 |------|------|------|
 | [Tesla Coil](../machines/tesla_coil.md) | tesla-coil.md | Redstone-triggered monster zapper |
 | [Luminator Flat](../machines/luminator_flat.md) | luminator.md | Light source that mounts on all 6 faces |
-| [Advanced Solar Add-ons](../machines/advanced_solar.md) | advanced-solar.md | Tier 4 advanced solar panel + molecular converter + quantum generator |
 
 ---
 

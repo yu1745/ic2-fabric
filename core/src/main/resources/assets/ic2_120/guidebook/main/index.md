@@ -166,7 +166,6 @@ This guide is provided by IC2 and rendered by Fabric Guidebook.
 
 ### Addons
 
-- [Advanced Solar Addon](machines/advanced_solar.md)
 - [Storage Box](machines/storage_box.md)
 
 ## Equipment

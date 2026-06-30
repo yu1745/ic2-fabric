@@ -130,7 +130,6 @@ navigation:
 |------|------|------|
 | [特斯拉线圈](../machines/tesla_coil.md) | tesla-coil.md | 红石触发电击怪物 |
 | [日光灯](../machines/luminator_flat.md) | luminator.md | 6 面贴装照明 |
-| [高级太阳能附属](../machines/advanced_solar.md) | advanced-solar.md | 4 级高级太阳能板 + 分子转换器 + 量子发电机 |
 
 ---
 

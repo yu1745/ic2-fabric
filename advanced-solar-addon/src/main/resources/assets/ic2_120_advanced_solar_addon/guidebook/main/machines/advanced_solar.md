@@ -1,9 +1,15 @@
 ---
 navigation:
   title: Advanced Solar Addon
-  parent: index.md
-  position: 205
+  position: 0
   icon: ic2_120_advanced_solar_addon:advanced_solar_panel
+item_ids:
+  - ic2_120_advanced_solar_addon:advanced_solar_panel
+  - ic2_120_advanced_solar_addon:hybrid_solar_panel
+  - ic2_120_advanced_solar_addon:ultimate_solar_panel
+  - ic2_120_advanced_solar_addon:quantum_solar_panel
+  - ic2_120_advanced_solar_addon:molecular_transformer
+  - ic2_120_advanced_solar_addon:quantum_generator
 ---
 
 # Advanced Solar Addon
@@ -18,9 +24,16 @@ This addon module for Industrial Craft 2 (IC2) provides 4 solar generators, 1 mo
 
 All four solar generators **only work in the Overworld** and require a clear view of the sky above them (generation stops if an opaque block blocks the line of sight). Weather detection is supported for automatic shutdown on rainy/snowy days.
 
+### Block View
+
+| Advanced | Hybrid | Ultimate Hybrid | Quantum |
+|:--------:|:------:|:---------------:|:-------:|
+| <BlockImage id="ic2_120_advanced_solar_addon:advanced_solar_panel" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:hybrid_solar_panel" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:ultimate_solar_panel" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:quantum_solar_panel" scale="2" /> |
+
+### Specs
+
 | Property | Advanced | Hybrid | Ultimate Hybrid | Quantum |
 |------|------|------|----------|------|
-| **Block Name** | Advanced Solar Panel | Hybrid Solar Panel | Ultimate Hybrid Solar Panel | Quantum Solar Panel |
 | **Daytime Output** | 8 EU/t | 64 EU/t | 512 EU/t | 4,096 EU/t |
 | **Nighttime Output** | 1 EU/t | 8 EU/t | 64 EU/t | 2,048 EU/t |
 | **Internal Storage** | 32,000 EU | 100,000 EU | 1,000,000 EU | 10,000,000 EU |
@@ -39,36 +52,40 @@ All solar panels share the same internal working principle:
 - **Output Strategy**: Once the internal buffer reaches one packet of the panel's output tier, it pushes outward, up to the cap of one voltage tier per packet
 - **GUI**: Right-click to open, showing current generation status, daytime output, nighttime output, and internal buffer
 
+### Crafting
+
+| Advanced | Hybrid | Ultimate | Quantum |
+|:--------:|:------:|:--------:|:-------:|
+| <Recipe id="ic2_120_advanced_solar_addon:advanced_solar_panel_irradiant" /> | <Recipe id="ic2_120_advanced_solar_addon:hybrid_solar_panel" /> | <Recipe id="ic2_120_advanced_solar_addon:ultimate_solar_panel" /> | <Recipe id="ic2_120_advanced_solar_addon:quantum_solar_panel" /> |
+
 ### Panel Details
 
 #### 1. Advanced Solar Panel
 
 - **Registry Name**: `advanced_solar_panel`
-- **Crafting**: 1 Basic Solar Panel + Advanced Alloy + Blast-Proof Glass + Advanced Circuit + Radiant Reinforced Plate
 - **Positioning**: The leap from basic to advanced solar. 8 EU/t daytime output is enough to reliably drive a basic machine pipeline, and 1 EU/t nighttime output ensures the storage box never fully drains at night.
 
 #### 2. Hybrid Solar Panel
 
 - **Registry Name**: `hybrid_solar_panel`
-- **Crafting**: 1 Advanced Solar Panel + Carbon Plate + Reinforced Iridium Plate + Reinforced Sunnarium + Advanced Circuit + Lapis Block
 - **Positioning**: Mid-tier workhorse. 64 EU/t daytime output can easily drive high-drain equipment like the induction furnace and compressor, and 8 EU/t nighttime output exceeds a standard panel's daytime output.
 
 #### 3. Ultimate Hybrid Solar Panel
 
 - **Registry Name**: `ultimate_solar_panel`
-- **Crafting**: 1 Advanced Solar Panel + Reinforced Sunnarium + Coal Block + Lapis Block (note: the hybrid panel itself is not required — you upgrade directly from the advanced panel)
 - **Positioning**: High-tier workhorse. 512 EU/t daytime output marks the entry into the HV era, and the 1M EU internal buffer is equivalent to an MFSU-class buffer.
 
 #### 4. Quantum Solar Panel
 
 - **Registry Name**: `quantum_solar_panel`
-- **Crafting**: 8 Ultimate Hybrid Solar Panels surrounding 1 Quantum Core
 - **Positioning**: **The ultimate solar solution.** 4,096 EU/t daytime and 2,048 EU/t nighttime — even at night it outputs 4x more than the ultimate panel's daytime rate. The 10M EU internal buffer and 4 battery charging slots make it not only a generator but also a large charging station.
 - **Charging Capability**: 4 built-in battery charging slots can charge 4 batteries/electric tools at once (with automatic voltage tier compatibility detection)
 
 ---
 
 ## 2. Molecular Transformer
+
+<BlockImage id="ic2_120_advanced_solar_addon:molecular_transformer" p:facing="north" scale="4" />
 
 - **Registry Name**: `molecular_transformer`
 - **Voltage Tier**: Tier 10 (Extreme High Voltage)
@@ -81,7 +98,11 @@ All solar panels share the same internal working principle:
 
 The Molecular Transformer is a high-energy **item conversion device** that uses massive amounts of EU to restructure matter at the molecular level, converting one item into another. Recipes are defined in the config file `ic2_120_advanced_solar_addon.json` and can be modified at runtime by the server via commands.
 
-### Default Recipes
+### Crafting
+
+<Recipe id="ic2_120_advanced_solar_addon:molecular_transformer" />
+
+### Default Conversion Recipes
 
 | Input | Output | Energy Cost |
 |------|------|---------|
@@ -115,6 +136,8 @@ All recipes are stored in the config file and **server administrators can freely
 
 ## 3. Quantum Generator
 
+<BlockImage id="ic2_120_advanced_solar_addon:quantum_generator" p:facing="north" scale="4" />
+
 - **Registry Name**: `quantum_generator`
 - **Voltage Tier**: Tier 3 (HV)
 - **Output**: 512 EU/t (constant)
@@ -122,6 +145,8 @@ All recipes are stored in the config file and **server administrators can freely
 - **Max Output**: 512 EU/t
 - **Slots**: None
 - **Redstone Control**: **Stops generating when receiving a redstone signal**
+
+**Note**: The Quantum Generator has no crafting recipe — it is a creative/command-only block.
 
 ### Function
 
@@ -146,10 +171,10 @@ The Quantum Generator is a pure EU generator — no fuel, no sunlight, no consum
 
 ### Solar Panel Upgrade Path
 
-```
-Basic Solar → Advanced Solar → Hybrid Solar → Ultimate Hybrid Solar → Quantum Solar
-  1 EU/t       8 EU/t         64 EU/t        512 EU/t                4,096 EU/t
-```
+| Basic | Advanced | Hybrid | Ultimate | Quantum |
+|:-----:|:--------:|:------:|:--------:|:-------:|
+| <BlockImage id="ic2_120:solar_generator" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:advanced_solar_panel" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:hybrid_solar_panel" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:ultimate_solar_panel" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:quantum_solar_panel" scale="2" /> |
+| 1 EU/t | 8 EU/t | 64 EU/t | 512 EU/t | 4,096 EU/t |
 
 Tier-skipping is allowed: the Ultimate Solar Panel can be crafted directly from the Advanced Solar Panel without going through the Hybrid Panel.
 
@@ -166,10 +191,3 @@ Tier-skipping is allowed: the Ultimate Solar Panel can be crafted directly from 
 
 - The Molecular Transformer is extremely power-hungry (a single diamond costs 9M EU) and will explode if connected to standard cables. Use **glass fibre cable** or **cryogenic superconducting cable** for transmission.
 - A single Quantum Solar Panel outputs up to 8,192 EU/t and must use the matching cable tier; route through an MFSU first before distributing to devices.
-
----
-
-## 5. Related Documentation
-
-- [Thermal Generator](../generator.md) - Basic EU generation
-- [Energy Storage](energy_storage.md) - Energy storage solutions

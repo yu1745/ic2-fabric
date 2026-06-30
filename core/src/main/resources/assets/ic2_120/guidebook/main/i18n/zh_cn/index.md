@@ -166,5 +166,4 @@ navigation:
 
 ### 附属内容
 
-- [高级太阳能附属](machines/advanced_solar.md)
 - [储物箱](machines/storage_box.md)

@@ -1,16 +1,22 @@
 ---
 navigation:
   title: 高级太阳能附属 (Advanced Solar Addon)
-  parent: index.md
-  position: 205
+  position: 0
   icon: ic2_120_advanced_solar_addon:advanced_solar_panel
+item_ids:
+  - ic2_120_advanced_solar_addon:advanced_solar_panel
+  - ic2_120_advanced_solar_addon:hybrid_solar_panel
+  - ic2_120_advanced_solar_addon:ultimate_solar_panel
+  - ic2_120_advanced_solar_addon:quantum_solar_panel
+  - ic2_120_advanced_solar_addon:molecular_transformer
+  - ic2_120_advanced_solar_addon:quantum_generator
 ---
 
 # 高级太阳能附属 (Advanced Solar Addon)
 
 <BlockImage id="ic2_120_advanced_solar_addon:advanced_solar_panel" scale="4" />
 
-本模组为工业时代 2 (IC2) 的附属模组，提供 4 个太阳能发电机、1 个能量转换器和 1 个终极发电机。
+本模组为工业时代 2 (IC2) 的附属模组，提供 4 个太阳能发电机、1 个分子重组仪和 1 个量子发电机。
 
 ---
 
@@ -18,9 +24,16 @@ navigation:
 
 四款太阳能发电机均**只在主世界工作**，上方需要看到天空（被不透明方块遮挡则停止发电）。支持阴天/雨天自动停机的天气检测。
 
+### 方块一览
+
+| 高级 | 混合 | 终极混合 | 量子 |
+|:--------:|:------:|:---------------:|:-------:|
+| <BlockImage id="ic2_120_advanced_solar_addon:advanced_solar_panel" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:hybrid_solar_panel" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:ultimate_solar_panel" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:quantum_solar_panel" scale="2" /> |
+
+### 数值对比
+
 | 属性 | 高级 | 混合 | 终极混合 | 量子 |
 |------|------|------|----------|------|
-| **方块名** | 高级太阳能发电机 | 混合太阳能发电机 | 终极混合太阳能发电机 | 量子太阳能发电机 |
 | **日间发电** | 8 EU/t | 64 EU/t | 512 EU/t | 4,096 EU/t |
 | **夜间发电** | 1 EU/t | 8 EU/t | 64 EU/t | 2,048 EU/t |
 | **内部储能** | 32,000 EU | 100,000 EU | 1,000,000 EU | 10,000,000 EU |
@@ -39,30 +52,32 @@ navigation:
 - **输出策略**：内部电量达到单次输出量后开始向外输送，每次最多输出一个电压等级的上限
 - **GUI**：右键打开，可看到当前发电状态、日间功率、夜间功率和内部电量
 
+### 合成
+
+| 高级 | 混合 | 终极 | 量子 |
+|:--------:|:------:|:--------:|:-------:|
+| <Recipe id="ic2_120_advanced_solar_addon:advanced_solar_panel_irradiant" /> | <Recipe id="ic2_120_advanced_solar_addon:hybrid_solar_panel" /> | <Recipe id="ic2_120_advanced_solar_addon:ultimate_solar_panel" /> | <Recipe id="ic2_120_advanced_solar_addon:quantum_solar_panel" /> |
+
 ### 各类面板详解
 
 #### 1. 高级太阳能发电机 (Advanced Solar Panel)
 
 - **注册名**：`advanced_solar_panel`
-- **合成**：1 个基础太阳能发电机 + 高级合金 + 防爆玻璃 + 高级电路板 + 光辉强化板
 - **定位**：从基础太阳能到高级的跨越。8 EU/t 的日间发电量已经能稳定驱动基础的机器流水线，1 EU/t 的夜间发电确保储电箱不会在夜间完全放空。
 
 #### 2. 混合太阳能发电机 (Hybrid Solar Panel)
 
 - **注册名**：`hybrid_solar_panel`
-- **合成**：1 个高级太阳能发电机 + 碳板 + 强化铱铁板 + 强化太阳尘埃 + 高级电路板 + 青金石块
 - **定位**：中级主力。64 EU/t 的日间发电量可轻松驱动感应炉、压缩机等高耗能设备，8 EU/t 的夜间发电也比普通面板的白天还高。
 
 #### 3. 终极混合太阳能发电机 (Ultimate Hybrid Solar Panel)
 
 - **注册名**：`ultimate_solar_panel`
-- **合成**：1 个高级太阳能发电机 + 强化太阳尘埃 + 煤块 + 青金石块（注意：不需要混合面板本身，直接从高级面板升级）
 - **定位**：高级主力。512 EU/t 的日间发电量开始步入高压（HV）时代，1M EU 的内部储能相当于一个 MFSU 级别的缓冲容量。
 
 #### 4. 量子太阳能发电机 (Quantum Solar Panel)
 
 - **注册名**：`quantum_solar_panel`
-- **合成**：8 个终极混合太阳能发电机围住 1 个量子核心
 - **定位**：**终极太阳能方案**。日间 4,096 EU/t、夜间 2,048 EU/t，即便在夜间也比终极面板的白天还高 4 倍。内部 10M EU 储能量和 4 个电池充电槽使其不仅是一台发电机，也是一个大型充电站。
 - **充电能力**：内置 4 个电池充电槽，可同时为 4 件电池/电动工具充电（自动检测电压等级兼容性）
 
@@ -70,8 +85,9 @@ navigation:
 
 ## 二、分子重组仪 (Molecular Transformer)
 
+<BlockImage id="ic2_120_advanced_solar_addon:molecular_transformer" p:facing="north" scale="4" />
+
 - **注册名**：`molecular_transformer`
-- **中文名**：分子重组仪
 - **电压等级**：Tier 10（极限高压）
 - **最大输入**：2,097,152 EU/t
 - **内部储能**：10,000,000 EU
@@ -82,7 +98,11 @@ navigation:
 
 分子重组仪是一台高能耗的**物品转换设备**，它利用巨量 EU 在分子层面重组物质，将一种物品转化为另一种。合成配方通过配置文件 `ic2_120_advanced_solar_addon.json` 定义，服务端可在运行时通过命令修改。
 
-### 默认配方
+### 合成
+
+<Recipe id="ic2_120_advanced_solar_addon:molecular_transformer" />
+
+### 默认转换配方
 
 | 输入 | 输出 | 消耗能量 |
 |------|------|---------|
@@ -116,14 +136,17 @@ navigation:
 
 ## 三、量子发电机 (Quantum Generator)
 
+<BlockImage id="ic2_120_advanced_solar_addon:quantum_generator" p:facing="north" scale="4" />
+
 - **注册名**：`quantum_generator`
-- **中文名**：量子发电机
 - **电压等级**：Tier 3 (HV)
 - **发电量**：512 EU/t（恒定）
 - **内部储能**：1,000,000 EU
 - **最大输出**：512 EU/t
 - **槽位**：无
 - **红石控制**：**收到红石信号时停止发电**
+
+**注意**：量子发电机没有合成配方——它是创造/命令专属方块。
 
 ### 功能
 
@@ -148,10 +171,10 @@ navigation:
 
 ### 太阳能面板升级路线
 
-```
-基础太阳能 → 高级太阳能 → 混合太阳能 → 终极混合太阳能 → 量子太阳能
-  1 EU/t       8 EU/t       64 EU/t       512 EU/t         4,096 EU/t
-```
+| 基础 | 高级 | 混合 | 终极 | 量子 |
+|:-----:|:--------:|:------:|:--------:|:-------:|
+| <BlockImage id="ic2_120:solar_generator" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:advanced_solar_panel" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:hybrid_solar_panel" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:ultimate_solar_panel" scale="2" /> | <BlockImage id="ic2_120_advanced_solar_addon:quantum_solar_panel" scale="2" /> |
+| 1 EU/t | 8 EU/t | 64 EU/t | 512 EU/t | 4,096 EU/t |
 
 跳级可行：终极太阳能可直接使用高级面板合成，不需要中间的混合面板。
 
@@ -168,11 +191,3 @@ navigation:
 
 - 分子重组仪耗电极高（单个钻石需 9M EU），直接接普通导线会爆炸。建议使用 **玻璃纤维电缆** 或 **低温超导导线** 传输。
 - 量子太阳能面板的单台输出高达 8,192 EU/t，必须使用对应等级的线缆，且建议先接入 MFSU 再分流至各设备。
-
----
-
-## 五、相关文档
-
-- [火力发电机](../generator.md) - 基础 EU 发电
-- [储电箱](energy_storage.md) - 电能储存方案
-
