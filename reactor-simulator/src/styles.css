@@ -1,0 +1,332 @@
+:root {
+  --bg: #1a1a1f;
+  --panel: #26262e;
+  --panel-light: #2f2f38;
+  --border: #3a3a44;
+  --text: #e0e0e8;
+  --text-dim: #888896;
+  --accent: #6ab0ff;
+  --danger: #ff5555;
+  --ok: #55cc55;
+  --warning: #ffaa00;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.app-header h1 {
+  margin: 0;
+  font-size: 22px;
+}
+.app-header .subtitle {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+/* ===== 模式/腔室 ===== */
+.mode-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: var(--panel);
+  padding: 10px 14px;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+.mode-buttons button {
+  background: var(--panel-light);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 6px;
+}
+.mode-buttons button.active {
+  background: var(--accent);
+  color: #112;
+  border-color: var(--accent);
+}
+.chambers-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.chambers-control input[type='range'] {
+  width: 160px;
+}
+
+/* ===== 主区域：左元件栏，右仪表盘+网格 ===== */
+.main-area {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+@media (max-width: 900px) {
+  .main-area {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== 元件栏 ===== */
+.palette {
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 10px;
+  overflow-y: auto;
+  max-height: 70vh;
+}
+.palette-group {
+  margin-bottom: 12px;
+}
+.palette-group-title {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2px;
+}
+.palette-items {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.palette-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 4px;
+  background: var(--panel-light);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: grab;
+  text-align: center;
+}
+.palette-item:hover {
+  border-color: var(--accent);
+}
+.palette-item img {
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+}
+.palette-item-name {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* ===== 右侧 ===== */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* ===== 仪表盘 ===== */
+.dashboard {
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 12px;
+}
+.dashboard-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.dashboard-row .label {
+  width: 50px;
+  font-size: 13px;
+}
+.heat-bar {
+  flex: 1;
+  height: 22px;
+  background: #111;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.heat-fill {
+  height: 100%;
+  transition: width 0.1s linear, background 0.2s;
+}
+.heat-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  text-shadow: 0 0 4px #000;
+}
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.stat {
+  background: var(--panel-light);
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.stat-value {
+  font-size: 18px;
+  font-weight: 600;
+}
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 13px;
+}
+.status-exploded { color: var(--danger); font-weight: 700; }
+.status-warning { color: var(--warning); }
+.status-ok { color: var(--ok); }
+.status-idle { color: var(--text-dim); }
+.cycle-count { color: var(--text-dim); font-size: 12px; }
+
+/* ===== 网格 ===== */
+.grid-wrapper {
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+.reactor-grid {
+  display: grid;
+  gap: 4px;
+  background: #111;
+  padding: 8px;
+  border-radius: 6px;
+  flex: 1;
+  min-height: 360px;
+}
+.grid-slot {
+  background: var(--panel-light);
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  min-width: 0;
+}
+.grid-slot:hover {
+  background: #3a3a48;
+}
+.slot-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.slot-content img {
+  width: 75%;
+  height: 75%;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.durability-bar {
+  position: absolute;
+  bottom: 1px;
+  left: 2px;
+  right: 2px;
+  height: 3px;
+  background: #000;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.durability-fill {
+  height: 100%;
+}
+.grid-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* ===== 运行控制 ===== */
+.run-controls {
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.run-controls button {
+  background: var(--panel-light);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.run-controls button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.run-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.run-controls select {
+  background: var(--panel-light);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 6px;
+  border-radius: 6px;
+}
+.speed-label {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-left: 8px;
+}

@@ -1,0 +1,24 @@
+{
+  "name": "ic2-reactor-simulator",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "IC2 核反应堆模拟器（移植自 ic2_120 NuclearReactorBlockEntity）",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "copy-textures": "node scripts/copy-textures.mjs"
+  },
+  "dependencies": {
+    "preact": "^10.22.0"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.9.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2",
+    "vitest": "^2.1.1"
+  }
+}
