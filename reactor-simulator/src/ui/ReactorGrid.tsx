@@ -67,7 +67,7 @@ export function ReactorGrid({ grid, chambers, stats, mode, selected, onPlace, on
   return (
     <div
       className={'reactor-grid' + (selected ? ' reactor-grid-placing' : '')}
-      style={{ gridTemplateColumns: `repeat(${c}, 1fr)`, gridTemplateRows: `repeat(${ROWS}, 1fr)` }}
+      style={{ '--cols': c } as Record<string, string | number>}
       onMouseLeave={() => setActiveButton(null)}
     >
       {Array.from({ length: c * ROWS }, (_v, idx) => {

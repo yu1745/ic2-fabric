@@ -24,13 +24,20 @@ body {
 }
 
 .app {
+  /* 桌面端专用：固定 1400px 宽布局，不做移动端适配。
+     窄屏（手机/小窗）下整个页面横向滚动查看。 */
+  width: 1400px;
   max-width: 1400px;
+  min-width: 1400px;
   margin: 0 auto;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 100vh;
+  /* 锁定视口高度：内容永远单屏不溢出 */
+  height: 100vh;
+  overflow: hidden;
+  overflow-x: auto;
 }
 
 .app-header {
@@ -90,11 +97,7 @@ body {
   flex: 1;
   min-height: 0;
 }
-@media (max-width: 900px) {
-  .main-area {
-    grid-template-columns: 1fr;
-  }
-}
+/* 桌面端专用布局：固定 1400px，无移动端断点 */
 
 /* ===== 元件栏 ===== */
 .palette {
@@ -102,7 +105,7 @@ body {
   border-radius: 8px;
   padding: 10px;
   overflow-y: auto;
-  max-height: 70vh;
+  max-height: 100%;
 }
 .palette-selected-hint {
   background: rgba(106, 176, 255, 0.15);
@@ -270,19 +273,22 @@ body {
   border-radius: 8px;
   padding: 12px;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
   min-height: 0;
+  position: relative;
+  /* 让 .reactor-grid 用 cqw/cqh 按容器尺寸自适应格子大小 */
+  container-type: size;
 }
 .reactor-grid {
+  /* 格子边长 = min(容器宽/列数, (容器高-提示行)/行数)；
+     预留 28px 给底部 .grid-hint，确保网格不与提示文字重叠 */
+  --cell: min(100cqw / var(--cols), (100cqh - 28px) / 9);
+  width: calc(var(--cell) * var(--cols));
+  height: calc(var(--cell) * 9);
+  margin: 0 auto;
   display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  grid-template-rows: repeat(9, var(--cell));
   gap: 4px;
-  background: #111;
-  padding: 8px;
-  border-radius: 6px;
-  flex: 1;
-  min-height: 360px;
   /* 屏蔽点击/拖选时出现的文本输入光标和文本选中 */
   user-select: none;
   -webkit-user-select: none;
@@ -291,7 +297,6 @@ body {
   background: var(--panel-light);
   border: 2px solid var(--border);
   border-radius: 4px;
-  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -373,9 +378,14 @@ body {
   height: 100%;
 }
 .grid-hint {
+  position: absolute;
+  bottom: 8px;
+  left: 12px;
+  right: 12px;
   font-size: 11px;
   color: var(--text-dim);
   text-align: center;
+  pointer-events: none;
 }
 
 /* ===== 运行控制 ===== */
