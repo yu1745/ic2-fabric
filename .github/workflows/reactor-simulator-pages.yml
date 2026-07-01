@@ -1,0 +1,76 @@
+# 前端：构建 reactor-simulator 并部署到 GitHub Pages。
+# 与 jar 构建 CI (build.yml) 完全独立：不同 workflow 文件、不同 job、互不依赖。
+# 仅当 reactor-simulator/ 或本 workflow 文件变动时才触发（减少无谓构建）。
+#
+# 首次使用前需在 仓库 Settings → Pages → Source 选 "GitHub Actions"。
+name: reactor-simulator (Pages)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'reactor-simulator/**'
+      - '.github/workflows/reactor-simulator-pages.yml'
+  workflow_dispatch: # 允许手动触发
+
+# 同一分支新 push 取消旧的 Pages 部署
+concurrency:
+  group: pages-reactor-simulator
+  cancel-in-progress: true
+
+# 部署 Pages 需要 permissions
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    defaults:
+      run:
+        working-directory: reactor-simulator
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: reactor-simulator/pnpm-lock.yaml
+
+      - name: install
+        # .npmrc 里 ignore-workspace=true，绕开上层 pnpm workspace
+        run: pnpm install --frozen-lockfile
+
+      - name: typecheck
+        run: pnpm exec tsc --noEmit
+
+      - name: test
+        run: pnpm test
+
+      - name: build
+        # base: './' 已在 vite.config.ts 设好，部署到项目子路径也能正常加载资源
+        run: pnpm build
+
+      - name: setup pages
+        uses: actions/configure-pages@v5
+
+      - name: upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: reactor-simulator/dist
+
+      - name: deploy to github pages
+        id: deploy
+        uses: actions/deploy-pages@v4
