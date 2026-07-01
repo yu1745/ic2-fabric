@@ -166,7 +166,11 @@ function reducer(s: ReactorState, a: Action): ReactorState {
     case 'start':
       return { ...s, running: true, speed: a.speed, exploded: false };
     case 'stop':
-      return { ...s, running: false };
+      // 停止时把运行产生的耐久衰减/堆温同步回 grid（lastGrid → grid），
+      // 这样停止后用户编辑基于最新状态，UI 回退到显示 state.grid 也不会丢耐久。
+      return s.lastGrid
+        ? { ...s, running: false, grid: s.lastGrid, lastGrid: null, lastStats: null }
+        : { ...s, running: false };
     case 'set-speed':
       return { ...s, speed: a.speed };
     case 'select-component':

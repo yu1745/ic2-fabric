@@ -23,10 +23,9 @@ export function App(): JSX.Element {
     return () => window.removeEventListener('keydown', onKey);
   }, [state.selectedComponent]);
 
-  // 全生命周期发电估算（memoized）：干跑一次单步 × 燃料棒总寿命。
-  // 用于仪表盘「全寿命总发电」+ tooltip 燃料棒全生命周期发电。
-  // 仅在网格/模式/堆温稳定（非运行中）时重算，避免拖动时高频触发。
-  const displayGrid = state.lastGrid ?? state.grid;
+  // 展示用的 grid：tick action 已把每次模拟结果同步进 state.grid（含耐久衰减），
+  // 所以直接用 state.grid 即可——停止后用户编辑的就是最新状态，新元件立即显示。
+  const displayGrid = state.grid;
   const life = useMemo(() => {
     // 运行中不重算（昂贵），用上次结果
     if (state.running) return null;
