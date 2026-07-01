@@ -49,7 +49,18 @@ data class GeneralConfig(
     @field:ConfigComment("电网不发生能量流动时是否仍会超压爆炸。设为 false 则无能量时不爆炸。", "false")
     val explodeWhenNoEnergyFlow: Boolean = false,
     @field:ConfigComment("是否启用超压爆炸。设为 false 则完全关闭超压爆炸。", "true")
-    val enableOvervoltageExplosion: Boolean = true
+    val enableOvervoltageExplosion: Boolean = true,
+    @field:ConfigComment(
+        "是否发送匿名使用统计（仅匿名 installId + 版本号，每天一次），用于统计有多少玩家安装了本 mod。",
+        "true"
+    )
+    val enableAnonymousStatistics: Boolean = true,
+    @field:ConfigComment(
+        "匿名统计上报地址（形如 https://xxx.workers.dev）。留空则使用内置默认地址。" +
+            "如不希望参与统计，把上面的 enableAnonymousStatistics 设为 false 即可。",
+        ""
+    )
+    val analyticsEndpoint: String = ""
 )
 
 data class RecyclerConfig(

@@ -1,0 +1,11 @@
+# 依赖
+node_modules/
+
+# Wrangler 本地状态（含本地 D1 数据库副本）
+.wrangler/
+
+# 本地开发密钥
+.dev.vars
+
+# 自动生成的类型文件（wrangler types 生成）
+worker-configuration.d.ts

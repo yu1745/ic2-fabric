@@ -1,5 +1,6 @@
 package ic2_120
 
+import ic2_120.analytics.AnalyticsReporter
 import ic2_120.content.CreativeGeneratorItemEntityHandler
 import ic2_120.content.RubberTreetapHandler
 import ic2_120.content.WrenchHandler
@@ -59,6 +60,7 @@ import ic2_120.registry.type
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
@@ -188,6 +190,11 @@ object Ic2_120 : ModInitializer {
             NuclearExplosionManager.tick(server)
         }
 
+        // 匿名使用统计：服务端每次启动上报一次（覆盖独立服务端 + 集成服务端）
+        ServerLifecycleEvents.SERVER_STARTED.register {
+            AnalyticsReporter.report("server")
+        }
+
         // 储电盒自定义 BlockItem（支持满电变体）及创造模式满电物品
         val storageIds = listOf(
             "batbox",
@@ -272,7 +279,8 @@ object Ic2_120 : ModInitializer {
 
         // [TEMP] 半流质发电机燃料 dump：启动后遍历所有流体过真实匹配逻辑并打日志。
         // 测完删掉本行 + content/debug/SemifluidFuelDump.kt
-        ic2_120.content.debug.SemifluidFuelDump.register()
+        // 2026-07-01 已注释：暂时关闭 dump，避免启动噪声。如需重新启用，取消下面这行注释即可。
+        // ic2_120.content.debug.SemifluidFuelDump.register()
 
         logger.info("IC2 1.20 模组已加载（类注解驱动自动注册）")
     }

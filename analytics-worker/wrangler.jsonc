@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "ic2-analytics",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-01",
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ic2_analytics",
+      "database_id": "4f01dbfb-bd3f-4e85-9221-e20a03f1b266",
+      "migrations_dir": "./migrations"
+    }
+  ]
+  // 可选：设置 STATS_TOKEN secret 后，/stats 需带 ?token=xxx 或 Authorization: Bearer xxx
+  // wrangler secret put STATS_TOKEN
+}

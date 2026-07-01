@@ -69,6 +69,8 @@ object Ic2ConfigScreen {
         var shockWhenNoEnergyFlow = cfg.shockWhenNoEnergyFlow
         var explodeWhenNoEnergyFlow = cfg.explodeWhenNoEnergyFlow
         var enableOvervoltageExplosion = cfg.enableOvervoltageExplosion
+        var enableAnonymousStatistics = cfg.enableAnonymousStatistics
+        var analyticsEndpoint = cfg.analyticsEndpoint
 
         val cat = builder.getOrCreateCategory(Text.literal("通用"))
         cat.addEntry(eb.startBooleanToggle(Text.literal("启用超压爆炸"), enableOvervoltageExplosion)
@@ -90,6 +92,14 @@ object Ic2ConfigScreen {
             .setDefaultValue(false)
             .setTooltip(Text.literal("电网不发生能量流动时是否仍会超压爆炸。设为 false 则无能量时不爆炸。"))
             .setSaveConsumer { explodeWhenNoEnergyFlow = it }.build())
+        cat.addEntry(eb.startBooleanToggle(Text.literal("发送匿名使用统计"), enableAnonymousStatistics)
+            .setDefaultValue(true)
+            .setTooltip(Text.literal("仅发送匿名 installId + 版本号，每天一次，用于统计有多少玩家安装了本 mod。不含任何个人信息。"))
+            .setSaveConsumer { enableAnonymousStatistics = it }.build())
+        cat.addEntry(eb.startStrField(Text.literal("匿名统计上报地址"), analyticsEndpoint)
+            .setDefaultValue("")
+            .setTooltip(Text.literal("形如 https://xxx.workers.dev。留空使用内置默认地址。如不希望参与统计，关闭上面的开关即可。"))
+            .setSaveConsumer { analyticsEndpoint = it }.build())
 
         return {
             GeneralConfig(
@@ -97,7 +107,9 @@ object Ic2ConfigScreen {
                 checkForUpdates = checkForUpdates,
                 shockWhenNoEnergyFlow = shockWhenNoEnergyFlow,
                 explodeWhenNoEnergyFlow = explodeWhenNoEnergyFlow,
-                enableOvervoltageExplosion = enableOvervoltageExplosion
+                enableOvervoltageExplosion = enableOvervoltageExplosion,
+                enableAnonymousStatistics = enableAnonymousStatistics,
+                analyticsEndpoint = analyticsEndpoint
             )
         }
     }

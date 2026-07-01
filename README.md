@@ -13,6 +13,12 @@
 
 IndustrialCraft 2 Experimental 的 Minecraft 1.20.1 Fabric 移植版本，使用 Kotlin 编写。
 
+## 安装统计
+
+下图展示近 30 天每日运行本模组的独立安装数（匿名统计，仅计数不含任何个人信息，可在配置中关闭）：
+
+![每日安装人数](https://ic2-analytics.wangyu174551226.workers.dev/chart.svg?days=30)
+
 ## 文档分区
 
 ### 玩家文档（游戏内 Guidebook）

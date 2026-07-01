@@ -1,0 +1,17 @@
+{
+  "name": "ic2-analytics-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Anonymous daily-active analytics backend for IC2_120 mod",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "dry-run": "wrangler deploy --dry-run",
+    "migrate:local": "wrangler d1 migrations apply ic2_analytics --local",
+    "migrate:remote": "wrangler d1 migrations apply ic2_analytics --remote",
+    "types": "wrangler types"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

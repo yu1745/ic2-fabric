@@ -2,14 +2,22 @@
 
 <big>[English](README_EN.md) | [简体中文](README.md)</big>
 
+> 📢 QQ Group: 638382077 (bug reports, dev progress discussion, talk with the author, etc.)
+
 > **⚠️ Required: Installation** To use this mod, you must copy **both files** from the release to your Minecraft mods folder:
 > - `ic2_120-*.jar` - Main mod file (Energy API bundled)
 > - `fabric-language-kotlin-*.jar` - Fabric Kotlin language support library
 > Both files are required, otherwise the mod will not work.
 
-> **📢 Sinytra Connector Support**: This mod has been adapted for [Sinytra Connector](https://github.com/Sinytra/connector) and can also run on Forge via Connector. For instructions on using Connector to load Fabric Mods in a Forge environment, please refer to the [official Sinytra Connector documentation](https://github.com/Sinytra/connector)。
+> **📢 Sinytra Connector Support**: This mod has been adapted for [Sinytra Connector](https://github.com/Sinytra/connector) and can also run on Forge via Connector. For instructions on using Connector to load Fabric Mods in a Forge environment, please refer to the [official Sinytra Connector documentation](https://github.com/Sinytra/connector).
 
 IndustrialCraft 2 Minecraft 1.20.1 Fabric port, written in Kotlin.
+
+## Installation Statistics
+
+The chart below shows the daily active installs over the last 30 days (anonymous, counts only, no personal data; can be disabled in config):
+
+![Daily installs](https://ic2-analytics.wangyu174551226.workers.dev/chart.svg?days=30&lang=en)
 
 **Player Guide**: Gameplay documentation is maintained only in the in-game Guidebook under `core/src/main/resources/assets/ic2_120/guidebook/main`. This document is for developers.
 
