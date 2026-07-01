@@ -11,11 +11,13 @@ interface Props {
   cycle: number;
   running: boolean;
   exploded: boolean;
-  /** 全寿命累计总发电（EU），来自 simulateFullLife；null=无燃料棒 */
+  /** 全寿命累计总发电（EU），来自 estimateFullLifeOutput；null=无燃料棒 */
   lifeTotalEu: number | null;
+  /** 直接设置起始堆温 */
+  onSetHeat: (heat: number) => void;
 }
 
-export function Dashboard({ stats, heat, mode, cycle, running, exploded, lifeTotalEu }: Props): JSX.Element {
+export function Dashboard({ stats, heat, mode, cycle, running, exploded, lifeTotalEu, onSetHeat }: Props): JSX.Element {
   const maxHeat = stats?.maxHeat ?? HEAT_EXPLODE_THRESHOLD;
   const heatPct = Math.max(0, Math.min(100, (heat / maxHeat) * 100));
   const heatColor = heat >= HEAT_EXPLODE_THRESHOLD
@@ -38,6 +40,18 @@ export function Dashboard({ stats, heat, mode, cycle, running, exploded, lifeTot
           <div className="heat-fill" style={{ width: `${heatPct}%`, background: heatColor }} />
           <span className="heat-text">{Math.round(heat)} / {maxHeat}</span>
         </div>
+        <input
+          className="heat-input"
+          type="number"
+          min={0}
+          max={10000}
+          value={Math.round(heat)}
+          title="直接设置起始堆温（0-10000）"
+          onChange={(e) => {
+            const v = Number((e.target as HTMLInputElement).value);
+            if (!Number.isNaN(v)) onSetHeat(v);
+          }}
+        />
       </div>
 
       <div className="dashboard-grid">

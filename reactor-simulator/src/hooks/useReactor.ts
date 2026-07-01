@@ -37,6 +37,7 @@ type Action =
   | { type: 'clear'; index: number }
   | { type: 'clear-all' }
   | { type: 'reset-heat' }
+  | { type: 'set-heat'; heat: number }
   | { type: 'tick'; stats: CycleStats; grid: Grid; heat: number }
   | { type: 'start'; speed: number }
   | { type: 'stop' }
@@ -93,6 +94,12 @@ function reducer(s: ReactorState, a: Action): ReactorState {
       return { ...s, grid: emptyGrid(s.chambers), running: false, cycle: 0, heat: 0, exploded: false, lastStats: null, lastGrid: null };
     case 'reset-heat':
       return { ...s, heat: 0, running: false, cycle: 0, exploded: false, lastStats: null, lastGrid: null };
+    case 'set-heat': {
+      // 直接设置堆温（用户输入）。设值会重置运行状态，把该堆温作为后续模拟的起点。
+      // 注意：不重置 grid（元件布局保留），只改起始堆温。
+      const h = Math.max(0, Math.min(10000, Math.floor(a.heat)));
+      return { ...s, heat: h, running: false, cycle: 0, exploded: false, lastStats: null, lastGrid: null };
+    }
     case 'tick':
       return {
         ...s,
@@ -186,6 +193,7 @@ export function useReactor() {
   }, []);
   const reset = useCallback(() => dispatch({ type: 'clear-all' }), []);
   const resetHeat = useCallback(() => dispatch({ type: 'reset-heat' }), []);
+  const setHeat = useCallback((heat: number) => dispatch({ type: 'set-heat', heat }), []);
   const setSpeed = useCallback((speed: number) => dispatch({ type: 'set-speed', speed }), []);
   // 双击元件栏选中 / 再次双击或传 null 取消
   const selectComponent = useCallback((id: ComponentId | null) => dispatch({ type: 'select-component', id }), []);
@@ -210,6 +218,7 @@ export function useReactor() {
     step,
     reset,
     resetHeat,
+    setHeat,
     setSpeed,
     selectComponent,
     runToCompletion,

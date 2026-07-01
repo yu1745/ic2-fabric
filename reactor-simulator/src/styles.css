@@ -208,6 +208,21 @@ body {
   font-size: 12px;
   text-shadow: 0 0 4px #000;
 }
+/* 直接输入堆温 */
+.heat-input {
+  width: 80px;
+  background: var(--panel-light);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.heat-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

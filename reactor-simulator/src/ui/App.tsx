@@ -3,7 +3,7 @@
 import { type JSX } from 'preact';
 import { useEffect, useMemo } from 'preact/hooks';
 import { useReactor } from '../hooks/useReactor';
-import { simulateFullLife } from '../sim';
+import { estimateFullLifeOutput } from '../sim';
 import { ModeToggle } from './ModeToggle';
 import { ComponentPalette } from './ComponentPalette';
 import { Dashboard } from './Dashboard';
@@ -23,14 +23,15 @@ export function App(): JSX.Element {
     return () => window.removeEventListener('keydown', onKey);
   }, [state.selectedComponent]);
 
-  // 全寿命模拟（memoized）：用于仪表盘「全寿命总发电」+ tooltip 燃料棒全生命周期发电。
+  // 全生命周期发电估算（memoized）：干跑一次单步 × 燃料棒总寿命。
+  // 用于仪表盘「全寿命总发电」+ tooltip 燃料棒全生命周期发电。
   // 仅在网格/模式/堆温稳定（非运行中）时重算，避免拖动时高频触发。
   const displayGrid = state.lastGrid ?? state.grid;
   const life = useMemo(() => {
     // 运行中不重算（昂贵），用上次结果
     if (state.running) return null;
     if (!steadyStats?.hasFuelRods) return null;
-    return simulateFullLife(displayGrid, state.chambers, state.mode, state.heat);
+    return estimateFullLifeOutput(displayGrid, state.chambers, state.mode, state.heat);
   }, [displayGrid, state.chambers, state.mode, state.heat, state.running, steadyStats?.hasFuelRods]);
 
   return (
@@ -65,6 +66,7 @@ export function App(): JSX.Element {
             running={state.running}
             exploded={state.exploded}
             lifeTotalEu={life?.totalEu ?? null}
+            onSetHeat={r.setHeat}
           />
           <div className="grid-wrapper">
             <ReactorGrid

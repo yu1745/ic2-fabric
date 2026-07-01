@@ -5,6 +5,7 @@
 import {
   ENERGY_CAPACITY,
   EU_PER_OUTPUT,
+  FUEL_ROD_PARAMS,
   HEAT_CAPACITY,
   HEAT_EXPLODE_THRESHOLD,
   HU_PER_BUCKET,
@@ -297,40 +298,42 @@ export const MAX_CHAMBERS_EXPORT = MAX_CHAMBERS;
 export { getMeta };
 
 /**
- * 全寿命模拟：从当前状态跑到燃料耗尽或爆炸，累计总发电与每个燃料棒的总发电。
- * 用于「全生命周期发电」展示——比手算公式更准（含脉冲叠加、MOX 堆温加成、散热衰减等布局效应）。
+ * 全生命周期发电估算：**干跑一次单步**取当前布局下每个燃料棒的单周期发电，
+ * 再乘以燃料棒的**总寿命 cycle 数**（maxUse），得到「从满到空」整个生命周期的发电量。
  *
- * @param startHeat 起始堆温（一般用当前堆温；想看满燃料潜力可用 0）
- * @returns totalEu 累计 EU；perSlotEu 按 slotIndex → 累计 EU；exploded 是否中途熔毁；cycles 跑了多少 cycle
+ * 关键语义（用户要求）：
+ *   - 无论燃料棒当前剩多少寿命，显示的都是「满寿命 → 空寿命」的总发电（潜力指标）
+ *   - 单步发电含真实布局效应（邻接燃料棒/反射板的脉冲加成、MOX 堆温加成）
+ *   - 所以两根铀棒挨着放，单步发电因互脉冲而更高，全生命周期发电也更高
+ *
+ * 这不是「剩余发电」，而是「布局潜力」：单步发电 × 总寿命。
+ *
+ * @param startHeat 单步干跑的起始堆温（MOX 发电依赖堆温；用当前堆温反映瞬时布局潜力）
+ * @returns totalEu 全反应堆全生命周期总发电；perSlotEu 每个燃料棒 slot → 全生命周期发电
  */
-export function simulateFullLife(
+export function estimateFullLifeOutput(
   grid: Grid,
   chambers: number,
   mode: ReactorMode,
   startHeat: number,
-  opts?: { produceEnergy?: boolean; hasCoolant?: boolean; maxCycles?: number },
-): { totalEu: number; perSlotEu: Map<number, number>; exploded: boolean; cycles: number; finalHeat: number } {
-  let cur: Grid = grid.map((s) => (s ? { ...s } : null));
-  let heat = startHeat;
-  let totalEu = 0;
+  opts?: { produceEnergy?: boolean; hasCoolant?: boolean },
+): { totalEu: number; perSlotEu: Map<number, number> } {
+  // 干跑一次（不改输入 grid），取单步 slotHeat.energy
+  const sim = new CycleSimulator(grid, chambers, mode, startHeat, opts);
+  const res = sim.run();
   const perSlotEu = new Map<number, number>();
-  let exploded = false;
-  let cycles = 0;
-  const max = opts?.maxCycles ?? 30000; // 燃料棒最长 20000 cycle，留余量
-  for (let step = 0; step < max; step++) {
-    const sim = new CycleSimulator(cur, chambers, mode, heat, opts);
-    const res = sim.run();
-    cur = res.grid;
-    heat = res.heat;
-    cycles++;
-    // 每 cycle 的 EU = euPerTick × TICKS_PER_CYCLE（euPerTick 已是单 cycle 总量 / 20）
-    totalEu += res.stats.euPerTick * TICKS_PER_CYCLE;
-    // 每个 slot 的发电（slotHeat.energy 是单 cycle 的 output 单位，× EU_PER_OUTPUT = EU）
-    for (const [slotIdx, info] of res.stats.slotHeat) {
-      perSlotEu.set(slotIdx, (perSlotEu.get(slotIdx) ?? 0) + info.energy * EU_PER_OUTPUT);
-    }
-    if (res.stats.exploded) { exploded = true; break; }
-    if (!res.stats.hasFuelRods) break;
+  let totalEu = 0;
+  for (const [slotIdx, info] of res.stats.slotHeat) {
+    const slot = grid[slotIdx];
+    if (!slot) continue;
+    // 仅燃料棒计发电（枯竭棒/其它元件的 energy=0 或无意义）
+    const params = (FUEL_ROD_PARAMS as Record<string, { maxUse: number }>)[slot.id];
+    if (!params) continue;
+    // 单步发电 × 总寿命 = 全生命周期发电
+    const fullLifeEu = info.energy * EU_PER_OUTPUT * params.maxUse;
+    perSlotEu.set(slotIdx, fullLifeEu);
+    totalEu += fullLifeEu;
   }
-  return { totalEu, perSlotEu, exploded, cycles, finalHeat: heat };
+  return { totalEu, perSlotEu };
 }
+
