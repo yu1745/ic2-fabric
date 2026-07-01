@@ -57,7 +57,7 @@ dependencies {
 	modCompileOnly("dev.ftb.mods:ftb-library-fabric:${project.ftb_library_version}") { transitive = false }
 	modCompileOnly("dev.ftb.mods:ftb-teams-fabric:${project.ftb_teams_version}") { transitive = false }
 
-	modRuntimeOnly("com.github.yu1745:mcdebug:0.4.12")
+	modRuntimeOnly("com.github.yu1745:mcdebug:0.4.13")
 	modCompileOnly("dev.architectury:architectury-fabric:${project.architectury_version}")
 
 	// ModMenu + Cloth Config: GUI 配置编辑（软依赖，需要同时安装）
