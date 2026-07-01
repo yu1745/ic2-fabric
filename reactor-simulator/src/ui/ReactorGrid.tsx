@@ -9,19 +9,21 @@ interface Props {
   grid: Grid;
   chambers: number;
   stats: CycleStats | null;
+  /** 当前选中的元件（双击态）：非 null 时空格单击直接放置该元件 */
+  selected: ComponentId | null;
   onPlace: (index: number, id: ComponentId) => void;
   onClear: (index: number) => void;
 }
 
 const cols = (chambers: number) => 3 + chambers;
 
-export function ReactorGrid({ grid, chambers, stats, onPlace, onClear }: Props): JSX.Element {
+export function ReactorGrid({ grid, chambers, stats, selected, onPlace, onClear }: Props): JSX.Element {
   const c = cols(chambers);
   const slotHeat = stats?.slotHeat;
 
   return (
     <div
-      className="reactor-grid"
+      className={'reactor-grid' + (selected ? ' reactor-grid-placing' : '')}
       style={{ gridTemplateColumns: `repeat(${c}, 1fr)`, gridTemplateRows: `repeat(${ROWS}, 1fr)` }}
     >
       {Array.from({ length: c * ROWS }, (_v, idx) => {
@@ -38,15 +40,21 @@ export function ReactorGrid({ grid, chambers, stats, onPlace, onClear }: Props):
               ? '#5599ff'
               : '#444'
           : '#444';
+        // 选中态下空格高亮（提示可放置）
+        const placingEmpty = selected && !slot;
         return (
           <div
             key={idx}
-            className="grid-slot"
+            className={'grid-slot' + (placingEmpty ? ' grid-slot-placeable' : '')}
             style={{ borderColor }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               const id = e.dataTransfer?.getData('text/component-id') as ComponentId | '';
               if (id) onPlace(idx, id);
+            }}
+            onClick={() => {
+              // 选中态：空格单击放置选中元件（已占用格忽略）
+              if (selected && !slot) onPlace(idx, selected);
             }}
             onContextMenu={(e) => {
               e.preventDefault();

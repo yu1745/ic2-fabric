@@ -104,6 +104,24 @@ body {
   overflow-y: auto;
   max-height: 70vh;
 }
+.palette-selected-hint {
+  background: rgba(106, 176, 255, 0.15);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: var(--accent);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+.palette-item-selected {
+  border-color: var(--accent);
+  background: rgba(106, 176, 255, 0.2);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.palette-item-selected img {
+  opacity: 0.95;
+}
 .palette-group {
   margin-bottom: 12px;
 }
@@ -258,6 +276,17 @@ body {
 }
 .grid-slot:hover {
   background: #3a3a48;
+}
+/* 选中放置态：空格高亮提示可放置 */
+.reactor-grid-placing {
+  cursor: crosshair;
+}
+.grid-slot-placeable {
+  background: rgba(106, 176, 255, 0.12);
+  border-color: var(--accent) !important;
+}
+.grid-slot-placeable:hover {
+  background: rgba(106, 176, 255, 0.3);
 }
 .slot-content {
   width: 100%;

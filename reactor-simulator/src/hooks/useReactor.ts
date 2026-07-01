@@ -26,6 +26,8 @@ export interface ReactorState {
   lastStats: CycleStats | null;
   lastGrid: Grid | null; // 上一次模拟后的 grid（用于展示耐久衰减等）
   exploded: boolean;
+  /** 双击元件栏后进入「选中态」：之后单击网格空格连续放置该元件，null = 未选中 */
+  selectedComponent: ComponentId | null;
 }
 
 type Action =
@@ -38,7 +40,8 @@ type Action =
   | { type: 'tick'; stats: CycleStats; grid: Grid; heat: number }
   | { type: 'start'; speed: number }
   | { type: 'stop' }
-  | { type: 'set-speed'; speed: number };
+  | { type: 'set-speed'; speed: number }
+  | { type: 'select-component'; id: ComponentId | null };
 
 function init(chambers: number): ReactorState {
   return {
@@ -52,6 +55,7 @@ function init(chambers: number): ReactorState {
     lastStats: null,
     lastGrid: null,
     exploded: false,
+    selectedComponent: null,
   };
 }
 
@@ -74,6 +78,8 @@ function reducer(s: ReactorState, a: Action): ReactorState {
     case 'set-mode':
       return { ...s, mode: a.mode, running: false, cycle: 0, heat: 0, exploded: false, lastStats: null, lastGrid: null };
     case 'place': {
+      // 已有元件的格子不覆盖（选中态单击放置时跳过占用格）
+      if (s.grid[a.index]) return s;
       const ng = s.grid.slice();
       ng[a.index] = { id: a.id, use: 0 };
       return { ...s, grid: ng };
@@ -104,6 +110,8 @@ function reducer(s: ReactorState, a: Action): ReactorState {
       return { ...s, running: false };
     case 'set-speed':
       return { ...s, speed: a.speed };
+    case 'select-component':
+      return { ...s, selectedComponent: a.id };
     default:
       return s;
   }
@@ -153,6 +161,8 @@ export function useReactor() {
   const reset = useCallback(() => dispatch({ type: 'clear-all' }), []);
   const resetHeat = useCallback(() => dispatch({ type: 'reset-heat' }), []);
   const setSpeed = useCallback((speed: number) => dispatch({ type: 'set-speed', speed }), []);
+  // 双击元件栏选中 / 再次双击或传 null 取消
+  const selectComponent = useCallback((id: ComponentId | null) => dispatch({ type: 'select-component', id }), []);
   const runToCompletion = useCallback(() => {
     // 一次性跑到燃料耗尽或爆炸（用于「快进」预览），不进 setInterval
     const s = stateRef.current;
@@ -175,6 +185,7 @@ export function useReactor() {
     reset,
     resetHeat,
     setSpeed,
+    selectComponent,
     runToCompletion,
   };
 }
