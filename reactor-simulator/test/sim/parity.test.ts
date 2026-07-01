@@ -123,3 +123,59 @@ describe('parity A: 稳态元件 2-cycle 快照对拍', () => {
     expect(res.grid[0]?.id).toBe('uranium_fuel_rod'); // 未枯竭
   });
 });
+
+// ===== 回归：列优先邻接 + component_heat_vent 四邻散热（防 UI/sim 映射错位复发） =====
+// 历史 bug：ReactorGrid 曾把 CSS 行优先 idx 当列优先解释，导致非满配列数下
+// 视觉上下邻居落到错误 slot，OC 的 component_heat_vent 包围失效。
+// 这组测试直接在 sim 层锁定「四邻都生效」的正确语义。
+describe('回归：component_heat_vent 四邻散热 + 列优先邻接', () => {
+  // OC 在 (col3,row3) = slot 3*9+3 = 30；四邻列优先 index：
+  // 上 (3,row2)=29, 下 (3,row4)=31, 左 (col2,3)=21, 右 (col4,3)=39
+  const OC = 30;
+
+  it('OC use=100，仅上侧 component_heat_vent：use 应 -4（上邻生效）', () => {
+    // chambers=3（6列）足够容纳 OC 在 col3；上邻 (col3,row2)
+    const g = emptyGrid(3);
+    g[OC] = { id: 'overclocked_heat_vent', use: 100 };
+    g[29] = { id: 'component_heat_vent', use: 0 }; // 上 (row-1)
+    const res = simulateCycle(g, 3, 'electric', 0);
+    // 上侧抽 -4，selfVent -20，reactorVent 因堆温0 吸 0 → 100-4-20 = 76
+    expect(res.grid[OC]?.use).toBe(76);
+  });
+
+  it('OC use=100，仅下侧 component_heat_vent：use 应 -4（下邻生效）', () => {
+    const g = emptyGrid(3);
+    g[OC] = { id: 'overclocked_heat_vent', use: 100 };
+    g[31] = { id: 'component_heat_vent', use: 0 }; // 下 (row+1)
+    const res = simulateCycle(g, 3, 'electric', 0);
+    expect(res.grid[OC]?.use).toBe(76);
+  });
+
+  it('OC use=100，四侧 component_heat_vent：use 应 -16（全生效）', () => {
+    for (const chambers of [3, 6]) {
+      const g = emptyGrid(chambers);
+      g[OC] = { id: 'overclocked_heat_vent', use: 100 };
+      g[29] = { id: 'component_heat_vent', use: 0 }; // 上
+      g[31] = { id: 'component_heat_vent', use: 0 }; // 下
+      g[21] = { id: 'component_heat_vent', use: 0 }; // 左
+      g[39] = { id: 'component_heat_vent', use: 0 }; // 右
+      const res = simulateCycle(g, chambers, 'electric', 0);
+      // 4×4=16 抽走 + selfVent 20 → 100-16-20 = 64
+      expect(res.grid[OC]?.use, `chambers=${chambers}`).toBe(64);
+    }
+  });
+
+  it('OC + 4 component_heat_vent 长期稳定：use 不无限增长', () => {
+    // 带初始堆温 800（模拟有产热），跑 30 cycle，OC.use 应进入有限稳态而非无限涨
+    const g = emptyGrid(6);
+    g[OC] = { id: 'overclocked_heat_vent', use: 0 };
+    g[29] = { id: 'component_heat_vent', use: 0 };
+    g[31] = { id: 'component_heat_vent', use: 0 };
+    g[21] = { id: 'component_heat_vent', use: 0 };
+    g[39] = { id: 'component_heat_vent', use: 0 };
+    const res = runCycles(g, 6, 'electric', 800, 30);
+    expect(res.grid[OC]).toBeTruthy(); // 未烧毁
+    expect((res.grid[OC]?.use ?? 0)).toBeLessThan(1000); // 远低于容量上限
+    expect((res.grid[OC]?.use ?? 9999)).toBeGreaterThanOrEqual(0);
+  });
+});

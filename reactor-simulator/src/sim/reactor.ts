@@ -295,3 +295,42 @@ export function runCycles(
 
 export const MAX_CHAMBERS_EXPORT = MAX_CHAMBERS;
 export { getMeta };
+
+/**
+ * 全寿命模拟：从当前状态跑到燃料耗尽或爆炸，累计总发电与每个燃料棒的总发电。
+ * 用于「全生命周期发电」展示——比手算公式更准（含脉冲叠加、MOX 堆温加成、散热衰减等布局效应）。
+ *
+ * @param startHeat 起始堆温（一般用当前堆温；想看满燃料潜力可用 0）
+ * @returns totalEu 累计 EU；perSlotEu 按 slotIndex → 累计 EU；exploded 是否中途熔毁；cycles 跑了多少 cycle
+ */
+export function simulateFullLife(
+  grid: Grid,
+  chambers: number,
+  mode: ReactorMode,
+  startHeat: number,
+  opts?: { produceEnergy?: boolean; hasCoolant?: boolean; maxCycles?: number },
+): { totalEu: number; perSlotEu: Map<number, number>; exploded: boolean; cycles: number; finalHeat: number } {
+  let cur: Grid = grid.map((s) => (s ? { ...s } : null));
+  let heat = startHeat;
+  let totalEu = 0;
+  const perSlotEu = new Map<number, number>();
+  let exploded = false;
+  let cycles = 0;
+  const max = opts?.maxCycles ?? 30000; // 燃料棒最长 20000 cycle，留余量
+  for (let step = 0; step < max; step++) {
+    const sim = new CycleSimulator(cur, chambers, mode, heat, opts);
+    const res = sim.run();
+    cur = res.grid;
+    heat = res.heat;
+    cycles++;
+    // 每 cycle 的 EU = euPerTick × TICKS_PER_CYCLE（euPerTick 已是单 cycle 总量 / 20）
+    totalEu += res.stats.euPerTick * TICKS_PER_CYCLE;
+    // 每个 slot 的发电（slotHeat.energy 是单 cycle 的 output 单位，× EU_PER_OUTPUT = EU）
+    for (const [slotIdx, info] of res.stats.slotHeat) {
+      perSlotEu.set(slotIdx, (perSlotEu.get(slotIdx) ?? 0) + info.energy * EU_PER_OUTPUT);
+    }
+    if (res.stats.exploded) { exploded = true; break; }
+    if (!res.stats.hasFuelRods) break;
+  }
+  return { totalEu, perSlotEu, exploded, cycles, finalHeat: heat };
+}

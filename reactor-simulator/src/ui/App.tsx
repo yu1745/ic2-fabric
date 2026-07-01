@@ -1,8 +1,9 @@
 // 顶层布局：模式/腔室 → [元件栏 | 仪表盘+网格] → 运行控制。
 
 import { type JSX } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useMemo } from 'preact/hooks';
 import { useReactor } from '../hooks/useReactor';
+import { simulateFullLife } from '../sim';
 import { ModeToggle } from './ModeToggle';
 import { ComponentPalette } from './ComponentPalette';
 import { Dashboard } from './Dashboard';
@@ -21,6 +22,16 @@ export function App(): JSX.Element {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [state.selectedComponent]);
+
+  // 全寿命模拟（memoized）：用于仪表盘「全寿命总发电」+ tooltip 燃料棒全生命周期发电。
+  // 仅在网格/模式/堆温稳定（非运行中）时重算，避免拖动时高频触发。
+  const displayGrid = state.lastGrid ?? state.grid;
+  const life = useMemo(() => {
+    // 运行中不重算（昂贵），用上次结果
+    if (state.running) return null;
+    if (!steadyStats?.hasFuelRods) return null;
+    return simulateFullLife(displayGrid, state.chambers, state.mode, state.heat);
+  }, [displayGrid, state.chambers, state.mode, state.heat, state.running, steadyStats?.hasFuelRods]);
 
   return (
     <div className="app">
@@ -53,20 +64,23 @@ export function App(): JSX.Element {
             cycle={state.cycle}
             running={state.running}
             exploded={state.exploded}
+            lifeTotalEu={life?.totalEu ?? null}
           />
           <div className="grid-wrapper">
             <ReactorGrid
-              grid={state.lastGrid ?? state.grid}
+              grid={displayGrid}
               chambers={state.chambers}
               stats={steadyStats}
+              mode={state.mode}
               selected={state.selectedComponent}
               onPlace={r.place}
               onClear={r.clear}
+              perSlotLifeEu={life?.perSlotEu ?? null}
             />
             <div className="grid-hint">
               {state.selectedComponent
-                ? `选中放置模式：单击空格放入「${state.selectedComponent}」· 再次单击该元件或按 ESC 取消`
-                : '单击元件栏选中后连续放置 · 拖入元件 · 右键移除 · 红边=产热 · 蓝边=散热'}
+                ? `选中放置模式：左键单击或按住拖动扫过空格批量放入「${state.selectedComponent}」· 右键拖动移除 · 再次单击该元件或按 ESC 取消`
+                : '单击元件栏选中后连续放置 · 左键拖动放置 · 右键单击或拖动移除 · 悬停查看详情 · 红边=产热 · 蓝边=散热'}
             </div>
           </div>
         </div>

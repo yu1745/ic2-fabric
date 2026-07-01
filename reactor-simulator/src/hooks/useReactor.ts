@@ -130,21 +130,47 @@ export function useReactor() {
     return res.stats;
   }, [state.grid, state.chambers, state.mode, state.heat, state.running, state.lastStats]);
 
-  // 运行循环
+  // 运行循环：用 requestAnimationFrame，按速度决定每帧推进几个 cycle。
+  // 高速（如 100 cycle/s）时每帧批量推进多个 cycle，避免 setInterval 高频触发的渲染抖动。
   useEffect(() => {
     if (!state.running) return;
-    const interval = Math.max(50, Math.floor(1000 / state.speed));
-    const timer = window.setInterval(() => {
+    const speed = state.speed; // cycles/sec
+    let raf = 0;
+    let last = performance.now();
+    let pending = 0; // 累积待跑的 cycle 数（分数）
+    const frame = (now: number) => {
+      const dt = (now - last) / 1000;
+      last = now;
+      pending += dt * speed;
+      // 每帧最多跑 floor(pending) 个 cycle，单帧上限 200 防卡死
+      let n = Math.min(200, Math.floor(pending));
+      pending -= n;
       const s = stateRef.current;
       if (s.exploded) {
         dispatch({ type: 'stop' });
         return;
       }
-      // 单步推进
-      const res = simulateCycle(s.grid, s.chambers, s.mode, s.heat);
-      dispatch({ type: 'tick', stats: res.stats, grid: res.grid, heat: res.heat });
-    }, interval);
-    return () => window.clearInterval(timer);
+      let grid = s.grid;
+      let heat = s.heat;
+      let stats = s.lastStats;
+      let exploded = false;
+      while (n > 0) {
+        const res = simulateCycle(grid, s.chambers, s.mode, heat);
+        grid = res.grid;
+        heat = res.heat;
+        stats = res.stats;
+        n--;
+        if (res.stats.exploded) { exploded = true; break; }
+        if (!res.stats.hasFuelRods) break;
+      }
+      if (stats) {
+        dispatch({ type: 'tick', stats, grid, heat });
+        if (exploded) { dispatch({ type: 'stop' }); return; }
+      }
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
   }, [state.running, state.speed]);
 
   const place = useCallback((index: number, id: ComponentId) => dispatch({ type: 'place', index, id }), []);
