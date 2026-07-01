@@ -1,7 +1,7 @@
 // 元件栏：按 category 分组。
-// - 单击：放到首个空格（旧行为保留）
-// - 双击：进入「选中态」，之后在网格空格单击即可连续放置该元件；再次双击同一元件或双击别的元件切换选中
-// 拖放仍保留（HTML5 drag&drop）。
+// - 单击：选中该元件（进入「连续放置态」），再次单击同一元件取消选中
+// 选中后单击网格空格即可连续放置该元件，ESC 退出选中。
+// 拖放仍保留（HTML5 drag&drop，拖一次放一格）。
 
 import { type JSX } from 'preact';
 import { PALETTE } from '../sim';
@@ -18,18 +18,17 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 interface Props {
-  /** 当前选中的元件（双击态），null = 未选中 */
+  /** 当前选中的元件（连续放置态），null = 未选中 */
   selected: ComponentId | null;
-  onPick?: (id: ComponentId) => void;       // 单击：放首个空格
-  onSelect?: (id: ComponentId) => void;     // 双击：进入/切换选中态
+  onSelect?: (id: ComponentId) => void;     // 单击：选中/切换/取消
 }
 
-export function ComponentPalette({ selected, onPick, onSelect }: Props): JSX.Element {
+export function ComponentPalette({ selected, onSelect }: Props): JSX.Element {
   return (
     <div className="palette">
       {selected && (
         <div className="palette-selected-hint">
-          已选中「{nameOf(selected)}」— 单击网格空格放置，再次双击或按 ESC 取消
+          已选中「{nameOf(selected)}」— 单击网格空格放置，再次单击该元件或按 ESC 取消
         </div>
       )}
       {PALETTE.map((group) => (
@@ -45,9 +44,8 @@ export function ComponentPalette({ selected, onPick, onSelect }: Props): JSX.Ele
                   e.dataTransfer?.setData('text/component-id', meta.id);
                   e.dataTransfer && (e.dataTransfer.effectAllowed = 'copy');
                 }}
-                onClick={() => onPick?.(meta.id)}
-                onDblClick={() => onSelect?.(meta.id)}
-                title={`${meta.name}（单击放置 · 双击选中后连续放置 · 可拖动）`}
+                onClick={() => onSelect?.(meta.id)}
+                title={`${meta.name}（单击选中后连续放置 · 可拖动）`}
               >
                 <img src={`./textures/${meta.texture}.png`} alt={meta.name} draggable={false} />
                 <span className="palette-item-name">{meta.name}</span>

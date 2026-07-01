@@ -39,15 +39,9 @@ export function App(): JSX.Element {
       <div className="main-area">
         <ComponentPalette
           selected={state.selectedComponent}
-          onSelect={r.selectComponent}
-          onPick={(id) => {
-            // 有选中态时：单击元件栏 = 切换选中到该元件；无选中态时：放到首个空格（旧行为）
-            if (state.selectedComponent) {
-              r.selectComponent(state.selectedComponent === id ? null : id);
-            } else {
-              const idx = state.grid.findIndex((s) => s === null);
-              if (idx >= 0) r.place(idx, id);
-            }
+          onSelect={(id) => {
+            // 单击元件栏：选中该元件；再次单击同一元件则取消选中
+            r.selectComponent(state.selectedComponent === id ? null : id);
           }}
         />
 
@@ -71,8 +65,8 @@ export function App(): JSX.Element {
             />
             <div className="grid-hint">
               {state.selectedComponent
-                ? `选中放置模式：单击空格放入「${state.selectedComponent}」· 再次双击或按 ESC 取消`
-                : '拖入元件 · 双击元件栏进入连续放置 · 右键移除 · 红边=产热 · 蓝边=散热'}
+                ? `选中放置模式：单击空格放入「${state.selectedComponent}」· 再次单击该元件或按 ESC 取消`
+                : '单击元件栏选中后连续放置 · 拖入元件 · 右键移除 · 红边=产热 · 蓝边=散热'}
             </div>
           </div>
         </div>
