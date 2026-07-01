@@ -14,6 +14,56 @@ import {
 } from '../sim';
 
 const MAX_CHAMBERS = 6;
+const STORAGE_KEY = 'ic2-reactor-simulator:v1';
+
+/** 持久化的状态子集（不含 running/cycle/lastStats 等瞬态） */
+interface Persisted {
+  grid: Grid;
+  chambers: number;
+  mode: ReactorMode;
+  heat: number;
+  speed: number;
+}
+
+/** 从 localStorage 读取持久化布局，失败/无则返回 null */
+function loadPersisted(): Persisted | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as Persisted;
+    // 基本合法性校验
+    if (
+      !Array.isArray(p.grid) ||
+      typeof p.chambers !== 'number' ||
+      (p.mode !== 'electric' && p.mode !== 'fluid') ||
+      typeof p.heat !== 'number' ||
+      typeof p.speed !== 'number'
+    ) {
+      return null;
+    }
+    // 网格容量与 chambers 不一致时，按 chambers 重建（防止脏数据越界）
+    if (p.grid.length !== gridCapacity(p.chambers)) return null;
+    return p;
+  } catch {
+    return null;
+  }
+}
+
+/** 保存布局到 localStorage（静默失败，如隐私模式） */
+function savePersisted(s: ReactorState): void {
+  try {
+    const p: Persisted = {
+      grid: s.grid,
+      chambers: s.chambers,
+      mode: s.mode,
+      heat: s.heat,
+      speed: s.speed,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+  } catch {
+    /* 忽略写入失败 */
+  }
+}
 
 export interface ReactorState {
   grid: Grid;
@@ -44,14 +94,16 @@ type Action =
   | { type: 'set-speed'; speed: number }
   | { type: 'select-component'; id: ComponentId | null };
 
-function init(chambers: number): ReactorState {
+function init(_chambers: number): ReactorState {
+  // 优先从 localStorage 恢复布局（刷新不丢）
+  const persisted = loadPersisted();
   return {
-    grid: emptyGrid(chambers),
-    chambers,
-    mode: 'electric',
-    heat: 0,
+    grid: persisted?.grid ?? emptyGrid(_chambers),
+    chambers: persisted?.chambers ?? _chambers,
+    mode: persisted?.mode ?? 'electric',
+    heat: persisted?.heat ?? 0,
     running: false,
-    speed: 5,
+    speed: persisted?.speed ?? 5,
     cycle: 0,
     lastStats: null,
     lastGrid: null,
@@ -128,6 +180,13 @@ export function useReactor() {
   const [state, dispatch] = useReducer(reducer, 3, init);
   const stateRef = useRef(state);
   stateRef.current = state;
+
+  // 持久化：grid/chambers/mode/heat/speed 变化时写入 localStorage（运行中不写，
+  // 避免每个 tick 频繁写盘；暂停后下次变化时再写）
+  useEffect(() => {
+    if (state.running) return;
+    savePersisted(state);
+  }, [state.grid, state.chambers, state.mode, state.heat, state.speed, state.running]);
 
   // 稳态视图：基于当前 grid + 当前 heat 算一个 cycle 的瞬时统计（不修改状态）
   const steadyStats = useMemo<CycleStats | null>(() => {

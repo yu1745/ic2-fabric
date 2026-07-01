@@ -32,13 +32,15 @@ class UraniumFuelRodBehavior implements IReactorComponent {
       if (!reactor.isFluidCooled()) {
         const totalPulses = (basePulses + neighborPulses) * this.cells;
         reactor.addOutput(totalPulses);
+        // pass0 记录真实单步发电（用于全生命周期估算/仪表盘）。铀棒：energy = totalPulses
+        reactor.addSlotHeatInfo(x * 9 + y, 0, 0, totalPulses);
       }
     } else {
       const heat0 = triangularNumber(basePulses + neighborPulses) * this.cells;
       let heat = heat0;
       reactor.addHeatProduced(heat);
-      const energyOutput = (basePulses + neighborPulses) * this.cells;
-      reactor.addSlotHeatInfo(x * 9 + y, heat, 0, energyOutput);
+      // 热量阶段的 slotHeatInfo 仅记产热（发电已在 pass0 记录，这里 energy=0 避免重复累加）
+      reactor.addSlotHeatInfo(x * 9 + y, heat, 0, 0);
 
       // 产热分配：四邻可储热元件平摊，溢出回流，最后剩余进堆温。
       // 移植自 UraniumFuelRods.kt:87-109
@@ -101,15 +103,18 @@ class MoxFuelRodBehavior implements IReactorComponent {
         // 移植自 UraniumFuelRods.kt:223-226：MOX 输出 = totalPulses * (4*heatFrac + 1)
         const breedereffectiveness = reactor.getHeat() / reactor.getMaxHeat();
         const reaktorOutput = 4.0 * breedereffectiveness + 1.0;
-        reactor.addOutput(totalPulses * reaktorOutput);
+        const moxOutput = totalPulses * reaktorOutput;
+        reactor.addOutput(moxOutput);
+        // pass0 记录真实单步发电（含 MOX 堆温倍率），用于全生命周期估算/仪表盘
+        reactor.addSlotHeatInfo(x * 9 + y, 0, 0, moxOutput);
       }
     } else {
       const rawHeat = triangularNumber(basePulses + neighborPulses) * this.cells;
       const finalHeat = this.getFinalHeat(reactor, rawHeat);
       let heat = finalHeat;
       reactor.addHeatProduced(heat);
-      const energyOutput = (basePulses + neighborPulses) * this.cells;
-      reactor.addSlotHeatInfo(x * 9 + y, heat, 0, energyOutput);
+      // 热量阶段仅记产热（发电已在 pass0 记录，energy=0 避免重复累加）
+      reactor.addSlotHeatInfo(x * 9 + y, heat, 0, 0);
 
       const acceptors: Array<{ slot: Slot; x: number; y: number }> = [];
       checkHeatAcceptor(reactor, x - 1, y, acceptors);
