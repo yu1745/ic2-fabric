@@ -50,8 +50,10 @@ jobs:
           cache-dependency-path: reactor-simulator/pnpm-lock.yaml
 
       - name: install
-        # .npmrc 里 ignore-workspace=true，绕开上层 pnpm workspace
-        run: pnpm install --frozen-lockfile
+        # --ignore-workspace 显式绕开上层 ic2_1.20 的 pnpm workspace，
+        # 否则依赖会装到仓库根 node_modules（hoisted）而非本目录，typecheck 找不到 preact/vitest。
+        # （.npmrc 里的 ignore-workspace=true 在 pnpm v10 下不可靠，故命令行显式传）
+        run: pnpm install --frozen-lockfile --ignore-workspace
 
       - name: typecheck
         run: pnpm exec tsc --noEmit
