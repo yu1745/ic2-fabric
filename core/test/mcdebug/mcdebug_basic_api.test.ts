@@ -44,6 +44,12 @@ export const mcdebugBasicApiTests = defineTests([
   }),
 
   defineTest("mcdebug_api:entity item spawn teleport collect", async (ctx) => {
+    // prepareArea 会把 origin 周围清成 air（含 origin 本身和其下方），item 实体
+    // 在 origin.up() 生成后会因无支撑受重力下落、掉出 listItems 的扫描范围，
+    // 甚至掉出加载区块被清除（曾表现为 0 !== 1 / 4 !== 1 的随机失败）。
+    // 在 origin 放一块石头当地板，item 落在上面即停住。
+    await setBlocks(ctx, [{ pos: ctx.origin, block: "minecraft:stone" }]);
+
     const spawned = await ctx.api.entity.spawn("minecraft:item", ctx.origin.up(), {
       stack: { item: "minecraft:diamond", count: 3 },
     });
@@ -55,7 +61,9 @@ export const mcdebugBasicApiTests = defineTests([
     assert.equal(listed.count, 1);
     assert.equal(listed.items[0]?.uuid, spawned.entity.uuid);
 
+    // teleport 到 origin 东 2 格上方；同样需要地板，否则 item 会继续下落。
     const target = ctx.origin.east(2).up();
+    await setBlocks(ctx, [{ pos: ctx.origin.east(2), block: "minecraft:stone" }]);
     const moved = await ctx.api.entity.teleport(spawned.entity.uuid, target);
     assert.equal(moved.teleported, true);
 

@@ -23,10 +23,48 @@ import {
   setBeField,
   setBlocks,
   setSlot,
+  traceBoxAround,
   waitTicks,
   waitUntil,
+  withTrace,
 } from "@yu1745/mcdebug";
 import { BATBOX_EAST, type TestContext } from "./helpers.js";
+
+/**
+ * 把“等待型”用例包在 trace 里：成功就静默通过；失败时把逐 tick 的库存/BE
+ * NBT 变化附在错误消息上，便于定位是“没供电 / 没配方 / 输出阻塞”哪一种。
+ *
+ * trace 范围只覆盖 origin 一格（机器本体）：我们要看的是机器内部状态变化，
+ * 快照区域越大 trace 越慢、输出越噪。intervalTicks=10 在 15s（300t）窗口里
+ * 大约抓 30 帧，足够看出趋势又不会刷屏。
+ *
+ * ⚠️ 不适用于“机器最终会消失”的用例（如过压爆炸）：trace 在结束时还会抓
+ * 一帧收尾快照，若此时方块已变 air（无 BE），capture 会抛
+ * `no block entity` RpcError。这类用例直接用 waitUntil。
+ */
+async function tracedWait(
+  ctx: TestContext,
+  predicate: string,
+  timeoutTicks: number,
+): Promise<void> {
+  const { trace } = await withTrace(
+    ctx,
+    { box: traceBoxAround(ctx.origin, 0), intervalTicks: 10 },
+    async () => {
+      try {
+        await waitUntil(ctx, predicate, timeoutTicks);
+      } catch (err) {
+        // predicate 超时：把 trace 帧拼成简明诊断附在错误上抛出。
+        const frames = trace.frames.map(f => `t=${f.tick}: ${JSON.stringify(f.snapshot)}`);
+        throw new Error(
+          `${(err as Error).message}\n` +
+          `trace (${frames.length} frames, box=macerator only):\n` +
+          frames.join('\n'),
+        );
+      }
+    },
+  );
+}
 
 /**
  * 标准搭建：东二格 BatBox + 东一格绝缘铜缆（让玩家放置以正确生成 facing），
@@ -52,7 +90,7 @@ export const maceratorTests = defineTests([
   defineTest('macerator:cobblestone to gravel with cable', async (ctx) => {
     await setupMacerator(ctx);
     await insertItem(ctx, ctx.origin, 'minecraft:cobblestone', 1, 0);
-    await waitUntil(ctx, invItemEquals(ctx.origin, 1, 'minecraft:gravel'), 15 * 20);
+    await tracedWait(ctx, invItemEquals(ctx.origin, 1, 'minecraft:gravel'), 15 * 20);
     await assertSlotHas(ctx, ctx.origin, 1, 'minecraft:gravel');
   }),
 
@@ -60,7 +98,7 @@ export const maceratorTests = defineTests([
   defineTest('macerator:coal_block to 9 coal_dust', async (ctx) => {
     await setupMacerator(ctx);
     await insertItem(ctx, ctx.origin, 'minecraft:coal_block', 1, 0);
-    await waitUntil(ctx, invItemEquals(ctx.origin, 1, 'ic2_120:coal_dust'), 15 * 20);
+    await tracedWait(ctx, invItemEquals(ctx.origin, 1, 'ic2_120:coal_dust'), 15 * 20);
     await assertSlotCount(ctx, ctx.origin, 1, 9);
   }),
 
@@ -68,7 +106,7 @@ export const maceratorTests = defineTests([
   defineTest('macerator:8 melon_slice to bio_chaff', async (ctx) => {
     await setupMacerator(ctx);
     await insertItem(ctx, ctx.origin, 'minecraft:melon_slice', 8, 0);
-    await waitUntil(ctx, invItemEquals(ctx.origin, 1, 'ic2_120:bio_chaff'), 15 * 20);
+    await tracedWait(ctx, invItemEquals(ctx.origin, 1, 'ic2_120:bio_chaff'), 15 * 20);
     await assertSlotCount(ctx, ctx.origin, 1, 1);
   }),
 
@@ -76,7 +114,7 @@ export const maceratorTests = defineTests([
   defineTest('macerator:iron_ore to 2 crushed_iron', async (ctx) => {
     await setupMacerator(ctx);
     await insertItem(ctx, ctx.origin, 'minecraft:iron_ore', 1, 0);
-    await waitUntil(ctx, invItemEquals(ctx.origin, 1, 'ic2_120:crushed_iron'), 15 * 20);
+    await tracedWait(ctx, invItemEquals(ctx.origin, 1, 'ic2_120:crushed_iron'), 15 * 20);
     await assertSlotCount(ctx, ctx.origin, 1, 2);
   }),
 
@@ -127,7 +165,7 @@ export const maceratorTests = defineTests([
     await setBeField(ctx, batbox, 'EnergyStored', 40000);
     await place(ctx, ctx.origin, 'ic2_120:macerator');
     await insertItem(ctx, ctx.origin, 'minecraft:cobblestone', 1, 0);
-    await waitUntil(ctx, invItemEquals(ctx.origin, 1, 'minecraft:gravel'), 15 * 20);
+    await tracedWait(ctx, invItemEquals(ctx.origin, 1, 'minecraft:gravel'), 15 * 20);
     await assertSlotHas(ctx, ctx.origin, 1, 'minecraft:gravel');
   }),
 
@@ -139,6 +177,10 @@ export const maceratorTests = defineTests([
     await setBeField(ctx, mfsu, 'EnergyStored', 40_000_000);
     await place(ctx, ctx.origin, 'ic2_120:macerator');
     await insertItem(ctx, ctx.origin, 'minecraft:cobblestone', 1, 0);
+    // 注意：本用例不能用 tracedWait —— 机器最终会爆炸成 air，trace 收尾时
+    // 去 capture 那一格的 BE NBT 会因“方块已不存在”抛 RpcError。爆炸类用例
+    // 直接用 waitUntil 即可（逻辑简单，失败时也容易诊断：方块没变 air 就
+    // 是没爆炸）。
     await waitUntil(ctx, `block[${ctx.origin[0]},${ctx.origin[1]},${ctx.origin[2]}].id == "minecraft:air"`, 15 * 20);
     await assertBlockId(ctx, ctx.origin, 'minecraft:air');
   }),
