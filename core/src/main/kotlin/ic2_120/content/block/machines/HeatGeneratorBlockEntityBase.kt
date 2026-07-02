@@ -26,7 +26,7 @@ abstract class HeatGeneratorBlockEntityBase(
     abstract val heatFlow: HeatFlowSync
 
     override fun getHeatTransferFace(): Direction {
-        return world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH
+        return cachedState.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH)
     }
 
     /** 获取上一 tick 产生的热量（HU） */

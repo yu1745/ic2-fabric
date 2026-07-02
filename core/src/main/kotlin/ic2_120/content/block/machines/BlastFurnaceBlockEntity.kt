@@ -517,7 +517,7 @@ class BlastFurnaceBlockEntity(
             return ModFluids.isCompressedAir(variant.fluid)
         }
         // 再检查任意 Fabric Transfer API 流体容器
-        val storage = FluidStorage.ITEM.find(stack, null) ?: return false
+        val storage = ContainerItemContext.withConstant(stack).find(FluidStorage.ITEM) ?: return false
         for (view in storage) {
             if (!view.isResourceBlank && view.amount >= FluidConstants.BUCKET && ModFluids.isCompressedAir(view.resource.fluid)) {
                 return true

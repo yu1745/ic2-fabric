@@ -21,6 +21,7 @@ import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
+import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -157,7 +158,7 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
     }
 
     private fun tryDrainBucket(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ActionResult {
-        val storage = FluidStorage.ITEM.find(held, null) ?: return ActionResult.PASS
+        val storage = ContainerItemContext.withConstant(held).find(FluidStorage.ITEM) ?: return ActionResult.PASS
         for (view in storage) {
             if (view.isResourceBlank || view.amount < FluidConstants.BUCKET) continue
             var inserted = 0L
