@@ -2,7 +2,7 @@
 	"schemaVersion": 1,
 	"id": "ic2_120",
 	"accessWidener": "ic2_120.accesswidener",
-	"version": "v0.2a",
+	"version": "${version}",
 	"name": "Industrial Craft 2 Refabricated",
 	"description": "IndustrialCraft 2 Experimental \u7684 Minecraft 1.20.1 Fabric \u79fb\u690d\u7248\u672c\uff0c\u4f7f\u7528 Kotlin \u7f16\u5199\uff0c\u57fa\u4e8e\u9006\u5411\u5de5\u7a0b\u5b9e\u73b0\uff0c\u652f\u6301\u4fe1\u96c5\u4e92\u8054\uff0c\u53ef\u4ee5\u88abforge\u52a0\u8f7d",
 	"authors": [
@@ -65,6 +65,7 @@
 		"minecraft": "~1.20.1",
 		"java": ">=17",
 		"fabric-api": "*",
+		"fabric-language-kotlin": ">=1.13.9+2.3.10",
 		"fabric_guidebook": ">=0.1.4"
 	},
 	"suggests": {

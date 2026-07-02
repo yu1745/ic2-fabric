@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "ic2_120_advanced_solar_addon",
-  "version": "v0.1a",
+  "version": "${version}",
   "name": "IC2R Advanced Solar Addon",
   "description": "Advanced Solar Panels addon for IC2 Fabric",
   "authors": ["stardust"],

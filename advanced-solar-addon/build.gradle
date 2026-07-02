@@ -1,6 +1,10 @@
 version = project.mod_version
 group = project.maven_group
 
+base {
+    archivesName = "ic2_120_advanced_solar_addon"
+}
+
 loom {
 	accessWidenerPath = file("src/main/resources/ic2_120_advanced_solar_addon.accesswidener")
 

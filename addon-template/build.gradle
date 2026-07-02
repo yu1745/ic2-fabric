@@ -1,6 +1,10 @@
 version = project.mod_version
 group = project.maven_group
 
+base {
+    archivesName = "addon_template"
+}
+
 loom {
 	mods {
 		"addon_template" {
