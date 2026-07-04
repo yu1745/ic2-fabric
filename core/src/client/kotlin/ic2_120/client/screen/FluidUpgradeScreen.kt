@@ -59,9 +59,7 @@ class FluidUpgradeScreen(
         context.drawText(textRenderer, filterText, x + 9, y + 18 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
 
         // 方向文本 (9,59)-(104,73)
-        val dirIdx = handler.currentDirectionIndex
-        val dirName = t("gui.ic2_120.direction.${Direction.entries[dirIdx].name.lowercase()}")
-        val dirText = t("gui.ic2_120.fluid_upgrade.direction", dirName)
+        val dirText = buildActiveDirectionsText()
         context.drawText(textRenderer, dirText, x + 9, y + 59 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
 
         // 7px 按钮文字覆盖
@@ -69,6 +67,16 @@ class FluidUpgradeScreen(
         draw7pxText(context, x + 108, y + 60, 20, 12, t("gui.ic2_120.fluid_upgrade.cycle_direction_short"))
 
         drawMouseoverTooltip(context, mouseX, mouseY)
+    }
+
+    private fun buildActiveDirectionsText(): String {
+        val activeDirs = Direction.entries.filter { handler.isDirectionActive(it.ordinal) }
+        val dirLabel = if (activeDirs.isEmpty()) {
+            t("gui.ic2_120.fluid_upgrade.any_direction")
+        } else {
+            activeDirs.joinToString(", ") { t("gui.ic2_120.direction.${it.name.lowercase()}") }
+        }
+        return t("gui.ic2_120.fluid_upgrade.direction", dirLabel)
     }
 
     private fun draw7pxText(context: DrawContext, bx: Int, by: Int, bw: Int, bh: Int, text: String) {

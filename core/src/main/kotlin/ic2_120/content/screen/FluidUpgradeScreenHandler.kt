@@ -61,9 +61,9 @@ class FluidUpgradeScreenHandler(
         const val BUTTON_CYCLE_DIRECTION = 8
         const val BUTTON_TOGGLE_DIR = 10  // 10-15
 
-        private const val PROP_DIR_BASE = 0    // 0-5: 6 directions
+        private const val PROP_DIR_BASE = 0
         private const val PROP_FLUID = 6
-        private const val PROP_DIR_INDEX = 7   // 当前切换方向索引
+        @Suppress("unused") private const val PROP_DIR_INDEX = 7
         private const val PROPERTY_COUNT = 8
 
         const val PLAYER_INV_START = SLOT_CONTAINER_COUNT
@@ -114,8 +114,9 @@ class FluidUpgradeScreenHandler(
                 FluidPipeUpgradeComponent.writeFilter(upgradeStack, null)
             }
             BUTTON_CYCLE_DIRECTION -> {
-                val idx = propertyDelegate.get(PROP_DIR_INDEX)
-                propertyDelegate.set(PROP_DIR_INDEX, (idx + 1) % 6)
+                val current = FluidPipeUpgradeComponent.readDirections(upgradeStack)
+                val next = FluidPipeUpgradeComponent.nextDirections(current)
+                FluidPipeUpgradeComponent.writeDirections(upgradeStack, next)
             }
             in BUTTON_TOGGLE_DIR until BUTTON_TOGGLE_DIR + 6 -> {
                 val dirIdx = id - BUTTON_TOGGLE_DIR
