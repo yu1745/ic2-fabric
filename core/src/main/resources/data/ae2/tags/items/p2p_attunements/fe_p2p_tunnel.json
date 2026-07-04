@@ -1,0 +1,19 @@
+{
+  "replace": false,
+  "values": [
+    "ic2_120:tin_cable",
+    "ic2_120:copper_cable",
+    "ic2_120:gold_cable",
+    "ic2_120:iron_cable",
+    "ic2_120:glass_fibre_cable",
+    "ic2_120:insulated_copper_cable",
+    "ic2_120:insulated_tin_cable",
+    "ic2_120:insulated_gold_cable",
+    "ic2_120:double_insulated_gold_cable",
+    "ic2_120:insulated_iron_cable",
+    "ic2_120:double_insulated_iron_cable",
+    "ic2_120:triple_insulated_iron_cable",
+    "ic2_120:splitter_cable",
+    "ic2_120:limiter_cable"
+  ]
+}
