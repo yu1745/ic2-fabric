@@ -1019,9 +1019,10 @@ class NuclearReactorBlockEntity(
 
         val shouldTick = (world.time + tickOffset) % 20L == 0L
         // 红石控制（参考 ElectricHeatGenerator）：有红石接口时以接口为准；无接口时检查反应堆自身
-        val redstonePortsAllowRun = checkRedstonePortsAllowRun()
-        val redstoneAllowsRun = if (redstonePortStates.isNotEmpty()) {
-            redstonePortsAllowRun
+        // 仅在热模式（多方块结构完整）时使用红石接口；电模式下红石接口不连接，回退到反应堆自身信号
+        val usePortControl = isThermalMode() && redstonePortStates.isNotEmpty()
+        val redstoneAllowsRun = if (usePortControl) {
+            checkRedstonePortsAllowRun()
         } else {
             RedstoneControlComponent.canRun(world, pos, this)
         }
