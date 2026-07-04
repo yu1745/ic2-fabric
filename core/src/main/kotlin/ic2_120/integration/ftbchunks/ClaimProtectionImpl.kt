@@ -16,7 +16,7 @@ import java.util.UUID
  * 仅在 [ClaimProtection] 通过 Class.forName 延迟加载时才会被 JVM 解析，
  * 确保 FTB Chunks 未安装时不会触发 ClassNotFoundException。
  */
-class ClaimProtectionImpl {
+class ClaimProtectionImpl : FTBChunksProtection {
 
     /**
      * 爆炸专用保护检查：按 chunk 粒度查询，使用 FTB Chunks 的 canExplosionsDamageTerrain()。
@@ -25,7 +25,7 @@ class ClaimProtectionImpl {
      * 性能说明：claim 是 chunk 粒度的，同一 chunk 内所有方块共享同一个判定，
      * 调用方应按 chunk 缓存结果（见 NuclearExplosion 的 chunkLevelCache）。
      */
-    fun isExplosionProtected(world: World, pos: BlockPos, ownerUuid: UUID?): Boolean {
+    override fun isExplosionProtected(world: World, pos: BlockPos, ownerUuid: UUID?): Boolean {
         if (world.isClient) return false
         val api = FTBChunksAPI.api()
         if (!api.isManagerLoaded) return false
@@ -46,13 +46,13 @@ class ClaimProtectionImpl {
         return true
     }
 
-    fun isProtected(world: World, pos: BlockPos, ownerUuid: UUID?, protectionType: String): Boolean {
+    override fun isProtected(world: World, pos: BlockPos, ownerUuid: UUID?, protectionType: String): Boolean {
         if (world.isClient) return false
         val protection = parseProtection(protectionType) ?: return false
         return checkProtection(world, pos, ownerUuid, protection)
     }
 
-    fun isProtected(world: World, pos: BlockPos, actor: net.minecraft.entity.Entity?, protectionType: String): Boolean {
+    override fun isProtected(world: World, pos: BlockPos, actor: net.minecraft.entity.Entity?, protectionType: String): Boolean {
         if (world.isClient) return false
         val protection = parseProtection(protectionType) ?: return false
         return checkProtectionWithActor(world, pos, actor, protection)
