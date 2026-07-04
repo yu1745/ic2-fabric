@@ -46,4 +46,13 @@ object ClaimProtection {
     fun isProtected(world: World, pos: BlockPos, actor: net.minecraft.entity.Entity?, protectionType: String = EDIT_BLOCK): Boolean {
         return impl?.isProtected(world, pos, actor, protectionType) == true
     }
+
+    /**
+     * 爆炸专用保护检查（FTB Chunks canExplosionsDamageTerrain）。
+     * 返回 true 表示该位置受保护，爆炸不应破坏此处方块。
+     * claim 是 chunk 粒度，调用方应按 chunk 缓存结果以优化批量场景（如核爆炸）。
+     */
+    fun isExplosionProtected(world: World, pos: BlockPos, ownerUuid: UUID? = null): Boolean {
+        return impl?.isExplosionProtected(world, pos, ownerUuid) == true
+    }
 }

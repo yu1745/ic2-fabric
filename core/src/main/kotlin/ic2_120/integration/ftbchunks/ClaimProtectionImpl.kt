@@ -18,6 +18,34 @@ import java.util.UUID
  */
 class ClaimProtectionImpl {
 
+    /**
+     * 爆炸专用保护检查：按 chunk 粒度查询，使用 FTB Chunks 的 canExplosionsDamageTerrain()。
+     * 返回 true 表示该位置受保护（爆炸不应破坏此处的方块）。
+     *
+     * 性能说明：claim 是 chunk 粒度的，同一 chunk 内所有方块共享同一个判定，
+     * 调用方应按 chunk 缓存结果（见 NuclearExplosion 的 chunkLevelCache）。
+     */
+    fun isExplosionProtected(world: World, pos: BlockPos, ownerUuid: UUID?): Boolean {
+        if (world.isClient) return false
+        val api = FTBChunksAPI.api()
+        if (!api.isManagerLoaded) return false
+        val manager = api.manager
+        val chunkDimPos = ChunkDimPos(world, pos)
+        val claimedChunk = manager.getChunk(chunkDimPos) ?: return false
+
+        val teamData = claimedChunk.teamData
+
+        // 1) 如果该 team 允许爆炸破坏地形，直接放行
+        if (teamData.canExplosionsDamageTerrain()) return false
+
+        // 2) 不允许爆炸破坏：判断 owner 是否有权限（owner 是 team 成员则放行自己的反应堆爆炸）
+        if (ownerUuid != null) {
+            if (teamData.isTeamMember(ownerUuid)) return false
+            if (teamData.isAlly(ownerUuid)) return false
+        }
+        return true
+    }
+
     fun isProtected(world: World, pos: BlockPos, ownerUuid: UUID?, protectionType: String): Boolean {
         if (world.isClient) return false
         val protection = parseProtection(protectionType) ?: return false

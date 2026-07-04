@@ -1326,6 +1326,7 @@ abstract class BaseMinerBlockEntity(
         val stateAfterFluid = world.getBlockState(pipePos)
         if (!stateAfterFluid.isAir && stateAfterFluid.block !is MiningPipeBlock) {
             if (stateAfterFluid.getHardness(world, pipePos) < 0f) return false
+            if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, pipePos, ownerUuid)) return false
             world.breakBlock(pipePos, false)
         }
 
@@ -1624,12 +1625,15 @@ abstract class BaseMinerBlockEntity(
 
         if (!fluidTankInternal.hasSpaceForBucket(sourceFluid)) return false
 
+        if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, pos, ownerUuid, ic2_120.integration.ftbchunks.ClaimProtection.EDIT_FLUID)) return false
+
         if (fluidState.isStill) {
             fluidTankInternal.insertBucket(sourceFluid)
             world.setBlockState(pos, net.minecraft.block.Blocks.AIR.defaultState, Block.NOTIFY_ALL)
         } else {
             val sourcePos = findFluidSourceBFS(world, pos, sourceFluid)
             if (sourcePos != null) {
+                if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, sourcePos, ownerUuid, ic2_120.integration.ftbchunks.ClaimProtection.EDIT_FLUID)) return false
                 fluidTankInternal.insertBucket(sourceFluid)
                 world.setBlockState(sourcePos, net.minecraft.block.Blocks.AIR.defaultState, Block.NOTIFY_ALL)
             }

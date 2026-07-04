@@ -1436,9 +1436,10 @@ class NuclearReactorBlockEntity(
             val posStr = "${pos.x} ${pos.y} ${pos.z}"
 
             val explosionDamageSource = sw.damageSources.explosion(null, null)
-            NuclearExplosionManager.startExplosion(
-                sw, cx, cy, cz, boomPower, explosionDamageSource,
-                onComplete = { explosion ->
+           NuclearExplosionManager.startExplosion(
+               sw, cx, cy, cz, boomPower, explosionDamageSource,
+               ownerUuid = ownerUuid,
+               onComplete = { explosion ->
                     // 冷却检查：同一玩家 30 分钟内不重复公告
                     val cooldownMins = Ic2Config.current.nuclear.reactorExplosionCooldownMinutes
                     var shouldBroadcast = true
