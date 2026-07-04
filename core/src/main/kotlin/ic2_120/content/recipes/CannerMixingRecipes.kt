@@ -18,9 +18,12 @@ import net.minecraft.util.Identifier
  * - 蒸馏水 + 1×青金石粉 → 冷却液
  * - 水 + 1×糠 → 生物质
  * - 水 + 建筑泡沫粉 → 建筑泡沫
- * - 水 + 1×蛤蛤粉 → 除草剂（weed_ex）
- */
-object CannerMixingRecipes {
+    * - 水 + 1×蛤蛤粉 → 除草剂（weed_ex）
+     *
+     * 注：只注册 still（静止）流体变体；flowing 变体由 fluidsMatch() 在运行时等价匹配，
+     * 不再单独建条目，否则 JEI 会把同一配方显示两遍。
+     */
+    object CannerMixingRecipes {
 
     data class Recipe(
         val inputFluid: Fluid,
@@ -39,17 +42,11 @@ object CannerMixingRecipes {
     private val recipes: List<Recipe> by lazy {
         listOf(
             Recipe(Fluids.WATER, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 8, ModFluids.COOLANT_STILL),
-            Recipe(Fluids.FLOWING_WATER, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 8, ModFluids.COOLANT_STILL),
             Recipe(ModFluids.DISTILLED_WATER_STILL, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 1, ModFluids.COOLANT_STILL),
-            Recipe(ModFluids.DISTILLED_WATER_FLOWING, IngredientInput.tag(ModTags.Compat.Items.DUSTS_LAPIS, lapisDust), 1, ModFluids.COOLANT_STILL),
             Recipe(Fluids.WATER, IngredientInput.item(bioChaff), 1, ModFluids.BIOMASS_STILL),
-            Recipe(Fluids.FLOWING_WATER, IngredientInput.item(bioChaff), 1, ModFluids.BIOMASS_STILL),
             Recipe(Fluids.WATER, IngredientInput.item(cfPowder), 1, ModFluids.CONSTRUCTION_FOAM_STILL),
-            Recipe(Fluids.FLOWING_WATER, IngredientInput.item(cfPowder), 1, ModFluids.CONSTRUCTION_FOAM_STILL),
             Recipe(Fluids.WATER, IngredientInput.item(grinPowder), 1, ModFluids.WEED_EX_STILL),
-            Recipe(Fluids.FLOWING_WATER, IngredientInput.item(grinPowder), 1, ModFluids.WEED_EX_STILL),
             Recipe(Fluids.WATER, IngredientInput.item(peatOre), 1, ModFluids.BIOMASS_STILL),
-            Recipe(Fluids.FLOWING_WATER, IngredientInput.item(peatOre), 1, ModFluids.BIOMASS_STILL)
         )
     }
 
