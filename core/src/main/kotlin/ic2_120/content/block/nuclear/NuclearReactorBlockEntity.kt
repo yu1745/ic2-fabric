@@ -502,7 +502,7 @@ class NuclearReactorBlockEntity(
     override fun getHeat(): Int = sync.temperature
     override fun setHeat(heat: Int) {
         val old = sync.temperature
-        sync.temperature = heat.coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
+        sync.temperature = heat.coerceAtLeast(0)
         val delta = sync.temperature - old
         cycleSetHeatDeltaTotal += delta
         if (sync.isThermalMode == 1 && delta != 0) {
@@ -522,7 +522,7 @@ class NuclearReactorBlockEntity(
 
     override fun addHeat(amount: Int): Int {
         val old = sync.temperature
-        sync.temperature = (sync.temperature + amount).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
+        sync.temperature = (sync.temperature + amount).coerceAtLeast(0)
         val applied = sync.temperature - old
         cycleAddHeatTotal += applied
         if (sync.isThermalMode == 1 && applied != 0) {
@@ -1063,7 +1063,7 @@ class NuclearReactorBlockEntity(
             }
 
             // 应用最终热量到堆温（无论电/热模式）
-            sync.temperature = (sync.temperature + emitHeatBuffer).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
+            sync.temperature = (sync.temperature + emitHeatBuffer).coerceAtLeast(0)
 
             var thermalEffectiveDissipatedHu = 0L
 
@@ -1155,7 +1155,7 @@ class NuclearReactorBlockEntity(
                         // 热模式下未转换、且未能回灌到散热片的热量不能凭空消失，回加到堆温保持守恒。
                         sync.temperature = (
                             sync.temperature + backfill.remainingHeat.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-                        ).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
+                        ).coerceAtLeast(0)
                     }
                     LOG.debug(
                         "[冷却液转换] 未转换热量回灌散热片: unconverted=${unconvertedHeat}HU " +

@@ -97,10 +97,10 @@ export class CycleSimulator implements IReactor {
   getHeat(): number { return this._heat; }
   setHeat(h: number): void { this._heat = h; }
   addHeat(amount: number): void {
-    // 移植自 NuclearReactorBlockEntity.addHeat：累加并 clamp
+    // 移植自 NuclearReactorBlockEntity.addHeat：累加，仅 clamp 下限
+    // 不夹上限——热量可以超过 maxHeat，由爆炸检查处理（否则散热片会阻止爆炸）
     this._heat += amount;
     if (this._heat < 0) this._heat = 0;
-    if (this._heat > this.getMaxHeat()) this._heat = this.getMaxHeat();
   }
   getMaxHeat(): number {
     // 移植自 getMaxHeat()：10000 + Σ 隔板加成
@@ -176,7 +176,7 @@ export class CycleSimulator implements IReactor {
     }
 
     // 2. emitHeatBuffer 折入堆温（移植自 tick() line ~1066）
-    this._heat = clampInt(this._heat + this.emitHeatBuffer, 0, this.getMaxHeat());
+    this._heat = Math.max(0, this._heat + this.emitHeatBuffer);
 
     // 3. 统计 / 结算
     const maxHeat = this.getMaxHeat();
@@ -336,4 +336,3 @@ export function estimateFullLifeOutput(
   }
   return { totalEu, perSlotEu };
 }
-

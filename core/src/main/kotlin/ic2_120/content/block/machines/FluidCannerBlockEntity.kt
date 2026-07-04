@@ -466,18 +466,16 @@ class FluidCannerBlockEntity(
                         val extracted = view.extract(view.resource, FluidConstants.BUCKET, tx)
                         if (extracted > 0) {
                             val inserted = tankInternal.insert(FluidVariant.of(view.resource.fluid), extracted, tx)
-                            if (inserted == extracted) {
-                                val remaining = ctx.itemVariant.toStack(ctx.amount.toInt().coerceAtLeast(0))
-                                filled.decrement(1)
-                                if (filled.isEmpty) setStack(SLOT_INPUT_FILLED, ItemStack.EMPTY)
-                                else setStack(SLOT_INPUT_FILLED, remaining)
+                           if (inserted == extracted) {
+                               filled.decrement(1)
+                               if (filled.isEmpty) setStack(SLOT_INPUT_FILLED, ItemStack.EMPTY)
 
                                 if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, emptyResult)
                                 else outputSlot.increment(emptyResult.count)
 
-                                syncTankState()
-                                tx.commit()
-                                return
+                               syncTankState()
+                               tx.commit()
+                               return
                             }
                         }
                     }
@@ -553,18 +551,14 @@ class FluidCannerBlockEntity(
                 val inserted = itemStorage.insert(variant, FluidConstants.BUCKET, tx)
                 if (inserted == FluidConstants.BUCKET) {
                     val extracted = tankInternal.extract(variant, inserted, tx)
-                    if (extracted == inserted) {
-                        val remaining = ctx.itemVariant.toStack(ctx.amount.toInt().coerceAtLeast(0))
-                        inputSlot.decrement(1)
-                        if (inputSlot.isEmpty) {
-                            if (wasPrimarySlot) setStack(SLOT_INPUT_FILLED, ItemStack.EMPTY)
-                            else setStack(SLOT_INPUT_EMPTY, ItemStack.EMPTY)
-                        } else {
-                            if (wasPrimarySlot) setStack(SLOT_INPUT_FILLED, remaining)
-                            else setStack(SLOT_INPUT_EMPTY, remaining)
-                        }
+                   if (extracted == inserted) {
+                       inputSlot.decrement(1)
+                       if (inputSlot.isEmpty) {
+                           if (wasPrimarySlot) setStack(SLOT_INPUT_FILLED, ItemStack.EMPTY)
+                           else setStack(SLOT_INPUT_EMPTY, ItemStack.EMPTY)
+                       }
 
-                        if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, filledResult)
+                       if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, filledResult)
                         else outputSlot.increment(filledResult.count)
 
                         syncTankState()

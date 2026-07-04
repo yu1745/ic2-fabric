@@ -86,13 +86,15 @@ class ContainmentBoxInventory(
     private val hand: Hand
 ) : SimpleInventory(ContainmentBoxInventory.SIZE) {
 
+    private var loading: Boolean = false
+
     init {
         loadFromStack()
     }
 
     override fun markDirty() {
         super.markDirty()
-        saveToStack()
+        if (!loading) saveToStack()
     }
 
     override fun onClose(player: PlayerEntity) {
@@ -106,6 +108,8 @@ class ContainmentBoxInventory(
     }
 
     private fun loadFromStack() {
+        loading = true
+        try {
         for (i in 0 until SIZE) setStack(i, ItemStack.EMPTY)
         val stack = player.getStackInHand(hand)
         if (stack.isEmpty || stack.item !is ContainmentBoxItem) return
@@ -115,6 +119,10 @@ class ContainmentBoxInventory(
         val list = DefaultedList.ofSize(SIZE, ItemStack.EMPTY)
         Inventories.readNbt(tag, list)
         for (i in 0 until SIZE) setStack(i, list[i])
+        } finally {
+            loading = false
+        }
+        saveToStack()
     }
 
     private fun saveToStack() {
