@@ -243,11 +243,6 @@ export class CycleSimulator implements IReactor {
     return power;
   }
 }
-
-function clampInt(v: number, lo: number, hi: number): number {
-  return v < lo ? lo : v > hi ? hi : v;
-}
-
 /**
  * 稳态计算：基于当前 grid + 堆温，跑一个 cycle 但不修改输入（用于仪表盘实时展示）。
  * 堆温从 startHeat 开始；若想看「平衡温度」可多次迭代。
