@@ -221,3 +221,14 @@ grep $'\tmethod_XXXXX\t' mappings/mappings.tiny # 查方法名
 git clone -b 1.20.1 https://github.com/FabricMC/fabric-api.git fabric-api_1.20.1
 git clone -b 1.21.1 https://github.com/FabricMC/fabric-api.git fabric-api_1.21.1
 ```
+
+### FTB Chunks / FTB Library 源码
+
+用于查阅 FTB Chunks 保护 API（`ClaimedChunkManager`、`ChunkTeamData`、`canExplosionsDamageTerrain` 等）：
+
+`ash
+git clone --depth 1 https://github.com/FTBTeam/FTB-Chunks.git ../ftb-chunks-src
+git clone --depth 1 https://github.com/FTBTeam/FTB-Library.git ../ftb-library-src
+`
+
+当前副本位于 `../ftb-chunks-src` 和 `../ftb-library-src`。
