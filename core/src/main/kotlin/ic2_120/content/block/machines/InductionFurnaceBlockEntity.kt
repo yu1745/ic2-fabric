@@ -11,6 +11,7 @@ import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.EjectorUpgrade
 import ic2_120.content.item.PullingUpgrade
 import ic2_120.content.item.IUpgradeItem
+import ic2_120.content.item.RedstoneInverterUpgrade
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
@@ -18,8 +19,11 @@ import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
+import ic2_120.content.upgrade.IRedstoneInverterUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.TransformerUpgradeComponent
+import ic2_120.content.upgrade.RedstoneControlComponent
+import ic2_120.content.upgrade.RedstoneInverterUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
@@ -50,7 +54,7 @@ class InductionFurnaceBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport,
-    ExtendedScreenHandlerFactory {
+    IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = InductionFurnaceBlock.ACTIVE
 
@@ -68,6 +72,7 @@ class InductionFurnaceBlockEntity(
     override val tier: Int = INDUCTION_TIER
 
     override var capacityBonus: Long = 0L
+    override var redstoneInverted: Boolean = false
     override var voltageTierBonus: Int = 0
 
     companion object {
@@ -93,6 +98,7 @@ class InductionFurnaceBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is EjectorUpgrade || it.item is PullingUpgrade }),
+            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is RedstoneInverterUpgrade }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_0), matcher = { isSmeltingInput(it) }),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_1), matcher = { isSmeltingInput(it) })
@@ -149,6 +155,7 @@ class InductionFurnaceBlockEntity(
         SLOT_OUTPUT_0, SLOT_OUTPUT_1 -> false
         SLOT_DISCHARGING -> isBatteryItem(stack)
         SLOT_UPGRADE_0, SLOT_UPGRADE_1 -> stack.item is EjectorUpgrade || stack.item is PullingUpgrade
+            || stack.item is RedstoneInverterUpgrade
         else -> false
     }
 
@@ -176,6 +183,7 @@ class InductionFurnaceBlockEntity(
         sync.amount = nbt.getLong(InductionFurnaceSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -183,6 +191,7 @@ class InductionFurnaceBlockEntity(
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(InductionFurnaceSync.NBT_ENERGY_STORED, sync.amount)
+        nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -191,13 +200,14 @@ class InductionFurnaceBlockEntity(
 
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        RedstoneInverterUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
-        val isRedstonePowered = world.isReceivingRedstonePower(pos)
+        val isRedstonePowered = RedstoneControlComponent.canRun(world, pos, this)
         val currentHeat = sync.heat
 
         if (isRedstonePowered) {

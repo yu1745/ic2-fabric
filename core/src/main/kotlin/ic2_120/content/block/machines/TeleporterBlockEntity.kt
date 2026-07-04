@@ -10,8 +10,11 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
+import ic2_120.content.upgrade.IRedstoneInverterUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
+import ic2_120.content.upgrade.RedstoneControlComponent
+import ic2_120.content.upgrade.RedstoneInverterUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
@@ -62,7 +65,7 @@ class TeleporterBlockEntity(
     IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport,
-    ExtendedScreenHandlerFactory {
+    IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = TeleporterBlock.ACTIVE
     override fun getInventory(): net.minecraft.inventory.Inventory = this
@@ -72,6 +75,7 @@ class TeleporterBlockEntity(
     override var energyMultiplier: Float = 1f
     override var capacityBonus: Long = 0L
     override var voltageTierBonus: Int = 0
+    override var redstoneInverted: Boolean = false
 
 
     companion object {
@@ -229,6 +233,7 @@ class TeleporterBlockEntity(
         chargeTicksMax = nbt.getInt(NBT_CHARGE_MAX).coerceAtLeast(0)
         teleportRange = normalizeRange(nbt.getInt(NBT_TELEPORT_RANGE))
 
+        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
         sync.cooldown = teleportCooldown
         sync.targetSet = if (targetPos != null) 1 else 0
         sync.targetX = targetPos?.x ?: 0
@@ -245,6 +250,7 @@ class TeleporterBlockEntity(
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
 
+        nbt.putBoolean("RedstoneInverted", redstoneInverted)
         nbt.putLong(TeleporterSync.NBT_ENERGY_STORED, sync.amount)
         val target = targetPos
         nbt.putBoolean(NBT_TARGET_SET, target != null)
@@ -274,6 +280,7 @@ class TeleporterBlockEntity(
         sync.teleportRange = teleportRange
 
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        RedstoneInverterUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
 
         if (teleportCooldown > 0) {
             teleportCooldown--
@@ -321,8 +328,8 @@ class TeleporterBlockEntity(
             return
         }
 
-        val powered = world.isReceivingRedstonePower(pos)
-        if (!powered) {
+        val redstoneAllowsRun = RedstoneControlComponent.canRun(world, pos, this)
+        if (!redstoneAllowsRun) {
             setActiveState(world, pos, state, false)
             endTick(world, pos)
             return

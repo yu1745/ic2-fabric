@@ -21,8 +21,11 @@ import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
+import ic2_120.content.upgrade.IRedstoneInverterUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.TransformerUpgradeComponent
+import ic2_120.content.upgrade.RedstoneControlComponent
+import ic2_120.content.upgrade.RedstoneInverterUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
@@ -65,7 +68,8 @@ class MatterGeneratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
+    IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty = MatterGeneratorBlock.ACTIVE
     override val tier: Int = MatterGeneratorSync.MATTER_GENERATOR_TIER
@@ -73,6 +77,7 @@ class MatterGeneratorBlockEntity(
     override fun getInventory(): Inventory = this
 
     override var capacityBonus: Long = 0L
+    override var redstoneInverted: Boolean = false
     override var voltageTierBonus: Int = 0
 
     override var fluidPipeProviderEnabled: Boolean = false
@@ -291,6 +296,7 @@ class MatterGeneratorBlockEntity(
         tankInternal.setStoredAmount(nbt.getLong(NBT_TANK_AMOUNT))
         sync.fluidCapacity = MatterGeneratorSync.TANK_CAPACITY_DROPLETS
         sync.mode = resolveDisplayedMode()
+        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -300,6 +306,7 @@ class MatterGeneratorBlockEntity(
         nbt.putLong(MatterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.getStoredAmount())
         nbt.putInt(NBT_PROGRESS, sync.progress)
+        nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -308,6 +315,7 @@ class MatterGeneratorBlockEntity(
 
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        RedstoneInverterUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
         if (fluidPipeProviderEnabled) {
             FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, tankInternal, fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
@@ -324,7 +332,7 @@ class MatterGeneratorBlockEntity(
         adjacentEnergyTransfer.tick()
         fillContainersFromTank()
 
-        if (!world.isReceivingRedstonePower(pos)) {
+        if (!RedstoneControlComponent.canRun(world, pos, this)) {
             setActiveState(world, pos, state, false)
             sync.mode = resolveDisplayedMode()
             sync.syncCurrentTickFlow()

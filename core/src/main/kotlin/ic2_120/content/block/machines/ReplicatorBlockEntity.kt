@@ -24,8 +24,11 @@ import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
+import ic2_120.content.upgrade.IRedstoneInverterUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
+import ic2_120.content.upgrade.RedstoneControlComponent
+import ic2_120.content.upgrade.RedstoneInverterUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
@@ -69,7 +72,8 @@ class ReplicatorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
+    IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty = ReplicatorBlock.ACTIVE
     override val tier: Int = ReplicatorSync.REPLICATOR_TIER
@@ -79,6 +83,7 @@ class ReplicatorBlockEntity(
     override var energyMultiplier: Float = 1f
     override var capacityBonus: Long = 0L
     override var voltageTierBonus: Int = 0
+    override var redstoneInverted: Boolean = false
     override var fluidPipeProviderEnabled: Boolean = false
     override var fluidPipeReceiverEnabled: Boolean = false
     override var fluidPipeProviderFilter: net.minecraft.fluid.Fluid? = null
@@ -262,6 +267,7 @@ class ReplicatorBlockEntity(
         singlePulseConsumed = nbt.getBoolean(NBT_SINGLE_PULSE_CONSUMED)
         fluidConsumptionRemainder = nbt.getLong(NBT_FLUID_REMAINDER).coerceAtLeast(0L)
         tankInternal.setStoredAmount(nbt.getLong(NBT_TANK_AMOUNT))
+        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -273,6 +279,7 @@ class ReplicatorBlockEntity(
         nbt.putInt(NBT_PROGRESS_UB, sync.progressUb)
         nbt.putBoolean(NBT_SINGLE_PULSE_CONSUMED, singlePulseConsumed)
         nbt.putLong(NBT_FLUID_REMAINDER, fluidConsumptionRemainder)
+        nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -282,6 +289,7 @@ class ReplicatorBlockEntity(
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        RedstoneInverterUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
         if (fluidPipeProviderEnabled) {
             FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, tankInternal, fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
@@ -299,8 +307,8 @@ class ReplicatorBlockEntity(
         extractFromDischargingSlot()
         fillTankFromContainers()
 
-        val hasRedstone = world.isReceivingRedstonePower(pos)
-        if (!hasRedstone) {
+        val redstoneAllowsRun = RedstoneControlComponent.canRun(world, pos, this)
+        if (!redstoneAllowsRun) {
             singlePulseConsumed = false
             sync.status = ReplicatorSync.STATUS_NO_REDSTONE
             sync.progressMaxUb = sync.currentCostUb

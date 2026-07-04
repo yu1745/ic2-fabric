@@ -20,8 +20,11 @@ import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
+import ic2_120.content.upgrade.IRedstoneInverterUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
+import ic2_120.content.upgrade.RedstoneControlComponent
+import ic2_120.content.upgrade.RedstoneInverterUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.ModMachineRecipeBinding
@@ -61,7 +64,8 @@ class CentrifugeBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
-    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport,
+    IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CentrifugeBlock.ACTIVE
 
@@ -73,6 +77,7 @@ class CentrifugeBlockEntity(
     override var energyMultiplier: Float = 1f
     override var capacityBonus: Long = 0L
     override var voltageTierBonus: Int = 0
+    override var redstoneInverted: Boolean = false
 
     companion object {
         const val SLOT_INPUT = 0
@@ -168,6 +173,7 @@ class CentrifugeBlockEntity(
         sync.amount = nbt.getLong(CentrifugeSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
+        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -175,6 +181,7 @@ class CentrifugeBlockEntity(
         Inventories.writeNbt(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(CentrifugeSync.NBT_ENERGY_STORED, sync.amount)
+        nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -184,6 +191,7 @@ class CentrifugeBlockEntity(
         OverclockerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EnergyStorageUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
+        RedstoneInverterUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
         PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
@@ -192,12 +200,12 @@ class CentrifugeBlockEntity(
         extractFromDischargingSlot()
 
         val input = getStack(SLOT_INPUT)
-        val hasRedstone = world.isReceivingRedstonePower(pos)
+        val redstoneAllowsRun = RedstoneControlComponent.canRun(world, pos, this)
 
         // 热量逻辑：有红石时加热至 5000；无红石时降至当前配方最低热量
         val recipe = getRecipe()
         val targetHeat = when {
-            hasRedstone -> CentrifugeSync.HEAT_MAX
+            redstoneAllowsRun -> CentrifugeSync.HEAT_MAX
             recipe != null -> recipe.minHeat
             else -> 0
         }
@@ -212,7 +220,7 @@ class CentrifugeBlockEntity(
             }
         }
         // 无红石时热量衰减至 targetHeat
-        if (!hasRedstone && sync.heat > targetHeat) {
+        if (!redstoneAllowsRun && sync.heat > targetHeat) {
             sync.heat = (sync.heat - CentrifugeSync.HEAT_RATE_PER_TICK).coerceAtLeast(targetHeat)
             markDirty()
         }
