@@ -23,16 +23,21 @@ class EnergyStorageSync(
     currentTickProvider = currentTickProvider
 ) {
 
-    companion object {
-        const val NBT_ENERGY_STORED = "EnergyStored"
-    }
+   companion object {
+       const val NBT_ENERGY_STORED = "EnergyStored"
+       const val NBT_CHARGE_MODE = "ChargeMode"
+       const val MODE_CHARGE = 0
+       const val MODE_DISCHARGE = 1
+   }
 
     private val maxRate = EnergyTier.euPerTickFromTier(tier)
 
-    var energy by schema.int("Energy")
-    private val flow = EnergyFlowSync(schema, this)
+   var energy by schema.int("Energy")
+   private val flow = EnergyFlowSync(schema, this)
+   /** 0 = 充电（机器→电池），1 = 放电（电池→机器） */
+   var chargeMode by schema.int("ChargeMode")
 
-    override fun getSideMaxInsert(side: Direction?): Long {
+   override fun getSideMaxInsert(side: Direction?): Long {
         if (side == null) return maxRate
         return if (side != getFacing()) maxRate else 0L
     }

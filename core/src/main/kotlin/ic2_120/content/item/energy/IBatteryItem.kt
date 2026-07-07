@@ -25,16 +25,16 @@ interface IBatteryItem : ITiered {
      */
     val canChargeWireless: Boolean
 
-    /**
-     * 是否可以充电
-     * 一次性电池应重写为 false
-     */
-    val canCharge: Boolean get() = true
+   /**
+    * 是否可以充电
+    * 一次性电池应重写为 false
+    */
+   val canCharge: Boolean get() = true
 
-    /**
-     * 获取当前剩余容量（EU）
-     */
-    fun getCurrentCharge(stack: net.minecraft.item.ItemStack): Long
+   /**
+    * 获取当前剩余容量（EU）
+    */
+   fun getCurrentCharge(stack: net.minecraft.item.ItemStack): Long
 
     /**
      * 设置当前剩余容量（EU）

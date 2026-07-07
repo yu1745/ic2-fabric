@@ -89,21 +89,28 @@ abstract class EnergyStorageBlockEntity(
 
     private val chargerComponents = mutableListOf<BatteryChargerComponent>()
 
-    init {
-        for (slot in 0 until config.slotCount) {
-            if (slot == fuelSlotIndex) continue
-            chargerComponents.add(
-                BatteryChargerComponent(
-                    inventory = this,
-                    batterySlot = slot,
-                    machineTierProvider = { tier },
-                    machineEnergyProvider = { sync.amount },
+   init {
+       for (slot in 0 until config.slotCount) {
+           if (slot == fuelSlotIndex) continue
+           chargerComponents.add(
+               BatteryChargerComponent(
+                   inventory = this,
+                   batterySlot = slot,
+                   machineTierProvider = { tier },
+                    // 充电模式返回机器当前储能（可输出量），放电模式返回剩余容量（可接收量）
+                    machineEnergyProvider = {
+                        if (sync.chargeMode == EnergyStorageSync.MODE_DISCHARGE)
+                            config.capacity - sync.amount
+                        else
+                            sync.amount
+                    },
                     extractEnergy = { requested -> sync.extractEnergy(requested) },
+                    insertEnergy = { requested -> sync.insertEnergy(requested) },
                     canChargeNow = { true }
-                )
-            )
-        }
-    }
+               )
+           )
+       }
+   }
 
     override fun size(): Int = config.slotCount
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
@@ -174,10 +181,14 @@ abstract class EnergyStorageBlockEntity(
 
         adjacentEnergyTransfer.tick()
 
-        var chargedThisTick = 0L
-        for (charger in chargerComponents) {
-            chargedThisTick += charger.tick()
-        }
+       var chargedThisTick = 0L
+       for (charger in chargerComponents) {
+            chargedThisTick += if (sync.chargeMode == EnergyStorageSync.MODE_DISCHARGE) {
+                charger.discharge()
+            } else {
+                charger.tick()
+            }
+       }
 
         if (config.chargePlayersAbove) {
             chargedThisTick += chargePlayersAbove(world, pos)
@@ -227,11 +238,19 @@ abstract class EnergyStorageBlockEntity(
         return charged
     }
 
-    private fun updateActiveState(world: World, pos: BlockPos, active: Boolean) {
-        val current = world.getBlockState(pos)
-        if (!current.contains(EnergyStorageBlock.ACTIVE)) return
-        if (current.get(EnergyStorageBlock.ACTIVE) == active) return
-        world.setBlockState(pos, current.with(EnergyStorageBlock.ACTIVE, active), Block.NOTIFY_LISTENERS)
+   private fun updateActiveState(world: World, pos: BlockPos, active: Boolean) {
+       val current = world.getBlockState(pos)
+       if (!current.contains(EnergyStorageBlock.ACTIVE)) return
+       if (current.get(EnergyStorageBlock.ACTIVE) == active) return
+       world.setBlockState(pos, current.with(EnergyStorageBlock.ACTIVE, active), Block.NOTIFY_LISTENERS)
+   }
+
+    fun toggleChargeMode() {
+        sync.chargeMode = if (sync.chargeMode == EnergyStorageSync.MODE_DISCHARGE)
+            EnergyStorageSync.MODE_CHARGE
+        else
+            EnergyStorageSync.MODE_DISCHARGE
+        markDirty()
     }
 
     // ============== Concrete BlockEntities ==============

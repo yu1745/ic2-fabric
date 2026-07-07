@@ -138,20 +138,34 @@ class EnergyStorageScreenHandler(
         return stack
     }
 
-    val playerInventorySlotStart: Int get() = machineSlotCount + (if (config.useEquipmentSlots) 4 else 0)
+   val playerInventorySlotStart: Int get() = machineSlotCount + (if (config.useEquipmentSlots) 4 else 0)
 
-    private val hotbarEnd: Int
-        get() = playerInventorySlotStart + 35
+   private val hotbarEnd: Int
+       get() = playerInventorySlotStart + 35
 
-    override fun canUse(player: PlayerEntity): Boolean =
+   override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+       if (id == BUTTON_ID_TOGGLE_CHARGE_MODE) {
+           context.get({ world, pos ->
+               val be = world.getBlockEntity(pos)
+               if (be is EnergyStorageBlockEntity) {
+                   be.toggleChargeMode()
+               }
+           }, true)
+           return true
+       }
+       return super.onButtonClick(player, id)
+   }
+
+   override fun canUse(player: PlayerEntity): Boolean =
         context.get({ world, pos ->
             val block = world.getBlockState(pos).block
             block is ic2_120.content.block.storage.EnergyStorageBlock &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
-    companion object {
-        const val SLOT_SIZE = 18
+   companion object {
+       const val SLOT_SIZE = 18
+       const val BUTTON_ID_TOGGLE_CHARGE_MODE = 0
 
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): EnergyStorageScreenHandler {

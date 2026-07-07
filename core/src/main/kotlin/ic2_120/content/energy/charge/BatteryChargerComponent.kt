@@ -19,6 +19,8 @@ class BatteryChargerComponent(
     //从机器提取能量的函数，返回实际提取量（EU）
     //机器应传入自己的 extractEnergy 方法的 lambda，以正确追踪输出速率
     private val extractEnergy: (Long) -> Long,
+    //向机器插入能量的函数，返回实际插入量（EU），用于放电模式
+    private val insertEnergy: (Long) -> Long = { 0L },
     private val canChargeNow: () -> Boolean = { true }
 ) {
     /**
@@ -35,6 +37,42 @@ class BatteryChargerComponent(
             is IElectricTool -> chargeElectricTool(stack, item)
             else -> 0L
         }
+    }
+
+    /**
+     * 执行一次放电流程（电池→机器），返回本次实际放电量（EU）。
+     * 仅支持 [IBatteryItem]，不支持电动工具。
+     */
+    fun discharge(): Long {
+        if (!canChargeNow()) return 0L
+
+       val stack = inventory.getStack(batterySlot)
+       val item = stack.item as? IBatteryItem ?: return 0L
+       if (item.tier > machineTierProvider()) return 0L
+        if (stack.count > 1) return 0L
+
+        val currentCharge = item.getCurrentCharge(stack)
+        if (currentCharge <= 0L) return 0L
+
+        // machineEnergyProvider 在放电模式下应返回机器剩余容量
+        val remainingCapacity = machineEnergyProvider().coerceAtLeast(0L)
+        if (remainingCapacity <= 0L) return 0L
+
+        val transferLimit = item.nominalEuPerTick()
+        val requested = minOf(transferLimit, currentCharge, remainingCapacity)
+        if (requested <= 0L) return 0L
+
+        val discharged = item.discharge(stack, requested).coerceIn(0L, requested)
+        if (discharged <= 0L) return 0L
+
+        val inserted = insertEnergy(discharged).coerceIn(0L, discharged)
+        if (inserted < discharged) {
+            // 机器没接受的部分回充到电池
+            item.charge(stack, discharged - inserted)
+        }
+
+        inventory.setStack(batterySlot, stack)
+        return inserted
     }
 
     private fun chargeBattery(stack: net.minecraft.item.ItemStack, battery: IBatteryItem): Long {
