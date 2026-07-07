@@ -139,7 +139,7 @@ object WrenchHandler {
                 // fall through to normal break
             }
 
-            if (block !is MachineBlock && block !is TankBlock && block !is StorageBoxBlock) return@register ActionResult.PASS
+            if (block !is MachineBlock && block !is DirectionalMachineBlock && block !is TankBlock && block !is StorageBoxBlock) return@register ActionResult.PASS
 
             // 电动扳手：电量不足 1000 EU 则不允许拆卸
             if (isElectricWrench(stack)) {
