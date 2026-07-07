@@ -23,6 +23,7 @@ import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Direction
+import net.minecraft.state.property.Properties
 import ic2_120.registry.annotation.ScreenFactory
 
 /**
@@ -48,7 +49,7 @@ class EnergyStorageScreenHandler(
     private val machineSlotCount: Int = config.slotCount
     val sync = EnergyStorageSync(
         schema = SyncedDataView(propertyDelegate),
-        getFacing = { Direction.NORTH },
+        getFacing = { context.get({ world, pos -> world.getBlockState(pos).get(Properties.FACING) }, Direction.NORTH) },
         tier = config.tier,
         capacity = config.capacity
     )

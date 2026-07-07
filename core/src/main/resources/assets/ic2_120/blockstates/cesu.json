@@ -1,19 +1,16 @@
 {
   "variants": {
-    "facing=east": {
-      "model": "ic2:block/wiring/storage/cesu",
-      "y": 90
-    },
-    "facing=north": {
-      "model": "ic2:block/wiring/storage/cesu"
-    },
-    "facing=south": {
-      "model": "ic2:block/wiring/storage/cesu",
-      "y": 180
-    },
-    "facing=west": {
-      "model": "ic2:block/wiring/storage/cesu",
-      "y": 270
-    }
+      "facing=north,active=true": { "model": "ic2:block/wiring/storage/cesu" }
+    , "facing=north,active=false": { "model": "ic2:block/wiring/storage/cesu" }
+    , "facing=south,active=true": { "model": "ic2:block/wiring/storage/cesu", "y": 180 }
+    , "facing=south,active=false": { "model": "ic2:block/wiring/storage/cesu", "y": 180 }
+    , "facing=east,active=true": { "model": "ic2:block/wiring/storage/cesu", "y": 90 }
+    , "facing=east,active=false": { "model": "ic2:block/wiring/storage/cesu", "y": 90 }
+    , "facing=west,active=true": { "model": "ic2:block/wiring/storage/cesu", "y": 270 }
+    , "facing=west,active=false": { "model": "ic2:block/wiring/storage/cesu", "y": 270 }
+    , "facing=up,active=true": { "model": "ic2:block/wiring/storage/cesu", "x": 270 }
+    , "facing=up,active=false": { "model": "ic2:block/wiring/storage/cesu", "x": 270 }
+    , "facing=down,active=true": { "model": "ic2:block/wiring/storage/cesu", "x": 90 }
+    , "facing=down,active=false": { "model": "ic2:block/wiring/storage/cesu", "x": 90 }
   }
 }

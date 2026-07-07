@@ -1,6 +1,6 @@
 package ic2_120.content.block.storage
 
-import ic2_120.content.block.MachineBlock
+import ic2_120.content.block.DirectionalMachineBlock
 import ic2_120.content.sync.EnergyStorageSync
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
@@ -28,10 +28,11 @@ import net.minecraft.world.World
  */
 abstract class EnergyStorageBlock(
     val config: EnergyStorageConfig
-) : MachineBlock() {
+) : DirectionalMachineBlock() {
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         super.appendProperties(builder)
+        builder.add(ACTIVE)
     }
 
     abstract override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity?

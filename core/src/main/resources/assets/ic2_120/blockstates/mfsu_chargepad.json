@@ -1,12 +1,16 @@
 {
   "variants": {
-    "facing=north,active=false": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad" },
-    "facing=east,active=false": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad", "y": 90 },
-    "facing=south,active=false": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad", "y": 180 },
-    "facing=west,active=false": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad", "y": 270 },
-    "facing=north,active=true": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad_active" },
-    "facing=east,active=true": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad_active", "y": 90 },
-    "facing=south,active=true": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad_active", "y": 180 },
-    "facing=west,active=true": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad_active", "y": 270 }
+      "facing=north,active=true": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad_active" }
+    , "facing=north,active=false": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad" }
+    , "facing=south,active=true": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad_active", "y": 180 }
+    , "facing=south,active=false": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad", "y": 180 }
+    , "facing=east,active=true": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad_active", "y": 90 }
+    , "facing=east,active=false": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad", "y": 90 }
+    , "facing=west,active=true": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad_active", "y": 270 }
+    , "facing=west,active=false": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad", "y": 270 }
+    , "facing=up,active=true": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad_active", "x": 270 }
+    , "facing=up,active=false": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad", "x": 270 }
+    , "facing=down,active=true": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad_active", "x": 90 }
+    , "facing=down,active=false": { "model": "ic2:block/wiring/chargepad/mfsu_chargepad", "x": 90 }
   }
 }

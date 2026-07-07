@@ -83,7 +83,7 @@ abstract class EnergyStorageBlockEntity(
     @RegisterEnergy
     val sync = EnergyStorageSync(
         syncedData,
-        { world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        { world?.getBlockState(pos)?.get(Properties.FACING) ?: Direction.NORTH },
         { world?.time },
         config.tier,
         config.capacity
