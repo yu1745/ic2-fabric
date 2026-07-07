@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.content.block.AnimalSlaughtererBlock
 import ic2_120.content.entity.AnimalFoodMapping
@@ -73,7 +73,7 @@ class AnimalSlaughtererBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1),
+            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && (it.item is IBatteryItem || it.item === Items.REDSTONE) }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_SHEARS), matcher = { !it.isEmpty && it.item == Items.SHEARS }, maxPerSlot = 1)
         ),
         extractSlots = SLOT_CONTENT_INDICES + SLOT_UPGRADE_INDICES + intArrayOf(SLOT_DISCHARGING, SLOT_SHEARS),
@@ -120,7 +120,7 @@ class AnimalSlaughtererBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         SLOT_CONTENT_INDICES.contains(slot) -> false
-        slot == SLOT_DISCHARGING -> stack.item is IBatteryItem
+        slot == SLOT_DISCHARGING -> (stack.item is IBatteryItem || stack.item === Items.REDSTONE)
         slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         SLOT_UPGRADE_INDICES.contains(slot) -> stack.item is IUpgradeItem
         else -> false
@@ -346,11 +346,11 @@ class AnimalSlaughtererBlockEntity(
 
     private fun extractFromDischargingSlot() {
         val space = (sync.getEffectiveCapacity() - sync.amount).coerceAtLeast(0L)
-        if (space <= 0L) return
         val request = minOf(space, sync.getEffectiveMaxInsertPerTick())
         val extracted = batteryDischarger.tick(request)
         if (extracted <= 0L) return
-        sync.insertEnergy(extracted)
+        val inserted = sync.insertEnergy(extracted)
+        if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         markDirty()
     }

@@ -7,11 +7,11 @@ import ic2_120.content.syncs.SyncSchema
  *
  * HU 无储值，直接消耗每 tick 传入的 HU。
  *
- * 升温消耗：
- * - 0–1400：100 HU/tick
- * - 1401–1500：80 HU/tick
- * - 1501–1600：60 HU/tick
- * - 1601–1700：40 HU/tick
+ * 升温消耗（已减半）：
+ * - 0–1400：50 HU/tick
+ * - 1401–1500：40 HU/tick
+ * - 1501–1600：30 HU/tick
+ * - 1601–1700：20 HU/tick
  *
  * 工作条件：温度 > 1400。
  *

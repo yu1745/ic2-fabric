@@ -26,7 +26,7 @@ item_ids:
 
 | 物品 | 等级 | 最大 EU | 说明 |
 |------|:---:|---:|-------|
-| <ItemLink id="ic2_120:single_use_battery" /> | 1 | 10,000 EU | 一次性电池，在任何普通电池槽放电，耗尽后销毁。 |
+| <ItemLink id="ic2_120:single_use_battery" /> | 1 | 2,500 EU | 一次性电池，在任何普通电池槽放电，耗尽后销毁。 |
 | <ItemLink id="ic2_120:re_battery" /> | 1 | 10,000 EU | 基础可充电电池，是早期工具最可靠的移动 EU 来源。 |
 | <ItemLink id="ic2_120:advanced_re_battery" /> | 2 | 100,000 EU | 高容量可充电电池，能让中期电动工具免去频繁充电。 |
 

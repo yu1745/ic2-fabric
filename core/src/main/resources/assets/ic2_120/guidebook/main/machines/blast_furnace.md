@@ -16,14 +16,14 @@ The Blast Furnace turns iron materials into steel. It does not take EU directly:
 
 ## Heat and Temperature
 
-The heat face is the machine's facing side, so place a heat generator against that side and point the two machines at each other. The Blast Furnace has no HU buffer; it only uses the HU it receives during the current tick.
+The heat face is the machine's facing side, so place a heat generator against that side and point the two machines at each other. The Blast Furnace has an internal HU buffer and can continuously receive heat.
 
 - Temperature range: **0-1700 C**
 - Work starts at **1401 C**
-- 0-1400 C: needs **100 HU/t** to heat
-- 1401-1500 C: needs **80 HU/t** to heat or hold temperature
-- 1501-1600 C: needs **60 HU/t** to heat or hold temperature
-- 1601-1700 C: needs **40 HU/t** to heat or hold temperature
+- 0-1400 C: needs **50 HU/t** to heat
+- 1401-1500 C: needs **40 HU/t** to heat or hold temperature
+- 1501-1600 C: needs **30 HU/t** to heat or hold temperature
+- 1601-1700 C: needs **20 HU/t** to heat or hold temperature
 
 If enough HU arrives and the furnace is not currently processing a valid recipe, it warms up. Once it is processing, the temperature is held in place and the same HU/t is required every tick. If HU falls short, progress pauses and the furnace cools down; progress is lost if it cools below 1401 C.
 

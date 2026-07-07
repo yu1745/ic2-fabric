@@ -108,9 +108,13 @@ class BlastFurnaceScreen(
 
         // 升级提示工具提示
         if (mouseX in (x + 35) until (x + 35 + 16) && mouseY in (y + 4) until (y + 4 + 16)) {
-            val upgradeTooltip = mutableListOf<Text>()
-            upgradeTooltip.add(Text.translatable("gui.ic2_120.upgrade_slots"))
-            for (id in SUPPORTED_UPGRADES) {
+           val upgradeTooltip = mutableListOf<Text>()
+           upgradeTooltip.add(Text.translatable("gui.ic2_120.upgrade_slots"))
+            upgradeTooltip.add(Text.translatable("gui.ic2_120.blast_furnace.heat_info_warmup"))
+            upgradeTooltip.add(Text.translatable("gui.ic2_120.blast_furnace.heat_info_maintain"))
+            upgradeTooltip.add(Text.translatable("gui.ic2_120.blast_furnace.heat_info_faster"))
+            upgradeTooltip.add(Text.translatable("gui.ic2_120.blast_furnace.heat_info_lower"))
+           for (id in SUPPORTED_UPGRADES) {
                 val item = Registries.ITEM.get(Identifier("ic2_120", id))
                 upgradeTooltip.add(item.name)
             }

@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.content.sync.ElectricFurnaceSync
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -35,6 +35,7 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.recipe.RecipeType
@@ -102,7 +103,7 @@ class ElectricFurnaceBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) }, maxPerSlot = 1),
+            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) || it.item === Items.REDSTONE }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isSmeltingInput(it) })
         ),
         extractSlots = intArrayOf(SLOT_OUTPUT),
@@ -157,7 +158,7 @@ class ElectricFurnaceBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> isSmeltingInput(stack)
         SLOT_OUTPUT -> false
-        SLOT_DISCHARGING -> isBatteryItem(stack)
+        SLOT_DISCHARGING -> isBatteryItem(stack) || stack.item === Items.REDSTONE
         in SLOT_UPGRADE_0..SLOT_UPGRADE_3 -> stack.item is IUpgradeItem
         else -> false
     }
@@ -293,13 +294,13 @@ class ElectricFurnaceBlockEntity(
      */
     private fun extractFromDischargingSlot() {
         val space = (sync.getEffectiveCapacity() - sync.amount).coerceAtLeast(0L)
-        if (space <= 0L) return
 
         val request = minOf(space, sync.getEffectiveMaxInsertPerTick())
         val extracted = batteryDischarger.tick(request)
         if (extracted <= 0L) return
 
-        sync.insertEnergy(extracted)
+        val inserted = sync.insertEnergy(extracted)
+        if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         markDirty()
     }

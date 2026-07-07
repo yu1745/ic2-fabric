@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.CondenserBlock
@@ -38,6 +38,7 @@ import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandler
@@ -275,7 +276,7 @@ class CondenserBlockEntity(
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_UPGRADE -> isBatteryItem(stack)
-        SLOT_DISCHARGE -> isBatteryItem(stack)
+        SLOT_DISCHARGE -> isBatteryItem(stack) || stack.item === Items.REDSTONE
         SLOT_WATER_INPUT -> isFluidCell(stack) || isWaterBucket(stack)
         SLOT_WATER_OUTPUT -> false  // 仅输出
         in SLOT_VENT_INDICES -> isValidVent(stack)
@@ -355,7 +356,8 @@ class CondenserBlockEntity(
         val euSpace = (CondenserSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0)
         val discharged = batteryDischarger.tick(euSpace.coerceAtMost(CondenserSync.MAX_INSERT))
         if (discharged > 0) {
-            sync.insertEnergy(discharged)
+            val inserted = sync.insertEnergy(discharged)
+            if (discharged > inserted) sync.forceInsertEnergy(discharged - inserted)
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         }
 

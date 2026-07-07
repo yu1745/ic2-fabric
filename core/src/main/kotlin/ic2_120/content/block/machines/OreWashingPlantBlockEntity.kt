@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.content.block.OreWashingPlantBlock
 import ic2_120.content.block.ITieredMachine
@@ -150,7 +150,7 @@ class OreWashingPlantBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) }, maxPerSlot = 1),
+            ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) || it.item === Items.REDSTONE }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_ORE), matcher = { isCrushedOreInput(it) }),
             ItemInsertRoute(intArrayOf(SLOT_INPUT_WATER), matcher = { isWaterInput(it) })
         ),
@@ -252,7 +252,7 @@ class OreWashingPlantBlockEntity(
         SLOT_INPUT_ORE -> isCrushedOreInput(stack)
         SLOT_INPUT_WATER -> isWaterInput(stack)
         SLOT_OUTPUT_1, SLOT_OUTPUT_2, SLOT_OUTPUT_3, SLOT_OUTPUT_EMPTY -> false
-        SLOT_DISCHARGING -> isBatteryItem(stack)
+        SLOT_DISCHARGING -> isBatteryItem(stack) || stack.item === Items.REDSTONE
         in SLOT_UPGRADE_0..SLOT_UPGRADE_3 -> stack.item is IUpgradeItem
         else -> false
     }
@@ -433,13 +433,13 @@ class OreWashingPlantBlockEntity(
 
     private fun extractFromDischargingSlot() {
         val space = (sync.getEffectiveCapacity() - sync.amount).coerceAtLeast(0L)
-        if (space <= 0L) return
 
         val request = minOf(space, sync.getEffectiveMaxInsertPerTick())
         val extracted = batteryDischarger.tick(request)
         if (extracted <= 0L) return
 
-        sync.insertEnergy(extracted)
+        val inserted = sync.insertEnergy(extracted)
+        if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         markDirty()
     }

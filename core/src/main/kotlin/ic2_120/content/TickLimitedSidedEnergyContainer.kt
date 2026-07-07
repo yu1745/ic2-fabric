@@ -255,6 +255,19 @@ open class TickLimitedSidedEnergyContainer(
     }
 
     /**
+     * 强制注能入口（红石转化等），允许溢出容量上限。
+     * 返回实际增加量（等于 requested）。
+     */
+    fun forceInsertEnergy(requested: Long): Long {
+        if (requested <= 0L) return 0L
+        amount += requested
+        trackInternalMutation {
+            insertedThisTick += requested
+        }
+        return requested
+    }
+
+    /**
      * 统一内部取能入口（机器给电池/电动工具充电等）。
      * 返回实际取出量。
      */
@@ -368,4 +381,3 @@ open class UpgradeableTickLimitedSidedEnergyContainer(
         return minOf(transformerMax, space)
     }
 }
-

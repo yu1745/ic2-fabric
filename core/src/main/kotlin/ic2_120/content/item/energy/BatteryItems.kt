@@ -262,11 +262,11 @@ class LapotronCrystalWirelessItem : WirelessBatteryItemBase(
  *
  * 只能放电，不能充电。电量耗尽后自动销毁。
  *
- * @spec 等级1, 容量10,000 EU, 速度32 EU/t, 不可充电
+ * @spec 等级1, 容量2,500 EU, 速度32 EU/t, 不可充电
  */
 @ModItem(name = "single_use_battery", tab = CreativeTab.IC2_MATERIALS, group = "battery")
 class SingleUseBatteryItem : BatteryItemBase(
-    name = "single_use_battery", tier = 1, maxCapacity = 10_000, canChargeWireless = false
+    name = "single_use_battery", tier = 1, maxCapacity = 2_500, canChargeWireless = false
 ) {
     companion object {
         @RecipeProvider

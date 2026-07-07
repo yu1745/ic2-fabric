@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.BlastFurnaceBlock
@@ -60,11 +60,11 @@ import net.minecraft.world.World
  *
  * HU 储值上限 1,000 HU。温度 0–1,700。
  *
- * 升温消耗 HU：
- * - 0–1400：100 HU/tick
- * - 1401–1500：80 HU/tick
- * - 1501–1600：60 HU/tick
- * - 1601–1700：40 HU/tick
+ * 升温消耗 HU（已减半）：
+ * - 0–1400：50 HU/tick
+ * - 1401–1500：40 HU/tick
+ * - 1501–1600：30 HU/tick
+ * - 1601–1700：20 HU/tick
  *
  * 工作条件：温度 > 1400。工作时温度冻结，持续消耗对应温度段的 HU 维持。
  *
@@ -113,7 +113,7 @@ class BlastFurnaceBlockEntity(
         private const val NBT_AIR_AMOUNT = "AirAmount"
         private const val NBT_HU_BUFFER = "HuBuffer"
 
-        /** HU 缓存容量：1280 HU = 16 tick × 80 HU/tick（恰好覆盖 1401 的 1 度温度衰减窗口） */
+        /** HU 缓存容量：1280 HU = 32 tick × 40 HU/tick（恰好覆盖 1401 的 1 度温度衰减窗口） */
         const val HU_BUFFER_CAPACITY: Long = 1280L
 
         @Volatile
@@ -293,29 +293,29 @@ class BlastFurnaceBlockEntity(
         return recipeManager.getFirstMatch(getRecipeType<BlastFurnaceRecipe>(), inv, world ?: return null).orElse(null)
     }
 
-    /** 当前温度下每 tick 升温 / 维持所需 HU */
+    /** 当前温度下每 tick 升温 / 维持所需 HU（已减半） */
     private fun getHuPerTick(temp: Int): Int = when {
-        temp >= 1601 -> 40
-        temp >= 1501 -> 60
-        temp >= 1401 -> 80
-        else -> 100
+        temp >= 1601 -> 20
+        temp >= 1501 -> 30
+        temp >= 1401 -> 40
+        else -> 50
     }
 
-    /** 当前温度下每升高 1 温度值所需 tick 数 */
-    private fun getTicksPerTemp(temp: Int): Int = when {
-        temp >= 1601 -> 56   // 2.8s
-        temp >= 1501 -> 32   // 1.6s
-        temp >= 1401 -> 20   // 1.0s
-        else -> 14           // 0.7s (0–1400)
-    }
+   /** 当前温度下每升高 1 温度值所需 tick 数 */
+   private fun getTicksPerTemp(temp: Int): Int = when {
+       temp >= 1601 -> 56   // 2.8s
+       temp >= 1501 -> 32   // 1.6s
+       temp >= 1401 -> 20   // 1.0s
+       else -> 14           // 0.7s (0–1400)
+   }
 
-    /** 当前温度下 HU 不足时每下降 1 温度值所需 tick 数 */
-    private fun getTicksPerDecay(temp: Int): Int = when {
-        temp >= 1601 -> 6    // 0.3s
-        temp >= 1501 -> 10   // 0.5s
-        temp >= 1401 -> 16   // 0.8s
-        else -> 20           // 1.0s (0–1400)
-    }
+   /** 当前温度下 HU 不足时每下降 1 温度值所需 tick 数 */
+   private fun getTicksPerDecay(temp: Int): Int = when {
+       temp >= 1601 -> 6    // 0.3s
+       temp >= 1501 -> 10   // 0.5s
+       temp >= 1401 -> 16   // 0.8s
+       else -> 20           // 1.0s (0–1400)
+   }
 
     /** 当前温度下的加工总 tick 数（三段线性插值） */
     private fun getProgressMax(temp: Int): Int = BlastFurnaceSync.getProgressMax(temp)

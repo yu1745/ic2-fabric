@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.content.block.AdvancedMinerBlock
 import ic2_120.content.block.BaseMinerBlock
@@ -190,7 +190,7 @@ abstract class BaseMinerBlockEntity(
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = buildList {
             add(ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { isAllowedUpgrade(it) }))
-            add(ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && it.item is IBatteryItem }, maxPerSlot = 1))
+            add(ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && (it.item is IBatteryItem || it.item === Items.REDSTONE) }, maxPerSlot = 1))
             add(ItemInsertRoute(intArrayOf(SLOT_SCANNER), matcher = { isValid(SLOT_SCANNER, it) }, maxPerSlot = 1))
             add(ItemInsertRoute(intArrayOf(SLOT_DRILL), matcher = { isValid(SLOT_DRILL, it) }, maxPerSlot = 1))
             // 普通采矿机：物品槽允许外部管道插入；高级采矿机：过滤槽不允许外部插入/抽出
@@ -398,7 +398,7 @@ abstract class BaseMinerBlockEntity(
                 else -> false
             }
             SLOT_DRILL -> stack.item is Drill || stack.item is DiamondDrill || stack.item is IridiumDrill
-            SLOT_DISCHARGING -> stack.item is IBatteryItem
+            SLOT_DISCHARGING -> (stack.item is IBatteryItem || stack.item === Items.REDSTONE)
             in SLOT_ITEM_START..SLOT_ITEM_END -> {
                 if (acceptsAdvancedScanner) {
                     stack.item is net.minecraft.item.BlockItem
@@ -1948,13 +1948,13 @@ abstract class BaseMinerBlockEntity(
 
     private fun extractFromDischargingSlot() {
         val space = (sync.getEffectiveCapacity() - sync.amount).coerceAtLeast(0L)
-        if (space <= 0L) return
 
         val request = minOf(space, sync.getEffectiveMaxInsertPerTick())
         val extracted = discharger.tick(request)
         if (extracted <= 0L) return
 
-        sync.insertEnergy(extracted)
+        val inserted = sync.insertEnergy(extracted)
+        if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceAtLeast(0)
         markDirty()
     }

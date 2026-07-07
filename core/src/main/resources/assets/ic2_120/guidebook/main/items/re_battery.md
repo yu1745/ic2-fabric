@@ -26,7 +26,7 @@ The Re-Battery family is the cheapest way to get mobile EU. Rechargeable variant
 
 | Item | Tier | Max EU | Notes |
 |------|:---:|---:|-------|
-| <ItemLink id="ic2_120:single_use_battery" /> | 1 | 10,000 EU | One-shot cell. Discharges in any normal battery slot and is destroyed when empty. |
+| <ItemLink id="ic2_120:single_use_battery" /> | 1 | 2,500 EU | One-shot cell. Discharges in any normal battery slot and is destroyed when empty. |
 | <ItemLink id="ic2_120:re_battery" /> | 1 | 10,000 EU | Basic rechargeable. The first reliable mobile EU source for early-game tools. |
 | <ItemLink id="ic2_120:advanced_re_battery" /> | 2 | 100,000 EU | Higher-capacity rechargeable. Carries the mid-game electric tools without frequent recharges. |
 
