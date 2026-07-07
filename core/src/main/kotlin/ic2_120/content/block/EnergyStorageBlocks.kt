@@ -187,13 +187,8 @@ class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
 abstract class ChargepadBlock(config: EnergyStorageConfig) : EnergyStorageBlock(config) {
     init {
         defaultState = stateManager.defaultState
-            .with(Properties.HORIZONTAL_FACING, net.minecraft.util.math.Direction.NORTH)
+            .with(Properties.FACING, net.minecraft.util.math.Direction.NORTH)
             .with(EnergyStorageBlock.ACTIVE, false)
-    }
-
-    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
-        super.appendProperties(builder)
-        builder.add(EnergyStorageBlock.ACTIVE)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
