@@ -186,20 +186,21 @@ abstract class EnergyStorageBlockEntity(
 
        var chargedThisTick = 0L
        for (charger in chargerComponents) {
-            chargedThisTick += if (sync.chargeMode == EnergyStorageSync.MODE_DISCHARGE) {
-                charger.discharge()
-            } else {
-                charger.tick()
-            }
+           chargedThisTick += if (sync.chargeMode == EnergyStorageSync.MODE_DISCHARGE) {
+               charger.discharge()
+           } else {
+               charger.tick()
+           }
        }
 
-        if (config.chargePlayersAbove) {
-            chargedThisTick += chargePlayersAbove(world, pos)
-            updateActiveState(world, pos, chargedThisTick > 0L)
-        }
+       if (config.chargePlayersAbove) {
+           chargedThisTick += chargePlayersAbove(world, pos)
+       }
 
-        sync.syncCurrentTickFlow()
-    }
+       updateActiveState(world, pos, chargedThisTick > 0L)
+
+       sync.syncCurrentTickFlow()
+   }
 
     private fun consumeFuel() {
         val fuelStack = inventory[fuelSlotIndex]
