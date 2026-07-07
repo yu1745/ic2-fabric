@@ -1,0 +1,85 @@
+{
+  "parent": "ic2_120:build_generator/build_compressor/build_nano_suit",
+  "display": {
+    "icon": {
+      "item": "ic2_120:quantum_chestplate"
+    },
+    "title": {
+      "translate": "advancements.ic2_120.buildQuantumSuits"
+    },
+    "description": {
+      "translate": "advancements.ic2_120.buildQuantumSuits.desc"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ic2_120:quantum_helmet": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:quantum_helmet"
+            ]
+          }
+        ]
+      }
+    },
+    "ic2_120:quantum_chestplate": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:quantum_chestplate"
+            ]
+          }
+        ]
+      }
+    },
+    "ic2_120:quantum_leggings": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:quantum_leggings"
+            ]
+          }
+        ]
+      }
+    },
+    "ic2_120:quantum_boots": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:quantum_boots"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ic2_120:quantum_helmet"
+    ],
+    [
+      "ic2_120:quantum_chestplate"
+    ],
+    [
+      "ic2_120:quantum_leggings"
+    ],
+    [
+      "ic2_120:quantum_boots"
+    ]
+  ],
+  "rewards": {
+    "experience": 150
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "parent": "ic2_120:build_generator/build_drill/build_ddrill",
+  "display": {
+    "icon": {
+      "item": "ic2_120:iridium_drill"
+    },
+    "title": {
+      "translate": "advancements.ic2_120.buildIDrill"
+    },
+    "description": {
+      "translate": "advancements.ic2_120.buildIDrill.desc"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ic2_120:iridium_drill": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:iridium_drill"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ic2_120:iridium_drill"
+    ]
+  ]
+}

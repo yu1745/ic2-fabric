@@ -1,0 +1,37 @@
+{
+  "parent": "ic2_120:build_generator/build_drill/root",
+  "display": {
+    "icon": {
+      "item": "ic2_120:diamond_drill"
+    },
+    "title": {
+      "translate": "advancements.ic2_120.buildDDrill"
+    },
+    "description": {
+      "translate": "advancements.ic2_120.buildDDrill.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ic2_120:diamond_drill": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:diamond_drill"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ic2_120:diamond_drill"
+    ]
+  ]
+}

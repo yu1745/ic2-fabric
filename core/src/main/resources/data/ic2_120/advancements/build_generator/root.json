@@ -1,0 +1,37 @@
+{
+  "parent": "ic2_120:acquire_insulated_cable",
+  "display": {
+    "icon": {
+      "item": "ic2_120:generator"
+    },
+    "title": {
+      "translate": "advancements.ic2_120.buildGenerator"
+    },
+    "description": {
+      "translate": "advancements.ic2_120.buildGenerator.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ic2_120:generator": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:generator"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ic2_120:generator"
+    ]
+  ]
+}

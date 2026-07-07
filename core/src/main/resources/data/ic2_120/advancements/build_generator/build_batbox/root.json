@@ -1,0 +1,37 @@
+{
+  "parent": "ic2_120:build_generator/root",
+  "display": {
+    "icon": {
+      "item": "ic2_120:batbox"
+    },
+    "title": {
+      "translate": "advancements.ic2_120.buildBatBox"
+    },
+    "description": {
+      "translate": "advancements.ic2_120.buildBatBox.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ic2_120:batbox": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:batbox"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ic2_120:batbox"
+    ]
+  ]
+}

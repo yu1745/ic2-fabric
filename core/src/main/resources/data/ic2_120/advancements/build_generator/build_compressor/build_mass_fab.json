@@ -1,0 +1,37 @@
+{
+  "parent": "ic2_120:build_generator/build_compressor/build_energy_crystal",
+  "display": {
+    "icon": {
+      "item": "ic2_120:matter_generator"
+    },
+    "title": {
+      "translate": "advancements.ic2_120.buildMassFab"
+    },
+    "description": {
+      "translate": "advancements.ic2_120.buildMassFab.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ic2_120:matter_generator": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:matter_generator"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ic2_120:matter_generator"
+    ]
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "parent": "ic2_120:acquire_resin",
+  "display": {
+    "icon": {
+      "item": "ic2_120:insulated_copper_cable"
+    },
+    "title": {
+      "translate": "advancements.ic2_120.acquireInsulatedCable"
+    },
+    "description": {
+      "translate": "advancements.ic2_120.acquireInsulatedCable.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ic2_120:insulated_copper_cable": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:insulated_copper_cable"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ic2_120:insulated_copper_cable"
+    ]
+  ]
+}

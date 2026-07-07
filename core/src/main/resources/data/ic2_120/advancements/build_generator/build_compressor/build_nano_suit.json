@@ -1,0 +1,76 @@
+{
+  "parent": "ic2_120:build_generator/build_compressor/build_energy_crystal",
+  "display": {
+    "icon": {
+      "item": "ic2_120:nano_chestplate"
+    },
+    "title": {
+      "translate": "advancements.ic2_120.buildNanoSuit"
+    },
+    "description": {
+      "translate": "advancements.ic2_120.buildNanoSuit.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "ic2_120:nano_helmet": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:nano_helmet"
+            ]
+          }
+        ]
+      }
+    },
+    "ic2_120:nano_chestplate": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:nano_chestplate"
+            ]
+          }
+        ]
+      }
+    },
+    "ic2_120:nano_leggings": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:nano_leggings"
+            ]
+          }
+        ]
+      }
+    },
+    "ic2_120:nano_boots": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:nano_boots"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "ic2_120:nano_helmet",
+      "ic2_120:nano_chestplate",
+      "ic2_120:nano_leggings",
+      "ic2_120:nano_boots"
+    ]
+  ]
+}
