@@ -1212,6 +1212,8 @@
   "block.ic2_120.condenser": "Condenser",
 
   "block.ic2_120.steam": "Steam",
+  "block.ic2_120.trade_o_mat": "Trade-O-Mat",
+  "block.ic2_120.energy_o_mat": "Energy O-Mat",
   "block.ic2_120.superheated_steam": "Superheated Steam",
   "item.ic2_120.steam_bucket": "Steam Bucket",
   "item.ic2_120.superheated_steam_bucket": "Superheated Steam Bucket",

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "ic2_120:circuit"
+    },
+    "E": {
+      "item": "ic2_120:energium_dust"
+    },
+    "M": {
+      "item": "ic2_120:machine"
+    },
+    "S": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "pattern": [
+    "S S",
+    "MEM",
+    "SCS"
+  ],
+  "result": {
+    "item": "ic2_120:energy_o_mat"
+  },
+  "show_notification": true
+}

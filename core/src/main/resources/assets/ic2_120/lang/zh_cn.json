@@ -1199,6 +1199,8 @@
   "block.ic2_120.condenser": "冷凝器",
 
   "block.ic2_120.steam": "蒸汽",
+  "block.ic2_120.trade_o_mat": "交易机",
+  "block.ic2_120.energy_o_mat": "能源交易机",
   "block.ic2_120.superheated_steam": "过热蒸汽",
   "item.ic2_120.steam_bucket": "蒸汽桶",
   "item.ic2_120.superheated_steam_bucket": "过热蒸汽桶",
