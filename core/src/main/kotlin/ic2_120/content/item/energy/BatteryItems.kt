@@ -284,8 +284,18 @@ class SingleUseBatteryItem : BatteryItemBase(
         }
     }
 
-    override val canCharge: Boolean get() = false
-    override fun discharge(stack: net.minecraft.item.ItemStack, amount: Long): Long {
+   override val canCharge: Boolean get() = false
+
+   /**
+    * 一次性电池不可充电，制作时即为满电。
+    * 无 NBT 时返回满电量，有 NBT 时返回实际剩余电量。
+    */
+   override fun getCurrentCharge(stack: net.minecraft.item.ItemStack): Long {
+       if (!stack.hasNbt() || !stack.nbt!!.contains(BatteryItemBase.ENERGY_KEY)) return maxCapacity
+       return super.getCurrentCharge(stack)
+   }
+
+   override fun discharge(stack: net.minecraft.item.ItemStack, amount: Long): Long {
         val discharged = super.discharge(stack, amount)
 
         // 电量耗尽后销毁物品

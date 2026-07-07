@@ -213,14 +213,17 @@ class InsulatedCopperCableBlock(settings: AbstractBlock.Settings = defaultSettin
     IInsulatedCable, ITiered {
 
     override val tier: Int = 2
-    override fun getTransferRate(): Long = nominalEuPerTick()
-    override fun getEnergyLoss(): Long = 200L
-    override val insulationLevel: Int = 2
+   override fun getTransferRate(): Long = nominalEuPerTick()
+   override fun getEnergyLoss(): Long = 200L
+  override val insulationLevel: Int = 2
 
-    companion object {
-        @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedCopperCableBlock::class.item(), 1)
+   override fun getCableMin(): Double = 5.0 / 16.0
+   override fun getCableMax(): Double = 11.0 / 16.0
+
+   companion object {
+       @RecipeProvider
+       fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+           ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedCopperCableBlock::class.item(), 1)
                 .input(CopperCableBlock::class.item())
                 .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
                 .criterion(hasItem(CopperCableBlock::class.item()), conditionsFromItem(CopperCableBlock::class.item()))
@@ -251,6 +254,8 @@ class InsulatedTinCableBlock(settings: AbstractBlock.Settings = defaultSettings(
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 200L
     override val insulationLevel: Int = 2
+    override fun getCableMin(): Double = 5.0 / 16.0
+    override fun getCableMax(): Double = 11.0 / 16.0
 
     companion object {
         @RecipeProvider
@@ -287,8 +292,8 @@ class InsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSettings
     override fun getEnergyLoss(): Long = 400L
     override val insulationLevel: Int = 2
 
-    override fun getCableMin(): Double = 6.5 / 16.0
-    override fun getCableMax(): Double = 9.5 / 16.0
+    override fun getCableMin(): Double = 5.5 / 16.0
+    override fun getCableMax(): Double = 10.5 / 16.0
 
     companion object {
         @RecipeProvider
@@ -325,8 +330,8 @@ class DoubleInsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSe
     override fun getEnergyLoss(): Long = 400L
     override val insulationLevel: Int = 3
 
-    override fun getCableMin(): Double = 6.5 / 16.0
-    override fun getCableMax(): Double = 9.5 / 16.0
+    override fun getCableMin(): Double = 4.5 / 16.0
+    override fun getCableMax(): Double = 11.5 / 16.0
 
     companion object {
         @RecipeProvider
@@ -374,8 +379,8 @@ class InsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSettings
     override fun getEnergyLoss(): Long = 800L
     override val insulationLevel: Int = 2
 
-    override fun getCableMin(): Double = 5.0 / 16.0
-    override fun getCableMax(): Double = 11.0 / 16.0
+    override fun getCableMin(): Double = 4.0 / 16.0
+    override fun getCableMax(): Double = 12.0 / 16.0
 
     companion object {
         @RecipeProvider
@@ -412,8 +417,8 @@ class DoubleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
     override fun getEnergyLoss(): Long = 800L
     override val insulationLevel: Int = 3
 
-    override fun getCableMin(): Double = 5.0 / 16.0
-    override fun getCableMax(): Double = 11.0 / 16.0
+    override fun getCableMin(): Double = 3.0 / 16.0
+    override fun getCableMax(): Double = 13.0 / 16.0
 
     companion object {
         @RecipeProvider
@@ -461,8 +466,8 @@ class TripleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
     override fun getEnergyLoss(): Long = 800L
     override val insulationLevel: Int = 4
 
-    override fun getCableMin(): Double = 5.0 / 16.0
-    override fun getCableMax(): Double = 11.0 / 16.0
+    override fun getCableMin(): Double = 2.0 / 16.0
+    override fun getCableMax(): Double = 14.0 / 16.0
 
     companion object {
         @RecipeProvider
