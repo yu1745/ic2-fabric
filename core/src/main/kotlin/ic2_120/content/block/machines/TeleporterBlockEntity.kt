@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.TeleporterBlock
@@ -23,6 +23,7 @@ import ic2_120.registry.type
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
@@ -61,6 +62,7 @@ class TeleporterBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state),
     Inventory,
+    IRoutedSidedInventory,
     ITieredMachine,
     IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport,
@@ -76,7 +78,6 @@ class TeleporterBlockEntity(
     override var capacityBonus: Long = 0L
     override var voltageTierBonus: Int = 0
     override var redstoneInverted: Boolean = false
-
 
     companion object {
         const val TELEPORTER_TIER = 4
@@ -122,6 +123,8 @@ class TeleporterBlockEntity(
         extractSlots = intArrayOf(*SLOT_UPGRADE_INDICES),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
 

@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.BlastFurnaceBlock
@@ -11,6 +11,7 @@ import ic2_120.content.item.EjectorUpgrade
 import ic2_120.content.item.PullingUpgrade
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.content.recipes.blastfurnace.BlastFurnaceRecipe
@@ -86,7 +87,7 @@ class BlastFurnaceBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = BlastFurnaceBlock.ACTIVE
     override fun getInventory(): Inventory = this
@@ -141,6 +142,8 @@ class BlastFurnaceBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT_STEEL, SLOT_OUTPUT_SLAG, SLOT_OUTPUT_EMPTY),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     val syncedData = SyncedData(this)
     val sync = BlastFurnaceSync(syncedData)
 

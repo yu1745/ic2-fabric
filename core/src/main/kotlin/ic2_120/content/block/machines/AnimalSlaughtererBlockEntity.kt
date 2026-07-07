@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.AnimalSlaughtererBlock
 import ic2_120.content.entity.AnimalFoodMapping
@@ -21,6 +21,7 @@ import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
 import net.minecraft.entity.passive.PassiveEntity
@@ -52,6 +53,7 @@ class AnimalSlaughtererBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state),
     Inventory,
+    IRoutedSidedInventory,
     IEnergyStorageUpgradeSupport,
     IEjectorUpgradeSupport,
     ITransformerUpgradeSupport,
@@ -77,6 +79,8 @@ class AnimalSlaughtererBlockEntity(
         extractSlots = SLOT_CONTENT_INDICES + SLOT_UPGRADE_INDICES + intArrayOf(SLOT_DISCHARGING, SLOT_SHEARS),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     val syncedData = SyncedData(this)
 
     @RegisterEnergy

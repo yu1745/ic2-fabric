@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.CondenserBlock
@@ -16,6 +16,7 @@ import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
@@ -64,7 +65,7 @@ class CondenserBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory,
     IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CondenserBlock.ACTIVE
@@ -131,6 +132,8 @@ class CondenserBlockEntity(
         extractSlots = (intArrayOf(SLOT_UPGRADE, SLOT_WATER_OUTPUT, SLOT_DISCHARGE) + SLOT_VENT_INDICES),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
     @RegisterEnergy

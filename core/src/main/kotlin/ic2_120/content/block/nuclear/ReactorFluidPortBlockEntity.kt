@@ -1,10 +1,11 @@
-package ic2_120.content.block.nuclear
+﻿package ic2_120.content.block.nuclear
 
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.annotation.RegisterItemStorage
@@ -43,7 +44,7 @@ class ReactorFluidPortBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, IFluidPipeUpgradeSupport,
+) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IFluidPipeUpgradeSupport,
     ExtendedScreenHandlerFactory {
 
     // 次构造函数：仅接受 pos 和 state，自动获取 type
@@ -104,6 +105,8 @@ class ReactorFluidPortBlockEntity(
         extractSlots = SLOT_UPGRADE_INDICES,
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     // Inventory 实现
     override fun size(): Int = INVENTORY_SIZE

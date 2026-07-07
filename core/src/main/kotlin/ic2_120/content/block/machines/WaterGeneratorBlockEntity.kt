@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -10,6 +10,7 @@ import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.isWaterFuel
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.sync.WaterGeneratorSync
 import ic2_120.content.screen.WaterGeneratorScreenHandler
@@ -68,7 +69,7 @@ class WaterGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
     override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
@@ -139,6 +140,8 @@ class WaterGeneratorBlockEntity(
         extractSlots = intArrayOf(FUEL_SLOT, EMPTY_CONTAINER_SLOT, BATTERY_SLOT, *SLOT_UPGRADE_INDICES),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
 
@@ -442,5 +445,4 @@ class WaterGeneratorBlockEntity(
         return count
     }
 }
-
 

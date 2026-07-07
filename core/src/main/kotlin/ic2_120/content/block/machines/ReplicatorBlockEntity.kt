@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.ReplicatorBlock
@@ -11,6 +11,7 @@ import ic2_120.content.item.ModFluidCell
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.ReplicatorScreenHandler
 import ic2_120.content.sync.ReplicatorSync
@@ -71,7 +72,7 @@ class ReplicatorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
     IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
 
@@ -139,6 +140,8 @@ class ReplicatorBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT, SLOT_CONTAINER_INPUT, SLOT_CONTAINER_OUTPUT, SLOT_DISCHARGING),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     private var singlePulseConsumed = false
     private var fluidConsumptionRemainder = 0L
     private val emptyCellItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "empty_cell")) }

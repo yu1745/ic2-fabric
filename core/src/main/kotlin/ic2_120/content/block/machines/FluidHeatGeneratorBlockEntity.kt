@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.FluidHeatGeneratorBlock
 import ic2_120.content.fluid.ModFluids
@@ -15,6 +15,7 @@ import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
@@ -55,7 +56,7 @@ class FluidHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IFluidPipeUpgradeSupport, ExtendedScreenHandlerFactory {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, IFluidPipeUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = FluidHeatGeneratorBlock.ACTIVE
 
@@ -133,6 +134,8 @@ class FluidHeatGeneratorBlockEntity(
         extractSlots = intArrayOf(FUEL_SLOT, EMPTY_CONTAINER_SLOT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     val syncedData = SyncedData(this)
     override val heatFlow = HeatFlowSync(syncedData, this)
     val sync = FluidHeatGeneratorSync(syncedData, heatFlow)

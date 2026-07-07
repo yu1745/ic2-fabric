@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
@@ -9,6 +9,7 @@ import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.screen.WindGeneratorScreenHandler
 import ic2_120.content.sync.WindGeneratorSync
 import ic2_120.content.syncs.SyncedData
@@ -51,7 +52,7 @@ class WindGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IGenerator,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator,
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     companion object {
@@ -90,6 +91,8 @@ class WindGeneratorBlockEntity(
         extractSlots = intArrayOf(BATTERY_SLOT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
 
@@ -298,5 +301,4 @@ class WindGeneratorBlockEntity(
         return count
     }
 }
-
 

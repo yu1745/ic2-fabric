@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.sync.InductionFurnaceSync
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -15,6 +15,7 @@ import ic2_120.content.item.RedstoneInverterUpgrade
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
@@ -52,7 +53,7 @@ class InductionFurnaceBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport,
     IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
 
@@ -106,6 +107,8 @@ class InductionFurnaceBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT_0, SLOT_OUTPUT_1),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
 

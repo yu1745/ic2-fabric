@@ -23,12 +23,22 @@ class RoutedItemStorage(
     private val markDirty: () -> Unit
 ) : SnapshotParticipant<MutableList<ItemStack>>(), Storage<ItemVariant> {
 
-    private val visibleSlots: IntArray = linkedSetOf<Int>().apply {
+    val visibleSlots: IntArray = linkedSetOf<Int>().apply {
         for (route in insertRoutes) {
             for (slot in route.slotIndices) add(slot)
         }
         for (slot in extractSlots) add(slot)
     }.toIntArray()
+
+    /**
+     * 判断指定 slot 是否允许从侧面插入指定物品（供 SidedInventory.canInsert 委托）。
+     */
+    fun canInsertFromSide(slot: Int, stack: ItemStack): Boolean {
+        if (stack.isEmpty) return false
+        val routesForSlot = insertRoutes.filter { slot in it.slotIndices }
+        if (routesForSlot.isEmpty()) return false
+        return slotValidator(slot, stack) && routesForSlot.any { it.matcher(stack) }
+    }
 
     override fun createSnapshot(): MutableList<ItemStack> = inventory.map { it.copy() }.toMutableList()
 

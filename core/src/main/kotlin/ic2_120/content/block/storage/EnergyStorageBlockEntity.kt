@@ -1,4 +1,4 @@
-package ic2_120.content.block.storage
+﻿package ic2_120.content.block.storage
 
 import ic2_120.content.block.*
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -11,6 +11,7 @@ import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.item.energy.chargePlayerInventoryPerItemLimit
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterItemStorage
@@ -47,7 +48,7 @@ abstract class EnergyStorageBlockEntity(
     pos: BlockPos,
     state: BlockState,
     val config: EnergyStorageConfig
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory, ITieredMachine {
+) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory, ITieredMachine {
 
     override val tier: Int get() = config.tier
 
@@ -75,6 +76,8 @@ abstract class EnergyStorageBlockEntity(
         extractSlots = IntArray(config.slotCount) { it },
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
     @RegisterEnergy

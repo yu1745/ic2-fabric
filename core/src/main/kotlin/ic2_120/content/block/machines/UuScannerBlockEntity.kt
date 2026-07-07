@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
@@ -11,6 +11,7 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.uu.UuTemplateEntry
 import ic2_120.content.uu.findUniqueAdjacentPatternStorage
 import ic2_120.content.uu.setUuTemplate
@@ -43,7 +44,7 @@ class UuScannerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
     override val activeProperty = UuScannerBlock.ACTIVE
     override val tier: Int = UuScannerSync.UU_SCANNER_TIER
@@ -72,6 +73,8 @@ class UuScannerBlockEntity(
         extractSlots = intArrayOf(SLOT_INPUT, SLOT_DISCHARGING, SLOT_CRYSTAL),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     private var lastCompletedItemId: String = ""
     private var cachedTemplate: UuTemplateEntry? = null
 

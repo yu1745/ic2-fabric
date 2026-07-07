@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.sync.GeneratorSync
 import ic2_120.content.block.GeneratorBlock
@@ -31,6 +31,7 @@ import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -44,7 +45,7 @@ class GeneratorBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IGenerator,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator,
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     companion object {
@@ -76,6 +77,8 @@ class GeneratorBlockEntity(
         extractSlots = intArrayOf(FUEL_SLOT, BATTERY_SLOT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
     @RegisterEnergy

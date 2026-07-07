@@ -1,4 +1,4 @@
-package ic2_120.content.block.nuclear
+﻿package ic2_120.content.block.nuclear
 
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
@@ -19,6 +19,7 @@ import ic2_120.content.network.SlotHeatEnergyInfo
 import ic2_120.content.screen.NuclearReactorScreenHandler
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.IRedstoneControlSupport
@@ -82,7 +83,7 @@ class NuclearReactorBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, IGenerator, ITieredMachine, IReactor,
+) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator, ITieredMachine, IReactor,
     ExtendedScreenHandlerFactory, IRedstoneControlSupport, IOwned {
 
     override val tier: Int = NuclearReactorSync.REACTOR_TIER
@@ -104,6 +105,8 @@ class NuclearReactorBlockEntity(
         extractSlots = IntArray(INVENTORY_SIZE) { it },
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     private var tickOffset: Int = 0
 

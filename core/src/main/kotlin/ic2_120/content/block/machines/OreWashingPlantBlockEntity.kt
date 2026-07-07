@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.OreWashingPlantBlock
 import ic2_120.content.block.ITieredMachine
@@ -9,6 +9,7 @@ import ic2_120.content.item.WaterCell
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.recipes.getRecipeType
 import ic2_120.content.recipes.orewashing.OreWashingRecipe
@@ -86,7 +87,7 @@ class OreWashingPlantBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = OreWashingPlantBlock.ACTIVE
@@ -156,6 +157,8 @@ class OreWashingPlantBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT_1, SLOT_OUTPUT_2, SLOT_OUTPUT_3, SLOT_OUTPUT_EMPTY),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
 
@@ -403,18 +406,20 @@ class OreWashingPlantBlockEntity(
             return
         }
 
-        // 消耗能量并增加进度
-        val progressIncrement = speedMultiplier.toInt().coerceAtLeast(1)
-        val need = (OreWashingPlantSync.ENERGY_PER_TICK * energyMultiplier).toLong().coerceAtLeast(1L)
+       // 消耗能量并增加进度
+       val progressIncrement = speedMultiplier.toInt().coerceAtLeast(1)
+       val need = (OreWashingPlantSync.ENERGY_PER_TICK * energyMultiplier).toLong().coerceAtLeast(1L)
+        val currentProgress = sync.progress.coerceIn(0, OreWashingPlantSync.PROGRESS_MAX)
+        val nextProgress = (currentProgress + progressIncrement).coerceAtMost(OreWashingPlantSync.PROGRESS_MAX)
+        val waterNeed = waterNeededForProgressRange(currentProgress, nextProgress)
+        // 先检查水是否充足，不足则不消耗能量
+        if (waterTankInternal.getStoredAmount() < waterNeed) {
+            setActiveState(world, pos, state, false)
+            sync.syncCurrentTickFlow()
+            return
+        }
         if (sync.consumeEnergy(need) > 0L) {
-            val currentProgress = sync.progress.coerceIn(0, OreWashingPlantSync.PROGRESS_MAX)
-            val nextProgress = (currentProgress + progressIncrement).coerceAtMost(OreWashingPlantSync.PROGRESS_MAX)
-            val waterNeed = waterNeededForProgressRange(currentProgress, nextProgress)
-            if (waterTankInternal.consumeInternal(waterNeed) < waterNeed) {
-                setActiveState(world, pos, state, false)
-                sync.syncCurrentTickFlow()
-                return
-            }
+            waterTankInternal.consumeInternal(waterNeed)
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
             sync.progress = nextProgress
             markDirty()

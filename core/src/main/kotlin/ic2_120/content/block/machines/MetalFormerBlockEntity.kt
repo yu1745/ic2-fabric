@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.recipes.getRecipeType
 import ic2_120.content.recipes.metalformer.MetalFormerRecipe
@@ -19,6 +19,7 @@ import ic2_120.content.block.MetalFormerBlock
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.screen.MetalFormerScreenHandler
@@ -50,7 +51,7 @@ class MetalFormerBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = MetalFormerBlock.ACTIVE
@@ -93,6 +94,8 @@ class MetalFormerBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
 

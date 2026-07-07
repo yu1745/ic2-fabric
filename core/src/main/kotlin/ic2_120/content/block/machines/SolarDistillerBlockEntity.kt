@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.SolarDistillerBlock
@@ -16,6 +16,7 @@ import ic2_120.content.item.FluidEjectorUpgrade
 import ic2_120.content.item.FluidPullingUpgrade
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.PullingUpgradeComponent
@@ -80,7 +81,7 @@ class SolarDistillerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
     // 流体管道升级支持属性（IFluidPipeUpgradeSupport 接口实现）
     override var fluidPipeProviderEnabled: Boolean = false  // 是否作为 provider 向管道输出流体
     override var fluidPipeReceiverEnabled: Boolean = false  // 是否作为 receiver 从管道接收流体
@@ -142,6 +143,8 @@ class SolarDistillerBlockEntity(
         extractSlots = intArrayOf(SLOT_INPUT_WATER, SLOT_OUTPUT_EMPTY, SLOT_INPUT_CELL, SLOT_OUTPUT_CELL),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     val syncedData = SyncedData(this)
     val sync = SolarDistillerSync(syncedData)
 

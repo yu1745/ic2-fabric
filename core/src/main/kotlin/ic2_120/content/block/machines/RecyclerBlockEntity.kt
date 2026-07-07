@@ -1,10 +1,11 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.recipes.RecyclerRecipes
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.sync.RecyclerSync
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.upgrade.EjectorUpgradeComponent
@@ -69,7 +70,7 @@ class RecyclerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = RecyclerBlock.ACTIVE
@@ -117,6 +118,8 @@ class RecyclerBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
 

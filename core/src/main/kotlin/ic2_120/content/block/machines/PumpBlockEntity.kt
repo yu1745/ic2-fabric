@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.sound.MachineSoundConfig
@@ -35,6 +35,7 @@ import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
@@ -72,6 +73,7 @@ class PumpBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state),
     Inventory,
+    IRoutedSidedInventory,
     ITieredMachine,
     IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport,
@@ -146,6 +148,8 @@ class PumpBlockEntity(
         extractSlots = intArrayOf(SLOT_INPUT, SLOT_OUTPUT, SLOT_DISCHARGING, *SLOT_UPGRADE_INDICES),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     val syncedData = SyncedData(this)
 
     @RegisterEnergy

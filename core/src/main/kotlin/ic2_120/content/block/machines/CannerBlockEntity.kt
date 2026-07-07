@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.CannerBlock
@@ -19,6 +19,7 @@ import ic2_120.content.recipes.CannerMixingRecipes
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.screen.CannerScreenHandler
 import ic2_120.content.sync.CannerSync
 import ic2_120.content.syncs.SyncedData
@@ -87,7 +88,7 @@ class CannerBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CannerBlock.ACTIVE
@@ -161,6 +162,8 @@ class CannerBlockEntity(
         extractSlots = intArrayOf(SLOT_INPUT, SLOT_MATERIAL, SLOT_OUTPUT, SLOT_DISCHARGING),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
     @RegisterEnergy

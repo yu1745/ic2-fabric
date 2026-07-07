@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.ExtractorBlock
 import ic2_120.content.sound.MachineSoundConfig
@@ -22,6 +22,7 @@ import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.recipes.extractor.ExtractorRecipeSerializer
 import ic2_120.content.recipes.getRecipeType
 import ic2_120.registry.annotation.ModBlockEntity
@@ -53,7 +54,7 @@ class ExtractorBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = ExtractorBlock.ACTIVE
 
@@ -102,6 +103,8 @@ class ExtractorBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
     @RegisterEnergy
@@ -271,5 +274,4 @@ class ExtractorBlockEntity(
         markDirty()
     }
 }
-
 

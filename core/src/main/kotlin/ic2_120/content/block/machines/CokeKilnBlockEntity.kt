@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.CokeKilnBlock
 import ic2_120.content.block.CokeKilnHatchBlock
@@ -8,6 +8,7 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.content.item.Coke
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.instance
@@ -42,7 +43,7 @@ class CokeKilnBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
     companion object {
         private const val SLOT_INPUT = 0
@@ -78,6 +79,8 @@ class CokeKilnBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     private var progress = 0
     private var structureDirty = true
     private var cachedStructureValid = false

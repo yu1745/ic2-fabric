@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.sync.MaceratorSync
 import ic2_120.content.energy.charge.BatteryDischargerComponent
@@ -17,6 +17,7 @@ import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.screen.MaceratorScreenHandler
 import ic2_120.content.syncs.SyncedData
@@ -52,7 +53,7 @@ class MaceratorBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = MaceratorBlock.ACTIVE
@@ -102,6 +103,8 @@ class MaceratorBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
     @RegisterEnergy

@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.SolidHeatGeneratorBlock
 import ic2_120.content.screen.SolidHeatGeneratorScreenHandler
@@ -9,6 +9,7 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
 import net.fabricmc.fabric.api.registry.FuelRegistry
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
@@ -39,7 +40,7 @@ class SolidHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, ExtendedScreenHandlerFactory {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SolidHeatGeneratorBlock.ACTIVE
 
@@ -64,6 +65,8 @@ class SolidHeatGeneratorBlockEntity(
         extractSlots = intArrayOf(SLOT_FUEL, SLOT_OUTPUT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     private var burnTime = 0
     private var burnTotal = 0
     val syncedData = SyncedData(this)

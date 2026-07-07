@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.CentrifugeBlock
 import ic2_120.content.block.ITieredMachine
@@ -8,6 +8,7 @@ import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.recipes.centrifuge.CentrifugeRecipe
 import ic2_120.content.recipes.centrifuge.CentrifugeRecipeSerializer
 import ic2_120.content.recipes.getRecipeType
@@ -63,7 +64,7 @@ class CentrifugeBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine, IOverclockerUpgradeSupport,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport,
     IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
 
@@ -109,6 +110,8 @@ class CentrifugeBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT_1, SLOT_OUTPUT_2, SLOT_OUTPUT_3),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
     @RegisterEnergy

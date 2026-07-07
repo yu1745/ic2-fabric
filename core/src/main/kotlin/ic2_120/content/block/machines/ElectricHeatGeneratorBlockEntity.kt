@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.ElectricHeatGeneratorBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
@@ -6,6 +6,7 @@ import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.sync.ElectricHeatGeneratorSync
 import ic2_120.content.sync.HeatFlowSync
 import ic2_120.content.syncs.SyncedData
@@ -49,7 +50,7 @@ class ElectricHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRedstoneControlSupport, ExtendedScreenHandlerFactory {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, IRedstoneControlSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = ElectricHeatGeneratorBlock.ACTIVE
 
@@ -75,6 +76,8 @@ class ElectricHeatGeneratorBlockEntity(
         extractSlots = IntArray(SLOT_COUNT) { it },
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     private val coilItem by lazy { Registries.ITEM.get(Identifier("ic2_120", "coil")) }
 
     private val batteryDischarger = BatteryDischargerComponent(

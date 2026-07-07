@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.FermenterBlock
@@ -20,6 +20,7 @@ import ic2_120.content.item.FluidEjectorUpgrade
 import ic2_120.content.item.FluidPullingUpgrade
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
@@ -68,7 +69,7 @@ class FermenterBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+) : HeatConsumerBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = FermenterBlock.ACTIVE
     override val tier: Int = 1
@@ -132,6 +133,8 @@ class FermenterBlockEntity(
         ),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
     private val fluidCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) }
     private val biomassCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "biomass_cell")) }

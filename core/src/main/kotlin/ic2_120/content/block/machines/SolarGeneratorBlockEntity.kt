@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
@@ -8,6 +8,7 @@ import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.screen.SolarGeneratorScreenHandler
 import ic2_120.content.sync.SolarGeneratorSync
 import ic2_120.content.syncs.SyncedData
@@ -49,7 +50,7 @@ class SolarGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IGenerator,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator,
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SolarGeneratorBlock.ACTIVE
@@ -78,6 +79,8 @@ class SolarGeneratorBlockEntity(
         extractSlots = intArrayOf(BATTERY_SLOT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
 
@@ -229,5 +232,4 @@ class SolarGeneratorBlockEntity(
         return true
     }
 }
-
 

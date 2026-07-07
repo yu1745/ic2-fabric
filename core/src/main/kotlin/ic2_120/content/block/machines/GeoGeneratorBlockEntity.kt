@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.GeoGeneratorBlock
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -8,6 +8,7 @@ import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.item.LavaCell
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.canBeCharged
 import ic2_120.Ic2_120
@@ -64,7 +65,7 @@ class GeoGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IGenerator,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator,
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     companion object {
@@ -112,6 +113,8 @@ class GeoGeneratorBlockEntity(
         extractSlots = intArrayOf(FUEL_SLOT, EMPTY_CONTAINER_SLOT, BATTERY_SLOT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
 

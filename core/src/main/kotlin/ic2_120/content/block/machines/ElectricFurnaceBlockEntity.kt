@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.sync.ElectricFurnaceSync
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -12,6 +12,7 @@ import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
 import ic2_120.content.upgrade.PullingUpgradeComponent
@@ -53,7 +54,7 @@ class ElectricFurnaceBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine,
     IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
@@ -107,6 +108,8 @@ class ElectricFurnaceBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
     @RegisterEnergy
@@ -310,5 +313,4 @@ class ElectricFurnaceBlockEntity(
         return w.recipeManager.getFirstMatch(RecipeType.SMELTING, inv, w).isPresent
     }
 }
-
 

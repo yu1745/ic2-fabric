@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.AdvancedMinerBlock
 import ic2_120.content.block.BaseMinerBlock
@@ -26,6 +26,7 @@ import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.MinerScreenHandler
 import ic2_120.content.sound.MachineSoundConfig
@@ -97,7 +98,7 @@ abstract class BaseMinerBlockEntity(
     private val blockKey: String,
     private val baseTier: Int,
     private val acceptsAdvancedScanner: Boolean
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine,
     IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
     IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
@@ -205,6 +206,8 @@ abstract class BaseMinerBlockEntity(
             + intArrayOf(SLOT_PIPE),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     val pipeStorage = PipeSlotStorage(
         inventory = inventory,
         slotIndex = SLOT_PIPE,

@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.PatternStorageBlock
@@ -14,6 +14,7 @@ import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -43,7 +44,7 @@ class PatternStorageBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
     companion object {
         const val SLOT_CRYSTAL = 0
@@ -63,6 +64,8 @@ class PatternStorageBlockEntity(
         extractSlots = intArrayOf(SLOT_CRYSTAL),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     private val crystalMemoryId = Identifier(Ic2_120.MOD_ID, "crystal_memory")
 
     private val templates = mutableListOf<UuTemplateEntry>()

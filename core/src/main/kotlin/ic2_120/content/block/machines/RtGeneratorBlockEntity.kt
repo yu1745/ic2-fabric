@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -8,6 +8,7 @@ import ic2_120.content.block.RtGeneratorBlock
 import ic2_120.content.screen.RtGeneratorScreenHandler
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.sync.RtGeneratorSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
@@ -47,7 +48,7 @@ class RtGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IGenerator,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator,
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = RtGeneratorBlock.ACTIVE
@@ -80,6 +81,8 @@ class RtGeneratorBlockEntity(
         extractSlots = IntArray(6) { it },
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
 
@@ -190,5 +193,4 @@ class RtGeneratorBlockEntity(
 
     }
 }
-
 

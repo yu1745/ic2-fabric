@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.CropBlock
@@ -10,6 +10,7 @@ import ic2_120.content.item.OverclockerUpgrade
 import ic2_120.content.screen.UvLampScreenHandler
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.sync.UvLampSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
@@ -47,7 +48,7 @@ class UvLampBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
@@ -61,6 +62,8 @@ class UvLampBlockEntity(
         extractSlots = intArrayOf(SLOT_UPGRADE),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     val syncedData = SyncedData(this)
 
     @RegisterEnergy

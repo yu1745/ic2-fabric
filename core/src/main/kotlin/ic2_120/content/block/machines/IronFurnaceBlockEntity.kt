@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.IronFurnaceBlock
 import ic2_120.content.screen.IronFurnaceScreenHandler
@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.registry.FuelRegistry
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
@@ -45,7 +46,7 @@ class IronFurnaceBlockEntity(
     type: net.minecraft.block.entity.BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : BlockEntity(type, pos, state), Inventory, ExtendedScreenHandlerFactory {
+) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
     private val activeProperty: net.minecraft.state.property.BooleanProperty = IronFurnaceBlock.ACTIVE
 
@@ -86,6 +87,8 @@ class IronFurnaceBlockEntity(
         extractSlots = intArrayOf(SLOT_OUTPUT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
     val sync = IronFurnaceSync(syncedData)

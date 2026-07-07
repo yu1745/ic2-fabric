@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.AnimalmatronBlock
@@ -10,6 +10,7 @@ import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.getFluidCellVariant
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.AnimalmatronScreenHandler
 import ic2_120.content.sync.AnimalmatronSync
@@ -74,6 +75,7 @@ class AnimalmatronBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state),
     Inventory,
+    IRoutedSidedInventory,
     IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport,
@@ -113,6 +115,8 @@ class AnimalmatronBlockEntity(
         extractSlots = IntArray(INVENTORY_SIZE) { it },
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     val syncedData = SyncedData(this)
 
     @RegisterEnergy
@@ -803,7 +807,6 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
 
     private fun isWeedEx(fluid: net.minecraft.fluid.Fluid): Boolean =
         fluid == ModFluids.WEED_EX_STILL || fluid == ModFluids.WEED_EX_FLOWING
-
 
     private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
 

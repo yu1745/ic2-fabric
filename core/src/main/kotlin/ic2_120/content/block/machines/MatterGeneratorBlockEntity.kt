@@ -10,6 +10,7 @@ import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.content.item.setFluidCellVariant
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.screen.MatterGeneratorScreenHandler
 import ic2_120.content.sync.MatterGeneratorSync
@@ -67,7 +68,7 @@ class MatterGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, ITieredMachine,
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IFluidPipeUpgradeSupport,
     IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
 
@@ -133,6 +134,8 @@ class MatterGeneratorBlockEntity(
         extractSlots = intArrayOf(SLOT_SCRAP, SLOT_CONTAINER_INPUT, SLOT_CONTAINER_OUTPUT),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     private val emptyCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "empty_cell")) }
     private val fluidCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "fluid_cell")) }
     private val uuMatterCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "uu_matter_cell")) }

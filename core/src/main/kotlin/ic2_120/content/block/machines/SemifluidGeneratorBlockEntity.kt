@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.SemifluidGeneratorBlock
@@ -11,6 +11,7 @@ import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.recipes.ModTags
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.screen.SemifluidGeneratorScreenHandler
 import ic2_120.content.sync.SemifluidGeneratorSync
 import ic2_120.content.syncs.SyncedData
@@ -54,7 +55,7 @@ class SemifluidGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), Inventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
+) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator, IFluidPipeUpgradeSupport, net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SemifluidGeneratorBlock.ACTIVE
 
@@ -142,6 +143,8 @@ class SemifluidGeneratorBlockEntity(
         extractSlots = intArrayOf(FUEL_SLOT, EMPTY_CONTAINER_SLOT, BATTERY_SLOT, *SLOT_UPGRADE_INDICES),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     val syncedData = SyncedData(this)
 
     @RegisterEnergy

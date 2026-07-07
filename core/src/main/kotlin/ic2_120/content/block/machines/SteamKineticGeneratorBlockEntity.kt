@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.content.block.SteamKineticGeneratorBlock
 import ic2_120.content.block.transmission.IKineticMachinePort
@@ -13,6 +13,7 @@ import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
@@ -63,7 +64,7 @@ class SteamKineticGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : MachineBlockEntity(type, pos, state), IKineticMachinePort, Inventory,
+) : MachineBlockEntity(type, pos, state), IKineticMachinePort, Inventory, IRoutedSidedInventory,
     IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = SteamKineticGeneratorBlock.ACTIVE
@@ -103,7 +104,6 @@ class SteamKineticGeneratorBlockEntity(
             fluidLookupRegistered = true
         }
 
-
         fun mbToDroplets(mb: Long): Long = mb * FluidConstants.BUCKET / 1000
         fun dropletsToMb(droplets: Long): Long = droplets * 1000 / FluidConstants.BUCKET
     }
@@ -121,6 +121,8 @@ class SteamKineticGeneratorBlockEntity(
         extractSlots = intArrayOf(SLOT_TURBINE, SLOT_UPGRADE),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
 
     val syncedData = SyncedData(this)
     val sync = SteamKineticGeneratorSync(syncedData)

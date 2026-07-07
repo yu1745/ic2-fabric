@@ -1,4 +1,4 @@
-package ic2_120.content.block.machines
+﻿package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.RtHeatGeneratorBlock
@@ -10,6 +10,7 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
+import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.registry.annotation.RegisterItemStorage
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
@@ -41,7 +42,7 @@ class RtHeatGeneratorBlockEntity(
     type: BlockEntityType<*>,
     pos: BlockPos,
     state: BlockState
-) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, ExtendedScreenHandlerFactory {
+) : HeatGeneratorBlockEntityBase(type, pos, state), Inventory, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = RtHeatGeneratorBlock.ACTIVE
 
@@ -80,6 +81,8 @@ class RtHeatGeneratorBlockEntity(
         extractSlots = intArrayOf(0, 1, 2, 3, 4, 5),
         markDirty = { markDirty() }
     )
+
+    override val routedItemStorage get() = itemStorage
     val syncedData = SyncedData(this)
     override val heatFlow = HeatFlowSync(syncedData, this)
     val sync = RtHeatGeneratorSync(syncedData, heatFlow)
