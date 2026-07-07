@@ -1336,9 +1336,8 @@ abstract class BaseMinerBlockEntity(
         refreshPipeBudget()
         if (pipePlacementBudget <= 0) return false
 
-        val pipeEnergy = getPipeEnergyCost()
-        if (sync.consumeEnergy(pipeEnergy) <= 0L) return false
-
+       val pipeEnergy = getPipeEnergyCost()
+        // 先检查管道库存，避免无管道时白白消耗能量
         findPipeInInventory() ?: run {
             if (triggerPipeRecycling()) {
                 pipeRecyclingRequested = true
@@ -1347,6 +1346,7 @@ abstract class BaseMinerBlockEntity(
             }
             return false
         }
+        if (sync.consumeEnergy(pipeEnergy) <= 0L) return false
         takePipes(1)
 
         world.setBlockState(pipePos, MiningPipeBlock::class.instance().defaultState, Block.NOTIFY_ALL)
