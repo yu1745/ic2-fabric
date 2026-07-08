@@ -1,6 +1,7 @@
 package ic2_120.content.block.storage
 
 import ic2_120.content.block.DirectionalMachineBlock
+import ic2_120.content.item.ICreativeFullVariant
 import ic2_120.content.sync.EnergyStorageSync
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
@@ -65,11 +66,11 @@ abstract class EnergyStorageBlock(
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
     }
 
-    abstract class EnergyStorageBlockItem(
-        block: Block,
-        settings: Item.Settings,
-        protected val config: EnergyStorageConfig
-    ) : BlockItem(block, settings) {
+   abstract class EnergyStorageBlockItem(
+       block: Block,
+       settings: Item.Settings,
+       protected val config: EnergyStorageConfig
+    ) : BlockItem(block, settings), ICreativeFullVariant {
         private fun getStoredEnergy(stack: ItemStack): Long {
             if (stack.nbt?.getBoolean(NBT_FULL) == true) return config.capacity
             val blockEntityTag = stack.getSubNbt(NBT_BLOCK_ENTITY_TAG) ?: return 0L
@@ -129,5 +130,9 @@ abstract class EnergyStorageBlock(
         }
 
         protected abstract val translationKeyFull: String
+
+        override fun createFullVariant(): ItemStack {
+            return ItemStack(this).also { it.orCreateNbt.putBoolean(NBT_FULL, true) }
+        }
     }
 }

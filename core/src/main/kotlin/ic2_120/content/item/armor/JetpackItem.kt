@@ -1,6 +1,7 @@
 package ic2_120.content.item.armor
 
 import ic2_120.config.Ic2Config
+import ic2_120.content.item.ICreativeFullVariant
 import ic2_120.content.item.ModArmorMaterials
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.ArmorItem
@@ -13,7 +14,7 @@ import net.minecraft.util.Formatting
  *
  * 使用生物燃料作为动力的飞行装置，类似创造飞行，按空格上升、Shift下降。
  */
-open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)) {
+open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)), ICreativeFullVariant {
 
     companion object {
         private const val FUEL_KEY = "Fuel"
@@ -115,5 +116,9 @@ open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Ty
             ratio > 0.2 -> 0xFFFF4A
             else -> 0xFF4A4A
         }
+    }
+
+    override fun createFullVariant(): ItemStack {
+        return ItemStack(this).also { setFuel(it, MAX_FUEL) }
     }
 }

@@ -26,7 +26,6 @@ import ic2_120.content.worldgen.RubberTreeGeneration
 import ic2_120.content.item.CellAndBucketFluidRegistration
 import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.recipes.ModMachineRecipes
-import ic2_120.content.block.storage.EnergyStorageBlock
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
 import ic2_120.content.block.machines.FluidHeatGeneratorBlockEntity
@@ -61,9 +60,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
 import net.fabricmc.fabric.api.registry.FuelRegistry
-import ic2_120.content.item.CfPack
-import ic2_120.content.item.FoamSprayerItem
-import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.CreativeTabIconItemsRegistration
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -184,61 +180,6 @@ object Ic2_120 : ModInitializer {
         // 匿名使用统计：服务端每次启动上报一次（覆盖独立服务端 + 集成服务端）
         ServerLifecycleEvents.SERVER_STARTED.register {
             AnalyticsReporter.report("server")
-        }
-
-        // 储电盒自定义 BlockItem（支持满电变体）及创造模式满电物品
-        val storageIds = listOf(
-            "batbox",
-            "cesu",
-            "mfe",
-            "mfsu",
-            "batbox_chargepad",
-            "cesu_chargepad",
-            "mfe_chargepad",
-            "mfsu_chargepad"
-        )
-        val ic2MachinesKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_MACHINES.id))
-        ItemGroupEvents.modifyEntriesEvent(ic2MachinesKey).register { entries ->
-            for (id in storageIds) {
-                val fullStack = ItemStack(Registries.ITEM.get(Identifier(MOD_ID, id)))
-                fullStack.orCreateNbt.putBoolean(EnergyStorageBlock.NBT_FULL, true)
-                entries.add(fullStack)
-            }
-        }
-
-        // 注册满燃料喷气背包到创造模式
-        val jetpackItem = Registries.ITEM.get(Identifier(MOD_ID, "jetpack"))
-        @Suppress("SENSELESS_COMPARISON")
-        if (jetpackItem != null) {
-            val ic2MaterialsKey =
-                RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_MATERIALS.id))
-            ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
-                // 添加满燃料的喷气背包
-                val fullFuelJetpack = ItemStack(jetpackItem).also {
-                    JetpackItem.setFuel(it, JetpackItem.MAX_FUEL)
-                }
-                entries.addAfter(jetpackItem, fullFuelJetpack)
-            }
-        }
-
-        // 建筑泡沫喷枪：满流体（8 桶）变体
-        val ic2MaterialsKey =
-            RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_MATERIALS.id))
-        ItemGroupEvents.modifyEntriesEvent(ic2MaterialsKey).register { entries ->
-            val sprayer = Registries.ITEM.get(Identifier(MOD_ID, "foam_sprayer"))
-            if (sprayer == Items.AIR || sprayer !is FoamSprayerItem) return@register
-            val fullSprayer = ItemStack(sprayer).also {
-                FoamSprayerItem.setFluidAmount(it, FoamSprayerItem.CAPACITY_DROPLETS)
-            }
-            entries.addAfter(sprayer, fullSprayer)
-
-            val cfPack = Registries.ITEM.get(Identifier.of(MOD_ID, "cf_pack"))
-            if (cfPack != Items.AIR) {
-                val fullCfPack = ItemStack(cfPack).also {
-                    CfPack.setFluidAmount(it, CfPack.CAPACITY_DROPLETS)
-                }
-                entries.addAfter(cfPack, fullCfPack)
-            }
         }
 
         // 杂交作物初始种子袋（三维属性 1/1/1）加入作物种子物品栏

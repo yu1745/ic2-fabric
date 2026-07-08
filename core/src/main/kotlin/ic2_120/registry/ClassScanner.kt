@@ -3,6 +3,7 @@ package ic2_120.registry
 import ic2_120.content.TickLimitedSidedEnergyContainer
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
+import ic2_120.content.item.ICreativeFullVariant
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlockEntity
@@ -604,10 +605,14 @@ object ClassScanner {
                                         electricTool.setEnergy(fullStack, electricTool.maxCapacity)
                                     }
                                     collector.add(fullStack)
-                                } else {
-                                    // 普通物品，直接添加
-                                    collector.add(item)
-                                }
+                               } else {
+                                   // 普通物品，直接添加
+                                   collector.add(item)
+                                   // 若物品实现了 ICreativeFullVariant，追加满变体
+                                   if (item is ICreativeFullVariant) {
+                                       collector.add(item.createFullVariant())
+                                   }
+                               }
                             }
                         }
                     }

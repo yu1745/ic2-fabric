@@ -5,6 +5,7 @@ import ic2_120.content.block.BatBoxBlock
 import ic2_120.content.block.LuminatorFlatBlock
 import ic2_120.content.block.ReinforcedGlassBlock
 import ic2_120.content.block.SolarGeneratorBlock
+import ic2_120.content.item.ICreativeFullVariant
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.effect.ModStatusEffects
 import ic2_120.content.item.AdvancedHeatExchangerItem
@@ -790,7 +791,7 @@ class AlloyChestplate : ArmorItem(ALLOY_ARMOR, ArmorItem.Type.CHESTPLATE, Fabric
  * 作为胸甲装备。
  */
 @ModItem(name = "cf_pack", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)) {
+class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)), ICreativeFullVariant {
     override fun isDamageable(): Boolean = false
 
     override fun inventoryTick(stack: ItemStack, world: World, entity: Entity, slot: Int, selected: Boolean) {
@@ -849,6 +850,10 @@ class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSet
     }
 
     override fun getItemBarColor(stack: ItemStack): Int = 0xFF_6B8E9F.toInt()
+
+    override fun createFullVariant(): ItemStack {
+        return ItemStack(this).also { setFluidAmount(it, CAPACITY_DROPLETS) }
+    }
 
     companion object {
         private const val NBT_FLUID_DROPLETS = "CfPackFoamDroplets"

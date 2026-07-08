@@ -46,7 +46,7 @@ import net.minecraft.world.event.GameEvent
  * Alt+M（与铱钻头等共用 [ic2_120.client.ModeKeybinds]）切换单格 / 多格喷涂模式。
  */
 @ModItem(name = "foam_sprayer", tab = CreativeTab.IC2_MATERIALS, group = "construction_foam")
-class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)) {
+class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)), ICreativeFullVariant {
 
     override fun useOnBlock(context: ItemUsageContext): ActionResult {
         val world = context.world
@@ -81,6 +81,10 @@ class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)) {
     }
 
     override fun getItemBarColor(stack: ItemStack): Int = 0xFF_6B8E9F.toInt()
+
+    override fun createFullVariant(): ItemStack {
+        return ItemStack(this).also { setFluidAmount(it, CAPACITY_DROPLETS) }
+    }
 
     companion object {
         private const val NBT_FLUID_DROPLETS = "FoamFluidDroplets"
