@@ -3,6 +3,7 @@ package ic2_120.content.recipes.crafting
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import ic2_120.content.item.Treetap
+import ic2_120.registry.annotation.ModMachineRecipe
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.inventory.RecipeInputInventory
 import net.minecraft.item.Item
@@ -42,6 +43,7 @@ class ConsumeTreetapShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
     override fun getSerializer(): RecipeSerializer<*> = ConsumeTreetapShapedRecipeSerializer
 }
 
+@ModMachineRecipe(id = "consume_treetap_shaped", recipeClass = ConsumeTreetapShapedRecipe::class)
 object ConsumeTreetapShapedRecipeSerializer : RecipeSerializer<ConsumeTreetapShapedRecipe> {
     override fun read(id: Identifier, json: JsonObject): ConsumeTreetapShapedRecipe {
         val shaped = RecipeSerializer.SHAPED.read(id, json)

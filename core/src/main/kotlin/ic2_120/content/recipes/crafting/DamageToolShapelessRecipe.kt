@@ -6,6 +6,7 @@ import ic2_120.content.item.Cutter
 import ic2_120.content.item.ForgeHammer
 import ic2_120.content.item.Treetap
 import ic2_120.content.item.Wrench
+import ic2_120.registry.annotation.ModMachineRecipe
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.inventory.RecipeInputInventory
 import net.minecraft.item.Item
@@ -63,6 +64,7 @@ class DamageToolShapelessRecipe(delegate: ShapelessRecipe) : ShapelessRecipe(
     }
 }
 
+@ModMachineRecipe(id = "damage_tool_shapeless", recipeClass = DamageToolShapelessRecipe::class)
 object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapelessRecipe> {
     override fun read(id: Identifier, json: JsonObject): DamageToolShapelessRecipe {
         val shapeless = RecipeSerializer.SHAPELESS.read(id, json)

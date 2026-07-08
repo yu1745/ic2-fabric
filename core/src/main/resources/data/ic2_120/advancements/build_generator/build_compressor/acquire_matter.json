@@ -2,7 +2,7 @@
   "parent": "ic2_120:build_generator/build_compressor/build_mass_fab",
   "display": {
     "icon": {
-      "item": "ic2_120:uu_matter"
+      "item": "ic2_120:uu_matter_bucket"
     },
     "title": {
       "translate": "advancements.ic2_120.acquireMatter"
@@ -16,13 +16,25 @@
     "hidden": false
   },
   "criteria": {
-    "ic2_120:uu_matter": {
+    "ic2_120:uu_matter_bucket": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
         "items": [
           {
             "items": [
-              "ic2_120:uu_matter"
+              "ic2_120:uu_matter_bucket"
+            ]
+          }
+        ]
+      }
+    },
+    "ic2_120:uu_matter_cell": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "ic2_120:uu_matter_cell"
             ]
           }
         ]
@@ -31,7 +43,8 @@
   },
   "requirements": [
     [
-      "ic2_120:uu_matter"
+      "ic2_120:uu_matter_bucket",
+      "ic2_120:uu_matter_cell"
     ]
   ]
 }

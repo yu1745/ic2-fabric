@@ -3,6 +3,7 @@ package ic2_120.content.recipes.crafting
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import ic2_120.content.item.isFluidCellEmpty
+import ic2_120.registry.annotation.ModMachineRecipe
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.inventory.RecipeInputInventory
 import net.minecraft.item.Item
@@ -51,6 +52,7 @@ class EmptyFluidCellToEmptyCellRecipe(delegate: ShapelessRecipe) : ShapelessReci
     override fun getSerializer(): RecipeSerializer<*> = EmptyFluidCellToEmptyCellRecipeSerializer
 }
 
+@ModMachineRecipe(id = "empty_fluid_cell_to_empty_cell", recipeClass = EmptyFluidCellToEmptyCellRecipe::class)
 object EmptyFluidCellToEmptyCellRecipeSerializer : RecipeSerializer<EmptyFluidCellToEmptyCellRecipe> {
     override fun read(id: Identifier, json: JsonObject): EmptyFluidCellToEmptyCellRecipe {
         val shapeless = RecipeSerializer.SHAPELESS.read(id, json)

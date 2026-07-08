@@ -6,6 +6,7 @@ import ic2_120.content.block.storage.EnergyStorageBlock
 import ic2_120.content.block.storage.EnergyStorageConfig
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
+import ic2_120.registry.annotation.ModMachineRecipe
 import ic2_120.content.sync.EnergyStorageSync
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.inventory.RecipeInputInventory
@@ -128,6 +129,7 @@ private fun setStorageEnergy(result: ItemStack, energy: Long) {
     nbt.put(EnergyStorageBlock.NBT_BLOCK_ENTITY_TAG, blockEntityTag)
 }
 
+@ModMachineRecipe(id = "battery_energy_shaped", recipeClass = BatteryEnergyShapedRecipe::class)
 object BatteryEnergyShapedRecipeSerializer : RecipeSerializer<BatteryEnergyShapedRecipe> {
     override fun read(id: Identifier, json: JsonObject): BatteryEnergyShapedRecipe {
         val shaped = RecipeSerializer.SHAPED.read(id, json)

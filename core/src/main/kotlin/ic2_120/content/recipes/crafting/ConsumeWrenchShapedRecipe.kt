@@ -6,6 +6,7 @@ import ic2_120.content.block.storage.EnergyStorageBlock
 import ic2_120.content.block.storage.EnergyStorageConfig
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.item.energy.IElectricTool
+import ic2_120.registry.annotation.ModMachineRecipe
 import ic2_120.content.sync.EnergyStorageSync
 import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.inventory.RecipeInputInventory
@@ -131,6 +132,7 @@ private fun Long.saturatingAdd(other: Long): Long {
     return if (Long.MAX_VALUE - this < other) Long.MAX_VALUE else this + other
 }
 
+@ModMachineRecipe(id = "consume_wrench_shaped", recipeClass = ConsumeWrenchShapedRecipe::class)
 object ConsumeWrenchShapedRecipeSerializer : RecipeSerializer<ConsumeWrenchShapedRecipe> {
     override fun read(id: Identifier, json: JsonObject): ConsumeWrenchShapedRecipe {
         val shaped = RecipeSerializer.SHAPED.read(id, json)

@@ -19,14 +19,12 @@ import ic2_120.content.network.BandwidthStatsService
 import ic2_120.content.network.ConfigSyncHelper
 import ic2_120.content.network.ConfigSyncPacket
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents
-import ic2_120.content.effect.ModStatusEffects
 import ic2_120.content.effect.RadiationHandler
 import ic2_120.content.worldgen.ChestLootInjector
 import ic2_120.content.worldgen.OreGeneration
 import ic2_120.content.worldgen.RubberTreeGeneration
 import ic2_120.content.item.CellAndBucketFluidRegistration
 import ic2_120.content.item.CropSeedBagItem
-import ic2_120.content.recipes.ModCraftingRecipes
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.block.storage.EnergyStorageBlock
 import ic2_120.content.block.cables.CableBlockEntity
@@ -95,9 +93,7 @@ object Ic2_120 : ModInitializer {
 
     override fun onInitialize() {
         Ic2Config.loadOrThrow()
-        ModCraftingRecipes.register()
 
-        ModStatusEffects.register()
         RadiationHandler.register()
 
         // 流体需在 ClassScanner 之前注册（流体、方块、桶）
@@ -121,6 +117,7 @@ object Ic2_120 : ModInitializer {
             MOD_ID,
             listOf(
                 "ic2_120.content.tab",     // 扫描物品栏类（必须先注册）
+                "ic2_120.content.effect",  // 扫描 StatusEffect 类
                 "ic2_120.content.block",   // 扫描方块类（包括 cables, machines, energy 等子包）
                 "ic2_120.content.screen",  // 扫描 ScreenHandler 类
                 "ic2_120.content.item"     // 扫描物品类（含 @ModItem 船物品）

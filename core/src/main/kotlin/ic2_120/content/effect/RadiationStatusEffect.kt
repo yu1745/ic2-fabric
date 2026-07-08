@@ -1,6 +1,7 @@
 package ic2_120.content.effect
 
 import ic2_120.Ic2_120
+import ic2_120.registry.annotation.ModStatusEffect
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.effect.StatusEffect
@@ -10,6 +11,7 @@ import net.minecraft.registry.RegistryKeys
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.Identifier
 
+@ModStatusEffect(name = "radiation", namespace = "ic2")
 class RadiationStatusEffect : StatusEffect(StatusEffectCategory.HARMFUL, 0x55FF55) {
 
     override fun canApplyUpdateEffect(duration: Int, amplifier: Int): Boolean {
