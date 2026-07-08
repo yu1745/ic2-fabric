@@ -1,6 +1,5 @@
 package ic2_120
 
-import ic2_120.content.entity.ModEntities
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.recipes.MaterialTagRegistry
 import ic2_120.content.recipes.ModBlockLootTableProvider
@@ -20,16 +19,16 @@ object Ic2_120DataGenerator : DataGeneratorEntrypoint {
 		if (MaterialTagRegistry.itemEntries.isEmpty()) {
 			val tinId = Identifier(Ic2_120.MOD_ID, "tin_ingot")
 			if (!Registries.ITEM.containsId(tinId)) {
-				ModFluids.register()
-				ModEntities.register()
-				ClassScanner.scanAndRegister(
-					Ic2_120.MOD_ID,
-					listOf(
-						"ic2_120.content.tab",
-						"ic2_120.content.block",
-						"ic2_120.content.screen",
-						"ic2_120.content.item",
-					),
+			ModFluids.register()
+			ClassScanner.scanAndRegister(
+				Ic2_120.MOD_ID,
+				listOf(
+					"ic2_120.content.tab",
+					"ic2_120.content.entity",
+					"ic2_120.content.block",
+					"ic2_120.content.screen",
+					"ic2_120.content.item",
+				),
 				)
 			}
 		}

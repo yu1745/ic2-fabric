@@ -1,6 +1,7 @@
 package ic2_120.content.entity
 
 import ic2_120.config.Ic2Config
+import ic2_120.registry.annotation.ModEntity
 import net.minecraft.block.AbstractFireBlock
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
@@ -34,6 +35,7 @@ import net.minecraft.world.World
  * 采矿镭射枪弹射实体。
  * 以速度 v 沿发射方向飞行，命中方块/实体后根据模式执行不同行为。
  */
+@ModEntity(name = "laser_projectile", width = 0.1f, height = 0.1f, maxTrackingRange = 256, trackingTickInterval = 1, dataFixerType = "minecraft:arrow")
 class LaserProjectileEntity(
     entityType: EntityType<out LaserProjectileEntity>,
     world: World

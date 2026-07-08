@@ -42,11 +42,9 @@ import ic2_120.content.block.machines.SemifluidGeneratorBlockEntity
 import ic2_120.content.block.machines.SolarDistillerBlockEntity
 import ic2_120.content.block.machines.WaterGeneratorBlockEntity
 import ic2_120.content.block.storage.TankBlockEntity
-import ic2_120.content.block.transmission.TransmissionBlockEntity
 import ic2_120.content.block.transmission.KineticNetworkManager
 import ic2_120.content.block.pipes.PipeNetworkManager
 import ic2_120.content.player.FlightManager
-import ic2_120.content.entity.ModEntities
 import ic2_120.config.Ic2Config
 import ic2_120.content.command.ConfigCommand
 import ic2_120.content.command.SeedCommand
@@ -99,9 +97,6 @@ object Ic2_120 : ModInitializer {
         // 流体需在 ClassScanner 之前注册（流体、方块、桶）
         ModFluids.register()
 
-        // 船实体类型需在扫描物品前注册，供 @ModItem 船物品类构造时引用
-        ModEntities.register()
-
         // 橡胶树世界生成（主世界植被装饰阶段）
         RubberTreeGeneration.register()
         // 矿石世界生成（锡/铅/铀，照搬铁矿/金矿/钻石矿）
@@ -117,6 +112,7 @@ object Ic2_120 : ModInitializer {
             MOD_ID,
             listOf(
                 "ic2_120.content.tab",     // 扫描物品栏类（必须先注册）
+                "ic2_120.content.entity",  // 扫描 Entity 类（须在物品前注册，供船物品引用）
                 "ic2_120.content.effect",  // 扫描 StatusEffect 类
                 "ic2_120.content.block",   // 扫描方块类（包括 cables, machines, energy 等子包）
                 "ic2_120.content.screen",  // 扫描 ScreenHandler 类
@@ -146,8 +142,6 @@ object Ic2_120 : ModInitializer {
         RubberTreetapHandler.register()
 
         // 传动轴/伞齿轮 BlockEntity（仅用于 BER 动画渲染）
-        TransmissionBlockEntity.register(MOD_ID)
-
         // 核反应仓能量能力注册（Fabric Transfer API）
         val reactorChamberType = ReactorChamberBlockEntity::class.type()
         team.reborn.energy.api.EnergyStorage.SIDED.registerForBlockEntity(

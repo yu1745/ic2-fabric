@@ -24,10 +24,15 @@ import ic2_120.registry.annotation.ModMachineRecipe
 import ic2_120.registry.annotation.ModMachineRecipeBinding
 import ic2_120.registry.MachineRecipeScanEntry
 import ic2_120.registry.annotation.ModStatusEffect
+import ic2_120.registry.annotation.ModEntity
 import ic2_120.content.recipes.MaterialTagRegistry
 import net.minecraft.recipe.RecipeSerializer
 import net.minecraft.util.math.Direction
 import net.minecraft.entity.effect.StatusEffect
+import net.minecraft.entity.EntityType
+import net.minecraft.entity.Entity
+import net.minecraft.entity.SpawnGroup
+import net.minecraft.world.World
 import team.reborn.energy.api.EnergyStorage
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
@@ -152,22 +157,24 @@ object ClassScanner {
         val screenHandlerClasses = mutableListOf<ScreenHandlerClassInfo>()
         val itemClasses = mutableListOf<ItemClassInfo>()
         val statusEffectClasses = mutableListOf<StatusEffectClassInfo>()
+        val entityClasses = mutableListOf<EntityClassInfo>()
 
         // 扫描所有包中的类
         for (packageName in packageNames) {
-            scanPackage(packageName, tabClasses, blockClasses, blockEntityClasses, screenHandlerClasses, itemClasses, statusEffectClasses)
+            scanPackage(packageName, tabClasses, blockClasses, blockEntityClasses, screenHandlerClasses, itemClasses, statusEffectClasses, entityClasses)
         }
 
-        logger.info("扫描完成: {} 个物品栏类, {} 个方块类, {} 个方块实体类, {} 个 ScreenHandler 类, {} 个物品类, {} 个效果类",
-            tabClasses.size, blockClasses.size, blockEntityClasses.size, screenHandlerClasses.size, itemClasses.size, statusEffectClasses.size)
+        logger.info("扫描完成: {} 个物品栏类, {} 个方块类, {} 个方块实体类, {} 个 ScreenHandler 类, {} 个物品类, {} 个效果类, {} 个实体类",
+            tabClasses.size, blockClasses.size, blockEntityClasses.size, screenHandlerClasses.size, itemClasses.size, statusEffectClasses.size, entityClasses.size)
 
-        // 按顺序注册：方块 → 方块实体类型 → ScreenHandler → 物品 → 物品栏 → 效果
+        // 按顺序注册：方块 → 方块实体类型 → ScreenHandler → 效果 → 实体 → 物品 → 物品栏
         registerBlocks(modId, blockClasses)
         registerBlockEntities(modId, blockEntityClasses)
         registerScreenHandlers(modId, screenHandlerClasses)
+        registerStatusEffects(modId, statusEffectClasses)
+        registerEntities(modId, entityClasses)
         registerItems(modId, itemClasses)
         registerCreativeTabs(modId, tabClasses)
-        registerStatusEffects(modId, statusEffectClasses)
         collectRecipeGenerators(blockClasses, itemClasses)
 
         logger.info("自动注册完成")
@@ -183,10 +190,11 @@ object ClassScanner {
         blockEntityClasses: MutableList<BlockEntityClassInfo>,
         screenHandlerClasses: MutableList<ScreenHandlerClassInfo>,
         itemClasses: MutableList<ItemClassInfo>,
-        statusEffectClasses: MutableList<StatusEffectClassInfo>
+        statusEffectClasses: MutableList<StatusEffectClassInfo>,
+        entityClasses: MutableList<EntityClassInfo>
     ) {
         forEachClassInPackage(packageName) { className ->
-            processClass(className, tabClasses, blockClasses, blockEntityClasses, screenHandlerClasses, itemClasses, statusEffectClasses)
+            processClass(className, tabClasses, blockClasses, blockEntityClasses, screenHandlerClasses, itemClasses, statusEffectClasses, entityClasses)
         }
     }
 
@@ -430,7 +438,8 @@ object ClassScanner {
         blockEntityClasses: MutableList<BlockEntityClassInfo>,
         screenHandlerClasses: MutableList<ScreenHandlerClassInfo>,
         itemClasses: MutableList<ItemClassInfo>,
-        statusEffectClasses: MutableList<StatusEffectClassInfo>
+        statusEffectClasses: MutableList<StatusEffectClassInfo>,
+        entityClasses: MutableList<EntityClassInfo>
     ) {
         try {
             if (!processedClassNames.add(className)) {
@@ -443,6 +452,7 @@ object ClassScanner {
             val modScreenHandler = clazz.findAnnotation<ModScreenHandler>()
             val modItem = clazz.findAnnotation<ModItem>()
             val modStatusEffect = clazz.findAnnotation<ModStatusEffect>()
+            val modEntity = clazz.findAnnotation<ModEntity>()
 
             when {
                 modCreativeTab != null -> {
@@ -488,6 +498,14 @@ object ClassScanner {
                     }
                     statusEffectClasses.add(StatusEffectClassInfo(clazz, modStatusEffect))
                     logger.debug("发现 @ModStatusEffect: {}", className)
+                }
+                modEntity != null -> {
+                    if (!clazz.isSubclassOf(Entity::class)) {
+                        logger.warn("@ModEntity 类 {} 不是 Entity 的子类", className)
+                        return
+                    }
+                    entityClasses.add(EntityClassInfo(clazz, modEntity))
+                    logger.debug("发现 @ModEntity: {}", className)
                 }
             }
         } catch (e: ClassNotFoundException) {
@@ -1240,6 +1258,42 @@ object ClassScanner {
                 logger.debug("已注册效果: {}", id)
             } catch (e: Exception) {
                 logger.error("注册效果 {} 失败: {}", clazz.simpleName, e.message, e)
+            }
+        }
+    }
+    private data class EntityClassInfo(
+        val clazz: kotlin.reflect.KClass<*>,
+        val annotation: ModEntity
+    )
+
+    @Suppress("UNCHECKED_CAST")
+    private fun registerEntities(modId: String, entityClasses: List<EntityClassInfo>) {
+        for ((clazz, annotation) in entityClasses) {
+            try {
+                // 查找 (EntityType, World) 构造函数
+                val ctor = clazz.constructors.find { c ->
+                    c.parameters.size == 2 &&
+                        c.parameters[0].type.classifier == EntityType::class &&
+                        c.parameters[1].type.classifier == World::class
+                } ?: error("@ModEntity 类 ${clazz.simpleName} 需提供 (EntityType, World) 构造函数")
+
+                val factory: (EntityType<*>, World) -> Entity = { type, world ->
+                    ctor.call(type, world) as Entity
+                }
+
+                val builder = EntityType.Builder.create(factory, annotation.spawnGroup)
+                    .setDimensions(annotation.width, annotation.height)
+                    .maxTrackingRange(annotation.maxTrackingRange)
+
+                if (annotation.trackingTickInterval > 0) {
+                    builder.trackingTickInterval(annotation.trackingTickInterval)
+                }
+
+                val type = builder.build(annotation.dataFixerType) as EntityType<Entity>
+                Registry.register(Registries.ENTITY_TYPE, Identifier(modId, annotation.name), type)
+                logger.debug("已注册实体: {}:{}", modId, annotation.name)
+            } catch (e: Exception) {
+                logger.error("注册实体 {} 失败: {}", clazz.simpleName, e.message, e)
             }
         }
     }
