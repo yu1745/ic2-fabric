@@ -63,11 +63,8 @@ class InductionFurnaceScreen(
         }
 
         // 工作进度纹理 (181,23)-(203,38) = 22×15，自左向右（仅处理物品时渲染）
-        if (handler.sync.progressSlot0 > 0) {
-            val baseTicks = InductionFurnaceSync.BASE_TICKS_PER_OPERATION
-            val heat = handler.sync.heat.coerceAtLeast(InductionFurnaceSync.MIN_HEAT_THRESHOLD)
-            val progressNeeded = (baseTicks * InductionFurnaceSync.HEAT_MAX / heat).toInt().coerceAtLeast(baseTicks.toInt())
-            val progressFrac = (handler.sync.progressSlot0.coerceIn(0, progressNeeded).toFloat() / progressNeeded).coerceIn(0f, 1f)
+        if (handler.sync.progress > 0) {
+            val progressFrac = (handler.sync.progress.toFloat() / InductionFurnaceSync.PROGRESS_THRESHOLD).coerceIn(0f, 1f)
             val arrowWidth = (PROGRESS_W * progressFrac).toInt().coerceAtLeast(1)
             context.enableScissor(
                 left + PROGRESS_X,

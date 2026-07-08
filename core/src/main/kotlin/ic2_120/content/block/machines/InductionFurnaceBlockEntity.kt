@@ -211,125 +211,86 @@ class InductionFurnaceBlockEntity(
         adjacentEnergyTransfer.tick()
         extractFromDischargingSlot()
 
-        val isRedstonePowered = RedstoneControlComponent.canRun(world, pos, this)
-        val currentHeat = sync.heat
+       val isRedstonePowered = RedstoneControlComponent.canRun(world, pos, this)
+        var heat = sync.heat
+        var progress = sync.progress
+        var newActive = state.get(activeProperty)
 
-        if (isRedstonePowered) {
-            if (currentHeat < InductionFurnaceSync.HEAT_MAX) {
-                // 只有消耗了能量才升温，避免无电时红石信号凭空加热
-                if (sync.consumeEnergy(InductionFurnaceSync.MAX_HEAT_ENERGY_PER_TICK) > 0L) {
-                    sync.heat = (currentHeat + InductionFurnaceSync.HEAT_CHANGE_PER_TICK)
-                        .coerceAtMost(InductionFurnaceSync.HEAT_MAX)
-                }
-            }
+        // Phase 1: completion — vanilla: if (heat == 0) newActive=false; if (progress >= 4000) { operate(); progress = 0; }
+        if (heat == 0) newActive = false
+        if (progress >= InductionFurnaceSync.PROGRESS_THRESHOLD) {
+            operateBothSlots(world)
+            progress = 0
+            newActive = false
+        }
+
+        // Phase 2: heating / cooling
+        // vanilla: if ((canOperate || redstone) && energy.useEnergy(1)) heat++; else heat -= min(heat, 4);
+        val canOperate = canOperate(world)
+        if ((canOperate || isRedstonePowered) && sync.consumeEnergy(InductionFurnaceSync.HEAT_ENERGY_PER_TICK) > 0L) {
+            if (heat < InductionFurnaceSync.HEAT_MAX) heat += InductionFurnaceSync.HEAT_GAIN_PER_TICK
+            newActive = true
         } else {
-            if (currentHeat > 0) {
-                sync.heat = (currentHeat - InductionFurnaceSync.HEAT_CHANGE_PER_TICK)
-                    .coerceAtLeast(0)
+            heat -= minOf(heat, InductionFurnaceSync.HEAT_LOSS_PER_TICK)
+        }
+        sync.heat = heat
+
+        // Phase 3: state machine — determines newActive (sound/active transitions)
+        if (!newActive || progress == 0) {
+            if (!canOperate) {
+                progress = 0
+            } else if (sync.amount >= InductionFurnaceSync.SMELT_ENERGY_PER_TICK) {
+                newActive = true
             }
+        } else if (!canOperate || sync.amount < InductionFurnaceSync.SMELT_ENERGY_PER_TICK) {
+            if (!canOperate) progress = 0
+            newActive = false
         }
 
-        val heat = sync.heat
-        val isActive = processBothSlots(world, heat)
+        // Phase 4: smelting
+        // vanilla: if (newActive && canOperate) { progress += heat / 30; energy.useEnergy(15); }
+        if (newActive && canOperate) {
+            progress += heat / 30
+            sync.consumeEnergy(InductionFurnaceSync.SMELT_ENERGY_PER_TICK)
+        }
 
+        sync.progress = progress
+        sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         sync.syncCurrentTickFlow()
-        setActiveState(world, pos, state, isActive)
+        setActiveState(world, pos, state, newActive)
     }
 
-    private fun processBothSlots(world: World, heat: Int): Boolean {
-        var slot0Working = false
-        var slot1Working = false
+    /** Vanilla canOperate(): either slot has a valid recipe with room for output. */
+    private fun canOperate(world: World): Boolean =
+        canOperateSlot(world, SLOT_INPUT_0, SLOT_OUTPUT_0) ||
+        canOperateSlot(world, SLOT_INPUT_1, SLOT_OUTPUT_1)
 
-        if (heat >= InductionFurnaceSync.MIN_HEAT_THRESHOLD) {
-            val input0 = getStack(SLOT_INPUT_0)
-            if (!input0.isEmpty) {
-                val recipe0 = findSmeltingRecipe(world, input0)
-                if (recipe0 != null) {
-                    val outputSlot0 = getStack(SLOT_OUTPUT_0)
-                    if (canAcceptOutput(outputSlot0, recipe0)) {
-                        slot0Working = processSlot0(heat, recipe0)
-                    }
-                }
-            }
-
-            val input1 = getStack(SLOT_INPUT_1)
-            if (!input1.isEmpty) {
-                val recipe1 = findSmeltingRecipe(world, input1)
-                if (recipe1 != null) {
-                    val outputSlot1 = getStack(SLOT_OUTPUT_1)
-                    if (canAcceptOutput(outputSlot1, recipe1)) {
-                        slot1Working = processSlot1(heat, recipe1)
-                    }
-                }
-            }
-        }
-
-        if (heat < InductionFurnaceSync.MIN_HEAT_THRESHOLD) {
-            if (sync.progressSlot0 != 0) sync.progressSlot0 = 0
-            if (sync.progressSlot1 != 0) sync.progressSlot1 = 0
-        }
-
-        return slot0Working || slot1Working
+    private fun canOperateSlot(world: World, inputSlot: Int, outputSlot: Int): Boolean {
+        val input = getStack(inputSlot)
+        if (input.isEmpty) return false
+        val recipe = findSmeltingRecipe(world, input) ?: return false
+        return canAcceptOutput(getStack(outputSlot), recipe)
     }
 
-    private fun processSlot0(heat: Int, result: ItemStack): Boolean {
-        val baseTicks = InductionFurnaceSync.BASE_TICKS_PER_OPERATION
-        val euPerOp = InductionFurnaceSync.EU_PER_OPERATION
-        val progressNeeded = (baseTicks * InductionFurnaceSync.HEAT_MAX / heat).coerceAtLeast(baseTicks)
-
-        val progress = sync.progressSlot0
-        if (progress >= progressNeeded) {
-            val input = getStack(SLOT_INPUT_0)
-            input.decrement(1)
-            val out = getStack(SLOT_OUTPUT_0)
-            if (out.isEmpty) {
-                setStack(SLOT_OUTPUT_0, result.copy())
-            } else {
-                out.increment(result.count)
-            }
-            sync.progressSlot0 = 0
-            markDirty()
-            return false
-        }
-
-        val euPerTick = (euPerOp.toDouble() / progressNeeded).coerceAtLeast(1.0).toLong()
-        if (sync.consumeEnergy(euPerTick) > 0L) {
-            sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            sync.progressSlot0 = progress + 1
-            markDirty()
-            return true
-        }
-        return false
+    /** Vanilla operate(): process both input/output pairs simultaneously (shared progress). */
+    private fun operateBothSlots(world: World) {
+        operateSlot(world, SLOT_INPUT_0, SLOT_OUTPUT_0)
+        operateSlot(world, SLOT_INPUT_1, SLOT_OUTPUT_1)
     }
 
-    private fun processSlot1(heat: Int, result: ItemStack): Boolean {
-        val baseTicks = InductionFurnaceSync.BASE_TICKS_PER_OPERATION
-        val euPerOp = InductionFurnaceSync.EU_PER_OPERATION
-        val progressNeeded = (baseTicks * InductionFurnaceSync.HEAT_MAX / heat).coerceAtLeast(baseTicks)
-
-        val progress = sync.progressSlot1
-        if (progress >= progressNeeded) {
-            val input = getStack(SLOT_INPUT_1)
-            input.decrement(1)
-            val out = getStack(SLOT_OUTPUT_1)
-            if (out.isEmpty) {
-                setStack(SLOT_OUTPUT_1, result.copy())
-            } else {
-                out.increment(result.count)
-            }
-            sync.progressSlot1 = 0
-            markDirty()
-            return false
+    private fun operateSlot(world: World, inputSlot: Int, outputSlot: Int) {
+        val input = getStack(inputSlot)
+        if (input.isEmpty) return
+        val recipe = findSmeltingRecipe(world, input) ?: return
+        val output = getStack(outputSlot)
+        if (!canAcceptOutput(output, recipe)) return
+        input.decrement(1)
+        if (output.isEmpty) {
+            setStack(outputSlot, recipe.copy())
+        } else {
+            output.increment(recipe.count)
         }
-
-        val euPerTick = (euPerOp.toDouble() / progressNeeded).coerceAtLeast(1.0).toLong()
-        if (sync.consumeEnergy(euPerTick) > 0L) {
-            sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            sync.progressSlot1 = progress + 1
-            markDirty()
-            return true
-        }
-        return false
+        markDirty()
     }
 
     private fun findSmeltingRecipe(world: World, input: ItemStack): ItemStack? {

@@ -1,8 +1,8 @@
 // 变压器 (Transformer) 测试。
 //
 // 变压器用 BE 字段 `Mode` 切换升/降压：
-//   mode = 0 → step-up   LV → MV
-//   mode = 1 → step-down MV → LV
+//   mode = 1 → step-up   LV → MV  (STEP_UP)
+//   mode = 0 → step-down MV → LV  (STEP_DOWN, default)
 //
 // 变压器需要两侧各接一个不同等级的储能：升压时西侧 BatBox（LV）放出，
 // 东侧 CESU（MV）充入；降压时反过来。
@@ -20,7 +20,7 @@ import {
 import { type TestContext } from "./helpers.js";
 
 /**
- * 升压摆设：西 BatBox (LV) → 变压器 (mode=0) → 东 CESU (MV)。
+ * 升压摆设：西 BatBox (LV) → 变压器 (mode=1/STEP_UP) → 东 CESU (MV)。
  * 返回两端坐标方便用例在断言时直接引用。
  */
 async function setupTransformerStepUp(ctx: TestContext): Promise<{ west: Pos; east: Pos }> {
@@ -33,7 +33,7 @@ async function setupTransformerStepUp(ctx: TestContext): Promise<{ west: Pos; ea
   ]);
   await setBeField(ctx, west, 'EnergyStored', 10000);
   await setBeField(ctx, east, 'EnergyStored', 0);
-  await setBeField(ctx, ctx.origin, 'Mode', 0);
+  await setBeField(ctx, ctx.origin, 'Mode', 1);
   return { west, east };
 }
 
@@ -61,7 +61,7 @@ export const transformerTests = defineTests([
     if (endBatboxEnergy > 10000) throw new Error(`BatBox should have lost some energy, got ${endBatboxEnergy}`);
   }),
 
-  // 降压：CESU (MV) → 变压器 (mode=1) → BatBox (LV)，等 100 tick 后 BatBox 应有能量流入。
+  // 降压：CESU (MV) → 变压器 (mode=0/STEP_DOWN) → BatBox (LV)，等 100 tick 后 BatBox 应有能量流入。
   defineTest('transformer:step_down MV to LV', async (ctx) => {
     const west = ctx.origin.west();
     const east = ctx.origin.east();
@@ -72,7 +72,7 @@ export const transformerTests = defineTests([
     ]);
     await setBeField(ctx, west, 'EnergyStored', 0);
     await setBeField(ctx, east, 'EnergyStored', 10000);
-    await setBeField(ctx, ctx.origin, 'Mode', 1);
+    await setBeField(ctx, ctx.origin, 'Mode', 0);
     const startBatboxEnergy = await getBeNumber(ctx, west, 'EnergyStored');
     await waitTicks(ctx, 100);
     const endBatboxEnergy = await getBeNumber(ctx, west, 'EnergyStored');

@@ -4,7 +4,7 @@
 // 三者同时满足才能熔炼。这里把红石火把放在西侧一格以提供持续红石信号。
 //
 // 槽位布局（与 `InductionFurnaceBlockEntity` 保持一致）：
-//   slot 0..1 = 输入 (SLOT_INPUT_0, SLOT_INPUT_1)    — 双输入槽，可并行熔炼
+//   slot 0..1 = 输入 (SLOT_INPUT_0, SLOT_INPUT_1)    — 双输入槽，共享进度
 //   slot 2..3 = 输出 (SLOT_OUTPUT_0, SLOT_OUTPUT_1)
 //   slot 4    = 放电槽 (SLOT_DISCHARGING)
 //   slot 5..6 = 升级槽 (SLOT_UPGRADE_0..1)
@@ -64,13 +64,14 @@ export const inductionFurnaceTests = defineTests([
     await setupInductionFurnaceHot(ctx);
     await insertItem(ctx, ctx.origin, 'minecraft:iron_ore', 1, 0);
     await insertItem(ctx, ctx.origin, 'minecraft:iron_ore', 1, 1);
-    await waitUntil(ctx, invItemEquals(ctx.origin, 3, 'minecraft:iron_ingot'), 15 * 20);
+    // 满热时约 13 tick/cycle
+    await waitUntil(ctx, invItemEquals(ctx.origin, 3, 'minecraft:iron_ingot'), 30 * 20);
     await assertSlotHas(ctx, ctx.origin, 2, 'minecraft:iron_ingot');
     await assertSlotHas(ctx, ctx.origin, 3, 'minecraft:iron_ingot');
   }),
 
-  // 无红石信号：有电、有初始 100 热，但没红石 → 热量会因衰减降回 < 100，
-  // 验证“无红石 → 不维持热量”的语义。
+  // 无红石且无可加工输入：有电、有初始 100 热，但没红石也没有效输入
+  // → canOperate=false 且 redstone=false → 热量持续散热至 0。
   defineTest('induction_furnace:no_redstone:no_heat_no_smelt', async (ctx) => {
     const batbox = ctx.origin.east();
     await setBlocks(ctx, [{ pos: batbox, block: 'ic2_120:batbox', props: { facing: 'west' } }]);
@@ -78,12 +79,11 @@ export const inductionFurnaceTests = defineTests([
     await place(ctx, ctx.origin, 'ic2_120:induction_furnace');
     await setBeField(ctx, ctx.origin, 'EnergyStored', 40000);
     await setHeat(ctx, 100);
-    await insertItem(ctx, ctx.origin, 'minecraft:iron_ore', 1, 0);
     await waitTicks(ctx, 200);
-    await assertSlotHas(ctx, ctx.origin, 0, 'minecraft:iron_ore');
     await assertSlotEmpty(ctx, ctx.origin, 2);
     const heat = await getBeNumber(ctx, ctx.origin, 'Heat_Low') + (await getBeNumber(ctx, ctx.origin, 'Heat_High')) * 65536;
-    if (heat >= 100) throw new Error(`expected heat < 100 (decayed), got ${heat}`);
+    // 原版散热 -4/tick，100 热量 25 tick 即散到 0，200 tick 后必然为 0
+    if (heat !== 0) throw new Error(`expected heat = 0 (fully decayed), got ${heat}`);
   }),
 
   // 无热量：有电有红石但热量为 0，机器不能工作。
@@ -102,7 +102,8 @@ export const inductionFurnaceTests = defineTests([
   // 升温曲线：电+红石都在但未预热的情况下，等 80 tick 后热量应上升到 > 100。
   defineTest('induction_furnace:heat_up:redstone+energy', async (ctx) => {
     await setupInductionFurnace(ctx);
-    await waitTicks(ctx, 80);
+    // 原版升温 +1/tick，120 tick 后热量应为 120
+    await waitTicks(ctx, 120);
     const heatLow = await getBeNumber(ctx, ctx.origin, 'Heat_Low');
     const heatHigh = await getBeNumber(ctx, ctx.origin, 'Heat_High');
     const energy = await getBeNumber(ctx, ctx.origin, 'EnergyStored');
