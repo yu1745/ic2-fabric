@@ -26,7 +26,7 @@ const REACTOR = 'ic2_120:nuclear_reactor';
 // 以及每个 grid 槽（0..80）里物品的 NBT "use"（= 已用 cycle 数 / 已存热量 / 已消耗脉冲数）。
 async function readReactor(ctx: any, label: string, slotsToFill: Array<[number, string]>) {
   await place(ctx, ctx.origin, REACTOR);
-  // 反应堆默认 redstoneInverted=false，需红石信号才运行（RedstoneControlComponent.canRun）
+  // 反应堆永远是有红石信号才运行（直接读 isReceivingRedstonePower，不响应反转升级）
   await setBlocks(ctx, [{ pos: ctx.origin.east(), block: 'minecraft:redstone_block' }]);
   for (const [slot, item] of slotsToFill) {
     await setSlot(ctx, ctx.origin, slot, item, 1);

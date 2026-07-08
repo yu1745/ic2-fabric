@@ -22,8 +22,6 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.sync.NuclearReactorSync
 import ic2_120.content.syncs.SyncedData
-import ic2_120.content.upgrade.IRedstoneControlSupport
-import ic2_120.content.upgrade.RedstoneControlComponent
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.annotation.RegisterEnergy
@@ -84,7 +82,7 @@ class NuclearReactorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : BlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, IGenerator, ITieredMachine, IReactor,
-    ExtendedScreenHandlerFactory, IRedstoneControlSupport, IOwned {
+    ExtendedScreenHandlerFactory, IOwned {
 
     override val tier: Int = NuclearReactorSync.REACTOR_TIER
 
@@ -129,8 +127,6 @@ class NuclearReactorBlockEntity(
     private var cycleAddHeatTotal: Int = 0
     private var cycleSetHeatDeltaTotal: Int = 0
     private var cycleEmitHeatTotal: Int = 0
-
-    override var redstoneInverted: Boolean = false
 
     /** 燃料棒是否活跃（受红石控制）；其他器件始终工作 */
     private var fuelActive: Boolean = true
@@ -428,7 +424,6 @@ class NuclearReactorBlockEntity(
         sync.temperature = nbt.getInt(NuclearReactorSync.NBT_HEAT_STORED).coerceIn(0, NuclearReactorSync.HEAT_CAPACITY)
         tickOffset = if (nbt.contains("TickOffset")) nbt.getInt("TickOffset").coerceIn(0, 19) else -1
         pendingEnergyOutput = nbt.getLong("PendingEnergyOutput").coerceIn(0L, NuclearReactorSync.ENERGY_CAPACITY)
-        redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
 
         // 读取热模式和流体数据
         thermalModeCache = nbt.getBoolean("ThermalMode")
@@ -467,7 +462,6 @@ class NuclearReactorBlockEntity(
         nbt.putInt(NuclearReactorSync.NBT_HEAT_STORED, sync.temperature)
         if (tickOffset >= 0) nbt.putInt("TickOffset", tickOffset)
         nbt.putLong("PendingEnergyOutput", pendingEnergyOutput)
-        nbt.putBoolean("RedstoneInverted", redstoneInverted)
 
         // 写入热模式和流体数据
         nbt.putBoolean("ThermalMode", thermalModeCache)
@@ -1027,7 +1021,7 @@ class NuclearReactorBlockEntity(
         val redstoneAllowsRun = if (usePortControl) {
             checkRedstonePortsAllowRun()
         } else {
-            RedstoneControlComponent.canRun(world, pos, this)
+            world.isReceivingRedstonePower(pos)
         }
         fuelActive = redstoneAllowsRun
         if (shouldTick) {
