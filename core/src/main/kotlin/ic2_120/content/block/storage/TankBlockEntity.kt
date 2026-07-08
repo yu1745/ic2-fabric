@@ -196,8 +196,8 @@ class TankBlockEntity(
         return TankScreenHandler(
             syncId,
             playerInventory,
-            syncedData,
-            ScreenHandlerContext.create(world!!, pos)
+            ScreenHandlerContext.create(world!!, pos),
+            syncedData
         )
     }
 

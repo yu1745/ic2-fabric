@@ -12,6 +12,7 @@ import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModScreenHandler
+import ic2_120.registry.annotation.ScreenHandlerMode
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.annotation.ScreenFactory
@@ -44,6 +45,7 @@ import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
@@ -665,35 +667,79 @@ object ClassScanner {
         clazz: KClass<*>,
         annotation: ModScreenHandler
     ): (Int, PlayerInventory, PacketByteBuf) -> ScreenHandler {
-        val inventorySize = annotation.clientInventorySize
-        if (inventorySize <= 0) {
-            error(
-                "@ModScreenHandler 类 ${clazz.simpleName} 未提供 fromBuffer，" +
-                    "请在 companion 增加 @ScreenFactory/fromBuffer，或在注解中配置 clientInventorySize 并使用标准构造签名"
-            )
-        }
-
-        val ctor = clazz.constructors.find { constructor ->
-            val parameters = constructor.parameters
-            parameters.size == 5 &&
-                parameters[0].type.classifier == Int::class &&
-                parameters[1].type.classifier == PlayerInventory::class &&
-                parameters[2].type.classifier == Inventory::class &&
-                parameters[3].type.classifier == ScreenHandlerContext::class &&
-                parameters[4].type.classifier == PropertyDelegate::class
-        } ?: error(
-            "@ModScreenHandler 类 ${clazz.simpleName} 未提供 fromBuffer 且构造函数不匹配，" +
-                "需要构造签名 (syncId, playerInventory, blockInventory, context, propertyDelegate)"
-        )
-
-        return { syncId, playerInventory, buf ->
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInventory = SimpleInventory(inventorySize)
-            val propertyDelegate = ArrayPropertyDelegate(propertyCount)
-            @Suppress("UNCHECKED_CAST")
-            ctor.call(syncId, playerInventory, blockInventory, context, propertyDelegate) as ScreenHandler
+        when (annotation.mode) {
+            ScreenHandlerMode.HANDHELD -> {
+                val ctor = clazz.constructors.find { c ->
+                    val p = c.parameters
+                    p.size >= 3 &&
+                        p[0].type.classifier == Int::class &&
+                        p[1].type.classifier == PlayerInventory::class &&
+                        p[2].type.classifier == Hand::class &&
+                        p.drop(3).all { it.isOptional }
+                } ?: error(
+                    "@ModScreenHandler 类 ${clazz.simpleName} mode=HANDHELD 但构造签名不匹配，" +
+                        "需要 (syncId: Int, playerInventory: PlayerInventory, hand: Hand, ...)"
+                )
+                return { syncId, playerInventory, buf ->
+                    val hand = buf.readEnumConstant(Hand::class.java)
+                    ctor.callBy(mapOf(
+                        ctor.parameters[0] to syncId,
+                        ctor.parameters[1] to playerInventory,
+                        ctor.parameters[2] to hand,
+                    )) as ScreenHandler
+                }
+            }
+            ScreenHandlerMode.BLOCK -> {
+                val inventorySize = annotation.inventorySize
+                // 先尝试 5 参数构造 (含 Inventory)，再回退 4 参数构造 (无 Inventory)
+                // 额外的尾部参数必须全部有默认值（如 itemStorage: RoutedItemStorage? = null）
+                val ctor5 = clazz.constructors.find { c ->
+                    val p = c.parameters
+                    p.size >= 5 &&
+                        p[0].type.classifier == Int::class &&
+                        p[1].type.classifier == PlayerInventory::class &&
+                        p[2].type.classifier == Inventory::class &&
+                        p[3].type.classifier == ScreenHandlerContext::class &&
+                        p[4].type.classifier == PropertyDelegate::class &&
+                        p.drop(5).all { it.isOptional }
+                }
+                val ctor4 = if (ctor5 == null) clazz.constructors.find { c ->
+                    val p = c.parameters
+                    p.size >= 4 &&
+                        p[0].type.classifier == Int::class &&
+                        p[1].type.classifier == PlayerInventory::class &&
+                        p[2].type.classifier == ScreenHandlerContext::class &&
+                        p[3].type.classifier == PropertyDelegate::class &&
+                        p.drop(4).all { it.isOptional }
+                } else null
+                val ctor = ctor5 ?: ctor4 ?: error(
+                    "@ModScreenHandler 类 ${clazz.simpleName} 构造签名不匹配，" +
+                        "需要 (syncId, playerInventory, blockInventory?, context, propertyDelegate, ...)"
+                )
+                return { syncId, playerInventory, buf ->
+                    val pos = buf.readBlockPos()
+                    val propertyCount = buf.readVarInt()
+                    val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
+                    val propertyDelegate = ArrayPropertyDelegate(propertyCount)
+                    if (ctor5 != null) {
+                        val blockInventory = SimpleInventory(inventorySize)
+                        ctor5.callBy(mapOf(
+                            ctor5.parameters[0] to syncId,
+                            ctor5.parameters[1] to playerInventory,
+                            ctor5.parameters[2] to blockInventory,
+                            ctor5.parameters[3] to context,
+                            ctor5.parameters[4] to propertyDelegate,
+                        )) as ScreenHandler
+                    } else {
+                        ctor4!!.callBy(mapOf(
+                            ctor4.parameters[0] to syncId,
+                            ctor4.parameters[1] to playerInventory,
+                            ctor4.parameters[2] to context,
+                            ctor4.parameters[3] to propertyDelegate,
+                        )) as ScreenHandler
+                    }
+                }
+            }
         }
     }
 

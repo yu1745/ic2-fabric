@@ -13,17 +13,13 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import ic2_120.registry.annotation.ScreenFactory
 
-@ModScreenHandler(block = AnimalmatronBlock::class)
+@ModScreenHandler(block = AnimalmatronBlock::class, inventorySize = AnimalmatronBlockEntity.INVENTORY_SIZE)
 class AnimalmatronScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -131,13 +127,5 @@ class AnimalmatronScreenHandler(
         const val PLAYER_INV_START = 15
         const val HOTBAR_END = 50
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): AnimalmatronScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(AnimalmatronBlockEntity.INVENTORY_SIZE)
-            return AnimalmatronScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
     }
 }

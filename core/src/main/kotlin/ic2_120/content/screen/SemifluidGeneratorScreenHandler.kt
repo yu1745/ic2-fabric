@@ -16,17 +16,13 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import ic2_120.registry.annotation.ScreenFactory
 
-@ModScreenHandler(block = SemifluidGeneratorBlock::class)
+@ModScreenHandler(block = SemifluidGeneratorBlock::class, inventorySize = SemifluidGeneratorBlockEntity.INVENTORY_SIZE)
 class SemifluidGeneratorScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -166,13 +162,5 @@ class SemifluidGeneratorScreenHandler(
         private val EMPTY_CONTAINER_SLOT_SPEC = SlotSpec(maxItemCount = 64, canInsert = { false })
         private val BATTERY_SLOT_SPEC = SlotSpec(maxItemCount = 1, canInsert = { stack -> stack.canBeCharged() })
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SemifluidGeneratorScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(SemifluidGeneratorBlockEntity.INVENTORY_SIZE)
-            return SemifluidGeneratorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
     }
 }

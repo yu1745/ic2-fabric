@@ -14,18 +14,14 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 import net.minecraft.text.Text
-import ic2_120.registry.annotation.ScreenFactory
 
-@ModScreenHandler(block = CannerBlock::class)
+@ModScreenHandler(block = CannerBlock::class, inventorySize = CannerBlockEntity.INVENTORY_SIZE)
 class CannerScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -183,13 +179,5 @@ class CannerScreenHandler(
         const val BUTTON_ID_MODE_CYCLE = 0
         const val BUTTON_ID_SWAP_TANKS = 1
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): CannerScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(CannerBlockEntity.INVENTORY_SIZE)
-            return CannerScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
     }
 }

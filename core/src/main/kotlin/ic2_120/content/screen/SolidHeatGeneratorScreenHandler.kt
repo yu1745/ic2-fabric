@@ -13,17 +13,13 @@ import net.fabricmc.fabric.api.registry.FuelRegistry
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import ic2_120.registry.annotation.ScreenFactory
 
-@ModScreenHandler(block = SolidHeatGeneratorBlock::class)
+@ModScreenHandler(block = SolidHeatGeneratorBlock::class, inventorySize = SolidHeatGeneratorBlockEntity.INVENTORY_SIZE)
 class SolidHeatGeneratorScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -97,12 +93,5 @@ class SolidHeatGeneratorScreenHandler(
         })
         private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false })
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SolidHeatGeneratorScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            return SolidHeatGeneratorScreenHandler(syncId, playerInventory, SimpleInventory(SolidHeatGeneratorBlockEntity.INVENTORY_SIZE), context, ArrayPropertyDelegate(propertyCount))
-        }
     }
 }

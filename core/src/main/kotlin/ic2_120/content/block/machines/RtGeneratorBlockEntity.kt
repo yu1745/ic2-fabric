@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -54,6 +54,7 @@ class RtGeneratorBlockEntity(
     override val activeProperty: net.minecraft.state.property.BooleanProperty = RtGeneratorBlock.ACTIVE
 
     companion object {
+        const val INVENTORY_SIZE = 6
         const val GENERATOR_TIER = 1
         const val FUEL_SLOT_COUNT = 6
         const val FUEL_SLOT_START = 0

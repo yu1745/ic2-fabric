@@ -18,20 +18,16 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
-import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 import net.minecraft.util.Identifier
-import ic2_120.registry.annotation.ScreenFactory
 
-@ModScreenHandler(block = FermenterBlock::class)
+@ModScreenHandler(block = FermenterBlock::class, inventorySize = FermenterBlockEntity.INVENTORY_SIZE)
 class FermenterScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -175,13 +171,5 @@ class FermenterScreenHandler(
             canTake = { true }
         )
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): FermenterScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(FermenterBlockEntity.INVENTORY_SIZE)
-            return FermenterScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
     }
 }

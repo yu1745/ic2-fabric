@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.content.sync.GeneratorSync
 import ic2_120.content.block.GeneratorBlock
@@ -49,6 +49,7 @@ class GeneratorBlockEntity(
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     companion object {
+        const val INVENTORY_SIZE = 2
         /** 发电机的能量等级（1级） */
         const val GENERATOR_TIER = 1
     }

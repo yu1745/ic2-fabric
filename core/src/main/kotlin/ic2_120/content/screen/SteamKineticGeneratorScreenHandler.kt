@@ -10,15 +10,11 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.SteamKineticGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
-import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
@@ -28,7 +24,7 @@ import net.minecraft.screen.slot.Slot
  * 蒸汽动能发电机 ScreenHandler。
  * 1 个涡轮槽 + 1 个升级槽 + 玩家背包。
  */
-@ModScreenHandler(block = SteamKineticGeneratorBlock::class)
+@ModScreenHandler(block = SteamKineticGeneratorBlock::class, inventorySize = SteamKineticGeneratorBlockEntity.INVENTORY_SIZE)
 class SteamKineticGeneratorScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -112,13 +108,5 @@ class SteamKineticGeneratorScreenHandler(
         const val PLAYER_INV_START = 2
         const val PLAYER_INV_END = 38
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SteamKineticGeneratorScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(SteamKineticGeneratorBlockEntity.INVENTORY_SIZE)
-            return SteamKineticGeneratorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
     }
 }

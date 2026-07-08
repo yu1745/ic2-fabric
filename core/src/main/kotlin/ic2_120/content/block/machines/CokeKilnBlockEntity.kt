@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.content.block.CokeKilnBlock
 import ic2_120.content.block.CokeKilnHatchBlock
@@ -48,7 +48,7 @@ class CokeKilnBlockEntity(
     companion object {
         private const val SLOT_INPUT = 0
         private const val SLOT_OUTPUT = 1
-        private const val INVENTORY_SIZE = 2
+        const val INVENTORY_SIZE = 2
         private const val PROCESS_TICKS = 1800
         private const val NBT_PROGRESS = "Progress"
 

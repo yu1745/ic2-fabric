@@ -11,17 +11,14 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import ic2_120.registry.annotation.ScreenFactory
 
-@ModScreenHandler(block = WindKineticGeneratorBlock::class)
+@ModScreenHandler(block = WindKineticGeneratorBlock::class, inventorySize = WindKineticGeneratorBlockEntity.INVENTORY_SIZE)
 class WindKineticGeneratorScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -98,19 +95,5 @@ class WindKineticGeneratorScreenHandler(
             }
         )
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): WindKineticGeneratorScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(1)
-            return WindKineticGeneratorScreenHandler(
-                syncId,
-                playerInventory,
-                blockInv,
-                context,
-                net.minecraft.screen.ArrayPropertyDelegate(propertyCount)
-            )
-        }
     }
 }

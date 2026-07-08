@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
@@ -56,6 +56,7 @@ class WindGeneratorBlockEntity(
     net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory {
 
     companion object {
+        const val INVENTORY_SIZE = 1
         const val GENERATOR_TIER = 1
         const val BATTERY_SLOT = 0
 

@@ -13,17 +13,13 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import ic2_120.registry.annotation.ScreenFactory
 
-@ModScreenHandler(block = CentrifugeBlock::class)
+@ModScreenHandler(block = CentrifugeBlock::class, inventorySize = CentrifugeBlockEntity.INVENTORY_SIZE)
 class CentrifugeScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -121,13 +117,5 @@ class CentrifugeScreenHandler(
         const val PLAYER_INV_START = 9
         const val HOTBAR_END = 45
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): CentrifugeScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(CentrifugeBlockEntity.INVENTORY_SIZE)
-            return CentrifugeScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
     }
 }

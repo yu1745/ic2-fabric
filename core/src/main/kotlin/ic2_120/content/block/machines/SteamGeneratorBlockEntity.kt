@@ -78,6 +78,7 @@ class SteamGeneratorBlockEntity(
     override var fluidPipePullingCount: Int = 1
 
     companion object {
+        const val INVENTORY_SIZE = 0
         private const val NBT_WATER_TANK = "WaterTank"
         private const val NBT_STEAM_TANK = "SteamTank"
         private const val NBT_SYSTEM_HEAT_MILLI = "SystemHeatMilli"

@@ -3,14 +3,13 @@ package ic2_120.content.screen
 import ic2_120.content.item.ItemFilterUpgradeItem
 import ic2_120.content.upgrade.EjectorUpgradeComponent
 import ic2_120.registry.annotation.ModScreenHandler
-import ic2_120.registry.annotation.ScreenFactory
+import ic2_120.registry.annotation.ScreenHandlerMode
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
@@ -31,7 +30,7 @@ import net.minecraft.util.Hand
  * - Index 0：方向序号（0~5=Direction 枚举，6=null/任意）
  * - Index 1：物品原始注册 ID（0=无过滤）
  */
-@ModScreenHandler(name = "item_upgrade")
+@ModScreenHandler(name = "item_upgrade", mode = ScreenHandlerMode.HANDHELD)
 class ItemUpgradeScreenHandler(
     syncId: Int,
     private val playerInventory: PlayerInventory,
@@ -60,11 +59,6 @@ class ItemUpgradeScreenHandler(
         private const val PLAYER_INV_END = PLAYER_INV_START + 27
         private const val HOTBAR_END = PLAYER_INV_END + 9
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ItemUpgradeScreenHandler {
-            val hand = buf.readEnumConstant(Hand::class.java)
-            return ItemUpgradeScreenHandler(syncId, playerInventory, hand)
-        }
     }
 
     init {

@@ -56,6 +56,7 @@ class WindKineticGeneratorBlockEntity(
     override val activeProperty: net.minecraft.state.property.BooleanProperty = WindKineticGeneratorBlock.ACTIVE
 
     companion object {
+        const val INVENTORY_SIZE = 1
         private val LOG = LoggerFactory.getLogger("ic2_120/WindKineticGenerator")
         const val ROTOR_SLOT = 0
         private val ALLOWED_ROTORS = setOf("wooden_rotor", "iron_rotor", "steel_rotor", "carbon_rotor")

@@ -5,15 +5,11 @@ import ic2_120.content.block.machines.SteamGeneratorBlockEntity
 import ic2_120.content.sync.SteamGeneratorSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
-import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
@@ -22,7 +18,7 @@ import net.minecraft.screen.ScreenHandlerContext
  * 蒸汽发生器 ScreenHandler — 对齐 ic2_origin ContainerSteamGenerator。
  * 无物品槽位，仅同步数据 + 按钮事件。
  */
-@ModScreenHandler(block = SteamGeneratorBlock::class)
+@ModScreenHandler(block = SteamGeneratorBlock::class, inventorySize = SteamGeneratorBlockEntity.INVENTORY_SIZE)
 class SteamGeneratorScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -69,12 +65,5 @@ class SteamGeneratorScreenHandler(
             +2001, +2010, +2100    // pressure inc (IDs 11-13)
         )
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): SteamGeneratorScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            return SteamGeneratorScreenHandler(syncId, playerInventory, SimpleInventory(0), context, ArrayPropertyDelegate(propertyCount))
-        }
     }
 }

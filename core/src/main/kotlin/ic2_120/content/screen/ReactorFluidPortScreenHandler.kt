@@ -11,21 +11,17 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import ic2_120.registry.annotation.ScreenFactory
 
 /**
  * 反应堆流体接口的 ScreenHandler。
  * 提供一个升级槽用于安装流体管道升级。
  */
-@ModScreenHandler(block = ReactorFluidPortBlock::class)
+@ModScreenHandler(block = ReactorFluidPortBlock::class, inventorySize = ReactorFluidPortBlockEntity.INVENTORY_SIZE)
 class ReactorFluidPortScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -109,13 +105,5 @@ class ReactorFluidPortScreenHandler(
         const val PLAYER_INV_START = 1
         const val HOTBAR_END = 36
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ReactorFluidPortScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(ReactorFluidPortBlockEntity.INVENTORY_SIZE)
-            return ReactorFluidPortScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
     }
 }

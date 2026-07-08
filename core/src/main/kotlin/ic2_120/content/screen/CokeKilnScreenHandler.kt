@@ -9,21 +9,17 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.sync.CokeKilnSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
-import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
 
-@ModScreenHandler(block = CokeKilnBlock::class)
+@ModScreenHandler(block = CokeKilnBlock::class, inventorySize = CokeKilnBlockEntity.INVENTORY_SIZE)
 class CokeKilnScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -103,13 +99,5 @@ class CokeKilnScreenHandler(
         private val DEFAULT_SLOT_SPEC = SlotSpec()
         private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false }, canTake = { true })
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): CokeKilnScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(2)
-            return CokeKilnScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
     }
 }

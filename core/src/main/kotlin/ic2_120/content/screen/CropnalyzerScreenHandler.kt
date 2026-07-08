@@ -7,21 +7,20 @@ import ic2_120.content.item.energy.IElectricTool
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.registry.annotation.ModScreenHandler
-import ic2_120.registry.annotation.ScreenFactory
+import ic2_120.registry.annotation.ScreenHandlerMode
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.slot.Slot
 import net.minecraft.util.Hand
 
-@ModScreenHandler(name = "cropnalyzer")
+@ModScreenHandler(name = "cropnalyzer", mode = ScreenHandlerMode.HANDHELD)
 class CropnalyzerScreenHandler(
     syncId: Int,
     private val playerInventory: PlayerInventory,
@@ -167,10 +166,5 @@ class CropnalyzerScreenHandler(
         const val HOTBAR_END = 38
         private const val PROPERTY_COUNT = 2
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): CropnalyzerScreenHandler {
-            val hand = buf.readEnumConstant(Hand::class.java)
-            return CropnalyzerScreenHandler(syncId, playerInventory, hand)
-        }
     }
 }

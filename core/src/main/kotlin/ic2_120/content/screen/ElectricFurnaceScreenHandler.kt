@@ -14,17 +14,13 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
-import ic2_120.registry.annotation.ScreenFactory
 
-@ModScreenHandler(block = ElectricFurnaceBlock::class, clientInventorySize = ElectricFurnaceBlockEntity.INVENTORY_SIZE)
+@ModScreenHandler(block = ElectricFurnaceBlock::class, inventorySize = ElectricFurnaceBlockEntity.INVENTORY_SIZE)
 class ElectricFurnaceScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -133,13 +129,5 @@ class ElectricFurnaceScreenHandler(
         const val PLAYER_INV_START = 7
         const val HOTBAR_END = 42
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ElectricFurnaceScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(ElectricFurnaceBlockEntity.INVENTORY_SIZE)
-            return ElectricFurnaceScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
     }
 }

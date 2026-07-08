@@ -14,17 +14,13 @@ import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
-import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
-import net.minecraft.screen.ArrayPropertyDelegate
 import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerContext
 import net.minecraft.screen.slot.Slot
-import ic2_120.registry.annotation.ScreenFactory
 
-@ModScreenHandler(block = ElectricHeatGeneratorBlock::class)
+@ModScreenHandler(block = ElectricHeatGeneratorBlock::class, inventorySize = ElectricHeatGeneratorBlockEntity.SLOT_COUNT)
 class ElectricHeatGeneratorScreenHandler(
     syncId: Int,
     playerInventory: PlayerInventory,
@@ -121,13 +117,5 @@ class ElectricHeatGeneratorScreenHandler(
         const val PLAYER_INV_START = ElectricHeatGeneratorBlockEntity.SLOT_COUNT
         const val HOTBAR_END = PLAYER_INV_START + 35
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ElectricHeatGeneratorScreenHandler {
-            val pos = buf.readBlockPos()
-            val propertyCount = buf.readVarInt()
-            val context = ScreenHandlerContext.create(playerInventory.player.world, pos)
-            val blockInv = SimpleInventory(ElectricHeatGeneratorBlockEntity.SLOT_COUNT)
-            return ElectricHeatGeneratorScreenHandler(syncId, playerInventory, blockInv, context, ArrayPropertyDelegate(propertyCount))
-        }
     }
 }

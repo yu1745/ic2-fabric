@@ -5,12 +5,11 @@ import ic2_120.content.item.ContainmentBoxItem
 import ic2_120.content.screen.slot.PredicateSlot
 import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.registry.annotation.ModScreenHandler
-import ic2_120.registry.annotation.ScreenFactory
+import ic2_120.registry.annotation.ScreenHandlerMode
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.slot.Slot
 import net.minecraft.util.Hand
@@ -18,7 +17,7 @@ import net.minecraft.util.Hand
 /**
  * 防辐射容纳盒 GUI：12 格 + 玩家背包，数据在物品 NBT。
  */
-@ModScreenHandler(name = "containment_box")
+@ModScreenHandler(name = "containment_box", mode = ScreenHandlerMode.HANDHELD)
 class ContainmentBoxScreenHandler(
     syncId: Int,
     private val playerInventory: PlayerInventory,
@@ -85,10 +84,5 @@ class ContainmentBoxScreenHandler(
     companion object {
         const val PLAYER_INV_START = ContainmentBoxInventory.SIZE
 
-        @ScreenFactory
-        fun fromBuffer(syncId: Int, playerInventory: PlayerInventory, buf: PacketByteBuf): ContainmentBoxScreenHandler {
-            val hand = buf.readEnumConstant(Hand::class.java)
-            return ContainmentBoxScreenHandler(syncId, playerInventory, hand)
-        }
     }
 }
