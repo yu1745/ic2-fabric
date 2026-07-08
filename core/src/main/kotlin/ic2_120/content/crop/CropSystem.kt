@@ -180,7 +180,7 @@ object CropSystem {
             CropType.HOPS -> 2
             CropType.VENOMILIA -> 2
             CropType.EATING_PLANT -> 0
-            else -> null
+            else -> 1
         }
         return next?.coerceIn(0, 7)
     }
