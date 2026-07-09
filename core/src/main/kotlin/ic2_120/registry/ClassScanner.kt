@@ -1286,7 +1286,14 @@ object ClassScanner {
                     ctor.call(type, world) as Entity
                 }
 
-                val builder = EntityType.Builder.create(factory, annotation.spawnGroup)
+                val groupName = annotation.spawnGroup.uppercase()
+                val spawnGroup = try {
+                    SpawnGroup.valueOf(groupName)
+                } catch (e: IllegalArgumentException) {
+                    logger.warn("未知 SpawnGroup '{}', 回退到 MISC", annotation.spawnGroup)
+                    SpawnGroup.MISC
+                }
+                val builder = EntityType.Builder.create(factory, spawnGroup)
                     .setDimensions(annotation.width, annotation.height)
                     .maxTrackingRange(annotation.maxTrackingRange)
 
