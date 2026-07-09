@@ -422,16 +422,19 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         processWaterInputContainer()
         processWeedExInputContainer()
 
-        // 按监管动物数量持续耗电（每只 1 EU/t）
+        // 按监管动物数量持续耗电（每 2 只动物 1 EU/t，向上取整）
         val drain = sync.animalCount.toLong()
-        if (drain > 0) {
-            sync.consumeEnergy(drain)
+        val actualDrain = (drain + 1L) / 2L
+        val canPower = if (actualDrain > 0L) {
+            sync.consumeEnergy(actualDrain) >= actualDrain
+        } else {
+            true
         }
 
         var active = false
         val interval = (WORK_INTERVAL_TICKS.toFloat() / speedMultiplier).toInt().coerceAtLeast(1)
         if ((world.time + workOffset) % interval.toLong() == 0L) {
-            val report = runScan(world)
+            val report = if (canPower) runScan(world) else ScanReport()
             sync.animalCount = report.touched
             sync.touchedThisRun = report.touched
             sync.foodConsumedThisRun = report.foodConsumed
