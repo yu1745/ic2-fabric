@@ -141,23 +141,7 @@ class LeadPlate : Item(FabricItemSettings()) {
 class ObsidianPlate : Item(FabricItemSettings())
 
 @ModItem(name = "steel_plate", tab = CreativeTab.IC2_MATERIALS, group = "plates", materialTags = ["plates/steel"])
-class SteelPlate : Item(FabricItemSettings()) {
-    companion object {
-        @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            DamageToolShapelessRecipeDatagen.offer(
-                exporter = exporter,
-                recipeId = SteelPlate::class.id(),
-                result = SteelPlate::class.instance(),
-                resultCount = 1,
-                ingredients = listOf(
-                    DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.INGOTS_STEEL)
-                )
-            )
-        }
-    }
-}
+class SteelPlate : Item(FabricItemSettings())
 
 @ModItem(name = "tin_plate", tab = CreativeTab.IC2_MATERIALS, group = "plates", materialTags = ["plates/tin"])
 class TinPlate : Item(FabricItemSettings()) {
