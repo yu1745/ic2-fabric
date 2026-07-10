@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "#ic2_120:rubber_tree_forest", "required": false },
+    { "id": "#ic2_120:rubber_tree_swamp", "required": false }
+  ]
+}

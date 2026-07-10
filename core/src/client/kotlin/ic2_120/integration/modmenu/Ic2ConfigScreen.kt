@@ -492,9 +492,7 @@ object Ic2ConfigScreen {
     ): () -> RubberTreeWorldgenConfig {
         val cat = builder.getOrCreateCategory(Text.literal("世界生成 • 橡胶树"))
         var enabled = cfg.enabled
-        var biomes = cfg.biomes.toMutableList()
-        var countPerChunk = cfg.countPerChunk
-        var rarityChance = cfg.rarityChance
+        var treeDensityFactor = cfg.treeDensityFactor
         var maxWaterDepth = cfg.maxWaterDepth
         var baseHeight = cfg.baseHeight
         var heightRandA = cfg.heightRandA
@@ -512,15 +510,9 @@ object Ic2ConfigScreen {
             .setDefaultValue(true)
             .setTooltip(Text.literal("是否允许自然生成橡胶树。变更后需要重启。"))
             .setSaveConsumer { enabled = it }.build())
-        cat.addEntry(eb.startStrList(Text.literal("允许生成的生物群系"), biomes)
-            .setDefaultValue(DEFAULT_RUBBER_BIOMES)
-            .setTooltip(Text.literal("生物群系列表，填写 biome id。变更后需要重启。"))
-            .setSaveConsumer { biomes = it.toMutableList() }.build())
-        cat.addEntry(eb.startIntField(Text.literal("每区块放置尝试次数"), countPerChunk)
-            .setDefaultValue(1).setSaveConsumer { countPerChunk = it }.build())
-        cat.addEntry(eb.startIntField(Text.literal("稀有度"), rarityChance)
-            .setDefaultValue(64).setTooltip(Text.literal("64 表示每次尝试平均 1/64 概率通过"))
-            .setSaveConsumer { rarityChance = it }.build())
+        cat.addEntry(eb.startFloatField(Text.literal("树木密度系数"), treeDensityFactor)
+            .setDefaultValue(1.0f).setTooltip(Text.literal("对齐 Forge treeDensityFactor，1.0 = 原版密度"))
+            .setSaveConsumer { treeDensityFactor = it }.build())
         cat.addEntry(eb.startIntField(Text.literal("最大地表水深"), maxWaterDepth)
             .setDefaultValue(0).setSaveConsumer { maxWaterDepth = it }.build())
         cat.addEntry(eb.startIntField(Text.literal("树干基础高度"), baseHeight)
@@ -549,9 +541,7 @@ object Ic2ConfigScreen {
         return {
             RubberTreeWorldgenConfig(
                 enabled = enabled,
-                biomes = biomes.toList(),
-                countPerChunk = countPerChunk,
-                rarityChance = rarityChance,
+                treeDensityFactor = treeDensityFactor,
                 maxWaterDepth = maxWaterDepth,
                 baseHeight = baseHeight,
                 heightRandA = heightRandA,
@@ -613,13 +603,6 @@ object Ic2ConfigScreen {
             )
         }
     }
-
-    private val DEFAULT_RUBBER_BIOMES = listOf(
-        "minecraft:forest", "minecraft:flower_forest", "minecraft:birch_forest",
-        "minecraft:dark_forest", "minecraft:taiga", "minecraft:old_growth_pine_taiga",
-        "minecraft:old_growth_spruce_taiga", "minecraft:jungle", "minecraft:sparse_jungle",
-        "minecraft:bamboo_jungle", "minecraft:swamp"
-    )
 
     private val DEFAULT_PEAT_BIOMES = listOf(
         "minecraft:jungle", "minecraft:sparse_jungle",

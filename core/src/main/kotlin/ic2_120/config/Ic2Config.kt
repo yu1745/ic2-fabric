@@ -324,20 +324,6 @@ data class LaserModeConfig(
     val entityDamage: Float
 )
 
-private val DEFAULT_RUBBER_TREE_BIOMES = listOf(
-    "minecraft:forest",
-    "minecraft:flower_forest",
-    "minecraft:birch_forest",
-    "minecraft:dark_forest",
-    "minecraft:taiga",
-    "minecraft:old_growth_pine_taiga",
-    "minecraft:old_growth_spruce_taiga",
-    "minecraft:jungle",
-    "minecraft:sparse_jungle",
-    "minecraft:bamboo_jungle",
-    "minecraft:swamp"
-)
-
 private val DEFAULT_PEAT_ORE_BIOMES = listOf(
     "minecraft:jungle",
     "minecraft:sparse_jungle",
@@ -346,7 +332,7 @@ private val DEFAULT_PEAT_ORE_BIOMES = listOf(
 )
 
 data class WorldgenConfig(
-    @field:ConfigComment("橡胶树世界生成配置。enabled/biomes 变更后需要重启；其余多数参数 /ic2config reload 后影响未来生成。")
+    @field:ConfigComment("橡胶树世界生成配置。enabled 变更后需要重启；其余多数参数 /ic2config reload 后影响未来生成。群系由 biome tag #ic2_120:generates_rubber_trees 控制。")
     val rubberTree: RubberTreeWorldgenConfig = RubberTreeWorldgenConfig(),
     @field:ConfigComment("泥炭矿世界生成配置。变更后需要重启生效。")
     val peatOre: PeatOreWorldgenConfig = PeatOreWorldgenConfig()
@@ -356,18 +342,9 @@ data class RubberTreeWorldgenConfig(
     /** 是否允许自然生成橡胶树。 */
     @field:ConfigComment("是否允许自然生成橡胶树。", "true")
     val enabled: Boolean = true,
-    /** 允许生成橡胶树的生物群系列表。 */
-    @field:ConfigComment(
-        "允许生成橡胶树的生物群系列表。填写 biome id，例如 minecraft:forest。",
-        "[\"minecraft:forest\", \"minecraft:flower_forest\", \"minecraft:birch_forest\", \"minecraft:dark_forest\", \"minecraft:taiga\", \"minecraft:old_growth_pine_taiga\", \"minecraft:old_growth_spruce_taiga\", \"minecraft:jungle\", \"minecraft:sparse_jungle\", \"minecraft:bamboo_jungle\", \"minecraft:swamp\"]"
-    )
-    val biomes: List<String> = DEFAULT_RUBBER_TREE_BIOMES,
-    /** 每个区块内尝试几次橡胶树放置。 */
-    @field:ConfigComment("每个区块进行几次橡胶树放置尝试。", "1")
-    val countPerChunk: Int = 1,
-    /** 每次尝试的稀有度，64 表示平均 1/64 概率通过。 */
-    @field:ConfigComment("每次尝试的稀有度。64 表示每次尝试平均 1/64 概率通过。", "64")
-    val rarityChance: Int = 64,
+    /** 树木密度系数，对齐 Forge general.ini treeDensityFactor。乘到 biome 采样累加值上。 */
+    @field:ConfigComment("树木密度系数，对齐 Forge treeDensityFactor。1.0 = 原版密度。", "1.0")
+    val treeDensityFactor: Float = 1.0f,
     /** 允许的地表水深，0 表示不允许生成在水面上。 */
     @field:ConfigComment("允许生成时的最大地表水深。0 表示不允许刷在水面上。", "0")
     val maxWaterDepth: Int = 0,
@@ -409,9 +386,7 @@ data class RubberTreeWorldgenConfig(
      * 统一在读取侧做约束，避免配置写错后在世界生成阶段抛异常。
      */
     fun normalized(): RubberTreeWorldgenConfig = copy(
-        biomes = biomes.map(String::trim).filter(String::isNotEmpty).distinct(),
-        countPerChunk = countPerChunk.coerceIn(0, 256),
-        rarityChance = rarityChance.coerceAtLeast(1),
+        treeDensityFactor = treeDensityFactor.coerceAtLeast(0f),
         maxWaterDepth = maxWaterDepth.coerceAtLeast(0),
         baseHeight = baseHeight.coerceIn(0, 32),
         heightRandA = heightRandA.coerceIn(0, 24),
