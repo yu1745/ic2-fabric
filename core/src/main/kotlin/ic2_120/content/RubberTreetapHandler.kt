@@ -96,7 +96,7 @@ object RubberTreetapHandler {
             val newState = block.setFaceDry(state, face)
             world.setBlockState(pos, newState)
 
-            // 记录提取时间，用于 1 MC 天后恢复
+            // 记录提取时间，供 Jade 显示已过时间
             (world.getBlockEntity(pos) as? RubberLogBlockEntity)?.setExtractedTime(face, world.time)
 
             when {

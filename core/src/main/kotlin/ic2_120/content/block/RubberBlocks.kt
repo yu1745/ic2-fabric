@@ -3,16 +3,18 @@ package ic2_120.content.block
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
 import ic2_120.registry.CreativeTab
+import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
-import ic2_120.registry.type
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.BlockEntityTicker
-import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
+import net.minecraft.loot.context.LootContextParameterSet
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
+import net.minecraft.registry.Registries
+import net.minecraft.registry.entry.RegistryEntry
+import net.minecraft.registry.tag.BlockTags
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
 import net.minecraft.state.property.EnumProperty
@@ -23,7 +25,10 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.random.Random
 import net.minecraft.world.World
+import net.minecraft.world.WorldAccess
+import net.minecraft.world.gen.chunk.ChunkGenerator
 import net.minecraft.world.gen.feature.ConfiguredFeature
+import net.minecraft.server.world.ServerWorld
 
 // ========== 原木 / 木材 ==========
 
@@ -41,7 +46,7 @@ enum class RubberFaceState(private val id: String) : StringIdentifiable {
 
 /** 橡胶树原木。仅自然生成的原木会随机生成可提取槽位，玩家放置的原木不会产出树脂。 */
 @ModBlock(name = "rubber_log", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood")
-class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_LOG).strength(2.0f)) : BlockWithEntity(settings) {
+class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_LOG).strength(2.0f).ticksRandomly()) : PillarBlock(settings), BlockEntityProvider {
 
     init {
         defaultState = stateManager.defaultState
@@ -53,26 +58,13 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
             .with(NATURAL, false)
     }
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
-        RubberLogBlockEntity(pos, state)
-
-    override fun <T : BlockEntity> getTicker(
-        world: World,
-        state: BlockState,
-        type: BlockEntityType<T>
-    ): BlockEntityTicker<T>? =
-        if (world.isClient) null
-        else checkType(type, RubberLogBlockEntity::class.type()) { w, p, s, be -> RubberLogBlockEntity.tick(w, p, s, be) }
-
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         super.appendProperties(builder)
-        builder.add(Properties.AXIS, RUBBER_NORTH, RUBBER_SOUTH, RUBBER_EAST, RUBBER_WEST, NATURAL)
+        builder.add(RUBBER_NORTH, RUBBER_SOUTH, RUBBER_EAST, RUBBER_WEST, NATURAL)
     }
 
-    override fun getPlacementState(ctx: ItemPlacementContext): BlockState =
-        defaultState.with(Properties.AXIS, ctx.side.axis)
-
-    override fun getRenderType(state: BlockState): BlockRenderType = BlockRenderType.MODEL
+    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
+        RubberLogBlockEntity(pos, state)
 
     // AbstractBlock.onBlockAdded 在 1.20.1 标记为 @Deprecated（Mojang 设计：override 是预期用法，详见其 javadoc）。
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -88,6 +80,35 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
 
     fun setFaceDry(state: BlockState, face: Direction): BlockState =
         state.with(propFor(face), RubberFaceState.DRY)
+
+    // 对齐 Forge 1.12：破坏含橡胶面的原木有 1/6 概率额外掉落粘性树脂。
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun getDroppedStacks(state: BlockState, builder: LootContextParameterSet.Builder): MutableList<ItemStack> {
+        val drops = super.getDroppedStacks(state, builder)
+        if (!hasNoRubberFaces(state) && builder.world.random.nextInt(6) == 0) {
+            val resinId = Identifier(Ic2_120.MOD_ID, "resin")
+            drops.add(ItemStack(Registries.ITEM.get(resinId)))
+        }
+        return drops
+    }
+
+    // randomTick：1/7 概率恢复 DRY → WET，对齐 Forge 1.12 BlockRubWood.randomTick 行为。
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun randomTick(state: BlockState, world: ServerWorld, pos: BlockPos, random: Random) {
+        if (!hasDryFace(state)) return
+        if (random.nextInt(7) != 0) return
+        if (!hasConnectedRubberLeaves(world, pos)) return
+
+        var newState = state
+        for (face in listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)) {
+            if (getRubberState(state, face) == RubberFaceState.DRY) {
+                newState = newState.with(propFor(face), RubberFaceState.WET)
+            }
+        }
+        if (newState != state) {
+            world.setBlockState(pos, newState)
+        }
+    }
 
     companion object {
         val RUBBER_NORTH: EnumProperty<RubberFaceState> = EnumProperty.of("rubber_north", RubberFaceState::class.java)
@@ -109,6 +130,40 @@ class RubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.c
                 state.get(RUBBER_SOUTH) == RubberFaceState.NONE &&
                 state.get(RUBBER_EAST) == RubberFaceState.NONE &&
                 state.get(RUBBER_WEST) == RubberFaceState.NONE
+
+        fun hasDryFace(state: BlockState): Boolean =
+            state.get(RUBBER_NORTH) == RubberFaceState.DRY ||
+                state.get(RUBBER_SOUTH) == RubberFaceState.DRY ||
+                state.get(RUBBER_EAST) == RubberFaceState.DRY ||
+                state.get(RUBBER_WEST) == RubberFaceState.DRY
+
+        private fun hasConnectedRubberLeaves(world: World, startPos: BlockPos): Boolean {
+            val queue = java.util.ArrayDeque<BlockPos>()
+            val visited = HashSet<BlockPos>()
+
+            queue.add(startPos)
+            visited.add(startPos)
+
+            while (queue.isNotEmpty()) {
+                val current = queue.removeFirst()
+
+                for (direction in Direction.values()) {
+                    val neighborPos = current.offset(direction)
+                    val neighborState = world.getBlockState(neighborPos)
+                    val neighborBlock = neighborState.block
+
+                    if (neighborBlock is RubberLeavesBlock) {
+                        return true
+                    }
+
+                    if (neighborBlock is RubberLogBlock && visited.add(neighborPos)) {
+                        queue.add(neighborPos.toImmutable())
+                    }
+                }
+            }
+
+            return false
+        }
 
         fun initializeNaturalState(state: BlockState, random: Random): BlockState {
             val faces = listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
@@ -197,9 +252,73 @@ class RubberPressurePlateBlock(settings: AbstractBlock.Settings = AbstractBlock.
 // ========== 树叶 / 树苗 ==========
 
 /** 橡胶树生成器，用于树苗生长与骨粉催熟。 */
-private class RubberSaplingGenerator : net.minecraft.block.sapling.SaplingGenerator() {
+internal class RubberSaplingGenerator : net.minecraft.block.sapling.SaplingGenerator() {
     override fun getTreeFeature(random: net.minecraft.util.math.random.Random, bees: Boolean): RegistryKey<ConfiguredFeature<*, *>>? =
         RegistryKey.of(RegistryKeys.CONFIGURED_FEATURE, Identifier(Ic2_120.MOD_ID, "rubber_tree"))
+
+    /**
+     * 覆写父类 [SaplingGenerator.generate]，目的有二：
+     *
+     * 1. **必须**在调用 feature 之前把树苗替换为流体状态（vanilla 行为），否则
+     *    [net.minecraft.world.gen.feature.TreeFeature.getTopPosition] 会在 i=0 处看到
+     *    sapling 方块并直接 `i - 2`，导致树干放不下，树永远不会长出来。
+     * 2. 由于 (1) 中树苗被替换成 AIR，feature 内 `getBlockState(origin).block is RubberSaplingBlock`
+     *    永远为 false，无法再区分"树苗生长"和"自然世界生成"两种来源。
+     *    这里用 [SAPLING_GROWTH_FLAG] ThreadLocal 标记当前调用来自树苗路径，
+     *    [RubberTreeFeature.isSaplingGrowth] 看到这个标记后会走树苗分支（保留周围方块），
+     *    而不是世界生成分支（清除/替换周围原木）。
+     */
+    override fun generate(
+        world: ServerWorld,
+        chunkGenerator: ChunkGenerator,
+        pos: BlockPos,
+        state: BlockState,
+        random: Random
+    ): Boolean {
+        val registryKey = getTreeFeature(random, areFlowersNearby(world, pos)) ?: return false
+        val registryEntry: RegistryEntry<ConfiguredFeature<*, *>> = world.registryManager
+            .get(RegistryKeys.CONFIGURED_FEATURE)
+            .getEntry(registryKey)
+            .orElse(null) ?: return false
+        val configuredFeature = registryEntry.value()
+
+        // 关键差异：与 vanilla 一样先把树苗替换为流体状态（无水 = AIR），
+        // 然后用 ThreadLocal 告诉 feature 这次是树苗生长而非世界生成。
+        val fluidState = world.getFluidState(pos).getBlockState()
+        world.setBlockState(pos, fluidState, Block.NO_REDRAW)
+        SAPLING_GROWTH_FLAG.set(true)
+        return try {
+            if (configuredFeature.generate(world, chunkGenerator, random, pos)) {
+                if (world.getBlockState(pos) == fluidState) {
+                    world.updateListeners(pos, state, fluidState, Block.NOTIFY_LISTENERS)
+                }
+                true
+            } else {
+                world.setBlockState(pos, state, Block.NO_REDRAW)
+                false
+            }
+        } finally {
+            SAPLING_GROWTH_FLAG.remove()
+        }
+    }
+
+    private fun areFlowersNearby(world: WorldAccess, pos: BlockPos): Boolean {
+        for (flowerPos in BlockPos.Mutable.iterate(pos.down().north(2).west(2), pos.up().south(2).east(2))) {
+            if (world.getBlockState(flowerPos).isIn(BlockTags.FLOWERS)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    companion object {
+        /**
+         * 标记下一次 [SaplingGenerator.generate] 的调用来自树苗生长路径。
+         * [RubberTreeFeature.isSaplingGrowth] 优先读这个标志，再用方块检查作为 fallback。
+         */
+        @JvmStatic
+        val SAPLING_GROWTH_FLAG: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
+    }
 }
 
 @ModBlock(name = "rubber_leaves", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "wood", generateBlockLootTable = false)

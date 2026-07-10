@@ -8,6 +8,11 @@ import ic2_120.content.block.CropStickBlock
 import ic2_120.content.block.CropStickBlockEntity
 import ic2_120.content.block.UvLampBlock
 import ic2_120.content.block.machines.UvLampBlockEntity
+import ic2_120.content.block.RubberSaplingBlock
+import ic2_120.content.worldgen.RubberSaplingGrowth
+import ic2_120.content.block.RubberLogBlock
+import ic2_120.content.block.RubberLogBlockEntity
+import ic2_120.content.block.RubberFaceState
 import ic2_120.content.block.AnimalmatronBlock
 import ic2_120.content.block.machines.AnimalmatronBlockEntity
 import ic2_120.content.block.TeleporterBlock
@@ -35,6 +40,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.registry.Registries
+import net.minecraft.util.math.Direction
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -98,6 +104,8 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockComponent(KineticJadeProvider, ManualKineticGeneratorBlock::class.java)
         registration.registerBlockComponent(KineticJadeProvider, KineticGeneratorBlock::class.java)
         registration.registerBlockComponent(TeleporterJadeProvider, TeleporterBlock::class.java)
+        registration.registerBlockComponent(RubberSaplingJadeProvider, RubberSaplingBlock::class.java)
+        registration.registerBlockComponent(RubberLogJadeProvider, RubberLogBlock::class.java)
         registration.registerEntityComponent(AnimalJadeProvider, PassiveEntity::class.java)
     }
 }
@@ -735,4 +743,112 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
     }
 
     override fun getUid(): Identifier = ANIMAL_MONITOR
+}
+
+/**
+ * 橡胶树苗 Jade 提示：显示能否长成大树。
+ *
+ * 树苗没有 BlockEntity，无法走 [IServerDataProvider]，因此完全在客户端计算——
+ * 客户端 world 已同步周围方块与光照，判定条件与服务端 [RubberSaplingGrowth] 一致。
+ *
+ * 判定两项（与原版 [net.minecraft.block.SaplingBlock.randomTick] + 生长净空一致）：
+ * 1. 光照：树苗上方那格 lightLevel >= 9 才会触发自然生长（骨粉可无视光照）。
+* 2. 空间：上方生长盒子内没有其他原木阻挡。
+ */
+object RubberSaplingJadeProvider : IBlockComponentProvider {
+    private val SAPLING_GROWTH = Identifier("ic2_120", "rubber_sapling_growth")
+    private const val MIN_GROW_LIGHT = 9
+
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+        val world = accessor.level
+        val pos = accessor.position
+
+        val light = world.getLightLevel(pos.up())
+        val enoughLight = light >= MIN_GROW_LIGHT
+        val clear = RubberSaplingGrowth.hasClearArea(world, pos)
+
+        if (enoughLight && clear) {
+            tooltip.add(Text.translatable("ic2_120.jade.sapling_can_grow").formatted(Formatting.GREEN))
+            return
+        }
+
+        tooltip.add(Text.translatable("ic2_120.jade.sapling_cannot_grow").formatted(Formatting.RED))
+        if (!clear) {
+            tooltip.add(Text.literal("  ⚠ ").append(Text.translatable("ic2_120.jade.sapling_blocked")).formatted(Formatting.GRAY))
+        }
+        if (!enoughLight) {
+            tooltip.add(
+                Text.literal("  ⚠ ")
+                    .append(Text.translatable("ic2_120.jade.sapling_low_light", light, MIN_GROW_LIGHT))
+                    .formatted(Formatting.GRAY)
+            )
+        }
+    }
+
+    override fun getUid(): Identifier = SAPLING_GROWTH
+}
+
+/**
+ * 橡胶原木 Jade 提示：显示每个面的状态。
+ * DRY 面额外显示已过时间和期望恢复时间（~8 min）。
+ * 提取时间戳通过 IServerDataProvider 从 BlockEntity 同步。
+ */
+object RubberLogJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
+    private val RUBBER_LOG = Identifier("ic2_120", "rubber_log_info")
+
+    private val FACES = listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
+
+    // randomTick 期望恢复时间：每 tick 被选中概率 = 3/4096，选中后 1/7 概率恢复
+    // → 期望 = 4096/3 * 7 ≈ 9557 ticks ≈ 8 min
+    private const val RECOVERY_EXPECTED_TICKS = 9557L
+
+    override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
+        val be = accessor.blockEntity as? RubberLogBlockEntity ?: return
+        data.putLong("worldTime", accessor.level.time)
+        for (face in FACES) {
+            data.putLong("ext_${face.name.lowercase()}", be.getExtractedAt(face))
+        }
+    }
+
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+        val state = accessor.blockState
+        if (state.block !is RubberLogBlock) return
+
+        val worldTime = accessor.serverData.getLong("worldTime")
+
+        for (face in FACES) {
+            val faceState = state.get(RubberLogBlock.propFor(face))
+            if (faceState == RubberFaceState.NONE) continue
+
+            val dirLabel = face.name.first().toString()
+
+            when (faceState) {
+                RubberFaceState.WET -> {
+                    tooltip.add(
+                        Text.literal("$dirLabel: ")
+                            .append(Text.translatable("ic2_120.jade.rubber_face_wet"))
+                            .formatted(Formatting.GREEN)
+                    )
+                }
+                RubberFaceState.DRY -> {
+                    val extAt = accessor.serverData.getLong("ext_${face.name.lowercase()}")
+                    val elapsedTicks = if (extAt > 0L) worldTime - extAt else 0L
+                    val elapsedSec = elapsedTicks / 20.0
+                    val expMin = RECOVERY_EXPECTED_TICKS / 20.0 / 60.0
+                    tooltip.add(
+                        Text.literal("$dirLabel: ")
+                            .append(Text.translatable(
+                                "ic2_120.jade.rubber_face_dry",
+                                String.format("%.0f", elapsedSec),
+                                String.format("%.1f", expMin)
+                            ))
+                            .formatted(Formatting.GRAY)
+                    )
+                }
+                else -> {}
+            }
+        }
+    }
+
+    override fun getUid(): Identifier = RUBBER_LOG
 }
