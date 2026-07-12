@@ -27,8 +27,8 @@ object DrillTooltipHandler {
     private const val DIAMOND_DRILL_EU_PER_BLOCK = 80L
     private const val IRIDIUM_DRILL_EU_PER_BLOCK = 800L
     private const val IRIDIUM_DRILL_SILK_EU_PER_BLOCK = 8_000L
-    private const val CHAINSAW_EU_PER_BLOCK = 250L
-    private const val NANO_SABER_EU_PER_HIT = 1_000L
+    private const val CHAINSAW_EU_PER_BLOCK = 100L
+    private const val NANO_SABER_EU_PER_HIT = 400L
 
     fun register() {
         ItemTooltipCallback.EVENT.register { stack, context, lines ->
@@ -78,6 +78,23 @@ object DrillTooltipHandler {
                         .formatted(Formatting.GRAY)
                         .append(Text.literal(boundKeyName).formatted(Formatting.YELLOW))
                         .append(Text.literal(" + 右键").formatted(Formatting.YELLOW))
+                )
+            }
+
+            if (item is Chainsaw) {
+                val modeKey = ModeKeybinds.getModeKey()
+                val boundKeyName = modeKey.boundKeyLocalizedText.string
+                val shearEnabled = Chainsaw.isShearEnabled(stack)
+                lines.add(
+                    Text.translatable(
+                        if (shearEnabled) "tooltip.ic2_120.chainsaw.mode_shear" else "tooltip.ic2_120.chainsaw.mode_normal"
+                    ).formatted(Formatting.GRAY)
+                )
+                lines.add(
+                    Text.translatable("tooltip.ic2_120.chainsaw.toggle_mode")
+                        .formatted(Formatting.GRAY)
+                        .append(Text.literal(boundKeyName).formatted(Formatting.YELLOW))
+                        .append(Text.translatable("tooltip.ic2_120.chainsaw.toggle_mode_suffix").formatted(Formatting.YELLOW))
                 )
             }
         }

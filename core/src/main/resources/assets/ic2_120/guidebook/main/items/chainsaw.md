@@ -12,7 +12,7 @@ item_ids:
 
 <ItemImage id="ic2_120:chainsaw" scale="4" />
 
-The Chainsaw is a tier-1 electric logging tool that combines the cutting power of a diamond axe with a built-in EU buffer. It is the dedicated counterpart to the mining drill: where the drill bores stone, the chainsaw fells wood. Every block of log, wood, or other axe-mineable material it touches is broken for a flat 100 EU, with no vanilla durability cost.
+The Chainsaw is a tier-1 electric multi-tool that combines axe and sword combat with a built-in EU buffer. Its optional shear mode also handles shearable entities and shear-specific block drops. Every normal mined block or combat/shear action costs 100 EU, with no vanilla durability cost.
 
 ## Item View
 
@@ -28,7 +28,7 @@ The Chainsaw is a tier-1 electric logging tool that combines the cutting power o
 | Max Energy | 30,000 EU |
 | Energy per Block | 100 EU |
 | Mining Speed Reference | Diamond Axe |
-| Item Tag | `minecraft:axes` |
+| Item Tags | `minecraft:axes`, `minecraft:swords` |
 | Stack Size | 1 |
 | Vanilla Durability | None (EU-powered) |
 
@@ -48,7 +48,14 @@ The chainsaw's specialty is bulk wood harvesting. Equip it and break any log, wo
 
 - Each block costs a flat **100 EU**, regardless of the block's hardness.
 - A single oak tree (roughly 4-6 logs plus leaves) typically fits well within one full charge.
-- The chainsaw is tagged `minecraft:axes`, so it interacts correctly with any other mod that inspects axe capabilities on held items.
+- The chainsaw is tagged `minecraft:axes` and `minecraft:swords`, so it can be used as both an axe and a powered melee tool.
+
+### Shear Mode
+
+- Hold the common mode key and right-click the chainsaw to toggle shear mode.
+- In shear mode, right-click sheep, mooshrooms, snow golems, or other `Shearable` entities to shear them for 100 EU.
+- Attack leaves, wool, cobwebs, vines, tripwire, grass, ferns, dead bushes, or hanging roots to use shear-specific drops for 100 EU.
+- The shear mode state is stored in the `ChainsawDisableShear` NBT flag.
 
 ### Out of Power
 

@@ -5,6 +5,7 @@ import ic2_120.content.block.machines.PatternStorageBlockEntity
 import ic2_120.content.block.machines.ReplicatorBlockEntity
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.IridiumDrill
+import ic2_120.content.item.Chainsaw
 import ic2_120.content.item.MiningLaserItem
 import ic2_120.content.item.MiningLaserServerSuppress
 import ic2_120.content.item.NightVisionGoggles
@@ -34,6 +35,7 @@ object NetworkManager {
     val TOGGLE_NIGHT_VISION_GOGGLES_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_night_vision_goggles")
     val TOGGLE_NANO_VISION_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_nano_vision")
     val TOGGLE_IRIDIUM_SILK_TOUCH_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_iridium_silk_touch")
+    val TOGGLE_CHAINSAW_SHEAR_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_chainsaw_shear")
     val TOGGLE_FOAM_SPRAYER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
     val TOGGLE_MINING_LASER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
     val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
@@ -130,6 +132,23 @@ object NetworkManager {
                     player.sendMessage(Text.translatable(
                         if (enabled) "message.ic2_120.iridium_drill.silk_touch_on" else "message.ic2_120.iridium_drill.silk_touch_off"
                     ), true)
+                }
+            }
+        }
+
+        ServerPlayNetworking.registerGlobalReceiver(TOGGLE_CHAINSAW_SHEAR_PACKET) { server, player, _, _, _ ->
+            server.execute {
+                for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
+                    val stack = player.getStackInHand(hand)
+                    if (stack.item is Chainsaw) {
+                        val enabled = Chainsaw.toggleShear(stack)
+                        player.setStackInHand(hand, stack)
+                        player.sendMessage(
+                            Text.literal(if (enabled) "链锯剪刀模式：开启" else "链锯剪刀模式：关闭"),
+                            true
+                        )
+                        return@execute
+                    }
                 }
             }
         }

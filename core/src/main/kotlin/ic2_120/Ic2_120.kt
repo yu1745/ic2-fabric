@@ -2,6 +2,7 @@ package ic2_120
 
 import ic2_120.analytics.AnalyticsReporter
 import ic2_120.content.CreativeGeneratorItemEntityHandler
+import ic2_120.content.ChainsawHandler
 import ic2_120.content.RubberTreetapHandler
 import ic2_120.content.WrenchHandler
 import ic2_120.content.block.nuclear.NuclearExplosionManager
@@ -130,6 +131,7 @@ object Ic2_120 : ModInitializer {
 
         // 扳手与机器方块交互（旋转、拆卸、掉落逻辑）
         WrenchHandler.register()
+        ChainsawHandler.register()
 
         // 创造模式发电机掉落物：永不清除、环境不伤实体
         CreativeGeneratorItemEntityHandler.register()

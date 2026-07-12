@@ -23,6 +23,7 @@ import ic2_120.client.ClientBlockEntityRenderers
 import ic2_120.client.JetpackSoundController
 import ic2_120.client.MachineLoopSoundController
 import ic2_120.client.IridiumDrillModeHandler
+import ic2_120.client.ChainsawModeHandler
 import ic2_120.client.MiningLaserModeHandler
 import ic2_120.client.SodiumCompatibilityWarning
 import ic2_120.client.WindMeterClientInitializer
@@ -52,6 +53,7 @@ object Ic2_120Client : ClientModInitializer {
 		AnimalmatronTooltipHandler.register()
 		DrillTooltipHandler.register()
 		IridiumDrillModeHandler.register()
+		ChainsawModeHandler.register()
 		MiningLaserModeHandler.register()
 		FoamSprayerTooltipHandler.register()
 		MiningLaserTooltipHandler.register()

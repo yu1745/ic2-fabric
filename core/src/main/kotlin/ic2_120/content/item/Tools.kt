@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMultimap
 import com.google.common.collect.Multimap
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
 import net.minecraft.entity.Entity
 import net.minecraft.entity.attribute.EntityAttribute
 import net.minecraft.entity.attribute.EntityAttributeModifier
@@ -54,6 +55,7 @@ import net.minecraft.inventory.Inventories
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.recipe.Ingredient
 import net.minecraft.registry.tag.ItemTags
+import net.minecraft.registry.tag.BlockTags
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.sound.SoundCategory
 import net.minecraft.sound.SoundEvents
@@ -670,13 +672,28 @@ class FrequencyTransmitter : Item(FabricItemSettings().maxCount(1)) {
 }
 
 /** 链锯 - 电动伐木工具（等级 1，30k EU） */
-@ModItem(name = "chainsaw", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:axes"])
+@ModItem(name = "chainsaw", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:axes", "minecraft:swords"])
 class Chainsaw : ElectricMiningDrillItem(
     FabricItemSettings(),
-    miningToolFactories = listOf({ ItemStack(Items.DIAMOND_AXE) }),
+    miningToolFactories = listOf({ ItemStack(Items.DIAMOND_AXE) }, { ItemStack(Items.DIAMOND_SWORD) }),
     baseEnergyPerBlock = 100L
 ) {
     companion object {
+        const val NBT_DISABLE_SHEAR = "ChainsawDisableShear"
+        const val ENERGY_PER_USE = 100L
+        private val ATTACK_DAMAGE_MODIFIER_ID = UUID.fromString("8F3D6D24-4E66-4D09-9A8B-5E1BB2FBC8E1")
+        private val ATTACK_SPEED_MODIFIER_ID = UUID.fromString("D936E5E4-3E75-4E2A-A1C0-B7CFB3F6B4F0")
+
+        fun isShearEnabled(stack: ItemStack): Boolean =
+            !stack.orCreateNbt.getBoolean(NBT_DISABLE_SHEAR)
+
+        fun toggleShear(stack: ItemStack): Boolean {
+            val nbt = stack.orCreateNbt
+            val disabled = !nbt.getBoolean(NBT_DISABLE_SHEAR)
+            nbt.putBoolean(NBT_DISABLE_SHEAR, disabled)
+            return !disabled
+        }
+
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val ironPlate = IronPlate::class.instance()
@@ -698,6 +715,46 @@ class Chainsaw : ElectricMiningDrillItem(
     override val tier = 1
     override val maxCapacity = 30_000L
     override fun nominalEuPerTick() = 100L
+
+    override fun getAttributeModifiers(
+        stack: ItemStack,
+        slot: EquipmentSlot
+    ): Multimap<EntityAttribute, EntityAttributeModifier> {
+        if (slot != EquipmentSlot.MAINHAND || getEnergy(stack) < ENERGY_PER_USE) {
+            return ImmutableMultimap.of()
+        }
+        val builder = ImmutableMultimap.builder<EntityAttribute, EntityAttributeModifier>()
+        builder.put(
+            EntityAttributes.GENERIC_ATTACK_DAMAGE,
+            EntityAttributeModifier(ATTACK_DAMAGE_MODIFIER_ID, "Chainsaw modifier", 9.0, EntityAttributeModifier.Operation.ADDITION)
+        )
+        builder.put(
+            EntityAttributes.GENERIC_ATTACK_SPEED,
+            EntityAttributeModifier(ATTACK_SPEED_MODIFIER_ID, "Chainsaw modifier", -3.0, EntityAttributeModifier.Operation.ADDITION)
+        )
+        return builder.build()
+    }
+
+    override fun getMiningSpeedMultiplier(stack: ItemStack, state: BlockState): Float {
+        if (!hasEnoughEnergyForMining(stack)) return 1.0f
+        return when {
+            state.isOf(Blocks.COBWEB) || state.isIn(BlockTags.LEAVES) -> 15.0f
+            state.isIn(BlockTags.WOOL) -> 5.0f
+            state.isOf(Blocks.VINE) || state.isOf(Blocks.GLOW_LICHEN) -> 2.0f
+            else -> super.getMiningSpeedMultiplier(stack, state)
+        }
+    }
+
+    override fun isSuitableFor(state: BlockState): Boolean =
+        state.isOf(Blocks.COBWEB) || state.isOf(Blocks.REDSTONE_WIRE) || state.isOf(Blocks.TRIPWIRE) ||
+            super.isSuitableFor(state)
+
+    override fun postHit(stack: ItemStack, target: LivingEntity, attacker: LivingEntity): Boolean {
+        if (!attacker.world.isClient && getEnergy(stack) >= ENERGY_PER_USE && (attacker !is PlayerEntity || !attacker.isCreative)) {
+            setEnergy(stack, getEnergy(stack) - ENERGY_PER_USE)
+        }
+        return true
+    }
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(
