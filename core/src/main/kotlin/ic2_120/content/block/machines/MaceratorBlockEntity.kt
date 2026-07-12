@@ -267,7 +267,8 @@ class MaceratorBlockEntity(
     private fun isRecipeInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || isBatteryItem(stack)) return false
         val currentWorld = world ?: return true
-        val recipeInventory = SimpleInventory(stack.copyWithCount(1))
+        // 仅用于识别物品类型时，必须提供足够大的虚拟堆叠；部分配方需要多个输入。
+        val recipeInventory = SimpleInventory(stack.copyWithCount(stack.maxCount))
         return currentWorld.recipeManager.getFirstMatch(getRecipeType<MaceratorRecipe>(), recipeInventory, currentWorld).isPresent
     }
 }

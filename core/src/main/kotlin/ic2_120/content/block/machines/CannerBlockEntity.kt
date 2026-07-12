@@ -449,7 +449,8 @@ class CannerBlockEntity(
         if (container.isEmpty || material.isEmpty) return false
         if (container.item != tinCanItem && container.item !is EmptyFuelRodItem) return false
         val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
-        val recipeInventory = SimpleInventory(container.copyWithCount(1), material.copyWithCount(1))
+        // 配方匹配包含 slot0/slot1 的数量要求，不能将输入堆叠压成 1 个。
+        val recipeInventory = SimpleInventory(container, material)
         val match = world?.recipeManager?.getFirstMatch(recipeType, recipeInventory, world) ?: return false
         if (match.isEmpty) return false
         val recipe = match.get()
@@ -607,7 +608,8 @@ class CannerBlockEntity(
         val material = getStack(SLOT_MATERIAL)
         val outputSlot = getStack(SLOT_OUTPUT)
         val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
-        val recipeInventory = SimpleInventory(container.copyWithCount(1), material.copyWithCount(1))
+        // 配方匹配包含 slot0/slot1 的数量要求，不能将输入堆叠压成 1 个。
+        val recipeInventory = SimpleInventory(container, material)
         val match = world?.recipeManager?.getFirstMatch(recipeType, recipeInventory, world) ?: return
         if (match.isEmpty) return
         val recipe = match.get()
