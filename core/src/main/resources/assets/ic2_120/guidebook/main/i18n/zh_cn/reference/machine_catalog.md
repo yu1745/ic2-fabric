@@ -41,7 +41,7 @@ navigation:
 | [蒸汽发电机](../machines/steam_generator.md) | steam-generator.md | Tier 2 (MV) | 蒸汽 | 水 + 热量（HU） |
 | [地热发电机](../machines/geo_generator.md) | geo-generator.md | Tier 1 (LV) | 20 EU/t | 岩浆 |
 | [太阳能发电机](../machines/solar_generator.md) | solar-generator.md | Tier 1 (LV) | 1 EU/t | 日光 |
-| [风力发电机](../machines/wind_generator.md) | wind-generator.md | Tier 1 (LV) | 可变 | 高度/天气 |
+| [风力发电机](../machines/wind_generator.md) | wind-generator.md | Tier 1 (LV) | Y>74 时 3 EU/t | 高度阈值 |
 | [动能发电机](../machines/kinetic_generator.md) | kinetic-generator.md | Tier 3 (HV) | 512 EU/t | 动能（KU） |
 | [创造模式发电机](../machines/creative_generator.md) | creative-generator.md | Tier 1 (LV) | 32 EU/t | 无限（创造模式） |
 
@@ -140,4 +140,3 @@ navigation:
 - [升级系统](../guides/upgrades.md) - 升级槽说明
 - [动能系统](../systems/kinetic_transmission.md) - KU 传动详情
 - [热能系统](../systems/heat_system.md) - HU 热量
-

@@ -30,6 +30,8 @@ The classic Jetpack runs on liquid biofuel stored directly in the item. It is th
 - **Consumption:** fuel is drained only while the player is actually flying.
 - **Slot:** chestplate.
 
+The Jetpack has no vanilla durability. Damage from combat does not break it; fuel is its only consumable resource.
+
 ## Electric Jetpack
 
 The Electric Jetpack is an `ElectricArmorItem` powered by EU. It uses the same flight permission behavior as the biofuel Jetpack, but draws from its internal EU buffer instead of a fuel tank.
@@ -51,6 +53,8 @@ The defaults give 12 minutes 30 seconds of active powered flight on a full charg
 ### Charging
 
 Charge the Electric Jetpack like any other `ElectricArmorItem`: in a BatBox, CESU, MFE, MFSU, or a charging pad; or top it up directly from compatible charged items in your inventory. QuantumSuit Bodyarmor uses the Quantum Armor energy buffer and accepts high-tier EU charging.
+
+The Electric Jetpack also has no vanilla durability and cannot be broken by combat damage. Its only consumable resource is EU.
 
 ## How to Use
 

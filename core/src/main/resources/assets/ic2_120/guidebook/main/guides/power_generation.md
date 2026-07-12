@@ -124,11 +124,9 @@ See [Kinetic System](../systems/kinetic_transmission.md)
 
 ### Wind Generator Altitude Model
 
-- **Altitude formula**: Gaussian, mu=150, sigma=35
-- **Clear weather factor**: 1.0
-- **Rain factor**: 1.2
-- **Thunderstorm factor**: 1.5
-- **Gust factor**: 0.5 ~ 1.5 (updates every 10 seconds)
+- **Y > 74**: fixed 3 EU/t
+- **Y 74 or below**: no output
+- Weather, wind strength, and nearby obstacles do not affect the direct Wind Generator.
 
 ### Rotor Durability (Clear-Weather Baseline)
 

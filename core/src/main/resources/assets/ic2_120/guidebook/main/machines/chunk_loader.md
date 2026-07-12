@@ -24,6 +24,8 @@ The Chunk Loader keeps selected chunks loaded and ticking when no players are ne
 
 The center chunk is always selected and cannot be toggled off. Use the GUI to toggle other chunks in the 9x9 grid. The machine refuses to enable more than 25 chunks.
 
+Selected chunks are kept at the ticking level, so block entities and entities inside them continue to run after players leave the area. This requires the loader itself to remain powered.
+
 Every tick, it consumes EU equal to the number of selected chunks. If it cannot pay the full cost, or if no chunks are selected, it releases all forced chunk tickets and turns inactive.
 
 ## Usage

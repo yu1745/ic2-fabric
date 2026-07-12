@@ -41,7 +41,7 @@ This index contains detailed documentation for every machine.
 | [Steam Generator](../machines/steam_generator.md) | steam-generator.md | Tier 2 (MV) | Steam | Water + Heat (HU) |
 | [Geothermal Generator](../machines/geo_generator.md) | geo-generator.md | Tier 1 (LV) | 20 EU/t | Lava |
 | [Solar Generator](../machines/solar_generator.md) | solar-generator.md | Tier 1 (LV) | 1 EU/t | Sunlight |
-| [Wind Generator](../machines/wind_generator.md) | wind-generator.md | Tier 1 (LV) | variable | Altitude / Weather |
+| [Wind Generator](../machines/wind_generator.md) | wind-generator.md | Tier 1 (LV) | 3 EU/t above Y=74 | Height threshold |
 | [Kinetic Generator](../machines/kinetic_generator.md) | kinetic-generator.md | Tier 3 (HV) | 512 EU/t | Kinetic (KU) |
 | [Creative Generator](../machines/creative_generator.md) | creative-generator.md | Tier 1 (LV) | 32 EU/t | Infinite (creative) |
 
