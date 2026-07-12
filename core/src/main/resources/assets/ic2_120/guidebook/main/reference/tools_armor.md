@@ -34,12 +34,12 @@ Electric tools do not consume vanilla durability and use EU. When unpowered, fun
 
 | Tool | Tier | Capacity | Typical Consumption | Use |
 |------|------|----------|----------|-----|
-| Mining Drill | 1 | 10,000 EU | 50 EU/block | Pickaxe/shovel hybrid |
-| Diamond Drill | 2 | 10,000 EU | 80 EU/block | Higher mining capability |
-| Iridium Drill | 3 | 1,000,000 EU | 800 EU/block, 10x for silk touch | High-tier pickaxe/shovel, can toggle silk touch |
-| Chainsaw | 1 | 30,000 EU | 250 EU/block | Axe-type felling |
-| Electric Resin Extractor | 1 | 10,000 EU | Per use | Extracts rubber tree resin |
-| Electric Wrench | 1 | 10,000 EU | Per use | Machine rotation and disassembly |
+| Mining Drill | 1 | 30,000 EU | 50 EU/block | Efficiency 8.0; pickaxe/shovel hybrid |
+| Diamond Drill | 1 | 30,000 EU | 80 EU/block | Efficiency 16.0; higher mining capability |
+| Iridium Drill | 3 | 300,000 EU | 800 EU/block, 10x for silk touch | Efficiency 24.0; high-tier pickaxe/shovel, can toggle silk touch |
+| Chainsaw | 1 | 30,000 EU | 100 EU/block | Axe-type felling |
+| Electric Resin Extractor | 1 | 10,000 EU | 50 EU/use | Extracts rubber tree resin |
+| Electric Wrench | 1 | 12,000 EU | 100 EU rotation / 1,000 EU removal | Machine rotation and disassembly |
 | Nano Saber | 3 | 160,000 EU | 400 EU on hit, idle drain when active | Right-click to toggle; high damage when active and powered |
 
 ---

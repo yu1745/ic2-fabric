@@ -20,7 +20,7 @@ import net.minecraft.world.World
 /**
  * 木龙头与电动树脂提取器与橡胶树原木的交互：
  * - 木龙头：右键湿面提取 1 粘性树脂，耗 1 耐久（共 10 次）
- * - 电动树脂提取器：右键湿面提取 1 粘性树脂，耗 500 EU（共 20 次，10k EU）
+ * - 电动树脂提取器：右键湿面提取 1 粘性树脂，耗 50 EU（共 200 次，10k EU）
  */
 object RubberTreetapHandler {
 
@@ -29,7 +29,7 @@ object RubberTreetapHandler {
     private val RESIN_ID = Identifier(Ic2_120.MOD_ID, "resin")
     private val TREETAP_SOUND = SoundEvent.of(Identifier("ic2", "item.treetap.use"))
     private val ELECTRIC_TREETAP_SOUND = SoundEvent.of(Identifier("ic2", "item.treetap.electric.use"))
-    private const val EU_PER_USE = 500L
+    private const val EU_PER_USE = 50L
 
     fun isTreetap(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
@@ -60,7 +60,7 @@ object RubberTreetapHandler {
 
             if (world.isClient) return@register ActionResult.SUCCESS
 
-            // 电动树脂提取器：电量不足 500 EU 则不允许提取
+            // 电动树脂提取器：电量不足 50 EU 则不允许提取
             if (isElectricTreetap(stack)) {
                 val tool = stack.item as IElectricTool
                 if (tool.getEnergy(stack) < EU_PER_USE) return@register ActionResult.FAIL

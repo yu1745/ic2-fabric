@@ -25,8 +25,8 @@ The Scanners are a two-tier family of prospecting tools used to locate ore depos
 
 | Scanner | Tier | Capacity | Per-Scan EU | Scan Radius | Scan Depth | Max Uses | Repair |
 |---------|:----:|----------|-------------|-------------|------------|:--------:|--------|
-| OD Scanner | 1 | 10,000 EU | 500 EU | 6 (13×13) | down to y=0 | 20 | none |
-| OV Scanner | 3 | 1,000,000 EU | 5,000 EU | 12 (25×25) | down to y=-64 | 200 | none |
+| OD Scanner | 1 | 100,000 EU | 50 EU | 6 (13×13) | down to y=0 | 20 | none |
+| OV Scanner | 2 | 1,000,000 EU | 250 EU | 12 (25×25) | down to y=-64 | 200 | none |
 
 Both scanners are **not damageable** — they have no vanilla durability bar. The "uses remaining" counter is stored in NBT (`ScannerUses`) and decrements on each successful scan; once the counter hits zero the scanner is spent and must be replaced. There is no repair recipe and no anvil combination: craft a fresh one when the buffer runs out.
 
@@ -38,7 +38,7 @@ Both scanners are **not damageable** — they have no vanilla durability bar. Th
 
 Scanners cannot self-charge. Place one in the input slot of any tier-appropriate EU storage block — BatBox, CESU, MFE, MFSU, or a Charging Pad — and let the block top it up.
 
-The OD Scanner accepts any tier-1 source (single battery, BatBox); the OV Scanner requires tier-3 hardware (Energy Crystal and above, MFE/MFSU).
+The OD Scanner accepts any tier-1 source (single battery, BatBox); the OV Scanner requires tier-2 hardware (Advanced Re-Battery, CESU, MFE, or better).
 
 ### Scanning
 
@@ -49,8 +49,8 @@ The OD Scanner accepts any tier-1 source (single battery, BatBox); the OV Scanne
 
 ### Choosing the Right Tier
 
-- **OD Scanner** — the cheap workhorse. A 13×13 footprint is plenty for surface prospecting and shallow cave work, and the 500 EU per scan is forgiving on a 10,000 EU buffer.
-- **OV Scanner** — for deep bases, strip-mining operations, and late-game prospecting. The 25×25 footprint reaches y=-64, so it covers everything from the surface down through deepslate. The 5,000 EU cost per scan means a fully charged OV Scanner can perform 200 scans before going dark, and 200 scans cover a substantial mining campaign.
+- **OD Scanner** — the cheap workhorse. A 13×13 footprint is plenty for surface prospecting and shallow cave work, and the 50 EU per scan is forgiving on a 100,000 EU buffer.
+- **OV Scanner** — for deep bases, strip-mining operations, and late-game prospecting. The 25×25 footprint reaches y=-64, so it covers everything from the surface down through deepslate. The 250 EU cost per scan means a fully charged OV Scanner can perform 200 scans before going dark, and 200 scans cover a substantial mining campaign.
 
 Always confirm the use counter before you head out: a scanner with one use left is still useful, but a drained one is dead weight in the field.
 

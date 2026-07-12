@@ -35,8 +35,8 @@ enum class ScannerType(
     val tier: Int,
     val deepY: Int = 0
 ) {
-    OD(10_000L, 500, 6, 20, 1, 0),
-    OV(1_000_000L, 5000, 12, 200, 3, -64);
+    OD(100_000L, 50, 6, 20, 1, 0),
+    OV(1_000_000L, 250, 12, 200, 2, -64);
 
     companion object {
         fun fromTier(tier: Int): ScannerType = entries.find { it.tier == tier } ?: OD
@@ -47,13 +47,13 @@ enum class ScannerType(
  * OD 扫描仪 - 矿石密度扫描器。
  *
  * 参数：
- * - 能量等级 1，容量 10,000 EU，每次扫描消耗 1000 EU
+ * - 能量等级 1，容量 100,000 EU，每次扫描消耗 50 EU
  * - 扫描半径 6（13×13 区域），深度至 y=0，共 20 次使用
  *
  * OV 扫描仪 - 矿石价值扫描器（AdvancedScanner）。
  *
  * 参数：
- * - 能量等级 3，容量 1,000,000 EU，每次扫描消耗 5000 EU
+ * - 能量等级 2，容量 1,000,000 EU，每次扫描消耗 250 EU
  * - 扫描半径 12（25×25 区域），深度至 y=-64，共 200 次使用
  *
  * 使用方式：必须先在储能箱/高级储能箱中充电。右键打开 GUI，点击"扫描"。
@@ -183,7 +183,7 @@ class OdScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
 }
 
 /**
- * OV 扫描仪 - 矿石价值扫描器，能量等级 3，扫描范围更大。
+ * OV 扫描仪 - 矿石价值扫描器，能量等级 2，扫描范围更大。
  */
 @ModItem(name = "advanced_scanner", tab = CreativeTab.IC2_TOOLS, group = "tools")
 class AdvancedScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {

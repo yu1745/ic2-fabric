@@ -26,17 +26,17 @@ The Drill family is a three-tier line of electric mining tools that replace the 
 
 | Drill | Tier | Capacity | Per-Block EU Cost | Pickaxe Behavior | Shovel Behavior | Special |
 |-------|:----:|---------:|------------------:|------------------|-----------------|---------|
-| <ItemLink id="ic2_120:drill" /> | 1 | 10,000 EU | 50 EU | Iron pickaxe | Iron shovel | Entry-level electric drill |
-| <ItemLink id="ic2_120:diamond_drill" /> | 1 | 10,000 EU | 80 EU | Diamond pickaxe | Diamond shovel | Upgrades the head to diamond capability |
-| <ItemLink id="ic2_120:iridium_drill" /> | 3 | 1,000,000 EU | 800 EU (Silk Touch mode: 8,000 EU) | Netherite pickaxe | Netherite shovel | Right-click toggles Silk Touch; 10x EU in that mode |
+| <ItemLink id="ic2_120:drill" /> | 1 | 30,000 EU | 50 EU | Iron pickaxe | Iron shovel | Efficiency 8.0 |
+| <ItemLink id="ic2_120:diamond_drill" /> | 1 | 30,000 EU | 80 EU | Diamond pickaxe | Diamond shovel | Efficiency 16.0 |
+| <ItemLink id="ic2_120:iridium_drill" /> | 3 | 300,000 EU | 800 EU (Silk Touch mode: 8,000 EU) | Netherite pickaxe | Netherite shovel | Efficiency 24.0; right-click toggles Silk Touch |
 
-The Drill and Diamond Drill share tier 1 and 10,000 EU capacity — the difference is what they can mine and how fast. The Iridium Drill is a separate tier-3 tool with a 100x larger buffer and netherite-level head, plus a Silk Touch toggle that costs ten times the usual EU per block.
+The Drill and Diamond Drill share tier 1 and 30,000 EU capacity — the difference is what they can mine and how fast. The Iridium Drill is a separate tier-3 tool with a 10x larger buffer and netherite-level head, plus a Silk Touch toggle that costs ten times the usual EU per block.
 
 ## How to Use
 
 ### Equipping
 
-Place the drill in your main hand. Because each drill is tagged as both a pickaxe and a shovel, it can break any block a vanilla tool of its head material can break — and at the speed of the fastest matching vanilla tool.
+Place the drill in your main hand. Because each drill is tagged as both a pickaxe and a shovel, it can break any block a vanilla tool of its head material can break. While powered, it uses the fixed IC2 efficiency shown in the table above.
 
 ### Power and Degradation
 

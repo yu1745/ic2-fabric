@@ -136,8 +136,9 @@ class CropSeedBagItem : Item(FabricItemSettings().maxCount(1)) {
 
 @ModItem(name = "cropnalyzer", tab = CreativeTab.IC2_TOOLS, group = "tools")
 class CropnalyzerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
-    override val tier: Int = 1
-    override val maxCapacity: Long = 10_000L
+    override val tier: Int = 2
+    override val maxCapacity: Long = 100_000L
+    override fun nominalEuPerTick() = 128L
 
     override fun getEnergy(stack: ItemStack): Long = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
@@ -183,11 +184,11 @@ class CropnalyzerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
         val type = cropState.get(ic2_120.content.block.CropBlock.CROP_TYPE)
 
         val energy = getEnergy(stack)
-        if (energy < ENERGY_PER_SCAN) {
+        if (energy < CROP_INSPECTION_ENERGY) {
             player.sendMessage(Text.literal("Cropnalyzer 电量不足").formatted(net.minecraft.util.Formatting.RED), true)
             return ActionResult.SUCCESS
         }
-        setEnergy(stack, energy - ENERGY_PER_SCAN)
+        setEnergy(stack, energy - CROP_INSPECTION_ENERGY)
 
         val msg = Text.literal("作物 ")
             .append(CropSeedData.displayName(type))
@@ -199,7 +200,16 @@ class CropnalyzerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
     }
 
     companion object {
-        const val ENERGY_PER_SCAN = 50L
+        const val ENERGY_PER_SCAN = 10L
+        const val CROP_INSPECTION_ENERGY = 900L
+
+        fun energyForScanLevel(level: Int): Long = when (level.coerceIn(0, 4)) {
+            0 -> 10L
+            1 -> 90L
+            2 -> 900L
+            3 -> 9_000L
+            else -> 0L
+        }
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {

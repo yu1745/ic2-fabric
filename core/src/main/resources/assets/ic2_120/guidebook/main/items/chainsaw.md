@@ -12,7 +12,7 @@ item_ids:
 
 <ItemImage id="ic2_120:chainsaw" scale="4" />
 
-The Chainsaw is a tier-1 electric logging tool that combines the cutting power of a diamond axe with a built-in EU buffer. It is the dedicated counterpart to the mining drill: where the drill bores stone, the chainsaw fells wood. Every block of log, wood, or other axe-mineable material it touches is broken for a flat 250 EU, with no vanilla durability cost.
+The Chainsaw is a tier-1 electric logging tool that combines the cutting power of a diamond axe with a built-in EU buffer. It is the dedicated counterpart to the mining drill: where the drill bores stone, the chainsaw fells wood. Every block of log, wood, or other axe-mineable material it touches is broken for a flat 100 EU, with no vanilla durability cost.
 
 ## Item View
 
@@ -26,7 +26,7 @@ The Chainsaw is a tier-1 electric logging tool that combines the cutting power o
 |----------|-------|
 | Tier | 1 |
 | Max Energy | 30,000 EU |
-| Energy per Block | 250 EU |
+| Energy per Block | 100 EU |
 | Mining Speed Reference | Diamond Axe |
 | Item Tag | `minecraft:axes` |
 | Stack Size | 1 |
@@ -46,13 +46,13 @@ The chainsaw is **not damageable**. It has no vanilla durability bar and no anvi
 
 The chainsaw's specialty is bulk wood harvesting. Equip it and break any log, wood, or other axe-mineable block:
 
-- Each block costs a flat **250 EU**, regardless of the block's hardness.
+- Each block costs a flat **100 EU**, regardless of the block's hardness.
 - A single oak tree (roughly 4-6 logs plus leaves) typically fits well within one full charge.
 - The chainsaw is tagged `minecraft:axes`, so it interacts correctly with any other mod that inspects axe capabilities on held items.
 
 ### Out of Power
 
-When the buffer drops below 250 EU, the chainsaw can no longer afford the per-block cost. It will not refuse to mine — it simply reverts to the slow base mining speed until you top it up. There is no risk of "ruining" the tool by running it dry; just recharge and continue.
+When the buffer drops below 100 EU, the chainsaw can no longer afford the per-block cost. It will not refuse to mine — it simply reverts to the slow base mining speed until you top it up. There is no risk of "ruining" the tool by running it dry; just recharge and continue.
 
 ## Crafting
 

@@ -84,16 +84,21 @@ class CropnalyzerScreenHandler(
 
         val tool = scanner.item as? IElectricTool ?: return true
         val currentEnergy = tool.getEnergy(scanner)
-        if (currentEnergy < CropnalyzerItem.ENERGY_PER_SCAN) {
+        val currentLevel = CropSeedData.readScanLevel(seed)
+        val scanCost = CropnalyzerItem.energyForScanLevel(currentLevel)
+        if (scanCost <= 0L) {
+            player.sendMessage(net.minecraft.text.Text.translatable("gui.ic2_120.cropnalyzer.no_valid_crop_data").formatted(net.minecraft.util.Formatting.RED), true)
+            return true
+        }
+        if (currentEnergy < scanCost) {
             player.sendMessage(net.minecraft.text.Text.translatable("gui.ic2_120.status_no_energy").formatted(net.minecraft.util.Formatting.RED), true)
             return true
         }
 
-        tool.setEnergy(scanner, currentEnergy - CropnalyzerItem.ENERGY_PER_SCAN)
+        tool.setEnergy(scanner, currentEnergy - scanCost)
 
-        // 一次扫描即达满级
         val stats = CropSeedData.readStats(seed)
-        CropSeedData.write(seed, type, stats, 4)
+        CropSeedData.write(seed, type, stats, currentLevel + 1)
         itemInventory.setStack(SLOT_OUTPUT, seed.copy())
         itemInventory.setStack(SLOT_INPUT, ItemStack.EMPTY)
         itemInventory.markDirty()

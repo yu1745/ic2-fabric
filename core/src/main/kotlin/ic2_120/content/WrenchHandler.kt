@@ -99,6 +99,11 @@ object WrenchHandler {
             if (block !is MachineBlock && block !is DirectionalMachineBlock) return@register ActionResult.PASS
 
             if (!world.isClient) {
+                if (isElectricWrench(stack)) {
+                    val tool = stack.item as IElectricTool
+                    if (tool.getEnergy(stack) < 100L) return@register ActionResult.FAIL
+                    tool.setEnergy(stack, tool.getEnergy(stack) - 100L)
+                }
                 when (block) {
                     is DirectionalMachineBlock -> {
                         // 变压器等六面朝向机器：根据玩家视角计算朝向

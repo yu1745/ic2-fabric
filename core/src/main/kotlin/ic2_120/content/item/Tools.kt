@@ -674,7 +674,7 @@ class FrequencyTransmitter : Item(FabricItemSettings().maxCount(1)) {
 class Chainsaw : ElectricMiningDrillItem(
     FabricItemSettings(),
     miningToolFactories = listOf({ ItemStack(Items.DIAMOND_AXE) }),
-    baseEnergyPerBlock = 250L
+    baseEnergyPerBlock = 100L
 ) {
     companion object {
         @RecipeProvider
@@ -697,6 +697,7 @@ class Chainsaw : ElectricMiningDrillItem(
 
     override val tier = 1
     override val maxCapacity = 30_000L
+    override fun nominalEuPerTick() = 100L
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(
@@ -717,7 +718,8 @@ class Chainsaw : ElectricMiningDrillItem(
 abstract class ElectricMiningDrillItem(
     settings: FabricItemSettings,
     private val miningToolFactories: List<() -> ItemStack>,
-    private val baseEnergyPerBlock: Long
+    private val baseEnergyPerBlock: Long,
+    private val miningEfficiency: Float? = null
 ) : Item(settings.maxCount(1)), IElectricTool {
 
     protected open fun getEnergyCostPerBlock(stack: ItemStack): Long = baseEnergyPerBlock
@@ -727,6 +729,7 @@ abstract class ElectricMiningDrillItem(
 
     override fun getMiningSpeedMultiplier(stack: ItemStack, state: BlockState): Float {
         if (!hasEnoughEnergyForMining(stack)) return 1.0f
+        miningEfficiency?.let { return it }
         return miningToolFactories.maxOf { factory ->
             val tool = factory()
             tool.item.getMiningSpeedMultiplier(tool, state)
@@ -763,7 +766,8 @@ abstract class ElectricMiningDrillItem(
 class DiamondDrill : ElectricMiningDrillItem(
     FabricItemSettings(),
     miningToolFactories = listOf({ ItemStack(Items.DIAMOND_PICKAXE) }, { ItemStack(Items.DIAMOND_SHOVEL) }),
-    baseEnergyPerBlock = 80L
+    baseEnergyPerBlock = 80L,
+    miningEfficiency = 16.0f
 ) {
     companion object {
         @RecipeProvider
@@ -779,7 +783,8 @@ class DiamondDrill : ElectricMiningDrillItem(
     }
 
     override val tier = 1
-    override val maxCapacity = 10_000L
+    override val maxCapacity = 30_000L
+    override fun nominalEuPerTick() = 100L
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(
@@ -802,7 +807,8 @@ class DiamondDrill : ElectricMiningDrillItem(
 class Drill : ElectricMiningDrillItem(
     FabricItemSettings(),
     miningToolFactories = listOf({ ItemStack(Items.IRON_PICKAXE) }, { ItemStack(Items.IRON_SHOVEL) }),
-    baseEnergyPerBlock = 50L
+    baseEnergyPerBlock = 50L,
+    miningEfficiency = 8.0f
 ) {
     companion object {
         @RecipeProvider
@@ -824,7 +830,8 @@ class Drill : ElectricMiningDrillItem(
     }
 
     override val tier = 1
-    override val maxCapacity = 10_000L
+    override val maxCapacity = 30_000L
+    override fun nominalEuPerTick() = 100L
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(
@@ -865,6 +872,7 @@ class ElectricTreetap : Item(FabricItemSettings().maxCount(1)), IElectricTool {
 
     override val tier = 1
     override val maxCapacity = 10_000L
+    override fun nominalEuPerTick() = 100L
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(
@@ -905,7 +913,8 @@ class ElectricWrench : Item(FabricItemSettings().maxCount(1)), IElectricTool {
     }
 
     override val tier = 1
-    override val maxCapacity = 10_000L
+    override val maxCapacity = 12_000L
+    override fun nominalEuPerTick() = 250L
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
     override fun appendTooltip(
@@ -923,15 +932,17 @@ class ElectricWrench : Item(FabricItemSettings().maxCount(1)), IElectricTool {
     override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 }
 
-/** 铱钻头 - 高级电动采矿工具（等级 3，1M EU），模式键 + 右键切换精准采集 */
+/** 铱钻头 - 高级电动采矿工具（等级 3，300k EU），模式键 + 右键切换精准采集 */
 @ModItem(name = "iridium_drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:pickaxes", "minecraft:shovels"])
 class IridiumDrill : ElectricMiningDrillItem(
     FabricItemSettings(),
     miningToolFactories = listOf({ ItemStack(Items.NETHERITE_PICKAXE) }, { ItemStack(Items.NETHERITE_SHOVEL) }),
-    baseEnergyPerBlock = 800L
+    baseEnergyPerBlock = 800L,
+    miningEfficiency = 24.0f
 ) {
     override val tier = 3
-    override val maxCapacity = 1_000_000L
+    override val maxCapacity = 300_000L
+    override fun nominalEuPerTick() = 1_000L
 
     companion object {
         private const val ENERGY_PER_BLOCK = 800L
@@ -1030,7 +1041,7 @@ private object NanoSaberMaterial : ToolMaterial {
 
 /**
  * 纳米剑：等级 3，160k EU。右键切换激活。
- * 激活且有余电时攻击伤害 21；未激活或激活但无电时为 5。激活时每击消耗 1000 EU。
+ * 激活且至少有 400 EU 时攻击伤害 21；未激活或电量不足时为 5。激活时每击消耗 400 EU。
  */
 @ModItem(name = "nano_saber", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
 class NanoSaber : SwordItem(
@@ -1146,6 +1157,7 @@ class NanoSaber : SwordItem(
 
     override val tier = 3
     override val maxCapacity = 160_000L
+    override fun nominalEuPerTick() = 500L
 
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
@@ -1154,7 +1166,7 @@ class NanoSaber : SwordItem(
 
     private fun weaponAttackModifier(stack: ItemStack): Double {
         val active = isActive(stack)
-        val fullPower = active && getEnergy(stack) > 0
+        val fullPower = active && getEnergy(stack) >= ENERGY_PER_HIT
         val total = if (fullPower) DAMAGE_ACTIVE_TOTAL else DAMAGE_INACTIVE_TOTAL
         return total - 1.0
     }
@@ -1194,6 +1206,9 @@ class NanoSaber : SwordItem(
             // 关闭前先把待机累计扣了
             if (isActive(stack)) {
                 flushAllPendingDrainsFor(user, stack)
+            }
+            if (!isActive(stack) && getEnergy(stack) < 16L) {
+                return TypedActionResult.pass(stack)
             }
             val on = toggleActive(stack, user)
             user.sendMessage(
