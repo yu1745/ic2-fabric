@@ -131,7 +131,9 @@ class ChunkLoaderBlockEntity(
         val sw = world as? ServerWorld ?: return
         val cm = sw.chunkManager ?: return
         for (chunkPos in activeChunkPositions) {
-            cm.removeTicket(ChunkTicketType.FORCED, chunkPos, 0, chunkPos)
+            // ServerChunkManager.addTicket 的 radius=2 对应 ENTITY_TICKING 等级，
+            // 确保区块内的方块实体和实体逻辑在玩家离开后仍继续 tick。
+            cm.removeTicket(ChunkTicketType.FORCED, chunkPos, 2, chunkPos)
         }
         activeChunkPositions = emptySet()
     }
@@ -163,10 +165,11 @@ class ChunkLoaderBlockEntity(
             val cm = sw?.chunkManager
             if (cm != null) {
                 for (cp in needed - activeChunkPositions) {
-                    cm.addTicket(ChunkTicketType.FORCED, cp, 0, cp)
+                    // radius=2 -> ENTITY_TICKING；radius=0 只有 FULL，不会 tick 方块实体。
+                    cm.addTicket(ChunkTicketType.FORCED, cp, 2, cp)
                 }
                 for (cp in activeChunkPositions - needed) {
-                    cm.removeTicket(ChunkTicketType.FORCED, cp, 0, cp)
+                    cm.removeTicket(ChunkTicketType.FORCED, cp, 2, cp)
                 }
                 activeChunkPositions = needed
             }
