@@ -64,8 +64,8 @@ object ModArmorMaterials {
         durabilityMultiplier = 15,
         protection = mapOf(
             ArmorItem.Type.HELMET to 3,
-            ArmorItem.Type.CHESTPLATE to 8,
-            ArmorItem.Type.LEGGINGS to 6,
+            ArmorItem.Type.CHESTPLATE to 7,
+            ArmorItem.Type.LEGGINGS to 5,
             ArmorItem.Type.BOOTS to 3
         ),
         enchantability = 10,
@@ -84,10 +84,10 @@ object ModArmorMaterials {
         name = "ic2_quantum",
         durabilityMultiplier = 25,
         protection = mapOf(
-            ArmorItem.Type.HELMET to 4,
-            ArmorItem.Type.CHESTPLATE to 9,
+            ArmorItem.Type.HELMET to 3,
+            ArmorItem.Type.CHESTPLATE to 10,
             ArmorItem.Type.LEGGINGS to 6,
-            ArmorItem.Type.BOOTS to 4
+            ArmorItem.Type.BOOTS to 3
         ),
         enchantability = 15,
         equipSound = SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE,
@@ -105,13 +105,13 @@ object ModArmorMaterials {
         durabilityMultiplier = 15,
         protection = mapOf(
             ArmorItem.Type.HELMET to 0,
-            ArmorItem.Type.CHESTPLATE to 8,  // 钻石胸甲级别
+            ArmorItem.Type.CHESTPLATE to 0,  // 原版 IC2 喷气背包不提供护甲
             ArmorItem.Type.LEGGINGS to 0,
             ArmorItem.Type.BOOTS to 0
         ),
         enchantability = 10,
         equipSound = SoundEvents.ITEM_ARMOR_EQUIP_LEATHER,
-        toughness = 2f,  // 钻石级韧性
+        toughness = 0f,
         knockbackResistance = 0f,
         repairIngredient = bronzeIngot
     )
@@ -125,13 +125,13 @@ object ModArmorMaterials {
         durabilityMultiplier = 15,
         protection = mapOf(
             ArmorItem.Type.HELMET to 0,
-            ArmorItem.Type.CHESTPLATE to 8,  // 钻石胸甲级别
+            ArmorItem.Type.CHESTPLATE to 0,  // 原版 IC2 电力喷气背包不提供护甲
             ArmorItem.Type.LEGGINGS to 0,
             ArmorItem.Type.BOOTS to 0
         ),
         enchantability = 10,
         equipSound = SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND,
-        toughness = 2f,  // 钻石级韧性
+        toughness = 0f,
         knockbackResistance = 0f,
         repairIngredient = carbonFibre
     )

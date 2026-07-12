@@ -97,7 +97,8 @@ private fun createArmorMaterial(
     equipSound: SoundEvent,
     toughness: Float,
     knockbackResistance: Float,
-    repairIngredient: Ingredient
+    repairIngredient: Ingredient,
+    durabilityOverrides: Map<ArmorItem.Type, Int> = emptyMap()
 ): ArmorMaterial = object : ArmorMaterial {
     // 各护甲部位的基础耐久度乘数
     private val durabilityMap = mapOf(
@@ -107,7 +108,7 @@ private fun createArmorMaterial(
         ArmorItem.Type.BOOTS to 13 * durabilityMultiplier
     )
 
-    override fun getDurability(type: ArmorItem.Type) = durabilityMap[type] ?: 0
+    override fun getDurability(type: ArmorItem.Type) = durabilityOverrides[type] ?: durabilityMap[type] ?: 0
     override fun getProtection(type: ArmorItem.Type) = protection[type] ?: 0
     override fun getEnchantability() = enchantability
     override fun getEquipSound() = equipSound
@@ -145,7 +146,8 @@ private val SOLAR_ARMOR = createArmorMaterial(
     equipSound = SoundEvents.ITEM_ARMOR_EQUIP_IRON,
     toughness = 0f,
     knockbackResistance = 0f,
-    repairIngredient = bronzeIngot  // 用青铜修复
+    repairIngredient = bronzeIngot,  // 用青铜修复
+    durabilityOverrides = mapOf(ArmorItem.Type.HELMET to 0)
 )
 
 // ========== 青铜护甲 (Bronze Armor) ==========
@@ -155,11 +157,11 @@ private val SOLAR_ARMOR = createArmorMaterial(
  */
 private val BRONZE_ARMOR = createArmorMaterial(
     name = "ic2_bronze",
-    durabilityMultiplier = 8,
+    durabilityMultiplier = 15,
     protection = mapOf(
         ArmorItem.Type.HELMET to 2,      // 2 点护甲（2 半格 / 1 图标）
-        ArmorItem.Type.CHESTPLATE to 6,  // 6 点护甲（6 半格 / 3 图标）
-        ArmorItem.Type.LEGGINGS to 5,    // 5 点护甲（5 半格 / 2.5 图标）
+        ArmorItem.Type.CHESTPLATE to 5,  // 原版 IC2 数值
+        ArmorItem.Type.LEGGINGS to 6,    // 原版 IC2 数值
         ArmorItem.Type.BOOTS to 2        // 2 点护甲（2 半格 / 1 图标）
     ),
     enchantability = 10,       // 与铁质相同，中等附魔能力
@@ -203,15 +205,21 @@ private val HAZMAT_ARMOR = createArmorMaterial(
     durabilityMultiplier = 5,  // 接近原版 64 的统一耐久
     protection = mapOf(
         ArmorItem.Type.HELMET to 1,     // 1 点护甲（1 半格 / 0.5 图标）
-        ArmorItem.Type.CHESTPLATE to 3, // 3 点护甲（3 半格 / 1.5 图标）
-        ArmorItem.Type.LEGGINGS to 2,   // 2 点护甲（2 半格 / 1 图标）
-        ArmorItem.Type.BOOTS to 0       // 无防护
+        ArmorItem.Type.CHESTPLATE to 1,
+        ArmorItem.Type.LEGGINGS to 1,
+        ArmorItem.Type.BOOTS to 1
     ),
     enchantability = 15,       // 与皮革相同
     equipSound = SoundEvents.ITEM_ARMOR_EQUIP_LEATHER,
     toughness = 0f,
     knockbackResistance = 0f,
-    repairIngredient = rubber  // 用橡胶修复
+    repairIngredient = rubber,
+    durabilityOverrides = mapOf(
+        ArmorItem.Type.HELMET to 64,
+        ArmorItem.Type.CHESTPLATE to 64,
+        ArmorItem.Type.LEGGINGS to 64,
+        ArmorItem.Type.BOOTS to 64
+    )
 )
 
 // ========== 纳米护甲 (Nano Armor) ==========
@@ -231,8 +239,8 @@ private val NANO_ARMOR = createArmorMaterial(
     durabilityMultiplier = 15,      // 超高耐久（青铜约 1.7 倍）
     protection = mapOf(
         ArmorItem.Type.HELMET to 3,      // 3 点护甲（钻石级）
-        ArmorItem.Type.CHESTPLATE to 8,   // 8 点护甲（钻石级）
-        ArmorItem.Type.LEGGINGS to 6,     // 6 点护甲（钻石级）
+        ArmorItem.Type.CHESTPLATE to 7,   // 原版 IC2 特殊护甲显示值
+        ArmorItem.Type.LEGGINGS to 5,
         ArmorItem.Type.BOOTS to 3        // 3 点护甲（钻石级）
     ),
     enchantability = 10,       // 与铁质相同
@@ -261,10 +269,10 @@ private val QUANTUM_ARMOR = createArmorMaterial(
     name = "ic2_quantum",
     durabilityMultiplier = 25,    // 最高耐久（青铜约 2.8 倍）
     protection = mapOf(
-        ArmorItem.Type.HELMET to 4,       // 等效 15% 减免
-        ArmorItem.Type.CHESTPLATE to 9,   // 等效 44% 减免，单件 9 格护甲（钻石胸甲 4 格）
-        ArmorItem.Type.LEGGINGS to 6,      // 等效 30% 减免
-        ArmorItem.Type.BOOTS to 4         // 等效 15% 减免
+        ArmorItem.Type.HELMET to 3,
+        ArmorItem.Type.CHESTPLATE to 10,
+        ArmorItem.Type.LEGGINGS to 6,
+        ArmorItem.Type.BOOTS to 3
     ),
     enchantability = 15,       // 高附魔能力
     equipSound = SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE,  // 下界合金音效
@@ -280,11 +288,11 @@ private val QUANTUM_ARMOR = createArmorMaterial(
  */
 private val ALLOY_ARMOR = createArmorMaterial(
     name = "ic2_alloy",
-    // 胸甲耐久 = 16 × multiplier；原版钻石胸甲为 528 ⇒ multiplier = 33
-    durabilityMultiplier = 33,
+    // 原版 IC2 Alloy 材料倍率为 50，胸甲耐久为 800。
+    durabilityMultiplier = 50,
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,     // 无头盔
-        ArmorItem.Type.CHESTPLATE to 9, // 9 点护甲
+        ArmorItem.Type.CHESTPLATE to 7,
         ArmorItem.Type.LEGGINGS to 0,   // 无护腿
         ArmorItem.Type.BOOTS to 0       // 无靴子
     ),
@@ -305,7 +313,7 @@ private val BACKPACK_ARMOR = createArmorMaterial(
     durabilityMultiplier = 10,
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,
-        ArmorItem.Type.CHESTPLATE to 3, // 3 点护甲（同铁胸甲）
+        ArmorItem.Type.CHESTPLATE to 0,
         ArmorItem.Type.LEGGINGS to 0,
         ArmorItem.Type.BOOTS to 0
     ),
@@ -322,7 +330,7 @@ private val ADVANCED_BATPACK_ARMOR = createArmorMaterial(
     durabilityMultiplier = 12,
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,
-        ArmorItem.Type.CHESTPLATE to 3,
+        ArmorItem.Type.CHESTPLATE to 0,
         ArmorItem.Type.LEGGINGS to 0,
         ArmorItem.Type.BOOTS to 0
     ),
@@ -339,7 +347,7 @@ private val ENERGY_PACK_ARMOR = createArmorMaterial(
     durabilityMultiplier = 15,
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,
-        ArmorItem.Type.CHESTPLATE to 4,
+        ArmorItem.Type.CHESTPLATE to 0,
         ArmorItem.Type.LEGGINGS to 0,
         ArmorItem.Type.BOOTS to 0
     ),
@@ -356,7 +364,7 @@ private val LAPPACK_ARMOR = createArmorMaterial(
     durabilityMultiplier = 20,
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,
-        ArmorItem.Type.CHESTPLATE to 5,
+        ArmorItem.Type.CHESTPLATE to 0,
         ArmorItem.Type.LEGGINGS to 0,
         ArmorItem.Type.BOOTS to 0
     ),
@@ -376,7 +384,7 @@ private val CF_PACK_ARMOR = createArmorMaterial(
     durabilityMultiplier = 8,
     protection = mapOf(
         ArmorItem.Type.HELMET to 0,
-        ArmorItem.Type.CHESTPLATE to 2,
+        ArmorItem.Type.CHESTPLATE to 0,
         ArmorItem.Type.LEGGINGS to 0,
         ArmorItem.Type.BOOTS to 0
     ),
@@ -1427,7 +1435,7 @@ class EnergyPack : BatteryPackArmorItem(ENERGY_PACK_ARMOR, tier = 3, maxCapacity
  * 作为胸甲装备。
  */
 @ModItem(name = "lappack", tab = CreativeTab.IC2_MATERIALS, group = "battery_pack")
-class LapPack : BatteryPackArmorItem(LAPPACK_ARMOR, tier = 4, maxCapacity = 60_000_000L) {
+class LapPack : BatteryPackArmorItem(LAPPACK_ARMOR, tier = 4, maxCapacity = 20_000_000L) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
