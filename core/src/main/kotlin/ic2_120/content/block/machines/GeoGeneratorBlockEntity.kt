@@ -54,7 +54,7 @@ import net.minecraft.registry.Registries
  * - 仅接受岩浆流体输入
  * - 内部流体缓存：8 桶
  * - 输出：20 EU/t（Tier 1）
- * - 1 桶岩浆燃烧 25 秒（500 ticks）
+ * - 1 桶岩浆燃烧 60 秒（1200 ticks）
  * - 按岩浆量消耗，电满时暂停（不消耗岩浆）
  *
  * 升级支持：
@@ -71,6 +71,7 @@ class GeoGeneratorBlockEntity(
     companion object {
         const val GENERATOR_TIER = 1
         private const val NBT_LAVA_AMOUNT = "LavaAmount"
+        private const val NBT_LAVA_CONSUMPTION_REMAINDER = "LavaConsumptionRemainder"
 
         const val FUEL_SLOT = 0
         const val EMPTY_CONTAINER_SLOT = 1
@@ -185,6 +186,9 @@ class GeoGeneratorBlockEntity(
         }
     }
 
+    /** 用余数累加处理 1200 tick / 81000 droplets 的非整数每 tick 消耗。 */
+    private var lavaConsumptionRemainder: Long = 0L
+
     val lavaTank: Storage<FluidVariant> = lavaTankInternal
 
     private val batteryCharger = BatteryChargerComponent(
@@ -297,6 +301,7 @@ class GeoGeneratorBlockEntity(
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         lavaTankInternal.setStoredLava(nbt.getLong(NBT_LAVA_AMOUNT))
+        lavaConsumptionRemainder = nbt.getLong(NBT_LAVA_CONSUMPTION_REMAINDER).coerceIn(0L, GeoGeneratorSync.BURN_TICKS_PER_BUCKET - 1L)
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -305,6 +310,7 @@ class GeoGeneratorBlockEntity(
         syncedData.writeNbt(nbt)
         nbt.putLong(GeoGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_LAVA_AMOUNT, lavaTankInternal.getStoredAmount())
+        nbt.putLong(NBT_LAVA_CONSUMPTION_REMAINDER, lavaConsumptionRemainder)
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -342,10 +348,12 @@ class GeoGeneratorBlockEntity(
             }
         }
 
-        // 按岩浆量消耗：每 tick 消耗 1 桶/500 = 2 mB 对应 20 EU
+        // 按岩浆量消耗：每桶 1200 tick，使用余数累加避免 81000 / 1200 的整数除法损失。
         val space = (GeoGeneratorSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0L)
         if (space > 0L && lavaTankInternal.amount > 0L && lavaTankInternal.variant.fluid == Fluids.LAVA) {
-            val consumePerTick = FluidConstants.BUCKET / GeoGeneratorSync.BURN_TICKS_PER_BUCKET
+            val numerator = FluidConstants.BUCKET + lavaConsumptionRemainder
+            val consumePerTick = numerator / GeoGeneratorSync.BURN_TICKS_PER_BUCKET
+            lavaConsumptionRemainder = numerator % GeoGeneratorSync.BURN_TICKS_PER_BUCKET
             val toConsume = minOf(consumePerTick, lavaTankInternal.amount, space * consumePerTick / GeoGeneratorSync.EU_PER_BURN_TICK)
             val consumed = lavaTankInternal.consumeInternal(toConsume)
             if (consumed > 0L) {

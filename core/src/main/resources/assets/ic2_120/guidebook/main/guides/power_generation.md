@@ -34,10 +34,10 @@ item_ids:
 
 ### Geothermal Generator
 
-- **Buffer**: 4,000 EU
-- **Generation rate**: 10 EU/t
-- **Fluid use**: 1 bucket (1000 mB) of lava = 20,000 EU
-- **Output time**: about 33 minutes (2000 ticks at 10 EU/t)
+- **Buffer**: 10,000 EU
+- **Generation rate**: 20 EU/t
+- **Fluid use**: 1 bucket (1000 mB) of lava = 24,000 EU
+- **Output time**: 60 seconds (1200 ticks at 20 EU/t)
 
 ### Solar Generator
 
@@ -119,7 +119,7 @@ See [Kinetic System](../systems/kinetic_transmission.md)
 |------|---:|
 | 1 coal | 4,000 EU |
 | 1 charcoal | 4,000 EU |
-| 1 lava bucket | 20,000 EU |
+| 1 lava bucket | 24,000 EU |
 | 1 mB biogas | about 60 EU |
 
 ### Wind Generator Altitude Model

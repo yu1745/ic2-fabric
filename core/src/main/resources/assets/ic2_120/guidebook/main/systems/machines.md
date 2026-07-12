@@ -141,9 +141,9 @@ Extracts fluid from plants, e.g. pulling resin from rubber trees.
 ### Geothermal Generator
 
 - **Voltage tier**: Tier 1 (LV)
-- **Energy buffer**: 4,000 EU
-- **Output**: 10 EU/t
-- **Fluid use**: 1 bucket of lava = 20,000 EU (2000 EU/tick, consumed in 10 seconds)
+- **Energy buffer**: 10,000 EU
+- **Output**: 20 EU/t
+- **Fluid use**: 1 bucket of lava = 24,000 EU (1200 ticks / 60 seconds at 20 EU/t)
 
 ### Solar Distiller
 

@@ -12,7 +12,7 @@ item_ids:
 
 <BlockImage id="ic2_120:geo_generator" p:facing="north" p:active="true" scale="4" />
 
-The Geothermal Generator turns ordinary Lava into EU. Its internal lava tank holds **8 buckets**, and each bucket burns for **500 ticks** at **20 EU/t**, for **10,000 EU per bucket**. Lava is consumed gradually, so the generator pauses automatically when its 10,000 EU buffer is full.
+The Geothermal Generator turns ordinary Lava into EU. Its internal lava tank holds **8 buckets**, and each bucket burns for **1200 ticks (60 seconds)** at **20 EU/t**, for **24,000 EU per bucket**. Lava is consumed gradually, so the generator pauses automatically when its 10,000 EU buffer is full.
 
 Only normal Lava is accepted. Pahoehoe Lava, Biofuel, Biomass, hot coolant, and other fluids are ignored.
 
@@ -22,8 +22,8 @@ Only normal Lava is accepted. Pahoehoe Lava, Biofuel, Biomass, hot coolant, and 
 - **Energy Storage**: 10,000 EU
 - **Tier**: 1
 - **Lava Tank**: 8 buckets
-- **Lava Consumption**: 2 mB/t, or 1 bucket every 25 seconds
-- **Fuel Value**: 10,000 EU per bucket
+- **Lava Consumption**: about 0.83 mB/t, or 1 bucket every 60 seconds
+- **Fuel Value**: 24,000 EU per bucket
 
 ## Slots
 

@@ -27,8 +27,8 @@ class GeoGeneratorSync(
         const val MAX_EXTRACT = 20L
         /** 每 tick 产能（EU） */
         const val EU_PER_BURN_TICK = 20L
-        /** 1 桶岩浆燃烧时长（25s = 500 ticks） */
-        const val BURN_TICKS_PER_BUCKET = 25 * 20
+        /** 1 桶岩浆燃烧时长（60s = 1200 ticks） */
+        const val BURN_TICKS_PER_BUCKET = 60 * 20
         const val NBT_ENERGY_STORED = "EnergyStored"
     }
 
@@ -54,4 +54,3 @@ class GeoGeneratorSync(
 
     fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
 }
-
