@@ -1,7 +1,7 @@
 package ic2_120.content.debug
 
-import ic2_120.content.block.machines.SemifluidGeneratorBlockEntity
-import ic2_120.content.block.machines.SemifluidGeneratorBlockEntity.FuelProfile
+import ic2_120.content.fluid.FluidFuelRegistry
+import ic2_120.content.fluid.FluidFuelRegistry.FuelProfile
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.minecraft.fluid.Fluid
 import net.minecraft.registry.Registries
@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 
 /**
  * 临时调试：服务器启动后遍历所有已注册流体，复用半流质发电机的真实匹配逻辑
- * ([SemifluidGeneratorBlockEntity.isSupportedFuelFluid] / [SemifluidGeneratorBlockEntity.getFuelProfile])，
+ * [FluidFuelRegistry]，
  * 把命中燃料的流体及其来源 mod 打到日志。
  *
  * 用于验证 jar 扫描无法覆盖的"代码运行时注册流体/标签"情况（如 GTCEu、TechReborn）。
@@ -42,7 +42,7 @@ object SemifluidFuelDump {
         val unsupportedButNamed = mutableListOf<Identifier>() // 名字像油/燃料但被判定为不支持
 
         for ((id, fluid) in all) {
-            val profile = SemifluidGeneratorBlockEntity.getFuelProfile(fluid)
+            val profile = FluidFuelRegistry.getProfile(fluid)
             if (profile != null) {
                 supported.add(id to profile)
             } else if (looksLikeFuel(id)) {

@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.SemifluidGeneratorBlock
@@ -6,6 +6,7 @@ import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.energy.charge.BatteryChargerComponent
 import ic2_120.content.fluid.ModFluids
+import ic2_120.content.fluid.FluidFuelRegistry
 import ic2_120.content.item.energy.canBeCharged
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.recipes.ModTags
@@ -73,11 +74,6 @@ class SemifluidGeneratorBlockEntity(
     override var fluidPipeEjectorCount: Int = 0
     override var fluidPipePullingCount: Int = 0
 
-    data class FuelProfile(
-        val euPerBucket: Long,
-        val euPerTick: Long
-    )
-
     companion object {
         const val GENERATOR_TIER = 1
         private const val NBT_FUEL_AMOUNT = "FuelAmount"
@@ -91,9 +87,6 @@ class SemifluidGeneratorBlockEntity(
         const val SLOT_UPGRADE_3 = 6
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
         const val INVENTORY_SIZE = 7
-
-        private val BIOFUEL_PROFILE = FuelProfile(euPerBucket = 32_000L, euPerTick = 16L)
-        private val CREOSOTE_PROFILE = FuelProfile(euPerBucket = 3_200L, euPerTick = 8L)
 
         /** 从 ModFluids 注册的 tint 颜色映射取色；无匹配则返回默认橙 */
         fun getFuelArgb(fluid: net.minecraft.fluid.Fluid?): Int {
@@ -114,18 +107,6 @@ class SemifluidGeneratorBlockEntity(
             fluidLookupRegistered = true
         }
 
-        fun isSupportedFuelFluid(fluid: net.minecraft.fluid.Fluid): Boolean = getFuelProfile(fluid) != null
-
-        fun getFuelProfile(fluid: net.minecraft.fluid.Fluid): FuelProfile? {
-            // Fluid.isIn(TagKey) 与 Fluid.getRegistryEntry() 在 1.20.1 均已 @Deprecated，
-            // 改用未废弃的 FluidState.isIn（其内部委托 RegistryEntry.isIn）。
-            val state = fluid.defaultState
-            return when {
-                state.isIn(ModTags.Compat.Fluids.SEMIFLUID_BIOFUEL_EQUIVALENT) -> BIOFUEL_PROFILE
-                state.isIn(ModTags.Compat.Fluids.SEMIFLUID_CREOSOTE_EQUIVALENT) -> CREOSOTE_PROFILE
-                else -> null
-            }
-        }
     }
 
     override val tier: Int = GENERATOR_TIER
@@ -163,7 +144,7 @@ class SemifluidGeneratorBlockEntity(
 
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
 
-        override fun canInsert(variant: FluidVariant): Boolean = isSupportedFuelFluid(variant.fluid) && ModFluids.isFluid(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = FluidFuelRegistry.isSupported(variant.fluid) && ModFluids.isFluid(variant.fluid)
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -181,7 +162,7 @@ class SemifluidGeneratorBlockEntity(
 
         fun setStoredFuel(newAmount: Long, fluid: net.minecraft.fluid.Fluid?) {
             amount = newAmount.coerceIn(0L, tankCapacity)
-            variant = if (amount > 0L && fluid != null && isSupportedFuelFluid(fluid)) {
+            variant = if (amount > 0L && fluid != null && FluidFuelRegistry.isSupported(fluid)) {
                 FluidVariant.of(fluid)
             } else {
                 FluidVariant.blank()
@@ -192,7 +173,7 @@ class SemifluidGeneratorBlockEntity(
         }
 
         fun tryInsertFuel(fluid: net.minecraft.fluid.Fluid, toInsert: Long): Long {
-            if (toInsert <= 0L || !isSupportedFuelFluid(fluid)) return 0L
+            if (toInsert <= 0L || !FluidFuelRegistry.isSupported(fluid)) return 0L
             if (amount > 0L && variant.fluid != fluid) return 0L
             val space = tankCapacity - amount
             val actual = minOf(toInsert, space)
@@ -206,7 +187,7 @@ class SemifluidGeneratorBlockEntity(
         }
 
         fun consumeInternal(toConsume: Long): Long {
-            if (toConsume <= 0L || !isSupportedFuelFluid(variant.fluid)) return 0L
+            if (toConsume <= 0L || !FluidFuelRegistry.isSupported(variant.fluid)) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
             amount -= actual
@@ -359,7 +340,7 @@ class SemifluidGeneratorBlockEntity(
         val tankTotalCapacity = 8 * FluidConstants.BUCKET
         if (fuelTankInternal.amount <= tankTotalCapacity - FluidConstants.BUCKET) {
             val fuelFluid = fuelStack.getSemifluidFuelFluid()
-            val fuelProfile = fuelFluid?.let { getFuelProfile(it) }
+            val fuelProfile = fuelFluid?.let { FluidFuelRegistry.getProfile(it) }
             if (fuelFluid != null && fuelProfile != null) {
                 val emptyContainer = when (fuelStack.item) {
                     Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "biofuel_cell")),
@@ -380,7 +361,7 @@ class SemifluidGeneratorBlockEntity(
 
         val space = (SemifluidGeneratorSync.ENERGY_CAPACITY - sync.amount).coerceAtLeast(0L)
         val fuelFluid = fuelTankInternal.variant.fluid
-        val fuelProfile = getFuelProfile(fuelFluid)
+        val fuelProfile = FluidFuelRegistry.getProfile(fuelFluid)
         if (space > 0L && fuelTankInternal.amount > 0L && fuelProfile != null) {
             val consumePerTick = (FluidConstants.BUCKET * fuelProfile.euPerTick / fuelProfile.euPerBucket).coerceAtLeast(1L)
             val toConsume = minOf(consumePerTick, fuelTankInternal.amount, space * consumePerTick / fuelProfile.euPerTick)
@@ -396,7 +377,7 @@ class SemifluidGeneratorBlockEntity(
 
         val active = sync.amount < SemifluidGeneratorSync.ENERGY_CAPACITY &&
             fuelTankInternal.amount > 0L &&
-            getFuelProfile(fuelTankInternal.variant.fluid) != null
+            FluidFuelRegistry.isSupported(fuelTankInternal.variant.fluid)
         setActiveState(world, pos, state, active)
         sync.syncCurrentTickFlow()
     }

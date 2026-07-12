@@ -33,6 +33,7 @@ import net.minecraft.item.ArmorItem
 import net.minecraft.item.ArmorMaterial
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.item.ItemUsageContext
 import net.minecraft.item.Items
 import net.minecraft.recipe.Ingredient
 import net.minecraft.registry.Registries
@@ -797,6 +798,16 @@ class CfPack : ArmorItem(
     FabricItemSettings().maxCount(1).maxDamage(-1)
 ), ICreativeFullVariant {
     override fun isDamageable(): Boolean = false
+
+    override fun useOnBlock(context: ItemUsageContext): net.minecraft.util.ActionResult {
+        val world = context.world
+        val player = context.player ?: return net.minecraft.util.ActionResult.PASS
+        if (world.isClient) return net.minecraft.util.ActionResult.SUCCESS
+        val storage = net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage.SIDED.find(world, context.blockPos, context.side)
+        return if (storage != null && net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil.interactWithFluidStorage(storage, player, context.hand)) {
+            net.minecraft.util.ActionResult.SUCCESS
+        } else net.minecraft.util.ActionResult.PASS
+    }
 
     override fun inventoryTick(stack: ItemStack, world: World, entity: Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)

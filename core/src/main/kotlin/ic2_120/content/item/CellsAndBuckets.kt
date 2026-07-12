@@ -2,6 +2,8 @@ package ic2_120.content.item
 
 import ic2_120.Ic2_120
 import ic2_120.content.fluid.ModFluids
+import ic2_120.content.item.armor.JetpackFluidStorage
+import ic2_120.content.item.armor.JetpackItem
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
@@ -837,6 +839,9 @@ object CellAndBucketFluidRegistration {
 
         val cfPack = Registries.ITEM.get(Identifier.of(modId, "cf_pack"))
         FluidStorage.ITEM.registerForItems({ _, ctx -> CfPackFluidStorage(ctx) }, cfPack)
+
+        val jetpack = Registries.ITEM.get(Identifier.of(modId, "jetpack"))
+        FluidStorage.ITEM.registerForItems({ _, ctx -> JetpackFluidStorage(ctx) }, jetpack)
 
         // 遍历所有流体，将满流体单元注册到创造模式物品栏（IC2 材料）
         // 排除已有独立单元类的本mod流体（同时排除 still 和 flowing，否则 flowing 变体会多出一个通用 fluid_cell 条目）
