@@ -50,6 +50,10 @@ data class GeneralConfig(
     val explodeWhenNoEnergyFlow: Boolean = false,
     @field:ConfigComment("是否启用超压爆炸。设为 false 则完全关闭超压爆炸。", "true")
     val enableOvervoltageExplosion: Boolean = true,
+    @field:ConfigComment("低耐压导线每次烧毁时随机烧毁的最小比例（百分比）。100 表示全部烧毁；不要填 0，否则不会按预期烧毁导线。", "10")
+    val cableBurnMinPercent: Int = 10,
+    @field:ConfigComment("低耐压导线每次烧毁时随机烧毁的最大比例（百分比）。100 表示全部烧毁；不要填 0，否则不会按预期烧毁导线。", "20")
+    val cableBurnMaxPercent: Int = 20,
     @field:ConfigComment(
         "是否发送匿名使用统计（仅匿名 installId + 版本号，每天一次），用于统计有多少玩家安装了本 mod。",
         "true"

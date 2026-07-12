@@ -73,6 +73,10 @@
 
 - `logConfigOnLoad`：启动/重载时是否把当前配置打印到日志。
 - `checkForUpdates`：更新检查开关（供更新检查逻辑读取）。
+- `cableBurnMinPercent` / `cableBurnMaxPercent`：低耐压导线每次烧毁时随机选择的比例范围，单位为百分比；默认 `10`～`20`，实际值限制在 `1`～`100`。`100` 表示全部烧毁，不应填 `0`。
+- `shockWhenNoEnergyFlow`：电网不发生能量流动时是否仍会电人。
+- `explodeWhenNoEnergyFlow`：电网不发生能量流动时是否仍会触发超压爆炸。
+- `enableOvervoltageExplosion`：是否启用机器超压爆炸。
 
 ### `recycler`
 

@@ -51,8 +51,6 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         var ENABLE_CABLE_BURN_LOG = false
     }
 
-    private val underTierCableBurnRatio = 1
-
     val cables = mutableSetOf<Long>()
     var energy: Long = 0
     var capacity: Long = 0
@@ -342,24 +340,48 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             log.debug("[导线烧毁] 电网输出等级=$outputLevel，可烧毁导线数量=${toBurn.size}（电压等级 < $outputLevel）")
         }
 
-        val burnCount = (toBurn.size * underTierCableBurnRatio).coerceIn(0, toBurn.size)
+        val generalConfig = ic2_120.config.Ic2Config.current.general
+        val minBurnPercent = generalConfig.cableBurnMinPercent.coerceIn(1, 100)
+        val maxBurnPercent = generalConfig.cableBurnMaxPercent.coerceIn(1, 100)
+        val lowerPercent = minOf(minBurnPercent, maxBurnPercent)
+        val upperPercent = maxOf(minBurnPercent, maxBurnPercent)
+        val burnPercent = serverWorld.random.nextBetween(lowerPercent, upperPercent)
+        // 向上取整，避免少量导线因百分比计算得到 0 根烧毁。
+        val burnCount = ((toBurn.size.toLong() * burnPercent + 99L) / 100L)
+            .toInt()
+            .coerceIn(1, toBurn.size)
         if (burnCount <= 0) return
 
         if (ENABLE_CABLE_BURN_LOG) {
-            log.debug("[导线烧毁] 准备烧毁 $burnCount 根导线（比例=${underTierCableBurnRatio}）")
+            log.debug("[导线烧毁] 准备烧毁 $burnCount 根导线（随机比例=${burnPercent}%）")
         }
 
-        val shuffled = toBurn.toMutableList()
-        for (i in shuffled.indices.reversed()) {
-            if (i == 0) break
-            val j = serverWorld.random.nextInt(i + 1)
-            val t = shuffled[i]
-            shuffled[i] = shuffled[j]
-            shuffled[j] = t
+        /**
+         * 从随机种子开始沿拓扑邻接关系扩张，形成连续的烧毁区域。
+         * 只有当前区域已经没有可烧邻居，或电网本身不连通时，才选择新的种子。
+         */
+        val remaining = toBurn.toMutableSet()
+        val selected = mutableListOf<Long>()
+        while (selected.size < burnCount && remaining.isNotEmpty()) {
+            val seed = remaining.elementAt(serverWorld.random.nextInt(remaining.size))
+            remaining.remove(seed)
+
+            val frontier = ArrayList<Long>()
+            frontier.add(seed)
+            while (frontier.isNotEmpty() && selected.size < burnCount) {
+                val frontierIndex = serverWorld.random.nextInt(frontier.size)
+                val current = frontier.removeAt(frontierIndex)
+                selected.add(current)
+
+                for (neighbor in topology.neighbors[current].orEmpty()) {
+                    if (remaining.remove(neighbor)) {
+                        frontier.add(neighbor)
+                    }
+                }
+            }
         }
         val actuallyBurned = mutableListOf<Pair<BlockPos, String>>()
-        for (i in 0 until burnCount) {
-            val posLong = shuffled[i]
+        for (posLong in selected) {
             val pos = BlockPos.fromLong(posLong)
             val state = world.getBlockState(pos)
             if (state.isAir) continue

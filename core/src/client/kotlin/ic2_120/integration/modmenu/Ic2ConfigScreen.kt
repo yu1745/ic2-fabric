@@ -69,6 +69,8 @@ object Ic2ConfigScreen {
         var shockWhenNoEnergyFlow = cfg.shockWhenNoEnergyFlow
         var explodeWhenNoEnergyFlow = cfg.explodeWhenNoEnergyFlow
         var enableOvervoltageExplosion = cfg.enableOvervoltageExplosion
+        var cableBurnMinPercent = cfg.cableBurnMinPercent
+        var cableBurnMaxPercent = cfg.cableBurnMaxPercent
         var enableAnonymousStatistics = cfg.enableAnonymousStatistics
         var analyticsEndpoint = cfg.analyticsEndpoint
 
@@ -92,6 +94,14 @@ object Ic2ConfigScreen {
             .setDefaultValue(false)
             .setTooltip(Text.literal("电网不发生能量流动时是否仍会超压爆炸。设为 false 则无能量时不爆炸。"))
             .setSaveConsumer { explodeWhenNoEnergyFlow = it }.build())
+        cat.addEntry(eb.startIntField(Text.literal("导线烧毁最小比例（%）"), cableBurnMinPercent)
+            .setDefaultValue(10)
+            .setTooltip(Text.literal("低耐压导线每次烧毁时随机选择的最小比例。范围 1～100%；100% 表示全部烧毁，不要填 0。"))
+            .setSaveConsumer { cableBurnMinPercent = it }.build())
+        cat.addEntry(eb.startIntField(Text.literal("导线烧毁最大比例（%）"), cableBurnMaxPercent)
+            .setDefaultValue(20)
+            .setTooltip(Text.literal("低耐压导线每次烧毁时随机选择的最大比例。范围 1～100%；100% 表示全部烧毁，不要填 0。"))
+            .setSaveConsumer { cableBurnMaxPercent = it }.build())
         cat.addEntry(eb.startBooleanToggle(Text.literal("发送匿名使用统计"), enableAnonymousStatistics)
             .setDefaultValue(true)
             .setTooltip(Text.literal("仅发送匿名 installId + 版本号，每天一次，用于统计有多少玩家安装了本 mod。不含任何个人信息。"))
@@ -108,6 +118,8 @@ object Ic2ConfigScreen {
                 shockWhenNoEnergyFlow = shockWhenNoEnergyFlow,
                 explodeWhenNoEnergyFlow = explodeWhenNoEnergyFlow,
                 enableOvervoltageExplosion = enableOvervoltageExplosion,
+                cableBurnMinPercent = cableBurnMinPercent,
+                cableBurnMaxPercent = cableBurnMaxPercent,
                 enableAnonymousStatistics = enableAnonymousStatistics,
                 analyticsEndpoint = analyticsEndpoint
             )
