@@ -849,6 +849,8 @@
   "gui.ic2_120.battery_charge": "Charge Battery",
   "gui.ic2_120.battery_discharge": "Discharge Battery",
  "gui.ic2_120.generate_eu": "Generate %s EU/t",
+  "gui.ic2_120.wind_generator.generating": "Status: Generating (3 EU/t)",
+  "gui.ic2_120.wind_generator.too_low": "Status: Too low (requires Y > 74)",
   "gui.ic2_120.generate_hu": "Generate %s HU/t",
   "gui.ic2_120.output_hu": "Output %s HU/t",
   "gui.ic2_120.input_ku": "Input %s KU/t",

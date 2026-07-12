@@ -7,11 +7,7 @@ import net.minecraft.util.math.Direction
 /**
  * 风力发电机同步属性与能量容器。
  *
- * 发电机制：
- * - 以高度为动力，风力强度 0~30 每 128 tick 刷新
- * - 发电量 p = w * s * (h - 64) / 750，h = y - c（有效高度）
- * - w：晴天 1.0，雨天 1.2，雷雨 1.5
- * - 极限约 11.46 EU/t
+ * 发电机制：方块 Y > 74 时固定发电 3 EU/t，否则不发电。
  */
 class WindGeneratorSync(
     schema: SyncSchema,
@@ -27,7 +23,7 @@ class WindGeneratorSync(
     companion object {
         /** 电力缓存容量（EU） */
         const val ENERGY_CAPACITY = 400L
-        /** 整机总输出上限（EU/t），理论极限约 11.46 */
+        /** 整机总输出上限（EU/t） */
         const val MAX_EXTRACT = 20L
         const val NBT_ENERGY_STORED = "EnergyStored"
         /** 最小输出能量（EU），积累到此值后才输出，与 MAX_EXTRACT 相等以保证完整周期清零 */
@@ -37,6 +33,8 @@ class WindGeneratorSync(
     var energy by schema.int("Energy")
     /** 是否正在发电（供 GUI 显示） */
     var isGenerating by schema.int("IsGenerating")
+    /** 发电状态：0=工作中，1=高度不足 */
+    var status by schema.int("Status")
     private val flow = EnergyFlowSync(schema, this, useGeneratedAsInput = true)
 
     override fun getSideMaxInsert(side: Direction?): Long = 0L
@@ -59,4 +57,3 @@ class WindGeneratorSync(
 
     fun getSyncedExtractedAmount(): Long = flow.getSyncedExtractedAmount()
 }
-
