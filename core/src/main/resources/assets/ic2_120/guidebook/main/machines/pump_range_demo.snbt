@@ -1,0 +1,24 @@
+{
+    DataVersion: 3465,
+    size: [4, 1, 3],
+    data: [
+        {pos: [0, 0, 0], state: "minecraft:dirt"},
+        {pos: [0, 0, 1], state: "ic2_120:pump{active:false,facing:east}"},
+        {pos: [0, 0, 2], state: "minecraft:dirt"},
+        {pos: [1, 0, 0], state: "minecraft:dirt"},
+        {pos: [1, 0, 1], state: "minecraft:water"},
+        {pos: [1, 0, 2], state: "minecraft:dirt"},
+        {pos: [2, 0, 0], state: "minecraft:dirt"},
+        {pos: [2, 0, 1], state: "minecraft:water"},
+        {pos: [2, 0, 2], state: "minecraft:dirt"},
+        {pos: [3, 0, 0], state: "minecraft:dirt"},
+        {pos: [3, 0, 1], state: "minecraft:water"},
+        {pos: [3, 0, 2], state: "minecraft:dirt"}
+    ],
+    entities: [],
+    palette: [
+        "ic2_120:pump{active:false,facing:east}",
+        "minecraft:water",
+        "minecraft:dirt"
+    ]
+}

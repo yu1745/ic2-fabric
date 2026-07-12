@@ -12,6 +12,7 @@ import ic2_120.content.item.fluidToFilledCellStack
 import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.content.item.setFluidCellVariant
 import ic2_120.content.screen.PumpScreenHandler
+import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.content.sync.PumpSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.EjectorUpgradeComponent
@@ -341,6 +342,7 @@ class PumpBlockEntity(
     }
 
     private fun tryDrainFromStorage(world: World, targetPos: BlockPos, fromSide: Direction): Long {
+        if (ClaimProtection.isProtected(world, targetPos, ownerUuid, ClaimProtection.EDIT_FLUID)) return 0L
         val external = FluidStorage.SIDED.find(world, targetPos, fromSide) ?: return 0L
 
         for (view in external) {
@@ -366,7 +368,7 @@ class PumpBlockEntity(
         if (fluidState.isEmpty || !fluidState.isStill) return 0L
         val fluid = fluidState.fluid
         if (!canAccept(fluid)) return 0L
-        if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, targetPos, ownerUuid, ic2_120.integration.ftbchunks.ClaimProtection.EDIT_FLUID)) return 0L
+        if (ClaimProtection.isProtected(world, targetPos, ownerUuid, ClaimProtection.EDIT_FLUID)) return 0L
 
         val variant = FluidVariant.of(fluid)
         val toDrain = FluidConstants.BUCKET
@@ -375,7 +377,14 @@ class PumpBlockEntity(
             if (inserted < FluidConstants.BUCKET) return 0L
             tx.commit()
         }
-        world.setBlockState(targetPos, net.minecraft.block.Blocks.AIR.defaultState, 3)
+        val targetState = world.getBlockState(targetPos)
+        if (targetState.contains(Properties.WATERLOGGED) && targetState.get(Properties.WATERLOGGED)) {
+            // 抽取含水方块中的水时保留方块本体，只移除含水状态。
+            world.setBlockState(targetPos, targetState.with(Properties.WATERLOGGED, false), 3)
+        } else {
+            // 普通水源方块没有可保留的方块本体，抽空后清为空气。
+            world.setBlockState(targetPos, net.minecraft.block.Blocks.AIR.defaultState, 3)
+        }
         return FluidConstants.BUCKET
     }
 
@@ -465,12 +474,12 @@ class PumpBlockEntity(
             val fluidState = world.getFluidState(target)
             if (!fluidState.isEmpty && fluidState.isStill) {
                 val fluid = fluidState.fluid
-                if (canAccept(fluid) && !ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, target, ownerUuid, ic2_120.integration.ftbchunks.ClaimProtection.EDIT_FLUID)) {
+                if (canAccept(fluid) && !ClaimProtection.isProtected(world, target, ownerUuid, ClaimProtection.EDIT_FLUID)) {
                     return true
                 }
             }
             val external = FluidStorage.SIDED.find(world, target, front.opposite)
-            if (external != null) {
+            if (external != null && !ClaimProtection.isProtected(world, target, ownerUuid, ClaimProtection.EDIT_FLUID)) {
                 for (view in external) {
                     if (!view.isResourceBlank && view.amount > 0L && canAccept(view.resource.fluid)) {
                         return true

@@ -12,7 +12,12 @@ item_ids:
 
 <BlockImage id="ic2_120:pump" p:facing="north" p:active="true" scale="4" />
 
-The Pump collects one-bucket fluid sources or fluid storage blocks in front of it and stores the fluid in its internal tank. It looks up to three blocks straight ahead, so the front face matters.
+The Pump collects one-bucket fluid sources or fluid storage blocks in front of it and stores the fluid in its internal tank. **It checks only one straight line directly in front of the pump, never the sides.** It looks up to three blocks ahead, so the front face matters.
+
+<GameScene zoom="6" interactive={true} fullWidth={true}>
+  <IsometricCamera yaw="0" pitch="30" />
+  <ImportStructure src="pump_range_demo.snbt" />
+</GameScene>
 
 ## Operation
 

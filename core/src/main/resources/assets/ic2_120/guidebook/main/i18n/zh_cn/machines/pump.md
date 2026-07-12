@@ -12,7 +12,12 @@ item_ids:
 
 <BlockImage id="ic2_120:pump" p:facing="north" p:active="true" scale="4" />
 
-泵会从正前方收集一桶量的流体源或流体储存方块，并存入内部储罐。它最多向前检查 3 格，所以机器朝向很重要。
+泵会从正前方收集一桶量的流体源或流体储存方块，并存入内部储罐。**它只检查泵正前方的一条直线，不会抽取两侧的方块。** 它最多向前检查 3 格，所以机器朝向很重要。
+
+<GameScene zoom="6" interactive={true} fullWidth={true}>
+  <IsometricCamera yaw="0" pitch="30" />
+  <ImportStructure src="pump_range_demo.snbt" />
+</GameScene>
 
 ## 工作方式
 

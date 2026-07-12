@@ -11,10 +11,10 @@ import ic2_120.registry.type
 import ic2_120.content.network.NetworkManager
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluids
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
@@ -66,8 +66,8 @@ class WaterKineticGeneratorBlockEntity(
         private const val MAX_ROTOR_RADIUS = 5.0
         private const val ROTOR_PLANE_TOLERANCE = 0.001
         private const val ROTOR_OVERLAP_EPSILON = 1.0 / 64.0
-        private const val BASE_KU_AT_PEAK = 64.0
-        private const val BASE_WEAR_PER_TICK = 2.0
+        private const val BASE_KU_AT_PEAK = 128.0
+        private const val BASE_WEAR_PER_TICK = 1.0
         private const val WATER_FLOW_BONUS_MULTIPLIER = 1.5
         private const val ROTOR_WEAR_REMAINDER_KEY = "RotorWearRemainder"
         private const val TICKS_PER_HOUR = 72_000.0
@@ -401,15 +401,14 @@ class WaterKineticGeneratorBlockEntity(
     }
 
     private fun isWaterBlock(world: World, x: Int, y: Int, z: Int): Boolean {
-        val blockState = world.getBlockState(BlockPos(x, y, z))
-        return blockState.block == Blocks.WATER
+        val fluidState = world.getFluidState(BlockPos(x, y, z))
+        return fluidState.isOf(Fluids.WATER) || fluidState.isOf(Fluids.FLOWING_WATER)
     }
 
     private fun isFlowingWater(world: World, x: Int, y: Int, z: Int): Boolean {
-        val blockState = world.getBlockState(BlockPos(x, y, z))
-        if (blockState.block != Blocks.WATER) return false
-        return blockState.contains(net.minecraft.state.property.Properties.LEVEL_1_8) &&
-            blockState.get(net.minecraft.state.property.Properties.LEVEL_1_8) > 0
+        val fluidState = world.getFluidState(BlockPos(x, y, z))
+        if (!fluidState.isOf(Fluids.WATER) && !fluidState.isOf(Fluids.FLOWING_WATER)) return false
+        return !fluidState.isStill
     }
 
     private fun applyRotorWear(rotor: ItemStack, wearMultiplier: Double): Boolean {
