@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_steel_plate": {
+    "has_iron_plate": {
       "conditions": {
         "items": [
           {
             "items": [
-              "ic2_120:steel_plate"
+              "ic2_120:iron_plate"
             ]
           }
         ]
@@ -22,7 +22,7 @@
   },
   "requirements": [
     [
-      "has_steel_plate",
+      "has_iron_plate",
       "has_the_recipe"
     ]
   ],

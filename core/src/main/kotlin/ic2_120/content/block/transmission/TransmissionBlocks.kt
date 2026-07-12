@@ -474,8 +474,8 @@ class BevelGearBlock(
                 .pattern("s s")
                 .pattern("s s")
                 .pattern("sss")
-                .input('s', Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL))
-                .criterion(hasItem(SteelPlate::class.instance()), conditionsFromItem(SteelPlate::class.instance()))
+                .input('s', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
+                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, BevelGearBlock::class.recipeId("from_plates"))
         }
     }
