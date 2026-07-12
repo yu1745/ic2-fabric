@@ -4,12 +4,7 @@ import ic2_120.content.item.BronzePlate
 import ic2_120.content.item.EmptyCell
 import ic2_120.content.item.IridiumPlate
 import ic2_120.content.item.IronPlate
-import ic2_120.content.item.FluidCellItem
-import ic2_120.content.item.ModFluidCell
 import ic2_120.content.item.SteelPlate
-import ic2_120.content.item.fluidToFilledCellStack
-import ic2_120.content.item.getFluidCellVariant
-import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
@@ -21,12 +16,10 @@ import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.BlockState
 import net.minecraft.block.BlockRenderType
@@ -85,142 +78,13 @@ abstract class TankBlock(settings: AbstractBlock.Settings) : BlockWithEntity(set
         if (world.isClient) return ActionResult.SUCCESS
 
         val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return ActionResult.PASS
-        val held = player.getStackInHand(hand)
-
-        // 空手或非桶/单元物品 → 打开 GUI
-        if (held.isEmpty || !isBucketOrCell(held.item)) {
-            player.openHandledScreen(be)
+        val storage = FluidStorage.SIDED.find(world, pos, hit.side)
+        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
             return ActionResult.SUCCESS
         }
-
-        val heldItem = held.item
-        // 空桶 → 取出流体
-        if (heldItem == Items.BUCKET) return tryFillBucket(world, be, player, hand, held)
-        // 满桶 → 放入流体
-        if (heldItem == Items.WATER_BUCKET || heldItem == Items.LAVA_BUCKET || isModBucket(heldItem))
-            return tryDrainBucket(world, be, player, hand, held)
-        // 空单元 → 取出流体
-        if (isEmptyCell(held)) return tryFillCell(world, be, player, hand, held)
-        // 满单元 → 放入流体
-        if (isFilledCell(held)) return tryDrainCell(world, be, player, hand, held)
 
         player.openHandledScreen(be)
         return ActionResult.SUCCESS
-    }
-
-    private fun isBucketOrCell(item: net.minecraft.item.Item): Boolean =
-        item == Items.BUCKET || item == Items.WATER_BUCKET || item == Items.LAVA_BUCKET ||
-        isModBucket(item) || item is FluidCellItem || item is ModFluidCell
-
-    private fun isModBucket(item: net.minecraft.item.Item): Boolean =
-        Registries.ITEM.getId(item).path.endsWith("_bucket")
-
-    private fun resolveBucketItem(fluid: net.minecraft.fluid.Fluid): net.minecraft.item.Item {
-        if (fluid == net.minecraft.fluid.Fluids.WATER) return Items.WATER_BUCKET
-        if (fluid == net.minecraft.fluid.Fluids.LAVA) return Items.LAVA_BUCKET
-        val fluidId = Registries.FLUID.getId(fluid)
-        val bucketId = Identifier(fluidId.namespace, "${fluidId.path}_bucket")
-        return Registries.ITEM.getOrEmpty(bucketId).orElse(Items.BUCKET)
-    }
-
-    private fun isEmptyCell(stack: ItemStack): Boolean {
-        val item = stack.item
-        val emptyCell = Registries.ITEM.get(Identifier("ic2_120", "empty_cell"))
-        if (item == emptyCell) return true
-        if (item is FluidCellItem) return stack.isFluidCellEmpty()
-        return false
-    }
-
-    private fun isFilledCell(stack: ItemStack): Boolean {
-        val item = stack.item
-        if (item is ModFluidCell) return true
-        if (item is FluidCellItem) return !stack.isFluidCellEmpty()
-        return false
-    }
-
-    private fun tryFillBucket(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ActionResult {
-        if (be.fluidAmount < FluidConstants.BUCKET) return ActionResult.PASS
-        val variant = be.fluidVariant
-        Transaction.openOuter().use { tx ->
-            val extracted = be.fluidTank.extract(variant, FluidConstants.BUCKET, tx)
-            if (extracted < FluidConstants.BUCKET) { tx.abort(); return ActionResult.PASS }
-            tx.commit()
-            be.markDirty()
-        }
-        if (!player.abilities.creativeMode) {
-            held.decrement(1)
-            val bucketItem = resolveBucketItem(variant.fluid)
-            val bucket = ItemStack(bucketItem)
-            if (held.isEmpty) player.setStackInHand(hand, bucket)
-            else if (!player.inventory.insertStack(bucket)) player.dropItem(bucket, false)
-        }
-        return ActionResult.SUCCESS
-    }
-
-    private fun tryDrainBucket(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ActionResult {
-        val storage = ContainerItemContext.withConstant(held).find(FluidStorage.ITEM) ?: return ActionResult.PASS
-        for (view in storage) {
-            if (view.isResourceBlank || view.amount < FluidConstants.BUCKET) continue
-            var inserted = 0L
-            Transaction.openOuter().use { tx ->
-                inserted = be.fluidTank.insert(view.resource, FluidConstants.BUCKET, tx)
-                if (inserted >= FluidConstants.BUCKET) tx.commit() else tx.abort()
-            }
-            if (inserted >= FluidConstants.BUCKET) {
-                if (!player.abilities.creativeMode) {
-                    held.decrement(1)
-                    val emptyBucket = ItemStack(Items.BUCKET)
-                    if (held.isEmpty) player.setStackInHand(hand, emptyBucket)
-                    else if (!player.inventory.insertStack(emptyBucket)) player.dropItem(emptyBucket, false)
-                }
-                be.markDirty()
-                return ActionResult.SUCCESS
-            }
-        }
-        return ActionResult.PASS
-    }
-
-    private fun tryFillCell(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ActionResult {
-        if (be.fluidAmount < FluidConstants.BUCKET) return ActionResult.PASS
-        val variant = be.fluidVariant
-        val filled = fluidToFilledCellStack(variant.fluid)
-        Transaction.openOuter().use { tx ->
-            val extracted = be.fluidTank.extract(variant, FluidConstants.BUCKET, tx)
-            if (extracted < FluidConstants.BUCKET) { tx.abort(); return ActionResult.PASS }
-            tx.commit()
-            be.markDirty()
-        }
-        if (!player.abilities.creativeMode) {
-            held.decrement(1)
-            if (held.isEmpty) player.setStackInHand(hand, filled)
-            else if (!player.inventory.insertStack(filled)) player.dropItem(filled, false)
-        }
-        return ActionResult.SUCCESS
-    }
-
-    private fun tryDrainCell(world: World, be: TankBlockEntity, player: PlayerEntity, hand: Hand, held: ItemStack): ActionResult {
-        val variant = when (val item = held.item) {
-            is ModFluidCell -> FluidVariant.of(item.getFluid())
-            else -> held.getFluidCellVariant()
-        } ?: return ActionResult.PASS
-        if (variant.isBlank) return ActionResult.PASS
-
-        var inserted = 0L
-        Transaction.openOuter().use { tx ->
-            inserted = be.fluidTank.insert(variant, FluidConstants.BUCKET, tx)
-            if (inserted >= FluidConstants.BUCKET) tx.commit() else tx.abort()
-        }
-        if (inserted >= FluidConstants.BUCKET) {
-            if (!player.abilities.creativeMode) {
-                held.decrement(1)
-                val emptyCell = ItemStack(Registries.ITEM.get(Identifier("ic2_120", "empty_cell")))
-                if (held.isEmpty) player.setStackInHand(hand, emptyCell)
-                else if (!player.inventory.insertStack(emptyCell)) player.dropItem(emptyCell, false)
-            }
-            be.markDirty()
-            return ActionResult.SUCCESS
-        }
-        return ActionResult.PASS
     }
 
     /**
