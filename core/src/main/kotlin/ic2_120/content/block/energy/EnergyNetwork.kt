@@ -72,6 +72,11 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     private val bufferedCandidatesCacheByEntries = mutableMapOf<String, List<PathCandidate>>()
     var lastTickTime: Long = -1
 
+    /**
+     * 消费者公平分发的轮转起点。每 tick 向后移动，避免同一个 consumer 永远先拿到首轮配额。
+     */
+    private var consumerRoundRobinOffset = 0
+
     override fun createSnapshot(): NetworkSnapshot = NetworkSnapshot(
         energy = energy,
         cableTransferRemaining = cableTransferRemaining.toMutableMap()
@@ -516,15 +521,44 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         val consumers = findConsumers(world, topology)
         val providers = findProviders(world, topology)
 
+        if (consumers.isEmpty()) {
+            syncCableLoadToLocalStorage(world, topology.cableRates)
+            return
+        }
+
+        // 每 tick 轮转首个 consumer，避免固定的拓扑发现顺序长期造成饥饿。
+        val consumerList = consumers.values.toList()
+        val offset = consumerRoundRobinOffset % consumerList.size
+        val orderedConsumers = consumerList.drop(offset) + consumerList.take(offset)
+        consumerRoundRobinOffset = (offset + 1) % consumerList.size
+
         // Phase 1: 残余池能分发（BFS 合并等场景遗留的 energy，通常一次 tick 即清空）
-        for ((_, consumer) in consumers) {
+        for (consumer in orderedConsumers) {
             if (energy <= 0) break
             pullFromBufferedEnergyByPath(world, consumer, topology.neighbors)
         }
 
         // Phase 2: providers → consumers 直送
         if (providers.isNotEmpty()) {
-            for ((_, consumer) in consumers) {
+            // 首轮给每个 consumer 一个有限额度，保证后面的 consumer 至少有一次取电机会。
+            // 这里的额度按 provider 的提取量计算，已包含路径损耗的消耗。
+            val totalProviderEnergy = providers.values.sumOf {
+                simulateExtraction(it.storage, Long.MAX_VALUE)
+            }
+            val firstRoundBudget = maxOf(1L, totalProviderEnergy / orderedConsumers.size)
+
+            for (consumer in orderedConsumers) {
+                pullFromProvidersByPath(
+                    world,
+                    consumer,
+                    providers,
+                    topology.neighbors,
+                    maxAmount = firstRoundBudget
+                )
+            }
+
+            // 首轮完成后，剩余 provider 能量继续按轮转顺序分发。
+            for (consumer in orderedConsumers) {
                 pullFromProvidersByPath(world, consumer, providers, topology.neighbors)
             }
         }
@@ -595,9 +629,11 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         world: World,
         consumer: Endpoint,
         providers: Map<Long, Endpoint>,
-        neighbors: Map<Long, List<Long>>
+        neighbors: Map<Long, List<Long>>,
+        maxAmount: Long = Long.MAX_VALUE
     ) {
-        while (true) {
+        var remainingBudget = maxAmount
+        while (remainingBudget > 0) {
             val demand = simulateInsertion(consumer.storage, Long.MAX_VALUE)
             if (demand <= 0) break
 
@@ -616,7 +652,11 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
                 val stepDemand = simulateInsertion(consumer.storage, maxDeliverable)
                 if (stepDemand <= 0) break
 
-                val needFromProvider = minOf(pathCapacity, stepDemand + pathLossEu)
+                val needFromProvider = minOf(
+                    pathCapacity,
+                    stepDemand + pathLossEu,
+                    remainingBudget
+                )
                 if (needFromProvider <= pathLossEu) continue
 
                 Transaction.openOuter().use { tx ->
@@ -633,6 +673,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
                             cableTransferRemaining[cablePosLong] =
                                 (cableTransferRemaining[cablePosLong] ?: 0L) - moved
                         }
+                        remainingBudget -= extracted
 
                         if (ENABLE_ENERGY_TRANSFER_LOG) {
                             val sourcePos = candidate.providerPos?.let { BlockPos.fromLong(it) } ?: BlockPos.ORIGIN
