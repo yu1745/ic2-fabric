@@ -3,6 +3,9 @@ package ic2_120.content.network
 import ic2_120.Ic2_120
 import ic2_120.content.block.machines.PatternStorageBlockEntity
 import ic2_120.content.block.machines.ReplicatorBlockEntity
+import ic2_120.content.screen.FluidUpgradeScreenHandler
+import ic2_120.content.screen.PumpAttachmentScreenHandler
+import net.minecraft.registry.Registries
 import ic2_120.content.item.FoamSprayerItem
 import ic2_120.content.item.IridiumDrill
 import ic2_120.content.item.Chainsaw
@@ -41,6 +44,7 @@ object NetworkManager {
     val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
     val TOGGLE_QUANTUM_BOOTS_JUMP_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_boots_jump")
     val SELECT_TEMPLATE_PACKET = Identifier(Ic2_120.MOD_ID, "select_template")
+    val SET_FLUID_FILTER_PACKET = Identifier(Ic2_120.MOD_ID, "set_fluid_filter")
 
     fun register() {
         // 注册服务端接收处理器（如果需要）
@@ -199,6 +203,18 @@ object NetworkManager {
                 when (be) {
                     is ReplicatorBlockEntity -> be.selectTemplate(index)
                     is PatternStorageBlockEntity -> be.selectTemplate(index)
+                }
+            }
+        }
+
+        ServerPlayNetworking.registerGlobalReceiver(SET_FLUID_FILTER_PACKET) { server, player, _, buf, _ ->
+            val fluidId = buf.readIdentifier()
+            server.execute {
+                if (!Registries.FLUID.containsId(fluidId)) return@execute
+                val fluid = Registries.FLUID.get(fluidId)
+                when (val handler = player.currentScreenHandler) {
+                    is FluidUpgradeScreenHandler -> handler.setFluidFilter(fluid)
+                    is PumpAttachmentScreenHandler -> handler.setFluidFilter(fluid)
                 }
             }
         }

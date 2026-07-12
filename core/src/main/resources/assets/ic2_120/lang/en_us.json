@@ -992,6 +992,7 @@
   "gui.ic2_120.pump_attachment.filter_sample": "Filter Sample",
   "gui.ic2_120.pump_attachment.filter_any": "Current: Any fluid",
   "gui.ic2_120.pump_attachment.filter_current": "Current: %s",
+  "gui.ic2_120.jei.drag_filter_hint": "You do not need to own the fluid; hold left-click and drag a fluid, fluid cell, or fluid bucket from the JEI list on the right",
   "gui.ic2_120.kinetic_generator.hint": "Takes energy from adjacent kinetic node on front face",
   "gui.ic2_120.water_kinetic.rotor_slot": "Rotor Slot",
   "gui.ic2_120.water_kinetic.rotor_hint": "Insert wood/iron/steel/carbon rotor and submerge in water",

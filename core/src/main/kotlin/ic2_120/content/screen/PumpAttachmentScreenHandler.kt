@@ -6,6 +6,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluid
 import net.minecraft.item.ItemStack
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandler
@@ -45,6 +46,16 @@ class PumpAttachmentScreenHandler(
 
     override fun quickMove(player: PlayerEntity, index: Int): ItemStack {
         return ItemStack.EMPTY
+    }
+
+    fun filterFluid(): Fluid? = blockEntity?.pumpFilterFluid()
+
+    /** 设置 JEI 幽灵流体过滤器，不需要玩家实际持有流体容器。 */
+    fun setFluidFilter(fluid: Fluid): Boolean {
+        val be = blockEntity ?: return false
+        be.setPumpFilterFluid(fluid)
+        sendContentUpdates()
+        return true
     }
 
     override fun onSlotClick(slotIndex: Int, button: Int, actionType: SlotActionType, player: PlayerEntity) {

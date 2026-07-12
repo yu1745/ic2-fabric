@@ -7,6 +7,7 @@ import ic2_120.registry.annotation.ScreenHandlerMode
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.fluid.Fluid
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
@@ -103,6 +104,7 @@ class FluidUpgradeScreenHandler(
                 val fluid = FluidPipeUpgradeComponent.readFluidFromItemStack(container)
                 if (fluid == null) return true
                 FluidPipeUpgradeComponent.writeFilter(upgradeStack, fluid)
+                returnContainerToPlayer()
             }
             BUTTON_CLEAR_FILTER -> {
                 FluidPipeUpgradeComponent.writeFilter(upgradeStack, null)
@@ -122,6 +124,16 @@ class FluidUpgradeScreenHandler(
             else -> return false
         }
 
+        refreshProperties()
+        sendContentUpdates()
+        return true
+    }
+
+    /** 设置 JEI 幽灵流体过滤器，不需要玩家实际持有流体容器。 */
+    fun setFluidFilter(fluid: Fluid): Boolean {
+        val upgradeStack = playerInventory.player.getStackInHand(hand)
+        if (upgradeStack.item !is FluidFilterUpgradeItem) return false
+        FluidPipeUpgradeComponent.writeFilter(upgradeStack, fluid)
         refreshProperties()
         sendContentUpdates()
         return true
@@ -161,6 +173,15 @@ class FluidUpgradeScreenHandler(
     override fun onClosed(player: PlayerEntity) {
         super.onClosed(player)
         dropInventory(player, containerInventory)
+    }
+
+    /** 过滤器只保存流体类型；设置完成后立即归还用于识别的容器。 */
+    private fun returnContainerToPlayer() {
+        val container = containerInventory.removeStack(SLOT_CONTAINER)
+        if (container.isEmpty) return
+        if (!playerInventory.insertStack(container)) {
+            playerInventory.player.dropItem(container, false)
+        }
     }
 
     /** 从升级物品中读取当前状态并写入 PropertyDelegate。 */

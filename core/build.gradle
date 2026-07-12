@@ -51,6 +51,7 @@ dependencies {
 	}
 
 	modCompileOnlyApi("mezz.jei:jei-${project.minecraft_version}-common-api-intermediary:${project.jei_version}")
+	modCompileOnlyApi("mezz.jei:jei-${project.minecraft_version}-fabric-api:${project.jei_version}")
 	modCompileOnlyApi("maven.modrinth:jade:${project.jade_version}")
 
 	modCompileOnly("dev.ftb.mods:ftb-chunks-fabric:${project.ftb_chunks_version}") { transitive = false }

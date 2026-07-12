@@ -4,6 +4,7 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.block.BlockState
+import net.minecraft.block.Block
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
@@ -80,10 +81,18 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         return true
     }
 
+    fun setPumpFilterFluid(fluid: Fluid) {
+        pumpFilterFluidId = Registries.FLUID.getId(fluid).toString()
+        pumpFilterGhostStack = ItemStack.EMPTY
+        markDirty()
+        world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
+    }
+
     fun clearPumpFilter() {
         pumpFilterFluidId = null
         pumpFilterGhostStack = ItemStack.EMPTY
         markDirty()
+        world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
     }
 
     override fun readNbt(nbt: NbtCompound) {

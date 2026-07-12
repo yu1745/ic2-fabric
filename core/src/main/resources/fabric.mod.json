@@ -32,6 +32,10 @@
 			{
 				"value": "ic2_120.integration.jei.Ic2JeiPlugin",
 				"adapter": "kotlin"
+			},
+			{
+				"value": "ic2_120.client.integration.jei.Ic2JeiGhostPlugin",
+				"adapter": "kotlin"
 			}
 		],
 		"jade": [

@@ -978,6 +978,7 @@
   "gui.ic2_120.pump_attachment.filter_sample": "过滤样本",
   "gui.ic2_120.pump_attachment.filter_any": "当前: 任意流体",
   "gui.ic2_120.pump_attachment.filter_current": "当前: %s",
+  "gui.ic2_120.jei.drag_filter_hint": "无需真正持有对应流体；从右侧 JEI 物品栏按住左键拖入流体、流体单元或流体桶",
   "gui.ic2_120.kinetic_generator.hint": "从正面相邻传动节点取能",
   "gui.ic2_120.water_kinetic.rotor_slot": "转子槽",
   "gui.ic2_120.water_kinetic.rotor_hint": "放入木/铁/钢/碳转子后浸入水中",
