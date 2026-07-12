@@ -422,11 +422,10 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         processWaterInputContainer()
         processWeedExInputContainer()
 
-        // 按监管动物数量持续耗电（每 2 只动物 1 EU/t，向上取整）
-        val drain = sync.animalCount.toLong()
-        val actualDrain = (drain + 1L) / 2L
+        // 有受监管动物时固定耗电 2 EU/t，不再随动物数量变化。
+        val actualDrain = AnimalmatronSync.ENERGY_PER_TICK
         val canPower = if (actualDrain > 0L) {
-            sync.consumeEnergy(actualDrain) >= actualDrain
+            sync.animalCount <= 0 || sync.consumeEnergy(actualDrain) >= actualDrain
         } else {
             true
         }
@@ -547,12 +546,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
                 // 消耗水
                 consumeWater(report)
 
-                // 每日杀虫剂消耗（每只动物每天固定 100mb）
-                if (!animalData.insecticidePaidToday && weedExTankInternal.getStoredWeedEx() >= INSECTICIDE_PER_DAY) {
-                    weedExTankInternal.consumeInternal(mbToDroplets(INSECTICIDE_PER_DAY))
-                    animalData.insecticidePaidToday = true
-                    report.weedExConsumed += INSECTICIDE_PER_DAY
-                }
+                // 暂时停用除草剂的实际作用：允许灌入，但不消耗，也不因缺少除草剂产生负面效果。
 
                 // 检查是否达到成长/繁殖条件
                 checkGrowthAndBreeding(animal, animalData, totalAnimals, report)

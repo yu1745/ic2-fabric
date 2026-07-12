@@ -23,6 +23,7 @@ class AnimalmatronSync(
 ) {
     companion object {
         const val ENERGY_CAPACITY = 10_000L
+        const val ENERGY_PER_TICK = 2L
         const val MAX_INSERT = 32L
         const val MAX_EXTRACT = 0L
         const val NBT_ENERGY_STORED = "EnergyStored"
