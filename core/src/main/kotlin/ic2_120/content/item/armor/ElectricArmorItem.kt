@@ -37,7 +37,7 @@ abstract class ElectricArmorItem(
     material: ArmorMaterial,
     type: Type,
     settings: FabricItemSettings
-) : ArmorItem(material, type, settings), IElectricTool {
+) : ArmorItem(material, type, settings.maxDamage(-1)), IElectricTool {
 
     // ========== IElectricTool 实现 ==========
 

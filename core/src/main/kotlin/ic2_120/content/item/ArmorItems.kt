@@ -791,7 +791,11 @@ class AlloyChestplate : ArmorItem(ALLOY_ARMOR, ArmorItem.Type.CHESTPLATE, Fabric
  * 作为胸甲装备。
  */
 @ModItem(name = "cf_pack", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-class CfPack : ArmorItem(CF_PACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)), ICreativeFullVariant {
+class CfPack : ArmorItem(
+    CF_PACK_ARMOR,
+    ArmorItem.Type.CHESTPLATE,
+    FabricItemSettings().maxCount(1).maxDamage(-1)
+), ICreativeFullVariant {
     override fun isDamageable(): Boolean = false
 
     override fun inventoryTick(stack: ItemStack, world: World, entity: Entity, slot: Int, selected: Boolean) {
@@ -1026,7 +1030,11 @@ class ElectricJetpack : ElectricArmorItem(
  * 提供夜视效果的头戴式装备。
  */
 @ModItem(name = "night_vision_goggles", tab = CreativeTab.IC2_MATERIALS, group = "armor")
-class NightVisionGoggles : ArmorItem(NIGHT_VISION_ARMOR, ArmorItem.Type.HELMET, FabricItemSettings().maxCount(1)), IBatteryItem {
+class NightVisionGoggles : ArmorItem(
+    NIGHT_VISION_ARMOR,
+    ArmorItem.Type.HELMET,
+    FabricItemSettings().maxCount(1).maxDamage(-1)
+), IBatteryItem {
     override val tier: Int = 2
     override val maxCapacity: Long
         get() = Ic2Config.current.armor.nightVision.nightVisionGogglesMaxEnergy
@@ -1187,7 +1195,11 @@ abstract class BatteryPackArmorItem(
     armorMaterial: ArmorMaterial,
     override val tier: Int,
     override val maxCapacity: Long,
-) : ArmorItem(armorMaterial, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)), IBatteryItem {
+) : ArmorItem(
+    armorMaterial,
+    ArmorItem.Type.CHESTPLATE,
+    FabricItemSettings().maxCount(1).maxDamage(-1)
+), IBatteryItem {
 
     init {
         require(tier in 1..4) { "电池背包等级须在 1–4，当前: $tier" }

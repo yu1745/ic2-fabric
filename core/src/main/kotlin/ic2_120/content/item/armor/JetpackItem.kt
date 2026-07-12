@@ -14,7 +14,12 @@ import net.minecraft.util.Formatting
  *
  * 使用生物燃料作为动力的飞行装置，类似创造飞行，按空格上升、Shift下降。
  */
-open class JetpackItem : ArmorItem(ModArmorMaterials.JETPACK_ARMOR, ArmorItem.Type.CHESTPLATE, FabricItemSettings().maxCount(1)), ICreativeFullVariant {
+open class JetpackItem : ArmorItem(
+    ModArmorMaterials.JETPACK_ARMOR,
+    ArmorItem.Type.CHESTPLATE,
+    // ArmorItem 会通过 maxDamageIfAbsent 自动注入材质耐久；-1 让 ItemStack.isDamageable() 返回 false。
+    FabricItemSettings().maxCount(1).maxDamage(-1)
+), ICreativeFullVariant {
 
     companion object {
         private const val FUEL_KEY = "Fuel"
