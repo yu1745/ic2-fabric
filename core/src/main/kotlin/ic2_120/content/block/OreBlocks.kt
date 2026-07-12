@@ -6,6 +6,8 @@ import ic2_120.registry.type
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
+import net.minecraft.block.MapColor
+import net.minecraft.sound.BlockSoundGroup
 
 // ========== 普通矿石（石头基质） ==========
 
@@ -45,16 +47,25 @@ class UraniumOreBlock : Block(
 @ModBlock(name = "deepslate_lead_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS, materialTags = ["ores/lead"])
 class DeepslateLeadOreBlock : Block(
     AbstractBlock.Settings.copy(Blocks.IRON_ORE)
+        .mapColor(MapColor.DEEPSLATE_GRAY)
+        .strength(4.5f, 3.0f)
+        .sounds(BlockSoundGroup.DEEPSLATE)
 )
 
 /** 深层锡矿石（照搬原版深层铁矿） */
 @ModBlock(name = "deepslate_tin_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS, materialTags = ["ores/tin"])
 class DeepslateTinOreBlock : Block(
     AbstractBlock.Settings.copy(Blocks.IRON_ORE)
+        .mapColor(MapColor.DEEPSLATE_GRAY)
+        .strength(4.5f, 3.0f)
+        .sounds(BlockSoundGroup.DEEPSLATE)
 )
 
 /** 深层铀矿石（照搬原版深层钻石矿） */
 @ModBlock(name = "deepslate_uranium_ore", registerItem = true, tab = CreativeTab.IC2_MATERIALS, materialTags = ["ores/uranium"])
 class DeepslateUraniumOreBlock : Block(
     AbstractBlock.Settings.copy(Blocks.IRON_ORE)
+        .mapColor(MapColor.DEEPSLATE_GRAY)
+        .strength(4.5f, 3.0f)
+        .sounds(BlockSoundGroup.DEEPSLATE)
 )
