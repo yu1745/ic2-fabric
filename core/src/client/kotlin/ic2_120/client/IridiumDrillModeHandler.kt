@@ -21,7 +21,7 @@ object IridiumDrillModeHandler {
     fun register() {
         UseItemCallback.EVENT.register { player, world, hand ->
             val stack = player.getStackInHand(hand)
-            if (!world.isClient || stack.item !is IridiumDrill || !ModeKeybinds.isModeKeyDown()) {
+            if (!world.isClient || stack.item !is IridiumDrill || !ModeKeybinds.isAltDown()) {
                 return@register TypedActionResult.pass(stack)
             }
             ClientPlayNetworking.send(
@@ -33,7 +33,7 @@ object IridiumDrillModeHandler {
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->
             val stack = player.getStackInHand(hand)
-            if (!world.isClient || stack.item !is IridiumDrill || !ModeKeybinds.isModeKeyDown()) {
+            if (!world.isClient || stack.item !is IridiumDrill || !ModeKeybinds.isAltDown()) {
                 return@register ActionResult.PASS
             }
             ClientPlayNetworking.send(

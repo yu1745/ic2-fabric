@@ -27,9 +27,6 @@ object MiningLaserTooltipHandler {
             val cost = mode.energyCost
             val shots = if (cost > 0) energy / cost else 0L
 
-            val modeKey = ModeKeybinds.getModeKey()
-            val boundKeyName = modeKey.boundKeyLocalizedText.string
-
             lines.add(
                 Text.translatable("tooltip.ic2_120.mining_laser.current_mode")
                     .formatted(Formatting.GRAY)
@@ -44,8 +41,7 @@ object MiningLaserTooltipHandler {
             lines.add(
                 Text.translatable("tooltip.ic2_120.mining_laser.toggle_mode_prefix")
                     .formatted(Formatting.GRAY)
-                    .append(Text.literal(boundKeyName).formatted(Formatting.YELLOW))
-                    .append(Text.translatable("tooltip.ic2_120.mining_laser.toggle_mode_suffix").formatted(Formatting.YELLOW))
+                    .append(Text.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").formatted(Formatting.YELLOW))
             )
 
             val shift = isShiftDown()

@@ -26,7 +26,7 @@ import org.lwjgl.glfw.GLFW
  * - Alt+J：量子靴子大跳
  *
  * 飞行（量子胸甲/喷气背包）复用原版创造飞行的双击空格触发。
- * M 键用于铱钻头、夜视仪、采矿镭射等手持设备，量子套不共用。
+ * 手持工具的模式切换使用 Alt+右键；盔甲功能不共用该交互。
  */
 @Environment(EnvType.CLIENT)
 object ArmorKeybinds {

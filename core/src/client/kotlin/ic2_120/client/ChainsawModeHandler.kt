@@ -18,7 +18,7 @@ object ChainsawModeHandler {
     fun register() {
         UseItemCallback.EVENT.register { player, world, hand ->
             val stack = player.getStackInHand(hand)
-            if (!world.isClient || stack.item !is Chainsaw || !ModeKeybinds.isModeKeyDown()) {
+            if (!world.isClient || stack.item !is Chainsaw || !ModeKeybinds.isAltDown()) {
                 return@register TypedActionResult.pass(stack)
             }
             ClientPlayNetworking.send(
@@ -30,7 +30,7 @@ object ChainsawModeHandler {
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->
             val stack = player.getStackInHand(hand)
-            if (!world.isClient || stack.item !is Chainsaw || !ModeKeybinds.isModeKeyDown()) {
+            if (!world.isClient || stack.item !is Chainsaw || !ModeKeybinds.isAltDown()) {
                 return@register ActionResult.PASS
             }
             ClientPlayNetworking.send(

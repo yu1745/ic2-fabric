@@ -63,10 +63,8 @@ object DrillTooltipHandler {
                 )
             }
 
-            // 铱钻头：模式键 + 右键切换精准采集（不需要 Alt）
+            // 铱钻头：Alt + 右键切换精准采集
             if (item is IridiumDrill) {
-                val modeKey = ModeKeybinds.getModeKey()
-                val boundKeyName = modeKey.boundKeyLocalizedText.string
                 val silkEnabled = IridiumDrill.isSilkTouchEnabled(stack)
                 lines.add(
                     Text.literal(
@@ -76,14 +74,11 @@ object DrillTooltipHandler {
                 lines.add(
                     Text.literal("精准采集按键: ")
                         .formatted(Formatting.GRAY)
-                        .append(Text.literal(boundKeyName).formatted(Formatting.YELLOW))
-                        .append(Text.literal(" + 右键").formatted(Formatting.YELLOW))
+                        .append(Text.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").formatted(Formatting.YELLOW))
                 )
             }
 
             if (item is Chainsaw) {
-                val modeKey = ModeKeybinds.getModeKey()
-                val boundKeyName = modeKey.boundKeyLocalizedText.string
                 val shearEnabled = Chainsaw.isShearEnabled(stack)
                 lines.add(
                     Text.translatable(
@@ -93,8 +88,7 @@ object DrillTooltipHandler {
                 lines.add(
                     Text.translatable("tooltip.ic2_120.chainsaw.toggle_mode")
                         .formatted(Formatting.GRAY)
-                        .append(Text.literal(boundKeyName).formatted(Formatting.YELLOW))
-                        .append(Text.translatable("tooltip.ic2_120.chainsaw.toggle_mode_suffix").formatted(Formatting.YELLOW))
+                        .append(Text.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").formatted(Formatting.YELLOW))
                 )
             }
         }

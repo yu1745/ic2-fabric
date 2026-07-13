@@ -9,7 +9,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
 /**
- * 建筑泡沫喷枪：容量、剩余喷涂格数、单格/多格模式与 Alt+绑定键提示（与 [ModeKeybinds] 一致）。
+ * 建筑泡沫喷枪：容量、剩余喷涂格数、单格/多格模式与 Alt+右键提示。
  */
 @Environment(EnvType.CLIENT)
 object FoamSprayerTooltipHandler {
@@ -29,10 +29,8 @@ object FoamSprayerTooltipHandler {
                 Text.translatable("tooltip.ic2_120.foam_sprayer.blocks_left", spraysLeft)
                     .formatted(Formatting.GRAY)
             )
-            val modeKey = ModeKeybinds.getFoamModeKey()
-            val keyName = modeKey.boundKeyLocalizedText.string
-            val keyLine = Text.literal("Alt + ").formatted(Formatting.YELLOW)
-                .append(Text.literal(keyName).formatted(Formatting.YELLOW))
+            val keyLine = Text.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click")
+                .formatted(Formatting.YELLOW)
             if (FoamSprayerItem.isMultiMode(stack)) {
                 lines.add(Text.translatable("tooltip.ic2_120.foam_sprayer.mode_multi", keyLine).formatted(Formatting.DARK_AQUA))
             } else {
