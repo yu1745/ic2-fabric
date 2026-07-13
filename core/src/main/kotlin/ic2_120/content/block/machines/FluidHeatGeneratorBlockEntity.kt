@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.content.block.FluidHeatGeneratorBlock
 import ic2_120.content.fluid.ModFluids
@@ -150,7 +150,7 @@ class FluidHeatGeneratorBlockEntity(
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
         override fun canExtract(variant: FluidVariant): Boolean = false
-        override fun canInsert(variant: FluidVariant): Boolean = isSupportedFuelFluid(variant.fluid) && ModFluids.isFluid(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = isSupportedFuelFluid(variant.fluid) && !variant.isBlank
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L

@@ -157,7 +157,7 @@ class FluidCannerBlockEntity(
     private val tankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = TANK_CAPACITY
-        override fun canInsert(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = !variant.isBlank
         override fun canExtract(variant: FluidVariant): Boolean = true
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {

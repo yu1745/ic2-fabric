@@ -144,7 +144,7 @@ class SemifluidGeneratorBlockEntity(
 
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
 
-        override fun canInsert(variant: FluidVariant): Boolean = FluidFuelRegistry.isSupported(variant.fluid) && ModFluids.isFluid(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = FluidFuelRegistry.isSupported(variant.fluid) && !variant.isBlank
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L

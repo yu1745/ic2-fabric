@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.SolarDistillerBlock
@@ -162,7 +162,7 @@ class SolarDistillerBlockEntity(
 
         // 只允许插入水（FLUID INPUT）
         override fun canInsert(variant: FluidVariant): Boolean =
-            (variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER) && ModFluids.isFluid(variant.fluid)
+            (variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER) && !variant.isBlank
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -234,7 +234,7 @@ class SolarDistillerBlockEntity(
 
         // 允许提取蒸馏水（FLUID OUTPUT）
         override fun canExtract(variant: FluidVariant): Boolean =
-            ModFluids.isFluid(variant.fluid)
+            !variant.isBlank
 
         // 提交后同步数据到客户端
         override fun onFinalCommit() {

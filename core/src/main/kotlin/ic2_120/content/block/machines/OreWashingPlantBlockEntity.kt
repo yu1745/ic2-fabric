@@ -180,7 +180,7 @@ class OreWashingPlantBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
 
         override fun canInsert(variant: FluidVariant): Boolean =
-            (variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER) && ModFluids.isFluid(variant.fluid)
+            (variant.fluid == Fluids.WATER || variant.fluid == Fluids.FLOWING_WATER) && !variant.isBlank
 
         override fun canExtract(variant: FluidVariant): Boolean = false
 

@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.FermenterBlock
@@ -154,7 +154,7 @@ class FermenterBlockEntity(
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
-        override fun canInsert(variant: FluidVariant): Boolean = isBiomass(variant.fluid) && ModFluids.isFluid(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = isBiomass(variant.fluid) && !variant.isBlank
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -218,7 +218,7 @@ class FermenterBlockEntity(
             return super.insert(insertedVariant, maxAmount, transaction)
         }
 
-        override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
+        override fun canExtract(variant: FluidVariant): Boolean = !variant.isBlank
 
         override fun onFinalCommit() {
             sync.outputBiogas = toMilliBuckets(amount)

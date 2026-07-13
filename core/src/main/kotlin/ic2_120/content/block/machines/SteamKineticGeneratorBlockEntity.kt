@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.content.block.SteamKineticGeneratorBlock
 import ic2_120.content.block.transmission.IKineticMachinePort
@@ -181,7 +181,7 @@ class SteamKineticGeneratorBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = WATER_TANK_CAPACITY
 
         override fun canInsert(variant: FluidVariant): Boolean = false
-        override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
+        override fun canExtract(variant: FluidVariant): Boolean = !variant.isBlank
 
         override fun onFinalCommit() {
             sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)

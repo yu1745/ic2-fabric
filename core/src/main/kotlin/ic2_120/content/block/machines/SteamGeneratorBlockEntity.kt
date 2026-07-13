@@ -145,7 +145,7 @@ class SteamGeneratorBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = WATER_TANK_CAPACITY
 
         override fun canInsert(variant: FluidVariant): Boolean =
-            ModFluids.isFluid(variant.fluid) && (variant.fluid == net.minecraft.fluid.Fluids.WATER || variant.fluid == ModFluids.DISTILLED_WATER_STILL)
+            !variant.isBlank && (variant.fluid == net.minecraft.fluid.Fluids.WATER || variant.fluid == ModFluids.DISTILLED_WATER_STILL)
 
         override fun canExtract(variant: FluidVariant): Boolean = false
 

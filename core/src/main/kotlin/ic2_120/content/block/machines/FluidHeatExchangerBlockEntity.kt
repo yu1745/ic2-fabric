@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.FluidHeatExchangerBlock
@@ -181,7 +181,7 @@ class FluidHeatExchangerBlockEntity(
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
-        override fun canInsert(variant: FluidVariant): Boolean = isAcceptedInputFluid(variant.fluid) && ModFluids.isFluid(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = isAcceptedInputFluid(variant.fluid) && !variant.isBlank
 
         private fun syncTankState() {
             sync.inputFluid = toMilliBuckets(amount)
@@ -261,7 +261,7 @@ class FluidHeatExchangerBlockEntity(
             return super.insert(insertedVariant, maxAmount, transaction)
         }
 
-        override fun canExtract(variant: FluidVariant): Boolean = isAcceptedOutputFluid(variant.fluid) && ModFluids.isFluid(variant.fluid)
+        override fun canExtract(variant: FluidVariant): Boolean = isAcceptedOutputFluid(variant.fluid) && !variant.isBlank
 
         override fun onFinalCommit() {
             syncTankState()

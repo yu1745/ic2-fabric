@@ -680,13 +680,7 @@ object ModFluids {
         return (item as? Ic2BucketItem)?.bucketFluid
     }
 
-    // ========== 气体/流体判定 ==========
-
-    /** 压缩空气、蒸汽、过热蒸汽均属于气体 */
-    fun isGas(fluid: Fluid): Boolean = isSteam(fluid) || isCompressedAir(fluid)
-
-    /** 非气体即为流体 */
-    fun isFluid(fluid: Fluid): Boolean = !isGas(fluid) && fluid != Fluids.EMPTY
+    // ========== 特定流体判定 ==========
 
     /** 蒸汽或过热蒸汽 */
     fun isSteam(fluid: Fluid): Boolean =

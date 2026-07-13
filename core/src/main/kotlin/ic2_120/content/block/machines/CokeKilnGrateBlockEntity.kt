@@ -46,7 +46,7 @@ class CokeKilnGrateBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = TANK_CAPACITY
         override fun canInsert(variant: FluidVariant): Boolean = false
         override fun canExtract(variant: FluidVariant): Boolean =
-            (variant.fluid == ModFluids.CREOSOTE_STILL || variant.fluid == ModFluids.CREOSOTE_FLOWING) && ModFluids.isFluid(variant.fluid)
+            (variant.fluid == ModFluids.CREOSOTE_STILL || variant.fluid == ModFluids.CREOSOTE_FLOWING) && !variant.isBlank
 
         override fun onFinalCommit() {
             markDirty()

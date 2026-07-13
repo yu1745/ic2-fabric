@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.CropmatronBlock
@@ -128,7 +128,7 @@ class CropmatronBlockEntity(
     private val waterTankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = waterTankCapacity
-        override fun canInsert(variant: FluidVariant): Boolean = isWater(variant.fluid) && ModFluids.isFluid(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = isWater(variant.fluid) && !variant.isBlank
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
@@ -176,7 +176,7 @@ class CropmatronBlockEntity(
     private val weedExTankInternal = object : SingleVariantStorage<FluidVariant>() {
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = weedExTankCapacity
-        override fun canInsert(variant: FluidVariant): Boolean = isWeedEx(variant.fluid) && ModFluids.isFluid(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = isWeedEx(variant.fluid) && !variant.isBlank
         override fun canExtract(variant: FluidVariant): Boolean = false
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {

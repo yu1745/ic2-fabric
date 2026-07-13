@@ -165,7 +165,7 @@ class MatterGeneratorBlockEntity(
             return super.insert(insertedVariant, maxAmount, transaction)
         }
 
-        override fun canExtract(variant: FluidVariant): Boolean = isUuMatter(variant.fluid) && ModFluids.isFluid(variant.fluid)
+        override fun canExtract(variant: FluidVariant): Boolean = isUuMatter(variant.fluid) && !variant.isBlank
 
         override fun onFinalCommit() {
             sync.fluidAmount = toMilliBuckets(amount)

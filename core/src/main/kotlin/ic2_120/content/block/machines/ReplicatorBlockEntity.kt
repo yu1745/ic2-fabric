@@ -163,7 +163,7 @@ class ReplicatorBlockEntity(
 
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
-        override fun canInsert(variant: FluidVariant): Boolean = isUuMatter(variant.fluid) && ModFluids.isFluid(variant.fluid)
+        override fun canInsert(variant: FluidVariant): Boolean = isUuMatter(variant.fluid) && !variant.isBlank
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L

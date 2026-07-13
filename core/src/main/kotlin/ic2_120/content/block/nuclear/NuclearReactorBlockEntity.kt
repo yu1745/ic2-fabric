@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.nuclear
+package ic2_120.content.block.nuclear
 
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
@@ -187,7 +187,7 @@ class NuclearReactorBlockEntity(
         override fun getBlankVariant(): FluidVariant = FluidVariant.blank()
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
         override fun canInsert(variant: FluidVariant): Boolean =
-            variant.fluid == ModFluids.COOLANT_STILL && ModFluids.isFluid(variant.fluid)
+            variant.fluid == ModFluids.COOLANT_STILL && !variant.isBlank
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L
@@ -214,7 +214,7 @@ class NuclearReactorBlockEntity(
             return super.insert(insertedVariant, maxAmount, transaction)
         }
 
-        override fun canExtract(variant: FluidVariant): Boolean = ModFluids.isFluid(variant.fluid)
+        override fun canExtract(variant: FluidVariant): Boolean = !variant.isBlank
 
         override fun onFinalCommit() {
             sync.outputHotCoolant = dropletsToMb(amount)

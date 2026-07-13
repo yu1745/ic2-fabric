@@ -177,7 +177,7 @@ class PumpBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
         override fun canInsert(variant: FluidVariant): Boolean = true
 
-        override fun canExtract(variant: FluidVariant): Boolean = !this.variant.isBlank && this.variant == variant && ModFluids.isFluid(variant.fluid)
+        override fun canExtract(variant: FluidVariant): Boolean = !this.variant.isBlank && this.variant == variant && !variant.isBlank
 
         override fun onFinalCommit() {
             syncTankState()

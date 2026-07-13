@@ -136,6 +136,10 @@ floor(baseBucketsPerSecond × materialMultiplier × FluidConstants.BUCKET / 20)
 
 不需要机器预先安装升级或声明接口。任何实现了 Fabric `FluidStorage.SIDED` 的方块都会被自动识别。
 
+系统不建立全局“气体/液体”二分。蒸汽、压缩空气和普通液体均使用 Fabric Transfer 的
+`FluidVariant` 表示；管道只区分具体流体 ID，端点储罐通过 `canInsert` / `canExtract`
+声明自己接受的具体流体。这样不会把第三方模组的未知气体误判为液体。
+
 ### 6.2 Provider
 
 | 途径 | 说明 |

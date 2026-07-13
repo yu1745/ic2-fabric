@@ -1,4 +1,4 @@
-﻿package ic2_120.content.block.machines
+package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -160,7 +160,7 @@ class WaterGeneratorBlockEntity(
         override fun getCapacity(variant: FluidVariant): Long = tankCapacity
 
         override fun canInsert(variant: FluidVariant): Boolean =
-            ModFluids.isFluid(variant.fluid) && variant.fluid == net.minecraft.fluid.Fluids.WATER
+            !variant.isBlank && variant.fluid == net.minecraft.fluid.Fluids.WATER
 
         override fun insert(insertedVariant: FluidVariant, maxAmount: Long, transaction: TransactionContext): Long {
             if (insertedVariant.isBlank) return 0L

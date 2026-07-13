@@ -37,6 +37,8 @@ item_ids:
 
 IC2 uses buckets, cells, tanks, and pipes to move fluids. Cells work well in recipes and inventory slots, buckets interact nicely with vanilla mechanics, and tanks and pipes are the backbone of automation.
 
+All registered substances use the same Fabric fluid representation for storage and transport. Terms such as steam, compressed air, and liquid fuel describe their gameplay behavior; they are not separate pipe-system categories.
+
 ## Common Fluids
 
 | Fluid | Common Use |
@@ -48,7 +50,7 @@ IC2 uses buckets, cells, tanks, and pipes to move fluids. Cells work well in rec
 | Distilled Water | Advanced thermal chains |
 | Construction Foam | Construction Foam Sprayer, foam blocks |
 | Weed-EX | Crop care |
-| Creosote, Compressed Air, Pahoehoe Lava | Auxiliary fluids for steam, Coke Oven, and tool chains |
+| Creosote, Compressed Air, Pahoehoe Lava | Auxiliary fluids for the Coke Oven, Blast Furnace, and thermal tool chains |
 
 ## Cells
 
