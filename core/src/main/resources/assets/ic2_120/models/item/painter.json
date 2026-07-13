@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "ic2:item/tool/painter/painter",
+    "layer1": "ic2:item/tool/painter/painter_white"
+  }
+}
