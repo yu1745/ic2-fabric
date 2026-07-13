@@ -5,12 +5,16 @@ import ic2_120.content.item.armor.QuantumBoots;
 import ic2_120.util.NanoSaberDamageHelper;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.HashMap;
@@ -23,15 +27,111 @@ import java.util.Map;
  * 1. 纳米/量子护甲减伤逻辑
  */
 @Mixin(PlayerEntity.class)
-public abstract class PlayerEntityMixin {
+public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
 
     private static final int DAMAGE_COST_PER_POINT = 5000;
+
+    @Unique
+    private static final int IC2_SUPER_JUMP_PROTECTION_MAX_TICKS = 200;
+
+    @Unique
+    private boolean ic2$superJumpProtectionActive;
+
+    @Unique
+    private boolean ic2$superJumpLeftGround;
+
+    @Unique
+    private int ic2$superJumpProtectionStartAge;
+
+    @Unique
+    private ItemStack ic2$superJumpProtectionBoots = ItemStack.EMPTY;
+
+    @Unique
+    private World ic2$superJumpProtectionWorld;
 
     /**
      * 防止 {@link #onDamage} 在递归调用 {@link PlayerEntity#damage} 时再次套用电力护甲减伤。
      */
     private static final ThreadLocal<Boolean> IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE =
             ThreadLocal.withInitial(() -> false);
+
+    @Override
+    public void ic2$activateSuperJumpProtection(ItemStack boots) {
+        PlayerEntity player = (PlayerEntity) (Object) this;
+        this.ic2$superJumpProtectionActive = true;
+        this.ic2$superJumpLeftGround = !player.isOnGround();
+        this.ic2$superJumpProtectionStartAge = player.age;
+        this.ic2$superJumpProtectionBoots = boots;
+        this.ic2$superJumpProtectionWorld = player.getWorld();
+    }
+
+    @Unique
+    private void ic2$clearSuperJumpProtection() {
+        this.ic2$superJumpProtectionActive = false;
+        this.ic2$superJumpLeftGround = false;
+        this.ic2$superJumpProtectionStartAge = 0;
+        this.ic2$superJumpProtectionBoots = ItemStack.EMPTY;
+        this.ic2$superJumpProtectionWorld = null;
+    }
+
+    @Unique
+    private boolean ic2$isProtectedBootsStillEquipped(PlayerEntity player) {
+        ItemStack equippedBoots = player.getEquippedStack(EquipmentSlot.FEET);
+        return equippedBoots == this.ic2$superJumpProtectionBoots
+                && equippedBoots.getItem() instanceof QuantumBoots;
+    }
+
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void ic2$tickSuperJumpProtection(CallbackInfo ci) {
+        if (!this.ic2$superJumpProtectionActive) {
+            return;
+        }
+
+        PlayerEntity player = (PlayerEntity) (Object) this;
+        int protectionAge = player.age - this.ic2$superJumpProtectionStartAge;
+        if (protectionAge < 0
+                || protectionAge > IC2_SUPER_JUMP_PROTECTION_MAX_TICKS
+                || !player.isAlive()
+                || player.getWorld() != this.ic2$superJumpProtectionWorld
+                || !this.ic2$isProtectedBootsStillEquipped(player)
+                || player.isTouchingWater()
+                || player.isClimbing()
+                || player.hasVehicle()
+                || player.getAbilities().flying
+                || player.isFallFlying()
+                || player.hasStatusEffect(StatusEffects.LEVITATION)) {
+            this.ic2$clearSuperJumpProtection();
+            return;
+        }
+
+        if (!player.isOnGround()) {
+            this.ic2$superJumpLeftGround = true;
+        } else if (this.ic2$superJumpLeftGround) {
+            // 无伤落地（例如摔落距离不足）也必须结束本次保护。
+            this.ic2$clearSuperJumpProtection();
+        }
+    }
+
+    @Inject(method = "handleFallDamage", at = @At("HEAD"), cancellable = true)
+    private void ic2$handleSuperJumpFallDamage(
+            float fallDistance,
+            float damageMultiplier,
+            DamageSource source,
+            CallbackInfoReturnable<Boolean> cir
+    ) {
+        if (!this.ic2$superJumpProtectionActive) {
+            return;
+        }
+
+        PlayerEntity player = (PlayerEntity) (Object) this;
+        boolean shouldProtect = this.ic2$isProtectedBootsStillEquipped(player)
+                && player.getWorld() == this.ic2$superJumpProtectionWorld;
+        this.ic2$clearSuperJumpProtection();
+
+        if (shouldProtect) {
+            cir.setReturnValue(false);
+        }
+    }
 
     /**
      * 纳米剑对穿戴纳米套的玩家：替换为无视原版护甲的伤害类型；量子护甲时不替换（见 {@link NanoSaberDamageHelper}）。
@@ -55,19 +155,6 @@ public abstract class PlayerEntityMixin {
 
         if (source.getName().equals("outOfWorld")) {
             return;
-        }
-
-        // 量子靴子大跳摔落保护
-        if (source.getName().equals("fall")) {
-            ItemStack boots = player.getEquippedStack(EquipmentSlot.FEET);
-            if (!boots.isEmpty() && boots.getItem() instanceof QuantumBoots) {
-                if (boots.getOrCreateNbt().getBoolean("SuperJumpProtection")) {
-                    boots.getOrCreateNbt().remove("SuperJumpProtection");
-                    cir.setReturnValue(false);
-                    cir.cancel();
-                    return;
-                }
-            }
         }
 
         // 纳米剑穿甲伤害：不走纳米/量子 EU 减伤（量子套不会收到此伤害类型）

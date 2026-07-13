@@ -32,7 +32,7 @@ public class LivingEntityJumpMixin {
         double multiplier = QuantumBoots.getJumpHeightMultiplier();
         player.setVelocity(vel.x, vel.y * multiplier, vel.z);
 
-        // 标记摔落保护
-        boots.getOrCreateNbt().putBoolean(QuantumBoots.SUPER_JUMP_PROTECTION_KEY, true);
+        // 保护状态属于本次跳跃的玩家，不能跟随靴子 NBT 持久化或转移。
+        ((SuperJumpProtectionAccess) player).ic2$activateSuperJumpProtection(boots);
     }
 }

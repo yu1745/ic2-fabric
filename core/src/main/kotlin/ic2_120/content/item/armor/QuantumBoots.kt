@@ -50,7 +50,6 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
 
     companion object {
         private const val SUPER_JUMP_KEY = "SuperJumpEnabled"
-        const val SUPER_JUMP_PROTECTION_KEY = "SuperJumpProtection"
 
         val jumpEnergyCost: Long
             get() = Ic2Config.getQuantumBootsJumpEnergyCost()
