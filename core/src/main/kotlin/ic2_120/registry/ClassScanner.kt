@@ -100,6 +100,7 @@ import net.minecraft.data.server.recipe.RecipeJsonProvider
 object ClassScanner {
 
     private val logger = LoggerFactory.getLogger("ic2_120/ClassScanner")
+    private const val SINYTRA_CONNECTOR_RESOURCE_PROTOCOL = "union"
     private var currentModId: String = "ic2_120"
 
     /** 扫描机器配方 [ModMachineRecipe] 的包 */
@@ -144,6 +145,28 @@ object ClassScanner {
 
     fun shouldSkipGeneratedBlockLootTable(path: String): Boolean =
         path in blockPathsSkippingGeneratedLootTable
+
+    /**
+     * 判断当前 Fabric 模组是否由信雅互联（Sinytra Connector）加载在 Forge 上。
+     *
+     * 与包扫描协议保持同一约定：原生 Fabric 使用 file/jar 资源，Connector 使用 union 虚拟文件系统。
+     */
+    fun isSinytraConnectorRuntime(): Boolean {
+        val classLoader = Thread.currentThread().contextClassLoader
+            ?: ClassScanner::class.java.classLoader
+        val packagePath = ClassScanner::class.java.packageName.replace('.', '/')
+        return runCatching {
+            val resources = classLoader.getResources(packagePath)
+            var connectorRuntime = false
+            while (resources.hasMoreElements()) {
+                if (resources.nextElement().protocol == SINYTRA_CONNECTOR_RESOURCE_PROTOCOL) {
+                    connectorRuntime = true
+                    break
+                }
+            }
+            connectorRuntime
+        }.getOrDefault(false)
+    }
 
     /**
      * 扫描并注册所有带注解的类。
@@ -226,7 +249,7 @@ object ClassScanner {
                         foundSupportedResource = true
                         scanJarFileForClassFiles(url, packageName, onClass)
                     }
-                    "union" -> {
+                    SINYTRA_CONNECTOR_RESOURCE_PROTOCOL -> {
                         foundSupportedResource = true
                         // 信雅互联（Sinytra Connector）兼容代码：
                         // 直接扫描 union 虚拟文件系统，不走 codeSource fallback。
