@@ -56,7 +56,8 @@ See: [Mining Laser](../guides/mining_laser.md)
 - **OV Scanner**: more advanced mineral scanner with longer range and stronger capability than the OD.
 - **Frequency Transmitter**: used for remote binding scenarios such as teleporters.
 - **Obscurator**: disguises the appearance of blocks.
-- **Construction Foam Sprayer**: consumes construction foam; combined with the construction foam backpack it supports continuous building.
+- **Construction Foam Sprayer**: consumes construction foam; combined with the construction foam backpack it supports continuous building. Right-click to spray, and hold Alt while right-clicking to switch between single-cell and multi-spray modes. Multi-spray follows connected IC2 or vanilla scaffolding.
+- **Brush**: loads a dye from the offhand and recolors hardened Construction Foam Walls. It has 32 uses and resets to an uncolored Brush when its color-specific durability is exhausted.
 
 ---
 

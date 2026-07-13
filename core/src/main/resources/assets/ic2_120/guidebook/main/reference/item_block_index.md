@@ -365,6 +365,7 @@ This page is generated from the core module's language files, used to confirm th
 | `flatification_tfbp` | Terrain Forcing Pattern - Flat |
 | `flour` | Flour |
 | `foam_sprayer` | Construction Foam Sprayer |
+| `painter` | Brush |
 | `forge_hammer` | Forge Hammer |
 | `frequency_transmitter` | Frequency Transmitter |
 | `fuel_rod` | Empty Fuel Rod |

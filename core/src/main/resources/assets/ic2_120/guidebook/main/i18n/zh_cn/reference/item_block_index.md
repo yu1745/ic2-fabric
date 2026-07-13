@@ -365,6 +365,7 @@ navigation:
 | `flatification_tfbp` | 地形转换模板 - 平地 |
 | `flour` | 面粉 |
 | `foam_sprayer` | 建筑泡沫喷枪 |
+| `painter` | 刷子 |
 | `forge_hammer` | 锻造锤 |
 | `frequency_transmitter` | 遥控器 |
 | `fuel_rod` | 空燃料棒 |
@@ -549,4 +550,3 @@ navigation:
 | `wooden_rotor` | 转子(木) |
 | `wooden_rotor_blade` | 木扇叶 |
 | `wrench` | 扳手 |
-

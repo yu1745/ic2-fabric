@@ -56,12 +56,18 @@ Rubber Trees provide a full set of wood blocks: Rubber Log, Rubber Wood, Strippe
 - Construction Foam can be applied via Construction Foam buckets, cells, the Sprayer, or machine chains.
 - Reinforced Construction Foam is for sturdier structures.
 - Foam Walls come in 16 dyed variants: white, orange, magenta, light blue, yellow, lime, pink, gray, light gray, cyan, purple, blue, brown, green, red, black.
+- Ordinary Construction Foam can also be sprayed into open air; scaffolding is not required for ordinary spray placement.
+- Wood Scaffolds produce ordinary Foam, while Iron Scaffolds produce Reinforced Foam. In multi-spray mode, spraying a connected IC2 or vanilla scaffold follows the scaffold shape instead of generating a random area.
+- Soft Foam hardens by random ticks. Under normal conditions, ordinary Foam takes about 300 seconds on average and Reinforced Foam about 600 seconds; brighter conditions make hardening faster.
+- Soft Foam has no collision and can be entered. When an entity's head is inside Foam, it suffers suffocation damage; a Hazmat Helmet prevents this damage. Right-clicking Foam with Sand hardens it immediately.
+- Ordinary Foam hardens into Construction Foam Walls, while Reinforced Foam hardens into Reinforced Stone. Hardened Foam Walls can be recolored with a Brush.
 - Resin Sheets, Rubber Sheets, and Wool Sheets are thin decorative / functional blocks.
 
 ## Scaffolding
 
 - Wooden Scaffold and Iron Scaffold are for temporary construction work.
 - Reinforced Wooden Scaffold and Reinforced Iron Scaffold are better suited for long-term structures.
+- IC2 Scaffolds always place upright and can be climbed like vanilla Scaffolding. Reinforced variants provide stronger support; removing a supporting scaffold can cause unsupported connected scaffolds to drop.
 - Mining Pipes belong to the [Miner](../machines/miner.md) working chain, not the regular fluid pipes.
 
 ## Miscellaneous Items
