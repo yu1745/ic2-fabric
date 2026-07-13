@@ -114,5 +114,5 @@ Except as otherwise required by law, the authors and contributors of this reposi
 - Game: Minecraft `1.20.1`
 - Loader: Fabric Loader `0.18.4`
 - Dependencies: Fabric API, Fabric Language Kotlin `1.13.9+kotlin.2.3.10` (Energy API bundled)
-- Mod version: `1.0.0`
+- Mod version: `v0.2a`
 - Compatibility: Sinytra Connector (runs under Forge + Connector)
