@@ -314,12 +314,12 @@ See [Power Generation and Storage](../guides/power_generation.md)
 | Machine | Upgrade Slots | Supported Upgrades |
 |------|---:|---|
 | Electric Furnace | 0 | none |
-| Induction Furnace | 0 | none |
-| Macerator | 4 | Overclock, Energy Storage, Transformer |
-| Compressor | 4 | Overclock, Energy Storage, Transformer |
-| Extractor | 4 | Overclock, Energy Storage, Transformer |
-| Metal Former | 4 | Overclock, Energy Storage, Transformer |
-| Thermal Centrifuge | 4 | Overclock, Energy Storage, Transformer |
-| Ore Washing Plant | 4 | Overclock, Energy Storage, Transformer |
+| Induction Furnace | 2 | Energy Storage, Transformer, Ejector, Pulling |
+| Macerator | 4 | Overclock, Energy Storage, Transformer, Ejector, Pulling |
+| Compressor | 4 | Overclock, Energy Storage, Transformer, Ejector, Pulling |
+| Extractor | 4 | Overclock, Energy Storage, Transformer, Ejector, Pulling |
+| Metal Former | 4 | Overclock, Energy Storage, Transformer, Ejector, Pulling |
+| Thermal Centrifuge | 4 | Overclock, Energy Storage, Transformer, Ejector, Pulling |
+| Ore Washing Plant | 4 | Overclock, Energy Storage, Transformer, Ejector, Pulling |
 | Miner | 4 | Overclock, Energy Storage, Transformer, Ejector |
 | Pump | 4 | Overclock, Energy Storage, Transformer, Fluid Ejector/Inserter |

@@ -30,7 +30,7 @@ The Animal-Matron is an automated livestock caretaker. It tracks managed animals
 - **Feed slots**: five slots for the managed animals' foods.
 - **Shears slot**: used for sheep wool collection.
 - **Harvest output**: receives eggs and wool.
-- **Upgrade slots**: overclocker, transformer, energy storage, and fluid pipe upgrades.
+- **Upgrade slots**: overclocker, transformer, energy storage, fluid pipe, Ejector, and Pulling upgrades.
 
 Managed animals are pigs, cows, mooshrooms, sheep, chickens, rabbits, horses, donkeys, mules, and llamas. Their accepted foods are carrot, wheat, wheat seeds, dandelion, golden apple, golden carrot, and hay block, depending on species.
 
@@ -46,4 +46,4 @@ Chickens can contribute eggs about every 10 minutes. Sheep can be sheared about 
 
 ## Usage
 
-Place the Animal-Matron beside or under a compact pen so the whole herd stays within 4 blocks. Keep water and Weed-Ex supplied, route eggs and wool out of the harvest slot, and use overclockers only if your feed and fluid supply can keep up with the faster scans.
+Place the Animal-Matron beside or under a compact pen so the whole herd stays within 4 blocks. Pulling upgrades can pull water containers, Weed-Ex containers, feed, and shears into their work slots. Ejector upgrades can push water-container returns, Weed-Ex returns, eggs, and wool from the work output slots. Keep water and Weed-Ex supplied, and use overclockers only if your feed and fluid supply can keep up with the faster scans.

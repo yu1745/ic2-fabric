@@ -50,7 +50,7 @@ Compared with the Electric Furnace, the Induction Furnace trades instant startup
 
 Energy Storage upgrades add 10,000 EU of buffer each when installed in the upgrade slots. Transformer upgrades raise the accepted input tier. Ejector upgrades push both output slots into adjacent inventories, using their filter and side settings. In vanilla IC2 the Induction Furnace ignores overclocking and processing upgrades entirely; this implementation follows that behavior.
 
-External item transfer can insert valid smelting inputs, one battery, and Ejector or Pulling upgrade items from any side, and can extract only the two output slots. In the current implementation, Pulling upgrade items are accepted by the routed upgrade slots, but the Induction Furnace does not actively pull inputs with them.
+External item transfer can insert valid smelting inputs, one battery, and Ejector or Pulling upgrade items from any side, and can extract only the two output slots. Pulling upgrades actively pull valid smelting inputs into the two input slots, while Ejector upgrades push the two output slots. The two upgrade slots themselves are never treated as machine input or output targets.
 
 ## Recipe
 

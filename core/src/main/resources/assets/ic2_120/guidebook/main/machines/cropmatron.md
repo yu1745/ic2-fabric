@@ -35,7 +35,7 @@ The active texture only means the last scan actually applied something. A powere
 - **Water tank**: 8 buckets. Accepts water or distilled water from buckets, cells, universal fluid cells, or fluid insertion.
 - **Weed-EX tank**: 8 buckets. Accepts Weed-EX from buckets, cells, universal fluid cells, or fluid insertion.
 - **Fertilizer slots**: seven slots, accepting IC2 Fertilizer only.
-- **Upgrade slots**: four slots.
+- **Upgrade slots**: four slots for overclocker, transformer, energy storage, fluid pipe, Ejector, and Pulling upgrades.
 
 Empty buckets and empty cells are placed in the matching output slots. The output slots must have room or the machine will not drain another container.
 
@@ -48,7 +48,7 @@ Empty buckets and empty cells are placed in the matching output slots. The outpu
 
 ## Automation Notes
 
-Item automation is routed by item type: upgrades go to the four upgrade slots, water containers to the water input, Weed-EX containers to the Weed-EX input, and Fertilizer to the seven fertilizer slots. Output containers can be extracted by item automation.
+Item automation is routed by item type: upgrades go to the four upgrade slots, water containers to the water input, Weed-EX containers to the Weed-EX input, and Fertilizer to the seven fertilizer slots. Pulling upgrades can pull those work inputs from adjacent inventories, and Ejector upgrades can push empty-container and Weed-EX output items. The four upgrade slots are excluded from both upgrade operations.
 
 Fluid automation is input-only. The exposed fluid storage accepts water/distilled water and Weed-EX but does not allow fluid extraction, so do not use the Crop-Matron as a fluid buffer.
 

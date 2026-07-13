@@ -22,7 +22,7 @@ This index contains detailed documentation for every machine.
 | [Extractor](../machines/extractor.md) | extractor.md | Tier 1 (LV) | 2 EU/t | 4 |
 | [Metal Former](../machines/metal_former.md) | metal-former.md | Tier 1 (LV) | 10 EU/t | 4 |
 | [Electric Furnace](../machines/electric_furnace.md) | electric-furnace.md | Tier 1 (LV) | 3 EU/t | 0 |
-| [Induction Furnace](../machines/induction_furnace.md) | induction-furnace.md | Tier 2 (MV) | variable | 0 |
+| [Induction Furnace](../machines/induction_furnace.md) | induction-furnace.md | Tier 2 (MV) | variable | 2 |
 | [Fluid Canner](../machines/fluid_canner.md) | fluid-bottler.md | Tier 1 (LV) | 2 EU/t | - |
 | [Solid Canner](../machines/solid_canner.md) | solid-canner.md | Tier 1 (LV) | 2 EU/t | - |
 | [Canner](../machines/canner.md) | canner.md | Tier 2 (MV) | 4 EU/t | - |
