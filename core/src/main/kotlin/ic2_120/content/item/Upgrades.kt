@@ -130,8 +130,8 @@ abstract class ItemFilterUpgradeItem : Item(FabricItemSettings()), IUpgradeItem 
         } else {
             tooltip.add(Text.literal("过滤物品: 全部").formatted(Formatting.GRAY))
         }
-        val side = EjectorUpgradeComponent.readDirection(stack)
-        tooltip.add(Text.literal("方向: ${directionLabel(side)}").formatted(Formatting.GRAY))
+        val sides = EjectorUpgradeComponent.readDirections(stack)
+        tooltip.add(Text.literal("方向: ${directionLabel(sides)}").formatted(Formatting.GRAY))
     }
 
     override fun use(world: World, user: net.minecraft.entity.player.PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
@@ -139,8 +139,9 @@ abstract class ItemFilterUpgradeItem : Item(FabricItemSettings()), IUpgradeItem 
         if (world.isClient) return TypedActionResult.success(stack)
 
         if (user.isSneaking) {
-            val next = EjectorUpgradeComponent.nextDirection(EjectorUpgradeComponent.readDirection(stack))
-            EjectorUpgradeComponent.writeDirection(stack, next)
+            val current = EjectorUpgradeComponent.readDirections(stack)
+            val next = nextDirections(current)
+            EjectorUpgradeComponent.writeDirections(stack, next)
             if (user is ServerPlayerEntity) {
                 user.sendMessage(Text.literal("已设置$directionActionLabel: ${directionLabel(next)}"), true)
             }
@@ -162,14 +163,23 @@ abstract class ItemFilterUpgradeItem : Item(FabricItemSettings()), IUpgradeItem 
         return TypedActionResult.success(stack)
     }
 
-    private fun directionLabel(side: Direction?): String = when (side) {
-        null -> "任意"
-        Direction.DOWN -> "下"
-        Direction.UP -> "上"
-        Direction.NORTH -> "北"
-        Direction.SOUTH -> "南"
-        Direction.WEST -> "西"
-        Direction.EAST -> "东"
+    private fun directionLabel(sides: Set<Direction>): String = if (sides.isEmpty()) {
+        "任意"
+    } else {
+        sides.joinToString(", ") { side -> when (side) {
+            Direction.DOWN -> "下"
+            Direction.UP -> "上"
+            Direction.NORTH -> "北"
+            Direction.SOUTH -> "南"
+            Direction.WEST -> "西"
+            Direction.EAST -> "东"
+        }}
+    }
+
+    private fun nextDirections(current: Set<Direction>): Set<Direction> {
+        val order = listOf(Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST)
+        if (current.size >= order.size) return emptySet()
+        return current + order.first { it !in current }
     }
 }
 

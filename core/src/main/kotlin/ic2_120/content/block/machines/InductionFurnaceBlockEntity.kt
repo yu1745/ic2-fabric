@@ -17,6 +17,7 @@ import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.upgrade.EjectorUpgradeComponent
+import ic2_120.content.upgrade.PullingUpgradeComponent
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
@@ -206,6 +207,7 @@ class InductionFurnaceBlockEntity(
         TransformerUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         RedstoneInverterUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES, this)
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
+        PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_INPUT_INDICES)
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
 
         adjacentEnergyTransfer.tick()

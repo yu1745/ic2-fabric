@@ -16,8 +16,9 @@ import net.minecraft.world.World
 object EjectorUpgradeComponent {
     private const val NBT_ITEM_FILTER = "PipeItemFilter"
     private const val NBT_DIRECTION = "PipeItemDirection"
+    private const val NBT_DIRECTIONS = "PipeItemDirections"
 
-    private data class EjectorConfig(val filter: Item?, val side: Direction?)
+    private data class EjectorConfig(val filter: Item?, val sides: Set<Direction>)
 
     /**
      * 统一入口：扫描升级槽中的所有弹出升级，逐个独立弹出 outputSlotIndices 中的物品。
@@ -38,13 +39,13 @@ object EjectorUpgradeComponent {
             val stack = inventory.getStack(idx)
             if (stack.isEmpty) continue
             if (stack.item is EjectorUpgrade) {
-                configs.add(EjectorConfig(readFilter(stack), readDirection(stack)))
+                configs.add(EjectorConfig(readFilter(stack), readDirections(stack)))
             }
         }
         if (configs.isEmpty()) return
 
         for (config in configs) {
-            val dirs = if (config.side != null) listOf(config.side) else Direction.values().toList()
+            val dirs = if (config.sides.isEmpty()) Direction.values().toList() else config.sides.toList()
 
             for (slotIndex in outputSlotIndices) {
                 val stack = inventory.getStack(slotIndex)
@@ -94,19 +95,39 @@ object EjectorUpgradeComponent {
     }
 
     fun readDirection(stack: ItemStack): Direction? {
-        val nbt = stack.nbt ?: return null
-        val raw = nbt.getString(NBT_DIRECTION)
-        if (raw.isNullOrBlank()) return null
-        return Direction.byName(raw.lowercase())
+        return readDirections(stack).singleOrNull()
     }
 
     fun writeDirection(stack: ItemStack, side: Direction?) {
+        writeDirections(stack, if (side == null) emptySet() else setOf(side))
+    }
+
+    /** 空集合表示任意方向；同时兼容旧版本的单方向 NBT。 */
+    fun readDirections(stack: ItemStack): Set<Direction> {
+        val nbt = stack.nbt ?: return emptySet()
+        val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.NbtElement.STRING_TYPE.toInt())
+        if (!list.isEmpty()) {
+            return list.mapNotNull { Direction.byName(it.asString()) }.toSet()
+        }
+
+        val raw = nbt.getString(NBT_DIRECTION)
+        if (raw.isNullOrBlank()) return emptySet()
+        return Direction.byName(raw.lowercase())?.let { setOf(it) } ?: emptySet()
+    }
+
+    fun writeDirections(stack: ItemStack, sides: Set<Direction>) {
         val nbt = stack.orCreateNbt
-        if (side == null) {
+        nbt.remove(NBT_DIRECTION)
+        if (sides.isEmpty()) {
+            nbt.remove(NBT_DIRECTIONS)
             nbt.remove(NBT_DIRECTION)
             return
         }
-        nbt.putString(NBT_DIRECTION, side.name.lowercase())
+        val list = net.minecraft.nbt.NbtList()
+        for (side in sides) {
+            list.add(net.minecraft.nbt.NbtString.of(side.name.lowercase()))
+        }
+        nbt.put(NBT_DIRECTIONS, list)
     }
 
     fun nextDirection(current: Direction?): Direction? {

@@ -16,6 +16,7 @@ import net.minecraft.screen.PropertyDelegate
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.slot.Slot
 import net.minecraft.util.Hand
+import net.minecraft.util.math.Direction
 
 /**
  * 物品升级配置 GUI。
@@ -24,11 +25,11 @@ import net.minecraft.util.Hand
  * 按钮：
  * - BUTTON_SET_FILTER (0)：读取容器槽位的物品 → 写入过滤
  * - BUTTON_CLEAR_FILTER (1)：清除过滤
- * - BUTTON_CYCLE_DIRECTION (2)：循环工作方向
+ * - BUTTON_TOGGLE_DIR (10~15)：开关各方向
  *
  * PropertyDelegate：
- * - Index 0：方向序号（0~5=Direction 枚举，6=null/任意）
- * - Index 1：物品原始注册 ID（0=无过滤）
+ * - Index 0~5：6 个方向是否激活（0/1）
+ * - Index 6：物品原始注册 ID（0=无过滤）
  */
 @ModScreenHandler(name = "item_upgrade", mode = ScreenHandlerMode.HANDHELD)
 class ItemUpgradeScreenHandler(
@@ -39,7 +40,7 @@ class ItemUpgradeScreenHandler(
     private val propertyDelegate: PropertyDelegate = ArrayPropertyDelegate(PROPERTY_COUNT)
 ) : ScreenHandler(ItemUpgradeScreenHandler::class.type(), syncId) {
 
-    val directionOrdinal: Int get() = propertyDelegate.get(0)
+    fun isDirectionActive(dirIdx: Int): Boolean = propertyDelegate.get(PROP_DIR_BASE + dirIdx) != 0
     val itemRawId: Int get() = propertyDelegate.get(1)
 
     companion object {
@@ -48,12 +49,11 @@ class ItemUpgradeScreenHandler(
 
         const val BUTTON_SET_FILTER = 0
         const val BUTTON_CLEAR_FILTER = 1
-        const val BUTTON_CYCLE_DIRECTION = 2
+        const val BUTTON_TOGGLE_DIR = 10
 
-        private const val DIR_ORDINAL_NULL = 6
-        private const val PROPERTY_COUNT = 2
-        private const val PROP_DIRECTION = 0
-        private const val PROP_ITEM = 1
+        private const val PROP_DIR_BASE = 0
+        private const val PROP_ITEM = 6
+        private const val PROPERTY_COUNT = 7
 
         const val PLAYER_INV_START = 1
         private const val PLAYER_INV_END = PLAYER_INV_START + 27
@@ -93,10 +93,11 @@ class ItemUpgradeScreenHandler(
             BUTTON_CLEAR_FILTER -> {
                 EjectorUpgradeComponent.writeFilter(upgradeStack, null)
             }
-            BUTTON_CYCLE_DIRECTION -> {
-                val current = EjectorUpgradeComponent.readDirection(upgradeStack)
-                val next = EjectorUpgradeComponent.nextDirection(current)
-                EjectorUpgradeComponent.writeDirection(upgradeStack, next)
+            in BUTTON_TOGGLE_DIR until BUTTON_TOGGLE_DIR + 6 -> {
+                val dir = Direction.entries[id - BUTTON_TOGGLE_DIR]
+                val current = EjectorUpgradeComponent.readDirections(upgradeStack)
+                val next = if (dir in current) current - dir else current + dir
+                EjectorUpgradeComponent.writeDirections(upgradeStack, next)
             }
             else -> return false
         }
@@ -140,13 +141,15 @@ class ItemUpgradeScreenHandler(
         val player = playerInventory.player
         val upgradeStack = player.getStackInHand(hand)
         if (upgradeStack.item !is ItemFilterUpgradeItem) {
-            propertyDelegate.set(PROP_DIRECTION, DIR_ORDINAL_NULL)
+            for (i in 0..5) propertyDelegate.set(PROP_DIR_BASE + i, 0)
             propertyDelegate.set(PROP_ITEM, 0)
             return
         }
 
-        val dir = EjectorUpgradeComponent.readDirection(upgradeStack)
-        propertyDelegate.set(PROP_DIRECTION, dir?.ordinal ?: DIR_ORDINAL_NULL)
+        val dirs = EjectorUpgradeComponent.readDirections(upgradeStack)
+        for (i in 0..5) {
+            propertyDelegate.set(PROP_DIR_BASE + i, if (Direction.entries[i] in dirs) 1 else 0)
+        }
 
         val filter = EjectorUpgradeComponent.readFilter(upgradeStack)
         propertyDelegate.set(PROP_ITEM, if (filter != null) Registries.ITEM.getRawId(filter) else 0)

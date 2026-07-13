@@ -17,7 +17,10 @@ import ic2_120.content.sync.AnimalmatronSync
 import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.EnergyStorageUpgradeComponent
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
+import ic2_120.content.upgrade.EjectorUpgradeComponent
+import ic2_120.content.upgrade.PullingUpgradeComponent
 import ic2_120.content.upgrade.IEnergyStorageUpgradeSupport
+import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
 import ic2_120.content.upgrade.IOverclockerUpgradeSupport
 import ic2_120.content.upgrade.ITransformerUpgradeSupport
@@ -80,6 +83,7 @@ class AnimalmatronBlockEntity(
     IEnergyStorageUpgradeSupport,
     ITransformerUpgradeSupport,
     IFluidPipeUpgradeSupport,
+    IEjectorUpgradeSupport,
     ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = AnimalmatronBlock.ACTIVE
@@ -416,6 +420,8 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
 
         adjacentEnergyTransfer.tick()
         FluidPipeUpgradeComponent.apply(this, SLOT_UPGRADE_INDICES)
+        EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_ITEM_OUTPUT_INDICES)
+        PullingUpgradeComponent.pullIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_ITEM_INPUT_INDICES)
         if (fluidPipeReceiverEnabled) {
             FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, waterTankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
@@ -864,6 +870,8 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             SLOT_FEED_3,
             SLOT_FEED_4
         )
+        val SLOT_ITEM_INPUT_INDICES = intArrayOf(SLOT_SHEARS, SLOT_WATER_INPUT, SLOT_WEED_EX_INPUT, *SLOT_FEED_INDICES)
+        val SLOT_ITEM_OUTPUT_INDICES = intArrayOf(SLOT_WATER_OUTPUT, SLOT_WEED_EX_OUTPUT, SLOT_HARVEST_OUTPUT)
         val SLOT_UPGRADE_INDICES = intArrayOf(SLOT_UPGRADE_0, SLOT_UPGRADE_1, SLOT_UPGRADE_2, SLOT_UPGRADE_3)
 
         const val INVENTORY_SIZE = 15

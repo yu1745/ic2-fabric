@@ -41,9 +41,17 @@ class FluidUpgradeScreen(
             client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_SET_FILTER))
         }.dimensions(x + 27, y + 37, 20, 14).build())
 
-        addDrawableChild(ButtonWidget.builder(Text.empty()) {
-            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_CYCLE_DIRECTION))
-        }.dimensions(x + 108, y + 60, 20, 12).build())
+        // 六个方向分别独立开关，避免用一个循环按钮无法表达任意组合。
+        for (dirIdx in Direction.entries.indices) {
+            addDrawableChild(ButtonWidget.builder(Text.empty()) {
+                client.networkHandler?.sendPacket(
+                    ButtonClickC2SPacket(
+                        handler.syncId,
+                        FluidUpgradeScreenHandler.BUTTON_TOGGLE_DIR + dirIdx
+                    )
+                )
+            }.dimensions(x + 9 + dirIdx * 16, y + 59, 16, 14).build())
+        }
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -67,13 +75,10 @@ class FluidUpgradeScreen(
         val filterText = t("gui.ic2_120.fluid_upgrade.filter_display", filterName)
         context.drawText(textRenderer, filterText, x + 9, y + 18 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
 
-        // 方向文本 (9,59)-(104,73)
-        val dirText = buildActiveDirectionsText()
-        context.drawText(textRenderer, dirText, x + 9, y + 59 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
+        drawDirectionButtons(context)
 
         // 7px 按钮文字覆盖
         draw7pxText(context, x + 27, y + 37, 20, 14, t("gui.ic2_120.fluid_upgrade.set_filter"))
-        draw7pxText(context, x + 108, y + 60, 20, 12, t("gui.ic2_120.fluid_upgrade.cycle_direction_short"))
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
@@ -101,14 +106,20 @@ class FluidUpgradeScreen(
         }
     }
 
-    private fun buildActiveDirectionsText(): String {
-        val activeDirs = Direction.entries.filter { handler.isDirectionActive(it.ordinal) }
-        val dirLabel = if (activeDirs.isEmpty()) {
-            t("gui.ic2_120.fluid_upgrade.any_direction")
-        } else {
-            activeDirs.joinToString(", ") { t("gui.ic2_120.direction.${it.name.lowercase()}") }
+    private fun drawDirectionButtons(context: DrawContext) {
+        Direction.entries.forEachIndexed { index, direction ->
+            val glyph = when (direction) {
+                Direction.DOWN -> "↓"
+                Direction.UP -> "↑"
+                Direction.NORTH -> "N"
+                Direction.SOUTH -> "S"
+                Direction.WEST -> "W"
+                Direction.EAST -> "E"
+            }
+            val color = if (handler.isDirectionActive(index)) 0x55FF55 else 0xFFFFFF
+            val glyphX = x + 17 + index * 16 - textRenderer.getWidth(glyph) / 2
+            context.drawText(textRenderer, glyph, glyphX, y + 62, color, false)
         }
-        return t("gui.ic2_120.fluid_upgrade.direction", dirLabel)
     }
 
     fun ghostFilterArea(): Rect2i = Rect2i(x + 8, y + 35, 16, 16)

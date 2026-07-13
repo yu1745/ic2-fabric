@@ -31,8 +31,8 @@ object PullingUpgradeComponent {
             if (upgradeStack.isEmpty || upgradeStack.item !is PullingUpgrade) continue
 
             val filter = EjectorUpgradeComponent.readFilter(upgradeStack)
-            val side = EjectorUpgradeComponent.readDirection(upgradeStack)
-            val dirs = if (side != null) listOf(side) else Direction.values().toList()
+            val configuredSides = EjectorUpgradeComponent.readDirections(upgradeStack)
+            val dirs = if (configuredSides.isEmpty()) Direction.values().toList() else configuredSides.toList()
 
             for (dir in dirs) {
                 val source = ItemStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue

@@ -37,9 +37,17 @@ class ItemUpgradeScreen(
             client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_SET_FILTER))
         }.dimensions(x + 27, y + 37, 20, 14).build())
 
-        addDrawableChild(ButtonWidget.builder(Text.empty()) {
-            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_CYCLE_DIRECTION))
-        }.dimensions(x + 108, y + 60, 20, 12).build())
+        // 六个方向分别独立开关，支持任意方向组合。
+        for (dirIdx in Direction.entries.indices) {
+            addDrawableChild(ButtonWidget.builder(Text.empty()) {
+                client.networkHandler?.sendPacket(
+                    ButtonClickC2SPacket(
+                        handler.syncId,
+                        ItemUpgradeScreenHandler.BUTTON_TOGGLE_DIR + dirIdx
+                    )
+                )
+            }.dimensions(x + 9 + dirIdx * 16, y + 59, 16, 14).build())
+        }
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
@@ -59,21 +67,28 @@ class ItemUpgradeScreen(
         val filterTextY = y + 18 + (14 - textRenderer.fontHeight) / 2
         context.drawText(textRenderer, filterText, filterTextX, filterTextY, 0x55FF55, false)
 
-        // 方向文本 (9,59)-(104,73)
-        val dirOrdinal = handler.directionOrdinal
-        val dirName = if (dirOrdinal in 0..5) {
-            t("gui.ic2_120.direction.${Direction.entries[dirOrdinal].name.lowercase()}")
-        } else {
-            t("gui.ic2_120.fluid_upgrade.any_direction")
-        }
-        val dirText = t("gui.ic2_120.fluid_upgrade.direction", dirName)
-        context.drawText(textRenderer, dirText, x + 9, y + 59 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
+        drawDirectionButtons(context)
 
         // 7px 按钮文字覆盖
         draw7pxText(context, x + 27, y + 37, 20, 14, t("gui.ic2_120.item_upgrade.set_filter"))
-        draw7pxText(context, x + 108, y + 60, 20, 12, t("gui.ic2_120.item_upgrade.cycle_direction_short"))
 
         drawMouseoverTooltip(context, mouseX, mouseY)
+    }
+
+    private fun drawDirectionButtons(context: DrawContext) {
+        Direction.entries.forEachIndexed { index, direction ->
+            val glyph = when (direction) {
+                Direction.DOWN -> "↓"
+                Direction.UP -> "↑"
+                Direction.NORTH -> "N"
+                Direction.SOUTH -> "S"
+                Direction.WEST -> "W"
+                Direction.EAST -> "E"
+            }
+            val color = if (handler.isDirectionActive(index)) 0x55FF55 else 0xFFFFFF
+            val glyphX = x + 17 + index * 16 - textRenderer.getWidth(glyph) / 2
+            context.drawText(textRenderer, glyph, glyphX, y + 62, color, false)
+        }
     }
 
     private fun draw7pxText(context: DrawContext, bx: Int, by: Int, bw: Int, bh: Int, text: String) {
