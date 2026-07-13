@@ -70,9 +70,14 @@ class Ic2JeiPlugin : IModPlugin {
         var jeiRuntime: IJeiRuntime? = null
 
         private var replicatorRecipes: List<ReplicatorJeiRecipe> = emptyList()
+        private var replicatorRefreshPending = false
 
         fun refreshReplicatorRecipes() {
-            val runtime = jeiRuntime ?: return
+            val runtime = jeiRuntime
+            if (runtime == null) {
+                replicatorRefreshPending = true
+                return
+            }
             val oldRecipes = replicatorRecipes
             if (oldRecipes.isNotEmpty()) {
                 runtime.recipeManager.hideRecipes(Ic2JeiRecipeTypes.REPLICATOR, oldRecipes)
@@ -87,6 +92,7 @@ class Ic2JeiPlugin : IModPlugin {
                 runtime.recipeManager.addRecipes(Ic2JeiRecipeTypes.REPLICATOR, newRecipes)
             }
             replicatorRecipes = newRecipes
+            replicatorRefreshPending = false
         }
     }
 
@@ -248,6 +254,9 @@ class Ic2JeiPlugin : IModPlugin {
 
     override fun onRuntimeAvailable(runtime: IJeiRuntime) {
         Ic2JeiPlugin.jeiRuntime = runtime
+        if (replicatorRefreshPending) {
+            refreshReplicatorRecipes()
+        }
     }
 
     override fun registerCategories(registration: IRecipeCategoryRegistration) {

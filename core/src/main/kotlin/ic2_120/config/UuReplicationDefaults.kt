@@ -41,6 +41,11 @@ object UuReplicationDefaults {
         "minecraft:cracked_stone_bricks" to 60,
         "minecraft:stone_slab" to 40,
         "minecraft:stone_pressure_plate" to 60,
+        // 旧版 UU 配方中当前没有同类自定义定价的物品
+        "minecraft:stone_stairs" to 346466802,
+        "minecraft:wooden_pressure_plate" to 192481557,
+        // 旧版白羊毛属于当前已有的羊毛定价范围，沿用当前黑羊毛价格而非旧版配方价
+        "minecraft:white_wool" to 200000,
 
         // ========== 陶瓦系列 ==========
         "minecraft:terracotta" to 80,
@@ -99,6 +104,9 @@ object UuReplicationDefaults {
         "minecraft:prismarine_crystals" to 300000,
         "minecraft:wet_sponge" to 500000,
         "minecraft:obsidian" to 100000,
+        "minecraft:netherrack" to 2,
+        "minecraft:glowstone_dust" to 8,
+        "minecraft:emerald_ore" to 60,
 
         // ========== 有机物-树木（昂贵）==========
         "minecraft:oak_log" to 50000,
