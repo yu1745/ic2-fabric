@@ -79,6 +79,9 @@ import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.superclasses
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
+import kotlin.reflect.jvm.javaMethod
+import java.lang.invoke.MethodHandle
+import java.lang.invoke.MethodHandles
 import java.util.function.Consumer
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -826,9 +829,12 @@ object ClassScanner {
                 val energyProperty = findAllMemberProperties(clazz).firstOrNull { it.hasAnnotation<RegisterEnergy>() }
                 if (energyProperty != null) {
                     val prop = energyProperty
+                    // 反射扫描只发生在启动阶段；运行时使用预解析的 Java getter，避免每次
+                    // EnergyStorage lookup 都调用 Kotlin KProperty1.get（后者会走 Kotlin Reflection）。
+                    val energyAccessor = createPropertyAccessor(prop)
                     @Suppress("UNCHECKED_CAST")
                     EnergyStorage.SIDED.registerForBlockEntity({ be, direction ->
-                        val energyContainer = (prop as KProperty1<Any, Any?>).get(be)
+                        val energyContainer = energyAccessor(be)
                         if (energyContainer is TickLimitedSidedEnergyContainer) energyContainer.getSideStorage(direction)
                         else {
                             logger.error("方块实体 {} 的能量容器 {} 不是 TickLimitedSidedEnergyContainer 的子类", clazz.simpleName, prop.name)
@@ -860,6 +866,25 @@ object ClassScanner {
                 logger.error("注册方块实体类型 {} 失败: {}", clazz.simpleName, e.message, e)
             }
         }
+    }
+
+    /**
+     * 将属性访问器在注册阶段预解析为 MethodHandle。Java getter 不可用时才回退到 Kotlin
+     * Reflection，保证 @RegisterEnergy 对特殊/私有属性仍然兼容。
+     */
+    private fun createPropertyAccessor(property: KProperty1<*, *>): (Any) -> Any? {
+        val getter = property.getter.javaMethod
+        if (getter != null) {
+            return try {
+                getter.isAccessible = true
+                val handle: MethodHandle = MethodHandles.lookup().unreflect(getter)
+                { instance: Any -> handle.invoke(instance) }
+            } catch (_: Throwable) {
+                // 访问权限或 JVM 反射限制下回退；该路径只在启动时决定一次。
+                { instance: Any -> (property as KProperty1<Any, Any?>).get(instance) }
+            }
+        }
+        return { instance: Any -> (property as KProperty1<Any, Any?>).get(instance) }
     }
 
     private fun registerFluidStorageLookup(clazz: KClass<*>) {
