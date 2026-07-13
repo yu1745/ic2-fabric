@@ -42,7 +42,6 @@ import ic2_120.content.block.machines.AdvancedMinerBlockEntity
 import ic2_120.content.block.machines.SemifluidGeneratorBlockEntity
 import ic2_120.content.block.machines.SolarDistillerBlockEntity
 import ic2_120.content.block.machines.WaterGeneratorBlockEntity
-import ic2_120.content.block.storage.TankBlockEntity
 import ic2_120.content.block.transmission.KineticNetworkManager
 import ic2_120.content.block.pipes.PipeNetworkManager
 import ic2_120.content.player.FlightManager

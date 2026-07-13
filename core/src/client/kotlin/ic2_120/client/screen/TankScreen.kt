@@ -26,6 +26,13 @@ class TankScreen(
     override fun drawBackground(context: DrawContext, delta: Float, mouseX: Int, mouseY: Int) {
         context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
 
+        // 与压缩机相同的升级提示图标，复用上游 uptips 资源。
+        context.drawTexture(
+            UPTIPS_TEXTURE, x + UPTIPS_X, y + UPTIPS_Y,
+            0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
+            UPTIPS_SIZE, UPTIPS_SIZE
+        )
+
         // 槽位纹理 (179,3)-(197,21) = 18x18
         context.drawTexture(
             TEXTURE, x + SLOT_X, y + SLOT_Y,
@@ -66,6 +73,23 @@ class TankScreen(
         val relX = mouseX - x
         val relY = mouseY - y
 
+        if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
+            relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
+        ) {
+            context.drawTooltip(
+                textRenderer,
+                listOf(
+                    Text.translatable("gui.ic2_120.tank.level_change"),
+                    Text.translatable("gui.ic2_120.tank.level_change_1s", formatRate(handler.sync.levelChange1s)),
+                    Text.translatable("gui.ic2_120.tank.level_change_5s", formatRate(handler.sync.levelChange5s)),
+                    Text.translatable("gui.ic2_120.tank.level_change_15s", formatRate(handler.sync.levelChange15s)),
+                    Text.translatable("gui.ic2_120.tank.level_change_30s", formatRate(handler.sync.levelChange30s)),
+                    Text.translatable("gui.ic2_120.tank.level_change_60s", formatRate(handler.sync.levelChange60s))
+                ),
+                mouseX, mouseY
+            )
+        }
+
         if (relX in FLUID_X until FLUID_X + FLUID_W &&
             relY in FLUID_Y until FLUID_Y + FLUID_H
         ) {
@@ -93,9 +117,15 @@ class TankScreen(
         }
     }
 
+    private fun formatRate(rate: Int): String = "%+d mB/s".format(rate)
+
     companion object {
         private val TEXTURE = Identifier("ic2", "textures/gui/guiother.png")
+        private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
+        private const val UPTIPS_SIZE = 16
+        private const val UPTIPS_X = 4
+        private const val UPTIPS_Y = 4
 
         // 槽位纹理 (179,3)-(197,21) = 18x18, 渲染至 79,28
         private const val SLOT_U = 179
@@ -110,4 +140,5 @@ class TankScreen(
         private const val FLUID_W = 16
         private const val FLUID_H = 16
     }
+
 }

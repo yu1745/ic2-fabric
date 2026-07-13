@@ -32,6 +32,7 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
+import java.util.ArrayDeque
 
 
 /**
@@ -70,6 +71,8 @@ class TankBlockEntity(
 
         /** 铱储罐容量 (mB) */
         const val IRIDIUM_CAPACITY_MB = 1024000
+
+        private const val MAX_HISTORY_SECONDS = 60
 
         private fun mbToDroplets(mb: Int): Long = mb.toLong() * FluidConstants.BUCKET / 1000L
 
@@ -117,6 +120,7 @@ class TankBlockEntity(
             return super.insert(insertedVariant, maxAmount, transaction)
         }
         override fun onFinalCommit() {
+            recordCommittedChange()
             syncFluidState()
             markDirty()
         }
@@ -126,12 +130,83 @@ class TankBlockEntity(
     val sync = TankSync(syncedData) { getCapacityMb() }
     val guiSlotInv = SimpleInventory(1)
     var shouldDropOnBreak = true
+    private var trackingInitialized = false
+    private var observedAmountMb = 0
+    private var activeSecond = Long.MIN_VALUE
+    private var activeSecondDelta = 0
+    private val perSecondChanges = ArrayDeque<Int>(MAX_HISTORY_SECONDS)
+
+    /** 记录一次已提交事务造成的实际液位变化，不依赖其他 Mod 的 tick 顺序。 */
+    private fun recordCommittedChange() {
+        val currentAmount = getFluidAmountMb()
+        if (!trackingInitialized) {
+            observedAmountMb = currentAmount
+            trackingInitialized = true
+            return
+        }
+        val currentSecond = (world?.time ?: return) / 20L
+        closeElapsedSeconds(currentSecond)
+        activeSecondDelta += currentAmount - observedAmountMb
+        observedAmountMb = currentAmount
+        updateRateSync()
+    }
+
+    private fun closeElapsedSeconds(currentSecond: Long) {
+        if (activeSecond == Long.MIN_VALUE) {
+            activeSecond = currentSecond
+            return
+        }
+        if (currentSecond <= activeSecond) return
+
+        appendClosedSecond(activeSecondDelta)
+        repeat((currentSecond - activeSecond - 1L).coerceAtMost(MAX_HISTORY_SECONDS.toLong()).toInt()) {
+            appendClosedSecond(0)
+        }
+        activeSecond = currentSecond
+        activeSecondDelta = 0
+    }
+
+    private fun appendClosedSecond(change: Int) {
+        perSecondChanges.addLast(change)
+        while (perSecondChanges.size > MAX_HISTORY_SECONDS) perSecondChanges.removeFirst()
+    }
+
+    private fun updateRateSync() {
+        sync.levelChange1s = averageChange(1)
+        sync.levelChange5s = averageChange(5)
+        sync.levelChange15s = averageChange(15)
+        sync.levelChange30s = averageChange(30)
+        sync.levelChange60s = averageChange(60)
+    }
+
+    /** 在打开 GUI 时补齐已经结束但尚未发生下一次事务的空闲秒。 */
+    fun refreshRateStatistics() {
+        val currentSecond = (world?.time ?: return) / 20L
+        closeElapsedSeconds(currentSecond)
+        updateRateSync()
+    }
+
+    private fun averageChange(seconds: Int): Int {
+        // 当前秒仍在累计中，不纳入统计，避免秒边界切换时短窗口瞬间归零。
+        if (perSecondChanges.isEmpty()) return 0
+        val count = minOf(seconds, perSecondChanges.size)
+        var sum = 0L
+        val iterator = perSecondChanges.descendingIterator()
+        repeat(count) {
+            sum += iterator.next().toLong()
+        }
+        return (sum / count).toInt()
+    }
 
     fun syncFluidState() {
         val variant = tankInternal.variant
         sync.fluidRawId = if (variant.isBlank) -1 else Registries.FLUID.getRawId(variant.fluid)
         sync.fluidAmount = getFluidAmountMb()
         sync.capacity = getCapacityMb()
+        if (!trackingInitialized) {
+            observedAmountMb = sync.fluidAmount
+            trackingInitialized = true
+        }
     }
 
     fun extractFluidForBucket(player: PlayerEntity): Boolean {
@@ -193,6 +268,7 @@ class TankBlockEntity(
 
     override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity?): ScreenHandler {
         syncFluidState()
+        refreshRateStatistics()
         return TankScreenHandler(
             syncId,
             playerInventory,
@@ -239,5 +315,7 @@ class TankBlockEntity(
         tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(fluidTag)
         syncedData.readNbt(nbt)
         syncFluidState()
+        updateRateSync()
     }
+
 }
