@@ -49,7 +49,7 @@ The boiler tracks system temperature. If it has heat but no water, or the feed r
 
 The machine exposes Fabric fluid storage on every side. Pipes and tanks can insert water or distilled water and extract the current steam output. It also actively pulls water and ejects steam to adjacent fluid storages at the normal fluid upgrade rate, so a simple adjacent tank or pipe network is enough for most setups. Keep the output line clear: steam left in the internal output tank is vented or recovered on the next tick, with a 10% chance of a small explosion.
 
-Steam and superheated steam are gases, not bucket fluids. If released into the world they rise, hurt living entities in the steam block, and disappear after a short time; superheated steam cools into regular steam before dissipating.
+Steam and superheated steam cannot be collected with buckets. If released into the world they rise and spread sideways with decreasing range, but never flow downward. Each steam block hurts living entities inside it. Regular steam dissipates after about 10 seconds; superheated steam first cools locally into regular steam after about 10 seconds, then dissipates later. One steam source expiring does not remove separately placed sources above it.
 
 ## Practical Setup
 

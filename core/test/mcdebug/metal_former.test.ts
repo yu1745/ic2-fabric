@@ -73,12 +73,12 @@ export const metalFormerTests = defineTests([
     await assertSlotEmpty(ctx, ctx.origin, 1);
   }),
 
-  // 模式不匹配：辊压模式下塞铁板进去不算合法输入。
-  defineTest('metal_former:invalid_input:plate_in_rolling_mode', async (ctx) => {
+  // 无效输入：泥土不属于任何辊压配方。
+  defineTest('metal_former:invalid_input:dirt_in_rolling_mode', async (ctx) => {
     await setupMetalFormer(ctx, 0);
-    await insertItem(ctx, ctx.origin, 'ic2_120:iron_plate', 1, 0);
+    await insertItem(ctx, ctx.origin, 'minecraft:dirt', 1, 0);
     await waitTicks(ctx, 200);
-    await assertSlotHas(ctx, ctx.origin, 0, 'ic2_120:iron_plate');
+    await assertSlotHas(ctx, ctx.origin, 0, 'minecraft:dirt');
     await assertSlotEmpty(ctx, ctx.origin, 1);
   }),
 

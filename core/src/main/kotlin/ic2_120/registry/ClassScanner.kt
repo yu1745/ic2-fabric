@@ -878,7 +878,8 @@ object ClassScanner {
             return try {
                 getter.isAccessible = true
                 val handle: MethodHandle = MethodHandles.lookup().unreflect(getter)
-                { instance: Any -> handle.invoke(instance) }
+                val accessor: (Any) -> Any? = { instance -> handle.invoke(instance) }
+                accessor
             } catch (_: Throwable) {
                 // 访问权限或 JVM 反射限制下回退；该路径只在启动时决定一次。
                 { instance: Any -> (property as KProperty1<Any, Any?>).get(instance) }

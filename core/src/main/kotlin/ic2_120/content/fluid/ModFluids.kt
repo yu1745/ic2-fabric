@@ -24,14 +24,18 @@ import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundEvents
 import net.minecraft.state.StateManager
+import net.minecraft.state.property.IntProperty
 import net.minecraft.state.property.Properties
 import net.minecraft.util.Identifier
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.random.Random
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
@@ -321,42 +325,70 @@ object ModFluids {
         Ic2Fluid.bucketMap[name] = bucket
     }
 
-    /**
-     * 蒸汽/上升流体的 FluidBlock 子类。
-     * 覆盖 neighborUpdate 防止邻居变化时自动调度流体 tick，让流体自己控制生命周期。
-     */
+    /** 蒸汽世界方块：流体 tick 负责扩散，方块 tick 负责独立、可持久化的生命周期。 */
     class SteamFluidBlock(fluid: FlowableFluid, settings: AbstractBlock.Settings) : FluidBlock(fluid, settings) {
-        override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
-            if (oldState.isAir) {
-                world.scheduleFluidTick(pos, fluid, fluid.getTickRate(world))
-            }
+        companion object {
+            /** 5 tick/阶段，共 40 阶段，即 10 秒。 */
+            val AGE: IntProperty = IntProperty.of("age", 0, 39)
+            private const val LIFECYCLE_TICK_RATE = 5
+            private const val MAX_AGE = 39
         }
 
-        override fun neighborUpdate(state: BlockState, world: World, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
-            // 蒸汽自己控制 tick，不自发重调度
+        override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+            super.appendProperties(builder)
+            builder.add(AGE)
+        }
+
+        override fun onBlockAdded(state: BlockState, world: World, pos: BlockPos, oldState: BlockState, notify: Boolean) {
+            super.onBlockAdded(state, world, pos, oldState, notify)
+            if (!world.isClient) {
+                world.scheduleBlockTick(pos, this, LIFECYCLE_TICK_RATE)
+            }
         }
 
         @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
-        override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
-            if (!newState.isOf(this)) {
-                Ic2Fluid.steamSourceTickCounts.remove(pos.asLong())
-                // 级联清除上方所有蒸汽块（排除过热→普通转换，转换由 onScheduledTick 自行处理）
-                if (!world.isClient && newState.block !is SteamFluidBlock) {
-                    var currentPos = pos.up()
-                    while (world.getBlockState(currentPos).block is SteamFluidBlock) {
-                        world.setBlockState(currentPos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
-                        currentPos = currentPos.up()
-                    }
-                }
-            }
+        override fun neighborUpdate(state: BlockState, world: World, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
             @Suppress("DEPRECATION")
-            super.onStateReplaced(state, world, pos, newState, moved)
+            super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify)
+            if (!world.isClient) {
+                world.scheduleBlockTick(pos, this, LIFECYCLE_TICK_RATE)
+            }
+        }
+
+        override fun hasRandomTicks(state: BlockState): Boolean = true
+
+        override fun randomTick(state: BlockState, world: ServerWorld, pos: BlockPos, random: Random) {
+            // 兼容升级前已经留在存档中的无调度蒸汽块。
+            world.scheduleBlockTick(pos, this, LIFECYCLE_TICK_RATE)
+            val currentFluid = state.fluidState.fluid
+            world.scheduleFluidTick(pos, currentFluid, currentFluid.getTickRate(world))
+        }
+
+        @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
+        override fun scheduledTick(state: BlockState, world: ServerWorld, pos: BlockPos, random: Random) {
+            val nextAge = state.get(AGE) + 1
+            if (nextAge <= MAX_AGE) {
+                // AGE 只在服务端用于生命周期，不需要每 5 tick 向客户端广播。
+                world.setBlockState(pos, state.with(AGE, nextAge), Block.FORCE_STATE or Block.NO_REDRAW)
+                world.scheduleBlockTick(pos, this, LIFECYCLE_TICK_RATE)
+                return
+            }
+
+            if (state.isOf(SUPERHEATED_STEAM_BLOCK)) {
+                // 过热蒸汽冷却为普通蒸汽，并保留当前扩散等级；新方块从 0 重新计时。
+                val cooled = STEAM_BLOCK.defaultState
+                    .with(LEVEL, state.get(LEVEL))
+                    .with(AGE, 0)
+                world.setBlockState(pos, cooled, Block.NOTIFY_ALL)
+            } else {
+                world.setBlockState(pos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+            }
         }
     }
 
     /**
-     * 行为类似水：非无限、流动速度 4、每格衰减 1、更新间隔 5 tick。
-     * 当 rises = true，流体向上流动（蒸汽），10 秒后自动消散。
+     * 普通液体沿用原版 FlowableFluid；rises 流体使用有限距离的向上/水平扩散。
+     * 蒸汽生命周期由 SteamFluidBlock 的方块状态管理。
      */
     abstract class Ic2Fluid(
         protected val name: String,
@@ -366,9 +398,6 @@ object ModFluids {
     ) : FlowableFluid() {
 
         companion object {
-            /** 蒸汽源计次：BlockPos.asLong() → 已 tick 次数，用于 10 秒自动消散 */
-            val steamSourceTickCounts = mutableMapOf<Long, Int>()
-
             /** 注册名 → Still/Flowing/Block/Bucket 查找表。由 registerFluid() 自动填充，替代 getStill/getFlowing/getBlock/getIc2Bucket 中的 when。 */
             internal val stillFluidMap = mutableMapOf<String, Fluid>()
             internal val flowingFluidMap = mutableMapOf<String, Fluid>()
@@ -405,21 +434,38 @@ object ModFluids {
         override fun getTickRate(world: WorldView): Int = 5
         override fun getBlastResistance(): Float = 100f
 
+        override fun getVelocity(world: BlockView, pos: BlockPos, state: FluidState): Vec3d =
+            if (rises) Vec3d(0.0, 0.08, 0.0) else super.getVelocity(world, pos, state)
+
+        override fun getHeight(state: FluidState): Float =
+            if (rises) 1.0f else super.getHeight(state)
+
+        override fun getHeight(state: FluidState, world: BlockView, pos: BlockPos): Float =
+            if (rises) 1.0f else super.getHeight(state, world, pos)
+
         // ========== 上升流体（蒸汽）行为 ==========
 
         override fun getUpdatedState(world: World, pos: BlockPos, state: BlockState): FluidState {
             if (!rises) return super.getUpdatedState(world, pos, state)
 
-            // 上升流体只从下方获取支持，不检查水平方向
-            val belowFluid = world.getFluidState(pos.down())
-            if (!belowFluid.isEmpty && belowFluid.fluid.matchesType(this)) {
-                val incomingLevel = if (belowFluid.isStill) 8 else belowFluid.level
-                val newLevel = (incomingLevel - getLevelDecreasePerBlock(world)).coerceAtLeast(1)
-                return getFlowing(newLevel, true)
+            // 源块由生命周期管理；流动块从下方和水平邻居获取强度。
+            val current = world.getFluidState(pos)
+            if (current.isStill && current.fluid.matchesType(this)) {
+                return getStill(false)
             }
 
-            // 无下方支持 → 消散
-            return Fluids.EMPTY.defaultState
+            var strongestLevel = propagatedLevel(world.getFluidState(pos.down()), world)
+            for (direction in Direction.Type.HORIZONTAL) {
+                strongestLevel = maxOf(strongestLevel, propagatedLevel(world.getFluidState(pos.offset(direction)), world))
+            }
+
+            return if (strongestLevel > 0) getFlowing(strongestLevel, false) else Fluids.EMPTY.defaultState
+        }
+
+        private fun propagatedLevel(state: FluidState, world: WorldView): Int {
+            if (state.isEmpty || !state.fluid.matchesType(this)) return 0
+            val level = if (state.isStill) 8 else state.level
+            return (level - getLevelDecreasePerBlock(world)).coerceAtLeast(0)
         }
 
         override fun tryFlow(world: World, pos: BlockPos, state: FluidState) {
@@ -430,14 +476,26 @@ object ModFluids {
 
             val blockState = world.getBlockState(pos)
 
-            // 蒸汽只上升，不水平扩散
-            val upPos = pos.up()
-            val upBlockState = world.getBlockState(upPos)
-            val upFluidState = getUpdatedState(world, upPos, upBlockState)
-            val canFlowUp = canFlow(world, pos, blockState, Direction.UP, upPos, upBlockState, world.getFluidState(upPos), upFluidState.fluid)
-
-            if (canFlowUp) {
-                flow(world, upPos, upBlockState, Direction.UP, upFluidState)
+            // 优先向上，同时向四周扩散；不向下传播。
+            val directions = arrayOf(Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST)
+            for (direction in directions) {
+                val targetPos = pos.offset(direction)
+                val targetBlockState = world.getBlockState(targetPos)
+                val targetFluidState = getUpdatedState(world, targetPos, targetBlockState)
+                if (targetFluidState.isEmpty) continue
+                if (canFlow(
+                        world,
+                        pos,
+                        blockState,
+                        direction,
+                        targetPos,
+                        targetBlockState,
+                        world.getFluidState(targetPos),
+                        targetFluidState.fluid
+                    )
+                ) {
+                    flow(world, targetPos, targetBlockState, direction, targetFluidState)
+                }
             }
         }
 
@@ -451,34 +509,7 @@ object ModFluids {
             applySteamDamage(world, pos)
 
             if (state.isStill) {
-                // 蒸汽源：每 tick 上升 + 扩散，记录次数，40 次（200 ticks = 10 秒）后自动消散
-                val key = pos.asLong()
-                val count = (steamSourceTickCounts[key] ?: 0) + 1
-                steamSourceTickCounts[key] = count
-
-                if (count >= 40) {
-                    steamSourceTickCounts.remove(key)
-                    if (name == "superheated_steam") {
-                        // 过热蒸汽 → 普通蒸汽（源块 + 上方流动块级联转换）
-                        world.setBlockState(pos, STEAM_BLOCK.defaultState, Block.NOTIFY_ALL)
-                        world.scheduleFluidTick(pos, STEAM_STILL, 5)
-                        // 级联转换上方的过热蒸汽流动块为普通蒸汽
-                        var currentPos = pos.up()
-                        while (true) {
-                            val currentBlockState = world.getBlockState(currentPos)
-                            if (!currentBlockState.isOf(SUPERHEATED_STEAM_BLOCK)) break
-                            val newBlockState = STEAM_BLOCK.defaultState.with(FluidBlock.LEVEL, currentBlockState.get(FluidBlock.LEVEL))
-                            world.setBlockState(currentPos, newBlockState, Block.NOTIFY_ALL)
-                            world.scheduleFluidTick(currentPos, STEAM_FLOWING, 5)
-                            currentPos = currentPos.up()
-                        }
-                    } else {
-                        // 普通蒸汽：消散
-                        world.setBlockState(pos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
-                    }
-                    return
-                }
-                world.scheduleFluidTick(pos, this, 5)
+                world.scheduleFluidTick(pos, state.fluid, getTickRate(world))
                 tryFlow(world, pos, state)
                 return
             }
@@ -489,13 +520,24 @@ object ModFluids {
                 world.setBlockState(pos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
             } else {
                 if (!newState.equals(state)) {
-                    world.setBlockState(pos, newState.blockState, Block.NOTIFY_LISTENERS)
-                    world.updateNeighborsAlways(pos, newState.blockState.block)
+                    val oldBlockState = world.getBlockState(pos)
+                    val newBlockState = newState.blockState.let { updated ->
+                        if (oldBlockState.contains(SteamFluidBlock.AGE) && updated.contains(SteamFluidBlock.AGE)) {
+                            updated.with(SteamFluidBlock.AGE, oldBlockState.get(SteamFluidBlock.AGE))
+                        } else {
+                            updated
+                        }
+                    }
+                    world.setBlockState(pos, newBlockState, Block.NOTIFY_LISTENERS)
+                    world.updateNeighborsAlways(pos, newBlockState.block)
                 }
-                // 上升流体的流动块始终重调度，以便在源消散后自行消散
-                world.scheduleFluidTick(pos, newState.fluid, getTickRate(world))
+                val actualFluid = world.getFluidState(pos).fluid
+                world.scheduleFluidTick(pos, actualFluid, getTickRate(world))
             }
-            tryFlow(world, pos, world.getFluidState(pos).let { if (it.isEmpty) state else it })
+            val actualState = world.getFluidState(pos)
+            if (!actualState.isEmpty) {
+                tryFlow(world, pos, actualState)
+            }
         }
 
         /** 蒸汽伤害：每 20 tick（1 秒）对格内生物造成 2 点伤害 */

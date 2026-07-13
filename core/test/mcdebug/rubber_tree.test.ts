@@ -22,6 +22,7 @@ import {
   place,
   waitTicks,
   setBlocks,
+  type Pos,
 } from "@yu1745/mcdebug";
 import { type TestContext } from "./helpers.js";
 
@@ -50,8 +51,8 @@ export const rubberTreeTests = defineTests([
     //    `setBlocks` helper 把 state 包装成 `state: { name, props }` 整个塞进 params，
     //    server 看不到，等于没传 state。结果就是树苗 stage=0，每次 bone meal
     //    只会把 stage 推到 1（45% 概率），永远到不了生成树的那一步。
-    const clearFrom = [origin[0] - 4, origin[1] - 1, origin[2] - 4];
-    const clearTo = [origin[0] + 4, origin[1] + 12, origin[2] + 4];
+    const clearFrom: Pos = [origin[0] - 4, origin[1] - 1, origin[2] - 4];
+    const clearTo: Pos = [origin[0] + 4, origin[1] + 12, origin[2] + 4];
     await ctx.api.world.clearBox({ from: clearFrom, to: clearTo }, { maxBlocks: 4096 });
 
     await place(ctx, dirt, "minecraft:dirt");
@@ -110,8 +111,8 @@ export const rubberTreeTests = defineTests([
     );
 
     // 6) y=floorY 层的 rubber_log 总数应当 ≥ 4（4 块周围 + 1 块树干底）。
-    const yFloorFrom = [origin[0] - 1, floorY, origin[2] - 1];
-    const yFloorTo = [origin[0] + 1, floorY, origin[2] + 1];
+    const yFloorFrom: Pos = [origin[0] - 1, floorY, origin[2] - 1];
+    const yFloorTo: Pos = [origin[0] + 1, floorY, origin[2] + 1];
     const yFloorCount = await ctx.api.scan.countByBlock({ from: yFloorFrom, to: yFloorTo });
     assert.ok(
       (yFloorCount.counts["ic2_120:rubber_log"] ?? 0) >= 4,

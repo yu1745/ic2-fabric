@@ -65,11 +65,21 @@ const SLOT_PIPE = 24;
  * 基础配置（无超频）：tier 1，scanCost=64，batbox 32 EU/t × period 20t = 640 EU/周期，够扫描+挖掘。
  * （超频配置见末尾注释掉的 setupFastMiner，待基础挖掘验证通过后再启用。）
  */
-async function setupFastMiner(ctx: TestContext): Promise<void> {
+async function placePoweredMiner(ctx: TestContext): Promise<void> {
   await setupAdjacentBatbox(ctx, "ic2_120:miner");
-  await insertItem(ctx, ctx.origin, "ic2_120:scanner", 1, 0);
+}
+
+/** 装齐设备会立刻启动扫描；需要布置矿石的测试必须在调用前完成世界搭建。 */
+async function equipMiner(ctx: TestContext): Promise<void> {
+  // 空扫描器会优先吃掉机器的全部 32 EU/t 输入，导致机器永远攒不到铺管所需的 500 EU。
+  await setSlot(ctx, ctx.origin, SLOT_SCANNER, "ic2_120:scanner", 1, { Energy: 100_000 });
   await insertItem(ctx, ctx.origin, "ic2_120:drill", 1, 1);
   await insertItem(ctx, ctx.origin, "ic2_120:mining_pipe", 32, SLOT_PIPE);
+}
+
+async function setupFastMiner(ctx: TestContext): Promise<void> {
+  await placePoweredMiner(ctx);
+  await equipMiner(ctx);
 }
 
 export const minerTests = defineTests([
@@ -91,13 +101,29 @@ export const minerTests = defineTests([
   // 所以矿石放在 pos.y-1 层的 (-1,+1)（origin.down().west().south()）——游标初始化后第一个就扫到。
   // 验证 SCANNING 主路径完整：铺中心柱→扫描首格→挖矿→掉落入物品槽。
   defineTest("miner:mines ore below", async (ctx) => {
-    await setupFastMiner(ctx);
+    await placePoweredMiner(ctx);
     // 矿石放在 pos.y-1 层扫描起点 (-1,+1)，避开中心柱 (0,0)（铺管位）。
     const ore = ctx.origin.down().west().south();
     await setBlocks(ctx, [{ pos: ore, block: "minecraft:iron_ore" }]);
+    // 最后才装齐设备启动扫描，避免 RPC 调用之间服务器已越过首个游标位置。
+    await equipMiner(ctx);
     // 铁钻头 → IRON_PICKAXE → 挖 iron_ore 掉 raw_iron，入 SLOT_ITEM_START(3)。
     // 双重验证：物品槽出现 raw_iron（invItem 谓词）+ 矿石方块被挖走（assertBlockNotId）。
-    await waitUntil(ctx, invItem(ctx.origin, SLOT_ITEM_START, "minecraft:raw_iron"), 25 * 20);
+    try {
+      await waitUntil(ctx, invItem(ctx.origin, SLOT_ITEM_START, "minecraft:raw_iron"), 25 * 20);
+    } catch (error) {
+      const [minerNbt, oreState, itemSlot, pipeSlot] = await Promise.all([
+        ctx.api.be.getNbt(ctx.origin),
+        ctx.api.world.getBlock(ore),
+        ctx.api.inv.getSlot(ctx.origin, SLOT_ITEM_START),
+        ctx.api.inv.getSlot(ctx.origin, SLOT_PIPE),
+      ]);
+      throw new Error(
+        `miner did not collect first ore: ore=${oreState.state.name}, itemSlot=${JSON.stringify(itemSlot.slot)}, ` +
+          `pipeSlot=${JSON.stringify(pipeSlot.slot)}, nbt=${JSON.stringify(minerNbt.nbt)}`,
+        { cause: error },
+      );
+    }
     await assertSlotHas(ctx, ctx.origin, SLOT_ITEM_START, "minecraft:raw_iron");
     // 矿石已被挖掉（不再是 iron_ore）。
     await assertBlockNotId(ctx, ore, "minecraft:iron_ore");

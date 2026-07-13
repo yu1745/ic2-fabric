@@ -66,6 +66,20 @@ registerFluid("steam", "fluid_still", "fluid_flow", tintArgb = 0xFFD0D0D0.toInt(
 5. **设置 Block/Bucket 引用**到伴生对象常量
 6. **填充查找表** `stillFluidMap`/`flowingFluidMap`/`blockMap`/`bucketMap`（替代 `Ic2Fluid.Still/Flowing` 中繁重的 `when` 表达式，新增流体无需再改分支）
 
+### 2.4 世界中的蒸汽行为
+
+蒸汽仍使用 `FlowableFluid`/`FluidVariant` 参与储罐、管道和机器传输，但世界方块不复用
+原版“向下落水”的 `FALLING` 状态表示上升。`SteamFluidBlock` 与 `Ic2Fluid` 分工如下：
+
+- 流体 tick 优先向上、同时向四个水平方向扩散，不向下传播；每传播一格强度降低 1，
+  因而单个源形成有限范围的蒸汽云。
+- 方块状态中的 `age=0..39` 每 5 tick 增加一次。普通蒸汽在 200 tick（10 秒）后消失；
+  过热蒸汽在 200 tick 后原地冷却为普通蒸汽，并以新年龄继续生命周期。
+- 每个蒸汽方块独立计时，不使用全局坐标表，也不在某个源消失时级联删除整列蒸汽；
+  区块保存会自然保存年龄状态，不同维度的相同坐标互不影响。
+- 流动状态的调度必须使用当前位置实际的 still/flowing 流体类型。服务端只会执行与
+  当前 `FluidState` 类型完全匹配的 scheduled fluid tick。
+
 ---
 
 ## 3. 流体单元物品 (CellsAndBuckets.kt)
