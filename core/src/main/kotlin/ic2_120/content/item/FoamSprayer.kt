@@ -3,12 +3,17 @@ package ic2_120.content.item
 import ic2_120.content.block.FoamBlock
 import ic2_120.content.block.IronScaffoldBlock
 import ic2_120.content.block.ReinforcedFoamBlock
+import ic2_120.content.block.ReinforcedIronScaffoldBlock
+import ic2_120.content.block.ReinforcedWoodenScaffoldBlock
+import ic2_120.content.block.WoodenScaffoldBlock
+import ic2_120.content.block.IronFenceBlock
 import ic2_120.content.fluid.ModFluids
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
+import ic2_120.registry.item
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -21,6 +26,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.block.Block
+import net.minecraft.block.ScaffoldingBlock
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
@@ -31,6 +37,7 @@ import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
+import java.util.ArrayDeque
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.sound.SoundCategory
@@ -43,7 +50,7 @@ import net.minecraft.world.event.GameEvent
 
 /**
  * 建筑泡沫喷枪：仅储存建筑泡沫流体，容量 8 桶；每喷涂一格消耗 0.1 桶（100mb），满罐约 80 格。
- * Alt+M（与铱钻头等共用 [ic2_120.client.ModeKeybinds]）切换单格 / 多格喷涂模式。
+ * 按住 Alt 并右键切换单格 / 多格喷涂模式。
  */
 @ModItem(name = "foam_sprayer", tab = CreativeTab.IC2_MATERIALS, group = "construction_foam")
 class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)), ICreativeFullVariant {
@@ -132,23 +139,30 @@ class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)), ICreativeFullVar
         }
 
         /**
-         * 喷涂空间锚点：点在铁脚手架上时以该格为目标（可替换为强化泡沫）；
-         * 否则为点击面外侧邻格（在空气中放置普通泡沫）。
+         * 喷涂空间锚点：点在脚手架上时以该格为目标；否则为点击面外侧邻格。
          */
         private fun foamSprayAnchorPos(world: World, hit: BlockHitResult): BlockPos =
-            if (world.getBlockState(hit.blockPos).block is IronScaffoldBlock) hit.blockPos
+            if (isAnyScaffold(world.getBlockState(hit.blockPos).block)) hit.blockPos
             else hit.blockPos.offset(hit.side)
 
-        private fun tryPlaceFoam(world: World, player: PlayerEntity, stack: ItemStack, hit: BlockHitResult): Boolean {
+        private fun isScaffold(block: Block): Boolean =
+            block is WoodenScaffoldBlock ||
+                block is ReinforcedWoodenScaffoldBlock ||
+                block is IronScaffoldBlock ||
+                block is ReinforcedIronScaffoldBlock
+
+        private fun isAnyScaffold(block: Block): Boolean =
+            isScaffold(block) || block is ScaffoldingBlock
+
+        private fun isWoodScaffold(block: Block): Boolean =
+            block is WoodenScaffoldBlock || block is ReinforcedWoodenScaffoldBlock
+
+        private fun isReinforcedIronScaffold(block: Block): Boolean =
+            block is ReinforcedIronScaffoldBlock
+
+    private fun tryPlaceFoam(world: World, player: PlayerEntity, stack: ItemStack, hit: BlockHitResult): Boolean {
             val foamState = FoamBlock::class.instance().defaultState
             val reinforcedFoamState = ReinforcedFoamBlock::class.instance().defaultState
-            val multi = isMultiMode(stack)
-            val positions = if (multi) {
-                buildMultiSprayPositions(world, hit)
-            } else {
-                listOf(foamSprayAnchorPos(world, hit))
-            }
-
             val cfPackStack = player.getEquippedStack(EquipmentSlot.CHEST)
             val useCfPack = cfPackStack.item is CfPack
 
@@ -159,11 +173,38 @@ class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)), ICreativeFullVar
             }
             if (!player.abilities.creativeMode && budget < DROPLETS_PER_BLOCK) return false
 
+            val multi = isMultiMode(stack)
+            val positions = if (multi) {
+                val scaffoldAnchor = isAnyScaffold(world.getBlockState(hit.blockPos).block)
+                if (scaffoldAnchor) {
+                    val maxBlocks = if (player.abilities.creativeMode) {
+                        SCAFFOLD_MULTI_MAX_BLOCKS
+                    } else {
+                        (budget / DROPLETS_PER_BLOCK).toInt()
+                    }
+                    buildScaffoldMultiSprayPositions(world, hit.blockPos, maxBlocks)
+                } else {
+                    buildMultiSprayPositions(world, hit)
+                }
+            } else {
+                listOf(foamSprayAnchorPos(world, hit))
+            }
+
             var placedAny = false
             for (pos in positions) {
                 if (!player.abilities.creativeMode && budget < DROPLETS_PER_BLOCK) break
                 val stateAt = world.getBlockState(pos)
                 val placed = when {
+                    isWoodScaffold(stateAt.block) -> {
+                        // 原版喷枪会先按脚手架自身掉落表掉落，再替换为普通泡沫。
+                        Block.dropStacks(stateAt, world, pos)
+                        world.setBlockState(pos, foamState, Block.NOTIFY_ALL)
+                    }
+                    isReinforcedIronScaffold(stateAt.block) -> {
+                        // 强化铁脚手架只额外掉落铁栅栏，随后变为强化泡沫。
+                        Block.dropStack(world, pos, ItemStack(IronFenceBlock::class.item()))
+                        world.setBlockState(pos, reinforcedFoamState, Block.NOTIFY_ALL)
+                    }
                     stateAt.block is IronScaffoldBlock ->
                         world.setBlockState(pos, reinforcedFoamState, Block.NOTIFY_ALL)
                     canPlaceFoamAt(world, pos) ->
@@ -190,6 +231,38 @@ class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)), ICreativeFullVar
                 world.emitGameEvent(player, GameEvent.BLOCK_PLACE, soundPos)
             }
             return placedAny
+        }
+
+        /**
+         * 多格模式命中脚手架时，沿相连的 IC2/原版脚手架做 BFS。
+         * 这样喷涂结果会保留脚手架的实际结构，不再生成随机球形区域。
+         */
+        private fun buildScaffoldMultiSprayPositions(
+            world: World,
+            start: BlockPos,
+            maxBlocks: Int,
+        ): List<BlockPos> {
+            if (maxBlocks <= 0 || !isAnyScaffold(world.getBlockState(start).block)) return emptyList()
+
+            val result = ArrayList<BlockPos>(maxBlocks)
+            val queue = ArrayDeque<BlockPos>()
+            val visited = mutableSetOf<BlockPos>()
+            queue.add(start)
+
+            while (queue.isNotEmpty() && result.size < maxBlocks) {
+                val pos = queue.removeFirst()
+                if (!visited.add(pos)) continue
+                if (!isAnyScaffold(world.getBlockState(pos).block)) continue
+
+                result.add(pos)
+                for (direction in net.minecraft.util.math.Direction.values()) {
+                    val next = pos.offset(direction)
+                    if (!visited.contains(next) && isAnyScaffold(world.getBlockState(next).block)) {
+                        queue.addLast(next)
+                    }
+                }
+            }
+            return result
         }
 
         /**
@@ -223,6 +296,8 @@ class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)), ICreativeFullVar
             }
             return candidates
         }
+
+        private const val SCAFFOLD_MULTI_MAX_BLOCKS = 256
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {

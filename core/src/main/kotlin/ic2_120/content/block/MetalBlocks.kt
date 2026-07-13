@@ -217,7 +217,7 @@ class CompressedCoalBall : Block(AbstractBlock.Settings.copy(Blocks.COAL_BLOCK).
 
 /** 防爆石。 */
 @ModBlock(name = "reinforced_stone", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")
-class ReinforcedStoneBlock : Block(AbstractBlock.Settings.copy(Blocks.STONE).strength(50.0f, 1200.0f))
+class ReinforcedStoneBlock : Block(AbstractBlock.Settings.copy(Blocks.STONE).strength(80.0f, 1200.0f))
 
 /** 玄武石。 */
 @ModBlock(name = "basalt", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "metal_blocks")

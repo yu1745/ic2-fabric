@@ -2,6 +2,7 @@ package ic2_120.content.recipes
 
 import ic2_120.Ic2_120
 import ic2_120.content.block.DirectionalMachineBlock
+import ic2_120.content.block.Ic2ScaffoldBlock
 import ic2_120.content.block.MachineBlock
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.block.pipes.BasePipeBlock
@@ -75,10 +76,13 @@ class ModBlockTagProvider(
         val stoneToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_STONE_TOOL).setReplace(false)
         val axeBuilder = getOrCreateTagBuilder(BlockTags.AXE_MINEABLE).setReplace(false)
         val hoeBuilder = getOrCreateTagBuilder(BlockTags.HOE_MINEABLE).setReplace(false)
+        val climbableBuilder = getOrCreateTagBuilder(BlockTags.CLIMBABLE).setReplace(false)
 
         for (block in Registries.BLOCK) {
             val id = Registries.BLOCK.getId(block)
             if (id.namespace != Ic2_120.MOD_ID) continue
+
+            if (block is Ic2ScaffoldBlock) climbableBuilder.add(block)
 
             when {
                 id.path == "rubber_leaves" -> {
