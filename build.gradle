@@ -74,19 +74,32 @@ subprojects {
 }
 
 // Core 的开发客户端自动加载本仓库内所有 addon 的最新开发产物。
-// 使用 modLocalRuntime：只影响 :core:runClient 等本地运行任务，不会把 addon
-// 打进 core 的发布 JAR，也不会改变 addon 对 core 的正常编译依赖。
+//
+// 这里不能使用 modLocalRuntime：Loom 的 runDatagen 也会继承该运行时类路径，
+// 从而把 addon 的资源和 datagen 输出混入 core 的数据生成。改用独立配置，
+// 只在 runClient 任务上追加 addon，保持 runDatagen 仅生成 core 数据。
 project(':core') {
+	configurations {
+		addonLocalRuntime {
+			canBeConsumed = false
+			canBeResolved = true
+		}
+	}
+
 	dependencies {
 		[
 			':advanced-solar-addon',
 			// ':advanced-weapons-addon',
 			// ':buildcraft-addon'
 		].each { addonProject ->
-			modLocalRuntime(project(
+			addonLocalRuntime(project(
 				path: addonProject,
 				configuration: 'namedElements'
 			))
 		}
+	}
+
+	tasks.named('runClient') {
+		classpath = classpath.plus(configurations.addonLocalRuntime)
 	}
 }
