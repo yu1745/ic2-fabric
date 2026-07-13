@@ -29,6 +29,8 @@ data class Ic2MainConfig(
     val nuclear: NuclearConfig = NuclearConfig(),
     @field:ConfigComment("UU 复制白名单配置。")
     val uuReplication: UuReplicationConfig = UuReplicationConfig(),
+    @field:ConfigComment("物质生成机配置。")
+    val matterGenerator: MatterGeneratorConfig = MatterGeneratorConfig(),
     @field:ConfigComment("采矿机配置。")
     val miner: MinerConfig = MinerConfig(),
     @field:ConfigComment("采矿镭射枪配置。")
@@ -97,6 +99,11 @@ data class UuReplicationConfig(
     val replicationWhitelist: Map<String, Int> = UuReplicationDefaults.defaultWhitelist
 )
 
+data class MatterGeneratorConfig(
+    @field:ConfigComment("是否允许物质生成机使用废料加速。", "true")
+    val allowScrapBoost: Boolean = true
+)
+
 data class MinerConfig(
     @field:ConfigComment(
         "采矿机额外可挖方块 id 列表。默认矿石通过名称自动匹配（含 ore），此列表用于添加特殊方块或者别的mod的方块。",
@@ -151,8 +158,8 @@ data class QuantumChestplateConfig(
     @field:ConfigComment("量子胸甲最大能量（EU）。", "10000000")
     val maxEnergy: Long = 10_000_000L,
     /** 飞行时长（秒）。耗电量自动通过 满电容量 / 时长 计算。 */
-    @field:ConfigComment("量子胸甲飞行时长（秒），耗电量自动计算。", "1200")
-    val flightDurationSeconds: Int = 1200
+    @field:ConfigComment("量子胸甲飞行时长（秒），耗电量自动计算。", "3600")
+    val flightDurationSeconds: Int = 3600
 )
 
 data class QuantumHelmetConfig(
@@ -448,6 +455,7 @@ private val DEFAULT_CONFIG_TEMPLATE = Ic2MainConfig(
     uuReplication = UuReplicationConfig(
         replicationWhitelist = UuReplicationDefaults.defaultWhitelist
     ),
+    matterGenerator = MatterGeneratorConfig(),
     miner = MinerConfig(),
     miningLaser = MiningLaserConfig(),
     armor = ArmorConfig(),

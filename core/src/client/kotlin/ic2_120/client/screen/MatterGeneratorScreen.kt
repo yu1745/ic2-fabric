@@ -3,6 +3,7 @@ package ic2_120.client.screen
 import ic2_120.client.EnergyFormatUtils
 import ic2_120.client.FluidUtils
 import ic2_120.client.t
+import ic2_120.config.Ic2Config
 import ic2_120.content.block.MatterGeneratorBlock
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.screen.MatterGeneratorScreenHandler
@@ -55,6 +56,12 @@ class MatterGeneratorScreen(
         // uptips (4,4) 16×16
         context.drawTexture(UPTIPS_TEXTURE, left + 4, top + 4, 0f, 0f, 16, 16, 16, 16)
 
+        // 服务端禁用废料加速时显示警告图标；使用压缩机 GUI 的叹号贴图。
+        if (!Ic2Config.current.matterGenerator.allowScrapBoost) {
+            context.drawTexture(UPTIPS_TEXTURE, left + SCRAP_WARNING_X, top + SCRAP_WARNING_Y,
+                0f, 0f, 16, 16, 16, 16)
+        }
+
         // 悬停提示
         val relX = mouseX - left
         val relY = mouseY - top
@@ -77,6 +84,15 @@ class MatterGeneratorScreen(
                 Text.literal("§7").append(Text.translatable("item.ic2_120.energy_storage_upgrade")),
                 Text.literal("§7").append(Text.translatable("item.ic2_120.ejector_upgrade")),
                 Text.literal("§7").append(Text.translatable("item.ic2_120.fluid_pulling_upgrade"))
+            ), mouseX, mouseY)
+        }
+
+        if (!Ic2Config.current.matterGenerator.allowScrapBoost &&
+            relX in SCRAP_WARNING_X until SCRAP_WARNING_X + 16 &&
+            relY in SCRAP_WARNING_Y until SCRAP_WARNING_Y + 16
+        ) {
+            context.drawTooltip(textRenderer, listOf(
+                Text.translatable("gui.ic2_120.matter_generator.scrap_boost_disabled")
             ), mouseX, mouseY)
         }
 
@@ -126,6 +142,9 @@ class MatterGeneratorScreen(
         private const val TANK_OVERLAY_H = 46
         private const val TANK_OVERLAY_X = 101
         private const val TANK_OVERLAY_Y = 27
+
+        private const val SCRAP_WARNING_X = 156
+        private const val SCRAP_WARNING_Y = 4
 
         private val uuMatterSprite by lazy {
             FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.UU_MATTER_STILL)

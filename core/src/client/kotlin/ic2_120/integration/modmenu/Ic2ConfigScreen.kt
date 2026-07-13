@@ -32,6 +32,7 @@ object Ic2ConfigScreen {
         val generalReader = generalCategory(builder, eb, config.general)
         val recyclerReader = recyclerCategory(builder, eb, config.recycler)
         val nuclearReader = nuclearCategory(builder, eb, config.nuclear)
+        val matterGeneratorReader = matterGeneratorCategory(builder, eb, config.matterGenerator)
         val minerReader = minerCategory(builder, eb, config.miner)
         val laserReader = miningLaserCategory(builder, eb, config.miningLaser)
         val armorReader = armorCategory(builder, eb, config.armor)
@@ -49,6 +50,7 @@ object Ic2ConfigScreen {
                 recycler = recyclerReader(),
                 nuclear = nuclearReader(),
                 uuReplication = config.uuReplication,
+                matterGenerator = matterGeneratorReader(),
                 miner = minerReader(),
                 miningLaser = laserReader(),
                 armor = armorReader(),
@@ -57,6 +59,21 @@ object Ic2ConfigScreen {
         }
 
         return builder.build()
+    }
+
+    // ==================== 物质生成机 ====================
+
+    private fun matterGeneratorCategory(
+        builder: ConfigBuilder, eb: ConfigEntryBuilder, cfg: MatterGeneratorConfig
+    ): () -> MatterGeneratorConfig {
+        var allowScrapBoost = cfg.allowScrapBoost
+        val cat = builder.getOrCreateCategory(Text.literal("物质生成机"))
+        cat.addEntry(eb.startBooleanToggle(Text.literal("允许废料加速"), allowScrapBoost)
+            .setDefaultValue(true)
+            .setTooltip(Text.literal("允许物质生成机使用废料降低 UU 物质生成的能耗。"))
+            .setSaveConsumer { allowScrapBoost = it }.build())
+
+        return { MatterGeneratorConfig(allowScrapBoost = allowScrapBoost) }
     }
 
     // ==================== 通用 ====================
@@ -376,7 +393,7 @@ object Ic2ConfigScreen {
         cat.addEntry(eb.startLongField(Text.literal("最大能量（EU）"), maxEnergy)
             .setDefaultValue(10_000_000L).setSaveConsumer { maxEnergy = it }.build())
         cat.addEntry(eb.startIntField(Text.literal("飞行时长（秒）"), flightDuration)
-            .setDefaultValue(1200).setSaveConsumer { flightDuration = it }.build())
+            .setDefaultValue(3600).setSaveConsumer { flightDuration = it }.build())
 
         return { QuantumChestplateConfig(maxEnergy = maxEnergy, flightDurationSeconds = flightDuration) }
     }

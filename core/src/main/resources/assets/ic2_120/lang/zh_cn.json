@@ -932,6 +932,7 @@
   "gui.ic2_120.matter_generator.mode_normal": "模式: 普通",
   "gui.ic2_120.matter_generator.progress_pct": "进度：%s%%",
   "gui.ic2_120.matter_generator.uptips": "可支持的升级:",
+  "gui.ic2_120.matter_generator.scrap_boost_disabled": "本服禁止了使用废料加速",
   "gui.ic2_120.magnetizer.redstone_triggered": "红石: 已触发",
   "gui.ic2_120.magnetizer.redstone_untriggered": "红石: 未触发",
   "gui.ic2_120.magnetizer.fence_count": "栅栏: %s",

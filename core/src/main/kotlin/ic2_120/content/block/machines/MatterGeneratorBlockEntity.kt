@@ -1,6 +1,7 @@
 package ic2_120.content.block.machines
 
 import ic2_120.Ic2_120
+import ic2_120.config.Ic2Config
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.MatterGeneratorBlock
 import ic2_120.content.fluid.ModFluids
@@ -105,6 +106,7 @@ class MatterGeneratorBlockEntity(
 
         private const val NBT_TANK_AMOUNT = "TankAmount"
         private const val NBT_PROGRESS = "Progress"
+        private const val NBT_SCRAP_CONSUMED = "ScrapConsumed"
 
         @Volatile
         private var fluidLookupRegistered = false
@@ -141,6 +143,8 @@ class MatterGeneratorBlockEntity(
     private val uuMatterCellItem by lazy { Registries.ITEM.get(Identifier(Ic2_120.MOD_ID, "uu_matter_cell")) }
 
     private val outputPerCycle = mbToDroplets(1)
+    /** 当前 1 mB 生成周期内已经消耗的废料数量。 */
+    private var scrapConsumedThisCycle = 0
 
     val syncedData = SyncedData(this)
 
@@ -266,7 +270,8 @@ class MatterGeneratorBlockEntity(
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
-        SLOT_SCRAP -> !stack.isEmpty && Registries.ITEM.getId(stack.item) == Identifier(Ic2_120.MOD_ID, "scrap")
+        SLOT_SCRAP -> Ic2Config.current.matterGenerator.allowScrapBoost &&
+            !stack.isEmpty && Registries.ITEM.getId(stack.item) == Identifier(Ic2_120.MOD_ID, "scrap")
         SLOT_CONTAINER_INPUT -> !stack.isEmpty && matterGenIsFillableContainer(stack)
         SLOT_CONTAINER_OUTPUT -> false
         else -> SLOT_UPGRADE_INDICES.contains(slot) && stack.item is IUpgradeItem && stack.item !is OverclockerUpgrade
@@ -296,6 +301,7 @@ class MatterGeneratorBlockEntity(
         sync.restoreEnergy(nbt.getLong(MatterGeneratorSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
         sync.progress = nbt.getInt(NBT_PROGRESS).coerceAtLeast(0)
+        scrapConsumedThisCycle = nbt.getInt(NBT_SCRAP_CONSUMED).coerceIn(0, MatterGeneratorSync.SCRAP_PER_MB)
         tankInternal.setStoredAmount(nbt.getLong(NBT_TANK_AMOUNT))
         sync.fluidCapacity = MatterGeneratorSync.TANK_CAPACITY_DROPLETS
         sync.mode = resolveDisplayedMode()
@@ -309,6 +315,7 @@ class MatterGeneratorBlockEntity(
         nbt.putLong(MatterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.getStoredAmount())
         nbt.putInt(NBT_PROGRESS, sync.progress)
+        nbt.putInt(NBT_SCRAP_CONSUMED, scrapConsumedThisCycle)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }
 
@@ -353,7 +360,7 @@ class MatterGeneratorBlockEntity(
             sync.mode = resolveDisplayedMode()
         }
 
-        val hasScrap = isScrap(getStack(SLOT_SCRAP))
+        val hasScrap = Ic2Config.current.matterGenerator.allowScrapBoost && isScrap(getStack(SLOT_SCRAP))
         val euPerMb = if (hasScrap) MatterGeneratorSync.SCRAP_EU_PER_MB else MatterGeneratorSync.BASE_EU_PER_MB
 
         // Consume as much energy as available, up to 1mb worth per tick
@@ -370,17 +377,15 @@ class MatterGeneratorBlockEntity(
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
             sync.progress = (sync.progress + progressIncrement).coerceAtMost(MatterGeneratorSync.PROGRESS_MAX)
 
-            // Consume scrap proportionally to progress
+            // 按累计进度逐个消耗废料，完成一个 1 mB 周期正好消耗 SCRAP_PER_MB 个。
             if (hasScrap) {
-                val scrapToConsume = ceil(
-                    MatterGeneratorSync.SCRAP_PER_MB.toDouble() * progressIncrement / MatterGeneratorSync.PROGRESS_MAX
-                ).toInt()
-                consumeScrap(scrapToConsume)
+                consumeScrapForProgress()
             }
 
             if (sync.progress >= MatterGeneratorSync.PROGRESS_MAX) {
                 tankInternal.insertInternal(outputPerCycle)
                 sync.progress = 0
+                scrapConsumedThisCycle = 0
                 markDirty()
             }
 
@@ -405,6 +410,18 @@ class MatterGeneratorBlockEntity(
         } else {
             markDirty()
         }
+    }
+
+    private fun consumeScrapForProgress() {
+        val targetConsumed = (
+            MatterGeneratorSync.SCRAP_PER_MB.toLong() * sync.progress / MatterGeneratorSync.PROGRESS_MAX
+            ).toInt()
+        val scrapToConsume = targetConsumed - scrapConsumedThisCycle
+        if (scrapToConsume <= 0) return
+
+        val before = getStack(SLOT_SCRAP).count
+        consumeScrap(scrapToConsume)
+        scrapConsumedThisCycle += (before - getStack(SLOT_SCRAP).count).coerceAtLeast(0)
     }
 
     private fun fillContainersFromTank() {
@@ -449,7 +466,7 @@ class MatterGeneratorBlockEntity(
     }
 
     private fun resolveDisplayedMode(): Int {
-        val scrapCount = getStack(SLOT_SCRAP).count
+        val scrapCount = if (Ic2Config.current.matterGenerator.allowScrapBoost) getStack(SLOT_SCRAP).count else 0
         return if (scrapCount > 0) 1 else 0
     }
 

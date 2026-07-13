@@ -946,6 +946,7 @@
   "gui.ic2_120.wind_meter.steel": "Steel",
   "gui.ic2_120.wind_meter.carbon": "Carbon",
   "gui.ic2_120.matter_generator.mode_scrap": "Mode: Scrap Boost",
+  "gui.ic2_120.matter_generator.scrap_boost_disabled": "Scrap boost is disabled on this server",
   "gui.ic2_120.matter_generator.mode_normal": "Mode: Normal",
   "gui.ic2_120.magnetizer.redstone_triggered": "Redstone: Triggered",
   "gui.ic2_120.magnetizer.redstone_untriggered": "Redstone: Not Triggered",
