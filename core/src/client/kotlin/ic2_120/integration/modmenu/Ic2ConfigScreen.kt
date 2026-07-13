@@ -332,6 +332,7 @@ object Ic2ConfigScreen {
     ): () -> ArmorConfig {
         val jetpackReader = jetpackConfig(eb, builder, cfg.jetpack)
         val electricJetpackReader = electricJetpackConfig(eb, builder, cfg.electricJetpack)
+        val electricArmorReader = electricArmorConfig(eb, builder, cfg.electricArmorDamageCostMultiplier)
         val chestplateReader = quantumChestplateConfig(eb, builder, cfg.quantumChestplate)
         val helmetReader = quantumHelmetConfig(eb, builder, cfg.quantumHelmet)
         val leggingsReader = quantumLeggingsConfig(eb, builder, cfg.quantumLeggings)
@@ -343,6 +344,7 @@ object Ic2ConfigScreen {
             ArmorConfig(
                 jetpack = jetpackReader(),
                 electricJetpack = electricJetpackReader(),
+                electricArmorDamageCostMultiplier = electricArmorReader(),
                 quantumChestplate = chestplateReader(),
                 quantumHelmet = helmetReader(),
                 quantumLeggings = leggingsReader(),
@@ -351,6 +353,20 @@ object Ic2ConfigScreen {
                 rubberBoots = rubberBootsReader()
             )
         }
+    }
+
+    private fun electricArmorConfig(
+        eb: ConfigEntryBuilder, builder: ConfigBuilder, initialMultiplier: Double
+    ): () -> Double {
+        val cat = builder.getOrCreateCategory(Text.literal("护甲 • 电力护甲通用"))
+        var multiplier = initialMultiplier
+
+        cat.addEntry(eb.startDoubleField(Text.literal("伤害扣电倍率"), multiplier)
+            .setDefaultValue(1.0)
+            .setSaveConsumer { multiplier = it }
+            .build())
+
+        return { multiplier }
     }
 
     private fun jetpackConfig(

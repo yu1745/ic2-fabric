@@ -33,7 +33,7 @@ import java.util.function.Consumer
  *
  * ## 能量消耗
  *
- * - 每减免 1 点伤害消耗 5000 EU
+ * - 每减免 1 点伤害消耗 20000 EU × 配置倍率（默认倍率 1.0）
  * - 能量从所有纳米装备均匀扣除
  */
 @ModItem(name = "nano_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "nano_armor")

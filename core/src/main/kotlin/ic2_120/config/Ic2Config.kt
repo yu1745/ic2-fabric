@@ -121,6 +121,8 @@ data class ArmorConfig(
     val jetpack: JetpackConfig = JetpackConfig(),
     @field:ConfigComment("电力喷气背包配置。")
     val electricJetpack: ElectricJetpackConfig = ElectricJetpackConfig(),
+    @field:ConfigComment("电力护甲每抵消 1 点伤害的扣电倍率。基准为原版 IC2 的 20000 EU/点，1.0 表示原版数值。", "1.0")
+    val electricArmorDamageCostMultiplier: Double = 1.0,
     @field:ConfigComment("量子胸甲配置。")
     val quantumChestplate: QuantumChestplateConfig = QuantumChestplateConfig(),
     @field:ConfigComment("量子头盔配置。")
@@ -605,6 +607,13 @@ object Ic2Config {
     fun getQuantumChestplateEuPerTick(): Double {
         val cfg = current.armor.quantumChestplate
         return cfg.maxEnergy.toDouble() / (cfg.flightDurationSeconds * 20.0)
+    }
+
+    /**
+     * 电力护甲伤害扣电倍率。基准为原版 IC2 的 20000 EU/点伤害。
+     */
+    fun getElectricArmorDamageCostMultiplier(): Double {
+        return current.armor.electricArmorDamageCostMultiplier.coerceAtLeast(0.0)
     }
 
     /**

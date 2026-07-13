@@ -1,5 +1,6 @@
 package ic2_120.mixin;
 
+import ic2_120.config.Ic2Config;
 import ic2_120.access.SuperJumpProtectionAccess;
 import ic2_120.content.item.armor.ElectricArmorItem;
 import ic2_120.content.item.armor.QuantumBoots;
@@ -30,7 +31,7 @@ import java.util.Map;
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
 
-    private static final int DAMAGE_COST_PER_POINT = 5000;
+    private static final long DAMAGE_COST_PER_POINT = 20000L;
 
     @Unique
     private static final int IC2_SUPER_JUMP_PROTECTION_MAX_TICKS = 200;
@@ -216,7 +217,9 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
         double mitigated = (double) amount - (double) reducedDamage;
         if (mitigated <= 0.0) return;
 
-        long energyNeeded = (long) Math.ceil(mitigated) * DAMAGE_COST_PER_POINT;
+        long energyNeeded = (long) Math.ceil(
+            mitigated * DAMAGE_COST_PER_POINT * Ic2Config.INSTANCE.getElectricArmorDamageCostMultiplier()
+        );
 
         long totalEnergy = 0;
         for (Map.Entry<ElectricArmorItem, ItemStack> entry : armorItems.entrySet()) {
