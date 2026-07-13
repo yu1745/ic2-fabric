@@ -89,6 +89,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockDataProvider(KineticJadeProvider, LeashKineticGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(KineticJadeProvider, KineticGeneratorBlockEntity::class.java)
         registration.registerBlockDataProvider(TeleporterJadeProvider, TeleporterBlockEntity::class.java)
+        registration.registerBlockDataProvider(RubberLogJadeProvider, RubberLogBlockEntity::class.java)
         registration.registerEntityDataProvider(AnimalJadeProvider, PassiveEntity::class.java)
     }
 
