@@ -30,6 +30,7 @@ object Ic2ConfigScreen {
         val eb = builder.entryBuilder()
 
         val generalReader = generalCategory(builder, eb, config.general)
+        val difficultyReader = difficultyCategory(builder, eb, config.difficulty)
         val recyclerReader = recyclerCategory(builder, eb, config.recycler)
         val nuclearReader = nuclearCategory(builder, eb, config.nuclear)
         val matterGeneratorReader = matterGeneratorCategory(builder, eb, config.matterGenerator)
@@ -45,8 +46,13 @@ object Ic2ConfigScreen {
             ).build())
 
         builder.setSavingRunnable {
+            val difficulty = difficultyReader()
+            if (difficulty.hardMode != config.difficulty.hardMode) {
+                LOGGER.warn("困难模式已修改为 {}，需要重启游戏或服务器后完全生效", difficulty.hardMode)
+            }
             Ic2Config.save(Ic2MainConfig(
                 general = generalReader(),
+                difficulty = difficulty,
                 recycler = recyclerReader(),
                 nuclear = nuclearReader(),
                 uuReplication = config.uuReplication,
@@ -59,6 +65,21 @@ object Ic2ConfigScreen {
         }
 
         return builder.build()
+    }
+
+    // ==================== 难度 ====================
+
+    private fun difficultyCategory(
+        builder: ConfigBuilder, eb: ConfigEntryBuilder, cfg: DifficultyConfig
+    ): () -> DifficultyConfig {
+        var hardMode = cfg.hardMode
+        val cat = builder.getOrCreateCategory(Text.literal("难度"))
+        cat.addEntry(eb.startBooleanToggle(Text.literal("困难模式"), hardMode)
+            .setDefaultValue(false)
+            .setTooltip(Text.literal("关闭战利品箱中的铱矿石，并将铱碎片数量减半。修改后需要重启游戏或服务器。"))
+            .setSaveConsumer { hardMode = it }.build())
+
+        return { DifficultyConfig(hardMode = hardMode) }
     }
 
     // ==================== 物质生成机 ====================

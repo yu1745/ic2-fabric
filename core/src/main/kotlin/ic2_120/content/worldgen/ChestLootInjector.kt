@@ -1,6 +1,7 @@
 package ic2_120.content.worldgen
 
 import ic2_120.Ic2_120
+import ic2_120.config.Ic2Config
 import net.fabricmc.fabric.api.loot.v2.LootTableEvents
 import net.minecraft.item.Item
 import net.minecraft.item.Items
@@ -138,7 +139,7 @@ object ChestLootInjector {
             .rolls(UniformLootNumberProvider.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 5f)
-            .withWeightedItem(modItem("iridium_shard"), 8, 2f, 5f)
+            .withIridiumShard(8, 2f, 5f)
             .withWeightedItem(modItem("bronze_pickaxe"), 1)
             .withWeightedItem(modItem("filled_tin_can"), 8, 4f, 16f)
             .withEmpty(34)
@@ -148,7 +149,7 @@ object ChestLootInjector {
             .rolls(UniformLootNumberProvider.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 5f)
-            .withWeightedItem(modItem("iridium_shard"), 8, 1f, 2f)
+            .withIridiumShard(8, 1f, 2f)
             .withWeightedItem(modItem("bronze_pickaxe"), 3)
             .withWeightedItem(modItem("bronze_sword"), 3)
             .withWeightedItem(modItem("bronze_helmet"), 3)
@@ -162,8 +163,8 @@ object ChestLootInjector {
             .rolls(UniformLootNumberProvider.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 10, 2f, 5f)
             .withWeightedItem(modItem("tin_ingot"), 10, 2f, 5f)
-            .withWeightedItem(modItem("iridium_ore_item"), 2, 1f, 2f)
-            .withWeightedItem(modItem("iridium_shard"), 10, 6f, 14f)
+            .withIridiumOre(2, 1f, 2f)
+            .withIridiumShard(10, 6f, 14f)
             .withEmpty(32)
 
     private fun createSpawnBonusPool(): LootPool.Builder =
@@ -177,8 +178,8 @@ object ChestLootInjector {
             .rolls(UniformLootNumberProvider.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 5f)
-            .withWeightedItem(modItem("iridium_ore_item"), 1, 1f, 4f)
-            .withWeightedItem(modItem("iridium_shard"), 8, 4f, 14f)
+            .withIridiumOre(1, 1f, 4f)
+            .withIridiumShard(8, 4f, 14f)
             .withWeightedItem(modItem("bronze_pickaxe"), 3)
             .withWeightedItem(modItem("bronze_sword"), 3)
             .withWeightedItem(modItem("bronze_helmet"), 3)
@@ -192,8 +193,8 @@ object ChestLootInjector {
             .rolls(UniformLootNumberProvider.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 5f)
-            .withWeightedItem(modItem("iridium_ore_item"), 1)
-            .withWeightedItem(modItem("iridium_shard"), 8, 2f, 5f)
+            .withIridiumOre(1)
+            .withIridiumShard(8, 2f, 5f)
             .withWeightedItem(modItem("bronze_pickaxe"), 3)
             .withWeightedItem(modItem("bronze_sword"), 3)
             .withWeightedItem(modItem("bronze_helmet"), 3)
@@ -207,7 +208,7 @@ object ChestLootInjector {
             .rolls(UniformLootNumberProvider.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 5f)
-            .withWeightedItem(modItem("iridium_shard"), 8, 3f, 7f)
+            .withIridiumShard(8, 3f, 7f)
             .withWeightedItem(modItem("bronze_pickaxe"), 3)
             .withWeightedItem(modItem("bronze_sword"), 3)
             .withWeightedItem(modItem("bronze_helmet"), 3)
@@ -223,8 +224,8 @@ object ChestLootInjector {
             .rolls(UniformLootNumberProvider.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 8, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 7, 1f, 5f)
-            .withWeightedItem(modItem("iridium_ore_item"), 3, 1f, 3f)
-            .withWeightedItem(modItem("iridium_shard"), 10, 4f, 12f)
+            .withIridiumOre(3, 1f, 3f)
+            .withIridiumShard(10, 4f, 12f)
             .withWeightedItem(modItem("energy_crystal"), 2)
             .withEmpty(30)
 
@@ -233,7 +234,7 @@ object ChestLootInjector {
             .rolls(UniformLootNumberProvider.create(1f, 3f))
             .withWeightedItem(Items.COPPER_INGOT, 8, 2f, 6f)
             .withWeightedItem(modItem("tin_ingot"), 7, 1f, 5f)
-            .withWeightedItem(modItem("iridium_shard"), 8, 2f, 8f)
+            .withIridiumShard(8, 2f, 8f)
             .withWeightedItem(modItem("bronze_pickaxe"), 2)
             .withWeightedItem(modItem("bronze_sword"), 2)
             .withWeightedItem(modItem("filled_tin_can"), 6, 4f, 12f)
@@ -244,7 +245,7 @@ object ChestLootInjector {
             .rolls(UniformLootNumberProvider.create(1f, 2f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 1f, 4f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 3f)
-            .withWeightedItem(modItem("iridium_shard"), 6, 1f, 4f)
+            .withIridiumShard(6, 1f, 4f)
             .withWeightedItem(modItem("bronze_ingot"), 5, 1f, 3f)
             .withEmpty(45)
 
@@ -253,7 +254,7 @@ object ChestLootInjector {
             .rolls(UniformLootNumberProvider.create(1f, 1f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 1f, 3f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 2f)
-            .withWeightedItem(modItem("iridium_shard"), 5, 1f, 3f)
+            .withIridiumShard(5, 1f, 3f)
             .withEmpty(50)
 
     private fun createVillageHousePool(): LootPool.Builder =
@@ -261,7 +262,7 @@ object ChestLootInjector {
             .rolls(UniformLootNumberProvider.create(1f, 1f))
             .withWeightedItem(Items.COPPER_INGOT, 8, 1f, 3f)
             .withWeightedItem(modItem("tin_ingot"), 7, 1f, 2f)
-            .withWeightedItem(modItem("iridium_shard"), 4, 1f, 3f)
+            .withIridiumShard(4, 1f, 3f)
             .withWeightedItem(modItem("rubber_sapling"), 3, 1f, 2f)
             .withEmpty(55)
 
@@ -270,7 +271,7 @@ object ChestLootInjector {
             .rolls(UniformLootNumberProvider.create(1f, 2f))
             .withWeightedItem(Items.COPPER_INGOT, 9, 1f, 4f)
             .withWeightedItem(modItem("tin_ingot"), 8, 1f, 3f)
-            .withWeightedItem(modItem("iridium_shard"), 6, 1f, 4f)
+            .withIridiumShard(6, 1f, 4f)
             .withWeightedItem(modItem("bronze_ingot"), 4, 1f, 3f)
             .withWeightedItem(modItem("rubber_sapling"), 3, 1f, 2f)
             .withEmpty(45)
@@ -285,6 +286,18 @@ object ChestLootInjector {
 
     private fun LootPool.Builder.withEmpty(weight: Int): LootPool.Builder =
         with(EmptyEntry.builder().weight(weight))
+
+    private fun LootPool.Builder.withIridiumOre(
+        weight: Int, min: Float? = null, max: Float? = null
+    ): LootPool.Builder {
+        if (Ic2Config.current.difficulty.hardMode) return this
+        return withWeightedItem(modItem("iridium_ore_item"), weight, min, max)
+    }
+
+    private fun LootPool.Builder.withIridiumShard(weight: Int, min: Float, max: Float): LootPool.Builder {
+        val divisor = if (Ic2Config.current.difficulty.hardMode) 2f else 1f
+        return withWeightedItem(modItem("iridium_shard"), weight, min / divisor, max / divisor)
+    }
 
     private fun modItem(path: String): Item = Registries.ITEM.get(Ic2_120.id(path))
 

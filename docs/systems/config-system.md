@@ -16,6 +16,7 @@
 顶层结构（当前）：
 
 - `general`
+- `difficulty`
 - `recycler`
 - `nuclear`
 - `uuReplication`
@@ -77,6 +78,10 @@
 - `shockWhenNoEnergyFlow`：电网不发生能量流动时是否仍会电人。
 - `explodeWhenNoEnergyFlow`：电网不发生能量流动时是否仍会触发超压爆炸。
 - `enableOvervoltageExplosion`：是否启用机器超压爆炸。
+
+### `difficulty`
+
+- `hardMode`：困难模式。开启后战利品箱不生成铱矿石，铱碎片数量减半。修改后需要重启游戏或服务器。
 
 ### `recycler`
 

@@ -23,6 +23,8 @@ annotation class ConfigComment(val value: String, val defaultValue: String = "")
 data class Ic2MainConfig(
     @field:ConfigComment("通用配置。")
     val general: GeneralConfig = GeneralConfig(),
+    @field:ConfigComment("游戏难度相关配置。")
+    val difficulty: DifficultyConfig = DifficultyConfig(),
     @field:ConfigComment("回收机相关配置。")
     val recycler: RecyclerConfig = RecyclerConfig(),
     @field:ConfigComment("核能系统相关配置。")
@@ -39,6 +41,11 @@ data class Ic2MainConfig(
     val armor: ArmorConfig = ArmorConfig(),
     @field:ConfigComment("世界生成配置。")
     val worldgen: WorldgenConfig = WorldgenConfig()
+)
+
+data class DifficultyConfig(
+    @field:ConfigComment("困难模式。开启后战利品箱不生成铱矿石，铱碎片数量减半；修改后需要重启游戏或服务器。", "false")
+    val hardMode: Boolean = false
 )
 
 data class GeneralConfig(
@@ -450,6 +457,7 @@ private val DEFAULT_CONFIG_TEMPLATE = Ic2MainConfig(
         checkForUpdates = true,
         shockWhenNoEnergyFlow = false
     ),
+    difficulty = DifficultyConfig(),
     recycler = RecyclerConfig(
         blacklist = listOf("minecraft:stick")
     ),
