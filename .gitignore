@@ -51,7 +51,7 @@ node_modules/
 
 # deploy
 
-deploy/
+/deploy
 r
 .playwright-cli/
 .zcode/
