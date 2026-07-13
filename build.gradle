@@ -72,3 +72,21 @@ subprojects {
 		}
 	}
 }
+
+// Core 的开发客户端自动加载本仓库内所有 addon 的最新开发产物。
+// 使用 modLocalRuntime：只影响 :core:runClient 等本地运行任务，不会把 addon
+// 打进 core 的发布 JAR，也不会改变 addon 对 core 的正常编译依赖。
+project(':core') {
+	dependencies {
+		[
+			':advanced-solar-addon',
+			// ':advanced-weapons-addon',
+			// ':buildcraft-addon'
+		].each { addonProject ->
+			modLocalRuntime(project(
+				path: addonProject,
+				configuration: 'namedElements'
+			))
+		}
+	}
+}
