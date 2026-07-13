@@ -42,6 +42,7 @@ object NetworkManager {
     val TOGGLE_FOAM_SPRAYER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_foam_sprayer_mode")
     val TOGGLE_MINING_LASER_MODE_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_mining_laser_mode")
     val TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_leggings_speed")
+    val QUANTUM_LEGGINGS_SPEED_TICK_PACKET = Identifier(Ic2_120.MOD_ID, "quantum_leggings_speed_tick")
     val TOGGLE_QUANTUM_BOOTS_JUMP_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_boots_jump")
     val SELECT_TEMPLATE_PACKET = Identifier(Ic2_120.MOD_ID, "select_template")
     val SET_FLUID_FILTER_PACKET = Identifier(Ic2_120.MOD_ID, "set_fluid_filter")
@@ -112,6 +113,18 @@ object NetworkManager {
                             else -> "message.ic2_120.quantum_leggings.speed_off"
                         }
                     ), true)
+                }
+            }
+        }
+
+        ServerPlayNetworking.registerGlobalReceiver(QUANTUM_LEGGINGS_SPEED_TICK_PACKET) { server, player, _, _, _ ->
+            server.execute {
+                if (player.hasVehicle() || player.abilities.flying || player.isSpectator) return@execute
+                if (!player.isOnGround && !player.isTouchingWater) return@execute
+
+                val stack = player.getEquippedStack(EquipmentSlot.LEGS)
+                if (stack.item is QuantumLeggings) {
+                    QuantumLeggings.consumeSpeedEnergyTick(stack)
                 }
             }
         }

@@ -175,12 +175,12 @@ data class QuantumLeggingsConfig(
     /** 神行时长（秒）。满电 2 档可连续神行多久。 */
     @field:ConfigComment("量子护腿神行时长（秒，2档满电），耗电量自动计算。", "1800")
     val speedBoostDurationSeconds: Int = 1800,
-    /** 神行 1 档速度倍率。 */
-    @field:ConfigComment("神行 1 档速度倍率。0.2 表示 +20% 移速，半耗电。", "0.2")
-    val speedMultiplierTier1: Double = 0.2,
-    /** 神行 2 档速度倍率。 */
-    @field:ConfigComment("神行 2 档速度倍率。0.4 表示 +40% 移速，全耗电。", "0.4")
-    val speedMultiplierTier2: Double = 0.4
+    /** 神行 2 档地面前进动力；1 档固定为一半。 */
+    @field:ConfigComment("神行 2 档每 tick 追加的地面前进动力。原版 IC2 为 0.22；1 档固定为一半。", "0.22")
+    val groundBoostTier2: Double = 0.22,
+    /** 神行 2 档水中前进/上浮动力；1 档固定为一半。 */
+    @field:ConfigComment("神行 2 档每 tick 追加的水中前进/上浮动力。原版 IC2 为 0.1；1 档固定为一半。", "0.1")
+    val waterBoostTier2: Double = 0.1
 )
 
 data class QuantumBootsConfig(
@@ -614,6 +614,30 @@ object Ic2Config {
     fun getQuantumLeggingsEuPerTick(): Double {
         val cfg = current.armor.quantumLeggings
         return cfg.maxEnergy.toDouble() / (cfg.speedBoostDurationSeconds * 20.0)
+    }
+
+    /**
+     * 量子护腿每 tick 追加的地面前进动力。2 档复刻原版 IC2，1 档固定为一半。
+     */
+    fun getQuantumLeggingsGroundBoost(tier: Int): Double {
+        val tierFactor = when (tier) {
+            1 -> 0.5
+            2 -> 1.0
+            else -> 0.0
+        }
+        return current.armor.quantumLeggings.groundBoostTier2.coerceIn(0.0, 1.0) * tierFactor
+    }
+
+    /**
+     * 量子护腿每 tick 追加的水中前进/上浮动力。1 档固定为 2 档的一半。
+     */
+    fun getQuantumLeggingsWaterBoost(tier: Int): Double {
+        val tierFactor = when (tier) {
+            1 -> 0.5
+            2 -> 1.0
+            else -> 0.0
+        }
+        return current.armor.quantumLeggings.waterBoostTier2.coerceIn(0.0, 1.0) * tierFactor
     }
 
     /**

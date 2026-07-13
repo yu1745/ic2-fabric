@@ -416,24 +416,24 @@ object Ic2ConfigScreen {
         val cat = builder.getOrCreateCategory(Text.literal("护甲 • 量子护腿"))
         var maxEnergy = cfg.maxEnergy
         var speedDuration = cfg.speedBoostDurationSeconds
-        var speed1 = cfg.speedMultiplierTier1
-        var speed2 = cfg.speedMultiplierTier2
+        var groundBoostTier2 = cfg.groundBoostTier2
+        var waterBoostTier2 = cfg.waterBoostTier2
 
         cat.addEntry(eb.startLongField(Text.literal("参考容量（EU）"), maxEnergy)
             .setDefaultValue(10_000_000L).setSaveConsumer { maxEnergy = it }.build())
         cat.addEntry(eb.startIntField(Text.literal("神行时长（秒，2档满电）"), speedDuration)
             .setDefaultValue(1800).setSaveConsumer { speedDuration = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("1 档速度倍率"), speed1)
-            .setDefaultValue(0.2).setSaveConsumer { speed1 = it }.build())
-        cat.addEntry(eb.startDoubleField(Text.literal("2 档速度倍率"), speed2)
-            .setDefaultValue(0.4).setSaveConsumer { speed2 = it }.build())
+        cat.addEntry(eb.startDoubleField(Text.literal("2 档地面推进力（1 档减半）"), groundBoostTier2)
+            .setDefaultValue(0.22).setSaveConsumer { groundBoostTier2 = it }.build())
+        cat.addEntry(eb.startDoubleField(Text.literal("2 档水中推进力（1 档减半）"), waterBoostTier2)
+            .setDefaultValue(0.1).setSaveConsumer { waterBoostTier2 = it }.build())
 
         return {
             QuantumLeggingsConfig(
                 maxEnergy = maxEnergy,
                 speedBoostDurationSeconds = speedDuration,
-                speedMultiplierTier1 = speed1,
-                speedMultiplierTier2 = speed2
+                groundBoostTier2 = groundBoostTier2,
+                waterBoostTier2 = waterBoostTier2
             )
         }
     }

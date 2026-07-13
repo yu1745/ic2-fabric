@@ -20,6 +20,7 @@ import ic2_120.client.colorprovider.StorageBoxColorProvider
 import ic2_120.client.colorprovider.PipeColorProvider
 import ic2_120.client.PainterModelPredicates
 import ic2_120.client.PeatOreTooltipHandler
+import ic2_120.client.QuantumLeggingsSpeedController
 import ic2_120.client.ClientBlockEntityRenderers
 import ic2_120.client.JetpackSoundController
 import ic2_120.client.MachineLoopSoundController
@@ -50,6 +51,7 @@ object Ic2_120Client : ClientModInitializer {
 		ModeKeybinds.register()
 		BandwidthHudKeybinds.register()
 		ArmorKeybinds.register()
+		QuantumLeggingsSpeedController.register()
 		ArmorTooltipHandler.register()
 		AnimalmatronTooltipHandler.register()
 		DrillTooltipHandler.register()
