@@ -332,19 +332,22 @@ object Ic2ConfigScreen {
     ): () -> ArmorConfig {
         val jetpackReader = jetpackConfig(eb, builder, cfg.jetpack)
         val electricJetpackReader = electricJetpackConfig(eb, builder, cfg.electricJetpack)
-        val electricArmorReader = electricArmorConfig(eb, builder, cfg.electricArmorDamageCostMultiplier)
+        val electricArmorReader = electricArmorConfig(
+            eb, builder, cfg.electricArmorDamageCostMultiplier, cfg.quantumArmorPreservesHitReaction
+        )
         val chestplateReader = quantumChestplateConfig(eb, builder, cfg.quantumChestplate)
         val helmetReader = quantumHelmetConfig(eb, builder, cfg.quantumHelmet)
         val leggingsReader = quantumLeggingsConfig(eb, builder, cfg.quantumLeggings)
         val bootsReader = quantumBootsConfig(eb, builder, cfg.quantumBoots)
         val nightVisionReader = nightVisionConfig(eb, builder, cfg.nightVision)
         val rubberBootsReader = rubberBootsConfig(eb, builder, cfg.rubberBoots)
-
         return {
+            val electricArmorSettings = electricArmorReader()
             ArmorConfig(
                 jetpack = jetpackReader(),
                 electricJetpack = electricJetpackReader(),
-                electricArmorDamageCostMultiplier = electricArmorReader(),
+                electricArmorDamageCostMultiplier = electricArmorSettings.first,
+                quantumArmorPreservesHitReaction = electricArmorSettings.second,
                 quantumChestplate = chestplateReader(),
                 quantumHelmet = helmetReader(),
                 quantumLeggings = leggingsReader(),
@@ -356,17 +359,25 @@ object Ic2ConfigScreen {
     }
 
     private fun electricArmorConfig(
-        eb: ConfigEntryBuilder, builder: ConfigBuilder, initialMultiplier: Double
-    ): () -> Double {
+        eb: ConfigEntryBuilder, builder: ConfigBuilder, initialMultiplier: Double,
+        initialPreservesHitReaction: Boolean
+    ): () -> Pair<Double, Boolean> {
         val cat = builder.getOrCreateCategory(Text.literal("护甲 • 电力护甲通用"))
         var multiplier = initialMultiplier
+        var preservesHitReaction = initialPreservesHitReaction
 
         cat.addEntry(eb.startDoubleField(Text.literal("伤害扣电倍率"), multiplier)
             .setDefaultValue(1.0)
             .setSaveConsumer { multiplier = it }
             .build())
 
-        return { multiplier }
+        cat.addEntry(eb.startBooleanToggle(Text.literal("量子护甲保留受击硬直和击退"), preservesHitReaction)
+            .setDefaultValue(false)
+            .setTooltip(Text.literal("关闭：完全吸收伤害时不产生硬直和击退；开启：对齐原版 IC2 行为。"))
+            .setSaveConsumer { preservesHitReaction = it }
+            .build())
+
+        return { multiplier to preservesHitReaction }
     }
 
     private fun jetpackConfig(

@@ -3,10 +3,12 @@ package ic2_120.mixin;
 import ic2_120.config.Ic2Config;
 import ic2_120.access.SuperJumpProtectionAccess;
 import ic2_120.content.item.armor.ElectricArmorItem;
+import ic2_120.content.item.armor.QuantumArmorItem;
 import ic2_120.content.item.armor.QuantumBoots;
 import ic2_120.util.NanoSaberDamageHelper;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -265,6 +267,16 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
             }
         }
 
+        if (reducedDamage <= 0.0f) {
+            if (Ic2Config.INSTANCE.isQuantumArmorHitReactionEnabled()
+                    && QuantumArmorItem.Companion.hasFullQuantumArmor(player)) {
+                applyVanillaHitReaction(player, source);
+            }
+            cir.setReturnValue(true);
+            cir.cancel();
+            return;
+        }
+
         IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE.set(true);
         try {
             cir.setReturnValue(player.damage(source, reducedDamage));
@@ -272,5 +284,28 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
             IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE.set(false);
         }
         cir.cancel();
+    }
+
+    /**
+     * 复刻原版 LivingEntity.damage 在伤害已被护甲吸收为 0 时仍保留的受击反馈。
+     */
+    private static void applyVanillaHitReaction(PlayerEntity player, DamageSource source) {
+        player.timeUntilRegen = 20;
+        player.maxHurtTime = 10;
+        player.hurtTime = player.maxHurtTime;
+
+        if (source.getAttacker() != null && !source.isIn(DamageTypeTags.IS_EXPLOSION)) {
+            double x = source.getAttacker().getX() - player.getX();
+            double z = source.getAttacker().getZ() - player.getZ();
+            while (x * x + z * z < 1.0E-4) {
+                x = (Math.random() - Math.random()) * 0.01;
+                z = (Math.random() - Math.random()) * 0.01;
+            }
+            player.takeKnockback(0.4, x, z);
+        }
+
+        if (!player.getWorld().isClient) {
+            player.getWorld().sendEntityDamage(player, source);
+        }
     }
 }
