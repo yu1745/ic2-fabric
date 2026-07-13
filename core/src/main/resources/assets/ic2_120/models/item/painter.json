@@ -1,7 +1,24 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "ic2:item/tool/painter/painter",
-    "layer1": "ic2:item/tool/painter/painter_white"
-  }
+    "layer0": "ic2:item/tool/painter/painter"
+  },
+  "overrides": [
+    { "predicate": { "ic2_120:painter_color": 0.0625 }, "model": "ic2:item/white_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.125 }, "model": "ic2:item/orange_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.1875 }, "model": "ic2:item/magenta_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.25 }, "model": "ic2:item/light_blue_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.3125 }, "model": "ic2:item/yellow_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.375 }, "model": "ic2:item/lime_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.4375 }, "model": "ic2:item/pink_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.5 }, "model": "ic2:item/gray_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.5625 }, "model": "ic2:item/light_gray_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.625 }, "model": "ic2:item/cyan_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.6875 }, "model": "ic2:item/purple_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.75 }, "model": "ic2:item/blue_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.8125 }, "model": "ic2:item/brown_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.875 }, "model": "ic2:item/green_painter" },
+    { "predicate": { "ic2_120:painter_color": 0.9375 }, "model": "ic2:item/red_painter" },
+    { "predicate": { "ic2_120:painter_color": 1.0 }, "model": "ic2:item/black_painter" }
+  ]
 }

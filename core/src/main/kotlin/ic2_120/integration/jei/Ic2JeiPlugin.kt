@@ -31,6 +31,7 @@ import ic2_120.integration.jei.SolidCannerJeiRecipe
 import ic2_120.integration.jei.SolidCannerRecipeCategory
 import ic2_120.content.block.storage.EnergyStorageBlock
 import ic2_120.content.item.FoamSprayerItem
+import ic2_120.content.item.PainterItem
 import ic2_120.content.item.armor.JetpackItem
 import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.recipes.CannerMixingRecipes
@@ -125,6 +126,12 @@ class Ic2JeiPlugin : IModPlugin {
                     FoamSprayerSubtypeInterpreter()
                 )
             }
+            if (item is PainterItem) {
+                registration.registerSubtypeInterpreter(
+                    item,
+                    PainterSubtypeInterpreter()
+                )
+            }
             // 检查物品是否为储电盒/充电座 BlockItem
             if (item is EnergyStorageBlock.EnergyStorageBlockItem) {
                 registration.registerSubtypeInterpreter(
@@ -207,6 +214,8 @@ class Ic2JeiPlugin : IModPlugin {
         registerEnergyStorageFullVariants(extraStacks)
         // 注册杂交作物初始种子袋（1/1/1）
         extraStacks += CropSeedBagItem.createInitialSeedStacks()
+        // 注册刷子的 16 个带色变体
+        extraStacks += PainterItem.createColoredStacks()
 
         // 通用流体单元：为所有没有专用单元类的流体注册 NBT 变体
         val fluidCell = Registries.ITEM.get(Identifier("ic2_120", "fluid_cell"))
@@ -601,6 +610,11 @@ class Ic2JeiPlugin : IModPlugin {
                 else -> "$PARTIAL_TAG:$amt"
             }
         }
+    }
+
+    class PainterSubtypeInterpreter : IIngredientSubtypeInterpreter<ItemStack> {
+        override fun apply(itemStack: ItemStack, uidContext: mezz.jei.api.ingredients.subtypes.UidContext): String =
+            "painter:${PainterItem.getColor(itemStack)?.getName() ?: "uncolored"}"
     }
 
     /**

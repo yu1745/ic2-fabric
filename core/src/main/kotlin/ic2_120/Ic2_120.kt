@@ -26,6 +26,7 @@ import ic2_120.content.worldgen.OreGeneration
 import ic2_120.content.worldgen.RubberTreeGeneration
 import ic2_120.content.item.CellAndBucketFluidRegistration
 import ic2_120.content.item.CropSeedBagItem
+import ic2_120.content.item.PainterItem
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.machines.GeoGeneratorBlockEntity
@@ -193,6 +194,18 @@ object Ic2_120 : ModInitializer {
                 for (stack in initialSeeds) entries.addAfter(seedBag, stack)
             } else {
                 for (stack in initialSeeds) entries.add(stack)
+            }
+        }
+
+        // 刷子 16 色变体（基础未染色刷子由 @ModItem 自动加入）
+        val ic2ToolsKey = RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier(MOD_ID, CreativeTab.IC2_TOOLS.id))
+        ItemGroupEvents.modifyEntriesEvent(ic2ToolsKey).register { entries ->
+            val painter = Registries.ITEM.get(Identifier(MOD_ID, "painter"))
+            val coloredPainters = PainterItem.createColoredStacks()
+            if (painter != Items.AIR) {
+                for (stack in coloredPainters) entries.addAfter(painter, stack)
+            } else {
+                for (stack in coloredPainters) entries.add(stack)
             }
         }
 

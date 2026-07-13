@@ -18,7 +18,7 @@ import ic2_120.client.colorprovider.FluidCellColorProvider
 import ic2_120.client.RubberLogModelPlugin
 import ic2_120.client.colorprovider.StorageBoxColorProvider
 import ic2_120.client.colorprovider.PipeColorProvider
-import ic2_120.client.colorprovider.PainterColorProvider
+import ic2_120.client.PainterModelPredicates
 import ic2_120.client.PeatOreTooltipHandler
 import ic2_120.client.ClientBlockEntityRenderers
 import ic2_120.client.JetpackSoundController
@@ -76,6 +76,6 @@ object Ic2_120Client : ClientModInitializer {
 		RubberLogModelPlugin.register()
 		// 注册管道着色器（青铜和碳纤维材质）
 		PipeColorProvider.register()
-		PainterColorProvider.register()
+		PainterModelPredicates.register()
 	}
 }

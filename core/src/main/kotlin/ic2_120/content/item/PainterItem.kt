@@ -145,6 +145,13 @@ class PainterItem : Item(FabricItemSettings().maxCount(1).maxDamage(MAX_DAMAGE))
             return DyeColor.byId(nbt.getInt(COLOR_KEY))
         }
 
+        /** 创造栏和 JEI 使用的 16 个带色刷子变体。 */
+        fun createColoredStacks(): List<ItemStack> = DyeColor.entries.map { color ->
+            ItemStack(PainterItem::class.instance()).also { stack ->
+                stack.orCreateNbt.putInt(COLOR_KEY, color.id)
+            }
+        }
+
         private fun wallFor(color: DyeColor): Block? = when (color) {
             DyeColor.WHITE -> WhiteWallBlock::class.instance()
             DyeColor.ORANGE -> OrangeWallBlock::class.instance()
