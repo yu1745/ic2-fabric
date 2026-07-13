@@ -58,15 +58,17 @@ import net.minecraft.world.World
  *
  * 从背面接收热量（HU），消耗铁质材料与压缩空气，产出钢锭和炉渣。
  *
- * HU 储值上限 1,000 HU。温度 0–1,700。
+ * HU 缓存上限 1,280 HU。温度 0–1,700。
  *
- * 升温消耗 HU（已减半）：
- * - 0–1400：50 HU/tick
- * - 1401–1500：40 HU/tick
- * - 1501–1600：30 HU/tick
- * - 1601–1700：20 HU/tick
+ * 纯 HU 累积温度模型：温度变化完全由 HU 流入/流出驱动，不再使用固定 tick 计数表。
+ * 每 tick 净HU = 缓存 HU − 散热(T)，散热随温度线性增长（见 [getDissipation]）：
+ * - T = 0..1401：散热 0 → 50 HU/t
+ * - T = 1402..1700：散热 50 → 100 HU/t
+ * 净HU > 0 累积到 [HEAT_PER_DEGREE] 升 1 度（速度 ∝ 净HU）；< 0 反向累积降 1 度；= 0 稳态。
+ * 稳态温度完全由 HU 输入决定：50 HU/t → 1401，100 HU/t → 1700，中间线性。
  *
- * 工作条件：温度 > 1400。工作时温度冻结，持续消耗对应温度段的 HU 维持。
+ * 温度逻辑每 tick 独立运行，工作时不再冻结温度。
+ * 工作条件：温度 ≥ 1401 且有材料、产物可接收、压缩空气充足。炼钢仅消耗压缩空气，不额外消耗 HU。
  *
  * 每钢锭空气消耗随温度线性递减（单位 droplets）：
  * - 1401→1500：486,000→421,200 droplets（显示约 6000→5200 mB）
@@ -108,13 +110,21 @@ class BlastFurnaceBlockEntity(
 
         private const val NBT_HU_RECEIVED = "HuReceived"
         private const val NBT_TEMPERATURE = "Temperature"
-        private const val NBT_TEMP_PROGRESS = "TempProgress"
-        private const val NBT_TEMP_DECAY = "TempDecay"
+        private const val NBT_HEAT_ACCUM = "HeatAccum"
         private const val NBT_AIR_AMOUNT = "AirAmount"
         private const val NBT_HU_BUFFER = "HuBuffer"
 
-        /** HU 缓存容量：1280 HU = 32 tick × 40 HU/tick（恰好覆盖 1401 的 1 度温度衰减窗口） */
+        /** HU 缓存容量：1280 HU，覆盖最高 100 HU/tick 散热的多个 tick 窗口 */
         const val HU_BUFFER_CAPACITY: Long = 1280L
+
+        /**
+         * 每升高 1 度需要的净 HU 总量（纯 HU 累积模型）。
+         * 升温速度 = 净HU/t ÷ HEAT_PER_DEGREE 度/tick，严格正比于 HU 输入。
+         */
+        const val HEAT_PER_DEGREE: Int = 100
+
+        /** 散热定点精度倍数（散热值 ×1000 存为整数，避免浮点） */
+        private const val DISSIPATION_SCALE = 1000
 
         @Volatile
         private var fluidLookupRegistered = false
@@ -150,8 +160,8 @@ class BlastFurnaceBlockEntity(
     private var huReceivedThisTick: Long = 0L
     private var huBuffer: Long = 0L  // HU 缓存，上限 HU_BUFFER_CAPACITY (1280)
     private var temperature: Int = 0
-    private var tempProgress: Int = 0
-    private var tempDecayProgress: Int = 0
+    /** 升温/降温累积进度（单位 = 净HU × DISSIPATION_SCALE，正值趋近 +HEAT_PER_DEGREE*SCALE 升温，负值趋近 -... 降温） */
+    private var heatAccum: Long = 0L
     private var heatReceivedLastTick: Boolean = false
 
     // 当前钢锭已消耗的空气 droplet 数（用于滞后耗尽模型）
@@ -251,8 +261,7 @@ class BlastFurnaceBlockEntity(
         Inventories.readNbt(nbt, inventory)
         syncedData.readNbt(nbt)
         temperature = nbt.getInt(NBT_TEMPERATURE).coerceIn(0, BlastFurnaceSync.TEMP_MAX)
-        tempProgress = nbt.getInt(NBT_TEMP_PROGRESS).coerceAtLeast(0)
-        tempDecayProgress = nbt.getInt(NBT_TEMP_DECAY).coerceAtLeast(0)
+        heatAccum = nbt.getLong(NBT_HEAT_ACCUM)
         huBuffer = nbt.getLong(NBT_HU_BUFFER).coerceIn(0L, HU_BUFFER_CAPACITY)
         sync.temperature = temperature
         airTankInternal.setStoredAir(nbt.getLong(NBT_AIR_AMOUNT).coerceAtLeast(0L))
@@ -265,8 +274,7 @@ class BlastFurnaceBlockEntity(
         nbt.putLong(NBT_HU_RECEIVED, huReceivedThisTick)
         nbt.putLong(NBT_HU_BUFFER, huBuffer)
         nbt.putInt(NBT_TEMPERATURE, temperature)
-        nbt.putInt(NBT_TEMP_PROGRESS, tempProgress)
-        nbt.putInt(NBT_TEMP_DECAY, tempDecayProgress)
+        nbt.putLong(NBT_HEAT_ACCUM, heatAccum)
         nbt.putLong(NBT_AIR_AMOUNT, airTankInternal.amount)
     }
 
@@ -293,29 +301,23 @@ class BlastFurnaceBlockEntity(
         return recipeManager.getFirstMatch(getRecipeType<BlastFurnaceRecipe>(), inv, world ?: return null).orElse(null)
     }
 
-    /** 当前温度下每 tick 升温 / 维持所需 HU（已减半） */
-    private fun getHuPerTick(temp: Int): Int = when {
-        temp >= 1601 -> 20
-        temp >= 1501 -> 30
-        temp >= 1401 -> 40
-        else -> 50
+    /**
+     * 当前温度下的散热（维持需求），返回 ×[DISSIPATION_SCALE] 的定点整数。
+     *
+     * 两段线性，穿过稳态锚点 (50 HU/t, 1401) 与 (100 HU/t, 1700)：
+     * - T = 0..1401：0 → 50 HU/t（线性，T=0 无散热，便于冷启动）
+     * - T = 1402..1700：50 → 100 HU/t（线性）
+     *
+     * 稳态温度（散热 = HU 输入）：50 HU/t → 1401，100 HU/t → 1700，中间线性。
+     */
+    private fun getDissipation(temp: Int): Long {
+        val t = temp.coerceIn(0, BlastFurnaceSync.TEMP_MAX)
+        return if (t <= BlastFurnaceSync.TEMP_WORK_MIN) {
+            50L * DISSIPATION_SCALE * t / BlastFurnaceSync.TEMP_WORK_MIN
+        } else {
+            50L * DISSIPATION_SCALE + (t - BlastFurnaceSync.TEMP_WORK_MIN).toLong() * 50L * DISSIPATION_SCALE / (BlastFurnaceSync.TEMP_MAX - BlastFurnaceSync.TEMP_WORK_MIN)
+        }
     }
-
-   /** 当前温度下每升高 1 温度值所需 tick 数 */
-   private fun getTicksPerTemp(temp: Int): Int = when {
-       temp >= 1601 -> 56   // 2.8s
-       temp >= 1501 -> 32   // 1.6s
-       temp >= 1401 -> 20   // 1.0s
-       else -> 14           // 0.7s (0–1400)
-   }
-
-   /** 当前温度下 HU 不足时每下降 1 温度值所需 tick 数 */
-   private fun getTicksPerDecay(temp: Int): Int = when {
-       temp >= 1601 -> 6    // 0.3s
-       temp >= 1501 -> 10   // 0.5s
-       temp >= 1401 -> 16   // 0.8s
-       else -> 20           // 1.0s (0–1400)
-   }
 
     /** 当前温度下的加工总 tick 数（三段线性插值） */
     private fun getProgressMax(temp: Int): Int = BlastFurnaceSync.getProgressMax(temp)
@@ -336,58 +338,63 @@ class BlastFurnaceBlockEntity(
 
         fillAirTankFromSlot()
 
-        val huPerTick = getHuPerTick(temperature)
-        val progressMax = getProgressMax(temperature)
-        sync.warmActive = if (huBuffer >= huPerTick) 1 else 0
+        // 当前温度下的散热（维持需求，定点 ×DISSIPATION_SCALE）
+        val dissipation = getDissipation(temperature)
+        // 每度累积阈值（定点）：HEAT_PER_DEGREE × SCALE
+        val accumThreshold = HEAT_PER_DEGREE.toLong() * DISSIPATION_SCALE
 
+        // ---- 温度逻辑（纯 HU 累积模型，每 tick 独立运行，与是否工作无关）----
+        // 每个 HU 只能用一次：先扣散热（维持），剩余的全部转升温累积。
+        // 这样缓存不会因"净HU用缓存总量算"而重复累积（曾导致秒升 1700 的 bug）。
+        // 缓存（huBuffer）仅用于吸收输入波动：本 tick 输入 + 上轮结余，扣散热后若有剩余则全用于升温。
+        // 散热随温度线性增长（见 getDissipation），稳态温度完全由 HU 输入决定：
+        //   50 HU/t → 1401，100 HU/t → 1700，中间线性。
+        val bufferScaled = huBuffer * DISSIPATION_SCALE  // 缓存 HU 折算为定点
+        val bufferAfterDissipation = bufferScaled - dissipation  // 扣散热后的剩余（定点）
+        if (bufferAfterDissipation >= 0L) {
+            // 缓存足以覆盖散热：扣散热，剩余全用于升温累积，清空缓存（不重复计算）
+            huBuffer = 0L
+            sync.warmActive = 1
+            if (bufferAfterDissipation > 0L && temperature < BlastFurnaceSync.TEMP_MAX) {
+                heatAccum += bufferAfterDissipation
+                while (heatAccum >= accumThreshold && temperature < BlastFurnaceSync.TEMP_MAX) {
+                    heatAccum -= accumThreshold
+                    temperature++
+                    sync.temperature = temperature
+                }
+            }
+            // bufferAfterDissipation == 0：稳态，温度不变
+        } else {
+            // 缓存不足以覆盖散热：扣空缓存，反向累积降温
+            huBuffer = 0L
+            sync.warmActive = 0
+            if (temperature > 0) {
+                val deficitScaled = -bufferAfterDissipation  // 散热超出缓存的部分（正定点值）
+                heatAccum -= deficitScaled
+                while (heatAccum <= -accumThreshold && temperature > 0) {
+                    heatAccum += accumThreshold
+                    temperature--
+                    sync.temperature = temperature
+                }
+                // 温度跌破工作阈值时清空炼钢进度
+                if (temperature < BlastFurnaceSync.TEMP_WORK_MIN && sync.progress != 0) {
+                    sync.progress = 0
+                    airConsumedThisSteel = 0L
+                }
+            }
+        }
+
+        // ---- 炼钢逻辑（独立于温度逻辑）----
+        // HU 只用于升温/维持（见上方），工作仅消耗压缩空气。
+        // progressMax 在温度逻辑之后计算，确保用更新后的温度（避免温度刚跨过 1401 时 progressMax=0 导致除零）。
+        val progressMax = getProgressMax(temperature)
         val hasInput = !input.isEmpty && getRecipeForInput(input) != null
         val canAcceptOutput = canAcceptOutput(outputSteel, outputSlag)
         val canWork = temperature >= BlastFurnaceSync.TEMP_WORK_MIN && hasInput && canAcceptOutput
 
         if (canWork) {
-            // HU 不足以维持当前温度：清空缓存，触发温度衰减
-            if (huBuffer < huPerTick) {
-                huBuffer = 0L
-                applyTemperatureDecay()
-                if (temperature < BlastFurnaceSync.TEMP_WORK_MIN && sync.progress != 0) {
-                    sync.progress = 0
-                    airConsumedThisSteel = 0L
-                }
-                setActiveState(world, pos, state, false)
-                sync.huInput = huBuffer.toInt()
-                huReceivedThisTick = 0L
-                heatReceivedLastTick = false
-                return
-            }
-
-            // HU 充足，消耗 HU 维持温度
-            huBuffer -= huPerTick
-            tempDecayProgress = 0
-
-            // 无材料：重置进度
-            if (!hasInput) {
-                if (sync.progress != 0) sync.progress = 0
-                markDirty()
-                setActiveState(world, pos, state, false)
-                sync.huInput = huBuffer.toInt()
-                huReceivedThisTick = 0L
-                heatReceivedLastTick = false
-                return
-            }
-
-            // 产物满
-            if (!canAcceptOutput) {
-                markDirty()
-                setActiveState(world, pos, state, false)
-                sync.huInput = huBuffer.toInt()
-                huReceivedThisTick = 0L
-                heatReceivedLastTick = false
-                return
-            }
-
-            // 消耗压缩空气
+            // 消耗压缩空气，空气不足则不推进进度（不产出）
             if (!consumeAirForTick(progressMax)) {
-                // 空气不足：不推进进度
                 markDirty()
                 setActiveState(world, pos, state, false)
                 sync.huInput = huBuffer.toInt()
@@ -410,7 +417,7 @@ class BlastFurnaceBlockEntity(
                 sync.progress = 0
                 airConsumedThisSteel = 0L
                 markDirty()
-                setActiveState(world, pos, state, false)
+                setActiveState(world, pos, state, true)
                 sync.huInput = huBuffer.toInt()
                 huReceivedThisTick = 0L
                 heatReceivedLastTick = false
@@ -421,36 +428,13 @@ class BlastFurnaceBlockEntity(
             markDirty()
             setActiveState(world, pos, state, true)
         } else {
-            // 不工作
+            // 温度不够 / 无材料 / 产物满：重置进度，不工作
             if (sync.progress != 0) sync.progress = 0
             airConsumedThisSteel = 0L
-
-            if (huBuffer >= huPerTick && temperature < BlastFurnaceSync.TEMP_MAX) {
-                // HU 充足且未达上限：消耗 HU，累积温度进度
-                huBuffer -= huPerTick
-                tempDecayProgress = 0
-                tempProgress++
-                val ticksPerTemp = getTicksPerTemp(temperature)
-                if (tempProgress >= ticksPerTemp) {
-                    temperature++
-                    tempProgress = 0
-                    sync.temperature = temperature
-                }
-                markDirty()
-            } else if (huBuffer >= huPerTick) {
-                // 已达温度上限（temperature >= TEMP_MAX）：消耗 HU 维持温度，不衰减
-                huBuffer -= huPerTick
-                tempDecayProgress = 0
-                tempProgress = 0
-                markDirty()
-            } else {
-                // HU 不足：清空缓存，温度衰减
-                if (huBuffer > 0L) huBuffer = 0L
-                applyTemperatureDecay()
-            }
             setActiveState(world, pos, state, false)
         }
 
+        markDirty()
         sync.huInput = huBuffer.toInt()
         huReceivedThisTick = 0L
         heatReceivedLastTick = false
@@ -458,6 +442,7 @@ class BlastFurnaceBlockEntity(
 
     /** 按当前温度 / 进度消耗压缩空气，返回是否成功消耗（可用于推进进度） */
     private fun consumeAirForTick(progressMax: Int): Boolean {
+        if (progressMax <= 0) return false  // 防御：温度低于工作阈值时不应调用
         val airPerSteel = BlastFurnaceSync.getAirPerSteelDroplets(temperature).toLong()
         // 当前进度应消耗的 droplet 总量
         val expected = airPerSteel * sync.progress / progressMax
@@ -527,20 +512,6 @@ class BlastFurnaceBlockEntity(
             }
         }
         return false
-    }
-
-    /** HU 不足时温度衰减，达到阈值后温度 -1。温度到 0 后不再衰减。 */
-    private fun applyTemperatureDecay() {
-        if (temperature <= 0) return
-        tempDecayProgress++
-        val ticksPerDecay = getTicksPerDecay(temperature)
-        if (tempDecayProgress >= ticksPerDecay) {
-            temperature--
-            tempDecayProgress = 0
-            tempProgress = 0
-            sync.temperature = temperature
-            markDirty()
-        }
     }
 
     private fun canAcceptOutput(steel: ItemStack, slag: ItemStack): Boolean {

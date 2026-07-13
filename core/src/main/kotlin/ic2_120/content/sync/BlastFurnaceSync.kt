@@ -5,15 +5,14 @@ import ic2_120.content.syncs.SyncSchema
 /**
  * 高炉同步数据。
  *
- * HU 无储值，直接消耗每 tick 传入的 HU。
+ * 纯 HU 累积温度模型：散热随温度线性增长，净HU 驱动温度变化。
+ * - T = 0..1401：散热 0 → 50 HU/t
+ * - T = 1402..1700：散热 50 → 100 HU/t
+ * - 稳态温度完全由 HU 输入决定：50 HU/t → 1401，100 HU/t → 1700，中间线性
+ * - 升温速度 ∝ 净HU（输入 − 散热），HU 输入越高升温越快
  *
- * 升温消耗（已减半）：
- * - 0–1400：50 HU/tick
- * - 1401–1500：40 HU/tick
- * - 1501–1600：30 HU/tick
- * - 1601–1700：20 HU/tick
- *
- * 工作条件：温度 > 1400。
+ * 工作条件：温度 ≥ 1401。温度逻辑每 tick 独立运行，工作时不再冻结温度。
+ * 炼钢仅消耗压缩空气，不额外消耗 HU。
  *
  * 每钢锭空气消耗（随温度线性递减，单位 droplets）：
  * - 1401→1500：486,000→421,200 droplets
@@ -24,9 +23,6 @@ import ic2_120.content.syncs.SyncSchema
  * - 1401→1500：10000→8400 ticks
  * - 1501→1600：8399→6000 ticks
  * - 1601→1700：5999→4000 ticks
- *
- * 工作时温度冻结，需持续消耗对应温度段的 HU 维持。
- * HU 输入不达标则温度衰减。
  */
 class BlastFurnaceSync(schema: SyncSchema) {
 
@@ -60,6 +56,6 @@ class BlastFurnaceSync(schema: SyncSchema) {
     var heatInput by schema.int("HeatInput", default = 0)
     /** 压缩空气储量（droplets），0..648,000 */
     var airAmount by schema.int("AirAmount", default = 0)
-    /** 升温条件是否满足（消费前缓存 >= 当前温度段 HU/tick 需求），1=满足 0=不满足 */
+    /** 升温条件是否满足（净HU ≥ 0，即缓存足以覆盖当前散热），1=满足 0=不满足 */
     var warmActive by schema.int("WarmActive", default = 0)
 }

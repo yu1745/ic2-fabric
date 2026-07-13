@@ -20,12 +20,19 @@ The heat face is the machine's facing side, so place a heat generator against th
 
 - Temperature range: **0-1700 C**
 - Work starts at **1401 C**
-- 0-1400 C: needs **50 HU/t** to heat
-- 1401-1500 C: needs **40 HU/t** to heat or hold temperature
-- 1501-1600 C: needs **30 HU/t** to heat or hold temperature
-- 1601-1700 C: needs **20 HU/t** to heat or hold temperature
 
-If enough HU arrives and the furnace is not currently processing a valid recipe, it warms up. Once it is processing, the temperature is held in place and the same HU/t is required every tick. If HU falls short, progress pauses and the furnace cools down; progress is lost if it cools below 1401 C.
+The furnace dissipates heat continuously, and the dissipation (HU/t needed to hold the current temperature) grows linearly with temperature:
+
+- 0-1401 C: dissipation rises from **0 to 50 HU/t**
+- 1402-1700 C: dissipation rises from **50 to 100 HU/t**
+
+Net heat per tick = HU input − dissipation. Positive net heat accumulates and raises the temperature; negative net heat lowers it; exactly zero holds the temperature steady. **The final stable temperature depends entirely on the HU input**:
+
+- **50 HU/t** → stabilizes at **1401 C** (just enough to start working)
+- **100 HU/t** → stabilizes at **1700 C**
+- Linear in between, e.g. 75 HU/t → about 1550 C
+
+Heating speed is proportional to net HU: more HU input warms faster. The temperature still rises and falls with the HU input while working — it is no longer frozen. If HU runs short and the temperature drops below 1401 C, the smelting progress is lost.
 
 Higher temperature is better: one steel takes about **10000 ticks at 1401 C**, **8400 ticks at 1500 C**, **6000 ticks at 1600 C**, and **4000 ticks at 1700 C**.
 
@@ -48,6 +55,7 @@ Each valid input produces **1 Steel Ingot** and **1 Slag**:
 - Iron Ingot
 - Iron Ore
 - Deepslate Iron Ore
+- Raw Iron
 
 ## Slots
 

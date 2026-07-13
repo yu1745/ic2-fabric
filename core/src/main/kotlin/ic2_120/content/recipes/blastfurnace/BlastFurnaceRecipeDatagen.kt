@@ -16,7 +16,7 @@ import java.util.function.Consumer
 /**
  * 高炉配方数据生成
  *
- * 6个配方：铁粉、粉碎铁矿石、纯净粉碎铁矿石、铁锭、铁矿石、深板岩铁矿石
+ * 6个配方：铁粉、粉碎铁矿石、纯净粉碎铁矿石、铁锭、铁矿石（含深板岩）、粗铁
  */
 object BlastFurnaceRecipeDatagen {
     data class Entry(
@@ -42,6 +42,9 @@ object BlastFurnaceRecipeDatagen {
             Registries.ITEM.get(Identifier("ic2_120", "steel_ingot")), 1,
             Registries.ITEM.get(Identifier("ic2_120", "slag")), 1),
         Entry("iron_ore", IngredientInput.tag(ModTags.Compat.Items.ORES_IRON, Items.IRON_ORE),
+            Registries.ITEM.get(Identifier("ic2_120", "steel_ingot")), 1,
+            Registries.ITEM.get(Identifier("ic2_120", "slag")), 1),
+        Entry("raw_iron", IngredientInput.tag(ModTags.Compat.Items.RAW_MATERIALS_IRON, Items.RAW_IRON),
             Registries.ITEM.get(Identifier("ic2_120", "steel_ingot")), 1,
             Registries.ITEM.get(Identifier("ic2_120", "slag")), 1)
     )

@@ -1,0 +1,14 @@
+{
+  "type": "ic2_120:blast_furnacing",
+  "ingredient": {
+    "tag": "ic2_120:compat/raw_materials/iron"
+  },
+  "slag_output": {
+    "count": 1,
+    "item": "ic2_120:slag"
+  },
+  "steel_output": {
+    "count": 1,
+    "item": "ic2_120:steel_ingot"
+  }
+}
