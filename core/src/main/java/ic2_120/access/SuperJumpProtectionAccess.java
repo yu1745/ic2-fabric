@@ -1,4 +1,4 @@
-package ic2_120.mixin;
+package ic2_120.access;
 
 import net.minecraft.item.ItemStack;
 

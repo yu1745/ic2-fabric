@@ -1,5 +1,6 @@
 package ic2_120.mixin;
 
+import ic2_120.access.SuperJumpProtectionAccess;
 import ic2_120.content.item.armor.ElectricArmorItem;
 import ic2_120.content.item.armor.QuantumBoots;
 import ic2_120.util.NanoSaberDamageHelper;

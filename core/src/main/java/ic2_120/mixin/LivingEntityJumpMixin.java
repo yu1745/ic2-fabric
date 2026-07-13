@@ -1,5 +1,6 @@
 package ic2_120.mixin;
 
+import ic2_120.access.SuperJumpProtectionAccess;
 import ic2_120.content.item.armor.QuantumBoots;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
