@@ -101,6 +101,7 @@ This guide is provided by IC2 and rendered by Fabric Guidebook.
 - [Solid Canning Machine](machines/solid_canner.md)
 - [Fluid Canner](machines/fluid_canner.md)
 - [Fluid/Solid Canning Machine](machines/canner.md)
+- [Biofuel Production Chain](machines/biofuel_chain.md)
 - [Block Cutting Machine](machines/block_cutter.md)
 - [Extractor](machines/extractor.md)
 - [Pump](machines/pump.md)
