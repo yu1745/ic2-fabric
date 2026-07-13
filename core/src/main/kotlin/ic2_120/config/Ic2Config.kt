@@ -187,6 +187,9 @@ data class QuantumBootsConfig(
     /** 最大能量 (EU)。用于参考。 */
     @field:ConfigComment("量子靴子计算跳跃耗电的参考容量（EU）。", "10000000")
     val maxEnergy: Long = 10_000_000L,
+    /** 是否启用原版 IC2 的常驻摔落保护。 */
+    @field:ConfigComment("是否启用量子靴子的常驻摔落保护。开启时前 10 格免费，超过部分每点摔落伤害消耗 20000 EU；关闭时只保护量子大跳的落地。", "true")
+    val permanentFallProtection: Boolean = true,
     /** 每次大跳消耗能量（EU）。默认 1000 次跳空靴子。 */
     @field:ConfigComment("每次大跳消耗能量（EU）。10M EU / 1000 次 = 10000 EU/次。", "10000")
     val jumpEnergyCost: Long = 10_000,

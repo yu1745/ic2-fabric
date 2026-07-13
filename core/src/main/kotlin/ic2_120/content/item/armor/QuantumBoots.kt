@@ -38,7 +38,7 @@ import java.util.function.Consumer
  * - Alt + J 开关
  * - 跳起高度 ~3.75 格（3 倍正常跳高）
  * - 耗电：10,000 EU/次（满电约 1000 跳）
- * - 落地自动免疫摔落伤害
+ * - 大跳落地自动免疫摔落伤害；可通过配置切换为原版 IC2 的常驻保护
  *
  * ## 能量消耗
  *
@@ -50,6 +50,8 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
 
     companion object {
         private const val SUPER_JUMP_KEY = "SuperJumpEnabled"
+        private const val PERMANENT_FALL_PROTECTION_FREE_DISTANCE = 10
+        private const val PERMANENT_FALL_PROTECTION_EU_PER_DAMAGE = 20_000L
 
         val jumpEnergyCost: Long
             get() = Ic2Config.getQuantumBootsJumpEnergyCost()
@@ -69,6 +71,28 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
         @JvmStatic
         fun getJumpHeightMultiplier(): Double =
             Ic2Config.getQuantumBootsJumpHeightMultiplier()
+
+        @JvmStatic
+        fun isPermanentFallProtectionEnabled(): Boolean =
+            Ic2Config.current.armor.quantumBoots.permanentFallProtection
+
+        /**
+         * 按原版 IC2 规则尝试吸收任意摔落：前 10 格免费，超过部分每点消耗 20,000 EU。
+         */
+        @JvmStatic
+        fun tryAbsorbPermanentFallDamage(stack: ItemStack, fallDistance: Float): Boolean {
+            if (!isPermanentFallProtectionEnabled()) return false
+            val boots = stack.item as? QuantumBoots ?: return false
+            val fallDamage = (fallDistance.toInt() - PERMANENT_FALL_PROTECTION_FREE_DISTANCE)
+                .coerceAtLeast(0)
+            val energyCost = fallDamage.toLong() * PERMANENT_FALL_PROTECTION_EU_PER_DAMAGE
+            val energy = boots.getEnergy(stack)
+            if (energyCost > energy) return false
+            if (energyCost > 0L) {
+                boots.setEnergy(stack, energy - energyCost)
+            }
+            return true
+        }
 
         /**
          * 消耗大跳能量。由混合在跳跃时调用。

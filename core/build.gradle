@@ -65,6 +65,8 @@ dependencies {
 	// ModMenu + Cloth Config: GUI 配置编辑（软依赖，需要同时安装）
 	modCompileOnly("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}")
 	modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}")
+	modLocalRuntime("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}")
+	modLocalRuntime("com.terraformersmc:modmenu:${project.modmenu_version}")
 
 	include implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}")
 	include implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}")

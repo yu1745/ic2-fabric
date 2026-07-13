@@ -443,11 +443,16 @@ object Ic2ConfigScreen {
     ): () -> QuantumBootsConfig {
         val cat = builder.getOrCreateCategory(Text.literal("护甲 • 量子靴子"))
         var maxEnergy = cfg.maxEnergy
+        var permanentFallProtection = cfg.permanentFallProtection
         var jumpCost = cfg.jumpEnergyCost
         var jumpHeight = cfg.jumpHeightMultiplier
 
         cat.addEntry(eb.startLongField(Text.literal("参考容量（EU）"), maxEnergy)
             .setDefaultValue(10_000_000L).setSaveConsumer { maxEnergy = it }.build())
+        cat.addEntry(eb.startBooleanToggle(Text.literal("永久免摔伤"), permanentFallProtection)
+            .setDefaultValue(true)
+            .setTooltip(Text.literal("开启：穿着量子靴时按原版 IC2 规则保护任意摔落，前 10 格免费，超过部分每点消耗 20,000 EU。关闭：仅保护量子大跳产生的落地伤害。"))
+            .setSaveConsumer { permanentFallProtection = it }.build())
         cat.addEntry(eb.startLongField(Text.literal("每次大跳消耗能量（EU）"), jumpCost)
             .setDefaultValue(10_000L).setSaveConsumer { jumpCost = it }.build())
         cat.addEntry(eb.startDoubleField(Text.literal("跳跃高度倍率"), jumpHeight)
@@ -456,6 +461,7 @@ object Ic2ConfigScreen {
         return {
             QuantumBootsConfig(
                 maxEnergy = maxEnergy,
+                permanentFallProtection = permanentFallProtection,
                 jumpEnergyCost = jumpCost,
                 jumpHeightMultiplier = jumpHeight
             )

@@ -42,6 +42,9 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
     private boolean ic2$superJumpLeftGround;
 
     @Unique
+    private int ic2$superJumpGroundedSinceAge = -1;
+
+    @Unique
     private int ic2$superJumpProtectionStartAge;
 
     @Unique
@@ -61,6 +64,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
         PlayerEntity player = (PlayerEntity) (Object) this;
         this.ic2$superJumpProtectionActive = true;
         this.ic2$superJumpLeftGround = !player.isOnGround();
+        this.ic2$superJumpGroundedSinceAge = -1;
         this.ic2$superJumpProtectionStartAge = player.age;
         this.ic2$superJumpProtectionBoots = boots;
         this.ic2$superJumpProtectionWorld = player.getWorld();
@@ -70,6 +74,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
     private void ic2$clearSuperJumpProtection() {
         this.ic2$superJumpProtectionActive = false;
         this.ic2$superJumpLeftGround = false;
+        this.ic2$superJumpGroundedSinceAge = -1;
         this.ic2$superJumpProtectionStartAge = 0;
         this.ic2$superJumpProtectionBoots = ItemStack.EMPTY;
         this.ic2$superJumpProtectionWorld = null;
@@ -107,9 +112,15 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
 
         if (!player.isOnGround()) {
             this.ic2$superJumpLeftGround = true;
+            this.ic2$superJumpGroundedSinceAge = -1;
         } else if (this.ic2$superJumpLeftGround) {
-            // 无伤落地（例如摔落距离不足）也必须结束本次保护。
-            this.ic2$clearSuperJumpProtection();
+            if (this.ic2$superJumpGroundedSinceAge < 0) {
+                // 服务端可能先在玩家 tick 中观察到 onGround，再处理触发摔落伤害的移动包。
+                this.ic2$superJumpGroundedSinceAge = player.age;
+            } else if (player.age - this.ic2$superJumpGroundedSinceAge >= 2) {
+                // 两 tick 内仍没有 handleFallDamage，视为无伤落地并结束本次保护。
+                this.ic2$clearSuperJumpProtection();
+            }
         }
     }
 
@@ -120,11 +131,26 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
             DamageSource source,
             CallbackInfoReturnable<Boolean> cir
     ) {
+        PlayerEntity player = (PlayerEntity) (Object) this;
+        if (player.getWorld().isClient()) {
+            return;
+        }
+
+        if (QuantumBoots.isPermanentFallProtectionEnabled()) {
+            if (this.ic2$superJumpProtectionActive) {
+                this.ic2$clearSuperJumpProtection();
+            }
+            ItemStack equippedBoots = player.getEquippedStack(EquipmentSlot.FEET);
+            if (QuantumBoots.tryAbsorbPermanentFallDamage(equippedBoots, fallDistance)) {
+                cir.setReturnValue(false);
+            }
+            return;
+        }
+
         if (!this.ic2$superJumpProtectionActive) {
             return;
         }
 
-        PlayerEntity player = (PlayerEntity) (Object) this;
         boolean shouldProtect = this.ic2$isProtectedBootsStillEquipped(player)
                 && player.getWorld() == this.ic2$superJumpProtectionWorld;
         this.ic2$clearSuperJumpProtection();
