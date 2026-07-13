@@ -258,6 +258,7 @@ navigation:
 | `bronze_leggings` | 青铜护腿 |
 | `bronze_pickaxe` | 青铜镐 |
 | `bronze_plate` | 青铜板 |
+| `bronze_rotor` | 转子(青铜) |
 | `bronze_rotor_blade` | 青铜扇叶 |
 | `bronze_shaft` | 铁柄（青铜） |
 | `bronze_shovel` | 青铜铲 |

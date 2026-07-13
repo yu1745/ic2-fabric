@@ -3,10 +3,10 @@
   "category": "misc",
   "key": {
     "B": {
-      "item": "ic2_120:steel_rotor_blade"
+      "item": "ic2_120:bronze_rotor_blade"
     },
     "I": {
-      "item": "ic2_120:iron_shaft"
+      "item": "ic2_120:bronze_shaft"
     }
   },
   "pattern": [
@@ -15,7 +15,7 @@
     " B "
   ],
   "result": {
-    "item": "ic2_120:steel_rotor"
+    "item": "ic2_120:bronze_rotor"
   },
   "show_notification": true
 }

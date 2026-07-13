@@ -59,7 +59,7 @@ class WindKineticGeneratorBlockEntity(
         const val INVENTORY_SIZE = 1
         private val LOG = LoggerFactory.getLogger("ic2_120/WindKineticGenerator")
         const val ROTOR_SLOT = 0
-        private val ALLOWED_ROTORS = setOf("wooden_rotor", "iron_rotor", "steel_rotor", "carbon_rotor")
+        private val ALLOWED_ROTORS = setOf("wooden_rotor", "bronze_rotor", "iron_rotor", "steel_rotor", "carbon_rotor")
         private const val PIXEL = 1.0f / 16.0f
         private const val BASE_SCAN_INTERVAL_TICKS = 5L
         private const val STUCK_SCAN_INTERVAL_TICKS = 2L
@@ -267,6 +267,7 @@ class WindKineticGeneratorBlockEntity(
     override fun getRotorRadius(stack: ItemStack): Float {
         return when (Registries.ITEM.getId(stack.item).path) {
             "wooden_rotor" -> 2.0f
+            "bronze_rotor" -> 3.0f
             "iron_rotor" -> 3.0f
             "steel_rotor" -> 4.0f
             "carbon_rotor" -> 5.0f
@@ -277,6 +278,7 @@ class WindKineticGeneratorBlockEntity(
     private fun getRotorMultiplier(stack: ItemStack): Int {
         return when (Registries.ITEM.getId(stack.item).path) {
             "wooden_rotor" -> 1
+            "bronze_rotor" -> 2
             "iron_rotor" -> 2
             "steel_rotor" -> 3
             "carbon_rotor" -> 4

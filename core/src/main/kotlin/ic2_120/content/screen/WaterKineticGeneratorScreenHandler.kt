@@ -86,7 +86,7 @@ class WaterKineticGeneratorScreenHandler(
         const val PLAYER_INV_START = 1
         const val SLOT_SIZE = 18
 
-        private val ALLOWED_ROTORS = setOf("wooden_rotor", "iron_rotor", "steel_rotor", "carbon_rotor")
+        private val ALLOWED_ROTORS = setOf("wooden_rotor", "bronze_rotor", "iron_rotor", "steel_rotor", "carbon_rotor")
         private val ROTOR_SLOT_SPEC = SlotSpec(
             maxItemCount = 1,
             canInsert = { stack ->

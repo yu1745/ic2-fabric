@@ -258,6 +258,7 @@ This page is generated from the core module's language files, used to confirm th
 | `bronze_leggings` | Bronze Leggings |
 | `bronze_pickaxe` | Bronze Pickaxe |
 | `bronze_plate` | Bronze Plate |
+| `bronze_rotor` | Rotor (Bronze) |
 | `bronze_rotor_blade` | Bronze Rotor Blade |
 | `bronze_shaft` | Shaft (Bronze) |
 | `bronze_shovel` | Bronze Shovel |

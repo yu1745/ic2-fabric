@@ -51,6 +51,7 @@ object WindMeterClientInitializer {
             }
 
             rotorLine("gui.ic2_120.wind_meter.wood", 1)
+            rotorLine("gui.ic2_120.wind_meter.bronze", 2)
             rotorLine("gui.ic2_120.wind_meter.iron", 2)
             rotorLine("gui.ic2_120.wind_meter.steel", 3)
             rotorLine("gui.ic2_120.wind_meter.carbon", 4)

@@ -185,17 +185,34 @@ class WoodenRotor : RotorItem(3) {
     }
 }
 
+@ModItem(name = "bronze_rotor", tab = CreativeTab.IC2_MATERIALS, group = "rotors")
+class BronzeRotor : RotorItem(24) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            val blade = BronzeRotorBlade::class.instance()
+            val shaft = ToolHandleBronzeItem::class.instance()
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BronzeRotor::class.instance(), 1)
+                .pattern(" B ").pattern("BIB").pattern(" B ")
+                .input('B', blade)
+                .input('I', shaft)
+                .criterion(hasItem(blade), conditionsFromItem(blade))
+                .offerTo(exporter, BronzeRotor::class.id())
+        }
+    }
+}
+
 @ModItem(name = "iron_rotor", tab = CreativeTab.IC2_MATERIALS, group = "rotors")
 class IronRotor : RotorItem(24) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val blade = IronRotorBlade::class.instance()
-            val plate = IronPlate::class.instance()
+            val shaft = ToolHandleIronItem::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronRotor::class.instance(), 1)
                 .pattern(" B ").pattern("BIB").pattern(" B ")
                 .input('B', blade)
-                .input('I', plate)
+                .input('I', shaft)
                 .criterion(hasItem(blade), conditionsFromItem(blade))
                 .offerTo(exporter, IronRotor::class.id())
         }
@@ -208,11 +225,11 @@ class SteelRotor : RotorItem(48) {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val blade = SteelRotorBlade::class.instance()
-            val plate = SteelPlate::class.instance()
+            val shaft = ToolHandleIronItem::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelRotor::class.instance(), 1)
                 .pattern(" B ").pattern("BIB").pattern(" B ")
                 .input('B', blade)
-                .input('I', plate)
+                .input('I', shaft)
                 .criterion(hasItem(blade), conditionsFromItem(blade))
                 .offerTo(exporter, SteelRotor::class.id())
         }
@@ -225,11 +242,11 @@ class CarbonRotor : RotorItem(168) {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             val blade = CarbonRotorBlade::class.instance()
-            val plate = SteelPlate::class.instance()
+            val shaft = ToolHandleSteelItem::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonRotor::class.instance(), 1)
                 .pattern(" B ").pattern("BIB").pattern(" B ")
                 .input('B', blade)
-                .input('I', plate)
+                .input('I', shaft)
                 .criterion(hasItem(blade), conditionsFromItem(blade))
                 .offerTo(exporter, CarbonRotor::class.id())
         }

@@ -23,6 +23,7 @@ class WindKineticGeneratorBlockEntityRenderer(
 ) : BlockEntityRenderer<WindKineticGeneratorBlockEntity> {
     companion object {
         private val WOOD_ROTOR_TEXTURE = Identifier("ic2", "textures/item/rotor/wood_rotor_model.png")
+        private val BRONZE_ROTOR_TEXTURE = Identifier("ic2", "textures/item/rotor/bronze_rotor_model.png")
         private val IRON_ROTOR_TEXTURE = Identifier("ic2", "textures/item/rotor/iron_rotor_model.png")
         private val STEEL_ROTOR_TEXTURE = Identifier("ic2", "textures/item/rotor/steel_rotor_model.png")
         private val CARBON_ROTOR_TEXTURE = Identifier("ic2", "textures/item/rotor/carbon_rotor_model.png")
@@ -50,6 +51,7 @@ class WindKineticGeneratorBlockEntityRenderer(
     private fun getRotorRadius(stack: ItemStack): Float {
         return when (Registries.ITEM.getId(stack.item).path) {
             "wooden_rotor" -> 2.0f
+            "bronze_rotor" -> 3.0f
             "iron_rotor" -> 3.0f
             "steel_rotor" -> 4.0f
             "carbon_rotor" -> 5.0f
@@ -140,6 +142,7 @@ class WindKineticGeneratorBlockEntityRenderer(
     private fun textureForRotor(stack: ItemStack): Identifier? =
         when (Registries.ITEM.getId(stack.item).path) {
             "wooden_rotor" -> WOOD_ROTOR_TEXTURE
+            "bronze_rotor" -> BRONZE_ROTOR_TEXTURE
             "iron_rotor" -> IRON_ROTOR_TEXTURE
             "steel_rotor" -> STEEL_ROTOR_TEXTURE
             "carbon_rotor" -> CARBON_ROTOR_TEXTURE
