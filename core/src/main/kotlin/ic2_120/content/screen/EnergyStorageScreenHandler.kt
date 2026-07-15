@@ -2,6 +2,7 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.storage.EnergyStorageBlockEntity
 import ic2_120.content.block.storage.EnergyStorageConfig
+import ic2_120.content.block.ChargepadBlock
 import ic2_120.content.sync.EnergyStorageSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.content.screen.slot.PredicateSlot
@@ -49,7 +50,13 @@ class EnergyStorageScreenHandler(
     private val machineSlotCount: Int = config.slotCount
     val sync = EnergyStorageSync(
         schema = SyncedDataView(propertyDelegate),
-        getFacing = { context.get({ world, pos -> world.getBlockState(pos).get(Properties.FACING) }, Direction.NORTH) },
+        getFacing = {
+            context.get({ world, pos ->
+                val state = world.getBlockState(pos)
+                state.getOrEmpty(Properties.FACING)
+                    .orElse(state.getOrEmpty(Properties.HORIZONTAL_FACING).orElse(Direction.NORTH))
+            }, Direction.NORTH)
+        },
         tier = config.tier,
         capacity = config.capacity
     )
@@ -160,7 +167,7 @@ class EnergyStorageScreenHandler(
    override fun canUse(player: PlayerEntity): Boolean =
         context.get({ world, pos ->
             val block = world.getBlockState(pos).block
-            block is ic2_120.content.block.storage.EnergyStorageBlock &&
+            (block is ic2_120.content.block.storage.EnergyStorageBlock || block is ChargepadBlock) &&
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 

@@ -184,11 +184,42 @@ class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
     }
 }
 
-abstract class ChargepadBlock(config: EnergyStorageConfig) : EnergyStorageBlock(config) {
+abstract class ChargepadBlock(config: EnergyStorageConfig) : MachineBlock() {
     init {
         defaultState = stateManager.defaultState
-            .with(Properties.FACING, net.minecraft.util.math.Direction.NORTH)
+            .with(Properties.HORIZONTAL_FACING, net.minecraft.util.math.Direction.NORTH)
             .with(EnergyStorageBlock.ACTIVE, false)
+    }
+
+    override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
+        super.appendProperties(builder)
+        builder.add(EnergyStorageBlock.ACTIVE)
+    }
+
+    override fun createScreenHandlerFactory(
+        state: BlockState,
+        world: World,
+        pos: BlockPos
+    ): net.minecraft.screen.NamedScreenHandlerFactory? {
+        val be = world.getBlockEntity(pos)
+        return be as? net.minecraft.screen.NamedScreenHandlerFactory
+    }
+
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun onUse(
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        player: net.minecraft.entity.player.PlayerEntity,
+        hand: net.minecraft.util.Hand,
+        hit: net.minecraft.util.hit.BlockHitResult
+    ): net.minecraft.util.ActionResult {
+        if (!world.isClient) {
+            createScreenHandlerFactory(state, world, pos)?.let { factory ->
+                player.openHandledScreen(factory)
+            }
+        }
+        return net.minecraft.util.ActionResult.SUCCESS
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")

@@ -8,9 +8,5 @@
     , "facing=east,active=false": { "model": "ic2:block/wiring/chargepad/mfe_chargepad", "y": 90 }
     , "facing=west,active=true": { "model": "ic2:block/wiring/chargepad/mfe_chargepad_active", "y": 270 }
     , "facing=west,active=false": { "model": "ic2:block/wiring/chargepad/mfe_chargepad", "y": 270 }
-    , "facing=up,active=true": { "model": "ic2:block/wiring/chargepad/mfe_chargepad_active", "x": 270 }
-    , "facing=up,active=false": { "model": "ic2:block/wiring/chargepad/mfe_chargepad", "x": 270 }
-    , "facing=down,active=true": { "model": "ic2:block/wiring/chargepad/mfe_chargepad_active", "x": 90 }
-    , "facing=down,active=false": { "model": "ic2:block/wiring/chargepad/mfe_chargepad", "x": 90 }
   }
 }
