@@ -20,6 +20,7 @@ import ic2_120.registry.type
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffectCategory
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.data.server.recipe.RecipeJsonProvider
@@ -178,13 +179,16 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
 
         // 功能 4: 消除负面效果（需全套量子护甲）
         if (QuantumArmorItem.hasFullQuantumArmor(player) && energy >= CURE_EFFECT_COST) {
-            val harmfulEffects = listOf(StatusEffects.POISON, StatusEffects.WITHER, ModStatusEffects.RADIATION)
-            for (effect in harmfulEffects) {
-                if (player.hasStatusEffect(effect)) {
-                    player.removeStatusEffect(effect)
-                    energy -= CURE_EFFECT_COST
-                    break
+            // 按效果类别动态覆盖所有负面效果（包括坚守者的 DARKNESS 以及模组效果）。
+            val harmfulEffects = player.statusEffects
+                .filter {
+                    it.effectType.category == StatusEffectCategory.HARMFUL ||
+                        it.effectType === ModStatusEffects.RADIATION
                 }
+            for (effect in harmfulEffects) {
+                if (energy < CURE_EFFECT_COST) break
+                player.removeStatusEffect(effect.effectType)
+                energy -= CURE_EFFECT_COST
             }
         }
 

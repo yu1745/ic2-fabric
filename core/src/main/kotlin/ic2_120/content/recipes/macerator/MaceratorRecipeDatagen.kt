@@ -52,6 +52,7 @@ import net.minecraft.data.server.recipe.RecipeJsonProvider
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
+import net.minecraft.registry.tag.ItemTags
 import net.minecraft.util.Identifier
 import java.util.function.Consumer
 
@@ -93,6 +94,7 @@ object MaceratorRecipeDatagen {
         Entry("coal_to_coal_dust", IngredientInput.item(Items.COAL), CoalDust::class.instance(), 1),
         Entry("coal_block_to_coal_dust", IngredientInput.item(Items.COAL_BLOCK), CoalDust::class.instance(), 9),
         Entry("clay_block_to_clay_dust", IngredientInput.item(Items.CLAY), ClayDust::class.instance(), 2),
+        Entry("wool_to_string", IngredientInput.tag(ItemTags.WOOL, Items.WHITE_WOOL), Items.STRING, 4),
         // 植物打粉配方
         Entry("plant_ball_to_bio_chaff", IngredientInput.item(PlantBall::class.instance()), BioChaff::class.instance(), 1),
         Entry("pumpkin_to_bio_chaff", IngredientInput.item(Items.PUMPKIN), BioChaff::class.instance(), 1, 8),

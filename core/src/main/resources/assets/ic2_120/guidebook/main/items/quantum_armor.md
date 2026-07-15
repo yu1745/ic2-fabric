@@ -43,6 +43,10 @@ The 3.0 toughness and 0.4 knockback resistance stack additively with vanilla mod
 - **Quantum Leggings** — speed boost support.
 - **Quantum Boots** — jump boost and fall-protection support.
 
+## Full-Set Negative Effect Immunity
+
+When all four Quantum Armor pieces are equipped, the set continuously removes every status effect classified as harmful, including the Warden's Darkness effect, as well as IC2 radiation. This requires at least `100 EU` in the Quantum Helmet and consumes `100 EU` for each harmful effect removed. The immunity does not activate with the Quantum Helmet alone.
+
 ## Quantum Flight
 
 The <ItemLink id="ic2_120:quantum_chestplate" /> is the highest-tier flight chestplate.

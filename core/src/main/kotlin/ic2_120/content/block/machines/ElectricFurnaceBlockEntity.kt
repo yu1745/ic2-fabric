@@ -248,7 +248,7 @@ class ElectricFurnaceBlockEntity(
             input.decrement(1)
             if (outputSlot.isEmpty()) setStack(1, result.copy())
             else outputSlot.increment(result.count)
-            storedExperience = (storedExperience + FurnaceExperienceHelper.getExperienceFromRecipe(recipe))
+            storedExperience = (storedExperience + getExperienceForElectricFurnace(recipe, input))
                 .coerceAtMost(MAX_STORED_XP)
             sync.progress = 0
             markDirty()
@@ -306,6 +306,15 @@ class ElectricFurnaceBlockEntity(
     }
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem
+
+    private fun getExperienceForElectricFurnace(
+        recipe: net.minecraft.recipe.Recipe<*>,
+        input: ItemStack
+    ): Float = if (input.item === Items.POTATO) {
+        0.1f
+    } else {
+        FurnaceExperienceHelper.getExperienceFromRecipe(recipe)
+    }
 
     private fun isSmeltingInput(stack: ItemStack): Boolean {
         if (stack.isEmpty || isBatteryItem(stack)) return false
