@@ -13,6 +13,7 @@ import ic2_120.content.worldgen.RubberSaplingGrowth
 import ic2_120.content.block.RubberLogBlock
 import ic2_120.content.block.RubberLogBlockEntity
 import ic2_120.content.block.RubberFaceState
+import ic2_120.content.block.Ic2ScaffoldBlock
 import ic2_120.content.block.AnimalmatronBlock
 import ic2_120.content.block.machines.AnimalmatronBlockEntity
 import ic2_120.content.block.TeleporterBlock
@@ -107,8 +108,34 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockComponent(TeleporterJadeProvider, TeleporterBlock::class.java)
         registration.registerBlockComponent(RubberSaplingJadeProvider, RubberSaplingBlock::class.java)
         registration.registerBlockComponent(RubberLogJadeProvider, RubberLogBlock::class.java)
+        registration.registerBlockComponent(ScaffoldJadeProvider, Ic2ScaffoldBlock::class.java)
         registration.registerEntityComponent(AnimalJadeProvider, PassiveEntity::class.java)
     }
+}
+
+/** IC2 脚手架 Jade 提示：显示从当前方块还能横向延伸多少格。 */
+object ScaffoldJadeProvider : IBlockComponentProvider {
+    private val SCAFFOLD_SUPPORT = Identifier("ic2_120", "scaffold_support")
+
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+        val block = accessor.blockState.block as? Ic2ScaffoldBlock ?: return
+        val remaining = block.remainingHorizontalSupport(accessor.level, accessor.position)
+
+        when {
+            remaining < 0 -> tooltip.add(
+                Text.translatable("ic2_120.jade.scaffold_unsupported").formatted(Formatting.RED)
+            )
+            remaining == 0 -> tooltip.add(
+                Text.translatable("ic2_120.jade.scaffold_support_limit").formatted(Formatting.RED)
+            )
+            else -> tooltip.add(
+                Text.translatable("ic2_120.jade.scaffold_support_remaining", remaining)
+                    .formatted(if (remaining == 1) Formatting.YELLOW else Formatting.GREEN)
+            )
+        }
+    }
+
+    override fun getUid(): Identifier = SCAFFOLD_SUPPORT
 }
 
 /**

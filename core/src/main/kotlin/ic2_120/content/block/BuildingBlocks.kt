@@ -175,6 +175,7 @@ class FoamBlock(
         .noCollision()
         .nonOpaque()
         .suffocates { _, _, _ -> true }
+        .blockVision { _, _, _ -> true }
         .allowsSpawning { _, _, _, _ -> false }
         .ticksRandomly()
 ) : Ic2FoamBlock(settings, 300) {
@@ -216,6 +217,7 @@ class ReinforcedFoamBlock(
         .noCollision()
         .nonOpaque()
         .suffocates { _, _, _ -> true }
+        .blockVision { _, _, _ -> true }
         .allowsSpawning { _, _, _, _ -> false }
         .ticksRandomly()
 ) : Ic2FoamBlock(settings, 600) {
@@ -585,6 +587,19 @@ abstract class Ic2ScaffoldBlock(
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun neighborUpdate(
+        state: BlockState,
+        world: World,
+        pos: BlockPos,
+        sourceBlock: Block,
+        sourcePos: BlockPos,
+        notify: Boolean,
+    ) {
+        super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify)
+        if (!world.isClient) world.scheduleBlockTick(pos, this, 1)
+    }
+
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun scheduledTick(state: BlockState, world: ServerWorld, pos: BlockPos, random: Random) {
         checkSupport(world, pos)
     }
@@ -654,7 +669,13 @@ abstract class Ic2ScaffoldBlock(
 
     private fun hasSupportForPlacement(world: BlockView, pos: BlockPos): Boolean {
         val below = pos.down()
-        if (world.getBlockState(below).isSideSolidFullSquare(world, below, Direction.UP)) return true
+        if (isSolidFoundation(world, below)) return true
+
+        if (isScaffold(world.getBlockState(below).block)) {
+            val component = connectedComponent(world, below)
+            if ((calculateSupport(world, component)[below] ?: -1) >= 0) return true
+        }
+
         return listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
             .map { pos.offset(it) }
             .any { neighbor ->
@@ -680,6 +701,16 @@ abstract class Ic2ScaffoldBlock(
             Block.dropStacks(state, world, pos)
             world.setBlockState(pos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
         }
+    }
+
+    /**
+     * 返回当前位置还能横向延伸的脚手架格数，供 Jade 与实际失稳判定共享。
+     * 竖直搭建不消耗该余量；负数表示当前连通结构没有有效支撑。
+     */
+    fun remainingHorizontalSupport(world: BlockView, pos: BlockPos): Int {
+        if (!isScaffold(world.getBlockState(pos).block)) return -1
+        val component = connectedComponent(world, pos)
+        return calculateSupport(world, component)[pos] ?: -1
     }
 
     private fun connectedComponent(world: BlockView, start: BlockPos): Set<BlockPos> {
@@ -710,12 +741,18 @@ abstract class Ic2ScaffoldBlock(
                 val block = world.getBlockState(pos).block as? Ic2ScaffoldBlock ?: continue
                 var best = support[pos] ?: -1
                 val below = pos.down()
-                if (world.getBlockState(below).isSideSolidFullSquare(world, below, Direction.UP)) {
+                if (isSolidFoundation(world, below)) {
                     best = maxOf(best, block.supportStrength)
                 }
-                for (direction in listOf(Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)) {
+
+                // 竖直传播不消耗距离，横向传播每格递减；任何方块都不能传递超过自身材质上限的支撑，
+                // 避免木脚手架成为钢支撑的无损中继。
+                if (isScaffold(world.getBlockState(below).block)) {
+                    best = maxOf(best, minOf(block.supportStrength, support[below] ?: -1))
+                }
+                for (direction in listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)) {
                     val neighborStrength = support[pos.offset(direction)] ?: -1
-                    best = maxOf(best, neighborStrength - 1)
+                    best = maxOf(best, minOf(block.supportStrength, neighborStrength - 1))
                 }
                 if (best > (support[pos] ?: -1)) {
                     support[pos] = best
@@ -724,6 +761,12 @@ abstract class Ic2ScaffoldBlock(
             }
         } while (changed)
         return support
+    }
+
+    /** 脚手架只能传递已有支撑，不能因为自身顶面形状而被当成新的落地支点。 */
+    private fun isSolidFoundation(world: BlockView, pos: BlockPos): Boolean {
+        val state = world.getBlockState(pos)
+        return !isScaffold(state.block) && state.isSideSolidFullSquare(world, pos, Direction.UP)
     }
 
     private fun isScaffold(block: Block): Boolean = block is Ic2ScaffoldBlock
