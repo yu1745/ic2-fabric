@@ -73,6 +73,7 @@ IC2 injects loot into vanilla chest types worldwide. Key drops include:
 
 ## Rubber Trees
 
+- Rubber trees naturally generate in forest biomes and their variants, jungle biomes and their variants, and swamp biomes including mangrove swamps. Swamps generally have denser rubber tree generation than forests and jungles; the exact distribution follows the world's generation settings.
 - Rubber trees generate Rubber Logs, Rubber Leaves, and Rubber Saplings.
 - A rubber log's side may carry a resin hole.
 - Right-click a resin hole with a Treetap or an Electric Treetap to obtain Sticky Resin.

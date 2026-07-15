@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory
  * 橡胶树世界生成。
  *
  * 群系选择由 biome tag `#ic2_120:generates_rubber_trees` 控制（引用 `rubber_tree_forest` ∪ `rubber_tree_swamp`），
- * tag JSON 里引用 vanilla `#is_forest`/`#is_taiga`/`#is_jungle` 自动覆盖高版本新增的等价群系。
- * 放置次数/稀有度/水深仍由 Ic2Config 控制。
+ * 概率分类对应 JADX 的 `BiomeDictionary.Type.FOREST` / `Type.JUNGLE` / `Type.SWAMP`。
+ * 放置概率/树密度/水深仍由 Ic2Config 控制。
  */
 object RubberTreeGeneration {
 

@@ -43,13 +43,13 @@
    - `rubber_tree_config_water_depth_filter`
 4. 然后读取 `Ic2Config.current.worldgen.rubberTree.normalized()`。
 5. 若 `enabled=false`，直接不向 biome modification 注册橡胶树。
-6. 若 `biomes` 为空或全是非法 id，也不会注册。
+6. 若 `#ic2_120:generates_rubber_trees` 没有匹配群系，也不会生成。
 7. 否则调用 `BiomeModifications.addFeature(...)`，把 `ic2_120:rubber_tree` 挂到这些生物群系的 `VEGETAL_DECORATION` 阶段。
 
 这里有一个关键点：
 
 - `enabled`
-- `biomes`
+- `#ic2_120:generates_rubber_trees`
 
 这两个字段只在模组启动时参与 `BiomeModifications.addFeature(...)` 注册。
 `/ic2config reload` 不会重新注册或撤销 biome modification。
@@ -104,9 +104,8 @@
 配置结构在 `Ic2Config.worldgen.rubberTree`：
 
 - `enabled`
-- `biomes`
-- `countPerChunk`
-- `rarityChance`
+- `#ic2_120:generates_rubber_trees`
+- `treeDensityFactor`
 - `maxWaterDepth`
 - `baseHeight`
 - `heightRandA`
@@ -125,9 +124,8 @@
 各字段落点如下：
 
 - `enabled`：启动时决定是否注册 biome feature；运行时 placement modifier 也会再次检查。
-- `biomes`：启动时转换为 `RegistryKey<Biome>` 并参与 `BiomeSelectors.includeByKey(...)`。
-- `countPerChunk`：`RubberTreeConfigPlacementModifier.getPositions()`。
-- `rarityChance`：`RubberTreeConfigPlacementModifier.getPositions()`。
+- `#ic2_120:generates_rubber_trees`：启动时参与 biome feature 注册；概率分类由 `rubber_tree_forest` / `rubber_tree_swamp` 提供。
+- `treeDensityFactor`：乘入 JADX `genRubberTree` 的 `rubberTrees2` 计算，默认 `1.0`。
 - `maxWaterDepth`：`RubberTreeConfigWaterDepthFilterPlacementModifier.shouldPlace()`。
 - `baseHeight` / `heightRandA` / `heightRandB`：`RubberTreeFeature.buildRuntimeConfig()` 中覆盖 `StraightTrunkPlacer`。
 - `foliageRadius` / `foliageOffset` / `foliageHeight`：`RubberTreeFeature.buildRuntimeConfig()` 中覆盖 `RubberTreeFoliagePlacer`。
@@ -139,7 +137,7 @@
 当某个区块在 `VEGETAL_DECORATION` 阶段尝试生成橡胶树时，链路如下：
 
 1. `placed_feature/rubber_tree.json` 开始执行 placement modifier 链。
-2. `RubberTreeConfigPlacementModifier` 读取当前配置，决定本区块要不要给出候选落点。
+2. `RubberTreeConfigPlacementModifier` 按 JADX `genRubberTree` 采样区块内 4 个海平面群系，计算 `rubberTrees2`，并执行 `nextInt(100) < rubberTrees2` 概率门。
 3. `in_square` 把候选点随机扩散到区块内。
 4. `surface_relative_threshold_filter` 限制候选点不能高于地表。
 5. `RubberTreeConfigWaterDepthFilterPlacementModifier` 检查当前位置的水深是否允许。
@@ -283,8 +281,7 @@
 
 重载后会立即影响的内容：
 
-- `countPerChunk`
-- `rarityChance`
+- `treeDensityFactor`
 - `maxWaterDepth`
 - `baseHeight`
 - `heightRandA`
@@ -301,7 +298,6 @@
 重载后不会自动重新注册的内容：
 
 - `enabled`
-- `biomes`
 
 另外，配置重载只影响“之后的新生成/新生长”：
 
@@ -311,13 +307,12 @@
 ## 13. 排查橡胶树不生成时优先看哪里
 
 1. 看 `Ic2Config.worldgen.rubberTree.enabled` 是否为 `true`。
-2. 看 `biomes` 是否填了合法生物群系 id。
-3. 若修改了 `enabled` 或 `biomes`，确认是否已经重启游戏或服务端，而不是只执行了 `/ic2config reload`。
-4. 看 `countPerChunk` 是否为 `0`。
-5. 看 `rarityChance` 是否设得过高。
-6. 看 `maxWaterDepth` 是否把沼泽等地形过滤掉了。
-7. 看周围是否有不可替换硬障碍，导致 `RubberTreeFeature` 在避让阶段直接失败。
-8. 看是否把 `accesswidener`、自定义注册或 JSON id 改坏了。
+2. 看 `treeDensityFactor` 是否为 `0`。
+3. 若修改了 `enabled`，确认是否已经重启游戏或服务端，而不是只执行了 `/ic2config reload`。
+4. 看目标群系是否匹配 `#ic2_120:generates_rubber_trees`。
+5. 看 `maxWaterDepth` 是否把沼泽等地形过滤掉了。
+6. 看周围是否有不可替换硬障碍，导致 `RubberTreeFeature` 在避让阶段直接失败。
+7. 看是否把 `accesswidener`、自定义注册或 JSON id 改坏了。
 
 ## 14. 当前设计取舍
 
@@ -329,6 +324,6 @@
 
 当前方案的限制：
 
-- `enabled` 和 `biomes` 不是热更新字段，改完需要重启后重新注册 biome modification。
+- `enabled` 不是热更新字段，改完需要重启后重新注册 biome modification；biome tag 变更也需要重启才能重新加载世界生成注册。
 - 世界生成仍部分依赖 JSON 作为注册入口，不是单一来源。
 - `NATURAL` 当前只是初始化标记，不是稳定的“自然生成来源”标记。

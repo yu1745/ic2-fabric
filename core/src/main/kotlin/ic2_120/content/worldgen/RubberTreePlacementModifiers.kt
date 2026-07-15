@@ -22,15 +22,15 @@ import java.util.stream.Stream
  * 概率层 [RUBBER_TREE_FOREST] / [RUBBER_TREE_SWAMP] 区分森林与沼泽做不同密度加权，
  * 对齐 Forge 1.12 BiomeDictionary.Type.FOREST / SWAMP 的分类。
  *
- * tag JSON 在 `data/ic2_120/tags/worldgen/biome/` 下，森林类引用 vanilla `#is_forest`/`#is_taiga`/`#is_jungle`
- * 自动覆盖高版本新增的等价群系（grove、old_growth_birch_forest、snowy_taiga 等）。
+ * tag JSON 在 `data/ic2_120/tags/worldgen/biome/` 下，概率分类只引用 vanilla `#is_forest`/`#is_jungle`，
+ * 对应 JADX 中的 `BiomeDictionary.Type.FOREST` / `Type.JUNGLE`。
  */
 object RubberTreeBiomeTags {
     /** 入口层：所有允许生成橡胶树的群系（= forest ∪ swamp）。 */
     val GENERATES_RUBBER_TREES: TagKey<Biome> =
         TagKey.of(RegistryKeys.BIOME, Identifier("ic2_120", "generates_rubber_trees"))
 
-    /** 概率层：森林/丛林/针叶林类（Forge FOREST + JUNGLE）。 */
+    /** 概率层：森林/丛林类（Forge FOREST + JUNGLE）。 */
     val FOREST: TagKey<Biome> =
         TagKey.of(RegistryKeys.BIOME, Identifier("ic2_120", "rubber_tree_forest"))
 
@@ -74,7 +74,8 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
         for (i in 0 until 4) {
             val sampleX = chunkX + 8 + ((i and 1) * 15)
             val sampleZ = chunkZ + 8 + (((i and 2) ushr 1) * 15)
-            val biome = world.getBiome(BlockPos(sampleX, 0, sampleZ))
+            // JADX 原版使用 world.func_181545_F()，即世界海平面，而不是 Y=0。
+            val biome = world.getBiome(BlockPos(sampleX, world.seaLevel, sampleZ))
             // 与 Forge 顺序一致：先查 SWAMP，再查 FOREST/JUNGLE（两个独立 if，非 else）
             if (biome.isIn(RubberTreeBiomeTags.SWAMP)) {
                 rubberTrees += random.nextInt(10) + 5  // 5~14
