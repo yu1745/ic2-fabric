@@ -37,7 +37,7 @@ import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 @ModBlock(name = "pump", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
-class PumpBlock : MachineBlock() {
+class PumpBlock : DirectionalMachineBlock() {
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         PumpBlockEntity(pos, state)
 

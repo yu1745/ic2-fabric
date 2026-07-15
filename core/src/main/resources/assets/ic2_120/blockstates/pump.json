@@ -29,7 +29,22 @@
     "facing=west,active=true": {
       "model": "ic2:block/machine/fluid/pump_active",
       "y": 270
+    },
+    "facing=up,active=false": {
+      "model": "ic2:block/machine/fluid/pump",
+      "x": 270
+    },
+    "facing=up,active=true": {
+      "model": "ic2:block/machine/fluid/pump_active",
+      "x": 270
+    },
+    "facing=down,active=false": {
+      "model": "ic2:block/machine/fluid/pump",
+      "x": 90
+    },
+    "facing=down,active=true": {
+      "model": "ic2:block/machine/fluid/pump_active",
+      "x": 90
     }
   }
 }
-

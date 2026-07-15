@@ -320,7 +320,7 @@ class PumpBlockEntity(
 
         if (!hasPumpableFluid(world, pos, state)) return false
 
-        val front = state.get(Properties.HORIZONTAL_FACING)
+        val front = state.get(Properties.FACING)
         val positions = (1..3).map { pos.offset(front, it) }
         for (target in positions) {
             val drained = tryDrainFromStorage(world, target, front.opposite)
@@ -458,7 +458,7 @@ class PumpBlockEntity(
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
-        val front = world?.getBlockState(pos)?.get(Properties.HORIZONTAL_FACING) ?: Direction.NORTH
+        val front = world?.getBlockState(pos)?.get(Properties.FACING) ?: Direction.NORTH
         return if (side == front) null else tank
     }
 
@@ -468,7 +468,7 @@ class PumpBlockEntity(
     }
 
     private fun hasPumpableFluid(world: World, pos: BlockPos, state: BlockState): Boolean {
-        val front = state.get(Properties.HORIZONTAL_FACING)
+        val front = state.get(Properties.FACING)
         val positions = (1..3).map { pos.offset(front, it) }
         for (target in positions) {
             val fluidState = world.getFluidState(target)
