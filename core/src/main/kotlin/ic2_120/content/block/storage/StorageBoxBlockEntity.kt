@@ -89,6 +89,9 @@ class StorageBoxBlockEntity(
     /** 获取物品栏（只读） - 外部访问用 */
     fun getInventory(): DefaultedList<ItemStack> = inventory
 
+    /** 创造模式破坏时由方块临时关闭掉落。 */
+    var shouldDropOnBreak = true
+
     /** 获取物品栏大小 */
     override fun size(): Int = inventory.size
 

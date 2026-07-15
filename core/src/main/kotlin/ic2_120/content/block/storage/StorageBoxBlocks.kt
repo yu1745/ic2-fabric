@@ -136,7 +136,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
     override fun onStateReplaced(state: BlockState, world: World, pos: BlockPos, newState: BlockState, moved: Boolean) {
         if (!world.isClient && !state.isOf(newState.block)) {
             val blockEntity = world.getBlockEntity(pos)
-            if (blockEntity is StorageBoxBlockEntity) {
+            if (blockEntity is StorageBoxBlockEntity && (moved || blockEntity.shouldDropOnBreak)) {
                 // 创建带有 BlockEntity NBT 的物品
                 val itemStack = ItemStack(this.asItem())
                 val nbt = blockEntity.createNbtWithIdentifyingData()
@@ -159,6 +159,13 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
             }
         }
         super.onStateReplaced(state, world, pos, newState, moved)
+    }
+
+    override fun onBreak(world: World, pos: BlockPos, state: BlockState, player: PlayerEntity) {
+        if (!world.isClient && player.abilities.creativeMode) {
+            (world.getBlockEntity(pos) as? StorageBoxBlockEntity)?.shouldDropOnBreak = false
+        }
+        super.onBreak(world, pos, state, player)
     }
 
     override fun onStacksDropped(state: BlockState, world: ServerWorld, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
