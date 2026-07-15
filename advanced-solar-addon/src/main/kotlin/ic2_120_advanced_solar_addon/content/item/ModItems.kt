@@ -4,6 +4,7 @@ import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.*
 import ic2_120.content.block.ReinforcedGlassBlock
 import ic2_120.content.item.energy.ReBatteryItem
+import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -81,10 +82,32 @@ class SunnariumAlloy : Item(FabricItemSettings()) {
                 .pattern("III")
                 .pattern("ISI")
                 .pattern("III")
-                .input('I', IridiumPlate::class.instance())
+                .input('I', PhotovoltaicIridiumPlate::class.instance())
                 .input('S', Sunnarium::class.instance())
-                .criterion(hasItem(IridiumPlate::class.instance()), conditionsFromItem(IridiumPlate::class.instance()))
+                .criterion(hasItem(PhotovoltaicIridiumPlate::class.instance()), conditionsFromItem(PhotovoltaicIridiumPlate::class.instance()))
                 .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_alloy"))
+        }
+    }
+}
+
+// i18n: item.ic2_120_advanced_solar_addon.photovoltaic_iridium_plate
+// zh_cn: 光伏铱板
+// en_us: Photovoltaic Iridium Plate
+@ModItem(name = "photovoltaic_iridium_plate", tab = CreativeTab.IC2_SOLAR, group = "material")
+class PhotovoltaicIridiumPlate : Item(FabricItemSettings()) {
+    companion object {
+        @RecipeProvider
+        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+            // 与 core 强化铱板相同，仅将铱矿石替换为高级太阳能附属的铱锭
+            ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, PhotovoltaicIridiumPlate::class.instance(), 1)
+                .pattern("IAI")
+                .pattern("ADA")
+                .pattern("IAI")
+                .input('I', IridiumIngot::class.instance())
+                .input('A', Alloy::class.instance())
+                .input('D', Ingredient.fromTag(ModTags.Compat.Items.GEMS_DIAMOND))
+                .criterion(hasItem(IridiumIngot::class.instance()), conditionsFromItem(IridiumIngot::class.instance()))
+                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("photovoltaic_iridium_plate"))
         }
     }
 }
@@ -230,9 +253,9 @@ class IrradiantReinforcedPlate : Item(FabricItemSettings()) {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IrradiantReinforcedPlate::class.instance(), 1)
+                .pattern("RPR")
+                .pattern("LIL")
                 .pattern("RDR")
-                .pattern("LPL")
-                .pattern("RIR")
                 .input('R', Items.REDSTONE)
                 .input('D', Items.DIAMOND)
                 .input('L', Items.LAPIS_LAZULI)

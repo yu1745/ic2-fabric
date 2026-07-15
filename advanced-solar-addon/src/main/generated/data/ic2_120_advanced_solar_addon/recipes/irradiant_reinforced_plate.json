@@ -19,9 +19,9 @@
     }
   },
   "pattern": [
-    "RDR",
-    "LPL",
-    "RIR"
+    "RPR",
+    "LIL",
+    "RDR"
   ],
   "result": {
     "item": "ic2_120_advanced_solar_addon:irradiant_reinforced_plate"
