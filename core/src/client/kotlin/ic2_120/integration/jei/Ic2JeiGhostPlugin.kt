@@ -1,4 +1,4 @@
-package ic2_120.client.integration.jei
+package ic2_120.integration.jei
 
 import ic2_120.client.screen.FluidUpgradeScreen
 import ic2_120.client.screen.PumpAttachmentScreen
