@@ -12,19 +12,18 @@ import net.minecraft.network.PacketByteBuf
 import net.minecraft.util.ActionResult
 import net.minecraft.util.TypedActionResult
 
-/** 链锯模式切换：按住通用模式键并右键切换剪刀功能。 */
+/** 链锯模式切换：按住 Alt 并右键切换剪刀功能。 */
 @Environment(EnvType.CLIENT)
 object ChainsawModeHandler {
+    private var lastToggleSentOnPlayerAge: Int = Int.MIN_VALUE
+
     fun register() {
         UseItemCallback.EVENT.register { player, world, hand ->
             val stack = player.getStackInHand(hand)
             if (!world.isClient || stack.item !is Chainsaw || !ModeKeybinds.isAltDown()) {
                 return@register TypedActionResult.pass(stack)
             }
-            ClientPlayNetworking.send(
-                NetworkManager.TOGGLE_CHAINSAW_SHEAR_PACKET,
-                PacketByteBuf(Unpooled.buffer())
-            )
+            sendToggleOnceThisTick(player.age)
             TypedActionResult.success(stack, true)
         }
 
@@ -33,11 +32,17 @@ object ChainsawModeHandler {
             if (!world.isClient || stack.item !is Chainsaw || !ModeKeybinds.isAltDown()) {
                 return@register ActionResult.PASS
             }
-            ClientPlayNetworking.send(
-                NetworkManager.TOGGLE_CHAINSAW_SHEAR_PACKET,
-                PacketByteBuf(Unpooled.buffer())
-            )
+            sendToggleOnceThisTick(player.age)
             ActionResult.SUCCESS
         }
+    }
+
+    private fun sendToggleOnceThisTick(playerAge: Int) {
+        if (playerAge == lastToggleSentOnPlayerAge) return
+        lastToggleSentOnPlayerAge = playerAge
+        ClientPlayNetworking.send(
+            NetworkManager.TOGGLE_CHAINSAW_SHEAR_PACKET,
+            PacketByteBuf(Unpooled.buffer())
+        )
     }
 }

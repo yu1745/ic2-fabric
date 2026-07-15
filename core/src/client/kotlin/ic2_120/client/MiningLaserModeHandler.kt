@@ -15,7 +15,7 @@ import net.minecraft.util.TypedActionResult
 
 /**
  * 采矿镭射枪模式切换：
- * 按住模式键并右键（空气/方块）时循环切换模式。
+ * 按住 Alt 并右键（空气/方块）时循环切换模式。
  *
  * 与 [IridiumDrillModeHandler] 一致使用 `success` 消费本次使用，避免仍触发 [MiningLaserItem.use]。
  * 同一 tick 内 [UseBlockCallback] 与 [UseItemCallback] 可能各触发一次，故每 tick 最多发一包，防止连切两档。

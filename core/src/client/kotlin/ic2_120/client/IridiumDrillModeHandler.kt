@@ -14,20 +14,19 @@ import net.minecraft.util.TypedActionResult
 
 /**
  * 铱钻头模式切换：
- * 按住“模式键”并右键（空气/方块）时切换精准采集。
+ * 按住 Alt 并右键（空气/方块）时切换精准采集。
  */
 @Environment(EnvType.CLIENT)
 object IridiumDrillModeHandler {
+    private var lastToggleSentOnPlayerAge: Int = Int.MIN_VALUE
+
     fun register() {
         UseItemCallback.EVENT.register { player, world, hand ->
             val stack = player.getStackInHand(hand)
             if (!world.isClient || stack.item !is IridiumDrill || !ModeKeybinds.isAltDown()) {
                 return@register TypedActionResult.pass(stack)
             }
-            ClientPlayNetworking.send(
-                NetworkManager.TOGGLE_IRIDIUM_SILK_TOUCH_PACKET,
-                PacketByteBuf(Unpooled.buffer())
-            )
+            sendToggleOnceThisTick(player.age)
             TypedActionResult.success(stack, true)
         }
 
@@ -36,11 +35,17 @@ object IridiumDrillModeHandler {
             if (!world.isClient || stack.item !is IridiumDrill || !ModeKeybinds.isAltDown()) {
                 return@register ActionResult.PASS
             }
-            ClientPlayNetworking.send(
-                NetworkManager.TOGGLE_IRIDIUM_SILK_TOUCH_PACKET,
-                PacketByteBuf(Unpooled.buffer())
-            )
+            sendToggleOnceThisTick(player.age)
             ActionResult.SUCCESS
         }
+    }
+
+    private fun sendToggleOnceThisTick(playerAge: Int) {
+        if (playerAge == lastToggleSentOnPlayerAge) return
+        lastToggleSentOnPlayerAge = playerAge
+        ClientPlayNetworking.send(
+            NetworkManager.TOGGLE_IRIDIUM_SILK_TOUCH_PACKET,
+            PacketByteBuf(Unpooled.buffer())
+        )
     }
 }

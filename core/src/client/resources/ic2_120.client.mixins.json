@@ -5,7 +5,9 @@
 	"client": [
 		"BandwidthHudMixin",
 		"HandledScreenInvTitleMixin",
+		"KeyboardModifierStateMixin",
 		"LivingEntityJumpClientMixin",
+		"ModeSwitchUseMixin",
 		"TransformerTooltipMixin"
 	],
 	"injectors": {
