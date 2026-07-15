@@ -9,7 +9,6 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluid
-import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.network.listener.ClientPlayPacketListener
@@ -43,7 +42,6 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
     var pipeLoad: Long = 0L
     var currentFluidId: String? = null
     private var disabledMask: Int = 0
-    private var pumpFilterGhostStack: ItemStack = ItemStack.EMPTY
     private var pumpFilterFluidId: String? = null
 
     fun isDisabled(direction: Direction): Boolean {
@@ -71,26 +69,14 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
 
     fun isPumpAttachment(): Boolean = cachedState.block is PumpAttachmentBlock
 
-    fun pumpFilterGhostStack(): ItemStack = pumpFilterGhostStack
-
-    fun setPumpFilterFromStack(stack: ItemStack): Boolean {
-        val fluidId = PumpAttachmentFilter.resolveFluidIdFromStack(stack) ?: return false
-        pumpFilterFluidId = fluidId
-        pumpFilterGhostStack = stack.copy().apply { count = 1 }
-        markDirty()
-        return true
-    }
-
     fun setPumpFilterFluid(fluid: Fluid) {
         pumpFilterFluidId = Registries.FLUID.getId(fluid).toString()
-        pumpFilterGhostStack = ItemStack.EMPTY
         markDirty()
         world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
     }
 
     fun clearPumpFilter() {
         pumpFilterFluidId = null
-        pumpFilterGhostStack = ItemStack.EMPTY
         markDirty()
         world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
     }
@@ -100,11 +86,6 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         disabledMask = nbt.getInt("DisabledMask")
         pipeLoad = nbt.getLong("PipeLoad")
         currentFluidId = nbt.getString("CurrentFluid").takeIf { it.isNotBlank() }
-        if (nbt.contains("PumpFilterSlot")) {
-            pumpFilterGhostStack = ItemStack.fromNbt(nbt.getCompound("PumpFilterSlot"))
-        } else {
-            pumpFilterGhostStack = ItemStack.EMPTY
-        }
         pumpFilterFluidId = nbt.getString("PumpFilterFluid").takeIf { it.isNotBlank() }
     }
 
@@ -113,9 +94,6 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         nbt.putInt("DisabledMask", disabledMask)
         nbt.putLong("PipeLoad", pipeLoad)
         currentFluidId?.let { nbt.putString("CurrentFluid", it) }
-        if (!pumpFilterGhostStack.isEmpty) {
-            nbt.put("PumpFilterSlot", pumpFilterGhostStack.writeNbt(NbtCompound()))
-        }
         if (!pumpFilterFluidId.isNullOrBlank()) {
             nbt.putString("PumpFilterFluid", pumpFilterFluidId)
         }

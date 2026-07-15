@@ -2,11 +2,13 @@ package ic2_120.content.screen
 
 import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.pipes.PumpAttachmentBlock
+import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.fluid.Fluid
+import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.network.PacketByteBuf
 import net.minecraft.screen.ScreenHandler
@@ -18,7 +20,7 @@ import ic2_120.registry.annotation.ScreenFactory
 @ModScreenHandler(names = ["bronze_pump_attachment", "carbon_pump_attachment"])
 class PumpAttachmentScreenHandler(
     syncId: Int,
-    playerInventory: PlayerInventory,
+    private val playerInventory: PlayerInventory,
     private val blockEntity: PipeBlockEntity?,
     private val context: ScreenHandlerContext
 ) : ScreenHandler(PumpAttachmentScreenHandler::class.type(), syncId) {
@@ -27,11 +29,9 @@ class PumpAttachmentScreenHandler(
         this(syncId, playerInventory, be, ScreenHandlerContext.create(playerInventory.player.world, be.pos))
 
     init {
-        addSlot(object : Slot(object : net.minecraft.inventory.SimpleInventory(1) {}, 0, 80, 31) {
+        addSlot(object : Slot(SimpleInventory(1), FILTER_SLOT, 80, 31) {
             override fun canInsert(stack: ItemStack): Boolean = false
             override fun canTakeItems(playerEntity: PlayerEntity): Boolean = false
-            override fun getStack(): ItemStack = blockEntity?.pumpFilterGhostStack() ?: ItemStack.EMPTY
-            override fun hasStack(): Boolean = !(blockEntity?.pumpFilterGhostStack()?.isEmpty ?: true)
         })
 
         for (row in 0 until 3) {
@@ -50,7 +50,7 @@ class PumpAttachmentScreenHandler(
 
     fun filterFluid(): Fluid? = blockEntity?.pumpFilterFluid()
 
-    /** 设置 JEI 幽灵流体过滤器，不需要玩家实际持有流体容器。 */
+    /** 设置幽灵流体过滤器；JEI 拖放和真实容器取样共用。 */
     fun setFluidFilter(fluid: Fluid): Boolean {
         val be = blockEntity ?: return false
         be.setPumpFilterFluid(fluid)
@@ -59,12 +59,15 @@ class PumpAttachmentScreenHandler(
     }
 
     override fun onSlotClick(slotIndex: Int, button: Int, actionType: SlotActionType, player: PlayerEntity) {
-        if (slotIndex == 0 && actionType == SlotActionType.PICKUP) {
+        if (slotIndex == FILTER_SLOT && actionType == SlotActionType.PICKUP) {
             val cursor = cursorStack
             if (cursor.isEmpty || button == 1) {
                 blockEntity?.clearPumpFilter()
             } else {
-                blockEntity?.setPumpFilterFromStack(cursor)
+                val fluid = FluidPipeUpgradeComponent.readFluidFromItemStack(cursor)
+                if (fluid != null && setFluidFilter(fluid)) {
+                    returnCursorToInventory()
+                }
             }
             return
         }
@@ -77,7 +80,16 @@ class PumpAttachmentScreenHandler(
                 player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
+    /** 真实容器仅作为过滤样本；设置后放回背包，不占用过滤槽。 */
+    private fun returnCursorToInventory() {
+        val returning = cursorStack.copy()
+        if (returning.isEmpty) return
+        playerInventory.insertStack(returning)
+        cursorStack = if (returning.isEmpty) ItemStack.EMPTY else returning
+    }
+
     companion object {
+        const val FILTER_SLOT = 0
         const val PLAYER_INV_START = 1
 
         @ScreenFactory

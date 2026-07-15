@@ -48,7 +48,7 @@ class PumpAttachmentScreen(
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        // 覆盖真实容器/旧幽灵容器的渲染，过滤槽统一只显示流体纹理。
+        // 幽灵过滤区始终为空，只绘制所选流体纹理。
         drawFilterFluid(context)
 
         drawJeiHint(context, mouseX, mouseY)

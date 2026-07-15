@@ -38,7 +38,7 @@ class FluidUpgradeScreen(
         val client = client ?: return
 
         addDrawableChild(ButtonWidget.builder(Text.empty()) {
-            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_SET_FILTER))
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_CLEAR_FILTER))
         }.dimensions(x + 27, y + 37, 20, 14).build())
 
         // 六个方向分别独立开关，避免用一个循环按钮无法表达任意组合。
@@ -58,7 +58,7 @@ class FluidUpgradeScreen(
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        // 覆盖真实容器的渲染，过滤槽统一只显示流体纹理。
+        // 幽灵过滤区始终为空，只绘制所选流体纹理。
         drawFilterFluid(context)
 
         drawJeiHint(context, mouseX, mouseY)
@@ -78,7 +78,7 @@ class FluidUpgradeScreen(
         drawDirectionButtons(context)
 
         // 7px 按钮文字覆盖
-        draw7pxText(context, x + 27, y + 37, 20, 14, t("gui.ic2_120.fluid_upgrade.set_filter"))
+        draw7pxText(context, x + 27, y + 37, 20, 14, t("gui.ic2_120.fluid_upgrade.clear_filter"))
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
