@@ -48,6 +48,7 @@ replay_*.log
 
 node_modules/
 .claude/
+.codex*/
 
 # deploy
 
