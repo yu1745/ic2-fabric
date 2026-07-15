@@ -4,12 +4,10 @@ import ic2_120.client.screen.FluidUpgradeScreen
 import ic2_120.client.screen.PumpAttachmentScreen
 import ic2_120.content.network.NetworkManager
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
-import ic2_120.registry.ClassScanner
 import io.netty.buffer.Unpooled
 import mezz.jei.api.IModPlugin
 import mezz.jei.api.JeiPlugin
 import mezz.jei.api.constants.VanillaTypes
-import mezz.jei.api.fabric.constants.FabricTypes
 import mezz.jei.api.gui.handlers.IGhostIngredientHandler
 import mezz.jei.api.ingredients.IIngredientTypeWithSubtypes
 import mezz.jei.api.ingredients.ITypedIngredient
@@ -28,20 +26,22 @@ class Ic2JeiGhostPlugin : IModPlugin {
     override fun getPluginUid(): Identifier = Identifier("ic2_120", "ghost_filters")
 
     override fun registerGuiHandlers(registration: IGuiHandlerRegistration) {
+        val fluidIngredientType = registration.jeiHelpers.platformFluidHelper.fluidIngredientType
         registration.addGhostIngredientHandler(
             PumpAttachmentScreen::class.java,
-            FluidFilterGhostHandler { it.ghostFilterArea() }
+            FluidFilterGhostHandler(fluidIngredientType) { it.ghostFilterArea() }
         )
         registration.addGhostIngredientHandler(
             FluidUpgradeScreen::class.java,
-            FluidFilterGhostHandler { it.ghostFilterArea() }
+            FluidFilterGhostHandler(fluidIngredientType) { it.ghostFilterArea() }
         )
     }
 
     private class FluidFilterGhostHandler<T : Screen>(
+        private val fluidIngredientType: IIngredientTypeWithSubtypes<Fluid, *>,
         private val areaProvider: (T) -> Rect2i
     ) : IGhostIngredientHandler<T> {
-        override fun <I> getTargetsTyped(
+        override fun <I : Any> getTargetsTyped(
             gui: T,
             ingredient: ITypedIngredient<I>,
             doStart: Boolean
@@ -58,8 +58,8 @@ class Ic2JeiGhostPlugin : IModPlugin {
 
         override fun onComplete() = Unit
 
-        private fun <I> resolveFluid(ingredient: ITypedIngredient<I>): Fluid? {
-            val fluid = JeiFluidIngredientResolver.resolve(ingredient)
+        private fun <I : Any> resolveFluid(ingredient: ITypedIngredient<I>): Fluid? {
+            val fluid = resolveFluidIngredient(ingredient)
             if (fluid != null) return fluid
 
             val stack = VanillaTypes.ITEM_STACK
@@ -69,61 +69,18 @@ class Ic2JeiGhostPlugin : IModPlugin {
             return FluidPipeUpgradeComponent.readFluidFromItemStack(stack)
         }
 
+        @Suppress("UNCHECKED_CAST")
+        private fun <I : Any> resolveFluidIngredient(ingredient: ITypedIngredient<I>): Fluid? {
+            if (ingredient.type !== fluidIngredientType) return null
+            val typedFluidIngredientType = fluidIngredientType as IIngredientTypeWithSubtypes<Fluid, I>
+            return typedFluidIngredientType.getBase(ingredient.ingredient)
+        }
+
         private fun sendFluidFilter(fluid: Fluid) {
             if (fluid == Fluids.EMPTY) return
             val buf = PacketByteBuf(Unpooled.buffer())
             buf.writeIdentifier(Registries.FLUID.getId(fluid))
             ClientPlayNetworking.send(NetworkManager.SET_FLUID_FILTER_PACKET, buf)
-        }
-    }
-
-    private fun interface JeiFluidIngredientResolver {
-        fun resolve(ingredient: ITypedIngredient<*>): Fluid?
-
-        companion object {
-            private val active: JeiFluidIngredientResolver by lazy {
-                if (ClassScanner.isSinytraConnectorRuntime()) ForgeJeiFluidIngredientResolver
-                else FabricJeiFluidIngredientResolver
-            }
-
-            fun resolve(ingredient: ITypedIngredient<*>): Fluid? = active.resolve(ingredient)
-        }
-    }
-
-    /** Native Fabric JEI path. Kept isolated so Forge never resolves FabricTypes. */
-    private object FabricJeiFluidIngredientResolver : JeiFluidIngredientResolver {
-        override fun resolve(ingredient: ITypedIngredient<*>): Fluid? {
-            val fluidIngredient = FabricTypes.FLUID_STACK
-                .castIngredient(ingredient.ingredient)
-                .orElse(null)
-                ?: return null
-            return FabricTypes.FLUID_STACK.getBase(fluidIngredient)
-        }
-    }
-
-    /**
-     * Forge JEI path used when this Fabric mod is transformed by Sinytra Connector.
-     * ForgeTypes cannot be a compile-time dependency of this Fabric source set, so only
-     * the field lookup is reflective; fluid extraction uses JEI's loader-neutral API.
-     */
-    private object ForgeJeiFluidIngredientResolver : JeiFluidIngredientResolver {
-        @Suppress("UNCHECKED_CAST")
-        private val fluidStackType: IIngredientTypeWithSubtypes<Fluid, Any>? by lazy {
-            runCatching {
-                Class.forName(
-                    "mezz.jei.api.forge.ForgeTypes",
-                    true,
-                    Ic2JeiGhostPlugin::class.java.classLoader
-                ).getField("FLUID_STACK").get(null) as IIngredientTypeWithSubtypes<Fluid, Any>
-            }.getOrNull()
-        }
-
-        override fun resolve(ingredient: ITypedIngredient<*>): Fluid? {
-            val type = fluidStackType ?: return null
-            val fluidIngredient = type.castIngredient(ingredient.ingredient)
-                .orElse(null)
-                ?: return null
-            return type.getBase(fluidIngredient)
         }
     }
 }
