@@ -56,7 +56,7 @@ object RubberTreetapHandler {
 
             val face = hitResult.side
             val faceState = block.getRubberState(state, face)
-            if (faceState != RubberFaceState.WET) return@register ActionResult.PASS
+            if (faceState == RubberFaceState.NONE) return@register ActionResult.PASS
 
             if (world.isClient) return@register ActionResult.SUCCESS
 
@@ -66,35 +66,43 @@ object RubberTreetapHandler {
                 if (tool.getEnergy(stack) < EU_PER_USE) return@register ActionResult.FAIL
             }
 
-            val resin = Registries.ITEM.get(RESIN_ID)
-            // 采集随机掉落 1-3 个：1个70%、2个20%、3个10%
-            val count = when (val r = world.random.nextFloat()) {
-                in 0f..0.7f -> 1
-                in 0.7f..0.9f -> 2
-                else -> 3
+            // 对齐 JADX ItemTreetap：干孔也会响应树脂提取器。
+            // 两个 1/5 判定彼此独立：可能只移除孔、只掉树脂，或两者同时发生。
+            val resinCount: Int?
+            if (faceState == RubberFaceState.DRY) {
+                var changed = false
+                if (world.random.nextInt(5) == 0) {
+                    world.setBlockState(pos, state.with(RubberLogBlock.propFor(face), RubberFaceState.NONE))
+                    changed = true
+                }
+                resinCount = if (world.random.nextInt(5) == 0) 1 else null
+                if (resinCount != null) changed = true
+                if (!changed) return@register ActionResult.FAIL
+            } else {
+                // JADX 湿孔提取：1-3 个树脂，等概率。
+                resinCount = world.random.nextInt(3) + 1
             }
-            val resinStack = ItemStack(resin, count)
-            val spawnX = pos.x + 0.5 + face.offsetX * 0.6
-            val spawnY = pos.y + 0.5 + face.offsetY * 0.35
-            val spawnZ = pos.z + 0.5 + face.offsetZ * 0.6
-            // 粘性树脂从被采集的那一面掉出，并带一点向外的速度
-            val itemEntity = ItemEntity(
-                world,
-                spawnX,
-                spawnY,
-                spawnZ,
-                resinStack
-            )
-            itemEntity.velocity = itemEntity.velocity.add(
-                face.offsetX * 0.08,
-                face.offsetY * 0.04,
-                face.offsetZ * 0.08
-            )
-            itemEntity.setToDefaultPickupDelay()
-            world.spawnEntity(itemEntity)
 
-            val newState = block.setFaceDry(state, face)
-            world.setBlockState(pos, newState)
+            if (resinCount != null) {
+                val resin = Registries.ITEM.get(RESIN_ID)
+                val resinStack = ItemStack(resin, resinCount)
+                val spawnX = pos.x + 0.5 + face.offsetX * 0.6
+                val spawnY = pos.y + 0.5 + face.offsetY * 0.35
+                val spawnZ = pos.z + 0.5 + face.offsetZ * 0.6
+                // 粘性树脂从被采集的那一面掉出，并带一点向外的速度
+                val itemEntity = ItemEntity(world, spawnX, spawnY, spawnZ, resinStack)
+                itemEntity.velocity = itemEntity.velocity.add(
+                    face.offsetX * 0.08,
+                    face.offsetY * 0.04,
+                    face.offsetZ * 0.08
+                )
+                itemEntity.setToDefaultPickupDelay()
+                world.spawnEntity(itemEntity)
+            }
+
+            if (faceState == RubberFaceState.WET) {
+                world.setBlockState(pos, block.setFaceDry(state, face))
+            }
 
             // 记录提取时间，供 Jade 显示已过时间
             (world.getBlockEntity(pos) as? RubberLogBlockEntity)?.setExtractedTime(face, world.time)

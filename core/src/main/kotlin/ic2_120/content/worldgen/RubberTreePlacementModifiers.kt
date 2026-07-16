@@ -40,17 +40,15 @@ object RubberTreeBiomeTags {
 }
 
 /**
- * 每区块的橡胶树放置数量，完全对齐 Forge 1.12 Ic2WorldDecorator.genRubberTree 的概率模型。
+ * 每区块的橡胶树放置数量。
  *
- * Forge 做法：
+ * 群系加成做法：
  * - 在区块内均匀采样 4 个 biome 点（每点取 chunk 内坐标 8 或 23）
- * - 每个采样点按 biome 类型加权累加 rubberTrees：
+ * - 每个采样点按 biome 类型累加加成：
  *     SWAMP              → +randInt(10)+5   (5~14)
  *     FOREST 或 JUNGLE   → +randInt(5)+1    (1~5)
  *     其他               → +0
- * - rubberTrees2 = round(rubberTrees * treeDensityFactor) / 2
- * - 概率门：randInt(100) < rubberTrees2 才生成
- * - 生成棵数 = rubberTrees2（每次失败 -3 惩罚）
+ * 旧版模型是每区块固定尝试次数、每次独立按稀有度判定；群系加成仍保留。
  */
 class RubberTreeConfigPlacementModifier : PlacementModifier() {
 
@@ -60,7 +58,7 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
         pos: BlockPos
     ): Stream<BlockPos> {
         val config = Ic2Config.current.worldgen.rubberTree.normalized()
-        if (!config.enabled || config.treeDensityFactor <= 0f) {
+        if (!config.enabled || config.countPerChunk <= 0) {
             return Stream.empty()
         }
 
@@ -70,7 +68,7 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
         // pos 是区块原点 (chunkX*16, 0, chunkZ*16)，采样偏移与 Forge 一致。
         val chunkX = pos.x
         val chunkZ = pos.z
-        var rubberTrees = 0
+        var biomeBonus = 0
         for (i in 0 until 4) {
             val sampleX = chunkX + 8 + ((i and 1) * 15)
             val sampleZ = chunkZ + 8 + (((i and 2) ushr 1) * 15)
@@ -78,27 +76,27 @@ class RubberTreeConfigPlacementModifier : PlacementModifier() {
             val biome = world.getBiome(BlockPos(sampleX, world.seaLevel, sampleZ))
             // 与 Forge 顺序一致：先查 SWAMP，再查 FOREST/JUNGLE（两个独立 if，非 else）
             if (biome.isIn(RubberTreeBiomeTags.SWAMP)) {
-                rubberTrees += random.nextInt(10) + 5  // 5~14
+                biomeBonus += random.nextInt(10) + 5  // 5~14，沼泽加成更高
             }
             if (biome.isIn(RubberTreeBiomeTags.FOREST)) {
-                rubberTrees += random.nextInt(5) + 1   // 1~5
+                biomeBonus += random.nextInt(5) + 1   // 1~5
             }
         }
 
-        // baseScale = treeDensityFactor（Forge general.ini 默认 1.0）
-        val rubberTrees2 = Math.round(rubberTrees * config.treeDensityFactor) / 2
-        if (rubberTrees2 <= 0) {
+        if (biomeBonus <= 0) {
             return Stream.empty()
         }
 
-        // 概率门：randInt(100) < rubberTrees2 才进入放置
-        if (random.nextInt(100) >= rubberTrees2) {
-            return Stream.empty()
+        // 旧模型：每次尝试独立判定。以 4 个森林/丛林采样点的平均加成（12）为基准，
+        // 保留当前群系加成模型，并将当前生成概率整体提高 2 倍；概率上限为 100%。
+        val baseBiomeBonus = 4f * 3f
+        val biomeScale = biomeBonus / baseBiomeBonus
+        val chance = (biomeScale / config.rarityChance * 2f).coerceAtMost(1f)
+        val positions = java.util.ArrayList<BlockPos>(config.countPerChunk)
+        repeat(config.countPerChunk) {
+            if (random.nextFloat() < chance) positions += pos
         }
-
-        // 生成 rubberTrees2 棵；失败惩罚 -3 在 feature 层面（feature.generate 返回 false）无法直接回传，
-        // 但 vanilla 会对返回的每个 pos 独立调用 feature，所以这里返回 rubberTrees2 个 pos 即可。
-        return Stream.generate { pos }.limit(rubberTrees2.toLong())
+        return positions.stream()
     }
 
     override fun getType(): PlacementModifierType<*> =

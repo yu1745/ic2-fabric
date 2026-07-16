@@ -575,7 +575,10 @@ object Ic2ConfigScreen {
     ): () -> RubberTreeWorldgenConfig {
         val cat = builder.getOrCreateCategory(Text.literal("世界生成 • 橡胶树"))
         var enabled = cfg.enabled
-        var treeDensityFactor = cfg.treeDensityFactor
+        var saplingGuaranteeEnabled = cfg.saplingGuaranteeEnabled
+        var saplingDropExpected = cfg.saplingDropExpected
+        var countPerChunk = cfg.countPerChunk
+        var rarityChance = cfg.rarityChance
         var maxWaterDepth = cfg.maxWaterDepth
         var baseHeight = cfg.baseHeight
         var heightRandA = cfg.heightRandA
@@ -593,9 +596,20 @@ object Ic2ConfigScreen {
             .setDefaultValue(true)
             .setTooltip(Text.literal("是否允许自然生成橡胶树。变更后需要重启。"))
             .setSaveConsumer { enabled = it }.build())
-        cat.addEntry(eb.startFloatField(Text.literal("树木密度系数"), treeDensityFactor)
-            .setDefaultValue(1.0f).setTooltip(Text.literal("对齐 Forge treeDensityFactor，1.0 = 原版密度"))
-            .setSaveConsumer { treeDensityFactor = it }.build())
+        cat.addEntry(eb.startBooleanToggle(Text.literal("开启树苗保底"), saplingGuaranteeEnabled)
+            .setDefaultValue(true)
+            .setTooltip(Text.literal("数学期望包含保底；开启后每棵树至少掉落 1 个树苗"))
+            .setSaveConsumer { saplingGuaranteeEnabled = it }.build())
+        cat.addEntry(eb.startFloatField(Text.literal("树苗掉落数学期望"), saplingDropExpected)
+            .setDefaultValue(1.25f)
+            .setTooltip(Text.literal("包含保底；1.25 = 保底 1 个后，以 0.25 概率额外掉 1 个"))
+            .setSaveConsumer { saplingDropExpected = it }.build())
+        cat.addEntry(eb.startIntField(Text.literal("每区块尝试次数"), countPerChunk)
+            .setDefaultValue(1).setTooltip(Text.literal("每个区块进行几次橡胶树放置尝试"))
+            .setSaveConsumer { countPerChunk = it }.build())
+        cat.addEntry(eb.startIntField(Text.literal("基础稀有度"), rarityChance)
+            .setDefaultValue(2).setTooltip(Text.literal("2 表示森林/丛林基准每次尝试约 1/2，沼泽会更高"))
+            .setSaveConsumer { rarityChance = it }.build())
         cat.addEntry(eb.startIntField(Text.literal("最大地表水深"), maxWaterDepth)
             .setDefaultValue(0).setSaveConsumer { maxWaterDepth = it }.build())
         cat.addEntry(eb.startIntField(Text.literal("树干基础高度"), baseHeight)
@@ -624,7 +638,10 @@ object Ic2ConfigScreen {
         return {
             RubberTreeWorldgenConfig(
                 enabled = enabled,
-                treeDensityFactor = treeDensityFactor,
+                saplingGuaranteeEnabled = saplingGuaranteeEnabled,
+                saplingDropExpected = saplingDropExpected,
+                countPerChunk = countPerChunk,
+                rarityChance = rarityChance,
                 maxWaterDepth = maxWaterDepth,
                 baseHeight = baseHeight,
                 heightRandA = heightRandA,

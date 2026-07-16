@@ -40,7 +40,8 @@ object RubberTreeGeneration {
 
         BiomeModifications.addFeature(
             BiomeSelectors.tag(RubberTreeBiomeTags.GENERATES_RUBBER_TREES),
-            GenerationStep.Feature.VEGETAL_DECORATION,
+            // 在原版树木的 VEGETAL_DECORATION 之前生成，避免橡胶树与其他树重叠。
+            GenerationStep.Feature.LOCAL_MODIFICATIONS,
             RUBBER_TREE_PLACED_KEY
         )
     }

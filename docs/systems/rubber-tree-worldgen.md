@@ -24,7 +24,7 @@
 1. 启动注册层：注册自定义 worldgen 类型，并把 `rubber_tree` placed feature 挂到指定生物群系。
 2. data 基底层：`configured_feature` 和 `placed_feature` 仍保留 JSON 入口。
 3. 运行时覆盖层：树高、树冠、尝试次数、稀有度、水深限制等参数在生成时读取 `Ic2Config`。
-4. 落地方块层：树叶形状、橡胶孔初始化、与其他树重叠时的清理逻辑由 Kotlin 自定义实现处理。
+4. 落地方块层：树叶形状、橡胶孔初始化以及与其他树重叠时的避让逻辑由 Kotlin 自定义实现处理。
 
 不是“纯 JSON 世界生成”，也不是“全代码硬编码”。
 当前实现是“JSON 提供注册入口 + Kotlin 在运行时覆盖关键参数”。
@@ -44,11 +44,13 @@
 4. 然后读取 `Ic2Config.current.worldgen.rubberTree.normalized()`。
 5. 若 `enabled=false`，直接不向 biome modification 注册橡胶树。
 6. 若 `#ic2_120:generates_rubber_trees` 没有匹配群系，也不会生成。
-7. 否则调用 `BiomeModifications.addFeature(...)`，把 `ic2_120:rubber_tree` 挂到这些生物群系的 `VEGETAL_DECORATION` 阶段。
+7. 否则调用 `BiomeModifications.addFeature(...)`，把 `ic2_120:rubber_tree` 挂到这些生物群系的 `LOCAL_MODIFICATIONS` 阶段，早于原版树木的植被生成。
 
 这里有一个关键点：
 
 - `enabled`
+- `saplingGuaranteeEnabled`
+- `saplingDropExpected`
 - `#ic2_120:generates_rubber_trees`
 
 这两个字段只在模组启动时参与 `BiomeModifications.addFeature(...)` 注册。
@@ -105,7 +107,8 @@
 
 - `enabled`
 - `#ic2_120:generates_rubber_trees`
-- `treeDensityFactor`
+- `countPerChunk`
+- `rarityChance`
 - `maxWaterDepth`
 - `baseHeight`
 - `heightRandA`
@@ -124,8 +127,11 @@
 各字段落点如下：
 
 - `enabled`：启动时决定是否注册 biome feature；运行时 placement modifier 也会再次检查。
+- `saplingGuaranteeEnabled`：是否启用整棵树至少掉落 1 个树苗的保底，默认开启；数学期望包含这 1 个保底。
+- `saplingDropExpected`：每棵树掉落树苗的数学期望，默认 `1.25`。开启保底且填写低于 `1` 时，实际强制只掉 `1` 个；填写 `1.25` 时表示保底 `1` 个后，再以 `0.25` 概率额外掉 `1` 个。
 - `#ic2_120:generates_rubber_trees`：启动时参与 biome feature 注册；概率分类由 `rubber_tree_forest` / `rubber_tree_swamp` 提供。
-- `treeDensityFactor`：乘入 JADX `genRubberTree` 的 `rubberTrees2` 计算，默认 `1.0`。
+- `countPerChunk` / `rarityChance`：沿用旧版“每区块固定尝试次数、每次独立按稀有度判定”的概率模型；默认 `rarityChance=2` 时森林/丛林基准概率为 `1/2`。
+- 群系加成：4 个区块采样点分别按群系加成；沼泽为 `5~14`，森林/丛林为 `1~5`，加成作为通过概率的分子。
 - `maxWaterDepth`：`RubberTreeConfigWaterDepthFilterPlacementModifier.shouldPlace()`。
 - `baseHeight` / `heightRandA` / `heightRandB`：`RubberTreeFeature.buildRuntimeConfig()` 中覆盖 `StraightTrunkPlacer`。
 - `foliageRadius` / `foliageOffset` / `foliageHeight`：`RubberTreeFeature.buildRuntimeConfig()` 中覆盖 `RubberTreeFoliagePlacer`。
@@ -134,10 +140,10 @@
 
 ## 5. 自然世界生成时的实际执行顺序
 
-当某个区块在 `VEGETAL_DECORATION` 阶段尝试生成橡胶树时，链路如下：
+当某个区块在 `LOCAL_MODIFICATIONS` 阶段尝试生成橡胶树时，链路如下：
 
 1. `placed_feature/rubber_tree.json` 开始执行 placement modifier 链。
-2. `RubberTreeConfigPlacementModifier` 按 JADX `genRubberTree` 采样区块内 4 个海平面群系，计算 `rubberTrees2`，并执行 `nextInt(100) < rubberTrees2` 概率门。
+2. `RubberTreeConfigPlacementModifier` 采样区块内 4 个海平面群系，累计群系加成，再按旧版的 `countPerChunk` / `rarityChance` 模型独立判定每次尝试。
 3. `in_square` 把候选点随机扩散到区块内。
 4. `surface_relative_threshold_filter` 限制候选点不能高于地表。
 5. `RubberTreeConfigWaterDepthFilterPlacementModifier` 检查当前位置的水深是否允许。
@@ -167,34 +173,23 @@
 `isSaplingGrowth(...)` 通过 `origin` 位置是否还是 `RubberSaplingBlock` 来判断：
 
 - 是树苗生长：直接走 `Feature.TREE.generate(runtimeContext)`，不做挪位、清理或替换周围树木。
-- 是自然世界生成：执行额外的避让和清理逻辑。
+- 是自然世界生成：执行额外的避让逻辑，不替换已有树木或其他方块。
 
 这意味着树苗长树也会吃到新的“树形参数”，但不会吃到“替换周围树木”的行为。
 
 ### 6.3 自然世界生成时的避让逻辑
 
-`findOverlappingTreeBlocks(...)` 会扫描一个固定包围盒：
+`hasClearNaturalGenerationArea(...)` 会扫描一个固定包围盒：
 
 - 半径：`CLEARANCE_RADIUS = 3`
 - 高度：`CLEARANCE_HEIGHT = 12`
 
 规则如下：
 
-- 若遇到 `logs` 或 `leaves` 标签方块，先记下来，稍后允许直接清掉。
+- 若遇到 `logs` 或 `leaves` 标签方块，本次生成直接失败，不会删除已有树木。
 - 若 `ignoreVines=true` 且遇到藤蔓，则忽略。
-- 若遇到其他不可替换硬障碍，则本次生成直接失败。
-
-如果扫描通过，会先把记录下来的旧树木方块替换为空气，再调用原版 `Feature.TREE.generate(...)`。
-
-### 6.4 生成后清理残叶
-
-生成成功后，`cleanupOrphanLeaves(...)` 会在更大范围内清理“被替换旧树留下来的残叶”：
-
-- 只处理 `leaves` 标签方块。
-- 不清理 `RubberLeavesBlock`。
-- 只有在 6 格连通搜索内找不到任何原木支撑时才删除。
-
-目标是避免橡胶树把别的树半截顶掉以后，留下浮空树叶。
+- 若遇到其他树的原木/树叶或不可替换硬障碍，则本次生成直接失败。
+- 树苗生长和骨粉催熟同样要求上方空间可用；不会强行删除其他方块。
 
 ## 7. 树叶形状怎么生成
 
@@ -281,7 +276,8 @@
 
 重载后会立即影响的内容：
 
-- `treeDensityFactor`
+- `countPerChunk`
+- `rarityChance`
 - `maxWaterDepth`
 - `baseHeight`
 - `heightRandA`
@@ -307,7 +303,7 @@
 ## 13. 排查橡胶树不生成时优先看哪里
 
 1. 看 `Ic2Config.worldgen.rubberTree.enabled` 是否为 `true`。
-2. 看 `treeDensityFactor` 是否为 `0`。
+2. 看 `countPerChunk` 是否大于 `0`，以及 `rarityChance` 是否过高。
 3. 若修改了 `enabled`，确认是否已经重启游戏或服务端，而不是只执行了 `/ic2config reload`。
 4. 看目标群系是否匹配 `#ic2_120:generates_rubber_trees`。
 5. 看 `maxWaterDepth` 是否把沼泽等地形过滤掉了。

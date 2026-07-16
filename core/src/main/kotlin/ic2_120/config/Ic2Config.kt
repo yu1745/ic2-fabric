@@ -367,9 +367,18 @@ data class RubberTreeWorldgenConfig(
     /** 是否允许自然生成橡胶树。 */
     @field:ConfigComment("是否允许自然生成橡胶树。", "true")
     val enabled: Boolean = true,
-    /** 树木密度系数，对齐 Forge general.ini treeDensityFactor。乘到 biome 采样累加值上。 */
-    @field:ConfigComment("树木密度系数，对齐 Forge treeDensityFactor。1.0 = 原版密度。", "1.0")
-    val treeDensityFactor: Float = 1.0f,
+    /** 是否启用整棵橡胶树至少掉落 1 个树苗的保底。 */
+    @field:ConfigComment("是否启用整棵橡胶树至少掉落 1 个树苗的保底；数学期望包含该保底。", "true")
+    val saplingGuaranteeEnabled: Boolean = true,
+    /** 每棵树掉落树苗的数学期望，开启保底时该值包含保底数量。 */
+    @field:ConfigComment("每棵橡胶树掉落树苗的数学期望，包含保底数量；开启保底且低于 1 时强制只掉 1 个。1.25 表示保底 1 个后，以 0.25 概率额外掉 1 个。", "1.25")
+    val saplingDropExpected: Float = 1.25f,
+    /** 每个区块内尝试几次橡胶树放置。 */
+    @field:ConfigComment("每个区块进行几次橡胶树放置尝试。", "1")
+    val countPerChunk: Int = 1,
+    /** 基础稀有度；群系加成会提高通过概率。 */
+    @field:ConfigComment("基础稀有度。2 表示森林/丛林基准每次尝试平均 1/2 概率通过。", "2")
+    val rarityChance: Int = 2,
     /** 允许的地表水深，0 表示不允许生成在水面上。 */
     @field:ConfigComment("允许生成时的最大地表水深。0 表示不允许刷在水面上。", "0")
     val maxWaterDepth: Int = 0,
@@ -411,7 +420,9 @@ data class RubberTreeWorldgenConfig(
      * 统一在读取侧做约束，避免配置写错后在世界生成阶段抛异常。
      */
     fun normalized(): RubberTreeWorldgenConfig = copy(
-        treeDensityFactor = treeDensityFactor.coerceAtLeast(0f),
+        saplingDropExpected = saplingDropExpected.coerceIn(0f, 64f),
+        countPerChunk = countPerChunk.coerceIn(0, 256),
+        rarityChance = rarityChance.coerceAtLeast(1),
         maxWaterDepth = maxWaterDepth.coerceAtLeast(0),
         baseHeight = baseHeight.coerceIn(0, 32),
         heightRandA = heightRandA.coerceIn(0, 24),

@@ -7,6 +7,7 @@ import ic2_120.content.block.RubberLeavesBlock
 import ic2_120.content.block.RubberLogBlock
 import ic2_120.content.block.RubberSaplingBlock
 import ic2_120.content.block.RubberSaplingGenerator
+import ic2_120.content.block.RubberTreeSaplingDrop
 import ic2_120.registry.instance
 import net.minecraft.block.Blocks
 import net.minecraft.block.Block
@@ -44,19 +45,13 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
             return growRubberTree(world, origin, random)
         }
 
-        val overlappingTreeBlocks = findOverlappingTreeBlocks(context, origin) ?: return false
-
-        // 自然世界生成时，只在原始落点处理重叠树木：
-        // 被树挡住就替换；不是树挡住就直接放弃，不再改落点重试。
-        overlappingTreeBlocks.forEach { pos ->
-            setBlockState(world, pos, Blocks.AIR.defaultState)
-        }
+        // 自然世界生成绝不替换已有树木；若与其他树重叠，直接放弃本次生成。
+        if (!hasClearNaturalGenerationArea(context, origin)) return false
 
         if (!growRubberTree(world, origin, random)) {
             return false
         }
 
-        cleanupOrphanLeaves(context, origin)
         return true
     }
 
@@ -117,12 +112,11 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
     private fun hasClearSaplingGrowthArea(context: FeatureContext<TreeFeatureConfig>, origin: BlockPos): Boolean =
         RubberSaplingGrowth.hasClearArea(context.world, origin)
 
-    private fun findOverlappingTreeBlocks(context: FeatureContext<TreeFeatureConfig>, origin: BlockPos): List<BlockPos>? {
+    private fun hasClearNaturalGenerationArea(context: FeatureContext<TreeFeatureConfig>, origin: BlockPos): Boolean {
         val world = context.world
         val ignoreVines = Ic2Config.current.worldgen.rubberTree.normalized().ignoreVines
-        val overlappingTreeBlocks = mutableListOf<BlockPos>()
 
-        // 允许覆盖已有树木，但仍然拒绝非树类硬障碍，避免橡胶树插进地形或其他结构里。
+        // 树木和其他硬障碍都阻止本次生成，避免破坏原版树木或结构。
         for (x in -CLEARANCE_RADIUS..CLEARANCE_RADIUS) {
             for (z in -CLEARANCE_RADIUS..CLEARANCE_RADIUS) {
                 // 不检查 origin 同层的周边地表，避免把草方块/泥土误判成“阻挡树生成”的硬障碍。
@@ -131,8 +125,7 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
                     val pos = origin.add(x, y, z)
                     val state = world.getBlockState(pos)
                     if (state.isIn(BlockTags.LOGS) || state.isIn(BlockTags.LEAVES)) {
-                        overlappingTreeBlocks += pos.toImmutable()
-                        continue
+                        return false
                     }
                     // 与原版 TreeFeature 的 getTopPosition 保持一致：
                     // 配置里 ignore_vines=true 时，藤蔓不应阻止橡胶树生成。    
@@ -140,61 +133,13 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
                         continue
                     }
                     if (!TreeFeature.canReplace(world, pos)) {
-                        return null
+                        return false
                     }
                 }
             }
         }
 
-        return overlappingTreeBlocks
-    }
-
-    private fun cleanupOrphanLeaves(context: FeatureContext<TreeFeatureConfig>, origin: BlockPos) {
-        val world = context.world
-
-        for (x in -LEAF_CLEANUP_RADIUS..LEAF_CLEANUP_RADIUS) {
-            for (z in -LEAF_CLEANUP_RADIUS..LEAF_CLEANUP_RADIUS) {
-                for (y in LEAF_CLEANUP_MIN_Y..LEAF_CLEANUP_MAX_Y) {
-                    val pos = origin.add(x, y, z)
-                    val state = world.getBlockState(pos)
-                    if (!state.isIn(BlockTags.LEAVES)) continue
-                    // 这里只清理被替换旧树遗留下来的叶子，不碰新生成的橡胶树叶，
-                    // 否则会把橡胶树顶部那几片单独叶子误判成残叶删掉。
-                    if (state.block is RubberLeavesBlock) continue
-                    if (hasSupportingLog(world, pos)) continue
-                    setBlockState(world, pos, Blocks.AIR.defaultState)
-                }
-            }
-        }
-    }
-
-    // 按叶子衰减的思路做一次局部搜索：只有还能经由叶子链在 6 格内连到原木的树叶才保留。
-    private fun hasSupportingLog(world: net.minecraft.world.StructureWorldAccess, start: BlockPos): Boolean {
-        val queue = ArrayDeque<Pair<BlockPos, Int>>()
-        val visited = HashSet<BlockPos>()
-
-        queue.add(start.toImmutable() to 0)
-        visited.add(start.toImmutable())
-
-        while (queue.isNotEmpty()) {
-            val (pos, depth) = queue.removeFirst()
-            if (depth >= LEAF_SUPPORT_DISTANCE) continue
-
-            for (direction in Direction.values()) {
-                val nextPos = pos.offset(direction).toImmutable()
-                if (!visited.add(nextPos)) continue
-
-                val nextState = world.getBlockState(nextPos)
-                if (nextState.isIn(BlockTags.LOGS)) {
-                    return true
-                }
-                if (nextState.isIn(BlockTags.LEAVES)) {
-                    queue.add(nextPos to (depth + 1))
-                }
-            }
-        }
-
-        return false
+        return true
     }
 
     /**
@@ -211,7 +156,7 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
         origin: BlockPos,
         random: Random
     ): Boolean {
-        // Forge getGrowHeight: 从 origin 上方扫描连续空气，上限 MAX_TREE_HEIGHT
+        // 旧版逻辑：从 origin 上方扫描连续空气，上限 MAX_TREE_HEIGHT。
         var height = 0
         var scanPos = origin.up()
         while (world.getBlockState(scanPos).isAir && height < MAX_TREE_HEIGHT) {
@@ -231,7 +176,7 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
         val logPositions = mutableListOf<BlockPos>()
        val baseLogState = rubberLog.defaultState
            .with(Properties.AXIS, Direction.Axis.Y)
-           .with(RubberLogBlock.NATURAL, false)
+           .with(RubberLogBlock.NATURAL, true)
 
         // 树级橡胶孔概率（对齐 Forge 1.12：初始 25%，每出一个 -10%）
         var treeholechance = 25
@@ -281,6 +226,12 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
            }
        }
 
+        // 按整棵树的数学期望，把树苗掉落标记绑定到实际生成的叶子上。
+        val dropConfig = Ic2Config.current.worldgen.rubberTree.normalized()
+        if (dropConfig.saplingGuaranteeEnabled && leafPositions.isNotEmpty()) {
+            RubberTreeSaplingDrop.bindLeaves(world, leafPositions, random)
+        }
+
         // 放完所有方块后手动设置树叶 DISTANCE（对齐 TreeFeature 的 BFS 距离计算）。
         // 不走 vanilla 邻居更新链——世界生成期间 scheduledTick 不保证及时执行，
         // 默认 DISTANCE=7 的叶子会被 randomTick 立即判定为"无支撑"而枯萎。
@@ -292,13 +243,9 @@ class RubberTreeFeature : Feature<TreeFeatureConfig>(TreeFeatureConfig.CODEC) {
    companion object {
         // 对齐 Forge 1.12 WorldGenRubTree.maxHeight
         private const val MAX_TREE_HEIGHT = 8
-        // 当前橡胶树树冠半径为 2，这里额外留 1 格缓冲，避免与其他树冠/树干贴脸生成。
+        // 当前橡胶树树冠半径为 2，这里额外留 1 格缓冲，避免与其他树冠/树干重叠。
         private const val CLEARANCE_RADIUS = 3
         private const val CLEARANCE_HEIGHT = 12
-        private const val LEAF_SUPPORT_DISTANCE = 6
-        private const val LEAF_CLEANUP_RADIUS = CLEARANCE_RADIUS + LEAF_SUPPORT_DISTANCE
-        private const val LEAF_CLEANUP_MIN_Y = -2
-        private const val LEAF_CLEANUP_MAX_Y = CLEARANCE_HEIGHT + 4
     }
 }
 
