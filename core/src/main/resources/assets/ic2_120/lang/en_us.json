@@ -1251,6 +1251,9 @@
   "gui.ic2_120.item_upgrade.no_filter": "All",
   "gui.ic2_120.limiter_cable.limit_value": "Limit: %s EU/t",
   "gui.ic2_120.limiter_cable.limit_unlimited": "Limit: Unlimited",
+  "gui.ic2_120.splitter_cable.threshold": "Trigger threshold: %s",
+  "gui.ic2_120.splitter_cable.inverted.on": "Inverted: On",
+  "gui.ic2_120.splitter_cable.inverted.off": "Inverted: Off",
 
   "block.ic2_120.steam_generator": "Steam Generator",
   "block.ic2_120.steam_kinetic_generator": "Steam Kinetic Generator",

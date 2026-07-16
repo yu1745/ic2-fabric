@@ -37,6 +37,12 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
     /** 限流值，0 表示不限流。由限流导线 GUI 设置。 */
     var configuredLimit: Long = 0
 
+    /** 分流导线的红石触发阈值（1–15）。 */
+    var splitterThreshold: Int = DEFAULT_SPLITTER_THRESHOLD
+
+    /** 分流导线是否反相：反相时，信号低于阈值才断开。 */
+    var splitterInverted: Boolean = false
+
     /** 有效传输速率，受限于 [configuredLimit]。 */
     val effectiveTransferRate: Long
         get() {
@@ -76,6 +82,12 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         super.readNbt(nbt)
         localEnergy = nbt.getLong(NBT_ENERGY)
         configuredLimit = if (nbt.contains(NBT_LIMIT)) nbt.getLong(NBT_LIMIT) else 0
+        splitterThreshold = if (nbt.contains(NBT_SPLITTER_THRESHOLD)) {
+            nbt.getInt(NBT_SPLITTER_THRESHOLD).coerceIn(MIN_SPLITTER_THRESHOLD, MAX_SPLITTER_THRESHOLD)
+        } else {
+            DEFAULT_SPLITTER_THRESHOLD
+        }
+        splitterInverted = nbt.getBoolean(NBT_SPLITTER_INVERTED)
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -84,6 +96,8 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         if (configuredLimit > 0) {
             nbt.putLong(NBT_LIMIT, configuredLimit)
         }
+        nbt.putInt(NBT_SPLITTER_THRESHOLD, splitterThreshold)
+        nbt.putBoolean(NBT_SPLITTER_INVERTED, splitterInverted)
     }
 
     fun tick(world: World, pos: BlockPos, state: BlockState) {
@@ -96,6 +110,11 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         private val logger = LoggerFactory.getLogger("ic2_120/CableBlockEntity")
         private const val NBT_ENERGY = "CableEnergy"
         private const val NBT_LIMIT = "ConfiguredLimit"
+        private const val NBT_SPLITTER_THRESHOLD = "SplitterThreshold"
+        private const val NBT_SPLITTER_INVERTED = "SplitterInverted"
+        const val MIN_SPLITTER_THRESHOLD = 1
+        const val MAX_SPLITTER_THRESHOLD = 15
+        const val DEFAULT_SPLITTER_THRESHOLD = 1
         // private const val NBT_LOAD = "CableLoad"
 
         lateinit var TYPE: BlockEntityType<CableBlockEntity>

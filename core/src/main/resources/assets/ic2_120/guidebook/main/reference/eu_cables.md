@@ -46,7 +46,7 @@ Cables move EU from generators and storage to machines. Machines have an input t
 
 ## Splitter and Limiter
 
-- **EU Splitter Cable**: disconnects when it receives a redstone signal; resumes transmission when the signal is low.
+- **EU Splitter Cable**: right-click to set a redstone trigger threshold from 1 to 15 and optionally invert the condition. By default, it disconnects at signal strength 1 or above.
 - **EU Limiter Cable**: right-click to open a UI for setting a maximum throughput, useful for protecting low-tier branches.
 
 ## Transformers

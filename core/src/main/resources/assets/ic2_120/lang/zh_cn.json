@@ -1238,6 +1238,9 @@
   "gui.ic2_120.item_upgrade.no_filter": "全部",
   "gui.ic2_120.limiter_cable.limit_value": "限流值: %s EU/t",
   "gui.ic2_120.limiter_cable.limit_unlimited": "限流值: 无限制",
+  "gui.ic2_120.splitter_cable.threshold": "触发阈值: %s",
+  "gui.ic2_120.splitter_cable.inverted.on": "反相: 开",
+  "gui.ic2_120.splitter_cable.inverted.off": "反相: 关",
 
   "block.ic2_120.steam_generator": "蒸汽发生器",
   "block.ic2_120.steam_kinetic_generator": "蒸汽动能发生机",

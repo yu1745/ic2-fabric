@@ -42,6 +42,7 @@ import java.util.function.Consumer
 import ic2_120.Ic2_120
 import ic2_120.content.item.*
 import ic2_120.content.screen.LimiterCableScreenHandler
+import ic2_120.content.screen.SplitterCableScreenHandler
 import ic2_120.content.recipes.ModTags
 import ic2_120.registry.instance
 import ic2_120.registry.item
@@ -505,7 +506,7 @@ class TripleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
 }
 
 /**
- * EU分流导线。受红石控制：高电平时断开所有连接，低电平时正常连接。
+ * EU分流导线。红石信号达到可配置阈值时断开所有连接，并支持反相控制。
  * Tier 5（8192 EU/t），损耗 0.5 EU/格。
  */
 @ModBlock(name = "splitter_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
@@ -541,9 +542,9 @@ class SplitterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) :
     }
 
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState {
-        val powered = ctx.world.isReceivingRedstonePower(ctx.blockPos)
+        val active = ctx.world.getReceivedRedstonePower(ctx.blockPos) >= CableBlockEntity.DEFAULT_SPLITTER_THRESHOLD
         val superState = super.getPlacementState(ctx)
-        return if (powered) {
+        return if (active) {
             var state = superState.with(ACTIVE, true)
             for (dir in Direction.values()) {
                 state = state.with(propertyFor(dir), false)
@@ -563,23 +564,52 @@ class SplitterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) :
             super.neighborUpdate(state, world, pos, block, sourcePos, notify)
             return
         }
-        val powered = world.isReceivingRedstonePower(pos)
-        val currentlyActive = state.get(ACTIVE)
-        if (powered != currentlyActive) {
-            var newState = state.with(ACTIVE, powered)
-            if (powered) {
-                for (dir in Direction.values()) {
-                    newState = newState.with(propertyFor(dir), false)
-                }
-            } else {
-                for (dir in Direction.values()) {
-                    newState = newState.with(propertyFor(dir), canConnect(world, pos, dir))
+        refreshControlState(world, pos, state)
+        super.neighborUpdate(state, world, pos, block, sourcePos, notify)
+    }
+
+    /** 按方块实体中的阈值与反相配置刷新断开状态。 */
+    fun refreshControlState(world: World, pos: BlockPos, state: BlockState = world.getBlockState(pos)) {
+        if (world.isClient || !state.isOf(this)) return
+        val be = world.getBlockEntity(pos) as? CableBlockEntity
+        val threshold = be?.splitterThreshold ?: CableBlockEntity.DEFAULT_SPLITTER_THRESHOLD
+        val inverted = be?.splitterInverted ?: false
+        val thresholdReached = world.getReceivedRedstonePower(pos) >= threshold
+        val shouldDisconnect = if (inverted) !thresholdReached else thresholdReached
+        if (shouldDisconnect == state.get(ACTIVE)) return
+
+        var newState = state.with(ACTIVE, shouldDisconnect)
+        for (dir in Direction.values()) {
+            newState = newState.with(propertyFor(dir), !shouldDisconnect && canConnect(world, pos, dir))
+        }
+        world.setBlockState(pos, newState, Block.NOTIFY_ALL)
+        EnergyNetworkManager.invalidateAt(world, pos)
+    }
+
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    override fun onUse(
+        state: BlockState, world: World, pos: BlockPos,
+        player: PlayerEntity, hand: Hand, hit: BlockHitResult
+    ): ActionResult {
+        if (world.isClient) return ActionResult.SUCCESS
+        val be = world.getBlockEntity(pos) as? CableBlockEntity ?: return ActionResult.PASS
+        player.openHandledScreen(object : ExtendedScreenHandlerFactory {
+            override fun getDisplayName(): Text = Text.translatable("block.ic2_120.splitter_cable")
+
+            override fun writeScreenOpeningData(player: ServerPlayerEntity, buf: PacketByteBuf) {
+                buf.writeBlockPos(pos)
+                buf.writeVarInt(be.splitterThreshold)
+                buf.writeBoolean(be.splitterInverted)
+            }
+
+            override fun createMenu(syncId: Int, playerInventory: PlayerInventory, player: PlayerEntity): ScreenHandler {
+                return SplitterCableScreenHandler(syncId, playerInventory, pos).also {
+                    it.threshold = be.splitterThreshold
+                    it.inverted = be.splitterInverted
                 }
             }
-            world.setBlockState(pos, newState)
-            EnergyNetworkManager.invalidateAt(world, pos)
-        }
-        super.neighborUpdate(state, world, pos, block, sourcePos, notify)
+        })
+        return ActionResult.SUCCESS
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
