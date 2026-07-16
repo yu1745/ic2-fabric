@@ -1,3 +1,4 @@
+![IC2: Refabricated Logo](logo.png)
 # IC2-120
 
 <big>[English](README_EN.md) | 简体中文</big>
