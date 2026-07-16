@@ -125,5 +125,5 @@ ic2-fabric/
 - 游戏版本：Minecraft `1.20.1`
 - 加载器：Fabric Loader `0.18.4`
 - 依赖：Fabric API、Fabric Language Kotlin `1.13.9+kotlin.2.3.10`（Energy API 已内置）
-- 模组版本：`v0.2a`
+- 模组版本：`0.3`
 - 兼容：Sinytra Connector（可在 Forge + Connector 环境运行）
