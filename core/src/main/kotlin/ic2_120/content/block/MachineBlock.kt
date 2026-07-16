@@ -92,7 +92,7 @@ abstract class MachineBlock(settings: AbstractBlock.Settings = defaultMachineSet
  *
  * 与 [MachineBlock] 的区别：
  * - 使用 [Properties.FACING] 支持六面朝向（上下南北西东）
- * - 放置时根据玩家点击的面决定朝向（点击哪个面，方块就朝向那个面）
+ * - 放置时根据玩家视线决定朝向，正面朝向玩家并保留上下方向
  * - 适用于需要任意方向放置的机器（如变压器）
  *
  * 其他行为（硬度、物品掉落、Inventory 散落等）与 [MachineBlock] 完全相同。
@@ -122,8 +122,8 @@ abstract class DirectionalMachineBlock(settings: AbstractBlock.Settings = defaul
     }
 
     override fun getPlacementState(ctx: ItemPlacementContext): BlockState? {
-        // 根据玩家点击的面决定朝向：玩家点击哪个面，方块就朝向那个面
-        val facing = ctx.side.opposite
+        // 与原版发射器、木桶一致：正面朝向玩家，同时允许上下六面放置。
+        val facing = ctx.playerLookDirection.opposite
         return defaultState.with(Properties.FACING, facing)
     }
 
