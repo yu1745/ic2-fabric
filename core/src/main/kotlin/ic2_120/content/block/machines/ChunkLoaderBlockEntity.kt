@@ -26,6 +26,11 @@ import net.minecraft.util.math.ChunkPos
 import net.minecraft.world.World
 import net.minecraft.server.world.ChunkTicketType
 
+/**
+ * 区块加载器的强制加载票据有意仅在本 BlockEntity tick 时创建，不做服务器重启后的持久化恢复。
+ * 因此服务器重启后，如果加载器所在区块没有被玩家、出生区、/forceload 或其他加载源加载，
+ * 本 BlockEntity 不会自行唤醒并重新添加票据；这是为避免建立独立的全局持久化与启动恢复机制而作出的设计取舍。
+ */
 @ModBlockEntity(block = ChunkLoaderBlock::class)
 class ChunkLoaderBlockEntity(
     type: BlockEntityType<*>,

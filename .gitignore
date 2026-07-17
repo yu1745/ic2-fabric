@@ -53,6 +53,7 @@ node_modules/
 # deploy
 
 /deploy
+/deploy.ps1
 r
 .playwright-cli/
 .zcode/

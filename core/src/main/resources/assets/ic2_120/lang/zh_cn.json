@@ -975,6 +975,7 @@
   "gui.ic2_120.chunk_loader.consume_chunks": "耗能 %1$s EU/t (%2$s 区块)",
   "gui.ic2_120.chunk_loader.loaded": "已加载",
   "gui.ic2_120.chunk_loader.unloaded": "未加载",
+  "gui.ic2_120.chunk_loader.restart_bootstrap_hint": "服务器重启后，需玩家先来到附近加载本区块，区块加载器才会重新启动。",
   "gui.ic2_120.uu_scanner.scan_progress": "扫描进度: %1$s / %2$s",
   "gui.ic2_120.uu_scanner.status_no_input": "请放入待扫描物品",
   "gui.ic2_120.uu_scanner.status_not_whitelisted": "物品不在白名单",

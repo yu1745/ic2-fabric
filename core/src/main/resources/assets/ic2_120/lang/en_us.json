@@ -989,6 +989,7 @@
   "gui.ic2_120.chunk_loader.consume_chunks": "Consume %1$s EU/t (%2$s chunks)",
   "gui.ic2_120.chunk_loader.loaded": "Loaded",
   "gui.ic2_120.chunk_loader.unloaded": "Unloaded",
+  "gui.ic2_120.chunk_loader.restart_bootstrap_hint": "After a server restart, a player must visit once to load this chunk before the Chunk Loader can start again.",
   "gui.ic2_120.uu_scanner.scan_progress": "Scan Progress: %1$s / %2$s",
   "gui.ic2_120.uu_scanner.status_no_input": "Please insert an item to scan",
   "gui.ic2_120.uu_scanner.status_not_whitelisted": "Item not in whitelist",
