@@ -5,7 +5,8 @@
 	"mixins": [
 		"PlayerEntityMixin",
 		"LivingEntityJumpMixin",
-		"LivingEntityScaffoldMixin",
+		"LivingEntityScaffoldFabricMixin",
+		"LivingEntityScaffoldForgeMixin",
 		"ServerPlayNetworkHandlerMixin",
 		"ChickenEntityMixin",
 		"PassiveEntityMixin",
