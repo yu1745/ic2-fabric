@@ -1,8 +1,5 @@
-// 版本号与 group 支持 JitPack 环境变量注入：
-//   - JitPack 构建时会设置 VERSION (如 main-SNAPSHOT 或 tag v0.3b) 和 GROUP (com.github.yu1745)
-//   - 本地开发时回退到 gradle.properties 的 mod_version / maven_group
-version = System.getenv("VERSION") ?: project.mod_version
-group = System.getenv("GROUP") ?: project.maven_group
+version = project.mod_version
+group = project.maven_group
 
 base {
 	archivesName = project.archives_base_name
