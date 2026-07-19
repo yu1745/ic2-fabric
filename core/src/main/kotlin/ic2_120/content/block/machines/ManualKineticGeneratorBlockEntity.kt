@@ -11,6 +11,7 @@ import ic2_120.registry.type
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
+import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.inventory.Inventories
 import net.minecraft.inventory.Inventory
@@ -52,7 +53,9 @@ class ManualKineticGeneratorBlockEntity(
 
     private var pendingOutputKu: Int = 0
 
-    private val playerLastUseTick = mutableMapOf<PlayerEntity, Long>()
+    // 驱动者 tick 记录：Key 放宽为 Entity，兼容玩家与外部实体（如 TLM 女仆）。
+    // 玩家通过 onUse 空手 + 有摇把路径写入；外部实体通过 driveByExternal 写入。
+    private val driverTick = mutableMapOf<Entity, Long>()
 
     var clientTurnAngle: Float = 0f
         private set
@@ -110,7 +113,7 @@ class ManualKineticGeneratorBlockEntity(
             }
 
             heldStack.isEmpty && hasCrank() -> {
-                playerLastUseTick[player] = world.time
+                driverTick[player] = world.time
                 return ActionResult.SUCCESS
             }
 
@@ -123,11 +126,21 @@ class ManualKineticGeneratorBlockEntity(
         }
     }
 
-    private fun isPlayerActivelyUsing(player: PlayerEntity): Boolean {
-        val lastTick = playerLastUseTick[player] ?: return false
+    /**
+     * 供外部实体（如 TLM 女仆）周期性调用以注册"正在驱动"。
+     * 每 tick 调用一次，满足 6-tick 超时窗口即可持续输出 KU。
+     * 调用者负责保证距离在 MAX_USE_DISTANCE 内，否则 tick 会被自动清理。
+     */
+    fun driveByExternal(driver: Entity) {
+        val world = world ?: return
+        driverTick[driver] = world.time
+    }
+
+    private fun isEntityActivelyUsing(entity: Entity): Boolean {
+        val lastTick = driverTick[entity] ?: return false
         val world = world ?: return false
         if (world.time - lastTick > 6) return false
-        val distance = player.pos.distanceTo(Vec3d(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5))
+        val distance = entity.pos.distanceTo(Vec3d(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5))
         if (distance > MAX_USE_DISTANCE) return false
         return true
     }
@@ -149,12 +162,12 @@ class ManualKineticGeneratorBlockEntity(
             return
         }
 
-        playerLastUseTick.entries.removeIf { (player, _) ->
-            !player.isAlive || !isPlayerActivelyUsing(player)
+        driverTick.entries.removeIf { (entity, _) ->
+            !entity.isAlive || !isEntityActivelyUsing(entity)
         }
 
         val wasTurning = sync.isTurning
-        val isTurning = playerLastUseTick.isNotEmpty() && hasCrank()
+        val isTurning = driverTick.isNotEmpty() && hasCrank()
 
         if (isTurning) {
             val kuPerTick = getKuPerTick()
