@@ -1,8 +1,10 @@
 package ic2_120.integration.ftbchunks
 
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI
+import ic2_120.Ic2_120
 import dev.ftb.mods.ftbchunks.api.Protection
 import dev.ftb.mods.ftblibrary.math.ChunkDimPos
+import org.slf4j.LoggerFactory
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
@@ -17,6 +19,8 @@ import java.util.UUID
  * 确保 FTB Chunks 未安装时不会触发 ClassNotFoundException。
  */
 class ClaimProtectionImpl : FTBChunksProtection {
+
+    private val logger = LoggerFactory.getLogger("${Ic2_120.MOD_ID}/ClaimProtection")
 
     /**
      * 爆炸专用保护检查：按 chunk 粒度查询，使用 FTB Chunks 的 canExplosionsDamageTerrain()。
@@ -74,14 +78,23 @@ class ClaimProtectionImpl : FTBChunksProtection {
         val server = world.server ?: return false
         val ownerPlayer: ServerPlayerEntity? = ownerUuid?.let { server.playerManager.getPlayer(it) }
 
+        logger.info(
+            "checkProtection pos={} dim={} owner={} online={} protection={}",
+            pos, world.registryKey.value, ownerUuid, ownerPlayer != null, protection
+        )
+
         if (ownerPlayer != null) {
-            return manager.shouldPreventInteraction(
+            val result = manager.shouldPreventInteraction(
                 ownerPlayer, Hand.MAIN_HAND, pos,
                 protection, null
             )
+            logger.info("  -> online shouldPreventInteraction={}", result)
+            return result
         }
 
-        return checkOfflineProtection(manager, world, pos, ownerUuid, protection)
+        val offResult = checkOfflineProtection(manager, world, pos, ownerUuid, protection)
+        logger.info("  -> offline result={}", offResult)
+        return offResult
     }
 
     private fun checkProtectionWithActor(world: World, pos: BlockPos, actor: net.minecraft.entity.Entity?, protection: Protection): Boolean {
@@ -114,6 +127,10 @@ class ClaimProtectionImpl : FTBChunksProtection {
         if (ownerUuid == null) return true
 
         val teamData = claimedChunk.teamData
+        logger.info(
+            "  offline: chunkClaimed by team={} ownerRankIsOwner={}",
+            teamData.team.name, teamData.team.getRankForPlayer(ownerUuid).isOwner
+        )
         val property = when (protection) {
             Protection.INTERACT_BLOCK, Protection.RIGHT_CLICK_ITEM ->
                 dev.ftb.mods.ftbchunks.api.FTBChunksProperties.BLOCK_INTERACT_MODE

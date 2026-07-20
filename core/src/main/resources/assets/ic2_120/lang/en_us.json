@@ -709,6 +709,7 @@
   "ic2_120.jade.stalled_header": "Stalled: %s conflicting fluid types detected",
   "ic2_120.jade.stalled_fluid_entry": "  - %s",
   "ic2_120.jade.pump": "Pump Attachment",
+  "ic2_120.jade.claim_blocked": "Claim Protected: %s target(s) blocked (offset %s, %s, %s)",
   "ic2_120.jade.crop_progress": "Growth: %s/%s (%s%%)",
   "ic2_120.jade.crop_fertilized_yes": "Fertilizer: Applied (nutrients %s)",
   "ic2_120.jade.crop_fertilized_no": "Fertilizer: Not applied",

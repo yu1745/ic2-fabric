@@ -38,6 +38,8 @@ import ic2_120.content.block.transmission.TransmissionShaftBlock
 import ic2_120.content.block.transmission.WoodTransmissionShaftBlock
 import ic2_120.content.entity.AnimalFoodMapping
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
+import net.minecraft.block.Block
+import net.minecraft.block.entity.BlockEntity
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.registry.Registries
@@ -92,6 +94,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockDataProvider(TeleporterJadeProvider, TeleporterBlockEntity::class.java)
         registration.registerBlockDataProvider(RubberLogJadeProvider, RubberLogBlockEntity::class.java)
         registration.registerEntityDataProvider(AnimalJadeProvider, PassiveEntity::class.java)
+        registration.registerBlockDataProvider(MachineClaimJadeProvider, BlockEntity::class.java)
     }
 
     override fun registerClient(registration: snownee.jade.api.IWailaClientRegistration) {
@@ -109,6 +112,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
         registration.registerBlockComponent(RubberSaplingJadeProvider, RubberSaplingBlock::class.java)
         registration.registerBlockComponent(RubberLogJadeProvider, RubberLogBlock::class.java)
         registration.registerBlockComponent(ScaffoldJadeProvider, Ic2ScaffoldBlock::class.java)
+        registration.registerBlockComponent(MachineClaimJadeProvider, Block::class.java)
         registration.registerEntityComponent(AnimalJadeProvider, PassiveEntity::class.java)
     }
 }

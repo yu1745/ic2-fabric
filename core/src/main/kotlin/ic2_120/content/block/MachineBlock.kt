@@ -127,6 +127,13 @@ abstract class DirectionalMachineBlock(settings: AbstractBlock.Settings = defaul
         return defaultState.with(Properties.FACING, facing)
     }
 
+    override fun onPlaced(world: World, pos: BlockPos, state: BlockState, placer: LivingEntity?, stack: ItemStack) {
+        super.onPlaced(world, pos, state, placer, stack)
+        if (placer is ServerPlayerEntity) {
+            (world.getBlockEntity(pos) as? IOwned)?.ownerUuid = placer.uuid
+        }
+    }
+
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? = null
 
     /**

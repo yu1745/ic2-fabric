@@ -2,6 +2,7 @@ package ic2_120.content.block.machines
 
 import ic2_120.content.block.AdvancedMinerBlock
 import ic2_120.content.block.BaseMinerBlock
+import ic2_120.content.block.IClaimSensitive
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.MinerBlock
 import ic2_120.content.block.MiningPipeBlock
@@ -100,7 +101,7 @@ abstract class BaseMinerBlockEntity(
     private val acceptsAdvancedScanner: Boolean
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine,
     IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
-    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, IClaimSensitive, ExtendedScreenHandlerFactory {
 
     override val activeProperty = BaseMinerBlock.ACTIVE
 
@@ -128,6 +129,18 @@ abstract class BaseMinerBlockEntity(
     override var fluidPipeEjectorCount: Int = 0
     override var fluidPipePullingCount: Int = 0
     private val logger = LoggerFactory.getLogger("ic2_120/MinerCursor")
+
+    override fun claimBlockedTargets(world: World, pos: BlockPos, state: BlockState): List<BlockPos> {
+        val target = pos.add(sync.cursorX, sync.cursorY - pos.y, sync.cursorZ)
+        if (target.y < world.bottomY) return emptyList()
+        val blockState = world.getBlockState(target)
+        if (blockState.isAir) return emptyList()
+        return if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, target, ownerUuid)) {
+            listOf(target)
+        } else {
+            emptyList()
+        }
+    }
 
     companion object {
         const val SLOT_SCANNER = 0

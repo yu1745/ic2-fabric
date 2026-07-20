@@ -3,6 +3,7 @@ package ic2_120.content.block.machines
 import ic2_120.Ic2_120
 import ic2_120.content.sound.MachineSoundConfig
 import ic2_120.content.block.ITieredMachine
+import ic2_120.content.block.IClaimSensitive
 import ic2_120.content.block.PumpBlock
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -82,6 +83,7 @@ class PumpBlockEntity(
     ITransformerUpgradeSupport,
     IFluidPipeUpgradeSupport,
     IEjectorUpgradeSupport,
+    IClaimSensitive,
     ExtendedScreenHandlerFactory {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = PumpBlock.ACTIVE
@@ -488,5 +490,21 @@ class PumpBlockEntity(
             }
         }
         return false
+    }
+
+    override fun claimBlockedTargets(world: World, pos: BlockPos, state: BlockState): List<BlockPos> {
+        val front = state.get(Properties.FACING)
+        val result = mutableListOf<BlockPos>()
+        for (offset in 1..3) {
+            val target = pos.offset(front, offset)
+            if (!ClaimProtection.isProtected(world, target, ownerUuid, ClaimProtection.EDIT_FLUID)) continue
+            val fluidState = world.getFluidState(target)
+            val hasWorldFluid = !fluidState.isEmpty && fluidState.isStill && canAccept(fluidState.fluid)
+            val hasStorageFluid = FluidStorage.SIDED.find(world, target, front.opposite)?.let { storage ->
+                storage.any { !it.isResourceBlank && it.amount > 0L && canAccept(it.resource.fluid) }
+            } ?: false
+            if (hasWorldFluid || hasStorageFluid) result.add(target)
+        }
+        return result
     }
 }
