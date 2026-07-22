@@ -113,6 +113,7 @@ class BlastFurnaceBlockEntity(
         private const val NBT_HEAT_ACCUM = "HeatAccum"
         private const val NBT_AIR_AMOUNT = "AirAmount"
         private const val NBT_HU_BUFFER = "HuBuffer"
+        private const val NBT_AIR_CONSUMED = "AirConsumed"
 
         /** HU 缓存容量：1280 HU，覆盖最高 100 HU/tick 散热的多个 tick 窗口 */
         const val HU_BUFFER_CAPACITY: Long = 1280L
@@ -265,6 +266,15 @@ class BlastFurnaceBlockEntity(
         huBuffer = nbt.getLong(NBT_HU_BUFFER).coerceIn(0L, HU_BUFFER_CAPACITY)
         sync.temperature = temperature
         airTankInternal.setStoredAir(nbt.getLong(NBT_AIR_AMOUNT).coerceAtLeast(0L))
+        // 优先从 NBT 恢复；旧存档没有此 key 时从 progress 反推，避免 reload 后 need 暴涨
+        airConsumedThisSteel = if (nbt.contains(NBT_AIR_CONSUMED)) {
+            nbt.getLong(NBT_AIR_CONSUMED).coerceAtLeast(0L)
+        } else {
+            val progressMax = getProgressMax(temperature)
+            if (progressMax > 0) {
+                BlastFurnaceSync.getAirPerSteelDroplets(temperature).toLong() * sync.progress / progressMax
+            } else 0L
+        }
     }
 
     override fun writeNbt(nbt: NbtCompound) {
@@ -276,6 +286,7 @@ class BlastFurnaceBlockEntity(
         nbt.putInt(NBT_TEMPERATURE, temperature)
         nbt.putLong(NBT_HEAT_ACCUM, heatAccum)
         nbt.putLong(NBT_AIR_AMOUNT, airTankInternal.amount)
+        nbt.putLong(NBT_AIR_CONSUMED, airConsumedThisSteel)
     }
 
     override fun receiveHeatInternal(hu: Long): Long {
