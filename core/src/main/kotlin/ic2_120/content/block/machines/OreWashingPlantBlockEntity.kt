@@ -41,6 +41,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -206,10 +207,14 @@ class OreWashingPlantBlockEntity(
             if (toConsume <= 0L || variant.fluid != Fluids.WATER) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.waterAmount = amount.toInt().coerceAtLeast(0)
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                sync.waterAmount = amount.toInt().coerceAtLeast(0)
+                actual
+            }
         }
     }
 

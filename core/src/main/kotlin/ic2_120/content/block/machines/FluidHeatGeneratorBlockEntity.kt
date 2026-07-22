@@ -166,10 +166,14 @@ class FluidHeatGeneratorBlockEntity(
             if (droplets <= 0L || !isSupportedFuelFluid(variant.fluid)) return 0L
             val actual = minOf(droplets, amount)
             if (actual <= 0L) return 0L
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                sync.fuelAmount = amount.toInt().coerceAtLeast(0)
+                actual
+            }
         }
 
         fun setStoredFuel(newAmount: Long, fluid: net.minecraft.fluid.Fluid?) {
@@ -188,10 +192,14 @@ class FluidHeatGeneratorBlockEntity(
             val space = tankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
-            amount += actual
-            if (variant.fluid != fluid) variant = FluidVariant.of(fluid)
-            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.fluid != fluid) variant = FluidVariant.of(fluid)
+                tx.commit()
+                sync.fuelAmount = amount.toInt().coerceAtLeast(0)
+                actual
+            }
         }
     }
 

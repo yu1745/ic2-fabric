@@ -34,6 +34,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
@@ -194,10 +195,14 @@ class SolarDistillerBlockEntity(
             val space = tankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
-            amount += actual
-            if (variant.fluid != Fluids.WATER) variant = FluidVariant.of(Fluids.WATER)
-            sync.waterInput = amount.toInt().coerceAtLeast(0)
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.fluid != Fluids.WATER) variant = FluidVariant.of(Fluids.WATER)
+                tx.commit()
+                sync.waterInput = amount.toInt().coerceAtLeast(0)
+                actual
+            }
         }
 
         // 消耗内部水（用于蒸馏过程）
@@ -205,10 +210,14 @@ class SolarDistillerBlockEntity(
             if (toConsume <= 0L || variant.fluid != Fluids.WATER) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.waterInput = amount.toInt().coerceAtLeast(0)
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                sync.waterInput = amount.toInt().coerceAtLeast(0)
+                actual
+            }
         }
     }
 
@@ -259,10 +268,14 @@ class SolarDistillerBlockEntity(
             val space = tankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
-            sync.distilledOutput = amount.toInt().coerceAtLeast(0)
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
+                tx.commit()
+                sync.distilledOutput = amount.toInt().coerceAtLeast(0)
+                actual
+            }
         }
 
         // 消耗内部蒸馏水（用于填充电池等）
@@ -270,10 +283,14 @@ class SolarDistillerBlockEntity(
             if (toConsume <= 0L || variant.isBlank) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.distilledOutput = amount.toInt().coerceAtLeast(0)
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                sync.distilledOutput = amount.toInt().coerceAtLeast(0)
+                actual
+            }
         }
     }
 

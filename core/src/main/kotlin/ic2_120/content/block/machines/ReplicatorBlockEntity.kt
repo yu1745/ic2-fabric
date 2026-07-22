@@ -190,11 +190,15 @@ class ReplicatorBlockEntity(
         fun extractInternal(toExtract: Long): Long {
             val actual = minOf(toExtract, amount)
             if (actual <= 0L) return 0L
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.fluidAmount = toMilliBuckets(amount)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                sync.fluidAmount = toMilliBuckets(amount)
+                markDirty()
+                actual
+            }
         }
     }
 

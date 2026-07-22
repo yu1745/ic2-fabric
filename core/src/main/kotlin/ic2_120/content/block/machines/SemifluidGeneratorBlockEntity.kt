@@ -29,6 +29,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -178,24 +179,32 @@ class SemifluidGeneratorBlockEntity(
             val space = tankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
-            amount += actual
-            if (variant.fluid != fluid) variant = FluidVariant.of(fluid)
-            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-            sync.fuelFluidRawId = Registries.FLUID.getRawId(variant.fluid)
-            fuelColorDirty = true
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.fluid != fluid) variant = FluidVariant.of(fluid)
+                tx.commit()
+                sync.fuelAmount = amount.toInt().coerceAtLeast(0)
+                sync.fuelFluidRawId = Registries.FLUID.getRawId(variant.fluid)
+                fuelColorDirty = true
+                actual
+            }
         }
 
         fun consumeInternal(toConsume: Long): Long {
             if (toConsume <= 0L || !FluidFuelRegistry.isSupported(variant.fluid)) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.fuelAmount = amount.toInt().coerceAtLeast(0)
-            sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) Registries.FLUID.getRawId(variant.fluid) else -1
-            fuelColorDirty = true
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                sync.fuelAmount = amount.toInt().coerceAtLeast(0)
+                sync.fuelFluidRawId = if (amount > 0L && !variant.isBlank) Registries.FLUID.getRawId(variant.fluid) else -1
+                fuelColorDirty = true
+                actual
+            }
         }
     }
 

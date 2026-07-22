@@ -25,6 +25,7 @@ import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -224,11 +225,15 @@ class FluidHeatExchangerBlockEntity(
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
 
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(normalized)
-            syncTankState()
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.isBlank) variant = FluidVariant.of(normalized)
+                tx.commit()
+                syncTankState()
+                markDirty()
+                actual
+            }
         }
 
         fun consumeInternal(toConsume: Long): Long {
@@ -236,11 +241,15 @@ class FluidHeatExchangerBlockEntity(
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
 
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            syncTankState()
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                syncTankState()
+                markDirty()
+                actual
+            }
         }
     }
 
@@ -299,11 +308,15 @@ class FluidHeatExchangerBlockEntity(
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
 
-            amount += actual
-            if (variant.isBlank) variant = outputVariant
-            syncTankState()
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.isBlank) variant = outputVariant
+                tx.commit()
+                syncTankState()
+                markDirty()
+                actual
+            }
         }
 
         fun consumeInternal(toConsume: Long): Long {
@@ -311,11 +324,15 @@ class FluidHeatExchangerBlockEntity(
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
 
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            syncTankState()
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                syncTankState()
+                markDirty()
+                actual
+            }
         }
     }
 

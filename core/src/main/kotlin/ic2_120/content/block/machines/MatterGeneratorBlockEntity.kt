@@ -41,6 +41,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
@@ -190,22 +191,30 @@ class MatterGeneratorBlockEntity(
             if (toInsert <= 0L) return 0L
             val actual = minOf(toInsert, availableSpace())
             if (actual <= 0L) return 0L
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(ModFluids.UU_MATTER_STILL)
-            sync.fluidAmount = toMilliBuckets(amount)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.isBlank) variant = FluidVariant.of(ModFluids.UU_MATTER_STILL)
+                tx.commit()
+                sync.fluidAmount = toMilliBuckets(amount)
+                markDirty()
+                actual
+            }
         }
 
         fun extractInternal(toExtract: Long): Long {
             if (toExtract <= 0L || variant.isBlank) return 0L
             val actual = minOf(toExtract, amount)
             if (actual <= 0L) return 0L
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.fluidAmount = toMilliBuckets(amount)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                sync.fluidAmount = toMilliBuckets(amount)
+                markDirty()
+                actual
+            }
         }
     }
 

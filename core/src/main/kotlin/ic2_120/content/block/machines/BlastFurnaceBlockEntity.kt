@@ -185,10 +185,14 @@ class BlastFurnaceBlockEntity(
         fun tryConsumeAir(droplets: Long): Long {
             if (droplets <= 0L || amount <= 0L) return 0L
             val actual = minOf(droplets, amount)
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.airAmount = amount.toInt().coerceAtLeast(0)
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                sync.airAmount = amount.toInt().coerceAtLeast(0)
+                actual
+            }
         }
 
         fun tryFillAir(droplets: Long): Long {
@@ -196,10 +200,14 @@ class BlastFurnaceBlockEntity(
             val space = tankCapacity - amount
             val actual = minOf(droplets, space)
             if (actual <= 0L) return 0L
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(ModFluids.COMPRESSED_AIR_STILL)
-            sync.airAmount = amount.toInt().coerceAtLeast(0)
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.isBlank) variant = FluidVariant.of(ModFluids.COMPRESSED_AIR_STILL)
+                tx.commit()
+                sync.airAmount = amount.toInt().coerceAtLeast(0)
+                actual
+            }
         }
 
         fun remainingSpace(): Long = tankCapacity - amount

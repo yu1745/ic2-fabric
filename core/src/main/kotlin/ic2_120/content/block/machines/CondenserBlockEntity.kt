@@ -187,8 +187,12 @@ class CondenserBlockEntity(
             val space = WATER_TANK_CAPACITY - amount
             val actual = minOf(droplets, space)
             if (actual <= 0L) return false
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
+            Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
+                tx.commit()
+            }
             sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return true
@@ -203,8 +207,12 @@ class CondenserBlockEntity(
                 try {
                     val extracted = storage.insert(variant, amount, null)
                     if (extracted > 0L) {
-                        amount -= extracted
-                        if (amount <= 0L) variant = FluidVariant.blank()
+                        Transaction.openOuter().use { tx ->
+                            updateSnapshots(tx)
+                            amount -= extracted
+                            if (amount <= 0L) variant = FluidVariant.blank()
+                            tx.commit()
+                        }
                         sync.waterAmount = amount.toInt().coerceAtLeast(0)
                         markDirty()
                     }
@@ -402,8 +410,12 @@ class CondenserBlockEntity(
                 if (toConsume > 0L && steamTank.amount > 0L) {
                 val consumed = steamTank.amount.coerceAtMost(toConsume)
                 if (consumed > 0L) {
-                    steamTank.amount -= consumed
-                    if (steamTank.amount <= 0L) steamTank.variant = FluidVariant.blank()
+                    Transaction.openOuter().use { tx ->
+                        steamTank.updateSnapshots(tx)
+                        steamTank.amount -= consumed
+                        if (steamTank.amount <= 0L) steamTank.variant = FluidVariant.blank()
+                        tx.commit()
+                    }
                     steamConsumed = consumed.toInt().coerceAtLeast(0).toLong()
                     progress += steamConsumed.toInt()
                     sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)

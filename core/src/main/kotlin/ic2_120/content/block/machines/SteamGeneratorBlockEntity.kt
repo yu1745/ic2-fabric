@@ -162,8 +162,12 @@ class SteamGeneratorBlockEntity(
             val droplets = mbToDroplets(mb)
             if (droplets <= 0L || variant.isBlank) return false
             if (amount < droplets) return false
-            amount -= droplets
-            if (amount <= 0L) variant = FluidVariant.blank()
+            Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= droplets
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+            }
             sync.waterAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
             return true
@@ -214,12 +218,16 @@ class SteamGeneratorBlockEntity(
             val space = STEAM_TANK_CAPACITY - amount
             val actual = minOf(droplets, space)
             if (actual <= 0L) return 0L
-            amount += actual
-            if (variant.isBlank) {
-                variant = if (producingSuperheated)
-                    FluidVariant.of(ModFluids.SUPERHEATED_STEAM_STILL)
-                else
-                    FluidVariant.of(ModFluids.STEAM_STILL)
+            Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.isBlank) {
+                    variant = if (producingSuperheated)
+                        FluidVariant.of(ModFluids.SUPERHEATED_STEAM_STILL)
+                    else
+                        FluidVariant.of(ModFluids.STEAM_STILL)
+                }
+                tx.commit()
             }
             sync.steamAmount = amount.toInt().coerceAtLeast(0)
             markDirty()
@@ -379,9 +387,13 @@ class SteamGeneratorBlockEntity(
                     val accepted = neighborStorage.insert(steamVariant, steamTank.amount, tx)
                     if (accepted > 0L) {
                         tx.commit()
-                        steamTank.amount -= accepted
+                        Transaction.openOuter().use { tx2 ->
+                            steamTank.updateSnapshots(tx2)
+                            steamTank.amount -= accepted
+                            if (steamTank.amount <= 0L) steamTank.variant = FluidVariant.blank()
+                            tx2.commit()
+                        }
                         debugSteamExtractedDroplets += accepted
-                        if (steamTank.amount <= 0L) steamTank.variant = FluidVariant.blank()
                     }
                 }
             }
@@ -407,13 +419,21 @@ class SteamGeneratorBlockEntity(
                     val space = WATER_TANK_CAPACITY - waterTank.amount
                     val actual = minOf(recoveredDroplets, space)
                     if (actual > 0L) {
-                        if (waterTank.variant.isBlank) waterTank.variant = FluidVariant.of(fillFluid)
-                        waterTank.amount += actual
+                        Transaction.openOuter().use { tx ->
+                            waterTank.updateSnapshots(tx)
+                            if (waterTank.variant.isBlank) waterTank.variant = FluidVariant.of(fillFluid)
+                            waterTank.amount += actual
+                            tx.commit()
+                        }
                     }
                 }
                 debugSteamRecoveredDroplets += leftoverSteam
-                steamTank.amount = 0L
-                steamTank.variant = FluidVariant.blank()
+                Transaction.openOuter().use { tx ->
+                    steamTank.updateSnapshots(tx)
+                    steamTank.amount = 0L
+                    steamTank.variant = FluidVariant.blank()
+                    tx.commit()
+                }
             }
         }
 
@@ -465,10 +485,14 @@ class SteamGeneratorBlockEntity(
                             }
                         }
                         if (ejected > 0) {
-                            waterTank.amount -= ejected
+                            Transaction.openOuter().use { tx ->
+                                waterTank.updateSnapshots(tx)
+                                waterTank.amount -= ejected
+                                if (waterTank.amount <= 0L) waterTank.variant = FluidVariant.blank()
+                                tx.commit()
+                            }
                             sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
                             consumedWaterIsDistilled = waterTank.isDistilled()
-                            if (waterTank.amount <= 0L) waterTank.variant = FluidVariant.blank()
                             sync.outputMB = (dropletsToMb(ejected) * SteamGeneratorSync.STEAM_EXPANSION)
                                 .coerceIn(0L, Int.MAX_VALUE.toLong())
                                 .toInt()

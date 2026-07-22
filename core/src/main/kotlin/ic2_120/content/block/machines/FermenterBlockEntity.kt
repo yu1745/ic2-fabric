@@ -34,6 +34,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.entity.player.PlayerEntity
@@ -184,25 +185,33 @@ class FermenterBlockEntity(
             val space = tankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(ModFluids.BIOMASS_STILL)
-            sync.inputBiomass = toMilliBuckets(amount)
-            sync.inputFluidType = sync.fluidToType(variant.fluid)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.isBlank) variant = FluidVariant.of(ModFluids.BIOMASS_STILL)
+                tx.commit()
+                sync.inputBiomass = toMilliBuckets(amount)
+                sync.inputFluidType = sync.fluidToType(variant.fluid)
+                markDirty()
+                actual
+            }
         }
 
         fun consumeInternal(toConsume: Long): Long {
             if (toConsume <= 0L || variant.isBlank) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-            amount -= actual
-            val becameEmpty = amount <= 0L
-            if (becameEmpty) variant = FluidVariant.blank()
-            sync.inputBiomass = toMilliBuckets(amount)
-            sync.inputFluidType = sync.fluidToType(if (becameEmpty) null else variant.fluid)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                val becameEmpty = amount <= 0L
+                if (becameEmpty) variant = FluidVariant.blank()
+                tx.commit()
+                sync.inputBiomass = toMilliBuckets(amount)
+                sync.inputFluidType = sync.fluidToType(if (becameEmpty) null else variant.fluid)
+                markDirty()
+                actual
+            }
         }
     }
 
@@ -243,25 +252,33 @@ class FermenterBlockEntity(
             val space = tankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(ModFluids.BIOFUEL_STILL)
-            sync.outputBiogas = toMilliBuckets(amount)
-            sync.outputFluidType = sync.fluidToType(variant.fluid)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.isBlank) variant = FluidVariant.of(ModFluids.BIOFUEL_STILL)
+                tx.commit()
+                sync.outputBiogas = toMilliBuckets(amount)
+                sync.outputFluidType = sync.fluidToType(variant.fluid)
+                markDirty()
+                actual
+            }
         }
 
         fun consumeInternal(toConsume: Long): Long {
             if (toConsume <= 0L || variant.isBlank) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-            amount -= actual
-            val becameEmpty = amount <= 0L
-            if (becameEmpty) variant = FluidVariant.blank()
-            sync.outputBiogas = toMilliBuckets(amount)
-            sync.outputFluidType = sync.fluidToType(if (becameEmpty) null else variant.fluid)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                val becameEmpty = amount <= 0L
+                if (becameEmpty) variant = FluidVariant.blank()
+                tx.commit()
+                sync.outputBiogas = toMilliBuckets(amount)
+                sync.outputFluidType = sync.fluidToType(if (becameEmpty) null else variant.fluid)
+                markDirty()
+                actual
+            }
         }
     }
 

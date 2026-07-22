@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityType
@@ -93,10 +94,14 @@ class CokeKilnGrateBlockEntity(
         val space = TANK_CAPACITY - creosoteTank.amount
         val moved = minOf(space, amount)
         if (moved <= 0) return 0
-        creosoteTank.amount += moved
-        if (creosoteTank.variant.isBlank) creosoteTank.variant = FluidVariant.of(ModFluids.CREOSOTE_STILL)
-        markDirty()
-        return moved
+        return Transaction.openOuter().use { tx ->
+            creosoteTank.updateSnapshots(tx)
+            creosoteTank.amount += moved
+            if (creosoteTank.variant.isBlank) creosoteTank.variant = FluidVariant.of(ModFluids.CREOSOTE_STILL)
+            tx.commit()
+            markDirty()
+            moved
+        }
     }
 
     override fun writeNbt(nbt: NbtCompound) {

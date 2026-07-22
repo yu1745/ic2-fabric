@@ -41,6 +41,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.BlockState
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.passive.AnimalEntity
@@ -166,22 +167,30 @@ class AnimalmatronBlockEntity(
             val space = waterTankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(Fluids.WATER)
-            sync.waterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.isBlank) variant = FluidVariant.of(Fluids.WATER)
+                tx.commit()
+                sync.waterAmount = amount.toInt().coerceAtLeast(0)
+                markDirty()
+                actual
+            }
         }
 
         fun consumeInternal(toConsume: Long): Long {
             if (toConsume <= 0L || variant.isBlank) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.waterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                sync.waterAmount = amount.toInt().coerceAtLeast(0)
+                markDirty()
+                actual
+            }
         }
 
         fun getStoredWater(): Long = amount
@@ -214,22 +223,30 @@ class AnimalmatronBlockEntity(
             val space = weedExTankCapacity - amount
             val actual = minOf(toInsert, space)
             if (actual <= 0L) return 0L
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(ModFluids.WEED_EX_STILL)
-            sync.weedExAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.isBlank) variant = FluidVariant.of(ModFluids.WEED_EX_STILL)
+                tx.commit()
+                sync.weedExAmount = amount.toInt().coerceAtLeast(0)
+                markDirty()
+                actual
+            }
         }
 
         fun consumeInternal(toConsume: Long): Long {
             if (toConsume <= 0L || variant.isBlank) return 0L
             val actual = minOf(toConsume, amount)
             if (actual <= 0L) return 0L
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.weedExAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                sync.weedExAmount = amount.toInt().coerceAtLeast(0)
+                markDirty()
+                actual
+            }
         }
 
         fun getStoredWeedEx(): Long = amount

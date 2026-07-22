@@ -165,11 +165,15 @@ class SteamKineticGeneratorBlockEntity(
             if (droplets <= 0L || variant.isBlank) return 0L
             val actual = minOf(droplets, amount)
             if (actual <= 0L) return 0L
-            amount -= actual
-            if (amount <= 0L) variant = FluidVariant.blank()
-            sync.steamAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount -= actual
+                if (amount <= 0L) variant = FluidVariant.blank()
+                tx.commit()
+                sync.steamAmount = amount.toInt().coerceAtLeast(0)
+                markDirty()
+                actual
+            }
         }
 
         fun isSuperheated(): Boolean = variant.fluid == ModFluids.SUPERHEATED_STEAM_STILL
@@ -195,11 +199,15 @@ class SteamKineticGeneratorBlockEntity(
             val space = WATER_TANK_CAPACITY - amount
             val actual = minOf(droplets, space)
             if (actual <= 0L) return 0L
-            amount += actual
-            if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
-            sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
-            return actual
+            return Transaction.openOuter().use { tx ->
+                updateSnapshots(tx)
+                amount += actual
+                if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
+                tx.commit()
+                sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
+                markDirty()
+                actual
+            }
         }
 
         fun ejectToNeighbors(world: World, pos: BlockPos) {
@@ -209,10 +217,14 @@ class SteamKineticGeneratorBlockEntity(
                 val neighborPos = pos.offset(side)
                 val storage = FluidStorage.SIDED.find(world, neighborPos, side.opposite) ?: continue
                 try {
-                    val extracted = storage.insert(variant, amount, null)
-                    if (extracted > 0L) {
-                        amount -= extracted
-                        if (amount <= 0L) variant = FluidVariant.blank()
+                   val extracted = storage.insert(variant, amount, null)
+                   if (extracted > 0L) {
+                        Transaction.openOuter().use { tx ->
+                            updateSnapshots(tx)
+                            amount -= extracted
+                            if (amount <= 0L) variant = FluidVariant.blank()
+                            tx.commit()
+                        }
                         sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
                         markDirty()
                     }
@@ -415,8 +427,12 @@ class SteamKineticGeneratorBlockEntity(
             // ---- handleSteam: 消耗全部蒸汽 ----
             steamInputDroplets = steamTank.amount.coerceAtLeast(0L)
             steamInputMb = dropletsToMb(steamInputDroplets).toInt().coerceAtLeast(0)
-            steamTank.amount = 0L
-            steamTank.variant = FluidVariant.blank()
+            Transaction.openOuter().use { tx ->
+                steamTank.updateSnapshots(tx)
+                steamTank.amount = 0L
+                steamTank.variant = FluidVariant.blank()
+                tx.commit()
+            }
             sync.steamAmount = 0
             steamConsumed = steamInputMb.toLong()
 
@@ -471,8 +487,12 @@ class SteamKineticGeneratorBlockEntity(
         } else if (hasTurbine && steamTank.amount > 0L && isTurbineFilledWithWater) {
             // 蒸馏水满阻塞 → 强制排汽，否则爆炸
             steamInputDroplets = steamTank.amount.coerceAtLeast(0L)
-            steamTank.amount = 0L
-            steamTank.variant = FluidVariant.blank()
+            Transaction.openOuter().use { tx ->
+                steamTank.updateSnapshots(tx)
+                steamTank.amount = 0L
+                steamTank.variant = FluidVariant.blank()
+                tx.commit()
+            }
             sync.steamAmount = 0
             outputSteam(world, pos, steamInputDroplets)
         }
