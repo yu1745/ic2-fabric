@@ -61,12 +61,12 @@ class CropnalyzerScreenHandler(
         refreshEnergyState()
     }
 
-    override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
-        if (id != BUTTON_ID_SCAN) return false
+   override fun onButtonClick(player: PlayerEntity, id: Int): Boolean {
+       if (id != BUTTON_ID_SCAN) return false
 
-        val scanner = getScannerStack(player) ?: return true
-        val seed = itemInventory.getStack(SLOT_INPUT)
-        if (seed.item !is CropSeedBagItem) {
+       val scanner = getScannerStack(player) ?: return true
+       val seed = itemInventory.getStack(SLOT_INPUT)
+       if (seed.item !is CropSeedBagItem) {
             player.sendMessage(net.minecraft.text.Text.translatable("gui.ic2_120.cropnalyzer.insert_seed_bag").formatted(net.minecraft.util.Formatting.RED), true)
             return true
         }
@@ -82,11 +82,11 @@ class CropnalyzerScreenHandler(
             return true
         }
 
-        val tool = scanner.item as? IElectricTool ?: return true
-        val currentEnergy = tool.getEnergy(scanner)
-        val currentLevel = CropSeedData.readScanLevel(seed)
-        val scanCost = CropnalyzerItem.energyForScanLevel(currentLevel)
-        if (scanCost <= 0L) {
+       val tool = scanner.item as? IElectricTool ?: return true
+       val currentEnergy = tool.getEnergy(scanner)
+       val currentLevel = CropSeedData.readScanLevel(seed)
+      val scanCost = CropnalyzerItem.energyForScanLevel(currentLevel)
+       if (scanCost <= 0L) {
             player.sendMessage(net.minecraft.text.Text.translatable("gui.ic2_120.cropnalyzer.no_valid_crop_data").formatted(net.minecraft.util.Formatting.RED), true)
             return true
         }
@@ -95,17 +95,17 @@ class CropnalyzerScreenHandler(
             return true
         }
 
-        tool.setEnergy(scanner, currentEnergy - scanCost)
+       tool.setEnergy(scanner, currentEnergy - scanCost)
 
-        val stats = CropSeedData.readStats(seed)
-        CropSeedData.write(seed, type, stats, currentLevel + 1)
-        itemInventory.setStack(SLOT_OUTPUT, seed.copy())
-        itemInventory.setStack(SLOT_INPUT, ItemStack.EMPTY)
-        itemInventory.markDirty()
+       val stats = CropSeedData.readStats(seed)
+       CropSeedData.write(seed, type, stats, currentLevel + 1)
+       itemInventory.setStack(SLOT_OUTPUT, seed.copy())
+       itemInventory.setStack(SLOT_INPUT, ItemStack.EMPTY)
+       itemInventory.markDirty()
 
-        refreshEnergyState()
+       refreshEnergyState()
         sendContentUpdates()
-        player.sendMessage(CropnalyzerItem.buildResultMessage(type, stats, 4), false)
+        player.sendMessage(CropnalyzerItem.buildResultMessage(type, stats, currentLevel + 1), false)
         return true
     }
 

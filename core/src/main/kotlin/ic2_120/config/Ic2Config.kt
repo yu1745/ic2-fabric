@@ -607,11 +607,13 @@ object Ic2Config {
     }
 
     /**
-     * 喷气背包每tick燃料消耗 = 燃料容量 / (飞行时长 × 20 ticks/秒)
+     * 喷气背包每tick燃料消耗（droplets）= 燃料容量(mB) × droplets/mB / (飞行时长 × 20 ticks/秒)。
+     * 内部存储以 droplets 为单位，与 Fabric Transfer API 一致。
      */
     fun getJetpackFuelPerTick(): Double {
         val cfg = current.armor.jetpack
-        return cfg.maxFuel.toDouble() / (cfg.flightDurationSeconds * 20.0)
+        return cfg.maxFuel.toDouble() * (net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants.BUCKET / 1000.0) /
+            (cfg.flightDurationSeconds * 20.0)
     }
 
     /**

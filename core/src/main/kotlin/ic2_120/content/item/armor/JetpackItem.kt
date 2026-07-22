@@ -42,17 +42,27 @@ open class JetpackItem : ArmorItem(
         private const val FUEL_FLUID_KEY = "FuelFluid"
         private const val FUEL_REMAINDER_KEY = "FuelRemainder"
 
-        @JvmStatic
-        val maxFuel: Long
-            get() = Ic2Config.current.armor.jetpack.maxFuel
+        // 内部燃料以 droplets 存储（与 Fabric Transfer API 一致），配置项以 mB 为单位。
+        // 1 mB = FluidConstants.BUCKET / 1000 droplets。
 
         @JvmStatic
+        /** 内部燃料容量（droplets）。由配置的 mB 值换算而来。 */
+        val maxFuel: Long
+            get() = Ic2Config.current.armor.jetpack.maxFuel * FluidConstants.BUCKET / 1000L
+
+        @JvmStatic
+        /** 内部燃料容量（droplets）。由配置的 mB 值换算而来。 */
         val MAX_FUEL: Long
-            get() = Ic2Config.current.armor.jetpack.maxFuel
+            get() = maxFuel
 
         @JvmStatic
         val fuelPerTick: Double
             get() = Ic2Config.getJetpackFuelPerTick()
+
+        /** 配置中的容量（mB），仅用于 UI 显示。 */
+        @JvmStatic
+        val maxFuelMb: Long
+            get() = Ic2Config.current.armor.jetpack.maxFuel
 
         /** 原油/杂酚油等效燃料的能量密度是生物燃油的一半。 */
         fun fuelConsumptionMultiplier(stack: ItemStack): Double =
@@ -122,6 +132,8 @@ open class JetpackItem : ArmorItem(
 
         val fuel = getFuel(stack)
         val ratio = if (maxFuel > 0) fuel.toDouble() / maxFuel else 0.0
+        // 内部以 droplets 存储显示需要换算成 mB
+        val fuelMb = fuel * 1000L / FluidConstants.BUCKET
 
         // 计算剩余飞行时间（秒）
         val remainingSeconds = if (fuel > 0 && maxFuel > 0) {
@@ -138,7 +150,7 @@ open class JetpackItem : ArmorItem(
         }
 
         val fuelName = getFuelFluid(stack)?.let { net.minecraft.registry.Registries.FLUID.getId(it).toString() } ?: "无"
-        tooltip.add(Text.literal("燃料: $fuelName %,d / %,d mB (%.1f%%)".format(fuel, maxFuel, ratio * 100)))
+        tooltip.add(Text.literal("燃料: $fuelName %,d / %,d mB (%.1f%%)".format(fuelMb, maxFuelMb, ratio * 100)))
         tooltip.add(Text.literal("剩余飞行: $timeText").formatted(Formatting.GRAY))
     }
 

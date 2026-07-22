@@ -5,7 +5,6 @@ import ic2_120.client.ui.GuiBackground
 import ic2_120.content.crop.CropSystem
 import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.CropSeedData
-import ic2_120.content.item.CropnalyzerItem
 import ic2_120.content.screen.CropnalyzerScreenHandler
 import ic2_120.content.screen.GuiSize
 import ic2_120.registry.annotation.ModScreen
@@ -196,19 +195,13 @@ class CropnalyzerScreen(
         if (button == 0) {
             val bx = x + BTN_X
             val by = y + BTN_Y
-            if (mouseX in bx.toDouble()..(bx + BTN_W).toDouble() && mouseY in by.toDouble()..(by + BTN_H).toDouble()) {
-                val inputSeed = handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].stack
-                val canScan = handler.energy >= CropnalyzerItem.ENERGY_PER_SCAN
-                        && inputSeed.item is CropSeedBagItem
-                        && CropSeedData.readType(inputSeed) != null
-                if (canScan) {
-                    MinecraftClient.getInstance().soundManager.play(
-                        PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
-                    )
-                    client?.player?.networkHandler?.sendPacket(
-                        ButtonClickC2SPacket(handler.syncId, CropnalyzerScreenHandler.BUTTON_ID_SCAN)
-                    )
-                }
+           if (mouseX in bx.toDouble()..(bx + BTN_W).toDouble() && mouseY in by.toDouble()..(by + BTN_H).toDouble()) {
+                MinecraftClient.getInstance().soundManager.play(
+                    PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
+                )
+                client?.player?.networkHandler?.sendPacket(
+                    ButtonClickC2SPacket(handler.syncId, CropnalyzerScreenHandler.BUTTON_ID_SCAN)
+                )
                 return true
             }
         }

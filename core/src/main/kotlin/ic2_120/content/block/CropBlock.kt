@@ -168,12 +168,15 @@ class CropBlock : BlockWithEntity(
             val be = world.getBlockEntity(pos) as? CropBlockEntity
             if (be != null) {
                 val cropType = state.get(CROP_TYPE)
-                if (cropType == CropType.WEED) {
-                    ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), Weed::class.instance().defaultStack)
-                } else {
-                    val seedBag = CropSeedBagItem.createStack(cropType, be.stats, scanLevel = be.scanLevel)
-                    ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), seedBag)
-                }
+               if (cropType == CropType.WEED) {
+                   ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), Weed::class.instance().defaultStack)
+               } else {
+                    val seedCount = be.calculateSeedDropCount(world, state)
+                    repeat(seedCount) {
+                        val seedBag = CropSeedBagItem.createStack(cropType, be.stats, scanLevel = be.scanLevel)
+                        ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), seedBag)
+                    }
+               }
                 ItemScatterer.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), CropStickBlock::class.instance().asItem().defaultStack)
             }
         }
@@ -321,10 +324,40 @@ class CropBlockEntity(
         val ageAfterHarvest: Int?
     )
 
-    fun canBeHarvested(state: BlockState): Boolean {
+   fun canBeHarvested(state: BlockState): Boolean {
+       val cropType = state.get(CropBlock.CROP_TYPE)
+       val age = state.get(CropBlock.AGE)
+       return CropSystem.canBeHarvested(cropType, age)
+   }
+
+    /**
+     * IC2 pick() 种子掉落逻辑：破坏作物时按概率掉 0-2 颗种子袋。
+     *
+     * - 可收获（age >= maxAge）时：
+     *   - 第一颗种子概率 = (baseChance * 1.1^resistance + 1.0) * 0.8
+     *   - 额外种子概率 = baseChance + growth/100，gain > 23 时每点乘 0.95
+     * - 不可收获时：概率 = baseChance * 1.1^resistance * 1.5，最多 1 颗
+     */
+    fun calculateSeedDropCount(world: World, state: BlockState): Int {
         val cropType = state.get(CropBlock.CROP_TYPE)
         val age = state.get(CropBlock.AGE)
-        return CropSystem.canBeHarvested(cropType, age)
+        val random = world.random
+
+        val baseChance = CropSystem.dropSeedChance(cropType, age)
+        val firstChance = (baseChance * Math.pow(1.1, stats.resistance.toDouble())).toFloat()
+        val harvestable = CropSystem.canBeHarvested(cropType, age)
+
+        var dropCount = 0
+        if (harvestable) {
+            if (random.nextFloat() <= (firstChance + 1.0f) * 0.8f) dropCount = 1
+
+            var extraChance = baseChance + stats.growth / 100.0f
+            for (index in 23 until stats.gain) extraChance *= 0.95f
+            if (random.nextFloat() <= extraChance) dropCount++
+        } else if (random.nextFloat() <= firstChance * 1.5f) {
+            dropCount = 1
+        }
+        return dropCount
     }
 
     fun performHarvest(state: BlockState): HarvestResult? {
@@ -665,7 +698,7 @@ class CropBlockEntity(
                         state.isIn(TAG_STORAGE_IRON)
                 COPPER ->
                     state.isIn(BlockTags.COPPER_ORES) ||
-                        block == Blocks.COPPER_BLOCK ||
+                       block in COPPER_BLOCKS ||
                         state.isIn(TAG_ORES_COPPER) ||
                         state.isIn(TAG_STORAGE_COPPER)
                 TIN ->
@@ -1010,6 +1043,16 @@ class CropBlockEntity(
         private val TAG_ORES_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/silver"))
         private val TAG_STORAGE_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/silver"))
         private val METAL_IRON = MetalRootGroup.IRON
+        private val COPPER_BLOCKS = setOf(
+            Blocks.COPPER_BLOCK,
+            Blocks.EXPOSED_COPPER,
+            Blocks.WEATHERED_COPPER,
+            Blocks.OXIDIZED_COPPER,
+            Blocks.WAXED_COPPER_BLOCK,
+            Blocks.WAXED_EXPOSED_COPPER,
+            Blocks.WAXED_WEATHERED_COPPER,
+            Blocks.WAXED_OXIDIZED_COPPER,
+        )
         private val METAL_COPPER = MetalRootGroup.COPPER
         private val METAL_TIN = MetalRootGroup.TIN
         private val METAL_LEAD = MetalRootGroup.LEAD
