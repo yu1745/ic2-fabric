@@ -42,7 +42,7 @@ class ItemUpgradeScreenHandler(
 ) : ScreenHandler(ItemUpgradeScreenHandler::class.type(), syncId) {
 
     fun isDirectionActive(dirIdx: Int): Boolean = propertyDelegate.get(PROP_DIR_BASE + dirIdx) != 0
-    val itemRawId: Int get() = propertyDelegate.get(1)
+    val itemRawId: Int get() = propertyDelegate.get(PROP_ITEM)
 
     companion object {
         const val SLOT_CONTAINER = 0
