@@ -32,7 +32,9 @@ class ClaimProtectionImpl : FTBChunksProtection {
     override fun isExplosionProtected(world: World, pos: BlockPos, ownerUuid: UUID?): Boolean {
         if (world.isClient) return false
         val api = FTBChunksAPI.api()
-        if (!api.isManagerLoaded) return false
+        // FTB Chunks is present but its claim manager is not ready yet.  Do not
+        // treat that transient state as wilderness for destructive actions.
+        if (!api.isManagerLoaded) return true
         val manager = api.manager
         val chunkDimPos = ChunkDimPos(world, pos)
         val claimedChunk = manager.getChunk(chunkDimPos) ?: return false
@@ -72,7 +74,7 @@ class ClaimProtectionImpl : FTBChunksProtection {
 
     private fun checkProtection(world: World, pos: BlockPos, ownerUuid: UUID?, protection: Protection): Boolean {
         val api = FTBChunksAPI.api()
-        if (!api.isManagerLoaded) return false
+        if (!api.isManagerLoaded) return true
         val manager = api.manager
 
         val server = world.server ?: return false
@@ -89,7 +91,7 @@ class ClaimProtectionImpl : FTBChunksProtection {
 
     private fun checkProtectionWithActor(world: World, pos: BlockPos, actor: net.minecraft.entity.Entity?, protection: Protection): Boolean {
         val api = FTBChunksAPI.api()
-        if (!api.isManagerLoaded) return false
+        if (!api.isManagerLoaded) return true
         val manager = api.manager
 
         if (actor is ServerPlayerEntity) {
@@ -132,7 +134,9 @@ class ClaimProtectionImpl : FTBChunksProtection {
         val mode = teamData.team.getProperty(property)
 
         if (mode == dev.ftb.mods.ftbteams.api.property.PrivacyMode.PUBLIC) return false
-        if (mode == dev.ftb.mods.ftbteams.api.property.PrivacyMode.ALLIES) return !teamData.isAlly(ownerUuid)
+        if (mode == dev.ftb.mods.ftbteams.api.property.PrivacyMode.ALLIES) {
+            return !teamData.isAlly(ownerUuid)
+        }
         return !teamData.team.getRankForPlayer(ownerUuid).isOwner
     }
 }
