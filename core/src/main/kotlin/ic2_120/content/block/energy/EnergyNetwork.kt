@@ -6,6 +6,7 @@ import ic2_120.content.block.machines.TransformerBlockEntity
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.item.energy.ITiered
+import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant
@@ -381,6 +382,18 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             }
         }
         val actuallyBurned = mutableListOf<Pair<BlockPos, String>>()
+        val burnPositions = mutableListOf<BlockPos>()
+        for (posLong in selected) {
+            val pos = BlockPos.fromLong(posLong)
+            val state = world.getBlockState(pos)
+            if (state.isAir) continue
+            val block = state.block as? BaseCableBlock ?: continue
+            if (block !is ITiered || block.tier >= outputLevel) continue
+
+            burnPositions.add(pos.toImmutable())
+        }
+        if (!ClaimProtection.allAllowedUuid(world, burnPositions, null, ClaimProtection.EDIT_BLOCK)) return
+
         for (posLong in selected) {
             val pos = BlockPos.fromLong(posLong)
             val state = world.getBlockState(pos)
@@ -422,6 +435,21 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         var skippedTransformerCount = 0
         var skippedTierOkCount = 0
         var skippedNotMachineCount = 0
+
+        val explosionCandidates = mutableListOf<BlockPos>()
+        val candidateSeen = mutableSetOf<Long>()
+        for (boundary in topology.boundaries) {
+            if (!candidateSeen.add(boundary.neighborPosLong)) continue
+            val candidatePos = BlockPos.fromLong(boundary.neighborPosLong)
+            val candidate = world.getBlockEntity(candidatePos)
+            if (candidate is IGenerator || candidate is TransformerBlockEntity || candidate !is ITieredMachine) continue
+            if (outputLevel > candidate.effectiveVoltageTierForSide(boundary.lookupFromNeighborSide)) {
+                explosionCandidates.add(candidatePos)
+            }
+        }
+        val candidatePower = explosionPowerForOutputLevel(outputLevel)
+        if (!ClaimProtection.allAllowedUuid(world, explosionCandidates, null, ClaimProtection.EDIT_BLOCK) ||
+            !explosionCandidates.all { ClaimProtection.explosionCubeAllowed(world, it, candidatePower, null) }) return
 
         for (boundary in topology.boundaries) {
             val neighborLong = boundary.neighborPosLong
@@ -489,8 +517,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             val x = neighborPos.x + 0.5
             val y = neighborPos.y + 0.5
             val z = neighborPos.z + 0.5
-            val power = explosionPowerForOutputLevel(outputLevel)
-            world.createExplosion(null, x, y, z, power, false, World.ExplosionSourceType.BLOCK)
+            world.createExplosion(null, x, y, z, candidatePower, false, World.ExplosionSourceType.BLOCK)
             explodedCount++
         }
 

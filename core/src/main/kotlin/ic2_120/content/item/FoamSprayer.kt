@@ -8,6 +8,7 @@ import ic2_120.content.block.ReinforcedWoodenScaffoldBlock
 import ic2_120.content.block.WoodenScaffoldBlock
 import ic2_120.content.block.IronFenceBlock
 import ic2_120.content.fluid.ModFluids
+import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -190,8 +191,11 @@ class FoamSprayerItem : Item(FabricItemSettings().maxCount(1)), ICreativeFullVar
                 listOf(foamSprayAnchorPos(world, hit))
             }
 
+            val targets = positions.map { it.toImmutable() }.distinct()
+            if (!ClaimProtection.allAllowed(world, targets, player, ClaimProtection.EDIT_BLOCK)) return false
+
             var placedAny = false
-            for (pos in positions) {
+            for (pos in targets) {
                 if (!player.abilities.creativeMode && budget < DROPLETS_PER_BLOCK) break
                 val stateAt = world.getBlockState(pos)
                 val placed = when {

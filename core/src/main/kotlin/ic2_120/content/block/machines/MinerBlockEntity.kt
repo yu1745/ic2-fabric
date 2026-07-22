@@ -44,6 +44,7 @@ import ic2_120.content.upgrade.ITransformerUpgradeSupport
 import ic2_120.content.upgrade.OverclockerUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
 import ic2_120.config.Ic2Config
+import ic2_120.integration.ftbchunks.ClaimProtection
 import net.minecraft.block.Block
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
@@ -1195,16 +1196,20 @@ abstract class BaseMinerBlockEntity(
      */
     private fun recoverLayerPipes(completedY: Int, range: Int) {
         val serverWorld = world as? ServerWorld ?: return
+        val planned = mutableListOf<BlockPos>()
         for (dx in -(range + 2)..(range + 2)) {
             for (dz in -(range + 2)..(range + 2)) {
                 if (dx == 0 && dz == 0) continue  // 保留中心柱
                 val pipePos = BlockPos(pos.x + dx, completedY, pos.z + dz)
-                if (serverWorld.getBlockState(pipePos).block !is MiningPipeBlock) continue
+                if (serverWorld.getBlockState(pipePos).block is MiningPipeBlock) planned.add(pipePos)
+            }
+        }
+        if (!ClaimProtection.allAllowedUuid(serverWorld, planned, ownerUuid, ClaimProtection.EDIT_BLOCK)) return
+        for (pipePos in planned) {
                 if (!canAcceptRecoveredPipe()) return
                 serverWorld.setBlockState(pipePos, net.minecraft.block.Blocks.AIR.defaultState, Block.NOTIFY_ALL)
                 knownPipePositions.remove(pipePos)
                 insertRecoveredPipeIntoSlot()
-            }
         }
         markDirty()
     }
@@ -1308,6 +1313,9 @@ abstract class BaseMinerBlockEntity(
                 queue.add(next)
             }
         }
+        if (!ClaimProtection.allAllowedUuid(world, pendingPipeRecovery, ownerUuid, ClaimProtection.EDIT_BLOCK)) {
+            pendingPipeRecovery.clear()
+        }
     }
 
     private fun refreshPipeBudget() {
@@ -1328,6 +1336,7 @@ abstract class BaseMinerBlockEntity(
     private fun tryPlacePipeAt(world: ServerWorld, pipePos: BlockPos): Boolean {
         val currentState = world.getBlockState(pipePos)
         if (currentState.block is MiningPipeBlock) return true
+        if (ClaimProtection.isProtected(world, pipePos, ownerUuid, ClaimProtection.EDIT_BLOCK)) return false
 
         // 遇到流体：抽入内部储罐，储罐满则等待
         val fluidState = world.getFluidState(pipePos)
@@ -1795,7 +1804,7 @@ abstract class BaseMinerBlockEntity(
     }
 
     private fun mineBlock(world: ServerWorld, targetPos: BlockPos, state: BlockState) {
-        if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, targetPos, ownerUuid)) return
+        if (ClaimProtection.isProtected(world, targetPos, ownerUuid, ClaimProtection.EDIT_BLOCK)) return
         val tool = getLootToolStack()
         val drops = net.minecraft.block.Block.getDroppedStacks(
             state,

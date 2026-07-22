@@ -2,6 +2,7 @@ package ic2_120.content.block
 
 import ic2_120.content.block.machines.AdvancedMinerBlockEntity
 import ic2_120.content.block.machines.MinerBlockEntity
+import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.content.item.Alloy
 import ic2_120.content.item.Circuit
 import ic2_120.registry.CreativeTab
@@ -101,6 +102,7 @@ abstract class BaseMinerBlock : MachineBlock() {
             }
         } else 0
 
+        val planned = mutableListOf<BlockPos>()
         for (y in (pos.y - 1) downTo world.bottomY) {
             var foundAny = false
 
@@ -108,8 +110,7 @@ abstract class BaseMinerBlock : MachineBlock() {
             val shaftPos = BlockPos(pos.x, y, pos.z)
             val shaftState = world.getBlockState(shaftPos)
             if (shaftState.block is MiningPipeBlock) {
-                ItemScatterer.spawn(world, shaftPos.x.toDouble(), shaftPos.y.toDouble(), shaftPos.z.toDouble(), ItemStack(shaftState.block.asItem()))
-                world.setBlockState(shaftPos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+                planned.add(shaftPos)
                 foundAny = true
             } else if (radius <= 0) {
                 break  // 无扫描仪，仅回收垂直管柱后停止
@@ -123,8 +124,7 @@ abstract class BaseMinerBlock : MachineBlock() {
                         val pipePos = BlockPos(pos.x + x, y, pos.z + z)
                         val state = world.getBlockState(pipePos)
                         if (state.block is MiningPipeBlock) {
-                            ItemScatterer.spawn(world, pipePos.x.toDouble(), pipePos.y.toDouble(), pipePos.z.toDouble(), ItemStack(state.block.asItem()))
-                            world.setBlockState(pipePos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+                            planned.add(pipePos)
                             foundAny = true
                         }
                     }
@@ -132,6 +132,13 @@ abstract class BaseMinerBlock : MachineBlock() {
             }
 
             if (!foundAny) break  // 此层及以下无管道，停止回收
+        }
+        if (!ClaimProtection.allAllowedUuid(world, planned, null, ClaimProtection.EDIT_BLOCK)) return
+        for (pipePos in planned) {
+            val state = world.getBlockState(pipePos)
+            if (state.block !is MiningPipeBlock) continue
+            ItemScatterer.spawn(world, pipePos.x.toDouble(), pipePos.y.toDouble(), pipePos.z.toDouble(), ItemStack(state.block.asItem()))
+            world.setBlockState(pipePos, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
         }
     }
 

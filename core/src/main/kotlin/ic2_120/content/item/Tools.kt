@@ -1,5 +1,7 @@
 package ic2_120.content.item
 
+import ic2_120.integration.ftbchunks.ClaimProtection
+
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.item.energy.EnergyCrystalItem
 import ic2_120.content.item.energy.IElectricTool
@@ -235,6 +237,7 @@ class WeedEx : Item(FabricItemSettings().maxCount(1)) {
         if (state.block !is CropBlock) return ActionResult.PASS
         if (world.isClient) return ActionResult.SUCCESS
         val player = context.player ?: return ActionResult.PASS
+        if (ClaimProtection.isProtected(world, pos, player, ClaimProtection.EDIT_BLOCK)) return ActionResult.FAIL
         val stack = context.stack
         val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return ActionResult.PASS
 

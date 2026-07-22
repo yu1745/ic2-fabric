@@ -1,5 +1,7 @@
 package ic2_120.content.item
 
+import ic2_120.integration.ftbchunks.ClaimProtection
+
 import ic2_120.content.block.BlackWallBlock
 import ic2_120.content.block.BlueWallBlock
 import ic2_120.content.block.BrownWallBlock
@@ -74,6 +76,9 @@ class PainterItem : Item(FabricItemSettings().maxCount(1).maxDamage(MAX_DAMAGE))
         val target = wallFor(color)
         if (target == null || oldBlock === target) return ActionResult.PASS
         if (wallColor(oldBlock) != null) {
+            if (!context.world.isClient && ClaimProtection.isProtected(context.world, context.blockPos, player, ClaimProtection.EDIT_BLOCK)) {
+                return ActionResult.FAIL
+            }
             context.world.setBlockState(context.blockPos, target.defaultState)
             if (!context.world.isClient) damagePainter(stack, player, context.hand)
             return ActionResult.CONSUME

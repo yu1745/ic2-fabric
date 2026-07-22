@@ -14,6 +14,7 @@ import ic2_120.content.block.storage.StorageBoxBlock
 import ic2_120.content.block.storage.TankBlock
 import ic2_120.content.block.storage.TankBlockEntity
 import ic2_120.content.item.energy.IElectricTool
+import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
@@ -80,6 +81,9 @@ object WrenchHandler {
 
             if (block is BasePipeBlock) {
                 if (!world.isClient) {
+                    if (ClaimProtection.isProtected(world, pos, player, ClaimProtection.INTERACT_BLOCK)) {
+                        return@register ActionResult.FAIL
+                    }
                     if (player.isSneaking) {
                         val transparent = !state.get(BasePipeBlock.TRANSPARENT)
                         world.setBlockState(pos, state.with(BasePipeBlock.TRANSPARENT, transparent), Block.NOTIFY_ALL)
@@ -99,6 +103,9 @@ object WrenchHandler {
             if (block !is MachineBlock && block !is DirectionalMachineBlock) return@register ActionResult.PASS
 
             if (!world.isClient) {
+                if (ClaimProtection.isProtected(world, pos, player, ClaimProtection.INTERACT_BLOCK)) {
+                    return@register ActionResult.FAIL
+                }
                 if (isElectricWrench(stack)) {
                     val tool = stack.item as IElectricTool
                     if (tool.getEnergy(stack) < 100L) return@register ActionResult.FAIL
@@ -134,6 +141,10 @@ object WrenchHandler {
 
             val state = world.getBlockState(pos)
             val block = state.block
+
+            if (!world.isClient && ClaimProtection.isProtected(world, pos, player, ClaimProtection.EDIT_BLOCK)) {
+                return@register ActionResult.FAIL
+            }
 
             // 储罐：扳手拆卸保留 80% 流体
             if (block is TankBlock) {

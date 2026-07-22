@@ -2,6 +2,7 @@ package buildcraft_addon.content.block
 
 import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.blockentity.PumpBlockEntity
+import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import net.minecraft.block.Block
@@ -74,11 +75,15 @@ class PumpBlock : BlockWithEntity(
         // BC TileMiner.onRemove: 方块被破坏时清除管道
         if (!state.isOf(newState.block) && !world.isClient) {
             val tubeBlock = Registries.BLOCK.get(BuildCraftAddon.id("tube"))
+            val planned = mutableListOf<BlockPos>()
             for (y in pos.y - 1 downTo pos.y - PumpBlockEntity.MAX_DEPTH) {
                 val bp = BlockPos(pos.x, y, pos.z)
                 if (world.getBlockState(bp).isOf(tubeBlock)) {
-                    world.setBlockState(bp, Blocks.AIR.defaultState, 3)
+                    planned.add(bp)
                 } else break
+            }
+            if (ClaimProtection.allAllowedUuid(world, planned, null, ClaimProtection.EDIT_BLOCK)) {
+                for (bp in planned) world.setBlockState(bp, Blocks.AIR.defaultState, 3)
             }
         }
         super.onStateReplaced(state, world, pos, newState, moved)

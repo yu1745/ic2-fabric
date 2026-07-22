@@ -1,5 +1,7 @@
 package buildcraft_addon.content.blockentity
 
+import ic2_120.integration.ftbchunks.ClaimProtection
+
 import buildcraft_addon.content.block.IronEngineBlock
 import buildcraft_addon.content.screen.IronEngineScreenHandler
 import ic2_120.content.block.transmission.IKineticMachinePort
@@ -246,6 +248,8 @@ class IronEngineBlockEntity(
     private fun explode() {
         val world = world ?: return
         if (!world.isClient) {
+            if (!ClaimProtection.allAllowedUuid(world, listOf(pos), null, ClaimProtection.EDIT_BLOCK) ||
+                !ClaimProtection.explosionCubeAllowed(world, pos, 4.0f, null)) return
             world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, 4.0f, true, net.minecraft.world.World.ExplosionSourceType.BLOCK)
             world.breakBlock(pos, false)
         }

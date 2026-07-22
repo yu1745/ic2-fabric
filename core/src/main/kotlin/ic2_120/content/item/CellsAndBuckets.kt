@@ -60,6 +60,7 @@ import ic2_120.registry.instance
 import ic2_120.registry.id
 import ic2_120.registry.recipeId
 import ic2_120.content.recipes.crafting.EmptyFluidCellToEmptyCellRecipeDatagen
+import ic2_120.integration.ftbchunks.ClaimProtection
 import org.slf4j.LoggerFactory
 
 /** 通用流体单元 NBT 键：存储 FluidVariant */
@@ -206,7 +207,7 @@ class FluidCellItem : Item(FabricItemSettings()), FluidModificationItem {
         // 先尝试与方块的 FluidStorage 交互（如流体储罐），命中则优先交给储罐接管，
         // 否则才会走下方 placeFluid 把流体放置到世界。
         val sided = FluidStorage.SIDED.find(world, pos, context.side)
-        if (sided != null && FluidStorageUtil.interactWithFluidStorage(sided, player, hand)) {
+        if (sided != null && !ClaimProtection.isProtected(world, pos, player, ClaimProtection.INTERACT_BLOCK) && FluidStorageUtil.interactWithFluidStorage(sided, player, hand)) {
             return ActionResult.SUCCESS
         }
 
@@ -245,6 +246,7 @@ class FluidCellItem : Item(FabricItemSettings()), FluidModificationItem {
 
         // FluidFillable：如炼药锅等可注入液体的方块
         if (block is FluidFillable) {
+            if (ClaimProtection.isProtected(world, pos, player, ClaimProtection.EDIT_FLUID)) return false
             if (block.canFillWithFluid(world, pos, state, fluid)) {
                 block.tryFillWithFluid(world, pos, state, fluid.defaultState)
                 fluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
@@ -255,6 +257,7 @@ class FluidCellItem : Item(FabricItemSettings()), FluidModificationItem {
 
         // 普通方块：在点击位置放置流体（需可替换，如空气、流体本身）
         if (state.isReplaceable || state.fluidState.isStill) {
+            if (ClaimProtection.isProtected(world, pos, player, ClaimProtection.EDIT_FLUID)) return false
             if (world.setBlockState(pos, fluid.defaultState.blockState)) {
                 fluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
                 world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos)
@@ -265,6 +268,7 @@ class FluidCellItem : Item(FabricItemSettings()), FluidModificationItem {
         val adjacentPos = hitResult?.side?.let { pos.offset(it) } ?: pos.up()
         val adjacentState = world.getBlockState(adjacentPos)
         if (adjacentState.isReplaceable || adjacentState.fluidState.isStill) {
+            if (ClaimProtection.isProtected(world, adjacentPos, player, ClaimProtection.EDIT_FLUID)) return false
             if (world.setBlockState(adjacentPos, fluid.defaultState.blockState)) {
                 fluid.getBucketFillSound().ifPresent { world.playSound(player, adjacentPos, it, SoundCategory.BLOCKS, 1f, 1f) }
                 world.emitGameEvent(player, GameEvent.FLUID_PLACE, adjacentPos)
@@ -312,6 +316,7 @@ abstract class EmptyCellItem(settings: FabricItemSettings) : Item(settings) {
 
     private fun interactAt(world: World, user: net.minecraft.entity.player.PlayerEntity, hand: Hand, hit: BlockHitResult): Boolean {
         val sided = FluidStorage.SIDED.find(world, hit.blockPos, hit.side) ?: return false
+        if (ClaimProtection.isProtected(world, hit.blockPos, user, ClaimProtection.INTERACT_BLOCK)) return false
         return FluidStorageUtil.interactWithFluidStorage(sided, user, hand)
     }
 
@@ -341,6 +346,8 @@ abstract class EmptyCellItem(settings: FabricItemSettings) : Item(settings) {
         val fluid = fluidState.fluid
         val stack = user.getStackInHand(hand)
         val filled = fluidToFilledCellStack(fluid)
+
+        if (ClaimProtection.isProtected(world, sourcePos, user, ClaimProtection.EDIT_FLUID)) return false
 
         if (state.block is FluidDrainable) {
             val drained = (state.block as FluidDrainable).tryDrainFluid(world, sourcePos, state)
@@ -439,7 +446,7 @@ abstract class ModFluidCell(settings: FabricItemSettings) : Item(settings), Flui
         // 先尝试与方块的 FluidStorage 交互（如流体储罐），命中则优先交给储罐接管，
         // 否则才会走下方 placeFluid 把流体放置到世界。
         val sided = FluidStorage.SIDED.find(world, pos, context.side)
-        if (sided != null && FluidStorageUtil.interactWithFluidStorage(sided, player, hand)) {
+        if (sided != null && !ClaimProtection.isProtected(world, pos, player, ClaimProtection.INTERACT_BLOCK) && FluidStorageUtil.interactWithFluidStorage(sided, player, hand)) {
             return ActionResult.SUCCESS
         }
 
@@ -476,6 +483,7 @@ abstract class ModFluidCell(settings: FabricItemSettings) : Item(settings), Flui
 
         // FluidFillable：如炼药锅等可注入液体的方块
         if (block is FluidFillable) {
+            if (ClaimProtection.isProtected(world, pos, player, ClaimProtection.EDIT_FLUID)) return false
             if (block.canFillWithFluid(world, pos, state, fluid)) {
                 block.tryFillWithFluid(world, pos, state, fluid.defaultState)
                 fluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
@@ -486,6 +494,7 @@ abstract class ModFluidCell(settings: FabricItemSettings) : Item(settings), Flui
 
         // 普通方块：在点击位置放置流体（需可替换，如空气、流体本身）
         if (state.isReplaceable || state.fluidState.isStill) {
+            if (ClaimProtection.isProtected(world, pos, player, ClaimProtection.EDIT_FLUID)) return false
             if (world.setBlockState(pos, fluid.defaultState.blockState)) {
                 fluid.getBucketFillSound().ifPresent { world.playSound(player, pos, it, SoundCategory.BLOCKS, 1f, 1f) }
                 world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos)
@@ -496,6 +505,7 @@ abstract class ModFluidCell(settings: FabricItemSettings) : Item(settings), Flui
         val adjacentPos = hitResult?.side?.let { pos.offset(it) } ?: pos.up()
         val adjacentState = world.getBlockState(adjacentPos)
         if (adjacentState.isReplaceable || adjacentState.fluidState.isStill) {
+            if (ClaimProtection.isProtected(world, adjacentPos, player, ClaimProtection.EDIT_FLUID)) return false
             if (world.setBlockState(adjacentPos, fluid.defaultState.blockState)) {
                 fluid.getBucketFillSound().ifPresent { world.playSound(player, adjacentPos, it, SoundCategory.BLOCKS, 1f, 1f) }
                 world.emitGameEvent(player, GameEvent.FLUID_PLACE, adjacentPos)

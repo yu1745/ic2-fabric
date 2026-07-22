@@ -4,6 +4,7 @@ import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.machines.TransformerBlockEntity
+import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.inventory.Inventory
@@ -129,6 +130,9 @@ class AdjacentEnergyTransferComponent(
         if (consumer is IGenerator) return
         if (consumer is TransformerBlockEntity) return
 
+        val power = explosionPowerForOutputLevel(providerVoltage)
+        if (ClaimProtection.isProtected(world, pos, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK) ||
+            !ClaimProtection.explosionCubeAllowed(world, pos, power, null)) return
         if (owner is Inventory) (owner as Inventory).clear()
         world.breakBlock(pos, false)
 
@@ -140,7 +144,6 @@ class AdjacentEnergyTransferComponent(
             world.spawnParticles(ParticleTypes.FLAME, x, y, z, 6, 0.15, 0.15, 0.15, 0.01)
         }
 
-        val power = explosionPowerForOutputLevel(providerVoltage)
         world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, power, false, World.ExplosionSourceType.BLOCK)
     }
 

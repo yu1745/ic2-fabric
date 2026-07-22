@@ -9,6 +9,7 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
+import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
@@ -409,8 +410,10 @@ class SteamGeneratorBlockEntity(
         if (leftoverSteam > 0L) {
             if (world.random.nextInt(10) == 0) {
                 debugSteamExplodedDroplets += leftoverSteam
-                world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                    1f, World.ExplosionSourceType.NONE)
+                if (ClaimProtection.explosionCubeAllowed(world, pos, 1f, null)) {
+                    world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
+                        1f, World.ExplosionSourceType.NONE)
+                }
             } else {
                 val recoveredDroplets = leftoverSteam / SteamGeneratorSync.STEAM_EXPANSION
                 if (recoveredDroplets > 0L) {
@@ -553,8 +556,10 @@ class SteamGeneratorBlockEntity(
 
         // 4. 超温爆炸 — 对齐 ic2_origin heatup(): >500°C 必爆, 半径 10, 不毁地形
         if (systemHeatMilli > SteamGeneratorSync.MAX_SYSTEM_HEAT_MILLI) {
-            world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                10f, World.ExplosionSourceType.NONE)
+            if (ClaimProtection.explosionCubeAllowed(world, pos, 10f, null)) {
+                world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
+                    10f, World.ExplosionSourceType.NONE)
+            }
         }
 
         // 6. 更新同步数据

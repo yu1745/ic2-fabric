@@ -5,6 +5,7 @@ import buildcraft_addon.content.block.PumpBlock
 import buildcraft_addon.content.fluid.ModFluids
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.content.block.transmission.pullKuFromNeighbors
+import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
@@ -328,6 +329,9 @@ class PumpBlockEntity(
                 return
             }
 
+            if (!(isInfiniteWater && fluid == Fluids.WATER) &&
+                ClaimProtection.isProtected(w, dp, null as java.util.UUID?, ClaimProtection.EDIT_FLUID)) return
+
             val variant = FluidVariant.of(fluid)
             val tx = Transaction.openOuter()
             val inserted = tank.insert(variant, FluidConstants.BUCKET, tx)
@@ -453,6 +457,7 @@ class PumpBlockEntity(
         for (y in pos.y - 1 downTo pos.y - MAX_DEPTH) {
             val bp = BlockPos(pos.x, y, pos.z)
             if (w.getBlockState(bp).isOf(tubeBlock)) {
+                if (ClaimProtection.isProtected(w, bp, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK)) continue
                 w.setBlockState(bp, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
             } else break
         }
@@ -460,6 +465,7 @@ class PumpBlockEntity(
             val bp = BlockPos(pos.x, y, pos.z)
             val bs = w.getBlockState(bp)
             if (bs.isAir || bs.isOf(tubeBlock)) {
+                if (ClaimProtection.isProtected(w, bp, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK)) continue
                 w.setBlockState(bp, tubeBlock.defaultState, Block.NOTIFY_ALL)
             }
         }

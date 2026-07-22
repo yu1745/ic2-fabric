@@ -8,6 +8,7 @@ import ic2_120.content.block.IOwned
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.MachineBlock
 import ic2_120.content.block.cables.BaseCableBlock
+import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.ReactorHeatVentBase
 import ic2_120.content.reactor.IBaseReactorComponent
@@ -1380,6 +1381,17 @@ class NuclearReactorBlockEntity(
             return
         }
 
+        val w = world ?: return
+        val structureTargets = buildList {
+            add(pos)
+            for (dir in Direction.values()) {
+                val neighborPos = pos.offset(dir)
+                if (w.getBlockState(neighborPos).block is ReactorChamberBlock) add(neighborPos)
+            }
+        }
+        if (!ClaimProtection.allAllowedUuid(w, structureTargets, ownerUuid, ClaimProtection.EDIT_BLOCK) ||
+            !ClaimProtection.allExplosionAllowed(w, structureTargets, ownerUuid)) return
+
         var boomPower = 10f
         var boomMod = 1f
         val cols = getReactorCols()
@@ -1406,7 +1418,6 @@ class NuclearReactorBlockEntity(
         // 安全硬上限，防止威力过高导致服务端卡死
         boomPower = boomPower.coerceAtMost(100f)
 
-        val w = world ?: return
         for (dir in Direction.values()) {
             val neighborPos = pos.offset(dir)
             if (w.getBlockState(neighborPos).block is ReactorChamberBlock) {
@@ -1477,12 +1488,24 @@ class NuclearReactorBlockEntity(
                 }
             )
         } else {
-            w.createExplosion(null, cx, cy, cz, boomPower.coerceAtMost(10f), true, World.ExplosionSourceType.BLOCK)
+            val fallbackPower = boomPower.coerceAtMost(10f)
+            if (ClaimProtection.explosionCubeAllowed(w, pos, fallbackPower, ownerUuid)) {
+                w.createExplosion(null, cx, cy, cz, fallbackPower, true, World.ExplosionSourceType.BLOCK)
+            }
         }
     }
 
     private fun meltdownWithoutExplosion() {
         val w = world ?: return
+
+        val structureTargets = buildList {
+            add(pos)
+            for (dir in Direction.values()) {
+                val neighborPos = pos.offset(dir)
+                if (w.getBlockState(neighborPos).block is ReactorChamberBlock) add(neighborPos)
+            }
+        }
+        if (!ClaimProtection.allAllowedUuid(w, structureTargets, ownerUuid, ClaimProtection.EDIT_BLOCK)) return
 
         for (slot in 0 until INVENTORY_SIZE) {
             if (!getStack(slot).isEmpty) {
@@ -1511,26 +1534,32 @@ class NuclearReactorBlockEntity(
         val rng = world.random
 
         if (heat > NuclearReactorSync.HEAT_FIRE_THRESHOLD) {
+            val fireTargets = mutableListOf<BlockPos>()
             for (dx in -2..2) for (dy in -2..2) for (dz in -2..2) {
                 if (rng.nextFloat() > 0.02f) continue
                 val p = pos.add(dx, dy, dz)
                 if (!world.isInBuildLimit(p)) continue
-                if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, p, ownerUuid)) continue
                 if (AbstractFireBlock.canPlaceAt(world, p, Direction.UP)) {
-                    world.setBlockState(p, Blocks.FIRE.defaultState)
+                    fireTargets.add(p)
                 }
+            }
+            if (ClaimProtection.allAllowedUuid(world, fireTargets, ownerUuid, ClaimProtection.EDIT_BLOCK)) {
+                fireTargets.forEach { world.setBlockState(it, Blocks.FIRE.defaultState) }
             }
         }
 
         if (heat > NuclearReactorSync.HEAT_EVAPORATE_THRESHOLD) {
+            val waterTargets = mutableListOf<BlockPos>()
             for (dx in -2..2) for (dy in -2..2) for (dz in -2..2) {
                 if (rng.nextFloat() > 0.02f) continue
                 val p = pos.add(dx, dy, dz)
                 if (!world.isInBuildLimit(p)) continue
-                if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, p, ownerUuid)) continue
                 if (world.getBlockState(p).isOf(Blocks.WATER)) {
-                    world.setBlockState(p, Blocks.AIR.defaultState)
+                    waterTargets.add(p)
                 }
+            }
+            if (ClaimProtection.allAllowedUuid(world, waterTargets, ownerUuid, ClaimProtection.EDIT_FLUID)) {
+                waterTargets.forEach { world.setBlockState(it, Blocks.AIR.defaultState) }
             }
         }
 
@@ -1547,17 +1576,20 @@ class NuclearReactorBlockEntity(
         }
 
         if (heat > NuclearReactorSync.HEAT_LAVA_THRESHOLD) {
+            val lavaTargets = mutableListOf<BlockPos>()
             for (dx in -2..2) for (dy in -2..2) for (dz in -2..2) {
                 if (rng.nextFloat() > 0.01f) continue
                 val p = pos.add(dx, dy, dz)
                 if (!world.isInBuildLimit(p)) continue
-                if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, p, ownerUuid)) continue
                 val state = world.getBlockState(p)
                 val block = state.block
                 if (block === Blocks.BEDROCK || block is NuclearReactorBlock || block is ReactorChamberBlock || block is MachineBlock || block is BaseCableBlock) continue
                 if (state.isSolidBlock(world, p) && state.getHardness(world, p) >= 0f) {
-                    world.setBlockState(p, Blocks.LAVA.defaultState)
+                    lavaTargets.add(p)
                 }
+            }
+            if (ClaimProtection.allAllowedUuid(world, lavaTargets, ownerUuid, ClaimProtection.EDIT_FLUID)) {
+                lavaTargets.forEach { world.setBlockState(it, Blocks.LAVA.defaultState) }
             }
         }
     }

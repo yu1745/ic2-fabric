@@ -1,6 +1,7 @@
 package ic2_120.content.entity
 
 import ic2_120.config.Ic2Config
+import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.registry.annotation.ModEntity
 import net.minecraft.block.AbstractFireBlock
 import net.minecraft.block.BlockState
@@ -178,6 +179,10 @@ class LaserProjectileEntity(
 
         // 爆破模式：与原版 TNT 一致传入「爆炸源实体」与命中点坐标（见 TntEntity.explode）
         if (currentMode.explosionPower > 0) {
+            if (!explosionAllowedAt(BlockPos.ofFloored(x, y, z), currentMode.explosionPower)) {
+                discard()
+                return
+            }
             world.createExplosion(
                 this,
                 x, y, z,
@@ -199,7 +204,7 @@ class LaserProjectileEntity(
         // 低聚焦模式：易燃物先破坏再在空格上随机点火（不可先放火再破坏，否则火随方块一起没了）
         val isFlammable = state.isIn(BlockTags.LEAVES) || state.isIn(BlockTags.PLANKS) || state.isIn(BlockTags.WOOL)
         if (currentMode == LaserMode.LOW_FOCUS && isFlammable) {
-            if (canBreak(state) && !ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, pos, owner)) {
+            if (canBreak(state) && !ClaimProtection.isProtected(world, pos, owner, ClaimProtection.EDIT_BLOCK)) {
                 world.breakBlock(pos, true, owner)
                 tryRandomIgniteAfterBreak(pos)
             }
@@ -210,7 +215,7 @@ class LaserProjectileEntity(
 
         // 采矿模式：按方块硬度消耗射程，可连续击穿多个方块（与 LaserMode 描述一致）
         if (currentMode == LaserMode.MINING && canBreak(state)) {
-            if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, pos, owner)) {
+            if (ClaimProtection.isProtected(world, pos, owner, ClaimProtection.EDIT_BLOCK)) {
                 discard()
                 return
             }
@@ -227,7 +232,7 @@ class LaserProjectileEntity(
         }
 
         // 其他模式：破坏方块
-        if (canBreak(state) && !ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, pos, owner)) {
+        if (canBreak(state) && !ClaimProtection.isProtected(world, pos, owner, ClaimProtection.EDIT_BLOCK)) {
             world.breakBlock(pos, true, owner)
             world.playSound(null, pos, LASER_HIT_SOUND, SoundCategory.PLAYERS, 0.8f, 1.2f)
         }
@@ -239,6 +244,7 @@ class LaserProjectileEntity(
     private fun tryRandomIgniteAfterBreak(pos: BlockPos) {
         if (world.random.nextFloat() >= POST_BREAK_IGNITE_CHANCE) return
         if (!world.isInBuildLimit(pos)) return
+        if (ClaimProtection.isProtected(world, pos, owner, ClaimProtection.EDIT_BLOCK)) return
         if (!AbstractFireBlock.canPlaceAt(world, pos, Direction.UP)) return
         if (!world.getBlockState(pos).isReplaceable) return
         world.setBlockState(pos, Blocks.FIRE.defaultState)
@@ -270,6 +276,10 @@ class LaserProjectileEntity(
 
         // 爆破模式在命中实体时也会爆炸（中心在弹体命中点，与方块命中一致）
         if (currentMode.explosionPower > 0) {
+            if (!explosionAllowedAt(BlockPos.ofFloored(x, y, z), currentMode.explosionPower)) {
+                discard()
+                return
+            }
             world.createExplosion(
                 this,
                 x, y, z,
@@ -289,7 +299,7 @@ class LaserProjectileEntity(
     private fun smeltBlock(pos: net.minecraft.util.math.BlockPos, state: BlockState) {
         if (state.isIn(BlockTags.LOGS) || state.isIn(BlockTags.LOGS_THAT_BURN)) return
         if (!canBreak(state)) return
-        if (ic2_120.integration.ftbchunks.ClaimProtection.isProtected(world, pos, owner)) return
+        if (ClaimProtection.isProtected(world, pos, owner, ClaimProtection.EDIT_BLOCK)) return
 
         val serverWorld = world as? ServerWorld ?: return
         val blockItem = state.block.asItem()
@@ -314,6 +324,15 @@ class LaserProjectileEntity(
         world.breakBlock(pos, true, owner)
         tryRandomIgniteAfterBreak(pos)
         world.playSound(null, pos, LASER_HIT_SOUND, SoundCategory.PLAYERS, 0.8f, 1.2f)
+    }
+
+    private fun explosionAllowedAt(center: BlockPos, power: Float): Boolean {
+        val radius = kotlin.math.ceil(power.toDouble()).toInt().coerceAtLeast(1)
+        val positions = BlockPos.iterate(
+            center.x - radius, center.y - radius, center.z - radius,
+            center.x + radius, center.y + radius, center.z + radius
+        ).map { it.toImmutable() }.toList()
+        return ClaimProtection.allExplosionAllowed(world, positions, owner?.uuid)
     }
 
     private fun canBreak(state: BlockState): Boolean {

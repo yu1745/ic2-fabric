@@ -1,6 +1,7 @@
 package ic2_120.content
 
 import ic2_120.content.item.Chainsaw
+import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseEntityCallback
 import net.minecraft.block.Block
@@ -28,6 +29,9 @@ object ChainsawHandler {
             if (entity !is Shearable || !entity.isShearable()) {
                 return@register ActionResult.PASS
             }
+            if (!world.isClient && ClaimProtection.isProtected(world, entity.blockPos, player, ClaimProtection.INTERACT_ENTITY)) {
+                return@register ActionResult.FAIL
+            }
             if (world.isClient) return@register ActionResult.SUCCESS
             if (!consumeUseEnergy(stack, player)) return@register ActionResult.FAIL
 
@@ -42,6 +46,9 @@ object ChainsawHandler {
             }
             val state = world.getBlockState(pos)
             if (!isShearableBlock(state)) return@register ActionResult.PASS
+            if (!world.isClient && ClaimProtection.isProtected(world, pos, player, ClaimProtection.EDIT_BLOCK)) {
+                return@register ActionResult.FAIL
+            }
             if (world.isClient) return@register ActionResult.SUCCESS
             if (!hasUseEnergy(stack, player)) return@register ActionResult.FAIL
             if (world !is ServerWorld) return@register ActionResult.FAIL

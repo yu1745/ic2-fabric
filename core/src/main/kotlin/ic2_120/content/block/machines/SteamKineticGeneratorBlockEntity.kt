@@ -17,6 +17,7 @@ import ic2_120.content.storage.IRoutedSidedInventory
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.content.upgrade.IEjectorUpgradeSupport
 import ic2_120.content.upgrade.IFluidPipeUpgradeSupport
+import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -540,8 +541,10 @@ class SteamKineticGeneratorBlockEntity(
         if (remaining > 0) {
             ventingSteam = true
             if (world.random.nextInt(10) == 0) {
-                world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                    1f, World.ExplosionSourceType.NONE)
+                if (ClaimProtection.explosionCubeAllowed(world, pos, 1f, null)) {
+                    world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
+                        1f, World.ExplosionSourceType.NONE)
+                }
             }
         } else {
             ventingSteam = false
@@ -577,8 +580,10 @@ class SteamKineticGeneratorBlockEntity(
         if (remaining > 0) {
             ventingSteam = true
             if (world.random.nextInt(10) == 0) {
-                world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
-                    1f, World.ExplosionSourceType.NONE)
+                if (ClaimProtection.explosionCubeAllowed(world, pos, 1f, null)) {
+                    world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5,
+                        1f, World.ExplosionSourceType.NONE)
+                }
             }
         } else {
             ventingSteam = false

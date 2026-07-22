@@ -78,23 +78,13 @@ class ClaimProtectionImpl : FTBChunksProtection {
         val server = world.server ?: return false
         val ownerPlayer: ServerPlayerEntity? = ownerUuid?.let { server.playerManager.getPlayer(it) }
 
-        logger.info(
-            "checkProtection pos={} dim={} owner={} online={} protection={}",
-            pos, world.registryKey.value, ownerUuid, ownerPlayer != null, protection
-        )
-
         if (ownerPlayer != null) {
-            val result = manager.shouldPreventInteraction(
+            return manager.shouldPreventInteraction(
                 ownerPlayer, Hand.MAIN_HAND, pos,
                 protection, null
             )
-            logger.info("  -> online shouldPreventInteraction={}", result)
-            return result
         }
-
-        val offResult = checkOfflineProtection(manager, world, pos, ownerUuid, protection)
-        logger.info("  -> offline result={}", offResult)
-        return offResult
+        return checkOfflineProtection(manager, world, pos, ownerUuid, protection)
     }
 
     private fun checkProtectionWithActor(world: World, pos: BlockPos, actor: net.minecraft.entity.Entity?, protection: Protection): Boolean {
@@ -127,10 +117,8 @@ class ClaimProtectionImpl : FTBChunksProtection {
         if (ownerUuid == null) return true
 
         val teamData = claimedChunk.teamData
-        logger.info(
-            "  offline: chunkClaimed by team={} ownerRankIsOwner={}",
-            teamData.team.name, teamData.team.getRankForPlayer(ownerUuid).isOwner
-        )
+        if (manager.getBypassProtection(ownerUuid)) return false
+        if (teamData.isTeamMember(ownerUuid)) return false
         val property = when (protection) {
             Protection.INTERACT_BLOCK, Protection.RIGHT_CLICK_ITEM ->
                 dev.ftb.mods.ftbchunks.api.FTBChunksProperties.BLOCK_INTERACT_MODE

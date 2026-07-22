@@ -5,6 +5,7 @@ import ic2_120.content.block.RubberFaceState
 import ic2_120.content.block.RubberLogBlock
 import ic2_120.content.block.RubberLogBlockEntity
 import ic2_120.content.item.energy.IElectricTool
+import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.ItemStack
@@ -59,6 +60,10 @@ object RubberTreetapHandler {
             if (faceState == RubberFaceState.NONE) return@register ActionResult.PASS
 
             if (world.isClient) return@register ActionResult.SUCCESS
+
+            if (ClaimProtection.isProtected(world, pos, player, ClaimProtection.INTERACT_BLOCK)) {
+                return@register ActionResult.FAIL
+            }
 
             // 电动树脂提取器：电量不足 50 EU 则不允许提取
             if (isElectricTreetap(stack)) {
