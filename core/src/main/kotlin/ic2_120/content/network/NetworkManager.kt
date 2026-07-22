@@ -4,6 +4,7 @@ import ic2_120.Ic2_120
 import ic2_120.content.block.machines.PatternStorageBlockEntity
 import ic2_120.content.block.machines.ReplicatorBlockEntity
 import ic2_120.content.screen.FluidUpgradeScreenHandler
+import ic2_120.content.screen.ItemUpgradeScreenHandler
 import ic2_120.content.screen.PumpAttachmentScreenHandler
 import net.minecraft.registry.Registries
 import ic2_120.content.item.FoamSprayerItem
@@ -46,6 +47,7 @@ object NetworkManager {
     val TOGGLE_QUANTUM_BOOTS_JUMP_PACKET = Identifier(Ic2_120.MOD_ID, "toggle_quantum_boots_jump")
     val SELECT_TEMPLATE_PACKET = Identifier(Ic2_120.MOD_ID, "select_template")
     val SET_FLUID_FILTER_PACKET = Identifier(Ic2_120.MOD_ID, "set_fluid_filter")
+    val SET_ITEM_FILTER_PACKET = Identifier(Ic2_120.MOD_ID, "set_item_filter")
 
     fun register() {
         // 注册服务端接收处理器（如果需要）
@@ -229,6 +231,15 @@ object NetworkManager {
                     is FluidUpgradeScreenHandler -> handler.setFluidFilter(fluid)
                     is PumpAttachmentScreenHandler -> handler.setFluidFilter(fluid)
                 }
+            }
+        }
+
+        ServerPlayNetworking.registerGlobalReceiver(SET_ITEM_FILTER_PACKET) { server, player, _, buf, _ ->
+            val itemId = buf.readIdentifier()
+            server.execute {
+                val item = if (Registries.ITEM.containsId(itemId)) Registries.ITEM.get(itemId) else null
+                val handler = player.currentScreenHandler
+                if (handler is ItemUpgradeScreenHandler) handler.setItemFilter(item)
             }
         }
     }

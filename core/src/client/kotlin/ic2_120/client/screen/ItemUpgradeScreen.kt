@@ -5,6 +5,7 @@ import ic2_120.content.screen.ItemUpgradeScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.util.math.Rect2i
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
@@ -108,4 +109,7 @@ class ItemUpgradeScreen(
         private val TEXTURE = Identifier("ic2", "textures/gui/guiupgrade.png")
         private const val TEX_SIZE = 256
     }
+
+    /** JEI ghost ingredient drag target：容器槽位区域 (x+8, y+35, 16x16) */
+    fun ghostFilterArea(): Rect2i = Rect2i(x + 8, y + 35, 16, 16)
 }

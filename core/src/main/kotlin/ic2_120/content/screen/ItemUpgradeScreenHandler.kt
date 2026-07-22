@@ -9,6 +9,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.inventory.Inventory
 import net.minecraft.inventory.SimpleInventory
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.screen.ArrayPropertyDelegate
@@ -105,6 +106,15 @@ class ItemUpgradeScreenHandler(
         refreshProperties()
         sendContentUpdates()
         return true
+    }
+
+    /** JEI ghost drag: 直接设置过滤器物品（无需放入物理槽位） */
+    fun setItemFilter(item: Item?) {
+        val upgradeStack = playerInventory.player.getStackInHand(hand)
+        if (upgradeStack.item !is ItemFilterUpgradeItem) return
+        EjectorUpgradeComponent.writeFilter(upgradeStack, item)
+        refreshProperties()
+        sendContentUpdates()
     }
 
     override fun quickMove(player: PlayerEntity, slotIndex: Int): ItemStack {

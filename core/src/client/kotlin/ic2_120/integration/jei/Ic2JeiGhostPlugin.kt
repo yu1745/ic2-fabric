@@ -1,6 +1,7 @@
 package ic2_120.integration.jei
 
 import ic2_120.client.screen.FluidUpgradeScreen
+import ic2_120.client.screen.ItemUpgradeScreen
 import ic2_120.client.screen.PumpAttachmentScreen
 import ic2_120.content.network.NetworkManager
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
@@ -18,6 +19,7 @@ import net.minecraft.client.util.math.Rect2i
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.Fluids
 import net.minecraft.network.PacketByteBuf
+import net.minecraft.item.Item
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 
@@ -34,6 +36,11 @@ class Ic2JeiGhostPlugin : IModPlugin {
         registration.addGhostIngredientHandler(
             FluidUpgradeScreen::class.java,
             FluidFilterGhostHandler(fluidIngredientType) { it.ghostFilterArea() }
+        )
+
+        registration.addGhostIngredientHandler(
+            ItemUpgradeScreen::class.java,
+            ItemFilterGhostHandler()
         )
     }
 
@@ -81,6 +88,39 @@ class Ic2JeiGhostPlugin : IModPlugin {
             val buf = PacketByteBuf(Unpooled.buffer())
             buf.writeIdentifier(Registries.FLUID.getId(fluid))
             ClientPlayNetworking.send(NetworkManager.SET_FLUID_FILTER_PACKET, buf)
+        }
+    }
+
+    private class ItemFilterGhostHandler : IGhostIngredientHandler<ItemUpgradeScreen> {
+        override fun <I : Any> getTargetsTyped(
+            gui: ItemUpgradeScreen,
+            ingredient: ITypedIngredient<I>,
+            doStart: Boolean
+        ): List<IGhostIngredientHandler.Target<I>> {
+            val item = resolveItem(ingredient) ?: return emptyList()
+            return listOf(object : IGhostIngredientHandler.Target<I> {
+                override fun getArea(): Rect2i = gui.ghostFilterArea()
+
+                override fun accept(ingredient: I) {
+                    sendItemFilter(item)
+                }
+            })
+        }
+
+        override fun onComplete() = Unit
+
+        private fun <I : Any> resolveItem(ingredient: ITypedIngredient<I>): Item? {
+            val stack = VanillaTypes.ITEM_STACK
+                .castIngredient(ingredient.ingredient)
+                .orElse(null)
+                ?: return null
+            return stack.item
+        }
+
+        private fun sendItemFilter(item: Item) {
+            val buf = PacketByteBuf(Unpooled.buffer())
+            buf.writeIdentifier(Registries.ITEM.getId(item))
+            ClientPlayNetworking.send(NetworkManager.SET_ITEM_FILTER_PACKET, buf)
         }
     }
 }
