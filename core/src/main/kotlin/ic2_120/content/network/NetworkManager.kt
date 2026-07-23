@@ -235,11 +235,11 @@ object NetworkManager {
         }
 
         ServerPlayNetworking.registerGlobalReceiver(SET_ITEM_FILTER_PACKET) { server, player, _, buf, _ ->
-            val itemId = buf.readIdentifier()
+            val slotIndex = buf.readVarInt()
+            val stack = buf.readItemStack()
             server.execute {
-                val item = if (Registries.ITEM.containsId(itemId)) Registries.ITEM.get(itemId) else null
                 val handler = player.currentScreenHandler
-                if (handler is ItemUpgradeScreenHandler) handler.setItemFilter(item)
+                if (handler is ItemUpgradeScreenHandler) handler.setItemFilter(slotIndex, stack)
             }
         }
     }

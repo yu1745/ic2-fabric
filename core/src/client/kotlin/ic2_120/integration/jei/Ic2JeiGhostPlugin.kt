@@ -15,11 +15,12 @@ import mezz.jei.api.ingredients.ITypedIngredient
 import mezz.jei.api.registration.IGuiHandlerRegistration
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.util.math.Rect2i
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.Fluids
 import net.minecraft.network.PacketByteBuf
-import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 
@@ -39,7 +40,7 @@ class Ic2JeiGhostPlugin : IModPlugin {
         )
 
         registration.addGhostIngredientHandler(
-            ItemUpgradeScreen::class.java,
+            HandledScreen::class.java,
             ItemFilterGhostHandler()
         )
     }
@@ -91,35 +92,36 @@ class Ic2JeiGhostPlugin : IModPlugin {
         }
     }
 
-    private class ItemFilterGhostHandler : IGhostIngredientHandler<ItemUpgradeScreen> {
+    private class ItemFilterGhostHandler : IGhostIngredientHandler<HandledScreen<*>> {
         override fun <I : Any> getTargetsTyped(
-            gui: ItemUpgradeScreen,
+            gui: HandledScreen<*>,
             ingredient: ITypedIngredient<I>,
             doStart: Boolean
         ): List<IGhostIngredientHandler.Target<I>> {
-            val item = resolveItem(ingredient) ?: return emptyList()
+            val itemGui = gui as? ItemUpgradeScreen ?: return emptyList()
+            val stack = resolveItem(ingredient) ?: return emptyList()
             return listOf(object : IGhostIngredientHandler.Target<I> {
-                override fun getArea(): Rect2i = gui.ghostFilterArea()
+                override fun getArea(): Rect2i = itemGui.ghostFilterArea()
 
                 override fun accept(ingredient: I) {
-                    sendItemFilter(item)
+                    sendItemFilter(itemGui.ghostFilterSlotIndex, stack)
                 }
             })
         }
 
         override fun onComplete() = Unit
 
-        private fun <I : Any> resolveItem(ingredient: ITypedIngredient<I>): Item? {
-            val stack = VanillaTypes.ITEM_STACK
-                .castIngredient(ingredient.ingredient)
+        private fun <I : Any> resolveItem(ingredient: ITypedIngredient<I>): ItemStack? {
+            val stack = VanillaTypes.ITEM_STACK.castIngredient(ingredient.ingredient)
                 .orElse(null)
                 ?: return null
-            return stack.item
+            return stack.takeUnless { it.isEmpty || it.item == net.minecraft.item.Items.AIR }
         }
 
-        private fun sendItemFilter(item: Item) {
+        private fun sendItemFilter(slotIndex: Int, stack: ItemStack) {
             val buf = PacketByteBuf(Unpooled.buffer())
-            buf.writeIdentifier(Registries.ITEM.getId(item))
+            buf.writeVarInt(slotIndex)
+            buf.writeItemStack(stack)
             ClientPlayNetworking.send(NetworkManager.SET_ITEM_FILTER_PACKET, buf)
         }
     }

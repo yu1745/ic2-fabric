@@ -3,6 +3,7 @@ package ic2_120.client.screen
 import ic2_120.client.t
 import ic2_120.content.screen.ItemUpgradeScreenHandler
 import ic2_120.registry.annotation.ModScreen
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.util.math.Rect2i
@@ -21,6 +22,9 @@ class ItemUpgradeScreen(
     title: Text
 ) : HandledScreen<ItemUpgradeScreenHandler>(handler, playerInventory, title) {
 
+    /** Slot index used by the AE2-style JEI fake-slot packet. */
+    val ghostFilterSlotIndex: Int get() = handler.filterSlotIndex
+
     init {
         backgroundWidth = 176
         backgroundHeight = 166
@@ -35,7 +39,7 @@ class ItemUpgradeScreen(
         val client = client ?: return
 
         addDrawableChild(ButtonWidget.builder(Text.empty()) {
-            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_SET_FILTER))
+            client.networkHandler?.sendPacket(ButtonClickC2SPacket(handler.syncId, ItemUpgradeScreenHandler.BUTTON_CLEAR_FILTER))
         }.dimensions(x + 27, y + 37, 20, 14).build())
 
         // 六个方向分别独立开关，支持任意方向组合。
@@ -55,6 +59,9 @@ class ItemUpgradeScreen(
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
+        drawFilterItem(context)
+        drawJeiHint(context, mouseX, mouseY)
+
         context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
 
         // 过滤文本 (9,18)-(104,32)
@@ -71,7 +78,7 @@ class ItemUpgradeScreen(
         drawDirectionButtons(context)
 
         // 7px 按钮文字覆盖
-        draw7pxText(context, x + 27, y + 37, 20, 14, t("gui.ic2_120.item_upgrade.set_filter"))
+        draw7pxText(context, x + 27, y + 37, 20, 14, t("gui.ic2_120.item_upgrade.clear_filter"))
 
         drawMouseoverTooltip(context, mouseX, mouseY)
     }
@@ -92,6 +99,20 @@ class ItemUpgradeScreen(
         }
     }
 
+    private fun drawFilterItem(context: DrawContext) {
+        if (handler.itemRawId <= 0) return
+        val item = Registries.ITEM.get(handler.itemRawId)
+        if (item != net.minecraft.item.Items.AIR) context.drawItem(item.defaultStack, x + 8, y + 35)
+    }
+
+    private fun drawJeiHint(context: DrawContext, mouseX: Int, mouseY: Int) {
+        if (!FabricLoader.getInstance().isModLoaded("jei")) return
+        context.drawTexture(UPTIPS_TEXTURE, x + HINT_X, y + HINT_Y, 0f, 0f, HINT_SIZE, HINT_SIZE, HINT_SIZE, HINT_SIZE)
+        if (mouseX - x in HINT_X until HINT_X + HINT_SIZE && mouseY - y in HINT_Y until HINT_Y + HINT_SIZE) {
+            context.drawTooltip(textRenderer, Text.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
+        }
+    }
+
     private fun draw7pxText(context: DrawContext, bx: Int, by: Int, bw: Int, bh: Int, text: String) {
         val scale = 7f / textRenderer.fontHeight
         val textW = textRenderer.getWidth(text)
@@ -107,7 +128,11 @@ class ItemUpgradeScreen(
 
     companion object {
         private val TEXTURE = Identifier("ic2", "textures/gui/guiupgrade.png")
+        private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
+        private const val HINT_X = 4
+        private const val HINT_Y = 4
+        private const val HINT_SIZE = 16
     }
 
     /** JEI ghost ingredient drag target：容器槽位区域 (x+8, y+35, 16x16) */
