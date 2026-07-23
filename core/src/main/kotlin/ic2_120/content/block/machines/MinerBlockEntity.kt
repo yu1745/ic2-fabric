@@ -164,8 +164,7 @@ abstract class BaseMinerBlockEntity(
         const val INVENTORY_SIZE = SLOT_PIPE + 1
         const val PIPE_SLOT_MAX_COUNT = 1024
         const val MAX_CACHE_ITEMS = 64
-        const val ADVANCED_MIN_Y = -63
-        const val NORMAL_MIN_Y = 0
+        const val MINER_MIN_Y = -63
 
         const val MAX_PIPES_PER_SECOND = 4
         const val PIPE_PLACE_INTERVAL = 20 / MAX_PIPES_PER_SECOND  // = 5 ticks
@@ -705,7 +704,7 @@ abstract class BaseMinerBlockEntity(
      * @return true = 满足恢复条件，可转 SCANNING
      */
     private fun tryAutoResume(): Boolean {
-        val minY = if (acceptsAdvancedScanner) ADVANCED_MIN_Y else NORMAL_MIN_Y
+        val minY = MINER_MIN_Y
         if (sync.cursorY < minY) return false
         if (getScannerType(getStack(SLOT_SCANNER)) == null) return false
         if (getDrillBreakCost() == null) return false
@@ -902,7 +901,7 @@ abstract class BaseMinerBlockEntity(
 
         while (true) {
             val targetPos = ensureAndGetCursorTarget(scanRadius)
-            val minY = if (acceptsAdvancedScanner) ADVANCED_MIN_Y else NORMAL_MIN_Y
+            val minY = MINER_MIN_Y
             if (targetPos.y < world.bottomY || targetPos.y < minY) {
                 reachedBottom = true
                 break
@@ -977,9 +976,8 @@ abstract class BaseMinerBlockEntity(
         if (pipeRecyclingRequested) return MinerState.PIPE_RECYCLING
         if (haltRequested) return MinerState.IDLE
 
-        // 到底处理：仅普通机自动回收管道（原 789 行 `if (reachedBottom && !acceptsAdvancedScanner && !recoveringPipes)`）。
-        // 高级机不在此触发终局回收——它靠每层 recoverLayerPipes 循环挖矿，不"到底"。
-        if (reachedBottom && !acceptsAdvancedScanner) {
+        // 到底处理：两种采矿机都触发终局回收（所有连通管道含垂直中心柱）。
+        if (reachedBottom) {
             return startPipeRecoveryAndGetState()
         }
 
@@ -1050,7 +1048,6 @@ abstract class BaseMinerBlockEntity(
      * 通过 pipeRecyclingRequested / haltRequested 侧信道翻译成状态转移）。
      */
     private fun triggerPipeRecycling(): Boolean {
-        if (acceptsAdvancedScanner) return false  // 仅普通机
         // 防死循环：游标未前进过则不再回收
         if (sync.cursorY >= lastRecycledCursorY) return false
         lastRecycledCursorY = sync.cursorY
@@ -1105,7 +1102,7 @@ abstract class BaseMinerBlockEntity(
             cursorInitialized = true
         }
         if (sync.cursorY > pos.y - 1) sync.cursorY = pos.y - 1
-        val minY = if (acceptsAdvancedScanner) ADVANCED_MIN_Y else NORMAL_MIN_Y
+        val minY = MINER_MIN_Y
         if (sync.cursorY < minY) sync.cursorY = minY
         val totalPositions = (2 * range + 1) * (2 * range + 1)
         if (cursorIndex >= totalPositions) cursorIndex = 0
@@ -1177,41 +1174,12 @@ abstract class BaseMinerBlockEntity(
         cursorIndex++
         val totalPositions = (2 * range + 1) * (2 * range + 1)
         if (cursorIndex >= totalPositions) {
-            val completedY = sync.cursorY
             sync.cursorY -= 1
             cursorIndex = 0
-            // 越界（到底）由调用方通过 cursorY < minY 检测，不再设 sync.running
-            if (acceptsAdvancedScanner) {
-                recoverLayerPipes(completedY, range)
-            }
         }
         val (x, z) = spiralXY(cursorIndex, range)
         sync.cursorX = x
         sync.cursorZ = z
-    }
-
-    /**
-     * 回收指定 Y 层的所有水平采矿管道（保留中心柱）。
-     * 高级采矿机每挖完一层后调用，将水平分支管道回收进管道槽。
-     */
-    private fun recoverLayerPipes(completedY: Int, range: Int) {
-        val serverWorld = world as? ServerWorld ?: return
-        val planned = mutableListOf<BlockPos>()
-        for (dx in -(range + 2)..(range + 2)) {
-            for (dz in -(range + 2)..(range + 2)) {
-                if (dx == 0 && dz == 0) continue  // 保留中心柱
-                val pipePos = BlockPos(pos.x + dx, completedY, pos.z + dz)
-                if (serverWorld.getBlockState(pipePos).block is MiningPipeBlock) planned.add(pipePos)
-            }
-        }
-        if (!ClaimProtection.allAllowedUuid(serverWorld, planned, ownerUuid, ClaimProtection.EDIT_BLOCK)) return
-        for (pipePos in planned) {
-                if (!canAcceptRecoveredPipe()) return
-                serverWorld.setBlockState(pipePos, net.minecraft.block.Blocks.AIR.defaultState, Block.NOTIFY_ALL)
-                knownPipePositions.remove(pipePos)
-                insertRecoveredPipeIntoSlot()
-        }
-        markDirty()
     }
 
     private fun getPipeEnergyCost(): Long {

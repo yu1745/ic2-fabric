@@ -364,7 +364,7 @@ class CannerBlockEntity(
         if (fluidPipeProviderEnabled && mode != CannerSync.Mode.BOTTLE_SOLID && mode != CannerSync.Mode.EMPTY_LIQUID) {
             FluidPipeUpgradeComponent.ejectFluidToNeighbors(world, pos, rightTankInternal, fluidPipeProviderFilter, fluidPipeProviderSides, upgradeCount = fluidPipeEjectorCount)
         }
-        if (fluidPipeReceiverEnabled && mode == CannerSync.Mode.EMPTY_LIQUID) {
+        if (fluidPipeReceiverEnabled && (mode == CannerSync.Mode.EMPTY_LIQUID || mode == CannerSync.Mode.ENRICH_LIQUID)) {
             FluidPipeUpgradeComponent.pullFluidFromNeighbors(world, pos, leftTankInternal, fluidPipeReceiverFilter, fluidPipeReceiverSides, upgradeCount = fluidPipePullingCount)
         }
         EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, SLOT_OUTPUT_INDICES)
@@ -694,4 +694,3 @@ class CannerBlockEntity(
         markDirty()
     }
 }
-
