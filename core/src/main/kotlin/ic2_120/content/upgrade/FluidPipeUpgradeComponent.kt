@@ -20,6 +20,8 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import net.minecraft.block.entity.BlockEntity
+import java.util.WeakHashMap
 import kotlin.math.min
 import kotlin.math.pow
 
@@ -28,6 +30,38 @@ private val DIRECTION_ORDER = listOf(Direction.DOWN, Direction.UP, Direction.NOR
 object FluidPipeUpgradeComponent {
     private const val NBT_FILTER = "PipeFluidFilter"
     private const val NBT_DIRECTIONS = "PipeFluidDirections"
+
+    /** 流体升级配置解析缓存（同 EjectorUpgradeComponent 的缓存策略） */
+    private data class ParsedFluidConfig(val filter: Fluid?, val sides: Set<Direction>)
+
+    private val configCache = object : LinkedHashMap<ItemStack, ParsedFluidConfig>(64, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<ItemStack, ParsedFluidConfig>): Boolean = size > 256
+    }
+
+    /**
+     * 已应用配置快照（按机器 BE 缓存）：升级槽引用+数量未变 → 配置必然未变，
+     * 直接跳过整个 apply（稳态零扫描、零比较、零分配）。
+     * 槽被 setStack 替换（引用变）或 count 变化时自动失效重算。
+     */
+    private class AppliedFluidConfig(
+        val stacks: Array<ItemStack?>,
+        val counts: IntArray,
+        val provider: Boolean,
+        val receiver: Boolean,
+        val providerFilter: Fluid?,
+        val receiverFilter: Fluid?,
+        val providerSides: Set<Direction>,
+        val receiverSides: Set<Direction>,
+        val ejectorCount: Int,
+        val pullingCount: Int
+    )
+
+    private val appliedCache = WeakHashMap<BlockEntity, AppliedFluidConfig>()
+
+    private fun parsedConfig(stack: ItemStack): ParsedFluidConfig {
+        if (stack.isEmpty) return ParsedFluidConfig(null, emptySet())
+        return configCache.getOrPut(stack) { ParsedFluidConfig(parseFilter(stack), parseDirections(stack)) }
+    }
 
     /**
      * 统一入口：机器同时具备 Inventory 与 IFluidPipeUpgradeSupport 时，按升级槽应用流体管道升级。
@@ -38,6 +72,21 @@ object FluidPipeUpgradeComponent {
 
     fun apply(inventory: Inventory, upgradeSlotIndices: IntArray, machine: Any) {
         if (machine !is IFluidPipeUpgradeSupport) return
+
+        // 快速路径：升级槽引用+数量未变 → 上次结果仍然有效，跳过全部重算
+        val be = inventory as? BlockEntity
+        val cached = be?.let { appliedCache[it] }
+        if (cached != null && cached.stacks.size == upgradeSlotIndices.size) {
+            var same = true
+            for (i in upgradeSlotIndices.indices) {
+                val s = inventory.getStack(upgradeSlotIndices[i])
+                if (cached.stacks[i] !== s || cached.counts[i] != s.count) {
+                    same = false
+                    break
+                }
+            }
+            if (same) return
+        }
 
         var provider = false
         var receiver = false
@@ -75,9 +124,24 @@ object FluidPipeUpgradeComponent {
         machine.fluidPipeReceiverSides = receiverSides.toMutableSet()
         machine.fluidPipeEjectorCount = ejectorCount
         machine.fluidPipePullingCount = pullingCount
+
+        if (be != null) {
+            val stacks = arrayOfNulls<ItemStack>(upgradeSlotIndices.size)
+            val counts = IntArray(upgradeSlotIndices.size)
+            for (i in upgradeSlotIndices.indices) {
+                stacks[i] = inventory.getStack(upgradeSlotIndices[i])
+                counts[i] = stacks[i]?.count ?: 0
+            }
+            appliedCache[be] = AppliedFluidConfig(
+                stacks, counts, provider, receiver, providerFilter, receiverFilter,
+                providerSides, receiverSides, ejectorCount, pullingCount
+            )
+        }
     }
 
-    fun readFilter(stack: ItemStack): Fluid? {
+    fun readFilter(stack: ItemStack): Fluid? = parsedConfig(stack).filter
+
+    private fun parseFilter(stack: ItemStack): Fluid? {
         val nbt = stack.nbt ?: return null
         val raw = nbt.getString(NBT_FILTER)
         if (raw.isNullOrBlank()) return null
@@ -99,7 +163,9 @@ object FluidPipeUpgradeComponent {
         }
     }
 
-    fun readDirections(stack: ItemStack): Set<Direction> {
+    fun readDirections(stack: ItemStack): Set<Direction> = parsedConfig(stack).sides
+
+    private fun parseDirections(stack: ItemStack): Set<Direction> {
         val nbt = stack.nbt ?: return emptySet()
         val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.NbtElement.STRING_TYPE.toInt())
         if (list.isEmpty()) return emptySet()
