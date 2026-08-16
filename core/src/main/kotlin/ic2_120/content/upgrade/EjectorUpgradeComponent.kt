@@ -26,6 +26,19 @@ object EjectorUpgradeComponent {
 
     private data class EjectorConfig(val filter: Item?, val sides: Set<Direction>, val count: Int)
 
+    /** 升级配置解析缓存：key = 升级槽里的 ItemStack（item+NBT 不变即命中，count 变化只 miss 一次）。
+     *  每 tick 热路径（eject/pull）不再重复解析 NBT + Registry 查询；LRU 上限 256 防泄漏。 */
+    private data class ParsedUpgradeConfig(val filter: Item?, val sides: Set<Direction>)
+
+    private val configCache = object : LinkedHashMap<ItemStack, ParsedUpgradeConfig>(64, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<ItemStack, ParsedUpgradeConfig>): Boolean = size > 256
+    }
+
+    private fun parsedConfig(stack: ItemStack): ParsedUpgradeConfig {
+        if (stack.isEmpty) return ParsedUpgradeConfig(null, emptySet())
+        return configCache.getOrPut(stack) { ParsedUpgradeConfig(parseFilter(stack), parseDirections(stack)) }
+    }
+
     /**
      * 对齐 ic2_origin：物品传输速率 = 4^(min(count, 4) - 1) 个/tick/候选，count=0 时返回 0。
      */
@@ -93,7 +106,8 @@ object EjectorUpgradeComponent {
             val stack = inventory.getStack(idx)
             if (stack.isEmpty) continue
             if (stack.item is EjectorUpgrade) {
-                configs.add(EjectorConfig(readFilter(stack), readDirections(stack), stack.count))
+                val parsed = parsedConfig(stack)
+                configs.add(EjectorConfig(parsed.filter, parsed.sides, stack.count))
             }
         }
         if (configs.isEmpty()) return
@@ -167,7 +181,9 @@ object EjectorUpgradeComponent {
         }
     }
 
-    fun readFilter(stack: ItemStack): Item? {
+    fun readFilter(stack: ItemStack): Item? = parsedConfig(stack).filter
+
+    private fun parseFilter(stack: ItemStack): Item? {
         val nbt = stack.nbt ?: return null
         val raw = nbt.getString(NBT_ITEM_FILTER)
         if (raw.isNullOrBlank()) return null
@@ -195,7 +211,9 @@ object EjectorUpgradeComponent {
     }
 
     /** 空集合表示任意方向；同时兼容旧版本的单方向 NBT。 */
-    fun readDirections(stack: ItemStack): Set<Direction> {
+    fun readDirections(stack: ItemStack): Set<Direction> = parsedConfig(stack).sides
+
+    private fun parseDirections(stack: ItemStack): Set<Direction> {
         val nbt = stack.nbt ?: return emptySet()
         val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.NbtElement.STRING_TYPE.toInt())
         if (!list.isEmpty()) {

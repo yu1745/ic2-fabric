@@ -105,10 +105,12 @@ object PullingUpgradeComponent {
                         if (!current.isEmpty) {
                             if (current.item != item) continue
                             if (current.count >= current.maxCount) continue
+                            // 槽里已有同类物品：机器的接受性已由槽内容证明（isValid 是 item 级规则），
+                            // 跳过 isValid——避免每 tick × 每 view × 每槽触发完整配方匹配（isRecipeInput）。
+                        } else {
+                            // 空槽才需要问机器是否接受该物品
+                            if (!inventory.isValid(slotIndex, variant.toStack(1))) continue
                         }
-
-                        // 检查机器是否接受该物品
-                        if (!inventory.isValid(slotIndex, variant.toStack(1))) continue
 
                         val space = if (current.isEmpty) current.maxCount else current.maxCount - current.count
                         if (space <= 0) continue
