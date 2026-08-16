@@ -74,29 +74,32 @@ class SyncedData : PropertyDelegate, SyncSchema {
         val indexLow = entries.size
         entries.add(Entry("${name}_Low", default and 0xFFFF))
         // 为每个属性维护独立的滑动窗口；windowSum 增量维护，避免每次读写 O(n) 求和。
+        // 环形 int 数组替代 ArrayDeque<Int>：无装箱、零分配（每 tick × 每机器 × 每字段都会写入）。
         // 注意：不能对等值写入做短路——窗口按“每次写入”滑动，等值写入同样会推出
         // 旧样本（如稳态 32 EU/t 会把停机期的 0 推出窗口）；若跳过，平均值会卡在
         // 历史混合值永不收敛到稳态（EnergyFlowSync/HeatFlowSync 每 tick 恒定写入）。
-        val window = ArrayDeque<Int>()
+        val buf = IntArray(windowSize)
+        var pos = 0          // 下一个写入位置（环形）
+        var count = 0        // 窗口内有效样本数
         var windowSum = 0
         return object : ReadWriteProperty<Any?, Int> {
             override fun getValue(thisRef: Any?, property: KProperty<*>): Int {
                 // 返回滑动窗口的平均值
-                return if (window.isEmpty()) {
+                return if (count == 0) {
                     val high = entries[indexHigh].value
                     val low = entries[indexLow].value
                     (high shl 16) or (low and 0xFFFF)
-                } else windowSum / window.size
+                } else windowSum / count
             }
             override fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
-                // 更新滑动窗口
-                window.addLast(value)
-                windowSum += value
-                if (window.size > windowSize) {
-                    windowSum -= window.removeFirst()
-                }
+                // 环形窗口：写入当前位置，替换最旧样本（窗口满时）
+                windowSum += value - buf[pos]
+                buf[pos] = value
+                pos++
+                if (pos == windowSize) pos = 0
+                if (count < windowSize) count++
                 // 同步平均值到 entry（用于 NBT 序列化）
-                val avg = windowSum / window.size
+                val avg = windowSum / count
                 entries[indexHigh].value = avg ushr 16
                 entries[indexLow].value = avg and 0xFFFF
             }

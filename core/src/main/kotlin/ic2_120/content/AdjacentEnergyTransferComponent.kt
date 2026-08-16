@@ -69,6 +69,8 @@ class AdjacentEnergyTransferComponent(
         val selfMachine = owner as? ITieredMachine ?: return 0L
         var total = 0L
         val nowTick = world.time
+        // 强制重查相位判定与方向无关，提出循环外（每 tick 每机器 6 方向各算一次 floorMod 是纯浪费）
+        val dueVerify = Math.floorMod(nowTick + verifyPhase, NEIGHBOR_VERIFY_INTERVAL.toLong()) == 0L
 
         for (side in Direction.values()) {
             val selfStorage = energy.getSideStorage(side)
@@ -82,7 +84,6 @@ class AdjacentEnergyTransferComponent(
             //  2. 未到强制重查相位 tick（防“无 BE 邻居被替换”漏检，相位随机分散）；
             //  3. 非空 BE 缓存未 removed（isRemoved 实时兜底，捕捉方块替换/区块重载的
             //     BE 实例替换——被移除的旧实例标记为 removed，无需等重查间隔）。
-            val dueVerify = Math.floorMod(nowTick + verifyPhase, NEIGHBOR_VERIFY_INTERVAL.toLong()) == 0L
             val cacheValid = cache.state != null && !dueVerify &&
                 (cache.blockEntity == null || !cache.blockEntity!!.isRemoved)
 
@@ -156,6 +157,9 @@ class AdjacentEnergyTransferComponent(
     }
 
     private fun move(provider: EnergyStorage, consumer: EnergyStorage): Long {
+        // provider 无能量时直接短路，避免每次探测都开事务（每机器每 tick 6 方向）
+        if (provider.amount <= 0L) return 0L
+
         val receivable = simulateInsertion(consumer, Long.MAX_VALUE)
         if (receivable <= 0L) return 0L
 

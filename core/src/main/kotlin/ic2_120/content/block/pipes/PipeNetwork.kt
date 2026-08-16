@@ -3,11 +3,11 @@ package ic2_120.content.block.pipes
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
-import net.minecraft.fluid.Fluid
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.state.property.Properties
+import net.minecraft.fluid.Fluid
 import net.minecraft.registry.Registries
+import net.minecraft.state.property.Properties
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
@@ -83,8 +83,14 @@ class PipeNetwork {
 
         val fluidKinds = providers.map { it.variant.fluid }.toSet()
         stalledByMixedProviders = fluidKinds.size > 1
-        primaryFluidId = providers.firstOrNull()?.variant?.fluid?.let { Registries.FLUID.getId(it).toString() }
-
+        // primaryFluidId 只在流体变化时才重新查 Registry + toString（每 tick 调用，避免重复分配）
+        val primaryFluidCandidate = providers.firstOrNull()?.variant?.fluid
+        if (primaryFluidCandidate != null) {
+            val id = Registries.FLUID.getId(primaryFluidCandidate).toString()
+            if (id != primaryFluidId) primaryFluidId = id
+        } else if (primaryFluidId != null) {
+            primaryFluidId = null
+        }
         if (stalledByMixedProviders) {
             conflictingFluidIds = fluidKinds.map { Registries.FLUID.getId(it).toString() }
             syncPipeLoad(world, topology.pipeRates, remaining)
@@ -155,9 +161,16 @@ class PipeNetwork {
             if (!canReceiverAccept(receiver.storage, provider.variant)) continue
 
             val cachedPath = pathCache[PathCacheKey(provider.entryPipe, receiver.entryPipe)]
-            if (cachedPath != null && cachedPath.all { (remaining[it] ?: 0L) > 0L }) {
-                val cap = cachedPath.minOf { remaining[it] ?: 0L }
-                if (cap > 0L && (best == null || cachedPath.size < best.second.size)) {
+            if (cachedPath != null) {
+                // 单次遍历：同时检查路径有效性（所有管道剩余容量 > 0）与计算瓶颈容量
+                var cap = Long.MAX_VALUE
+                var valid = true
+                for (pipe in cachedPath) {
+                    val r = remaining[pipe] ?: 0L
+                    if (r <= 0L) { valid = false; break }
+                    if (r < cap) cap = r
+                }
+                if (valid && cap > 0L && (best == null || cachedPath.size < best.second.size)) {
                     best = Triple(provider, cachedPath, cap)
                 }
             } else {
@@ -176,7 +189,12 @@ class PipeNetwork {
             pathCache[PathCacheKey(provider.entryPipe, receiver.entryPipe)] = path
             pathCache[PathCacheKey(receiver.entryPipe, provider.entryPipe)] = path.reversed()
 
-            val cap = path.minOf { remaining[it] ?: 0L }
+            // BFS 路径必然可达（邻居过滤已排除剩余容量为 0 的管道），单次遍历算瓶颈即可
+            var cap = Long.MAX_VALUE
+            for (pipe in path) {
+                val r = remaining[pipe] ?: 0L
+                if (r < cap) cap = r
+            }
             if (cap > 0L && (best == null || path.size < best.second.size)) {
                 best = Triple(provider, path, cap)
             }
