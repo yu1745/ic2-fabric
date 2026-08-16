@@ -44,6 +44,10 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
     private var disabledMask: Int = 0
     private var pumpFilterFluidId: String? = null
 
+    /** pumpFilterFluid 解析缓存：id 字符串不变时避免每 tick 重复 Registry 查询（管道网络每 tick 每边界调用） */
+    private var pumpFilterFluidCached: Fluid? = null
+    private var pumpFilterFluidDirty = true
+
     fun isDisabled(direction: Direction): Boolean {
         val bit = 1 shl direction.id
         return (disabledMask and bit) != 0
@@ -62,6 +66,14 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
     }
 
     fun pumpFilterFluid(): Fluid? {
+        if (pumpFilterFluidDirty) {
+            pumpFilterFluidCached = parsePumpFilterFluid()
+            pumpFilterFluidDirty = false
+        }
+        return pumpFilterFluidCached
+    }
+
+    private fun parsePumpFilterFluid(): Fluid? {
         val raw = pumpFilterFluidId ?: return null
         val id = Identifier.tryParse(raw) ?: return null
         return if (Registries.FLUID.containsId(id)) Registries.FLUID.get(id) else null
@@ -71,12 +83,14 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
 
     fun setPumpFilterFluid(fluid: Fluid) {
         pumpFilterFluidId = Registries.FLUID.getId(fluid).toString()
+        pumpFilterFluidDirty = true
         markDirty()
         world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
     }
 
     fun clearPumpFilter() {
         pumpFilterFluidId = null
+        pumpFilterFluidDirty = true
         markDirty()
         world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
     }
@@ -87,6 +101,7 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
         pipeLoad = nbt.getLong("PipeLoad")
         currentFluidId = nbt.getString("CurrentFluid").takeIf { it.isNotBlank() }
         pumpFilterFluidId = nbt.getString("PumpFilterFluid").takeIf { it.isNotBlank() }
+        pumpFilterFluidDirty = true
     }
 
     override fun writeNbt(nbt: NbtCompound) {

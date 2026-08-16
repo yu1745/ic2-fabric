@@ -132,14 +132,11 @@ abstract class MachineBlockEntity(
         val wasActive = state.get(activeProperty)
         if (wasActive != active) {
             world.setBlockState(pos, state.with(activeProperty, active))
+            // 声音只在状态切换时播放（未变化时 playSound 内所有分支均无输出，避免每 tick 白跑分发）
+            if (!world.isClient) {
+                playSound(world, pos, wasActive, active)
+            }
         }
-
-        if (world.isClient) return
-
-        val config = soundConfig
-        if (config.soundType == ic2_120.content.sound.SoundType.NONE) return
-
-        playSound(world, pos, wasActive, active)
     }
 
     private fun playSound(world: World, pos: BlockPos, wasActive: Boolean, isActive: Boolean) {
