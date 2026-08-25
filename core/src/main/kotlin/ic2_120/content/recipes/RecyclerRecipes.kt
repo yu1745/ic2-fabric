@@ -4,6 +4,7 @@ import ic2_120.config.Ic2Config
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
+import java.util.IdentityHashMap
 
 /**
  * ================================================================================
@@ -49,6 +50,20 @@ object RecyclerRecipes {
         Registries.ITEM.get(net.minecraft.util.Identifier("minecraft", "stick"))
     )
 
+    /*
+     * canRecycle is on the recycler's every-tick path.  The old implementation
+     * rebuilt a lower-cased Set<String> for every call, and then resolved the
+     * input's registry id again.  Config reload replaces Ic2Config.current (and
+     * consequently the blacklist list), so the list identity is a reliable and
+     * cheap invalidation token.  The per-item result cache is identity based:
+     * Item instances are registry singletons and never mutate their id.
+     */
+    @Volatile
+    private var cachedBlacklistSource: List<String>? = null
+    @Volatile
+    private var cachedBlockedItems: Set<Item> = FALLBACK_BLOCKED_ITEMS
+    private val cachedResults = IdentityHashMap<Item, Boolean>()
+
     /**
      * 检查物品是否可以被回收。
      * 排除法：仅当物品不在 [BLOCKED_ITEMS] 中且非空时方可回收。
@@ -56,17 +71,29 @@ object RecyclerRecipes {
     fun canRecycle(input: ItemStack): Boolean {
         if (input.isEmpty) return false
         val item = input.item
-        val configured = Ic2Config.current.recycler.blacklist
-            .asSequence()
-            .map { it.trim().lowercase() }
-            .filter { it.isNotEmpty() }
-            .toSet()
-
-        if (configured.isEmpty()) {
-            return item !in FALLBACK_BLOCKED_ITEMS
+        val source = Ic2Config.current.recycler.blacklist
+        if (source !== cachedBlacklistSource) {
+            synchronized(cachedResults) {
+                if (source !== cachedBlacklistSource) {
+                    val configured = source.asSequence()
+                        .map { it.trim().lowercase() }
+                        .filter { it.isNotEmpty() }
+                        .toSet()
+                    cachedBlockedItems = if (configured.isEmpty()) {
+                        FALLBACK_BLOCKED_ITEMS
+                    } else {
+                        configured.mapNotNull { id ->
+                            val identifier = net.minecraft.util.Identifier.tryParse(id) ?: return@mapNotNull null
+                            Registries.ITEM.getOrEmpty(identifier).orElse(null)
+                        }.toSet()
+                    }
+                    cachedResults.clear()
+                    cachedBlacklistSource = source
+                }
+            }
         }
-
-        val itemId = Registries.ITEM.getId(item).toString().lowercase()
-        return itemId !in configured
+        // All callers are on the logical server thread; keeping the hot read
+        // lock-free matters because this runs once per recycler tick.
+        return cachedResults[item] ?: (item !in cachedBlockedItems).also { cachedResults[item] = it }
     }
 }

@@ -234,7 +234,7 @@ class MaceratorBlockEntity(
             sync.syncCurrentTickFlow()
             return
         }
-        val result = recipe.output.copy()
+        val result = maceratorOutputFor(recipe)
         val inputCount = recipe.inputCount
         val outputSlot = getStack(SLOT_OUTPUT)
         val maxStack = result.maxCount
@@ -304,6 +304,8 @@ class MaceratorBlockEntity(
     private var cachedRecipe: MaceratorRecipe? = null
     private var cachedRecipeQueryCount = 0
     private var cachedRecipeEpoch = -1
+    private var cachedOutputRecipe: MaceratorRecipe? = null
+    private var cachedOutputStack: ItemStack = ItemStack.EMPTY
 
     private fun maceratorRecipeFor(input: ItemStack, world: World): MaceratorRecipe? {
         if (RecipeCacheEpoch.current() == cachedRecipeEpoch && cachedRecipeItem === input.item) {
@@ -318,6 +320,15 @@ class MaceratorBlockEntity(
         cachedRecipe = recipe
         cachedRecipeQueryCount = input.count
         return recipe
+    }
+
+    /** Recipe outputs are immutable data after datapack load; avoid copying one every tick. */
+    private fun maceratorOutputFor(recipe: MaceratorRecipe): ItemStack {
+        if (recipe !== cachedOutputRecipe) {
+            cachedOutputRecipe = recipe
+            cachedOutputStack = recipe.output.copy()
+        }
+        return cachedOutputStack
     }
 
     // 类型判定缓存：isRecipeInput 始终用 maxCount 查询（仅依赖物品类型，与数量无关），

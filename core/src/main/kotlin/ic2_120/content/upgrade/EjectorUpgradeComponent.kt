@@ -91,8 +91,7 @@ object EjectorUpgradeComponent {
         val configs = mutableListOf<EjectorConfig>()
         for (idx in upgradeSlotIndices) {
             val stack = inventory.getStack(idx)
-            if (stack.isEmpty) continue
-            if (stack.item is EjectorUpgrade) {
+            if (!stack.isEmpty && stack.item is EjectorUpgrade) {
                 configs.add(EjectorConfig(readFilter(stack), readDirections(stack), stack.count))
             }
         }

@@ -81,7 +81,9 @@
 
 ## 4. 管道网络生命周期
 
-`PipeNetworkManager` 按维度维护 `pos -> network` 索引。
+`PipeNetworkManager` 按维度同时维护 `pos -> network` 索引和活跃唯一网络集合。
+每 tick 只按网络数量生成安全快照并推动传输，不再扫描全部管道位置后临时去重；
+构建/合并/失效/世界卸载时同步维护活跃集合。
 
 | 事件 | 行为 |
 |------|------|
@@ -135,6 +137,10 @@ floor(baseBucketsPerSecond × materialMultiplier × FluidConstants.BUCKET / 20)
 - **Receiver** — 遍历边界，跳过泵正面连接，检查 `storage.supportsInsertion()`，然后用 simulateInsertion（dry-run `insert(variant, 1, tx)`）确认能接受当前网络的流体。
 
 不需要机器预先安装升级或声明接口。任何实现了 Fabric `FluidStorage.SIDED` 的方块都会被自动识别。
+
+接收端针对本 tick 实际传输使用的主流体完成 simulateInsertion 后，路径选择不会再按
+每个 provider 重复执行相同插入探测。无 provider、混流停机或无 receiver 时不会复制
+全网管道容量表；这些分支仍会清理上一 tick 的负载显示，不改变传输结果。
 
 系统不建立全局“气体/液体”二分。蒸汽、压缩空气和普通液体均使用 Fabric Transfer 的
 `FluidVariant` 表示；管道只区分具体流体 ID，端点储罐通过 `canInsert` / `canExtract`

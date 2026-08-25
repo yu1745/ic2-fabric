@@ -2,6 +2,7 @@ package ic2_120.content.upgrade
 
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import java.util.WeakHashMap
 
 /**
  * 通用红石控制组件。
@@ -9,6 +10,15 @@ import net.minecraft.world.World
  * 只要机器实现 [IRedstoneControlSupport]，即可通过该组件统一判断当前是否允许运行。
  */
 object RedstoneControlComponent {
+
+    private data class CacheEntry(
+        val world: World,
+        val tick: Long,
+        val inverted: Boolean,
+        val powered: Boolean
+    )
+
+    private val tickCache = WeakHashMap<IRedstoneControlSupport, CacheEntry>()
 
     /**
     * 返回机器当前是否允许运行。
@@ -18,7 +28,16 @@ object RedstoneControlComponent {
     */
    fun canRun(world: World, pos: BlockPos, machine: Any): Boolean {
        if (machine !is IRedstoneControlSupport) return true
-       val powered = world.isReceivingRedstonePower(pos)
-        return if (machine.redstoneInverted) !powered else powered
+       val inverted = machine.redstoneInverted
+       val now = world.time
+       val cached = tickCache[machine]
+       val powered = if (cached != null && cached.world === world && cached.tick == now && cached.inverted == inverted) {
+           cached.powered
+       } else {
+           world.isReceivingRedstonePower(pos).also {
+               tickCache[machine] = CacheEntry(world, now, inverted, it)
+           }
+       }
+        return if (inverted) !powered else powered
    }
 }

@@ -29,18 +29,15 @@ abstract class MachineBlockEntity(
     state: BlockState
 ) : BlockEntity(type, pos, state), ITieredMachine, IOwned {
 
-    private var lastThrottledDirtyTick = Long.MIN_VALUE
+    /** Per-instance startup phase prevents all loaded machines dirtying the same tick. */
+    private val initialDirtyDelayTicks = kotlin.random.Random.nextLong(1L, DIRTY_INTERVAL_TICKS + 1L)
+    private var nextDirtyTick = Long.MIN_VALUE
 
     /**
-     * Processing machines change progress every tick, but persisting every
-     * intermediate value keeps the chunk dirty continuously.  Use this for
-     * tick-driven progress/state changes; inventory and user actions should
-     * continue to call markDirty() directly.
+     * Compatibility alias retained for existing call sites. All machine
+     * dirty marking is throttled centrally by [markDirty].
      */
-    protected fun markDirtyThrottled(intervalTicks: Long = 20L) {
-        val now = world?.time ?: return markDirty()
-        if (now - lastThrottledDirtyTick < intervalTicks) return
-        lastThrottledDirtyTick = now
+    protected fun markDirtyThrottled() {
         markDirty()
     }
 
@@ -50,6 +47,7 @@ abstract class MachineBlockEntity(
         const val BATTERY_SLOT = 1   // 电池充电/供电槽
         private const val NBT_OWNER_UUID = "OwnerUUID"
         private const val NBT_VOLTAGE_TIER_BONUS = "VoltageTierBonus"
+        private const val DIRTY_INTERVAL_TICKS = 20L
     }
 
     override var ownerUuid: UUID? = null
@@ -68,16 +66,28 @@ abstract class MachineBlockEntity(
     }
 
     /**
-     * 客户端跳过 markDirty。
+     * 客户端跳过 markDirty；服务端每台机器最多每 20 tick 标脏一次。
      *
      * Create 等模组在装配 contraption（矿车、轴承等）时会用 [net.minecraft.world.World] 的
      * 虚拟实现（如 VirtualRenderWorld）通过 be.load(nbt) 重建 BlockEntity。这类世界的 chunk
      * 不是原版 [net.minecraft.world.chunk.WorldChunk]，基类 markDirty 会强转失败导致客户端 ClassCastException 崩溃。
      * 客户端 markDirty 本就是空操作，跳过既安全又无副作用。
+     *
+     * 全局限流是明确的性能/崩溃恢复取舍：正常区块卸载与关服仍会序列化当前内存状态；
+     * 若进程在两次标脏之间崩溃，机器的库存、配置、能量或进度最多可能回退约 20 tick。
      */
     override fun markDirty() {
         val world = world
         if (world != null && world.isClient) return
+        if (world != null) {
+            val now = world.time
+            if (nextDirtyTick != Long.MIN_VALUE && now < nextDirtyTick) return
+            nextDirtyTick = if (nextDirtyTick == Long.MIN_VALUE) {
+                now + initialDirtyDelayTicks
+            } else {
+                now + DIRTY_INTERVAL_TICKS
+            }
+        }
         super.markDirty()
     }
 
@@ -130,9 +140,8 @@ abstract class MachineBlockEntity(
      */
     protected open fun setActiveState(world: World, pos: BlockPos, state: BlockState, active: Boolean) {
         val wasActive = state.get(activeProperty)
-        if (wasActive != active) {
-            world.setBlockState(pos, state.with(activeProperty, active))
-        }
+        if (wasActive == active) return
+        world.setBlockState(pos, state.with(activeProperty, active))
 
         if (world.isClient) return
 

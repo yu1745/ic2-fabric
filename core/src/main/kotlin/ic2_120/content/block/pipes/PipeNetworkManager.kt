@@ -7,6 +7,7 @@ import net.minecraft.world.World
 
 object PipeNetworkManager {
     private val worldPosToNetwork = mutableMapOf<RegistryKey<World>, MutableMap<Long, PipeNetwork>>()
+    private val worldNetworks = mutableMapOf<RegistryKey<World>, MutableSet<PipeNetwork>>()
 
     private fun mapFor(world: World): MutableMap<Long, PipeNetwork> =
         worldPosToNetwork.getOrPut(world.registryKey) { mutableMapOf() }
@@ -21,6 +22,7 @@ object PipeNetworkManager {
         val network = PipeNetwork()
         val visited = mutableSetOf<Long>()
         val queue = ArrayDeque<BlockPos>()
+        val absorbedNetworks = mutableSetOf<PipeNetwork>()
         queue.add(startPos)
         visited.add(startPos.asLong())
 
@@ -31,6 +33,7 @@ object PipeNetworkManager {
 
             map[current.asLong()]?.let { old ->
                 if (old !== network) {
+                    absorbedNetworks.add(old)
                     network.lastTickTime = maxOf(network.lastTickTime, old.lastTickTime)
                 }
             }
@@ -53,12 +56,16 @@ object PipeNetworkManager {
             }
         }
 
+        val networks = worldNetworks.getOrPut(world.registryKey) { mutableSetOf() }
+        networks.removeAll(absorbedNetworks)
+        networks.add(network)
         return network
     }
 
     fun invalidateAt(world: World, pos: BlockPos) {
         val map = worldPosToNetwork[world.registryKey] ?: return
         val network = map[pos.asLong()] ?: return
+        worldNetworks[world.registryKey]?.remove(network)
         for (pipePos in network.pipes) {
             map.remove(pipePos)
             (world.getBlockEntity(BlockPos.fromLong(pipePos)) as? PipeBlockEntity)?.network = null
@@ -73,18 +80,16 @@ object PipeNetworkManager {
 
     fun tickAllWorlds(server: net.minecraft.server.MinecraftServer) {
         for (world in server.worlds) {
-            val map = worldPosToNetwork[world.registryKey] ?: continue
-            val ticked = mutableSetOf<PipeNetwork>()
-            for (network in map.values) {
-                if (network !in ticked) {
-                    network.tickIfNeeded(world)
-                    ticked.add(network)
-                }
-            }
+            // Snapshot by network count so invalidation during transfer cannot
+            // mutate the set being iterated. This replaces the old per-pipe
+            // map scan and temporary deduplication set.
+            val networks = worldNetworks[world.registryKey]?.toList() ?: continue
+            for (network in networks) network.tickIfNeeded(world)
         }
     }
 
     fun onWorldUnload(world: World) {
         worldPosToNetwork.remove(world.registryKey)
+        worldNetworks.remove(world.registryKey)
     }
 }

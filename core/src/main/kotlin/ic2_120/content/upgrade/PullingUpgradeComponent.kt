@@ -36,22 +36,16 @@ object PullingUpgradeComponent {
         if (inputSlotIndices.isEmpty()) return
 
         // 预解析每个抽入升级的有效方向与速率（多个抽入升级共享同一方向的缓存查找结果）
-        val active = mutableListOf<Triple<Int, Item?, List<Direction>>>()  // (rate, filter, dirs)
+        val active = mutableListOf<Triple<Int, Item?, List<Direction>>>()
         for (idx in upgradeSlotIndices) {
             val upgradeStack = inventory.getStack(idx)
             if (upgradeStack.isEmpty || upgradeStack.item !is PullingUpgrade) continue
-
             val rate = EjectorUpgradeComponent.itemTransferRate(upgradeStack.count)
             if (rate <= 0) continue
             val filter = EjectorUpgradeComponent.readFilter(upgradeStack)
             val configuredSides = EjectorUpgradeComponent.readDirections(upgradeStack)
-            val dirs = if (configuredSides.isEmpty()) {
-                ALL_DIRECTIONS
-            } else {
-                ALL_DIRECTIONS.filter { it in configuredSides }
-            }
-            if (dirs.isEmpty()) continue
-            active.add(Triple(rate, filter, dirs))
+            val dirs = if (configuredSides.isEmpty()) ALL_DIRECTIONS else ALL_DIRECTIONS.filter { it in configuredSides }
+            if (dirs.isNotEmpty()) active.add(Triple(rate, filter, dirs))
         }
         if (active.isEmpty()) return
 

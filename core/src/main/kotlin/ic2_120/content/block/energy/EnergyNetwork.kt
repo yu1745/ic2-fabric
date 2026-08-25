@@ -255,8 +255,6 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         if (lastTickTime == time) return
         lastTickTime = time
 
-        val isDamageTick = (time + damageTickOffset) % damageIntervalTicks == 0L
-
         pushToConsumers(world)
         tryUninsulatedCableDamage(world)
         tryUnderTierCableBurn(world)
@@ -627,18 +625,23 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
         if (cables.isEmpty()) return
 
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
-        ensureCapacityTracking(world, topology.cableRates)
-
         val consumers = findConsumers(world, topology)
-        val providers = findProviders(world, topology)
 
         // 无消费者 = 空载：本 tick 不会有任何传输，cableLoad 无需每 tick 同步
         // （避免孤立导线/空载电网每 tick 对全部导线 O(N) getBlockEntity）；
         // 但每 20 tick 强制同步一次，让 Jade 的 cableLoad 窗口能衰减归零，不永久残留旧值。
         if (consumers.isEmpty()) {
-            if (isCableLoadSyncDue(world)) syncCableLoadToLocalStorage(world, topology.cableRates)
+            if (isCableLoadSyncDue(world)) {
+                ensureCapacityTracking(world, topology.cableRates)
+                syncCableLoadToLocalStorage(world, topology.cableRates)
+            }
             return
         }
+
+        // Only active networks need a per-cable capacity ledger and provider
+        // discovery. Empty networks skip both on 19/20 ticks.
+        ensureCapacityTracking(world, topology.cableRates)
+        val providers = findProviders(world, topology)
 
         var anyTransfer = false
 

@@ -73,30 +73,37 @@ class SyncedData : PropertyDelegate, SyncSchema {
         entries.add(Entry("${name}_High", default ushr 16))
         val indexLow = entries.size
         entries.add(Entry("${name}_Low", default and 0xFFFF))
-        // 为每个属性维护独立的滑动窗口；windowSum 增量维护，避免每次读写 O(n) 求和。
+        require(windowSize > 0) { "windowSize must be positive" }
+        // 固定大小的 primitive 环形窗口避免 ArrayDeque<Int> 每 tick 装箱与节点/数组维护。
+        // windowSum 增量维护，读写均为 O(1)。
         // 注意：不能对等值写入做短路——窗口按“每次写入”滑动，等值写入同样会推出
         // 旧样本（如稳态 32 EU/t 会把停机期的 0 推出窗口）；若跳过，平均值会卡在
         // 历史混合值永不收敛到稳态（EnergyFlowSync/HeatFlowSync 每 tick 恒定写入）。
-        val window = ArrayDeque<Int>()
-        var windowSum = 0
+        val window = IntArray(windowSize)
+        var windowCount = 0
+        var nextIndex = 0
+        var windowSum = 0L
         return object : ReadWriteProperty<Any?, Int> {
             override fun getValue(thisRef: Any?, property: KProperty<*>): Int {
                 // 返回滑动窗口的平均值
-                return if (window.isEmpty()) {
+                return if (windowCount == 0) {
                     val high = entries[indexHigh].value
                     val low = entries[indexLow].value
                     (high shl 16) or (low and 0xFFFF)
-                } else windowSum / window.size
+                } else (windowSum / windowCount).toInt()
             }
             override fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
-                // 更新滑动窗口
-                window.addLast(value)
-                windowSum += value
-                if (window.size > windowSize) {
-                    windowSum -= window.removeFirst()
+                if (windowCount == windowSize) {
+                    windowSum -= window[nextIndex].toLong()
+                } else {
+                    windowCount++
                 }
+                window[nextIndex] = value
+                nextIndex++
+                if (nextIndex == windowSize) nextIndex = 0
+                windowSum += value
                 // 同步平均值到 entry（用于 NBT 序列化）
-                val avg = windowSum / window.size
+                val avg = (windowSum / windowCount).toInt()
                 entries[indexHigh].value = avg ushr 16
                 entries[indexLow].value = avg and 0xFFFF
             }

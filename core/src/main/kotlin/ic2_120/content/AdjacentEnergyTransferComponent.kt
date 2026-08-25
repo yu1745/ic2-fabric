@@ -6,8 +6,8 @@ import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.machines.TransformerBlockEntity
 import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
-import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.BlockState
+import net.minecraft.block.entity.BlockEntity
 import net.minecraft.inventory.Inventory
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.server.world.ServerWorld
@@ -27,40 +27,19 @@ class AdjacentEnergyTransferComponent(
     private val owner: BlockEntity,
     private val energy: TickLimitedSidedEnergyContainer
 ) {
-
     companion object {
-        /**
-         * 邻居缓存强制重查间隔（tick）。
-         *
-         * Fabric yarn 的 BlockEntity 没有 neighborUpdate 回调，无法在方块替换时
-         * 精确失效缓存。用固定间隔全方向重查作为兜底：
-         * - 有 BE 的邻居被替换（含区块卸载/重载）→ 旧 BE isRemoved() 实时兜底，无需等间隔；
-         * - 无 BE 的邻居被替换（如石头→电池盒）→ 最多延迟一个间隔感知（默认 20 tick）。
-         */
         private const val NEIGHBOR_VERIFY_INTERVAL = 20
     }
 
-    /**
-     * 每台组件构造时随机生成的重查相位（0..INTERVAL-1）。
-     *
-     * 强制重查按 `floorMod(worldTime + phase, INTERVAL) == 0` 触发，各机器相位不同，
-     * 把全服务器的 20 tick 重查分散到不同 tick——避免所有机器在同一 tick 同时
-     * 重查（否则会形成周期性的 CPU 采样尖峰）。
-     */
     private val verifyPhase: Int = kotlin.random.Random.nextInt(NEIGHBOR_VERIFY_INTERVAL)
 
-    /**
-     * Energy API capability lookup is relatively expensive and the adjacent block
-     * usually does not change between ticks. Keep the lookup result tied to the
-     * current neighbor BlockEntity; a replaced neighbor naturally invalidates it.
-     */
     private data class NeighborStorageCache(
         var state: BlockState? = null,
         var blockEntity: BlockEntity? = null,
         var storage: EnergyStorage? = null
     )
 
-    private val neighborStorageCache = arrayOfNulls<NeighborStorageCache>(Direction.values().size)
+    private val neighborStorageCache = arrayOfNulls<NeighborStorageCache>(Direction.entries.size)
 
     fun tick(): Long {
         val world = owner.world ?: return 0L
@@ -71,24 +50,17 @@ class AdjacentEnergyTransferComponent(
         val selfMachine = owner as? ITieredMachine ?: return 0L
         var total = 0L
         val nowTick = world.time
+        val dueVerify = Math.floorMod(nowTick + verifyPhase, NEIGHBOR_VERIFY_INTERVAL.toLong()) == 0L
 
-        for (side in Direction.values()) {
-            val selfStorage = energy.getSideStorage(side)
+        for (side in Direction.entries) {
             val neighborPos = owner.pos.offset(side)
             val cache = neighborStorageCache[side.ordinal] ?: NeighborStorageCache().also {
                 neighborStorageCache[side.ordinal] = it
             }
 
-            // 缓存有效判定：
-            //  1. 已初始化（state != null）；
-            //  2. 未到强制重查相位 tick（防“无 BE 邻居被替换”漏检，相位随机分散）；
-            //  3. 非空 BE 缓存未 removed（isRemoved 实时兜底，捕捉方块替换/区块重载的
-            //     BE 实例替换——被移除的旧实例标记为 removed，无需等重查间隔）。
-            val dueVerify = Math.floorMod(nowTick + verifyPhase, NEIGHBOR_VERIFY_INTERVAL.toLong()) == 0L
             val cacheValid = cache.state != null && !dueVerify &&
                 (cache.blockEntity == null || !cache.blockEntity!!.isRemoved)
-
-            val neighborBe: BlockEntity? = if (cacheValid) {
+            val neighborBe = if (cacheValid) {
                 cache.blockEntity
             } else {
                 val neighborState = world.getBlockState(neighborPos)
@@ -101,11 +73,14 @@ class AdjacentEnergyTransferComponent(
             val neighborStorage = cache.storage ?: continue
 
             if (neighborBe is CableBlockEntity) continue
+            // Most faces have no energy endpoint. Resolve our sided wrapper only
+            // after the cached neighbor lookup succeeds.
+            val selfStorage = energy.getSideStorage(side)
 
             total += if (neighborBe is ITieredMachine) {
                 transferWithIc2Rules(world, selfMachine, selfStorage, neighborBe, neighborStorage, side)
             } else {
-                transferWithExternalRules(selfStorage, neighborStorage)
+                transferWithExternalRules(selfStorage, neighborStorage, side)
             }
         }
 
@@ -120,7 +95,16 @@ class AdjacentEnergyTransferComponent(
         providerStorage: EnergyStorage,
         consumerSide: Direction
     ): Long {
-        if (!consumerStorage.supportsInsertion() || !providerStorage.supportsExtraction()) return 0L
+        if (!providerStorage.supportsExtraction()) return 0L
+
+        // The insertion probe is both the sided-capability check and the exact
+        // per-tick budget. Calling supportsInsertion() first would run the same
+        // TickLimitedSidedEnergyContainer budget path twice on every IC2 face.
+        val receivable = minOf(
+            energy.getMaxInsert(consumerSide),
+            (energy.capacity - energy.amount).coerceAtLeast(0L)
+        )
+        if (receivable <= 0L) return 0L
 
         val providerSide = consumerSide.opposite
         val providerVoltage = providerMachine.effectiveVoltageTierForSide(providerSide)
@@ -130,20 +114,33 @@ class AdjacentEnergyTransferComponent(
             return 0L
         }
 
-        return move(providerStorage, consumerStorage)
+        return move(providerStorage, consumerStorage, receivable)
     }
 
     private fun transferWithExternalRules(
         selfStorage: EnergyStorage,
-        neighborStorage: EnergyStorage
+        neighborStorage: EnergyStorage,
+        selfSide: Direction
     ): Long {
-        return when {
-            selfStorage.supportsInsertion() && neighborStorage.supportsExtraction() ->
-                move(neighborStorage, selfStorage)
-            selfStorage.supportsExtraction() && neighborStorage.supportsInsertion() ->
-                move(selfStorage, neighborStorage)
-            else -> 0L
+        // The self endpoint is always our TickLimited container, so its exact
+        // budget and capacity are available without a dry-run transaction or a
+        // duplicated supportsInsertion/getMaxInsert call.
+        val selfReceivable = minOf(
+            energy.getMaxInsert(selfSide),
+            (energy.capacity - energy.amount).coerceAtLeast(0L)
+        )
+        if (selfReceivable > 0L && neighborStorage.supportsExtraction()) {
+            return move(neighborStorage, selfStorage, selfReceivable)
         }
+
+        val selfAvailable = minOf(energy.getMaxExtract(selfSide), energy.amount)
+        if (selfAvailable > 0L) {
+            val neighborReceivable = simulateInsertion(neighborStorage, selfAvailable)
+            if (neighborReceivable > 0L) {
+                return move(selfStorage, neighborStorage, neighborReceivable)
+            }
+        }
+        return 0L
     }
 
     private fun wouldOvervoltage(
@@ -157,10 +154,7 @@ class AdjacentEnergyTransferComponent(
         return providerVoltage > consumerVoltage
     }
 
-    private fun move(provider: EnergyStorage, consumer: EnergyStorage): Long {
-        val receivable = simulateInsertion(consumer, Long.MAX_VALUE)
-        if (receivable <= 0L) return 0L
-
+    private fun move(provider: EnergyStorage, consumer: EnergyStorage, receivable: Long): Long {
         var moved = 0L
         Transaction.openOuter().use { tx ->
             val extracted = provider.extract(receivable, tx)

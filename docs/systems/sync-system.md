@@ -62,6 +62,7 @@ class ElectricFurnaceSync(
 ### 2. 服务端：BlockEntity
 
 - 创建 `SyncedData()` 并用它构造你的属性定义类。属性写入**不会**自动调用 `markDirty()`（同步字段大多是每 tick 变化的运行时/显示数据，不该让区块持续变脏）；NBT 落盘靠区块自然保存（卸载 / 关服 / 业务代码显式 `markDirty()`）时调用 `writeNbt` 完成。
+- `MachineBlockEntity.markDirty()` 在服务端按机器统一限流为每 20 tick 最多一次，库存、配置、能量和进度均采用相同策略。第一次标脏立即执行；每个 BE 构造时生成独立的 1–20 tick 初始相位，使后续周期错开，避免大量机器集中在同一 tick 标脏。正常卸载/关服仍保存当前内存状态；异常崩溃时接受最多约 20 tick 的机器状态回退，以降低大型基地持续标脏的 CPU 开销。
 - 把 `syncedData` 传给 ScreenHandler；在 `writeScreenOpeningData` 里写入 `syncedData.size()`。
 - NBT 中调用 `syncedData.readNbt(nbt)` / `syncedData.writeNbt(nbt)`。
 

@@ -20,6 +20,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
+import java.util.WeakHashMap
 import kotlin.math.min
 import kotlin.math.pow
 
@@ -28,6 +29,9 @@ private val DIRECTION_ORDER = listOf(Direction.DOWN, Direction.UP, Direction.NOR
 object FluidPipeUpgradeComponent {
     private const val NBT_FILTER = "PipeFluidFilter"
     private const val NBT_DIRECTIONS = "PipeFluidDirections"
+
+    private data class ApplyCache(val stacks: Array<ItemStack>)
+    private val applyCache = WeakHashMap<Inventory, ApplyCache>()
 
     /**
      * 统一入口：机器同时具备 Inventory 与 IFluidPipeUpgradeSupport 时，按升级槽应用流体管道升级。
@@ -39,6 +43,13 @@ object FluidPipeUpgradeComponent {
     fun apply(inventory: Inventory, upgradeSlotIndices: IntArray, machine: Any) {
         if (machine !is IFluidPipeUpgradeSupport) return
 
+        val cached = applyCache[inventory]
+        if (cached != null && cached.stacks.size == upgradeSlotIndices.size &&
+            upgradeSlotIndices.indices.all { i -> ItemStack.areEqual(cached.stacks[i], inventory.getStack(upgradeSlotIndices[i])) }
+        ) return
+
+        val snapshots = Array(upgradeSlotIndices.size) { i -> inventory.getStack(upgradeSlotIndices[i]).copy() }
+
         var provider = false
         var receiver = false
         var providerFilter: Fluid? = null
@@ -48,8 +59,7 @@ object FluidPipeUpgradeComponent {
         var ejectorCount = 0
         var pullingCount = 0
 
-        for (idx in upgradeSlotIndices) {
-            val stack = inventory.getStack(idx)
+        for (stack in snapshots) {
             if (stack.isEmpty) continue
             when (stack.item) {
                 is FluidEjectorUpgrade -> {
@@ -75,6 +85,7 @@ object FluidPipeUpgradeComponent {
         machine.fluidPipeReceiverSides = receiverSides.toMutableSet()
         machine.fluidPipeEjectorCount = ejectorCount
         machine.fluidPipePullingCount = pullingCount
+        applyCache[inventory] = ApplyCache(snapshots)
     }
 
     fun readFilter(stack: ItemStack): Fluid? {

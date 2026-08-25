@@ -19,6 +19,7 @@ object EnergyNetworkManager {
 
     private val logger = LoggerFactory.getLogger("ic2_120/EnergyNetworkManager")
     private val worldPosToNetwork = mutableMapOf<RegistryKey<World>, MutableMap<Long, EnergyNetwork>>()
+    private val worldNetworks = mutableMapOf<RegistryKey<World>, MutableSet<EnergyNetwork>>()
     private val pendingBuilds = mutableMapOf<RegistryKey<World>, MutableSet<Long>>()
 
     /**
@@ -46,7 +47,10 @@ object EnergyNetworkManager {
             }
         }
 
-        val networks = worldPosToNetwork[world.registryKey]?.values?.toSet() ?: return
+        // Snapshot by network count, not cable count. A network can invalidate
+        // itself while ticking (for example when an under-tier cable burns),
+        // so iterating the mutable registry directly is unsafe.
+        val networks = worldNetworks[world.registryKey]?.toList() ?: return
         for (network in networks) network.tickIfNeeded(world)
     }
 
@@ -118,6 +122,9 @@ object EnergyNetworkManager {
         }
 
         network.energy = network.energy.coerceAtMost(network.capacity)
+        val networks = worldNetworks.getOrPut(world.registryKey) { mutableSetOf() }
+        networks.removeAll(absorbedNetworks)
+        networks.add(network)
         logger.debug("构建电网：{} 根导线，容量 {}，能量 {}", network.cables.size, network.capacity, network.energy)
         return network
     }
@@ -130,6 +137,7 @@ object EnergyNetworkManager {
     fun invalidateAt(world: World, pos: BlockPos) {
         val posToNetwork = worldPosToNetwork[world.registryKey] ?: return
         val network = posToNetwork[pos.asLong()] ?: return
+        worldNetworks[world.registryKey]?.remove(network)
         distributeEnergyToEntities(world, network)
         for (cablePosLong in network.cables) {
             posToNetwork.remove(cablePosLong)
@@ -165,6 +173,7 @@ object EnergyNetworkManager {
     /** 世界卸载时仅清理该维度缓存，避免误伤其他维度电网。 */
     fun onWorldUnload(world: World) {
         worldPosToNetwork.remove(world.registryKey)
+        worldNetworks.remove(world.registryKey)
         pendingBuilds.remove(world.registryKey)
     }
 }

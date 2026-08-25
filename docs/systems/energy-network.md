@@ -17,6 +17,8 @@
 
 `EnergyNetworkManager` 维护按维度分组的索引：
 - `RegistryKey<World> -> (posLong -> EnergyNetwork)`。
+- `RegistryKey<World> -> Set<EnergyNetwork>`：活跃唯一电网集合，用于按电网数量 tick，
+  避免每 tick 扫描全部导线位置并临时去重。构建/合并/失效/世界卸载时同步维护。
 
 ## 2. 生命周期
 
@@ -59,6 +61,10 @@
 `tickIfNeeded(world)` 保证同一网络每个游戏 tick 只执行一次：
 1. `pushToConsumers(world)`：执行能量传输。
 2. `tryUninsulatedCableDamage(world)`：执行漏电伤害判定。
+
+`pushToConsumers` 会先检查消费者。空载电网不创建每根导线的本 tick 容量账本，也不扫描
+provider；仅每 20 tick 为 Jade 负载显示执行一次容量重置和归零同步。有消费者的活跃电网
+仍按原顺序初始化容量、发现 provider 并传输。
 
 ## 4. 传输规则（pushToConsumers）
 
@@ -196,6 +202,4 @@
 - 明确”连接缓存失效”只清缓存，不拆网。
 - 明确 Dijkstra 起点距离包含起点导线自身损耗。
 - 明确缓存清理阈值条件是 `> 512`。
-
-
 

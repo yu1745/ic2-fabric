@@ -40,6 +40,9 @@ class PipeNetwork {
     /** Pipes that had fluid flow last tick (for clearing stale load display). */
     private val lastTouchedPipes = HashSet<Long>()
 
+    /** Reused per receiver; normally remains empty unless an endpoint rejects a transfer. */
+    private val reusableFailedProviderEntries = HashSet<Long>()
+
     /** Last synced fluid ID, used to detect fluid type changes that require full resync. */
     private var lastSyncedFluidId: String? = null
 
@@ -72,57 +75,64 @@ class PipeNetwork {
 
         val topology = topologyCache ?: buildTopology(world).also { topologyCache = it }
 
-        reusableRemaining.clear()
-        for ((k, v) in topology.pipeRates) reusableRemaining[k] = v
-        val remaining = reusableRemaining
-
         currentTouchedPipes.clear()
 
         // Find providers via FluidStorage API (dry-run extract), no IFluidPipeUpgradeSupport needed
         val providers = findProviders(world, topology)
 
-        val fluidKinds = providers.map { it.variant.fluid }.toSet()
-        stalledByMixedProviders = fluidKinds.size > 1
-        primaryFluidId = providers.firstOrNull()?.variant?.fluid?.let { Registries.FLUID.getId(it).toString() }
+        val primaryFluid = providers.firstOrNull()?.variant?.fluid
+        stalledByMixedProviders = primaryFluid != null && providers.any { it.variant.fluid != primaryFluid }
+        primaryFluidId = primaryFluid?.let { Registries.FLUID.getId(it).toString() }
 
         if (stalledByMixedProviders) {
-            conflictingFluidIds = fluidKinds.map { Registries.FLUID.getId(it).toString() }
-            syncPipeLoad(world, topology.pipeRates, remaining)
+            conflictingFluidIds = providers.asSequence()
+                .map { Registries.FLUID.getId(it.variant.fluid).toString() }
+                .distinct()
+                .toList()
+            syncPipeLoad(world, topology.pipeRates, emptyMap())
             return
         } else {
             conflictingFluidIds = emptyList()
         }
 
-        if (providers.isEmpty()) {
-            syncPipeLoad(world, topology.pipeRates, remaining)
+        if (primaryFluid == null) {
+            // No transfer can happen, so avoid copying every pipe capacity.
+            // An empty remaining map means zero usage to syncPipeLoad.
+            syncPipeLoad(world, topology.pipeRates, emptyMap())
             return
         }
 
         // Find receivers via FluidStorage API + simulateInsertion, no IFluidPipeUpgradeSupport needed
-        val primaryFluid = providers.first().variant.fluid
         val receivers = findReceivers(world, topology, primaryFluid)
 
         if (receivers.isEmpty()) {
-            syncPipeLoad(world, topology.pipeRates, remaining)
+            syncPipeLoad(world, topology.pipeRates, emptyMap())
             return
         }
+
+        reusableRemaining.clear()
+        for ((k, v) in topology.pipeRates) reusableRemaining[k] = v
+        val remaining = reusableRemaining
 
         val primaryVariant = FluidVariant.of(primaryFluid)
 
         for (receiver in receivers) {
-            val failedProviderEntries = mutableSetOf<Long>()
-            // 排除 provider 和 receiver 是同一个 storage 的情况（自环）
-            val filteredProviders = providers.filter { it.storage !== receiver.storage }
+            reusableFailedProviderEntries.clear()
 
             while (true) {
-                val best = findBestPath(receiver, filteredProviders, failedProviderEntries, topology.neighbors, remaining)
+                val best = findBestPath(
+                    receiver,
+                    providers,
+                    reusableFailedProviderEntries,
+                    topology.neighbors,
+                    remaining
+                )
                 if (best == null) break
 
                 val (provider, path, pathCap) = best
                 val moved = transferOnce(provider.storage, receiver.storage, primaryVariant, pathCap)
                 if (moved <= 0L) {
-                    failedProviderEntries.add(provider.entryPipe)
-                    if (failedProviderEntries.size >= filteredProviders.size) break
+                    reusableFailedProviderEntries.add(provider.entryPipe)
                     continue
                 }
                 for (pipe in path) {
@@ -152,7 +162,10 @@ class PipeNetwork {
 
         for (provider in providers) {
             if (provider.entryPipe in failedProviders) continue
-            if (!canReceiverAccept(receiver.storage, provider.variant)) continue
+            // findReceivers already simulated insertion of the exact
+            // FluidVariant used by transferOnce. Also exclude storage self-loops
+            // here to avoid allocating a filtered provider list per receiver.
+            if (provider.storage === receiver.storage) continue
 
             val cachedPath = pathCache[PathCacheKey(provider.entryPipe, receiver.entryPipe)]
             if (cachedPath != null && cachedPath.all { (remaining[it] ?: 0L) > 0L }) {
@@ -239,17 +252,26 @@ class PipeNetwork {
     }
 
     private fun transferOnce(provider: Storage<FluidVariant>, receiver: Storage<FluidVariant>, variant: FluidVariant, cap: Long): Long {
-        val extractable = Transaction.openOuter().use { tx -> provider.extract(variant, cap, tx) }
-        if (extractable <= 0L) return 0L
-        val insertable = Transaction.openOuter().use { tx -> receiver.insert(variant, extractable, tx) }
+        // Probe both ends in one transaction. Closing it without commit rolls both
+        // storages back, while avoiding a second outer transaction for every
+        // provider/receiver attempt.
+        val insertable = Transaction.openOuter().use { tx ->
+            val extractable = provider.extract(variant, cap, tx)
+            if (extractable <= 0L) 0L else receiver.insert(variant, extractable, tx)
+        }
         if (insertable <= 0L) return 0L
 
         var moved = 0L
         Transaction.openOuter().use { tx ->
             val ext = provider.extract(variant, insertable, tx)
             val ins = if (ext > 0L) receiver.insert(variant, ext, tx) else 0L
-            if (ins > 0L) moved = minOf(ext, ins)
-            tx.commit()
+            // Only commit a balanced transfer. A compatibility storage is allowed
+            // to change its answer between simulation and execution; committing a
+            // partial insertion here would otherwise destroy the difference.
+            if (ext > 0L && ins == ext) {
+                moved = ext
+                tx.commit()
+            }
         }
         return moved
     }
@@ -277,9 +299,6 @@ class PipeNetwork {
         }
         return null
     }
-
-    private fun canReceiverAccept(receiver: Storage<FluidVariant>, variant: FluidVariant): Boolean =
-        Transaction.openOuter().use { tx -> receiver.insert(variant, FluidConstants.BUCKET, tx) > 0L }
 
     private fun findProviders(world: World, topology: TopologyCache): List<ProviderEndpoint> {
         val providers = mutableListOf<ProviderEndpoint>()

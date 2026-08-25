@@ -108,6 +108,8 @@ class ElectricFurnaceBlockEntity(
     private var cachedRecipeItem: net.minecraft.item.Item? = null
     private var cachedRecipe: SmeltingRecipe? = null
     private var cachedRecipeEpoch = -1
+    private var cachedOutputRecipe: SmeltingRecipe? = null
+    private var cachedOutputStack: ItemStack = ItemStack.EMPTY
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -255,7 +257,7 @@ class ElectricFurnaceBlockEntity(
             return
         }
 
-        val result = recipe.getOutput(world.registryManager).copy()
+        val result = smeltingOutputFor(recipe, world)
         val outputSlot = getStack(1)
         val maxStack = result.maxCount
         val canAccept = outputSlot.isEmpty() ||
@@ -347,6 +349,15 @@ class ElectricFurnaceBlockEntity(
         cachedRecipeItem = input.item
         cachedRecipe = world.recipeManager.getFirstMatch(RecipeType.SMELTING, inputInv, world).orElse(null)
         return cachedRecipe
+    }
+
+    /** Smelting outputs are fixed by the recipe; reuse the stack between ticks. */
+    private fun smeltingOutputFor(recipe: SmeltingRecipe, world: World): ItemStack {
+        if (recipe !== cachedOutputRecipe) {
+            cachedOutputRecipe = recipe
+            cachedOutputStack = recipe.getOutput(world.registryManager).copy()
+        }
+        return cachedOutputStack
     }
 
     private fun getExperienceForElectricFurnace(

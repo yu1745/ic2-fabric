@@ -120,6 +120,7 @@ class RecyclerBlockEntity(
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val cachedScrapItem by lazy { Registries.ITEM.get(SCRAP_ID) }
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
@@ -347,8 +348,7 @@ class RecyclerBlockEntity(
     }
 
     private fun getScrapItem(): Item? {
-        val item = Registries.ITEM.get(SCRAP_ID)
-        return if (item == net.minecraft.item.Items.AIR) null else item
+        return cachedScrapItem.takeUnless { it == net.minecraft.item.Items.AIR }
     }
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem
@@ -358,4 +358,3 @@ class RecyclerBlockEntity(
         return RecyclerRecipes.canRecycle(stack)
     }
 }
-

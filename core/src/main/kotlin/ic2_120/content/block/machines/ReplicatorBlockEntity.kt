@@ -146,6 +146,12 @@ class ReplicatorBlockEntity(
     private var singlePulseConsumed = false
     private var fluidConsumptionRemainder = 0L
 
+    // A replicator asks for the same output stack on every progress tick.  Keep
+    // the registry parse/lookup out of that hot path; the returned stack is only
+    // inspected here and is copied when it is inserted into the inventory.
+    private var cachedOutputItemId: String? = null
+    private var cachedOutputStack: ItemStack = ItemStack.EMPTY
+
     val syncedData = SyncedData()
 
     @RegisterEnergy
@@ -517,9 +523,15 @@ class ReplicatorBlockEntity(
         fluid == ModFluids.UU_MATTER_STILL || fluid == ModFluids.UU_MATTER_FLOWING
 
     private fun createOutputStack(itemId: String): ItemStack? {
+        if (itemId == cachedOutputItemId) {
+            return cachedOutputStack.takeUnless { it.isEmpty }
+        }
+        cachedOutputItemId = itemId
+        cachedOutputStack = ItemStack.EMPTY
         val id = net.minecraft.util.Identifier.tryParse(itemId) ?: return null
         val item = Registries.ITEM.getOrEmpty(id).orElse(null) ?: return null
-        return if (item == net.minecraft.item.Items.AIR) null else ItemStack(item)
+        cachedOutputStack = if (item == net.minecraft.item.Items.AIR) ItemStack.EMPTY else ItemStack(item)
+        return cachedOutputStack.takeUnless { it.isEmpty }
     }
 
     private fun toMilliBuckets(amount: Long): Int =
