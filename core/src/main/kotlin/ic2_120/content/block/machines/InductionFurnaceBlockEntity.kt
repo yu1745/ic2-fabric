@@ -50,6 +50,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import ic2_120.content.upgrade.IValidInputItem
 
 @ModBlockEntity(block = InductionFurnaceBlock::class)
 class InductionFurnaceBlockEntity(
@@ -58,7 +59,7 @@ class InductionFurnaceBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport,
-    IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
+    IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = InductionFurnaceBlock.ACTIVE
 
@@ -224,7 +225,7 @@ class InductionFurnaceBlockEntity(
         if (progress >= InductionFurnaceSync.PROGRESS_THRESHOLD) {
             operateBothSlots(world)
             progress = 0
-            newActive = false
+            // 完工不振荡（2026-08-26 perf）：不置 false，见 ElectricFurnace 同款注释
         }
 
         // Phase 2: heating / cooling
@@ -352,4 +353,12 @@ class InductionFurnaceBlockEntity(
         cachedIsInput = found
         return found
     }
+    /** P1（2026-08-26）：pulling 候选快速否定——(配方类型, Item) 布尔缓存零分配作答。
+     *  返回 false = 该 item 必然不被输入槽接受；true = 值得走完整 isValid 裁决。 */
+    override fun isValidInputItem(item: net.minecraft.item.Item): Boolean {
+        if (isBatteryItem(net.minecraft.item.ItemStack(item, 1))) return false
+        val w = world as? net.minecraft.server.world.ServerWorld ?: return true
+        return ic2_120.content.RecipeInputLookupCache.hasAnyRecipe(RecipeType.SMELTING, item, w)
+    }
+
 }

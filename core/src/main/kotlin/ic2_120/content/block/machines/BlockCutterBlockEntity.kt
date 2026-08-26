@@ -50,6 +50,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import ic2_120.content.upgrade.IValidInputItem
 
 @ModBlockEntity(block = BlockCutterBlock::class)
 @ModMachineRecipeBinding(BlockCutterRecipeSerializer::class)
@@ -58,7 +59,7 @@ class BlockCutterBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = BlockCutterBlock.ACTIVE
 
@@ -344,7 +345,6 @@ class BlockCutterBlockEntity(
             energyDebtF = 0f
             sync.progress = 0
             markDirty()
-            setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
         }
@@ -400,4 +400,12 @@ class BlockCutterBlockEntity(
         cachedIsInput = found
         return found
     }
+    /** P1（2026-08-26）：pulling 候选快速否定——(配方类型, Item) 布尔缓存零分配作答。
+     *  返回 false = 该 item 必然不被输入槽接受；true = 值得走完整 isValid 裁决。 */
+    override fun isValidInputItem(item: net.minecraft.item.Item): Boolean {
+        if (isBatteryItem(net.minecraft.item.ItemStack(item, 1)) || net.minecraft.item.ItemStack(item, 1).item is IUpgradeItem || net.minecraft.item.ItemStack(item, 1).item is IBlockCuttingBlade) return false
+        val w = world as? net.minecraft.server.world.ServerWorld ?: return true
+        return ic2_120.content.RecipeInputLookupCache.hasAnyRecipe(getRecipeType<BlockCutterRecipe>(), item, w)
+    }
+
 }

@@ -26,6 +26,18 @@ object EjectorUpgradeComponent {
 
     private data class EjectorConfig(val filter: Item?, val sides: Set<Direction>, val count: Int)
 
+    // ── P5 反馈退避（与 PullingUpgradeComponent 同款，独立分表不共用）──
+    private const val MIN_INTERVAL = 1
+    private const val MAX_INTERVAL = 20
+
+    private class BackoffState {
+        var interval: Int = MIN_INTERVAL
+        var lastFired: Long = -MAX_INTERVAL.toLong()
+        var fireCount: Long = 0
+    }
+
+    private val backoff = WeakHashMap<BlockEntity, BackoffState>()
+
     /**
      * 对齐 ic2_origin：物品传输速率 = 4^(min(count, 4) - 1) 个/tick/候选，count=0 时返回 0。
      */
@@ -74,10 +86,12 @@ object EjectorUpgradeComponent {
     /**
      * 统一入口：扫描升级槽中的所有弹出升级，逐个独立弹出 outputSlotIndices 中的物品。
      * 每个弹出升级使用自己的过滤和方向配置。
-     * 轮询语义（对齐 ic2_origin）：每 tick 遍历全部 n 个候选方向，每个候选至多传输
-     * itemTransferRate(count) 个物品（配额跨输出槽共享）；每 tick 起始方向轮转一次，
-     * 避免低吞吐时第一个候选独占。开启方向过滤时，轮转只在过滤后的方向集内进行。
+     * 轮询语义（对齐 ic2_origin，2026-08-26 P4/P5 修订）：每次触发遍历全部 n 个候选方向，
+     * 每个候选至多传输 elapsed × itemTransferRate(count) 个物品（配额跨输出槽共享，按实际
+     * 流逝 tick 补偿）；每次触发起始方向轮转（BE 内计数器游标），避免低吞吐时第一个候选独占。
+     * 开启方向过滤时，轮转只在过滤后的方向集内进行。整个触发共用一个事务（P4）。
      * 使用 Fabric Transfer API 查找目标容器，兼容 vanilla Inventory 和 modded Storage。
+     * 空闲退避（P5）：空手 1t/tick 递增至最长 20t 一跳，干活即逐步回到每 tick。
      */
     fun ejectIfUpgraded(
         world: World,
@@ -88,6 +102,41 @@ object EjectorUpgradeComponent {
     ) {
         if (outputSlotIndices.isEmpty()) return
 
+        // ── P5 退避门：未到触发时刻直接返回 ──
+        val machine = inventory as? BlockEntity
+        var st: BackoffState? = null
+        var elapsed = 1L
+        if (machine != null) {
+            st = backoff.getOrPut(machine) { BackoffState() }
+            val now = world.time
+            elapsed = now - st.lastFired
+            if (elapsed < st.interval) return
+            st.lastFired = now
+            st.fireCount++
+        }
+
+        val didWork = doEject(world, pos, inventory, machine, upgradeSlotIndices, outputSlotIndices,
+            elapsed.coerceAtLeast(1L), machine?.let { backoff[it]!!.fireCount } ?: world.time)
+
+        // 反馈调节
+        if (st != null) {
+            st.interval = if (didWork) (st.interval - 2).coerceAtLeast(MIN_INTERVAL)
+                          else (st.interval + 1).coerceAtMost(MAX_INTERVAL)
+        }
+    }
+
+    private fun doEject(
+        world: World,
+        pos: BlockPos,
+        inventory: Inventory,
+        machine: BlockEntity?,
+        upgradeSlotIndices: IntArray,
+        outputSlotIndices: IntArray,
+        rateScale: Long,
+        rotationCursor: Long
+    ): Boolean {
+        var didWork = false
+
         val configs = mutableListOf<EjectorConfig>()
         for (idx in upgradeSlotIndices) {
             val stack = inventory.getStack(idx)
@@ -95,7 +144,7 @@ object EjectorUpgradeComponent {
                 configs.add(EjectorConfig(readFilter(stack), readDirections(stack), stack.count))
             }
         }
-        if (configs.isEmpty()) return
+        if (configs.isEmpty()) return false
 
         // 预解析每个升级配置的有效方向与速率（多个弹出升级共享同一方向的缓存查找结果）
         val active = mutableListOf<Triple<EjectorConfig, Int, List<Direction>>>()
@@ -106,64 +155,67 @@ object EjectorUpgradeComponent {
             if (dirs.isEmpty()) continue
             active.add(Triple(config, rate, dirs))
         }
-        if (active.isEmpty()) return
+        if (active.isEmpty()) return false
 
         // 输出槽全空时无需弹出，跳过整个方向循环
-        if (outputSlotIndices.all { inventory.getStack(it).isEmpty }) return
+        if (outputSlotIndices.all { inventory.getStack(it).isEmpty }) return false
 
-        // 邻居容器引用走 BlockApiCache（BE/方块状态变化时自动失效），避免每 tick 重查 capability；
-        // 无法缓存（非服务端/非 BE 调用）时回退到直接 find。
-        val machine = inventory as? BlockEntity
         val caches = if (machine != null) neighborCaches(world, pos, machine) else null
 
-        for ((config, rate, dirs) in active) {
-            // 先剔除无目标容器的空方向，只对有效方向轮转：空方向穿插在列表里会破坏轮转
-            // 对称性（第一个有效方向由 (index−start) mod n 决定，靠前方向系统性占优），
-            // 有效列表长度 m 的起点轮转（world.time 即游标）让每个方向在每个处理位置
-            // 各出现 1/m 次，任意 m、任意物品量下竞争分配完全均等。
-            val candidates = ArrayList<Storage<ItemVariant>>(dirs.size)
-            for (dir in dirs) {
-                val target = if (caches != null) {
-                    caches[dir.ordinal]?.find(dir.opposite)
-                } else {
-                    ItemStorage.SIDED.find(world, pos.offset(dir), dir.opposite)
-                } ?: continue
-                candidates.add(target)
-            }
-            if (candidates.isEmpty()) continue
-
-            val m = candidates.size
-            val start = Math.floorMod(world.time, m.toLong()).toInt()
-            for (i in 0 until m) {
-                val target = candidates[(start + i) % m]
-
-                // 该候选本次 tick 的配额，跨所有输出槽共享（对齐原版 transfer(amount) 语义）
-                var remainingQuota = rate
-                for (slotIndex in outputSlotIndices) {
-                    if (remainingQuota <= 0) break
-                    val stack = inventory.getStack(slotIndex)
-                    if (stack.isEmpty) continue
-                    if (config.filter != null && stack.item != config.filter) continue
-
-                    val variant = ItemVariant.of(stack)
-                    val move = minOf(remainingQuota.toLong(), stack.count.toLong())
-                    val tx = Transaction.openOuter()
-                    val moved = target.insert(variant, move, tx)
-                    tx.commit()
-                    if (moved <= 0) continue
-
-                    remainingQuota -= moved.toInt()
-                    val left = stack.count - moved.toInt()
-                    if (left <= 0) {
-                        inventory.setStack(slotIndex, ItemStack.EMPTY)
+        // P4 事务合并：整个 doEject 一个 outer transaction，全部槽位先模拟 insert、
+        // 统一 commit；任一 insert 失败不影响其他槽位（moved=0 只是不累加）。
+        // 顺带消除旧实现「insert 返回 0 也 commit 空事务」的浪费。
+        val tx = Transaction.openOuter()
+        try {
+            for ((config, rate, dirs) in active) {
+                val candidates = ArrayList<Storage<ItemVariant>>(dirs.size)
+                for (dir in dirs) {
+                    val target = if (caches != null) {
+                        caches[dir.ordinal]?.find(dir.opposite)
                     } else {
-                        val newStack = stack.copy()
-                        newStack.count = left
-                        inventory.setStack(slotIndex, newStack)
+                        ItemStorage.SIDED.find(world, pos.offset(dir), dir.opposite)
+                    } ?: continue
+                    candidates.add(target)
+                }
+                if (candidates.isEmpty()) continue
+
+                val m = candidates.size
+                // P5 修正：BE 内计数器游标，不用 world.time（gcd 卡死）
+                val start = Math.floorMod(rotationCursor, m.toLong()).toInt()
+                for (i in 0 until m) {
+                    val target = candidates[(start + i) % m]
+
+                    // 配额：基础速率 × 流逝补偿，跨所有输出槽共享
+                    var remainingQuota = rate * rateScale
+                    for (slotIndex in outputSlotIndices) {
+                        if (remainingQuota <= 0) break
+                        val stack = inventory.getStack(slotIndex)
+                        if (stack.isEmpty) continue
+                        if (config.filter != null && stack.item != config.filter) continue
+
+                        val variant = ItemVariant.of(stack)
+                        val move = minOf(remainingQuota, stack.count.toLong())
+                        val moved = target.insert(variant, move, tx)
+                        if (moved <= 0) continue
+
+                        remainingQuota -= moved
+                        didWork = true
+                        val left = stack.count - moved.toInt()
+                        if (left <= 0) {
+                            inventory.setStack(slotIndex, ItemStack.EMPTY)
+                        } else {
+                            val newStack = stack.copy()
+                            newStack.count = left
+                            inventory.setStack(slotIndex, newStack)
+                        }
                     }
                 }
             }
+            if (didWork) tx.commit()
+        } finally {
+            tx.close()
         }
+        return didWork
     }
 
     fun readFilter(stack: ItemStack): Item? {

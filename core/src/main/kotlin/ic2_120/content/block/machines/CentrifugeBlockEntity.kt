@@ -53,6 +53,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import ic2_120.content.upgrade.IValidInputItem
 
 /**
  * 热能离心机方块实体。
@@ -69,7 +70,7 @@ class CentrifugeBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport, IEjectorUpgradeSupport,
-    IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory {
+    IRedstoneInverterUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = CentrifugeBlock.ACTIVE
 
@@ -294,7 +295,7 @@ class CentrifugeBlockEntity(
             energyDebtF = 0f
             sync.progress = 0
             markDirty()
-            setActiveState(world, pos, state, false)
+            // 完工不振荡（2026-08-26 perf）：下 tick 早退分支自然关灯
             sync.syncCurrentTickFlow()
             return
         }
@@ -399,4 +400,12 @@ class CentrifugeBlockEntity(
         cachedIsInput = found
         return found
     }
+    /** P1（2026-08-26）：pulling 候选快速否定——(配方类型, Item) 布尔缓存零分配作答。
+     *  返回 false = 该 item 必然不被输入槽接受；true = 值得走完整 isValid 裁决。 */
+    override fun isValidInputItem(item: net.minecraft.item.Item): Boolean {
+        if (isBatteryItem(net.minecraft.item.ItemStack(item, 1))) return false
+        val w = world as? net.minecraft.server.world.ServerWorld ?: return true
+        return ic2_120.content.RecipeInputLookupCache.hasAnyRecipe(getRecipeType<CentrifugeRecipe>(), item, w)
+    }
+
 }

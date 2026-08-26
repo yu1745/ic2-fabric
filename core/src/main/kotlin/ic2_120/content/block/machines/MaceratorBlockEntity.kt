@@ -49,6 +49,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import ic2_120.content.upgrade.IValidInputItem
 
 @ModBlockEntity(block = MaceratorBlock::class)
 @ModMachineRecipeBinding(MaceratorRecipeSerializer::class)
@@ -57,7 +58,7 @@ class MaceratorBlockEntity(
     pos: BlockPos,
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine, IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = MaceratorBlock.ACTIVE
 
@@ -254,7 +255,6 @@ class MaceratorBlockEntity(
             progressF = 0f
             energyDebtF = 0f
             sync.progress = 0
-            setActiveState(world, pos, state, false)
             markDirtyThrottled()
             sync.syncCurrentTickFlow()
             return
@@ -349,4 +349,12 @@ class MaceratorBlockEntity(
         cachedIsInput = found
         return found
     }
+    /** P1（2026-08-26）：pulling 候选快速否定——(配方类型, Item) 布尔缓存零分配作答。
+     *  返回 false = 该 item 必然不被输入槽接受；true = 值得走完整 isValid 裁决。 */
+    override fun isValidInputItem(item: net.minecraft.item.Item): Boolean {
+        if (isBatteryItem(net.minecraft.item.ItemStack(item, 1))) return false
+        val w = world as? net.minecraft.server.world.ServerWorld ?: return true
+        return ic2_120.content.RecipeInputLookupCache.hasAnyRecipe(getRecipeType<MaceratorRecipe>(), item, w)
+    }
+
 }

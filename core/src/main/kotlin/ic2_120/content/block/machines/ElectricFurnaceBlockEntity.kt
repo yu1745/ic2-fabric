@@ -48,6 +48,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.collection.DefaultedList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
+import ic2_120.content.upgrade.IValidInputItem
 
 /**
  * 电力熔炉方块实体。提供输入/输出槽位并实现简单 GUI。
@@ -60,7 +61,7 @@ class ElectricFurnaceBlockEntity(
     state: BlockState
 ) : MachineBlockEntity(type, pos, state), Inventory, IRoutedSidedInventory, ITieredMachine,
     IOverclockerUpgradeSupport, IEnergyStorageUpgradeSupport,
-    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory {
+    ITransformerUpgradeSupport, IEjectorUpgradeSupport, ExtendedScreenHandlerFactory, IValidInputItem {
 
     override val activeProperty: net.minecraft.state.property.BooleanProperty = ElectricFurnaceBlock.ACTIVE
 
@@ -280,7 +281,10 @@ class ElectricFurnaceBlockEntity(
             energyDebtF = 0f
             sync.progress = 0
             markDirtyThrottled()
-            setActiveState(world, pos, state, false)
+            // 完工不振荡（2026-08-26 perf）：不在此置 false——下一 tick 若输入仍在则
+            // 正常工作分支置 true，旧写法每出一个成品 false→true 真实翻转一轮，
+            // 触发 setBlockState+邻居 shape 级联+START_STOP 音效 spam。若输入耗尽/输出满，
+            // 下 tick 的早退分支自然会关灯。
             sync.syncCurrentTickFlow()
             return
         }
@@ -386,4 +390,12 @@ class ElectricFurnaceBlockEntity(
         cachedIsInput = found
         return found
     }
+    /** P1（2026-08-26）：pulling 候选快速否定——(配方类型, Item) 布尔缓存零分配作答。
+     *  返回 false = 该 item 必然不被输入槽接受；true = 值得走完整 isValid 裁决。 */
+    override fun isValidInputItem(item: net.minecraft.item.Item): Boolean {
+        if (isBatteryItem(net.minecraft.item.ItemStack(item, 1))) return false
+        val w = world as? net.minecraft.server.world.ServerWorld ?: return true
+        return ic2_120.content.RecipeInputLookupCache.hasAnyRecipe(RecipeType.SMELTING, item, w)
+    }
+
 }

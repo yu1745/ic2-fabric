@@ -286,7 +286,6 @@ class SolidCannerBlockEntity(
             energyDebtF = 0f
             sync.progress = 0
             markDirty()
-            setActiveState(world, pos, state, false)
             sync.syncCurrentTickFlow()
             return
         }

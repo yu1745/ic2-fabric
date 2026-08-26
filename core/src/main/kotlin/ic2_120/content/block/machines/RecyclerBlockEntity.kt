@@ -309,7 +309,7 @@ class RecyclerBlockEntity(
             energyDebtF = 0f
             sync.progress = 0
             markDirty()
-            setActiveState(world, pos, state, false)
+            // 完工不振荡（2026-08-26 perf）：下 tick 早退分支自然关灯
             sync.syncCurrentTickFlow()
             return
         }
