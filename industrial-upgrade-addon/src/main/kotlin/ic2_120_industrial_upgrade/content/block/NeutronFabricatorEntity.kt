@@ -20,9 +20,13 @@ import ic2_120.content.upgrade.PullingUpgradeComponent
 import ic2_120.content.upgrade.RedstoneControlComponent
 import ic2_120.content.upgrade.RedstoneInverterUpgradeComponent
 import ic2_120.content.upgrade.TransformerUpgradeComponent
+import ic2_120.content.storage.IRoutedSidedInventory
+import ic2_120.content.storage.ItemInsertRoute
+import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterFluidStorage
+import ic2_120.registry.annotation.RegisterItemStorage
 import ic2_120.registry.type
 import ic2_120_industrial_upgrade.content.fluid.NeutronFluid
 import ic2_120_industrial_upgrade.content.screen.NeutronFabricatorScreenHandler
@@ -62,7 +66,7 @@ import net.minecraft.world.World
 @ModBlockEntity(block = NeutronFabricatorBlock::class)
 class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     MachineBlockEntity(NeutronFabricatorBlockEntity::class.type(), pos, state),
-    ITieredMachine, ExtendedScreenHandlerFactory, Inventory,
+    ITieredMachine, ExtendedScreenHandlerFactory, Inventory, IRoutedSidedInventory,
     IEnergyStorageUpgradeSupport, ITransformerUpgradeSupport,
     IFluidPipeUpgradeSupport, IEjectorUpgradeSupport, IRedstoneInverterUpgradeSupport {
 
@@ -225,6 +229,27 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
 
     // ====== Inventory ======
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+
+    /**
+     * 对外物品自动化通道（对齐 core 复制机）：AE2 输出总线等 Transfer API 消费方经
+     * ItemStorage.SIDED lookup 访问；漏斗等 vanilla 消费方经 IRoutedSidedInventory 访问。
+     * 容器输入槽 maxPerSlot=1（逐个装填，与复制机一致）；升级槽沿用 isValid 过滤（排除超频）。
+     */
+    @RegisterItemStorage
+    val itemStorage = RoutedItemStorage(
+        inventory = inventory,
+        maxCountPerStackProvider = { maxCountPerStack },
+        slotValidator = { slot, stack -> isValid(slot, stack) },
+        insertRoutes = listOf(
+            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
+            ItemInsertRoute(intArrayOf(SLOT_CONTAINER_INPUT), matcher = { isValid(SLOT_CONTAINER_INPUT, it) }, maxPerSlot = 1)
+        ),
+        extractSlots = intArrayOf(SLOT_CONTAINER_INPUT, SLOT_CONTAINER_OUTPUT),
+        markDirty = { markDirty() }
+    )
+
+    override val routedItemStorage get() = itemStorage
+
     override fun getInventory(): Inventory = this
     override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
