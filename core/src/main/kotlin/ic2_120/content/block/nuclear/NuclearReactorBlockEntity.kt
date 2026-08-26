@@ -321,7 +321,7 @@ class NuclearReactorBlockEntity(
             inventoryChangedSinceLastCycle = true
             val oldId = Registries.ITEM.getId(oldStack.item)
             val newId = Registries.ITEM.getId(stack.item)
-            LOG.info(
+            LOG.debug(
                 "[燃料棒变更] pos={} slot={} old={}x{} new={}x{}",
                 pos,
                 slot,
