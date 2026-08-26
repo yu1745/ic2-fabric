@@ -78,8 +78,9 @@ class CropHarvesterBlockEntity(
         inventory = inventory,
         maxCountPerStackProvider = { maxCountPerStack },
         slotValidator = { slot, stack -> isValid(slot, stack) },
-        // 升级格不对外暴露（不在 insertRoutes/extractSlots 中）：GUI 与物流均不可操作，仅内部升级组件读写。
+        // 升级格仅在 insertRoutes（玩家 GUI 可放可取），不在 extractSlots：物流/自动化不可抽走升级卡（同 Macerator 等标准机器模式）。
         insertRoutes = listOf(
+            ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && (it.item is IBatteryItem || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust) }, maxPerSlot = 1)
         ),
         extractSlots = SLOT_CONTENT_INDICES + intArrayOf(SLOT_DISCHARGING),
