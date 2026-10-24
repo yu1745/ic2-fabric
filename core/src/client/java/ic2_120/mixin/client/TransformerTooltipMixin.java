@@ -42,17 +42,17 @@ public abstract class TransformerTooltipMixin {
             return;
         }
 
-        if (client.getDebugHud().shouldShowDebugHud() || client.options.hudHidden) {
+        if (client.getDebugOverlay().showDebugScreen() || client.options.hideGui) {
             return;
         }
 
         // 检查玩家指向的方块
-        if (client.crosshairTarget == null || client.crosshairTarget.getType() != HitResult.Type.BLOCK) {
+        if (client.hitResult == null || client.hitResult.getType() != HitResult.Type.BLOCK) {
             return;
         }
 
-        BlockHitResult blockHit = (BlockHitResult) client.crosshairTarget;
-        var world = client.world;
+        BlockHitResult blockHit = (BlockHitResult) client.hitResult;
+        var world = client.level;
         if (world == null) return;
 
         var blockPos = blockHit.getBlockPos();
@@ -79,13 +79,13 @@ public abstract class TransformerTooltipMixin {
         }
 
         // 在屏幕上方绘制模式文本
-        var windowHeight = client.getWindow().getScaledHeight();
-        var textRenderer = client.textRenderer;
+        var windowHeight = client.getWindow().getGuiScaledHeight();
+        var textRenderer = client.font;
 
         // 在准星上方显示
         var y = windowHeight / 2 - 20;
-        var x = client.getWindow().getScaledWidth() / 2 - textRenderer.getWidth(modeText) / 2;
+        var x = client.getWindow().getGuiScaledWidth() / 2 - textRenderer.width(modeText) / 2;
 
-        context.drawText(textRenderer, modeText, x, y, 0xFFFFFFFF, true);
+        context.drawString(textRenderer, modeText, x, y, 0xFFFFFFFF, true);
     }
 }

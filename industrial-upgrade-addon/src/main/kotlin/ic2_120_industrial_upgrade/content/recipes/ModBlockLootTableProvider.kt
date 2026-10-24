@@ -14,30 +14,32 @@ import net.minecraft.world.level.storage.loot.providers.number.ConstantValue
 import net.minecraft.advancements.critereon.ItemPredicate
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
+import java.util.concurrent.CompletableFuture
+import net.minecraft.core.HolderLookup
 
-class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTableProvider(output) {
+class ModBlockLootTableProvider(output: FabricDataOutput, registriesFuture: CompletableFuture<HolderLookup.Provider>) : FabricBlockLootTableProvider(output, registriesFuture) {
 
-    private val wrenchPredicateBuilder = ItemPredicate.Builder.create()
-        .items(
+    private val wrenchPredicateBuilder = ItemPredicate.Builder.item()
+        .of(
             BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "wrench")),
             BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", "electric_wrench"))
         )
 
     override fun generate() {
         for (block in BuiltInRegistries.BLOCK) {
-            val id = BuiltInRegistries.BLOCK.getId(block)
+            val id = BuiltInRegistries.BLOCK.getKey(block)
             if (id.namespace != IC2IndustrialUpgrade.MOD_ID) continue
 
             when {
                 // 机器方块（含太阳能板/中子制造机，均继承 MachineBlock）：
                 // 扳手挖 → 掉本体；其它工具挖 → 掉 core 通用机器外壳
                 block is MachineBlock -> {
-                    addDrop(block, createMachineLootTable(block))
+                    add(block, createMachineLootTable(block))
                 }
 
                 // 其它方块：直接掉本体
                 else -> {
-                    addDrop(block)
+                    dropSelf(block)
                 }
             }
         }
@@ -47,21 +49,21 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
         val blockItem = block.asItem()
         val casingItem = block.getCasingDrop()
 
-        val wrenchConditionBuilder = MatchTool.builder(wrenchPredicateBuilder)
-        val notWrenchConditionBuilder = InvertedLootItemCondition.builder(wrenchConditionBuilder)
+        val wrenchConditionBuilder = MatchTool.toolMatches(wrenchPredicateBuilder)
+        val notWrenchConditionBuilder = InvertedLootItemCondition.invert(wrenchConditionBuilder)
 
-        return LootTable.builder()
-            .pool(
-                LootPool.builder()
-                    .rolls(ConstantValue.create(1f))
-                    .conditionally(wrenchConditionBuilder)
-                    .setValue(LootItem.builder(blockItem).apply(ApplyExplosionDecay.builder()))
+        return LootTable.lootTable()
+            .withPool(
+                LootPool.lootPool()
+                    .setRolls(ConstantValue.exactly(1f))
+                    .`when`(wrenchConditionBuilder)
+                    .add(LootItem.lootTableItem(blockItem).apply(ApplyExplosionDecay.explosionDecay()))
             )
-            .pool(
-                LootPool.builder()
-                    .rolls(ConstantValue.create(1f))
-                    .conditionally(notWrenchConditionBuilder)
-                    .setValue(LootItem.builder(casingItem).apply(ApplyExplosionDecay.builder()))
+            .withPool(
+                LootPool.lootPool()
+                    .setRolls(ConstantValue.exactly(1f))
+                    .`when`(notWrenchConditionBuilder)
+                    .add(LootItem.lootTableItem(casingItem).apply(ApplyExplosionDecay.explosionDecay()))
             )
     }
 }

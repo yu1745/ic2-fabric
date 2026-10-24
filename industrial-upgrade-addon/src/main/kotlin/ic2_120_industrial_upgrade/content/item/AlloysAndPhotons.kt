@@ -11,6 +11,8 @@ import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Item
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // ===== 富集阳光合金II enriched_sunnarium_alloy2 =====
 // zh_cn: 光谱富集阳光合金  en_us: Spectral Enriched Sunnarium Alloy
@@ -18,13 +20,13 @@ import java.util.function.Consumer
 class EnrichedSunnariumAlloy2 : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // ABA：2×富集阳光合金 + 1×奇点核心
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnrichedSunnariumAlloy2::class.instance(), 1)
                 .pattern("ABA")
                 .define('A', EnrichedSunnariumAlloy::class.instance())
                 .define('B', SingularCore::class.instance())
-                .unlockedBy(has(SingularCore::class.instance()), has(SingularCore::class.instance()))
+                .unlockedBy(getHasName(SingularCore::class.instance()), has(SingularCore::class.instance()))
                 .save(exporter, IC2IndustrialUpgrade.id("enriched_sunnarium_alloy2"))
         }
     }
@@ -36,13 +38,13 @@ class EnrichedSunnariumAlloy2 : Item(Item.Properties()) {
 class EnrichedSunnariumAlloy3 : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // ABA：2×富集阳光合金II + 1×光子锭
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnrichedSunnariumAlloy3::class.instance(), 1)
                 .pattern("ABA")
                 .define('A', EnrichedSunnariumAlloy2::class.instance())
                 .define('B', PhotoniyIngot::class.instance())
-                .unlockedBy(has(PhotoniyIngot::class.instance()), has(PhotoniyIngot::class.instance()))
+                .unlockedBy(getHasName(PhotoniyIngot::class.instance()), has(PhotoniyIngot::class.instance()))
                 .save(exporter, IC2IndustrialUpgrade.id("enriched_sunnarium_alloy3"))
         }
     }
@@ -54,13 +56,13 @@ class EnrichedSunnariumAlloy3 : Item(Item.Properties()) {
 class EnrichedSunnariumAlloy4 : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // ABA：2×富集阳光合金 + 1×光谱核心
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnrichedSunnariumAlloy4::class.instance(), 1)
                 .pattern("ABA")
                 .define('A', EnrichedSunnariumAlloy::class.instance())
                 .define('B', SpectralCore::class.instance())
-                .unlockedBy(has(SpectralCore::class.instance()), has(SpectralCore::class.instance()))
+                .unlockedBy(getHasName(SpectralCore::class.instance()), has(SpectralCore::class.instance()))
                 .save(exporter, IC2IndustrialUpgrade.id("enriched_sunnarium_alloy4"))
         }
     }

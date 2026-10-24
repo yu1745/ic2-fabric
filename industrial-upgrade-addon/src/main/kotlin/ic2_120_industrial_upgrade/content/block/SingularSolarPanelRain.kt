@@ -21,6 +21,9 @@ import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
+import ic2_120.compat.*
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // i18n: block.ic2_120_industrial_upgrade.singular_solar_panelrain
 // zh_cn: 奇异雨能太阳能发电机  en_us: Singular Rain Panel
@@ -39,19 +42,19 @@ class SingularSolarPanelRainBlock : IndustrialSolarPanelBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // "BA"：奇异太阳能发电机 + RainLinse（ASA）
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SingularSolarPanelRainBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
                 .define('B', SingularSolarPanelBlock::class.item())
                 .define('A', RainLinse::class.instance())
-                .unlockedBy(has(SingularSolarPanelBlock::class.item()), has(SingularSolarPanelBlock::class.item()))
+                .unlockedBy(getHasName(SingularSolarPanelBlock::class.item()), has(SingularSolarPanelBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("singular_solar_panelrain"))
             // 变体回退：变体 → 原版（透镜不返还）
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SingularSolarPanelBlock::class.item(), 1)
                 .requires(SingularSolarPanelRainBlock::class.item())
-                .unlockedBy(has(SingularSolarPanelRainBlock::class.item()), has(SingularSolarPanelRainBlock::class.item()))
+                .unlockedBy(getHasName(SingularSolarPanelRainBlock::class.item()), has(SingularSolarPanelRainBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("singular_solar_panelrain_revert"))
         }
     }

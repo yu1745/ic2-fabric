@@ -37,12 +37,12 @@ object BuildCraftAddon : ModInitializer {
         // Attach features to biomes via Fabric API
         BiomeModifications.addFeature(
             BiomeSelectors.foundInOverworld(),
-            GenerationStep.Feature.UNDERGROUND_DECORATION,
+            GenerationStep.Decoration.UNDERGROUND_DECORATION,
             ModWorldgen.WATER_SPRING_PLACED_KEY
         )
         BiomeModifications.addFeature(
             BiomeSelectors.foundInOverworld(),
-            GenerationStep.Feature.UNDERGROUND_DECORATION,
+            GenerationStep.Decoration.UNDERGROUND_DECORATION,
             ModWorldgen.OIL_WELL_PLACED_KEY
         )
 

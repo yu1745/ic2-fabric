@@ -21,6 +21,9 @@ import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
+import ic2_120.compat.*
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // i18n: block.ic2_120_industrial_upgrade.photonic_solar_panel
 // zh_cn: 光子太阳能发电机
@@ -35,7 +38,7 @@ class PhotonicSolarPanelBlock : IndustrialSolarPanelBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 十字：4 个管理员太阳能 + 1 个量子核心I
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PhotonicSolarPanelBlock::class.item(), 1)
                 .pattern(" B ")
@@ -43,7 +46,7 @@ class PhotonicSolarPanelBlock : IndustrialSolarPanelBlock() {
                 .pattern(" B ")
                 .define('B', AdminSolarPanelBlock::class.item())
                 .define('A', QuantCore1::class.instance())
-                .unlockedBy(has(AdminSolarPanelBlock::class.item()), has(AdminSolarPanelBlock::class.item()))
+                .unlockedBy(getHasName(AdminSolarPanelBlock::class.item()), has(AdminSolarPanelBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("photonic_solar_panel"))
         }
     }

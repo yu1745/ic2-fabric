@@ -7,6 +7,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
+import ic2_120.compat.*
 
 /**
  * Rain 变体太阳能发电机抽象基类（雨镜 rainlinse 升级）。
@@ -46,7 +47,7 @@ abstract class RainPanelBlockEntity(
         }
 
         // Rain 变体仅在主世界生效（末地下雨面板不发电）
-        if (world.registryKey != Level.OVERWORLD) {
+        if (world.dimension() != Level.OVERWORLD) {
             generationState = GenerationState.NONE
             setChanged()
             return

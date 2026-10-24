@@ -27,6 +27,10 @@ import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+import net.minecraft.data.recipes.RecipeProvider.has
+import com.mojang.serialization.MapCodec
+import net.minecraft.world.level.block.BaseEntityBlock
 
 // ── 工业升级高压玻璃 EU 导线（11 档）────────────────────────────────────────────
 //
@@ -51,6 +55,7 @@ import java.util.function.Consumer
 
 /** 光谱导线（tier 6，32768 EU/t，无损）。 */
 class SpectralCableBlock : BaseCableBlock(), ITiered {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec { _ -> SpectralCableBlock() }
     override val tier: Int = 6
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 0L
@@ -58,6 +63,7 @@ class SpectralCableBlock : BaseCableBlock(), ITiered {
 
 /** 质子导线（tier 7，131072 EU/t，无损）。 */
 class ProtonCableBlock : BaseCableBlock(), ITiered {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec { _ -> ProtonCableBlock() }
     override val tier: Int = 7
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 0L
@@ -65,6 +71,7 @@ class ProtonCableBlock : BaseCableBlock(), ITiered {
 
 /** 奇异导线（tier 8，524288 EU/t，无损）。 */
 class SingularCableBlock : BaseCableBlock(), ITiered {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec { _ -> SingularCableBlock() }
     override val tier: Int = 8
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 0L
@@ -72,6 +79,7 @@ class SingularCableBlock : BaseCableBlock(), ITiered {
 
 /** 神话导线（tier 9，2097152 EU/t，无损）。 */
 class MythicalCableBlock : BaseCableBlock(), ITiered {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec { _ -> MythicalCableBlock() }
     override val tier: Int = 9
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 0L
@@ -79,6 +87,7 @@ class MythicalCableBlock : BaseCableBlock(), ITiered {
 
 /** 量子导线（tier 10，8388608 EU/t，无损）。 */
 class QuantumCableBlock : BaseCableBlock(), ITiered {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec { _ -> QuantumCableBlock() }
     override val tier: Int = 10
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 0L
@@ -86,6 +95,7 @@ class QuantumCableBlock : BaseCableBlock(), ITiered {
 
 /** 光子导线（tier 11，33554432 EU/t，无损）。 */
 class PhotonicCableBlock : BaseCableBlock(), ITiered {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec { _ -> PhotonicCableBlock() }
     override val tier: Int = 11
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 0L
@@ -93,6 +103,7 @@ class PhotonicCableBlock : BaseCableBlock(), ITiered {
 
 /** 中子导线（tier 12，134217728 EU/t，无损）。 */
 class NeutronCableBlock : BaseCableBlock(), ITiered {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec { _ -> NeutronCableBlock() }
     override val tier: Int = 12
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 0L
@@ -100,6 +111,7 @@ class NeutronCableBlock : BaseCableBlock(), ITiered {
 
 /** 完美导线（tier 13，536870912 EU/t，无损）。 */
 class PerfectCableBlock : BaseCableBlock(), ITiered {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec { _ -> PerfectCableBlock() }
     override val tier: Int = 13
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 0L
@@ -107,6 +119,7 @@ class PerfectCableBlock : BaseCableBlock(), ITiered {
 
 /** 寰宇导线（tier 14，2147483648 EU/t，无损）。 */
 class UniversalCableBlock : BaseCableBlock(), ITiered {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec { _ -> UniversalCableBlock() }
     override val tier: Int = 14
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 0L
@@ -114,6 +127,7 @@ class UniversalCableBlock : BaseCableBlock(), ITiered {
 
 /** 街射导线（tier 15，8589934592 EU/t，无损）。 */
 class DiffractiveCableBlock : BaseCableBlock(), ITiered {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec { _ -> DiffractiveCableBlock() }
     override val tier: Int = 15
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 0L
@@ -121,6 +135,7 @@ class DiffractiveCableBlock : BaseCableBlock(), ITiered {
 
 /** 无限导线（tier 16，34359738368 EU/t，无损）。 */
 class InfinityCableBlock : BaseCableBlock(), ITiered {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec { _ -> InfinityCableBlock() }
     override val tier: Int = 16
     override fun getTransferRate(): Long = nominalEuPerTick()
     override fun getEnergyLoss(): Long = 0L
@@ -137,7 +152,7 @@ object CableRecipes {
      * 生成 11 档导线的级联合成表。由 [ic2_120_industrial_upgrade.content.recipes.ModRecipeProvider]
      * 显式调用（导线不走 @ModBlock，其 companion 不参与 ClassScanner 的 @RecipeProvider 扫描）。
      */
-    fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+    fun generateRecipes(exporter: RecipeOutput) {
         // 1 光谱：core 玻璃纤维 + 混合金属锭 + 橡胶
         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SpectralCableBlock::class.item(), 1)
             .pattern(" A ")
@@ -146,7 +161,7 @@ object CableRecipes {
             .define('A', GlassFibreCableBlock::class.item())
             .define('B', MixedMetalIngot::class.instance())
             .define('C', RubberItem::class.instance())
-            .unlockedBy(has(GlassFibreCableBlock::class.item()), has(GlassFibreCableBlock::class.item()))
+            .unlockedBy(getHasName(GlassFibreCableBlock::class.item()), has(GlassFibreCableBlock::class.item()))
             .save(exporter, IC2IndustrialUpgrade.id("spectral_cable"))
 
         // 2 质子：光谱导线 + 致密锡板 + 银锭
@@ -157,7 +172,7 @@ object CableRecipes {
             .define('A', SpectralCableBlock::class.item())
             .define('B', DenseTinPlate::class.instance())
             .define('C', SilverIngot::class.instance())
-            .unlockedBy(has(SpectralCableBlock::class.item()), has(SpectralCableBlock::class.item()))
+            .unlockedBy(getHasName(SpectralCableBlock::class.item()), has(SpectralCableBlock::class.item()))
             .save(exporter, IC2IndustrialUpgrade.id("proton_cable"))
 
         // 3 奇异：质子导线 + 致密锡板 + 高级合金
@@ -168,7 +183,7 @@ object CableRecipes {
             .define('A', ProtonCableBlock::class.item())
             .define('B', DenseTinPlate::class.instance())
             .define('C', Alloy::class.instance())
-            .unlockedBy(has(ProtonCableBlock::class.item()), has(ProtonCableBlock::class.item()))
+            .unlockedBy(getHasName(ProtonCableBlock::class.item()), has(ProtonCableBlock::class.item()))
             .save(exporter, IC2IndustrialUpgrade.id("singular_cable"))
 
         // 4 神话：奇异导线 + 致密铅板 + 高级合金 + 致密金板
@@ -180,7 +195,7 @@ object CableRecipes {
             .define('B', DenseLeadPlate::class.instance())
             .define('C', Alloy::class.instance())
             .define('D', DenseGoldPlate::class.instance())
-            .unlockedBy(has(SingularCableBlock::class.item()), has(SingularCableBlock::class.item()))
+            .unlockedBy(getHasName(SingularCableBlock::class.item()), has(SingularCableBlock::class.item()))
             .save(exporter, IC2IndustrialUpgrade.id("mythical_cable"))
 
         // 5 量子：神话导线 + 钢锭 + 碳板 + 青铜锭
@@ -192,7 +207,7 @@ object CableRecipes {
             .define('B', SteelIngot::class.instance())
             .define('C', CarbonPlate::class.instance())
             .define('D', BronzeIngot::class.instance())
-            .unlockedBy(has(MythicalCableBlock::class.item()), has(MythicalCableBlock::class.item()))
+            .unlockedBy(getHasName(MythicalCableBlock::class.item()), has(MythicalCableBlock::class.item()))
             .save(exporter, IC2IndustrialUpgrade.id("quantum_cable"))
 
         // 6 光子：量子导线 + 致密铜板 + 致密钢板
@@ -203,7 +218,7 @@ object CableRecipes {
             .define('A', QuantumCableBlock::class.item())
             .define('B', DenseCopperPlate::class.instance())
             .define('C', DenseSteelPlate::class.instance())
-            .unlockedBy(has(QuantumCableBlock::class.item()), has(QuantumCableBlock::class.item()))
+            .unlockedBy(getHasName(QuantumCableBlock::class.item()), has(QuantumCableBlock::class.item()))
             .save(exporter, IC2IndustrialUpgrade.id("photonic_cable"))
 
         // 7 中子：光子导线 + 致密铁板 + 致密度石岩板
@@ -214,7 +229,7 @@ object CableRecipes {
             .define('A', PhotonicCableBlock::class.item())
             .define('B', DenseIronPlate::class.instance())
             .define('C', DenseObsidianPlate::class.instance())
-            .unlockedBy(has(PhotonicCableBlock::class.item()), has(PhotonicCableBlock::class.item()))
+            .unlockedBy(getHasName(PhotonicCableBlock::class.item()), has(PhotonicCableBlock::class.item()))
             .save(exporter, IC2IndustrialUpgrade.id("neutron_cable"))
 
         // 8 完美：中子导线 + 致密青金石板 + 致密青铜板
@@ -225,7 +240,7 @@ object CableRecipes {
             .define('A', NeutronCableBlock::class.item())
             .define('B', DenseLapisPlate::class.instance())
             .define('C', DenseBronzePlate::class.instance())
-            .unlockedBy(has(NeutronCableBlock::class.item()), has(NeutronCableBlock::class.item()))
+            .unlockedBy(getHasName(NeutronCableBlock::class.item()), has(NeutronCableBlock::class.item()))
             .save(exporter, IC2IndustrialUpgrade.id("perfect_cable"))
 
         // 9 寰宇：完美导线 + 混合金属锭 + 致密铁板 + 致密青金石板
@@ -237,7 +252,7 @@ object CableRecipes {
             .define('B', DenseIronPlate::class.instance())
             .define('C', MixedMetalIngot::class.instance())
             .define('D', DenseLapisPlate::class.instance())
-            .unlockedBy(has(PerfectCableBlock::class.item()), has(PerfectCableBlock::class.item()))
+            .unlockedBy(getHasName(PerfectCableBlock::class.item()), has(PerfectCableBlock::class.item()))
             .save(exporter, IC2IndustrialUpgrade.id("universal_cable"))
 
         // 10 街射：寰宇导线 + 碳板 + 混合金属锭 + 致密度石岩板
@@ -249,7 +264,7 @@ object CableRecipes {
             .define('B', CarbonPlate::class.instance())
             .define('C', MixedMetalIngot::class.instance())
             .define('D', DenseObsidianPlate::class.instance())
-            .unlockedBy(has(UniversalCableBlock::class.item()), has(UniversalCableBlock::class.item()))
+            .unlockedBy(getHasName(UniversalCableBlock::class.item()), has(UniversalCableBlock::class.item()))
             .save(exporter, IC2IndustrialUpgrade.id("diffractive_cable"))
 
         // 11 无限：街射导线 + 致密青金石板 + 致密青铜板 + 致密度石岩板
@@ -261,7 +276,7 @@ object CableRecipes {
             .define('B', DenseLapisPlate::class.instance())
             .define('C', DenseBronzePlate::class.instance())
             .define('D', DenseObsidianPlate::class.instance())
-            .unlockedBy(has(DiffractiveCableBlock::class.item()), has(DiffractiveCableBlock::class.item()))
+            .unlockedBy(getHasName(DiffractiveCableBlock::class.item()), has(DiffractiveCableBlock::class.item()))
             .save(exporter, IC2IndustrialUpgrade.id("infinity_cable"))
     }
 }

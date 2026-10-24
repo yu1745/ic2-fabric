@@ -12,6 +12,8 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import ic2_120.compat.*
+import net.minecraft.world.level.block.Block
 
 enum class PowerStage {
     BLUE, GREEN, YELLOW, RED, OVERHEAT, BLACK
@@ -95,7 +97,7 @@ class RedstoneEngineBlockEntity(
 
     fun checkRedstonePower() {
         val world = world ?: return
-        val powered = world.isReceivingRedstonePower(pos)
+        val powered = world.hasNeighborSignal(pos)
         if (powered != isRedstonePowered) {
             isRedstonePowered = powered
             setChanged()
@@ -105,10 +107,10 @@ class RedstoneEngineBlockEntity(
     fun autoRotate() {
         val world = world ?: return
         for (dir in Direction.entries) {
-            val neighbor = world.getBlockState(pos.offset(dir))
+            val neighbor = world.getBlockState(pos.relative(dir))
             if (!neighbor.isAir) {
                 currentDirection = dir
-                world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, dir))
+                world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, dir), Block.UPDATE_ALL)
                 setChanged()
                 return
             }
@@ -119,7 +121,7 @@ class RedstoneEngineBlockEntity(
         val world = world ?: return
         val next = Direction.entries[(current.ordinal + 1) % 6]
         currentDirection = next
-        world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, next))
+        world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, next), Block.UPDATE_ALL)
         setChanged()
     }
 
@@ -154,7 +156,7 @@ class RedstoneEngineBlockEntity(
         if (!world.isClient) return
         currentDirection = cachedState.getValue(BlockStateProperties.FACING)
 
-        val powered = world.isReceivingRedstonePower(pos)
+        val powered = world.hasNeighborSignal(pos)
         isRedstonePowered = powered
 
         if (powered) {

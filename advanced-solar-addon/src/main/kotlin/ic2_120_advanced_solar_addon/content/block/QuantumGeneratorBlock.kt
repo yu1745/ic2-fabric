@@ -42,6 +42,7 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
+import ic2_120.compat.*
 
 // i18n: block.ic2_120_advanced_solar_addon.quantum_generator
 // zh_cn: 量子发电机
@@ -141,7 +142,7 @@ class QuantumGeneratorBlockEntity(
 
         var hasRedstoneSignal = false
         for (direction in Direction.entries) {
-            if (world.getEmittedRedstonePower(pos.offset(direction), direction) > 0) {
+            if (world.getSignal(pos.relative(direction), direction) > 0) {
                 hasRedstoneSignal = true
                 break
             }
@@ -179,7 +180,7 @@ class QuantumGeneratorBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.getContainerSize())
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 

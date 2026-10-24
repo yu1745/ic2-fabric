@@ -9,14 +9,14 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
 
 object IC2AdvancedWeaponsAddonClient : ClientModInitializer {
-    private val QUANTUM_SABER_ACTIVE_ID = ResourceLocation(IC2AdvancedWeaponsAddon.MOD_ID, "quantum_saber_active")
+    private val QUANTUM_SABER_ACTIVE_ID = ResourceLocation.fromNamespaceAndPath(IC2AdvancedWeaponsAddon.MOD_ID, "quantum_saber_active")
 
     override fun onInitializeClient() {
         registerQuantumSaberPredicate()
     }
 
     private fun registerQuantumSaberPredicate() {
-        val saber = BuiltInRegistries.ITEM.get(ResourceLocation(IC2AdvancedWeaponsAddon.MOD_ID, "quantum_saber"))
+        val saber = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(IC2AdvancedWeaponsAddon.MOD_ID, "quantum_saber"))
         if (saber is QuantumSaber) {
             ItemProperties.register(
                 saber,

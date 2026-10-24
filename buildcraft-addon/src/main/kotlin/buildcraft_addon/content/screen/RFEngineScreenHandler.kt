@@ -15,6 +15,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.world.inventory.Slot
 import ic2_120.registry.annotation.ScreenFactory
 import net.minecraft.world.item.ItemStack
+import ic2_120.compat.*
 
 @ModScreenHandler(block = RFEngineBlock::class)
 class RFEngineScreenHandler(
@@ -27,7 +28,6 @@ class RFEngineScreenHandler(
 
     init {
         checkContainerSize(blockInventory, 4)
-        checkDataCount(propertyDelegate, 2)
 
         // 4 upgrade slots (BC8 pos: 62,44 / 80,44 / 98,44 / 116,44)
         for (i in 0..3) {
@@ -55,7 +55,7 @@ class RFEngineScreenHandler(
     override fun quickMoveStack(player: Player, slotIndex: Int): net.minecraft.world.item.ItemStack {
         val slot = slots.getOrNull(slotIndex) ?: return ItemStack.EMPTY
         if (!slot .hasItem()) return ItemStack.EMPTY
-        val original = slot.stack
+        val original = slot.item
         val newStack = original.copy()
 
         if (slotIndex in 0..3) {
@@ -65,7 +65,7 @@ class RFEngineScreenHandler(
         }
 
         if (original.isEmpty) {
-            slot.stack = ItemStack.EMPTY
+            slot.set(ItemStack.EMPTY)
         } else {
             slot.setChanged()
         }
@@ -73,7 +73,7 @@ class RFEngineScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean {
-        return context.get({ world, pos ->
+        return context.evaluate({ world, pos ->
             world.getBlockState(pos).block is RFEngineBlock && player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
     }
@@ -83,7 +83,7 @@ class RFEngineScreenHandler(
         fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): RFEngineScreenHandler {
             buf.readBlockPos()
             buf.readVarInt()
-            return RFEngineScreenHandler(syncId, playerInventory, SimpleContainer(4), ContainerLevelAccess.EMPTY, SimpleContainerData(2))
+            return RFEngineScreenHandler(syncId, playerInventory, SimpleContainer(4), ContainerLevelAccess.NULL, SimpleContainerData(2))
         }
     }
 }

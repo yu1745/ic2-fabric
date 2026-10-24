@@ -29,6 +29,8 @@ import net.minecraft.network.chat.Component
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import ic2_120.compat.*
+import net.minecraft.world.level.block.Block
 
 /**
  * RF 转换引擎
@@ -88,7 +90,7 @@ class RFEngineBlockEntity(
             else -> 0
         }
         override fun set(index: Int, value: Int) {}
-        override fun getContainerSize(): Int = 2
+        override fun getCount(): Int = 2
     }
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
@@ -184,7 +186,7 @@ class RFEngineBlockEntity(
 
     fun checkRedstonePower() {
         val world = world ?: return
-        val powered = world.isReceivingRedstonePower(pos)
+        val powered = world.hasNeighborSignal(pos)
         if (powered != isRedstonePowered) {
             isRedstonePowered = powered
             setChanged()
@@ -195,7 +197,7 @@ class RFEngineBlockEntity(
         val world = world ?: return
         val next = Direction.entries[(current.ordinal + 1) % 6]
         currentDirection = next
-        world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, next))
+        world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, next), Block.UPDATE_ALL)
         setChanged()
     }
 
@@ -243,8 +245,8 @@ class RFEngineBlockEntity(
         if (heat >= MAX_HEAT_RF) {
             if (!ClaimProtection.allAllowedUuid(world, listOf(pos), null, ClaimProtection.EDIT_BLOCK) ||
                 !ClaimProtection.explosionCubeAllowed(world, pos, 4.0f, null)) return
-            world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, 4.0f, true, net.minecraft.world.level.Level.ExplosionSourceType.BLOCK)
-            world.breakBlock(pos, false)
+            world.explode(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, 4.0f, true, net.minecraft.world.level.Level.ExplosionInteraction.BLOCK)
+            world.destroyBlock(pos, false)
         }
 
         currentStage = computePowerStage()
@@ -258,7 +260,7 @@ class RFEngineBlockEntity(
         if (!world.isClient) return
         currentDirection = cachedState.getValue(BlockStateProperties.FACING)
 
-        val powered = world.isReceivingRedstonePower(pos)
+        val powered = world.hasNeighborSignal(pos)
         isRedstonePowered = powered
         isBurning = powered && currentRF > 0
 
@@ -306,7 +308,7 @@ class RFEngineBlockEntity(
         for (i in 0..3) {
             val slotNbt = CompoundTag()
             if (!upgradeInventory[i].isEmpty) {
-                upgradeInventory[i].writeNbt(slotNbt)
+                upgradeInventory[i].save(lookup, slotNbt)
             }
             invNbt.put("slot_$i", slotNbt)
         }
@@ -330,7 +332,7 @@ class RFEngineBlockEntity(
             val invNbt = nbt.getCompound("upgradeInventory")
             for (i in 0..3) {
                 if (invNbt.contains("slot_$i")) {
-                    upgradeInventory[i] = ItemStack.fromNbt(invNbt.getCompound("slot_$i"))
+                    upgradeInventory[i] = ItemStack.parseOptional(lookup, invNbt.getCompound("slot_$i"))
                 }
             }
         }

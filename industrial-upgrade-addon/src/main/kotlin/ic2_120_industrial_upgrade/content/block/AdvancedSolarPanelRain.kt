@@ -22,6 +22,9 @@ import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
+import ic2_120.compat.*
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // i18n: block.ic2_120_industrial_upgrade.advanced_solar_panelrain
 // zh_cn: 高级雨能太阳能发电机  en_us: Advanced Rain Panel
@@ -40,19 +43,19 @@ class AdvancedSolarPanelRainBlock : AdvancedSolarPanelBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // "BA"：高级太阳能发电机（ASA）+ RainLinse
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedSolarPanelRainBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
                 .define('B', AdvancedSolarPanelBlock::class.item())
                 .define('A', RainLinse::class.instance())
-                .unlockedBy(has(AdvancedSolarPanelBlock::class.item()), has(AdvancedSolarPanelBlock::class.item()))
+                .unlockedBy(getHasName(AdvancedSolarPanelBlock::class.item()), has(AdvancedSolarPanelBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("advanced_solar_panelrain"))
             // 变体回退：变体 → 原版（透镜不返还）
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
                 .requires(AdvancedSolarPanelRainBlock::class.item())
-                .unlockedBy(has(AdvancedSolarPanelRainBlock::class.item()), has(AdvancedSolarPanelRainBlock::class.item()))
+                .unlockedBy(getHasName(AdvancedSolarPanelRainBlock::class.item()), has(AdvancedSolarPanelRainBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("advanced_solar_panelrain_revert"))
         }
     }

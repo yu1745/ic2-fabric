@@ -16,6 +16,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // ===== 质子碎片 proton_shard =====
 // zh_cn: 质子碎片  en_us: Proton Shard
@@ -47,7 +48,7 @@ class Neutron : Item(Item.Properties())
 class RedComponent : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // AAA/BBB/AAA：5×防爆玻璃 + 3×红石
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RedComponent::class.instance(), 1)
                 .pattern("AAA")
@@ -67,7 +68,7 @@ class RedComponent : Item(Item.Properties()) {
 class BlueComponent : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // AAA/BBB/AAA：5×防爆玻璃 + 3×青金石
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BlueComponent::class.instance(), 1)
                 .pattern("AAA")
@@ -87,12 +88,12 @@ class BlueComponent : Item(Item.Properties()) {
 class GreenComponent : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // A  ：1×光辉玻璃板
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, GreenComponent::class.instance(), 1)
                 .pattern("A  ")
                 .define('A', IrradiantGlassPane::class.instance())
-                .unlockedBy(has(IrradiantGlassPane::class.instance()), has(IrradiantGlassPane::class.instance()))
+                .unlockedBy(getHasName(IrradiantGlassPane::class.instance()), has(IrradiantGlassPane::class.instance()))
                 .save(exporter, IC2IndustrialUpgrade.id("green_component"))
         }
     }
@@ -104,7 +105,7 @@ class GreenComponent : Item(Item.Properties()) {
 class SolarSplitter : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // ABC/ABC/ABC：3×红色 + 3×绿色 + 3×蓝色
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SolarSplitter::class.instance(), 1)
                 .pattern("ABC")
@@ -113,7 +114,7 @@ class SolarSplitter : Item(Item.Properties()) {
                 .define('A', RedComponent::class.instance())
                 .define('B', GreenComponent::class.instance())
                 .define('C', BlueComponent::class.instance())
-                .unlockedBy(has(RedComponent::class.instance()), has(RedComponent::class.instance()))
+                .unlockedBy(getHasName(RedComponent::class.instance()), has(RedComponent::class.instance()))
                 .save(exporter, IC2IndustrialUpgrade.id("solar_splitter"))
         }
     }

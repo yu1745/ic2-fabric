@@ -18,6 +18,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // i18n: item.ic2_120_advanced_solar_addon.sunnarium
 // zh_cn: 阳光化合物
@@ -26,7 +27,7 @@ import java.util.function.Consumer
 class Sunnarium : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 配方 1: UU物质 + 荧石粉
 //            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, Sunnarium::class.instance(), 1)
 //                .pattern("UUU")
@@ -43,7 +44,7 @@ class Sunnarium : Item(Item.Properties()) {
                 .pattern("SSS")
                 .pattern("SSS")
                 .define('S', SunnariumPart::class.instance())
-                .unlockedBy(has(SunnariumPart::class.instance()), has(SunnariumPart::class.instance()))
+                .unlockedBy(getHasName(SunnariumPart::class.instance()), has(SunnariumPart::class.instance()))
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_from_parts"))
         }
     }
@@ -56,7 +57,7 @@ class Sunnarium : Item(Item.Properties()) {
 class SunnariumPart : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
 //            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SunnariumPart::class.instance(), 1)
 //                .pattern(" U ")
 //                .pattern(" G ")
@@ -76,14 +77,14 @@ class SunnariumPart : Item(Item.Properties()) {
 class SunnariumAlloy : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SunnariumAlloy::class.instance(), 1)
                 .pattern("III")
                 .pattern("ISI")
                 .pattern("III")
                 .define('I', PhotovoltaicIridiumPlate::class.instance())
                 .define('S', Sunnarium::class.instance())
-                .unlockedBy(has(PhotovoltaicIridiumPlate::class.instance()), has(PhotovoltaicIridiumPlate::class.instance()))
+                .unlockedBy(getHasName(PhotovoltaicIridiumPlate::class.instance()), has(PhotovoltaicIridiumPlate::class.instance()))
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_alloy"))
         }
     }
@@ -96,7 +97,7 @@ class SunnariumAlloy : Item(Item.Properties()) {
 class PhotovoltaicIridiumPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 与 core 强化铱板相同，仅将铱矿石替换为高级太阳能附属的铱锭
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PhotovoltaicIridiumPlate::class.instance(), 1)
                 .pattern("IAI")
@@ -105,7 +106,7 @@ class PhotovoltaicIridiumPlate : Item(Item.Properties()) {
                 .define('I', IridiumIngot::class.instance())
                 .define('A', Alloy::class.instance())
                 .define('D', Ingredient.of(ModTags.Compat.Items.GEMS_DIAMOND))
-                .unlockedBy(has(IridiumIngot::class.instance()), has(IridiumIngot::class.instance()))
+                .unlockedBy(getHasName(IridiumIngot::class.instance()), has(IridiumIngot::class.instance()))
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("photovoltaic_iridium_plate"))
         }
     }
@@ -118,14 +119,14 @@ class PhotovoltaicIridiumPlate : Item(Item.Properties()) {
 class IrradiantUranium : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IrradiantUranium::class.instance(), 1)
                 .pattern(" G ")
                 .pattern("GUG")
                 .pattern(" G ")
                 .define('G', Items.GLOWSTONE_DUST)
                 .define('U', ic2_120.content.item.UraniumIngot::class.instance())
-                .unlockedBy(has(ic2_120.content.item.UraniumIngot::class.instance()), has(ic2_120.content.item.UraniumIngot::class.instance()))
+                .unlockedBy(getHasName(ic2_120.content.item.UraniumIngot::class.instance()), has(ic2_120.content.item.UraniumIngot::class.instance()))
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("irradiant_uranium"))
         }
     }
@@ -138,14 +139,14 @@ class IrradiantUranium : Item(Item.Properties()) {
 class EnrichedSunnarium : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnrichedSunnarium::class.instance(), 1)
                 .pattern("III")
                 .pattern("ISI")
                 .pattern("III")
                 .define('I', IrradiantUranium::class.instance())
                 .define('S', Sunnarium::class.instance())
-                .unlockedBy(has(IrradiantUranium::class.instance()), has(IrradiantUranium::class.instance()))
+                .unlockedBy(getHasName(IrradiantUranium::class.instance()), has(IrradiantUranium::class.instance()))
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("enriched_sunnarium"))
         }
     }
@@ -158,14 +159,14 @@ class EnrichedSunnarium : Item(Item.Properties()) {
 class EnrichedSunnariumAlloy : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnrichedSunnariumAlloy::class.instance(), 1)
                 .pattern(" E ")
                 .pattern("EAE")
                 .pattern(" E ")
                 .define('E', EnrichedSunnarium::class.instance())
                 .define('A', SunnariumAlloy::class.instance())
-                .unlockedBy(has(EnrichedSunnarium::class.instance()), has(EnrichedSunnarium::class.instance()))
+                .unlockedBy(getHasName(EnrichedSunnarium::class.instance()), has(EnrichedSunnarium::class.instance()))
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("enriched_sunnarium_alloy"))
         }
     }
@@ -178,7 +179,7 @@ class EnrichedSunnariumAlloy : Item(Item.Properties()) {
 class IrradiantGlassPane : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IrradiantGlassPane::class.instance(), 6)
                 .pattern("GGG")
                 .pattern("IXI")
@@ -186,7 +187,7 @@ class IrradiantGlassPane : Item(Item.Properties()) {
                 .define('G', ReinforcedGlassBlock::class.instance())
                 .define('I', IrradiantUranium::class.instance())
                 .define('X', Items.GLOWSTONE_DUST)
-                .unlockedBy(has(ReinforcedGlassBlock::class.instance()), has(ReinforcedGlassBlock::class.instance()))
+                .unlockedBy(getHasName(ReinforcedGlassBlock::class.instance()), has(ReinforcedGlassBlock::class.instance()))
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("irradiant_glass_pane"))
         }
     }
@@ -199,7 +200,7 @@ class IrradiantGlassPane : Item(Item.Properties()) {
 class IridiumIronPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 配方 1: 铁锭 + 铱锭
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
                 .pattern("III")
@@ -216,7 +217,7 @@ class IridiumIronPlate : Item(Item.Properties()) {
             //     .pattern("I I")
             //     .pattern("III")
             //     .define('I', IronPlate::class.instance())
-            //     .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+            //     .unlockedBy(getHasName(IronPlate::class.instance()), has(IronPlate::class.instance()))
             //     .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_iron_plate_from_plate"))
         }
     }
@@ -229,7 +230,7 @@ class IridiumIronPlate : Item(Item.Properties()) {
 class ReinforcedIridiumIronPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReinforcedIridiumIronPlate::class.instance(), 1)
                 .pattern("ACA")
                 .pattern("CPC")
@@ -237,7 +238,7 @@ class ReinforcedIridiumIronPlate : Item(Item.Properties()) {
                 .define('A', Alloy::class.instance())
                 .define('C', CarbonPlate::class.instance())
                 .define('P', IridiumIronPlate::class.instance())
-                .unlockedBy(has(IridiumIronPlate::class.instance()), has(IridiumIronPlate::class.instance()))
+                .unlockedBy(getHasName(IridiumIronPlate::class.instance()), has(IridiumIronPlate::class.instance()))
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("reinforced_iridium_iron_plate"))
         }
     }
@@ -250,7 +251,7 @@ class ReinforcedIridiumIronPlate : Item(Item.Properties()) {
 class IrradiantReinforcedPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IrradiantReinforcedPlate::class.instance(), 1)
                 .pattern("RPR")
                 .pattern("LIL")
@@ -260,7 +261,7 @@ class IrradiantReinforcedPlate : Item(Item.Properties()) {
                 .define('L', Items.LAPIS_LAZULI)
                 .define('P', SunnariumPart::class.instance())
                 .define('I', ReinforcedIridiumIronPlate::class.instance())
-                .unlockedBy(has(SunnariumPart::class.instance()), has(SunnariumPart::class.instance()))
+                .unlockedBy(getHasName(SunnariumPart::class.instance()), has(SunnariumPart::class.instance()))
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("irradiant_reinforced_plate"))
         }
     }
@@ -273,14 +274,14 @@ class IrradiantReinforcedPlate : Item(Item.Properties()) {
 class IridiumIngot : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // // 配方 1: 8个铱矿石杆
             // ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
             //     .pattern("III")
             //     .pattern("I I")
             //     .pattern("III")
             //     .define('I', IridiumOreItem::class.instance())
-            //     .unlockedBy(has(IridiumOreItem::class.instance()), has(IridiumOreItem::class.instance()))
+            //     .unlockedBy(getHasName(IridiumOreItem::class.instance()), has(IridiumOreItem::class.instance()))
             //     .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_ingot_from_ore"))
 
            // // 配方 3: 强化铱板 + 充电电池
@@ -290,7 +291,7 @@ class IridiumIngot : Item(Item.Properties()) {
             //     .pattern(" B ")
             //     .define('I', IridiumPlate::class.instance())
             //     .define('B', ReBatteryItem::class.instance())
-            //     .unlockedBy(has(IridiumPlate::class.instance()), has(IridiumPlate::class.instance()))
+            //     .unlockedBy(getHasName(IridiumPlate::class.instance()), has(IridiumPlate::class.instance()))
             //     .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_ingot_from_plate_battery"))
         }
     }
@@ -303,14 +304,14 @@ class IridiumIngot : Item(Item.Properties()) {
 class MtCore : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MtCore::class.instance(), 1)
                 .pattern("GNG")
                 .pattern("G G")
                 .pattern("GNG")
                 .define('G', IrradiantGlassPane::class.instance())
                 .define('N', ThickNeutronReflectorItem::class.instance())
-                .unlockedBy(has(IrradiantGlassPane::class.instance()), has(IrradiantGlassPane::class.instance()))
+                .unlockedBy(getHasName(IrradiantGlassPane::class.instance()), has(IrradiantGlassPane::class.instance()))
                 .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("mt_core"))
         }
     }
@@ -323,7 +324,7 @@ class MtCore : Item(Item.Properties()) {
 class QuantumCore : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuantumCore::class.instance(), 1)
                 .pattern("ESE")
                 .pattern("SNS")

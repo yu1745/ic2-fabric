@@ -9,6 +9,7 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.client.Minecraft
 
 @ModScreen(block = QuantumGeneratorBlock::class)
 class QuantumGeneratorScreen(
@@ -16,38 +17,42 @@ class QuantumGeneratorScreen(
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<QuantumGeneratorScreenHandler>(handler, playerInventory, title) {
+    // yarn→mojmap 兼容别名
+    private val x get() = leftPos
+    private val y get() = topPos
+    private val textRenderer get() = font
 
     init {
         imageWidth = GUI_WIDTH
         imageHeight = GUI_HEIGHT
-        playerInventoryTitleY = -20000
+        inventoryLabelY = -20000
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.blit(TEXTURE, x, y, 0f, 0f, GUI_WIDTH, GUI_HEIGHT, TEX_WIDTH, TEX_HEIGHT)
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, GUI_WIDTH, GUI_HEIGHT, TEX_WIDTH, TEX_HEIGHT)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
-        val energyMac = handler.sync.energyMac
-        val variable = handler.sync.variable
-        val isActive = handler.sync.isActive != 0
+        val energyMac = menu.sync.energyMac
+        val variable = menu.sync.variable
+        val isActive = menu.sync.isActive != 0
 
         // 标题居中
-        val titleWidth = textRenderer.getWidth(title)
-        context.drawString(textRenderer, title, x + (GUI_WIDTH - titleWidth) / 2, y + 6, 0xFFFFFF, false)
+        val titleWidth = font.width(title)
+        context.drawString(font, title, x + (GUI_WIDTH - titleWidth) / 2, y + 6, 0xFFFFFF, false)
 
         // 输出: energyMac at (70,24) / (92,24)
         val outputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.output").string
-        context.drawString(textRenderer, outputLabel, x + 68, y + 24, 0xFFFFFF, false)
-        context.drawString(textRenderer, "$energyMac EU/t", x + 94, y + 24, 0xFFFFFF, false)
+        context.drawString(font, outputLabel, x + 68, y + 24, 0xFFFFFF, false)
+        context.drawString(font, "$energyMac EU/t", x + 94, y + 24, 0xFFFFFF, false)
 
         // 输入: variable at (70,68) / (92,68)
         val inputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.input").string
-        context.drawString(textRenderer, inputLabel, x + 68, y + 68, 0xFFFFFF, false)
-        context.drawString(textRenderer, "$variable", x + 94, y + 68, 0xFFFFFF, false)
+        context.drawString(font, inputLabel, x + 68, y + 68, 0xFFFFFF, false)
+        context.drawString(font, "$variable", x + 94, y + 68, 0xFFFFFF, false)
 
         // 工作指示纹理: 运行时渲染 (176,3) 14x14 @ (146,22)
         if (isActive) {
@@ -75,8 +80,8 @@ class QuantumGeneratorScreen(
         context.fill(bx, by + btn.h - 1, bx + btn.w, by + btn.h, 0xFF333333.toInt())
         context.fill(bx + btn.w - 1, by, bx + btn.w, by + btn.h, 0xFF333333.toInt())
 
-        val textW = textRenderer.getWidth(btn.text)
-        context.drawString(textRenderer, btn.text, bx + (btn.w - textW) / 2, by + (btn.h - 8) / 2, 0xFFFFFF, false)
+        val textW = font.width(btn.text)
+        context.drawString(font, btn.text, bx + (btn.w - textW) / 2, by + (btn.h - 8) / 2, 0xFFFFFF, false)
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
@@ -85,7 +90,7 @@ class QuantumGeneratorScreen(
                 val bx = x + btn.x
                 val by = y + btn.y
                 if (mouseX.toInt() in bx until (bx + btn.w) && mouseY.toInt() in by until (by + btn.h)) {
-                    client?.networkHandler?.sendPacket(ServerboundContainerButtonClickPacket(handler.containerId, btn.id))
+                    Minecraft.getInstance().connection?.send(ServerboundContainerButtonClickPacket(menu.containerId, btn.id))
                     return true
                 }
             }

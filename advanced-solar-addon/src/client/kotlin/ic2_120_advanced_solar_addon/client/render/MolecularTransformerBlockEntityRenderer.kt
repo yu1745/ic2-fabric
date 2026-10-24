@@ -13,6 +13,7 @@ import net.minecraft.resources.ResourceLocation
 import com.mojang.math.Axis
 import org.joml.Matrix3f
 import org.joml.Matrix4f
+import ic2_120.compat.*
 
 class MolecularTransformerBlockEntityRenderer(
     context: BlockEntityRendererProvider.Context
@@ -57,9 +58,9 @@ class MolecularTransformerBlockEntityRenderer(
         if (state.block !is MolecularTransformerBlock) return
 
         val isActive = try { state.getValue(MolecularTransformerBlock.ACTIVE) } catch (_: Exception) { false }
-        val ov = overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV
+        val ov = overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY
 
-        val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(TEXTURE))
+        val vc = vertexConsumers.getBuffer(RenderType.entityCutoutNoCull(TEXTURE))
 
         matrices.pushPose()
 
@@ -91,7 +92,7 @@ class MolecularTransformerBlockEntityRenderer(
         matrices.popPose()
 
         // Translucent coreWorkZone
-        val vcTrans = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(TEXTURE))
+        val vcTrans = vertexConsumers.getBuffer(RenderType.entityTranslucent(TEXTURE))
         renderBox(vcTrans, matrices, light, ov, CORE_WORK_ZONE, 0, 44, 6, 9, 6)
 
         matrices.popPose()
@@ -123,45 +124,45 @@ class MolecularTransformerBlockEntityRenderer(
         sizeX: Int, sizeY: Int, sizeZ: Int
     ) {
         val entry = matrices.last()
-        val pos = entry.positionMatrix
-        val norm = entry.normalMatrix
+        val pos = entry.pose()
+        val norm = entry.normal()
 
         val x1 = coords[0]; val y1 = coords[1]; val z1 = coords[2]
         val x2 = coords[3]; val y2 = coords[4]; val z2 = coords[5]
         val w = sizeX.toFloat(); val h = sizeY.toFloat(); val d = sizeZ.toFloat()
 
         // Top (+Y)
-        quad(vc, pos, norm, light, overlay,
+        quad(vc, entry, light, overlay,
             x1, y2, z2,  x2, y2, z2,  x2, y2, z1,  x1, y2, z1,
             (texU+d)/TW, texV/TH, (texU+d+w)/TW, (texV+d)/TH,
             0f, 1f, 0f)
 
         // Bottom (-Y)
-        quad(vc, pos, norm, light, overlay,
+        quad(vc, entry, light, overlay,
             x1, y1, z1,  x2, y1, z1,  x2, y1, z2,  x1, y1, z2,
             (texU+d+w)/TW, texV/TH, (texU+d+2*w)/TW, (texV+d)/TH,
             0f, -1f, 0f)
 
         // North (-Z)
-        quad(vc, pos, norm, light, overlay,
+        quad(vc, entry, light, overlay,
             x2, y2, z1,  x1, y2, z1,  x1, y1, z1,  x2, y1, z1,
             (texU+d+w)/TW, (texV+d)/TH, (texU+d)/TW, (texV+d+h)/TH,
             0f, 0f, -1f)
 
         // South (+Z)
-        quad(vc, pos, norm, light, overlay,
+        quad(vc, entry, light, overlay,
             x1, y2, z2,  x2, y2, z2,  x2, y1, z2,  x1, y1, z2,
             (texU+d)/TW, (texV+d)/TH, (texU+d+w)/TW, (texV+d+h)/TH,
             0f, 0f, 1f)
 
         // West (-X)
-        quad(vc, pos, norm, light, overlay,
+        quad(vc, entry, light, overlay,
             x1, y2, z1,  x1, y2, z2,  x1, y1, z2,  x1, y1, z1,
             texU/TW, (texV+d)/TH, (texU+d)/TW, (texV+d+h)/TH,
             -1f, 0f, 0f)
 
         // East (+X)
-        quad(vc, pos, norm, light, overlay,
+        quad(vc, entry, light, overlay,
             x2, y2, z2,  x2, y2, z1,  x2, y1, z1,  x2, y1, z2,
             (texU+d+w)/TW, (texV+d)/TH, (texU+d+w+d)/TW, (texV+d+h)/TH,
             1f, 0f, 0f)
@@ -169,7 +170,7 @@ class MolecularTransformerBlockEntityRenderer(
 
     private fun quad(
         vc: VertexConsumer,
-        pos: Matrix4f, norm: Matrix3f,
+        entry: PoseStack.Pose,
         light: Int, overlay: Int,
         x0: Float, y0: Float, z0: Float,
         x1: Float, y1: Float, z1: Float,
@@ -178,27 +179,26 @@ class MolecularTransformerBlockEntityRenderer(
         u0: Float, v0: Float, u1: Float, v1: Float,
         nx: Float, ny: Float, nz: Float
     ) {
-        vertex(vc, pos, norm, x0, y0, z0, u0, v0, nx, ny, nz, light, overlay)
-        vertex(vc, pos, norm, x1, y1, z1, u1, v0, nx, ny, nz, light, overlay)
-        vertex(vc, pos, norm, x2, y2, z2, u1, v1, nx, ny, nz, light, overlay)
-        vertex(vc, pos, norm, x3, y3, z3, u0, v1, nx, ny, nz, light, overlay)
+        vertex(vc, entry, x0, y0, z0, u0, v0, nx, ny, nz, light, overlay)
+        vertex(vc, entry, x1, y1, z1, u1, v0, nx, ny, nz, light, overlay)
+        vertex(vc, entry, x2, y2, z2, u1, v1, nx, ny, nz, light, overlay)
+        vertex(vc, entry, x3, y3, z3, u0, v1, nx, ny, nz, light, overlay)
     }
 
     private fun vertex(
         vc: VertexConsumer,
-        pos: Matrix4f, norm: Matrix3f,
+        entry: PoseStack.Pose,
         x: Float, y: Float, z: Float,
         u: Float, v: Float,
         nx: Float, ny: Float, nz: Float,
         light: Int, overlay: Int
     ) {
-        vc.addVertex(pos, x, y, z)
+        vc.addVertex(entry, x, y, z)
             .setColor(255, 255, 255, 255)
-            .texture(u, v)
+            .setUv(u, v)
             .setOverlay(overlay)
             .setLight(light)
-            .setNormal(norm, nx, ny, nz)
-            .next()
+            .setNormal(entry, nx, ny, nz)
     }
 
     private fun renderActiveCore(
@@ -207,11 +207,11 @@ class MolecularTransformerBlockEntityRenderer(
         light: Int,
         overlay: Int
     ) {
-        val vc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(PLAZMA_TEXTURE))
+        val vc = vertexConsumers.getBuffer(RenderType.entityTranslucent(PLAZMA_TEXTURE))
         renderBox(vc, matrices, light, overlay,
             floatArrayOf(px(1.5f), py(9f), pz(-1.5f), px(-1.5f), py(5f), pz(1.5f)),
             0, 0, 3, 4, 3)
     }
 
-    override fun rendersOutsideBoundingBox(entity: MolecularTransformerBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(entity: MolecularTransformerBlockEntity): Boolean = true
 }

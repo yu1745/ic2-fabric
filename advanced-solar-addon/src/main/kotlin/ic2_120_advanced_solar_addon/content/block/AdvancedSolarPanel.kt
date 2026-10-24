@@ -35,6 +35,8 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
+import ic2_120.compat.*
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // i18n: block.ic2_120_advanced_solar_addon.advanced_solar_panel
 // zh_cn: 高级太阳能发电机
@@ -75,7 +77,7 @@ open class AdvancedSolarPanelBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val solarPanel = SolarGeneratorBlock::class.item()
             val circuit = AdvancedCircuit::class.instance()
             val glass = ReinforcedGlassBlock::class.item()

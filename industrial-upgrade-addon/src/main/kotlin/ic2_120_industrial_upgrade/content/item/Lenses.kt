@@ -15,6 +15,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
+import net.minecraft.data.recipes.RecipeProvider.has
 
 /**
  * 透镜系物品（对应 1.4.0 CraftingThings.sunlinse/nightlinse/rainlinse）。
@@ -28,7 +29,7 @@ import java.util.function.Consumer
 class SunLinse : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 十字：强化玻璃聚萤石之光
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SunLinse::class.instance(), 1)
                 .pattern(" G ")
@@ -48,7 +49,7 @@ class SunLinse : Item(Item.Properties()) {
 class NightLinse : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 十字：强化玻璃聚煤之暗
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, NightLinse::class.instance(), 1)
                 .pattern(" C ")
@@ -68,13 +69,13 @@ class NightLinse : Item(Item.Properties()) {
 class RainLinse : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 原版配方：2×日光镜 + 1×夜光镜
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RainLinse::class.instance(), 1)
                 .pattern("USU")
                 .define('U', SunLinse::class.instance())
                 .define('S', NightLinse::class.instance())
-                .unlockedBy(has(SunLinse::class.instance()), has(SunLinse::class.instance()))
+                .unlockedBy(getHasName(SunLinse::class.instance()), has(SunLinse::class.instance()))
                 .save(exporter, IC2IndustrialUpgrade.id("rainlinse"))
         }
     }

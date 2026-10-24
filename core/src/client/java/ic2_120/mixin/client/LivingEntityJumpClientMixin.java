@@ -27,8 +27,8 @@ public class LivingEntityJumpClientMixin {
         if (!QuantumBoots.isSuperJumpEnabled(boots)) return;
         if (!QuantumBoots.consumeJumpEnergy(boots)) return;
 
-        Vec3 vel = player.getVelocity();
+        Vec3 vel = player.getDeltaMovement();
         double multiplier = QuantumBoots.getJumpHeightMultiplier();
-        player.setVelocity(vel.x, vel.y * multiplier, vel.z);
+        player.setDeltaMovement(vel.x, vel.y * multiplier, vel.z);
     }
 }

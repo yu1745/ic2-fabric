@@ -22,6 +22,9 @@ import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
+import ic2_120.compat.*
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // i18n: block.ic2_120_industrial_upgrade.quantum_solar_panelsun
 // zh_cn: 量子日光太阳能发电机  en_us: Quantum Sun Panel
@@ -40,19 +43,19 @@ class QuantumSolarPanelSunBlock : QuantumSolarPanelBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // "BA"：量子太阳能发电机（ASA）+ SunLinse
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuantumSolarPanelSunBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
                 .define('B', QuantumSolarPanelBlock::class.item())
                 .define('A', SunLinse::class.instance())
-                .unlockedBy(has(QuantumSolarPanelBlock::class.item()), has(QuantumSolarPanelBlock::class.item()))
+                .unlockedBy(getHasName(QuantumSolarPanelBlock::class.item()), has(QuantumSolarPanelBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("quantum_solar_panelsun"))
             // 变体回退：变体 → 原版（透镜不返还）
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, QuantumSolarPanelBlock::class.item(), 1)
                 .requires(QuantumSolarPanelSunBlock::class.item())
-                .unlockedBy(has(QuantumSolarPanelSunBlock::class.item()), has(QuantumSolarPanelSunBlock::class.item()))
+                .unlockedBy(getHasName(QuantumSolarPanelSunBlock::class.item()), has(QuantumSolarPanelSunBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("quantum_solar_panelsun_revert"))
         }
     }

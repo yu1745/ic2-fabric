@@ -296,12 +296,12 @@ object Ic2AdvancedSolarAddonConfig {
         declaredConfigFields(instance.javaClass).forEach { field ->
             field.isAccessible = true
             val fieldName = field.name
-            val valueElement = jsonNode.getValue(fieldName) ?: return@forEach
+            val valueElement = jsonNode.get(fieldName) ?: return@forEach
             field.getAnnotation(ConfigComment::class.java)?.let { annotation ->
                 result.put("_comment_$fieldName", formatComment(annotation))
             }
 
-            val fieldValue = field.getValue(instance)
+            val fieldValue = field.get(instance)
             val isNestedConfigObject =
                 fieldValue != null &&
                     valueElement.isObject &&

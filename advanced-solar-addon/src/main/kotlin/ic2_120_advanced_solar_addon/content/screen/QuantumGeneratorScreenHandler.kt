@@ -15,6 +15,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.type
+import ic2_120.compat.*
 
 @ModScreenHandler(block = ic2_120_advanced_solar_addon.content.block.QuantumGeneratorBlock::class)
 class QuantumGeneratorScreenHandler(
@@ -57,7 +58,7 @@ class QuantumGeneratorScreenHandler(
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot .hasItem()) {
-            val stackInSlot = slot.stack
+            val stackInSlot = slot.item
             stack = stackInSlot.copy()
             when {
                 index in PLAYER_INV_START until HOTBAR_START -> {
@@ -67,7 +68,7 @@ class QuantumGeneratorScreenHandler(
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_START, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -76,9 +77,9 @@ class QuantumGeneratorScreenHandler(
     }
 
     override fun clickMenuButton(player: Player, id: Int): Boolean {
-        if (player.world.isClient) return true
+        if (player.level().isClientSide) return true
         // 使用双参数版本 get(BiFunction, defaultValue)，返回 T? 而不是 Optional<T>
-        val be = context.get({ world, pos -> world.getBlockEntity(pos) }, null)
+        val be = context.evaluate<net.minecraft.world.level.block.entity.BlockEntity?>({ world, pos -> world.getBlockEntity(pos) }, null)
             as? QuantumGeneratorBlockEntity ?: return false
 
         when (id) {
@@ -101,7 +102,7 @@ class QuantumGeneratorScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
@@ -136,7 +137,7 @@ class QuantumGeneratorScreenHandler(
         fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): QuantumGeneratorScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
-            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val context = ContainerLevelAccess.create(playerInventory.player.level(), pos)
             val propertyDelegate = net.minecraft.world.inventory.SimpleContainerData(propertyCount)
             return QuantumGeneratorScreenHandler(syncId, playerInventory, context, propertyDelegate)
         }

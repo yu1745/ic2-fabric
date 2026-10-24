@@ -9,8 +9,8 @@ object AddonTemplateDataGenerator : DataGeneratorEntrypoint {
     override fun onInitializeDataGenerator(fabricDataGenerator: FabricDataGenerator) {
         val pack = fabricDataGenerator.createPack()
 
-        pack.addProvider { output: FabricDataOutput ->
-            ModRecipeProvider(output)
+        pack.addProvider { output: FabricDataOutput, registriesFuture ->
+			ModRecipeProvider(output, registriesFuture)
         }
     }
 }

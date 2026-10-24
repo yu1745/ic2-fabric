@@ -6,10 +6,11 @@ import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider
 import net.minecraft.data.recipes.RecipeOutput
 import java.util.function.Consumer
+import java.util.concurrent.CompletableFuture
+import net.minecraft.core.HolderLookup
 
-class ModRecipeProvider(output: FabricDataOutput) : FabricRecipeProvider(output) {
-
-    override fun generate(exporter: Consumer<RecipeOutput>) {
-        ClassScanner.generateRecipesForMod(IC2AdvancedSolarAddon.MOD_ID, exporter)
+class ModRecipeProvider(output: FabricDataOutput, registriesFuture: CompletableFuture<HolderLookup.Provider>) : FabricRecipeProvider(output, registriesFuture) {
+    override fun buildRecipes(exporter: RecipeOutput) {
+        ClassScanner.generateRecipesForMod("ic2_120_advanced_solar_addon", exporter)
     }
 }

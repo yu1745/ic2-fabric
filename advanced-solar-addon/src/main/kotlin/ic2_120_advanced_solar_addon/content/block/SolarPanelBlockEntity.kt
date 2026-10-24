@@ -38,6 +38,7 @@ import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
+import ic2_120.compat.*
 
 enum class GenerationState {
     NONE, NIGHT, DAY, RAIN
@@ -191,18 +192,18 @@ abstract class SolarPanelBlockEntity(
 
         // 末地永远白天、无天气变化，直接按白天发电
         // 注意：末地的 timeOfDay 会流动，不能用时间判定白天/黑夜
-        if (world.registryKey == Level.END) {
+        if (world.dimension() == Level.END) {
             generationState = GenerationState.DAY
             setChanged()
             return
         }
 
-        if (world.registryKey != Level.OVERWORLD) {
+        if (world.dimension() != Level.OVERWORLD) {
             generationState = GenerationState.NONE
             return
         }
 
-        val time = world.timeOfDay % 24000
+        val time = world.dayTime % 24000
         val isRaining = world.isRaining || world.isThundering
         val canRain = world.getBiome(pos).value().hasPrecipitation()
         val isDaytime = time in DAY_START_TICK..DAY_END_TICK
@@ -222,12 +223,12 @@ abstract class SolarPanelBlockEntity(
      * 参考 ic2-fabric 的 SolarGeneratorBlockEntity 实现。
      */
     protected fun hasSkyAccess(world: Level, basePos: BlockPos): Boolean {
-        val topY = world.topY
+        val topY = world.maxBuildHeight
         var y = basePos.y + 1
-        while (y < topY) {
+        while (y <= topY) {
             val pos = BlockPos(basePos.x, y, basePos.z)
             val blockState = world.getBlockState(pos)
-            if (blockState.isOpaqueFullCube(world, pos)) return false
+            if (blockState.isSolidRender(world, pos)) return false
             y++
         }
         return true
@@ -263,7 +264,7 @@ abstract class SolarPanelBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.getContainerSize())
+            buf.writeVarInt(syncedData.count)
             buf.writeVarInt(CHARGE_SLOTS)
             buf.writeVarInt(tier)
         return buf
@@ -278,7 +279,7 @@ abstract class SolarPanelBlockEntity(
         sync.restoreEnergy(nbt.getLong(SolarPanelSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
         generationState = GenerationState.entries[nbt.getInt("state").coerceIn(0, GenerationState.entries.size - 1)]
         syncedData.readNbt(nbt)
-        ContainerHelper.loadAllItems(nbt.getCompound(INVENTORY_NBT_KEY), inventory)
+        ContainerHelper.loadAllItems(nbt.getCompound(INVENTORY_NBT_KEY), inventory, lookup)
     }
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
@@ -286,6 +287,6 @@ abstract class SolarPanelBlockEntity(
         nbt.putLong(SolarPanelSync.NBT_ENERGY, sync.amount)
         nbt.putInt("state", generationState.ordinal)
         syncedData.writeNbt(nbt)
-        nbt.put(INVENTORY_NBT_KEY, ContainerHelper.saveAllItems(CompoundTag(), inventory))
+        nbt.put(INVENTORY_NBT_KEY, ContainerHelper.saveAllItems(CompoundTag(), inventory, lookup))
     }
 }

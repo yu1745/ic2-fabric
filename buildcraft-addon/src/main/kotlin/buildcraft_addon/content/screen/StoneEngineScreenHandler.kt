@@ -16,6 +16,7 @@ import net.minecraft.world.inventory.Slot
 import ic2_120.registry.annotation.ScreenFactory
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import ic2_120.compat.*
 
 @ModScreenHandler(block = StoneEngineBlock::class)
 class StoneEngineScreenHandler(
@@ -28,12 +29,11 @@ class StoneEngineScreenHandler(
 
     init {
         checkContainerSize(blockInventory, 1)
-        checkDataCount(propertyDelegate, 2)
 
         // Fuel slot (BC8 pos: 80, 41)
         addSlot(object : Slot(blockInventory, 0, 80, 41) {
-            override fun canInsert(stack: net.minecraft.world.item.ItemStack): Boolean {
-                return stack.item.recipeRemainder !== stack.item || stack.item.toString().contains("coal")
+            override fun mayPlace(stack: net.minecraft.world.item.ItemStack): Boolean {
+                return stack.item.craftingRemainingItem !== stack.item || stack.item.toString().contains("coal")
             }
         })
 
@@ -60,7 +60,7 @@ class StoneEngineScreenHandler(
     override fun quickMoveStack(player: Player, slotIndex: Int): net.minecraft.world.item.ItemStack {
         val slot = slots[slotIndex] ?: return ItemStack.EMPTY
         if (!slot .hasItem()) return ItemStack.EMPTY
-        val original = slot.stack
+        val original = slot.item
         val newStack = original.copy()
 
         if (slotIndex == 0) {
@@ -70,7 +70,7 @@ class StoneEngineScreenHandler(
         }
 
         if (original.isEmpty) {
-            slot.stack = ItemStack.EMPTY
+            slot.set(ItemStack.EMPTY)
         } else {
             slot.setChanged()
         }
@@ -78,7 +78,7 @@ class StoneEngineScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean {
-        return context.get({ world, pos ->
+        return context.evaluate({ world, pos ->
             world.getBlockState(pos).block is StoneEngineBlock && player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
     }
@@ -88,7 +88,7 @@ class StoneEngineScreenHandler(
         fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): StoneEngineScreenHandler {
             buf.readBlockPos()
             buf.readVarInt()
-            return StoneEngineScreenHandler(syncId, playerInventory, SimpleContainer(1), ContainerLevelAccess.EMPTY, SimpleContainerData(2))
+            return StoneEngineScreenHandler(syncId, playerInventory, SimpleContainer(1), ContainerLevelAccess.NULL, SimpleContainerData(2))
         }
     }
 }

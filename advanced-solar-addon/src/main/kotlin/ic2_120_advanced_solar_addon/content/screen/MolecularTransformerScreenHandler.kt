@@ -21,6 +21,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.world.inventory.Slot
 import net.minecraft.core.Direction
+import ic2_120.compat.*
 
 @ModScreenHandler(block = MolecularTransformerBlock::class)
 class MolecularTransformerScreenHandler(
@@ -78,7 +79,7 @@ class MolecularTransformerScreenHandler(
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot .hasItem()) {
-            val stackInSlot = slot.stack
+            val stackInSlot = slot.item
             stack = stackInSlot.copy()
 
             val beSlot = (slot as? PredicateSlot)?.index ?: -1
@@ -87,7 +88,7 @@ class MolecularTransformerScreenHandler(
                 // Machine slots -> player inventory
                 beSlot >= 0 -> {
                     if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
-                    slot.onTake(stackInSlot, stack)
+                    slot.onTake(player, stackInSlot)
                 }
                 // Player inventory -> machine (via RoutedItemStorage routes)
                 index in PLAYER_INV_START until HOTBAR_END -> {
@@ -108,7 +109,7 @@ class MolecularTransformerScreenHandler(
                 }
             }
 
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -117,7 +118,7 @@ class MolecularTransformerScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
@@ -155,7 +156,7 @@ class MolecularTransformerScreenHandler(
         fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): MolecularTransformerScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
-            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val context = ContainerLevelAccess.create(playerInventory.player.level(), pos)
             val blockInventory = net.minecraft.world.SimpleContainer(MolecularTransformerBlock.INVENTORY_SIZE)
             val propertyDelegate = net.minecraft.world.inventory.SimpleContainerData(propertyCount)
             return MolecularTransformerScreenHandler(syncId, playerInventory, blockInventory, context, propertyDelegate)

@@ -23,14 +23,16 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
+import ic2_120.compat.*
+import net.minecraft.world.level.block.state.BlockBehaviour
 
 @ModBlock(name = "pump", registerItem = true, tab = CreativeTab.BUILDCRAFT)
-class PumpBlock : BaseEntityBlock(
-    Settings.create().strength(5.0f, 10.0f) .noOcclusion()
-), EntityBlock {
+class PumpBlock(properties: BlockBehaviour.Properties = Properties.of().strength(5.0f, 10.0f).noOcclusion()) : BaseEntityBlock(properties), EntityBlock {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec(::PumpBlock)
+
 
     init {
-        registerDefaultState(stateManager.defaultBlockState)
+        registerDefaultState(defaultBlockState())
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {}
@@ -42,13 +44,13 @@ class PumpBlock : BaseEntityBlock(
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? PumpBlockEntity ?: return InteractionResult.PASS
-            player.sendMessage(net.minecraft.network.chat.Component.literal("液泵: ${be.getTankInfo()}"), true)
+            player.displayClientMessage(net.minecraft.network.chat.Component.literal("液泵: ${be.getTankInfo()}"), true)
         }
         return InteractionResult.SUCCESS
     }
 
-    override fun neighborUpdate(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
-        super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify)
+    override fun neighborChanged(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
+        super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? PumpBlockEntity ?: return
             be.checkRedstonePower()
@@ -66,7 +68,7 @@ class PumpBlock : BaseEntityBlock(
         }
     }
 
-    override fun getPickStack(world: net.minecraft.world.level.BlockGetter, pos: BlockPos, state: BlockState): ItemStack {
+    override fun getCloneItemStack(world: net.minecraft.world.level.LevelReader, pos: BlockPos, state: BlockState): ItemStack {
         return ItemStack(this)
     }
 
@@ -83,7 +85,7 @@ class PumpBlock : BaseEntityBlock(
                 } else break
             }
             if (ClaimProtection.allAllowedUuid(world, planned, null, ClaimProtection.EDIT_BLOCK)) {
-                for (bp in planned) world.setBlock(bp, Blocks.AIR.defaultBlockState, 3)
+                for (bp in planned) world.setBlock(bp, Blocks.AIR.defaultBlockState(), 3)
             }
         }
         super.onRemove(state, world, pos, newState, moved)

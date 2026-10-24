@@ -15,9 +15,13 @@ class IronEngineScreen(
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<IronEngineScreenHandler>(handler, playerInventory, title) {
+    // yarn→mojmap 兼容别名
+    private val x get() = leftPos
+    private val y get() = topPos
+    private val textRenderer get() = font
 
     companion object {
-        val TEXTURE: ResourceLocation = ResourceLocation(BuildCraftAddon.MOD_ID, "textures/gui/combustion_engine_gui.png")
+        val TEXTURE: ResourceLocation = ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, "textures/gui/combustion_engine_gui.png")
         const val TEXTURE_SIZE = 256
         const val BG_WIDTH = 176
         const val BG_HEIGHT = 177
@@ -41,17 +45,17 @@ class IronEngineScreen(
         imageHeight = BG_HEIGHT
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.blit(TEXTURE, x, y, 0f, 0f, BG_WIDTH, BG_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE)
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, BG_WIDTH, BG_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // Draw tank overlays + fluid levels for 3 tanks
-        drawTank(context, TANK_X, handler.getFuelAmount(), 0xFFFF4444.toInt())    // Red-ish for fuel
-        drawTank(context, TANK_X + TANK_SPACING, handler.getCoolantAmount(), 0xFF4488FF.toInt())  // Blue for coolant
-        drawTank(context, TANK_X + TANK_SPACING * 2, handler.getResidueAmount(), 0xFF885522.toInt())  // Brown for residue
+        drawTank(context, TANK_X, menu.getFuelAmount(), 0xFFFF4444.toInt())    // Red-ish for fuel
+        drawTank(context, TANK_X + TANK_SPACING, menu.getCoolantAmount(), 0xFF4488FF.toInt())  // Blue for coolant
+        drawTank(context, TANK_X + TANK_SPACING * 2, menu.getResidueAmount(), 0xFF885522.toInt())  // Brown for residue
 
         // Draw tank backgrounds (overlay texture)
         for (i in 0..2) {
-            val tx = x + TANK_X + i * TANK_SPACING
+            val tx = leftPos + TANK_X + i * TANK_SPACING
             context.blit(TEXTURE, tx, y + TANK_Y, TANK_TEX_U.toFloat(), TANK_TEX_V.toFloat(), TANK_W, TANK_H, TEXTURE_SIZE, TEXTURE_SIZE)
         }
     }
@@ -68,8 +72,8 @@ class IronEngineScreen(
         renderTooltip(context, mouseX, mouseY)
     }
 
-    override fun drawForeground(context: GuiGraphics, mouseX: Int, mouseY: Int) {
-        context.drawString(textRenderer, title, imageWidth / 2 - textRenderer.getWidth(title) / 2, 6, 0x404040, false)
-        context.drawString(textRenderer, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
+    override fun renderLabels(context: GuiGraphics, mouseX: Int, mouseY: Int) {
+        context.drawString(font, title, imageWidth / 2 - font.width(title) / 2, 6, 0x404040, false)
+        context.drawString(font, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
     }
 }

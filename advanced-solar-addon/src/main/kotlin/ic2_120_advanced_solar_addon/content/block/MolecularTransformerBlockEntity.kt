@@ -37,6 +37,8 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.type
 import ic2_120.content.AdjacentEnergyTransferComponent
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
+import ic2_120.compat.*
+import net.minecraft.world.level.block.Block
 
 @ModBlockEntity(block = MolecularTransformerBlock::class)
 class MolecularTransformerBlockEntity(
@@ -134,8 +136,8 @@ class MolecularTransformerBlockEntity(
                 if (inputStack.isEmpty) {
                     inventory[MolecularTransformerBlock.INPUT_SLOT] = ItemStack.EMPTY
                 }
-                sync.inputItemId = Item.getRawId(consumedInputItem.item)
-                sync.outputItemId = Item.getRawId(recipe.output.item)
+                sync.inputItemId = Item.getId(consumedInputItem.item)
+                sync.outputItemId = Item.getId(recipe.output.item)
             }
         }
 
@@ -178,11 +180,11 @@ class MolecularTransformerBlockEntity(
             val shouldBeLit = noEnergyTicks < LIGHT_TIMEOUT_TICKS
             if (shouldBeLit != isLit) {
                 isLit = shouldBeLit
-                world.setBlock(pos, state.setValue(MolecularTransformerBlock.LIT, isLit))
+                world.setBlock(pos, state.setValue(MolecularTransformerBlock.LIT, isLit), Block.UPDATE_ALL)
             }
         } else if (isLit) {
             isLit = false
-            world.setBlock(pos, state.setValue(MolecularTransformerBlock.LIT, false))
+            world.setBlock(pos, state.setValue(MolecularTransformerBlock.LIT, false), Block.UPDATE_ALL)
         }
 
         // Update sync data
@@ -210,13 +212,13 @@ class MolecularTransformerBlockEntity(
         sync.progress = 0
         if (isLit) {
             isLit = false
-            world.setBlock(pos, state.setValue(MolecularTransformerBlock.LIT, false))
+            world.setBlock(pos, state.setValue(MolecularTransformerBlock.LIT, false), Block.UPDATE_ALL)
         }
     }
 
     private fun canOutput(output: ItemStack, currentOutput: ItemStack): Boolean {
         if (currentOutput.isEmpty) return true
-        if (!ItemStack.canCombine(currentOutput, output)) return false
+        if (!ItemStack.isSameItemSameComponents(currentOutput, output)) return false
         return currentOutput.count + output.count <= currentOutput.maxStackSize
     }
 
@@ -234,15 +236,15 @@ class MolecularTransformerBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.getContainerSize())
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         energyUsed = nbt.getLong("energyUsed")
-        consumedInputItem = ItemStack.fromNbt(nbt.getCompound("consumedInput"))
+        consumedInputItem = ItemStack.parseOptional(lookup, nbt.getCompound("consumedInput"))
         noEnergyTicks = nbt.getInt("noEnergyTicks")
         isLit = nbt.getBoolean("isLit")
         sync.restoreEnergy(nbt.getLong(MolecularTransformerSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
@@ -255,9 +257,9 @@ class MolecularTransformerBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         nbt.putLong("energyUsed", energyUsed)
-        nbt.put("consumedInput", consumedInputItem.writeNbt(CompoundTag()))
+        nbt.put("consumedInput", consumedInputItem.save(lookup, CompoundTag()))
         nbt.putInt("noEnergyTicks", noEnergyTicks)
         nbt.putBoolean("isLit", isLit)
         nbt.putLong(MolecularTransformerSync.NBT_ENERGY, sync.amount)

@@ -27,12 +27,13 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.util.RandomSource
 import net.minecraft.world.level.Level
+import ic2_120.compat.*
 
 enum class SpringType(val fluid: Fluid) : StringRepresentable {
     WATER(net.minecraft.world.level.material.Fluids.WATER),
     OIL(ModFluids.CRUDE_OIL_STILL);
 
-    override fun asString(): String = name.lowercase()
+    override fun getSerializedName(): String = name.lowercase()
 }
 
 @ModBlock(name = "spring", registerItem = true, tab = CreativeTab.BUILDCRAFT)
@@ -45,46 +46,46 @@ class SpringBlock : Block(
     }
 
     init {
-        registerDefaultState(stateManager.defaultBlockState.setValue(SPRING_TYPE, SpringType.WATER))
+        registerDefaultState(defaultBlockState().setValue(SPRING_TYPE, SpringType.WATER))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
         builder.add(SPRING_TYPE)
     }
 
-    override fun hasRandomTicks(state: BlockState): Boolean = false
+    override fun isRandomlyTicking(state: BlockState): Boolean = false
 
-    override fun onBlockAdded(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
+    override fun onPlace(state: BlockState, world: Level, pos: BlockPos, oldState: BlockState, notify: Boolean) {
         if (!world.isClient) {
-            world.scheduleBlockTick(pos, this, 20)
+            world.scheduleTick(pos, this, 20)
         }
     }
 
     @Suppress("OVERRIDE_DEPRECATION")
-    override fun scheduledTick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
+    override fun tick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
         generateSpringFluid(world, pos, state)
     }
 
     private fun generateSpringFluid(world: Level, pos: BlockPos, state: BlockState) {
         val springType = state.getValue(SPRING_TYPE)
-        val upPos = pos.up()
+        val upPos = pos.above()
         val upState = world.getBlockState(upPos)
 
         // 上方已有流体或非空气方块 → 停止生成，不再重调度
         if (!upState.isAir) return
 
-        world.setBlock(upPos, springType.fluid.defaultBlockState.blockState)
+        world.setBlock(upPos, springType.fluid.defaultFluidState().createLegacyBlock(), 3)
         // 成功后重新调度
-        world.scheduleBlockTick(pos, this, 20)
+        world.scheduleTick(pos, this, 20)
     }
 
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient && state.getValue(SPRING_TYPE) == SpringType.OIL) {
-            val held = player.getItemInHand(hand)
+            val held = player.getItemInHand(InteractionHand.MAIN_HAND)
             if (held.`is`(net.minecraft.world.item.Items.GLASS_BOTTLE)) {
                 held.shrink(1)
-                player.giveItemStack(ItemStack(net.minecraft.world.item.Items.EMERALD))
-                world.playSound(null, pos, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundSource.BLOCKS, 1.0f, 1.0f)
+                player.addItem(ItemStack(net.minecraft.world.item.Items.EMERALD))
+                world.playSound(null, pos, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.BLOCKS, 1.0f, 1.0f)
                 return InteractionResult.SUCCESS
             }
         }
@@ -97,7 +98,7 @@ class SpringBlock : Block(
 
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? = null
 
-    override fun getPickStack(world: net.minecraft.world.level.BlockGetter, pos: BlockPos, state: BlockState): ItemStack {
+    override fun getCloneItemStack(world: net.minecraft.world.level.LevelReader, pos: BlockPos, state: BlockState): ItemStack {
         return ItemStack(this)
     }
 }

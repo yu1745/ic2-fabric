@@ -52,7 +52,7 @@ object ModFluidClient {
                 ?: run { BuildCraftAddon.LOGGER.warn("无法找到 IC2 fluidTintColors 字段"); return }
             field.isAccessible = true
             @Suppress("UNCHECKED_CAST")
-            val map = field.getValue(ull) as? MutableMap<Any, Any>
+            val map = field.get(null) as? MutableMap<Any, Any>
                 ?: run { BuildCraftAddon.LOGGER.warn("IC2 fluidTintColors 不是 MutableMap"); return }
             for ((fluid, color) in ModFluids.fluidTintColors) {
                 map[fluid] = color

@@ -31,6 +31,8 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
+import ic2_120.compat.*
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // i18n: block.ic2_120_industrial_upgrade.neutron_fabricator
 // zh_cn: 中子制造机
@@ -44,7 +46,7 @@ class NeutronFabricatorBlock : MachineBlock() {
         if (world.isClient) null
         else validateTicker(type, NeutronFabricatorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
-    override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): MenuProvider? =
+    override fun getMenuProvider(state: BlockState, world: Level, pos: BlockPos): MenuProvider? =
         world.getBlockEntity(pos) as? MenuProvider
 
     @Deprecated("Override without InteractionHand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
@@ -65,7 +67,7 @@ class NeutronFabricatorBlock : MachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 1.4.0: " A "/"BCB"/" A "：2×末影量子组件 + 1×ic2 物质制造机 + 2×(1.4.0 QuantumItems5)
             // 简化：用末影量子组件 + 高级机器外壳 + 高级电路
             val enderComponent = EnderQuantumComponent::class.instance()

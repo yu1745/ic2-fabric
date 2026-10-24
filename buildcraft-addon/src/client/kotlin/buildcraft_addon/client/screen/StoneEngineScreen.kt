@@ -15,9 +15,13 @@ class StoneEngineScreen(
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<StoneEngineScreenHandler>(handler, playerInventory, title) {
+    // yarn→mojmap 兼容别名
+    private val x get() = leftPos
+    private val y get() = topPos
+    private val textRenderer get() = font
 
     companion object {
-        val TEXTURE: ResourceLocation = ResourceLocation(BuildCraftAddon.MOD_ID, "textures/gui/steam_engine_gui.png")
+        val TEXTURE: ResourceLocation = ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, "textures/gui/steam_engine_gui.png")
         const val TEXTURE_SIZE = 256
         const val BG_WIDTH = 176
         const val BG_HEIGHT = 166
@@ -36,11 +40,11 @@ class StoneEngineScreen(
         imageHeight = BG_HEIGHT
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.blit(TEXTURE, x, y, 0f, 0f, BG_WIDTH, BG_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE)
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, BG_WIDTH, BG_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // Animated flame (bottom-up burn indicator)
-        val burnProgress = handler.getBurnProgress()
+        val burnProgress = menu.getBurnProgress()
         if (burnProgress > 0f) {
             val flameHeight = (burnProgress * FLAME_H).toInt().coerceIn(0, FLAME_H)
             context.blit(
@@ -58,8 +62,8 @@ class StoneEngineScreen(
         renderTooltip(context, mouseX, mouseY)
     }
 
-    override fun drawForeground(context: GuiGraphics, mouseX: Int, mouseY: Int) {
-        context.drawString(textRenderer, title, imageWidth / 2 - textRenderer.getWidth(title) / 2, 6, 0x404040, false)
-        context.drawString(textRenderer, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
+    override fun renderLabels(context: GuiGraphics, mouseX: Int, mouseY: Int) {
+        context.drawString(font, title, imageWidth / 2 - font.width(title) / 2, 6, 0x404040, false)
+        context.drawString(font, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
     }
 }

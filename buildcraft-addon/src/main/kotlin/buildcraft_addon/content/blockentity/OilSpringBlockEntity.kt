@@ -53,7 +53,7 @@ class OilSpringBlockEntity(
         pumpProgress.clear()
         if (nbt.contains("pumpProgress")) {
             val progressList = nbt.getCompound("pumpProgress")
-            for (key in progressList.keys) {
+            for (key in progressList.getAllKeys()) {
                 val entry = progressList.getCompound(key)
                 pumpProgress[key] = PlayerPumpInfo(
                     playerName = entry.getString("name"),

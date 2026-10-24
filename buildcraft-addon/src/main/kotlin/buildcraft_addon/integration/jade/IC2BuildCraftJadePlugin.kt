@@ -101,13 +101,13 @@ object BcJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccess
                 data.putBoolean("isActive", be.isActive)
                 data.putBoolean("isBlocked", be.isBlocked)
                 if (!be.tank.variant.isBlank) {
-                    data.putString("tankFluid", net.minecraft.core.registries.BuiltInRegistries.FLUID.getId(be.tank.variant.fluid).toString())
+                    data.putString("tankFluid", net.minecraft.core.registries.BuiltInRegistries.FLUID.getKey(be.tank.variant.fluid).toString())
                 }
             }
         }
     }
 
-    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val kind = accessor.serverData.getString("kind")
         when (kind) {
             "redstone_engine", "stone_engine", "iron_engine", "rf_engine" -> {
@@ -172,7 +172,7 @@ object BcJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccess
                     val id = ResourceLocation.tryParse(fid)
                     if (id != null) {
                         val fluid = net.minecraft.core.registries.BuiltInRegistries.FLUID.get(id)
-                        BuiltInRegistries.FLUID.getId(fluid).toLanguageKey().let { Component.translatable("block.$it") }
+                        BuiltInRegistries.FLUID.getKey(fluid).toLanguageKey().let { Component.translatable("block.$it") }
                     } else null
                 } else null
 

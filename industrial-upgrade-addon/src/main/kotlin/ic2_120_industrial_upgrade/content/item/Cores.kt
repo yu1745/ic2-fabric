@@ -17,6 +17,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // ===== 光谱核心 spectral_core =====
 // zh_cn: 光谱核心  en_us: Spectral Core
@@ -24,7 +25,7 @@ import java.util.function.Consumer
 class SpectralCore : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // CBC/CAC/CBC：1×量子核心 + 4×光子 + 4×分光器
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SpectralCore::class.instance(), 1)
                 .pattern("CBC")
@@ -33,7 +34,7 @@ class SpectralCore : Item(Item.Properties()) {
                 .define('A', QuantumCore::class.instance())
                 .define('B', Photoniy::class.instance())
                 .define('C', SolarSplitter::class.instance())
-                .unlockedBy(has(QuantumCore::class.instance()), has(QuantumCore::class.instance()))
+                .unlockedBy(getHasName(QuantumCore::class.instance()), has(QuantumCore::class.instance()))
                 .save(exporter, IC2IndustrialUpgrade.id("spectral_core"))
         }
     }
@@ -45,7 +46,7 @@ class SpectralCore : Item(Item.Properties()) {
 class ProtonCore : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // +形：4×质子 + 2×富集阳光合金IV + 1×光谱核心
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ProtonCore::class.instance(), 1)
                 .pattern(" B ")
@@ -54,7 +55,7 @@ class ProtonCore : Item(Item.Properties()) {
                 .define('A', EnrichedSunnariumAlloy4::class.instance())
                 .define('B', Proton::class.instance())
                 .define('C', SpectralCore::class.instance())
-                .unlockedBy(has(SpectralCore::class.instance()), has(SpectralCore::class.instance()))
+                .unlockedBy(getHasName(SpectralCore::class.instance()), has(SpectralCore::class.instance()))
                 .save(exporter, IC2IndustrialUpgrade.id("proton_core"))
         }
     }
@@ -66,7 +67,7 @@ class ProtonCore : Item(Item.Properties()) {
 class SingularCore : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // ABA/DCD/ABA：4×末影量子组件 + 1×光子锭 + 2×光伏铱板 + 2×富集阳光合金
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SingularCore::class.instance(), 1)
                 .pattern("ABA")
@@ -76,7 +77,7 @@ class SingularCore : Item(Item.Properties()) {
                 .define('B', PhotovoltaicIridiumPlate::class.instance())
                 .define('C', PhotoniyIngot::class.instance())
                 .define('D', EnrichedSunnariumAlloy::class.instance())
-                .unlockedBy(has(EnderQuantumComponent::class.instance()), has(EnderQuantumComponent::class.instance()))
+                .unlockedBy(getHasName(EnderQuantumComponent::class.instance()), has(EnderQuantumComponent::class.instance()))
                 .save(exporter, IC2IndustrialUpgrade.id("singular_core"))
         }
     }
@@ -88,13 +89,13 @@ class SingularCore : Item(Item.Properties()) {
 class QuantCore2 : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // ABA：2×富集阳光合金III + 1×奇点核心
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuantCore2::class.instance(), 1)
                 .pattern("ABA")
                 .define('A', EnrichedSunnariumAlloy3::class.instance())
                 .define('B', SingularCore::class.instance())
-                .unlockedBy(has(SingularCore::class.instance()), has(SingularCore::class.instance()))
+                .unlockedBy(getHasName(SingularCore::class.instance()), has(SingularCore::class.instance()))
                 .save(exporter, IC2IndustrialUpgrade.id("quant_core2"))
         }
     }
@@ -106,13 +107,13 @@ class QuantCore2 : Item(Item.Properties()) {
 class QuantCore1 : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // ABA：2×富集阳光合金II + 1×量子核心II
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuantCore1::class.instance(), 1)
                 .pattern("ABA")
                 .define('A', EnrichedSunnariumAlloy2::class.instance())
                 .define('B', QuantCore2::class.instance())
-                .unlockedBy(has(QuantCore2::class.instance()), has(QuantCore2::class.instance()))
+                .unlockedBy(getHasName(QuantCore2::class.instance()), has(QuantCore2::class.instance()))
                 .save(exporter, IC2IndustrialUpgrade.id("quant_core1"))
         }
     }
@@ -124,7 +125,7 @@ class QuantCore1 : Item(Item.Properties()) {
 class NeutronCore : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // +形：4×中子 + 1×量子核心II
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, NeutronCore::class.instance(), 1)
                 .pattern(" A ")
@@ -132,7 +133,7 @@ class NeutronCore : Item(Item.Properties()) {
                 .pattern(" A ")
                 .define('A', Neutron::class.instance())
                 .define('B', QuantCore2::class.instance())
-                .unlockedBy(has(QuantCore2::class.instance()), has(QuantCore2::class.instance()))
+                .unlockedBy(getHasName(QuantCore2::class.instance()), has(QuantCore2::class.instance()))
                 .save(exporter, IC2IndustrialUpgrade.id("neutron_core"))
         }
     }
@@ -144,7 +145,7 @@ class NeutronCore : Item(Item.Properties()) {
 class EnderQuantumComponent : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // ABA/BCB/ABA：4×光伏铱板 + 4×末影之眼 + 1×下界之星
             // （1.4.0 原用 IC2 强化铱板，按计划全部替换为光伏铱板）
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnderQuantumComponent::class.instance(), 1)

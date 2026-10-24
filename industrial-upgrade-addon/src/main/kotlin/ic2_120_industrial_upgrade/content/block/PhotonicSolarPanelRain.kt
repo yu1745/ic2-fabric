@@ -21,6 +21,9 @@ import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
+import ic2_120.compat.*
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // i18n: block.ic2_120_industrial_upgrade.photonic_solar_panelrain
 // zh_cn: 光子雨能太阳能发电机  en_us: Photonic Rain Panel
@@ -39,19 +42,19 @@ class PhotonicSolarPanelRainBlock : IndustrialSolarPanelBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // "BA"：光子太阳能发电机 + RainLinse（ASA）
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PhotonicSolarPanelRainBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
                 .define('B', PhotonicSolarPanelBlock::class.item())
                 .define('A', RainLinse::class.instance())
-                .unlockedBy(has(PhotonicSolarPanelBlock::class.item()), has(PhotonicSolarPanelBlock::class.item()))
+                .unlockedBy(getHasName(PhotonicSolarPanelBlock::class.item()), has(PhotonicSolarPanelBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("photonic_solar_panelrain"))
             // 变体回退：变体 → 原版（透镜不返还）
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, PhotonicSolarPanelBlock::class.item(), 1)
                 .requires(PhotonicSolarPanelRainBlock::class.item())
-                .unlockedBy(has(PhotonicSolarPanelRainBlock::class.item()), has(PhotonicSolarPanelRainBlock::class.item()))
+                .unlockedBy(getHasName(PhotonicSolarPanelRainBlock::class.item()), has(PhotonicSolarPanelRainBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("photonic_solar_panelrain_revert"))
         }
     }

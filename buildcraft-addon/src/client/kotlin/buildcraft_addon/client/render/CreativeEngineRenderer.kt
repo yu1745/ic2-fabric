@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.inventory.InventoryMenu
 import net.minecraft.resources.ResourceLocation
+import ic2_120.compat.*
 
 class CreativeEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
     BlockEntityRenderer<CreativeEngineBlockEntity> {
@@ -23,8 +24,8 @@ class CreativeEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
 
     private fun ensureSprites() {
         if (spritesLoaded) return
-        val atlas = Minecraft.getInstance().bakedModelManager.getAtlas(InventoryMenu.BLOCK_ATLAS_TEXTURE)
-        fun sprite(path: String) = atlas.getSprite(ResourceLocation(BuildCraftAddon.MOD_ID, path))
+        val atlas = Minecraft.getInstance().modelManager.getAtlas(InventoryMenu.BLOCK_ATLAS)
+        fun sprite(path: String) = atlas.getSprite(ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, path))
         trunkBlack = sprite("block/engine/trunk_black")
         backSprite = sprite("block/engine/creative/back")
         sideSprite = sprite("block/engine/creative/side")
@@ -41,7 +42,7 @@ class CreativeEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
         overlay: Int
     ) {
         ensureSprites()
-        val buffer = vertexConsumers.getBuffer(RenderType.getCutout())
+        val buffer = vertexConsumers.getBuffer(RenderType.cutout())
         EngineRenderHelper.renderEngine(
             matrices = matrices,
             buffer = buffer,
@@ -49,7 +50,7 @@ class CreativeEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
             overlay = overlay,
             progress = entity.progress,
             stage = PowerStage.BLACK,
-            facing = entity.cachedState.getValue(et.minecraft.world.level.block.state.properties.BlockStateProperties.FACING),
+            facing = entity.cachedState.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING),
             world = entity.world,
             pos = entity.pos,
             backSprite = backSprite,
@@ -59,5 +60,5 @@ class CreativeEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
         )
     }
 
-    override fun rendersOutsideBoundingBox(entity: CreativeEngineBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(entity: CreativeEngineBlockEntity): Boolean = true
 }

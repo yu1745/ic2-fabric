@@ -45,7 +45,7 @@ class NeutronFabricatorScreenHandler(
 
     /** 升级槽：仅接受 UpgradeItemRegistry 注册且本机实现了对应接口的升级（与物质生成机一致） */
     private val upgradeSlotSpec: SlotSpec by lazy {
-        UpgradeSlotLayout.slotSpec { context.get({ world, pos -> world.getBlockEntity(pos) }, null) }
+        UpgradeSlotLayout.slotSpec { context.evaluate({ world, pos -> world.getBlockEntity(pos) }, null) }
     }
 
     companion object {
@@ -77,7 +77,7 @@ class NeutronFabricatorScreenHandler(
         fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): NeutronFabricatorScreenHandler {
             val pos = buf.readBlockPos()
             val propertyCount = buf.readVarInt()
-            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val context = ContainerLevelAccess.create(playerInventory.player.level(), pos)
             val propertyDelegate = SimpleContainerData(propertyCount)
             // 客户端用临时 SimpleContainer 占位（真实数据由服务端同步）
             val inv = SimpleContainer(NeutronFabricatorBlockEntity.INVENTORY_SIZE)
@@ -118,7 +118,7 @@ class NeutronFabricatorScreenHandler(
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot .hasItem()) {
-            val stackInSlot = slot.stack
+            val stackInSlot = slot.item
             stack = stackInSlot.copy()
             if (index < machineSlotCount) {
                 // 机器槽 → 玩家背包
@@ -127,7 +127,7 @@ class NeutronFabricatorScreenHandler(
                 // 玩家背包 → 机器槽（由 PredicateSlot 的 spec 自动判定能否放入对应槽）
                 if (!moveItemStackTo(stackInSlot, 0, machineSlotCount, false)) return ItemStack.EMPTY
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY) else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
         }
@@ -135,7 +135,7 @@ class NeutronFabricatorScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 }

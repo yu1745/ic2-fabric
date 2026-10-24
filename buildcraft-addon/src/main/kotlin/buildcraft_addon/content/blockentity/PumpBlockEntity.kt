@@ -34,6 +34,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
 import java.util.*
+import ic2_120.compat.*
 
 /**
  * 液泵
@@ -148,7 +149,7 @@ class PumpBlockEntity(
     // ========== 红石 ==========
     fun checkRedstonePower() {
         val w = world ?: return
-        val powered = w.isReceivingRedstonePower(pos)
+        val powered = w.hasNeighborSignal(pos)
         if (powered != isRedstonePowered) {
             isRedstonePowered = powered
             setChanged()
@@ -175,13 +176,13 @@ class PumpBlockEntity(
         var found: BlockPos? = null
 
         // 1. 向下扫第一个流体
-        for (searchY in pos.y - 1 downTo w.bottomY) {
+        for (searchY in pos.y - 1 downTo w.minBuildHeight) {
             if (pos.y - searchY > MAX_DEPTH) break
             val check = BlockPos(pos.x, searchY, pos.z)
             val fs = w.getFluidState(check)
             if (!fs.isEmpty) {
                 found = check
-                targetFluid = fs.fluid
+                targetFluid = fs.type
                 tubeDepth = pos.y - searchY
                 break
             }
@@ -196,7 +197,7 @@ class PumpBlockEntity(
         }
         foundPos = found
         val target = targetFluid!!
-        val targetBlock = target.defaultBlockState.blockState.block
+        val targetBlock = target.defaultFluidState().createLegacyBlock().block
 
         // 2. 6 邻接 BFS 收集半径内所有同流体方块
         // 复杂度 O(N)，N = 实际流体方块数（油井球体 ~4000），远低于原立方体暴力扫描
@@ -207,14 +208,14 @@ class PumpBlockEntity(
         while (bfsQueue.isNotEmpty()) {
             val cur = bfsQueue.removeFirst()
             for (dir in ALL_DIRS) {
-                val np = cur.offset(dir)
+                val np = cur.relative(dir)
                 if (np in fluidSet) continue
                 val dx = np.x - foundX; val dy = np.y - foundY; val dz = np.z - foundZ
                 if (dx * dx + dy * dy + dz * dz > MAX_RADIUS_SQ) continue
                 val nfs = w.getFluidState(np)
-                if (nfs.isEmpty || nfs.fluid == Fluids.EMPTY) continue
-                val nf = nfs.fluid
-                if (nf !== target && nf.defaultBlockState.blockState.block !== targetBlock) continue
+                if (nfs.isEmpty || nfs.type == Fluids.EMPTY) continue
+                val nf = nfs.type
+                if (nf !== target && nf.defaultFluidState().createLegacyBlock().block !== targetBlock) continue
                 fluidSet.add(np)
                 bfsQueue.addLast(np)
             }
@@ -251,12 +252,12 @@ class PumpBlockEntity(
         if (target == Fluids.WATER) {
             var waterNeighborCount = 0
             for (dir in ALL_DIRS) {
-                if (found.offset(dir) in fluidSet) waterNeighborCount++
+                if (found.relative(dir) in fluidSet) waterNeighborCount++
             }
             if (waterNeighborCount >= 2) {
-                val below = w.getBlockState(found.down())
-                val belowFluid = below.fluidState.fluid
-                if (belowFluid == Fluids.WATER || belowFluid == Fluids.FLOWING_WATER || below.blocksMovement()) {
+                val below = w.getBlockState(found.below())
+                val belowFluid = below.fluidState.type
+                if (belowFluid == Fluids.WATER || belowFluid == Fluids.FLOWING_WATER) {
                     isInfiniteWater = true
                 }
             }
@@ -266,7 +267,7 @@ class PumpBlockEntity(
         if (target == ModFluids.CRUDE_OIL_STILL) {
             val springBlock = SPRING_BLOCK
             outer1@ for (dx in -10..10) for (dz in -10..10) {
-                val sp = BlockPos(found.x + dx, w.bottomY + 1, found.z + dz)
+                val sp = BlockPos(found.x + dx, w.minBuildHeight + 1, found.z + dz)
                 if (w.getBlockState(sp).`is`(springBlock)) { oilSpringPos = sp; break@outer1 }
             }
         }
@@ -288,7 +289,7 @@ class PumpBlockEntity(
         if (tank.amount >= tank.capacity) return
         val found = foundPos ?: return
         val target = targetFluid ?: return
-        val targetBlock = target.defaultBlockState.blockState.block
+        val targetBlock = target.defaultFluidState().createLegacyBlock().block
 
         while (fluidQueue.isNotEmpty()) {
             val dp = fluidQueue.removeFirst()
@@ -303,13 +304,13 @@ class PumpBlockEntity(
             }
 
             val fs = w.getFluidState(dp)
-            if (fs.isEmpty || fs.fluid == Fluids.EMPTY) {
+            if (fs.isEmpty || fs.type == Fluids.EMPTY) {
                 fluidSet.remove(dp)
                 continue
             }
-            val fluid = fs.fluid
-            if (nf_check(fluid, target, targetBlock).not()) continue
-            if (!tank.isResourceBlank && !tank.variant.`is`(fluid)) continue
+            val fluid = fs.type
+            if (!nf_check(fluid, target, targetBlock)) continue
+            if (!tank.isResourceBlank && tank.variant.fluid != fluid) continue
 
             // 优化：远端节点（邻居流体数 ≤ 1）天然是边界/表面，dp 即将与主体断开
             // 这种情况 A* 必然失败（从表面走到 foundPos 至少要穿过整团），直接视为连通放行
@@ -342,7 +343,7 @@ class PumpBlockEntity(
             if (isInfiniteWater && fluid == Fluids.WATER) {
                 // 无限水源不动方块
             } else {
-                w.setBlock(dp, Blocks.AIR.defaultBlockState, Block.UPDATE_ALL)
+                w.setBlock(dp, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL)
                 totalPumped++
 
                 if (fluid == ModFluids.CRUDE_OIL_STILL) {
@@ -366,7 +367,7 @@ class PumpBlockEntity(
     }
 
     private fun nf_check(fluid: Fluid, target: Fluid, targetBlock: net.minecraft.world.level.block.Block): Boolean {
-        return fluid === target || fluid.defaultBlockState.blockState.block === targetBlock
+        return fluid === target || fluid.defaultFluidState().createLegacyBlock().block === targetBlock
     }
 
     /**
@@ -376,7 +377,7 @@ class PumpBlockEntity(
     private fun countFluidNeighbors(dp: BlockPos): Int {
         var count = 0
         for (dir in ALL_DIRS) {
-            if (dp.offset(dir) in fluidSet) count++
+            if (dp.relative(dir) in fluidSet) count++
         }
         return count
     }
@@ -417,11 +418,11 @@ class PumpBlockEntity(
             if (curPos == goal) return true
 
             for (dir in ALL_DIRS) {
-                val np = curPos.offset(dir)
+                val np = curPos.relative(dir)
                 val nfs = w.getFluidState(np)
-                if (nfs.isEmpty || nfs.fluid == Fluids.EMPTY) continue
-                val nf = nfs.fluid
-                if (nf !== target && nf.defaultBlockState.blockState.block !== targetBlock) continue
+                if (nfs.isEmpty || nfs.type == Fluids.EMPTY) continue
+                val nf = nfs.type
+                if (nf !== target && nf.defaultFluidState().createLegacyBlock().block !== targetBlock) continue
 
                 val dx = np.x - foundPos!!.x; val dy = np.y - foundPos!!.y; val dz = np.z - foundPos!!.z
                 if (dx * dx + dy * dy + dz * dz > MAX_RADIUS_SQ) continue
@@ -459,7 +460,7 @@ class PumpBlockEntity(
             val bp = BlockPos(pos.x, y, pos.z)
             if (w.getBlockState(bp).`is`(tubeBlock)) {
                 if (ClaimProtection.isProtected(w, bp, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK)) continue
-                w.setBlock(bp, Blocks.AIR.defaultBlockState, Block.UPDATE_ALL)
+                w.setBlock(bp, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL)
             } else break
         }
         for (y in pos.y - 1 downTo targetY + 1) {
@@ -467,14 +468,14 @@ class PumpBlockEntity(
             val bs = w.getBlockState(bp)
             if (bs.isAir || bs.`is`(tubeBlock)) {
                 if (ClaimProtection.isProtected(w, bp, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK)) continue
-                w.setBlock(bp, tubeBlock.defaultBlockState, Block.UPDATE_ALL)
+                w.setBlock(bp, tubeBlock.defaultBlockState(), Block.UPDATE_ALL)
             }
         }
     }
 
-    /** 管道清理移至 PumpBlock.onRemove()，不在 markRemoved 中做 */
-    override fun markRemoved() {
-        super.markRemoved()
+    /** 管道清理移至 PumpBlock.onRemove()，不在 setRemoved 中做 */
+    override fun setRemoved() {
+        super.setRemoved()
     }
 
     // ========== Tick ==========
@@ -507,7 +508,7 @@ class PumpBlockEntity(
     private fun syncTubeDepthToClient() {
         val w = world ?: return
         val sw = w as? net.minecraft.server.level.ServerLevel ?: return
-        sw.chunkSource.markForUpdate(pos)
+        sw.chunkSource.blockChanged(pos)
     }
 
     fun clientTick(deltaTick: Int) {
@@ -532,7 +533,7 @@ class PumpBlockEntity(
 
     // ========== 信息 ==========
     fun getTankInfo(): String {
-        val name = if (tank.variant.isBlank) "空" else tank.variant.fluid.defaultBlockState.blockState.block.name.string
+        val name = if (tank.variant.isBlank) "空" else tank.variant.fluid.defaultFluidState().createLegacyBlock().block.name.string
         return "${name}: ${tank.amount} / ${tank.capacity} mB"
     }
 
@@ -540,7 +541,7 @@ class PumpBlockEntity(
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
         nbt.putLong("tankAmount", tank.amount)
-        if (!tank.variant.isBlank) nbt.putString("tankFluid", BuiltInRegistries.FLUID.getId(tank.variant.fluid).toString())
+        if (!tank.variant.isBlank) nbt.putString("tankFluid", BuiltInRegistries.FLUID.getKey(tank.variant.fluid).toString())
         nbt.putBoolean("powered", isRedstonePowered)
         nbt.putBoolean("isActive", isActive)
         nbt.putBoolean("isBlocked", isBlocked)
@@ -554,7 +555,7 @@ class PumpBlockEntity(
         super.loadAdditional(nbt, lookup)
         val amt = nbt.getLong("tankAmount")
         if (amt > 0 && nbt.contains("tankFluid")) {
-            val fid = ResourceLocation(nbt.getString("tankFluid"))
+            val fid = ResourceLocation.parse(nbt.getString("tankFluid"))
             tank.variant = FluidVariant.of(BuiltInRegistries.FLUID.get(fid))
             tank.amount = amt
         }
@@ -570,7 +571,9 @@ class PumpBlockEntity(
     // ========== 客户端 NBT 同步 ==========
     // 客户端渲染需要 tubeDepth，必须把 NBT 同步到客户端。
     // 否则 PumpRenderer 收到的 tubeDepth 永远是 0，管道不显示。
-    override fun toInitialChunkDataNbt(): CompoundTag = createNbt()
+    override fun getUpdateTag(lookup: HolderLookup.Provider): CompoundTag = saveCustomOnly(lookup)
 
-    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
+    override fun getUpdatePacket(): net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket =
+        net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.create(this)
+
 }

@@ -26,6 +26,8 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import ic2_120.compat.*
+import net.minecraft.world.level.block.Block
 
 /**
  * 燃烧引擎（铁引擎）
@@ -152,7 +154,7 @@ class IronEngineBlockEntity(
 
     fun checkRedstonePower() {
         val world = world ?: return
-        val powered = world.isReceivingRedstonePower(pos)
+        val powered = world.hasNeighborSignal(pos)
         if (powered != isRedstonePowered) {
             isRedstonePowered = powered
             if (!powered) {
@@ -166,7 +168,7 @@ class IronEngineBlockEntity(
         val world = world ?: return
         val next = Direction.entries[(current.ordinal + 1) % 6]
         currentDirection = next
-        world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, next))
+        world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, next), Block.UPDATE_ALL)
         setChanged()
     }
 
@@ -208,7 +210,7 @@ class IronEngineBlockEntity(
             else -> 0
         }
         override fun set(index: Int, value: Int) {}
-        override fun getContainerSize(): Int = 4
+        override fun getCount(): Int = 4
     }
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
@@ -256,8 +258,8 @@ class IronEngineBlockEntity(
         if (!world.isClient) {
             if (!ClaimProtection.allAllowedUuid(world, listOf(pos), null, ClaimProtection.EDIT_BLOCK) ||
                 !ClaimProtection.explosionCubeAllowed(world, pos, 4.0f, null)) return
-            world.createExplosion(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, 4.0f, true, net.minecraft.world.level.Level.ExplosionSourceType.BLOCK)
-            world.breakBlock(pos, false)
+            world.explode(null, pos.x + 0.5, pos.y + 0.5, pos.z + 0.5, 4.0f, true, net.minecraft.world.level.Level.ExplosionInteraction.BLOCK)
+            world.destroyBlock(pos, false)
         }
     }
 
@@ -305,7 +307,7 @@ class IronEngineBlockEntity(
         if (!world.isClient) return
         currentDirection = cachedState.getValue(BlockStateProperties.FACING)
 
-        val powered = world.isReceivingRedstonePower(pos)
+        val powered = world.hasNeighborSignal(pos)
         isRedstonePowered = powered
         isBurning = burnTime > 0 && powered
 

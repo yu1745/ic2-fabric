@@ -11,12 +11,12 @@ object IC2AdvancedSolarAddonDataGenerator : DataGeneratorEntrypoint {
         val pack = fabricDataGenerator.createPack()
 
         // 注册合成表生成器（扫描 @RecipeProvider 注解方法）
-        pack.addProvider { output: net.fabricmc.fabric.api.datagen.v1.FabricDataOutput ->
-            ModRecipeProvider(output)
+        pack.addProvider { output: net.fabricmc.fabric.api.datagen.v1.FabricDataOutput, registriesFuture ->
+            ModRecipeProvider(output, registriesFuture)
         }
         // 注册方块掉落表生成器（机器方块需扳手拆才掉完整机器）
-        pack.addProvider { output: net.fabricmc.fabric.api.datagen.v1.FabricDataOutput ->
-            ModBlockLootTableProvider(output)
+        pack.addProvider { output: net.fabricmc.fabric.api.datagen.v1.FabricDataOutput, registriesFuture ->
+            ModBlockLootTableProvider(output, registriesFuture)
         }
         // 注册方块标签生成器（为机器方块添加挖掘标签）
         pack.addProvider { output, registriesFuture ->

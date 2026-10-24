@@ -13,6 +13,7 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
+import ic2_120.compat.*
 
 /** 所有面板共用的 ACTIVE 属性，名称与 advanced-solar-addon 保持一致。 */
 val SOLAR_ACTIVE: BooleanProperty = BooleanProperty.create("active")
@@ -22,7 +23,7 @@ val SOLAR_ACTIVE: BooleanProperty = BooleanProperty.create("active")
  * 交互/放置/状态属性逻辑统一，行为完全复用 ASA 的 SolarPanelBlockEntity。
  */
 abstract class IndustrialSolarPanelBlock : MachineBlock() {
-    override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): MenuProvider? =
+    override fun getMenuProvider(state: BlockState, world: Level, pos: BlockPos): MenuProvider? =
         world.getBlockEntity(pos) as? MenuProvider
 
     @Deprecated("Override without InteractionHand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))

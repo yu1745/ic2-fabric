@@ -17,30 +17,34 @@ class MolecularTransformerScreen(
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<MolecularTransformerScreenHandler>(handler, playerInventory, title) {
+    // yarn→mojmap 兼容别名
+    private val x get() = leftPos
+    private val y get() = topPos
+    private val textRenderer get() = font
 
     init {
         imageWidth = GUI_WIDTH
         imageHeight = GUI_HEIGHT
-        playerInventoryTitleY = -20000
+        inventoryLabelY = -20000
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.blit(TEXTURE, x, y, 0f, 0f, GUI_WIDTH, GUI_HEIGHT, TEX_WIDTH, TEX_HEIGHT)
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, GUI_WIDTH, GUI_HEIGHT, TEX_WIDTH, TEX_HEIGHT)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
-        val progress = handler.sync.progress.toLong().coerceAtLeast(0)
-        val requiredEnergy = handler.sync.requiredEnergy.toLong().coerceAtLeast(0)
+        val progress = menu.sync.progress.toLong().coerceAtLeast(0)
+        val requiredEnergy = menu.sync.requiredEnergy.toLong().coerceAtLeast(0)
         val hasRecipe = requiredEnergy > 0
         val progressFraction = if (hasRecipe) (progress.toFloat() / requiredEnergy.toFloat()).coerceIn(0f, 1f) else 0f
-        val inputEuPerTick = handler.sync.avgInserted.toLong().coerceAtLeast(0)
+        val inputEuPerTick = menu.sync.avgInserted.toLong().coerceAtLeast(0)
 
         // 工作进度条：纹理区域 (221,8)-(231,22) 11×15 → 渲染于 (23,48)
-        val gaugeX = x + GAUGE_RENDER_X
-        val gaugeY = y + GAUGE_RENDER_Y
+        val gaugeX = leftPos + GAUGE_RENDER_X
+        val gaugeY = topPos + GAUGE_RENDER_Y
         val fillH = (GAUGE_TEX_H * progressFraction).toInt().coerceAtLeast(0)
         if (fillH > 0) {
             // 从上到下填充
@@ -49,44 +53,44 @@ class MolecularTransformerScreen(
             context.disableScissor()
         }
 
-        val tx = x + TEXT_X
+        val tx = leftPos + TEXT_X
 
         // 输入: itemName at (59, 25)
         val inputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.input").string
-        context.drawString(textRenderer, inputLabel, tx, y + TEXT_Y_INPUT, 0xFFFFFF, false)
+        context.drawString(font, inputLabel, tx, y + TEXT_Y_INPUT, 0xFFFFFF, false)
         if (hasRecipe) {
-            val inputName = getItemName(handler.sync.inputItemId)
-            context.drawString(textRenderer, inputName, tx + textRenderer.getWidth(inputLabel), y + TEXT_Y_INPUT, 0xFFFFFF, false)
+            val inputName = getItemName(menu.sync.inputItemId)
+            context.drawString(font, inputName, tx + font.width(inputLabel), y + TEXT_Y_INPUT, 0xFFFFFF, false)
         }
 
         // 输出: outputName at (59, 38)
         val outputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.output").string
-        context.drawString(textRenderer, outputLabel, tx, y + TEXT_Y_OUTPUT, 0xFFFFFF, false)
+        context.drawString(font, outputLabel, tx, y + TEXT_Y_OUTPUT, 0xFFFFFF, false)
         if (hasRecipe) {
-            val outputName = getItemName(handler.sync.outputItemId)
-            context.drawString(textRenderer, outputName, tx + textRenderer.getWidth(outputLabel), y + TEXT_Y_OUTPUT, 0xFFFFFF, false)
+            val outputName = getItemName(menu.sync.outputItemId)
+            context.drawString(font, outputName, tx + font.width(outputLabel), y + TEXT_Y_OUTPUT, 0xFFFFFF, false)
         }
 
         // 能耗: total required EU at (59, 51)
         val energyLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.energy_per_operation").string
-        context.drawString(textRenderer, energyLabel, tx, y + TEXT_Y_ENERGY, 0xFFFFFF, false)
+        context.drawString(font, energyLabel, tx, y + TEXT_Y_ENERGY, 0xFFFFFF, false)
         if (hasRecipe) {
-            context.drawString(textRenderer, formatNum(requiredEnergy) + " EU", tx + textRenderer.getWidth(energyLabel), y + TEXT_Y_ENERGY, 0xFFFFFF, false)
+            context.drawString(font, formatNum(requiredEnergy) + " EU", tx + font.width(energyLabel), y + TEXT_Y_ENERGY, 0xFFFFFF, false)
         }
 
         // EU输入: avgInserted at (59, 64)
         val euInputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.energy_per_tick").string
-        context.drawString(textRenderer, euInputLabel, tx, y + TEXT_Y_EU_INPUT, 0xFFFFFF, false)
+        context.drawString(font, euInputLabel, tx, y + TEXT_Y_EU_INPUT, 0xFFFFFF, false)
         if (hasRecipe) {
-            context.drawString(textRenderer, formatNum(inputEuPerTick) + " EU/t", tx + textRenderer.getWidth(euInputLabel), y + TEXT_Y_EU_INPUT, 0xFFFFFF, false)
+            context.drawString(font, formatNum(inputEuPerTick) + " EU/t", tx + font.width(euInputLabel), y + TEXT_Y_EU_INPUT, 0xFFFFFF, false)
         }
 
         // 进度: percentage% at (59, 77)
         val progressLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.progress").string
-        context.drawString(textRenderer, progressLabel, tx, y + TEXT_Y_PROGRESS, 0xFFFFFF, false)
+        context.drawString(font, progressLabel, tx, y + TEXT_Y_PROGRESS, 0xFFFFFF, false)
         if (hasRecipe) {
             val progressPercent = String.format("%d%%", (progressFraction * 100f).toInt())
-            context.drawString(textRenderer, progressPercent, tx + textRenderer.getWidth(progressLabel), y + TEXT_Y_PROGRESS, 0xFFFFFF, false)
+            context.drawString(font, progressPercent, tx + font.width(progressLabel), y + TEXT_Y_PROGRESS, 0xFFFFFF, false)
         }
 
         renderTooltip(context, mouseX, mouseY)
@@ -94,7 +98,7 @@ class MolecularTransformerScreen(
 
     private fun getItemName(rawId: Int): String {
         if (rawId == 0) return ""
-        val item = Item.byRawId(rawId)
+        val item = Item.byId(rawId)
         return item.getName(ItemStack(item)).string
     }
 

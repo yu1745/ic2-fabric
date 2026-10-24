@@ -17,9 +17,13 @@ class RFEngineScreen(
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<RFEngineScreenHandler>(handler, playerInventory, title) {
+    // yarn→mojmap 兼容别名
+    private val x get() = leftPos
+    private val y get() = topPos
+    private val textRenderer get() = font
 
     companion object {
-        val TEXTURE: ResourceLocation = ResourceLocation(BuildCraftAddon.MOD_ID, "textures/gui/rf_engine_gui.png")
+        val TEXTURE: ResourceLocation = ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, "textures/gui/rf_engine_gui.png")
         const val TEXTURE_SIZE = 256
         const val BG_WIDTH = 176
         const val BG_HEIGHT = 177
@@ -54,11 +58,11 @@ class RFEngineScreen(
         imageHeight = BG_HEIGHT
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.blit(TEXTURE, x, y, 0f, 0f, BG_WIDTH, BG_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE)
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, BG_WIDTH, BG_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // RF battery bar (bottom-up)
-        val rfLevel = handler.getCurrentRF()
+        val rfLevel = menu.getCurrentRF()
         val rfHeight = (rfLevel.toFloat() / MAX_RF * RF_BAR_H).toInt().coerceIn(0, RF_BAR_H)
         if (rfHeight > 0) {
             // Draw the RF bar from the texture, clipped
@@ -90,8 +94,8 @@ class RFEngineScreen(
         renderTooltip(context, mouseX, mouseY)
     }
 
-    override fun drawForeground(context: GuiGraphics, mouseX: Int, mouseY: Int) {
-        context.drawString(textRenderer, title, imageWidth / 2 - textRenderer.getWidth(title) / 2, 6, 0x404040, false)
-        context.drawString(textRenderer, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
+    override fun renderLabels(context: GuiGraphics, mouseX: Int, mouseY: Int) {
+        context.drawString(font, title, imageWidth / 2 - font.width(title) / 2, 6, 0x404040, false)
+        context.drawString(font, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
     }
 }

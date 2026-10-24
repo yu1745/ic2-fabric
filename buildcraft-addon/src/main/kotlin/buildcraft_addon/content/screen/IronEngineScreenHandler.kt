@@ -23,7 +23,6 @@ class IronEngineScreenHandler(
 ) : AbstractContainerMenu(IronEngineScreenHandler::class.type(), syncId) {
 
     init {
-        checkDataCount(propertyDelegate, 4)
         // No item slots — only fluid tanks
         // Player inventory (y offset = 95)
         for (row in 0..2) {
@@ -50,7 +49,7 @@ class IronEngineScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean {
-        return context.get({ world, pos ->
+        return context.evaluate({ world, pos ->
             world.getBlockState(pos).block is IronEngineBlock && player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
     }
@@ -60,7 +59,7 @@ class IronEngineScreenHandler(
         fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): IronEngineScreenHandler {
             buf.readBlockPos()
             buf.readVarInt()
-            return IronEngineScreenHandler(syncId, playerInventory, ContainerLevelAccess.EMPTY, SimpleContainerData(4))
+            return IronEngineScreenHandler(syncId, playerInventory, ContainerLevelAccess.NULL, SimpleContainerData(4))
         }
     }
 }

@@ -27,18 +27,20 @@ import net.minecraft.world.phys.shapes.VoxelShape
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
+import ic2_120.compat.*
+import net.minecraft.world.level.block.state.BlockBehaviour
 
 @ModBlock(name = "creative_engine", registerItem = true, tab = CreativeTab.BUILDCRAFT)
-class CreativeEngineBlock : BaseEntityBlock(
-    Settings.create().strength(-1.0f, 3600000.0f) .noOcclusion()
-), EntityBlock {
+class CreativeEngineBlock(properties: BlockBehaviour.Properties = Properties.of().strength(-1.0f, 3600000.0f).noOcclusion()) : BaseEntityBlock(properties), EntityBlock {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec(::CreativeEngineBlock)
+
 
     companion object {
-        private val SHAPE_ENGINE: VoxelShape = Shapes.fullCube()
+        private val SHAPE_ENGINE: VoxelShape = Shapes.block()
     }
 
     init {
-        registerDefaultState(stateManager.defaultBlockState.setValue(BlockStateProperties.FACING, Direction.UP))
+        registerDefaultState(defaultBlockState().setValue(BlockStateProperties.FACING, Direction.UP))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -61,7 +63,7 @@ class CreativeEngineBlock : BaseEntityBlock(
         return InteractionResult.SUCCESS
     }
 
-    override fun onPlaced(world: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
+    override fun setPlacedBy(world: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? CreativeEngineBlockEntity ?: return
             be.currentDirection = state.getValue(BlockStateProperties.FACING)
@@ -70,11 +72,11 @@ class CreativeEngineBlock : BaseEntityBlock(
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
-        return defaultState.setValue(BlockStateProperties.FACING, ctx.side.opposite)
+        return defaultBlockState().setValue(BlockStateProperties.FACING, ctx.clickedFace.opposite)
     }
 
-    override fun neighborUpdate(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
-        super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify)
+    override fun neighborChanged(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
+        super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
         val be = world.getBlockEntity(pos) as? CreativeEngineBlockEntity ?: return
         be.checkRedstonePower()
     }
@@ -95,17 +97,8 @@ class CreativeEngineBlock : BaseEntityBlock(
         return SHAPE_ENGINE
     }
 
-    override fun getCullingShape(state: BlockState, world: BlockGetter, pos: BlockPos): VoxelShape {
-        return Shapes.empty()
-    }
 
-    override fun isTransparent(state: BlockState, world: BlockGetter, pos: BlockPos): Boolean {
-        return true
-    }
 
-    override fun hasSidedTransparency(state: BlockState): Boolean {
-        return true
-    }
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? {

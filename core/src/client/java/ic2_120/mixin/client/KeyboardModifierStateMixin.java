@@ -20,7 +20,7 @@ public abstract class KeyboardModifierStateMixin {
         int modifiers,
         CallbackInfo ci
     ) {
-        if (window == Minecraft.getInstance().getWindow().getHandle()) {
+        if (window == Minecraft.getInstance().getWindow().getWindow()) {
             ModeKeybinds.onKeyEvent(key, action);
         }
     }

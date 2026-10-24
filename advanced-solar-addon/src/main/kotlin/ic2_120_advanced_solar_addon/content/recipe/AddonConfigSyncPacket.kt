@@ -18,7 +18,7 @@ class AddonConfigSyncPacket(
         const val MAX_CHUNK_BYTES = 20000
 
         val CODEC: StreamCodec<FriendlyByteBuf, AddonConfigSyncPacket> = StreamCodec.of(
-            { value, buf -> write(value, buf) },
+            { buf, value -> write(value, buf) },
             { read(it) }
         )
 

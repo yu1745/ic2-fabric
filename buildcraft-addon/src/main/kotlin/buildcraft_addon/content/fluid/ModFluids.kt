@@ -120,7 +120,7 @@ object ModFluids {
 
         // 2. LiquidBlock
         val blockSettings = BlockBehaviour.Properties.ofFullCopy(Blocks.WATER)
-            .noCollision().noLootTable()
+            .noCollission().noLootTable()
         val block = Registry.register(
             BuiltInRegistries.BLOCK, BuildCraftAddon.id(name),
             LiquidBlock(still, blockSettings)
@@ -162,36 +162,36 @@ object ModFluids {
 
         private val ref: Pair<Fluid, Fluid> get() = fluidLookup[fluidName] ?: error("Fluid $fluidName not registered")
 
-        override fun getStill(): Fluid = ref.first
+        override fun getSource(): Fluid = ref.first
         override fun getFlowing(): Fluid = ref.second
-        override fun getBucketItem(): Item = bucketLookup[fluidName] ?: Items.AIR
-        override fun toBlockState(state: FluidState): BlockState {
-            val block = BuiltInRegistries.BLOCK.get(ResourceLocation(BuildCraftAddon.MOD_ID, fluidName))
-            return block.defaultBlockState.setValue(LiquidBlock.LEVEL, getBlockStateLevel(state))
+        override fun getBucket(): Item = bucketLookup[fluidName] ?: Items.AIR
+        override fun createLegacyBlock(state: FluidState): BlockState {
+            val block = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, fluidName))
+            return block.defaultBlockState().setValue(LiquidBlock.LEVEL, getAmount(state))
         }
-        override fun matchesType(fluid: Fluid): Boolean = fluid == ref.first || fluid == ref.second
-        override fun isInfinite(world: Level): Boolean = false
-        override fun beforeBreakingBlock(world: net.minecraft.world.level.LevelAccessor, pos: net.minecraft.core.BlockPos, state: BlockState) {
+        override fun isSame(fluid: Fluid): Boolean = fluid == ref.first || fluid == ref.second
+        override fun canConvertToSource(world: Level): Boolean = false
+        override fun beforeDestroyingBlock(world: net.minecraft.world.level.LevelAccessor, pos: net.minecraft.core.BlockPos, state: BlockState) {
             val entity = if (state.hasBlockEntity()) world.getBlockEntity(pos) else null
-            Block.dropStacks(state, world, pos, entity)
+            Block.dropResources(state, world, pos, entity)
         }
         override fun canBeReplacedWith(state: FluidState, world: BlockGetter, pos: net.minecraft.core.BlockPos, fluid: Fluid, direction: net.minecraft.core.Direction): Boolean = false
-        override fun getFlowSpeed(world: LevelReader): Int = 4
-        override fun getLevelDecreasePerBlock(world: LevelReader): Int = 1
-        override fun getTickRate(world: LevelReader): Int = 5
-        override fun getBlastResistance(): Float = 100f
+        override fun getSlopeFindDistance(world: LevelReader): Int = 4
+        override fun getDropOff(world: LevelReader): Int = 1
+        override fun getTickDelay(world: LevelReader): Int = 5
+        override fun getExplosionResistance(): Float = 100f
 
         class Still(override val fluidName: String) : BcOilFluid() {
-            override fun getLevel(state: FluidState): Int = 8
-            override fun isStill(state: FluidState): Boolean = true
+            override fun getAmount(state: FluidState): Int = 8
+            override fun isSource(state: FluidState): Boolean = true
         }
 
         class Flowing(override val fluidName: String) : BcOilFluid() {
-            override fun createBlockStateDefinition(builder: StateDefinition.Builder<Fluid, FluidState>) {
-                super.createBlockStateDefinition(builder); builder.add(LEVEL)
+            override fun createFluidStateDefinition(builder: StateDefinition.Builder<Fluid, FluidState>) {
+                super.createFluidStateDefinition(builder); builder.add(LEVEL)
             }
-            override fun getLevel(state: FluidState): Int = state.getValue(LEVEL)
-            override fun isStill(state: FluidState): Boolean = false
+            override fun getAmount(state: FluidState): Int = state.getValue(LEVEL)
+            override fun isSource(state: FluidState): Boolean = false
         }
     }
 }

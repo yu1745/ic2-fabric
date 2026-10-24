@@ -28,6 +28,8 @@ import net.minecraft.network.chat.Component
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import ic2_120.compat.*
+import net.minecraft.world.level.block.Block
 
 /**
  * 斯特林引擎（石引擎）
@@ -75,7 +77,7 @@ class StoneEngineBlockEntity(
             else -> 0
         }
         override fun set(index: Int, value: Int) {}
-        override fun getContainerSize(): Int = 2
+        override fun getCount(): Int = 2
     }
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
@@ -160,7 +162,7 @@ class StoneEngineBlockEntity(
 
     fun checkRedstonePower() {
         val world = world ?: return
-        val powered = world.isReceivingRedstonePower(pos)
+        val powered = world.hasNeighborSignal(pos)
         if (powered != isRedstonePowered) {
             isRedstonePowered = powered
             setChanged()
@@ -171,7 +173,7 @@ class StoneEngineBlockEntity(
         val world = world ?: return
         val next = Direction.entries[(current.ordinal + 1) % 6]
         currentDirection = next
-        world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, next))
+        world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, next), Block.UPDATE_ALL)
         setChanged()
     }
 
@@ -221,7 +223,7 @@ class StoneEngineBlockEntity(
         totalBurnTime = time
 
         // 处理容器物品（如空桶）
-        val containerItem = fuel.item.recipeRemainder
+        val containerItem = fuel.item.craftingRemainingItem
         if (containerItem != Items.AIR) {
             inventory[SLOT_FUEL] = ItemStack(containerItem)
         } else {
@@ -274,7 +276,7 @@ class StoneEngineBlockEntity(
         if (!world.isClient) return
         currentDirection = cachedState.getValue(BlockStateProperties.FACING)
 
-        val powered = world.isReceivingRedstonePower(pos)
+        val powered = world.hasNeighborSignal(pos)
         isRedstonePowered = powered
 
         if (powered && burnTime > 0) {
@@ -334,7 +336,7 @@ class StoneEngineBlockEntity(
         val fuelStack = inventory[SLOT_FUEL]
         if (!fuelStack.isEmpty) {
             val fuelNbt = CompoundTag()
-            fuelStack.writeNbt(fuelNbt)
+            fuelStack.save(lookup, fuelNbt)
             nbt.put("fuel", fuelNbt)
         }
     }
@@ -353,7 +355,7 @@ class StoneEngineBlockEntity(
         currentStage = PowerStage.entries.getOrElse(stageIdx) { PowerStage.BLUE }
         pendingOutputKu = nbt.getInt("pendingOutputKu").coerceAtLeast(0)
         if (nbt.contains("fuel")) {
-            inventory[SLOT_FUEL] = ItemStack.fromNbt(nbt.getCompound("fuel"))
+            inventory[SLOT_FUEL] = ItemStack.parseOptional(lookup, nbt.getCompound("fuel"))
         }
     }
 }

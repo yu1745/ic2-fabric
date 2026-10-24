@@ -61,29 +61,29 @@ object BuildCraftAddonClient : ClientModInitializer {
         )
 
         // Register BER-based item rendering (dummy entities for inventory/ground rendering)
-        val dummyRedstone = RedstoneEngineBlockEntity(BlockPos.ORIGIN, RedstoneEngineBlock::class.instance().defaultBlockState())
+        val dummyRedstone = RedstoneEngineBlockEntity(BlockPos.ZERO, RedstoneEngineBlock::class.instance().defaultBlockState())
         BuiltinItemRendererRegistry.INSTANCE.register(RedstoneEngineBlock::class.instance().asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
-            Minecraft.getInstance().blockEntityRenderDispatcher.renderEntity(dummyRedstone, matrices, vertexConsumers, light, overlay)
+            Minecraft.getInstance().blockEntityRenderDispatcher.getRenderer(dummyRedstone)!!.render(dummyRedstone, 1.0f, matrices, vertexConsumers, light, overlay)
         }
 
-        val dummyStone = StoneEngineBlockEntity(BlockPos.ORIGIN, StoneEngineBlock::class.instance().defaultBlockState())
+        val dummyStone = StoneEngineBlockEntity(BlockPos.ZERO, StoneEngineBlock::class.instance().defaultBlockState())
         BuiltinItemRendererRegistry.INSTANCE.register(StoneEngineBlock::class.instance().asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
-            Minecraft.getInstance().blockEntityRenderDispatcher.renderEntity(dummyStone, matrices, vertexConsumers, light, overlay)
+            Minecraft.getInstance().blockEntityRenderDispatcher.getRenderer(dummyStone)!!.render(dummyStone, 1.0f, matrices, vertexConsumers, light, overlay)
         }
 
-        val dummyIron = IronEngineBlockEntity(BlockPos.ORIGIN, IronEngineBlock::class.instance().defaultBlockState())
+        val dummyIron = IronEngineBlockEntity(BlockPos.ZERO, IronEngineBlock::class.instance().defaultBlockState())
         BuiltinItemRendererRegistry.INSTANCE.register(IronEngineBlock::class.instance().asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
-            Minecraft.getInstance().blockEntityRenderDispatcher.renderEntity(dummyIron, matrices, vertexConsumers, light, overlay)
+            Minecraft.getInstance().blockEntityRenderDispatcher.getRenderer(dummyIron)!!.render(dummyIron, 1.0f, matrices, vertexConsumers, light, overlay)
         }
 
-        val dummyRF = RFEngineBlockEntity(BlockPos.ORIGIN, RFEngineBlock::class.instance().defaultBlockState())
+        val dummyRF = RFEngineBlockEntity(BlockPos.ZERO, RFEngineBlock::class.instance().defaultBlockState())
         BuiltinItemRendererRegistry.INSTANCE.register(RFEngineBlock::class.instance().asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
-            Minecraft.getInstance().blockEntityRenderDispatcher.renderEntity(dummyRF, matrices, vertexConsumers, light, overlay)
+            Minecraft.getInstance().blockEntityRenderDispatcher.getRenderer(dummyRF)!!.render(dummyRF, 1.0f, matrices, vertexConsumers, light, overlay)
         }
 
-        val dummyCreative = CreativeEngineBlockEntity(BlockPos.ORIGIN, CreativeEngineBlock::class.instance().defaultBlockState())
+        val dummyCreative = CreativeEngineBlockEntity(BlockPos.ZERO, CreativeEngineBlock::class.instance().defaultBlockState())
         BuiltinItemRendererRegistry.INSTANCE.register(CreativeEngineBlock::class.instance().asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
-            Minecraft.getInstance().blockEntityRenderDispatcher.renderEntity(dummyCreative, matrices, vertexConsumers, light, overlay)
+            Minecraft.getInstance().blockEntityRenderDispatcher.getRenderer(dummyCreative)!!.render(dummyCreative, 1.0f, matrices, vertexConsumers, light, overlay)
         }
     }
 }

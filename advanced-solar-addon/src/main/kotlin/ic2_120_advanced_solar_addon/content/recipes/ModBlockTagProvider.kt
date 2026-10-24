@@ -14,16 +14,16 @@ import java.util.concurrent.CompletableFuture
 
 class ModBlockTagProvider(
     output: FabricDataOutput,
-    registriesFuture: CompletableFuture<HolderLookup.HolderLookup.Provider>,
+    registriesFuture: CompletableFuture<HolderLookup.Provider>,
 ) : FabricTagProvider.BlockTagProvider(output, registriesFuture) {
 
-    override fun configure(registries: HolderLookup.HolderLookup.Provider) {
-        val pickaxeBuilder = getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE).setReplace(false)
+    override fun addTags(provider: HolderLookup.Provider) {
+        val pickaxeBuilder = getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE).setReplace(false)
         val ironToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL).setReplace(false)
         val stoneToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_STONE_TOOL).setReplace(false)
 
         for (block in BuiltInRegistries.BLOCK) {
-            val id = BuiltInRegistries.BLOCK.getId(block)
+            val id = BuiltInRegistries.BLOCK.getKey(block)
             if (id.namespace != IC2AdvancedSolarAddon.MOD_ID) continue
 
             when {

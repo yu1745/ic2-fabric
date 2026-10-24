@@ -66,6 +66,7 @@ import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
+import ic2_120.compat.*
 
 @ModBlockEntity(block = NeutronFabricatorBlock::class)
 class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
@@ -243,10 +244,10 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
         maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
-        slotValidator = { slot, stack -> isValid(slot, stack) },
+        slotValidator = { slot, stack -> canPlaceItem(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
-            ItemInsertRoute(intArrayOf(SLOT_CONTAINER_INPUT), matcher = { isValid(SLOT_CONTAINER_INPUT, it) }, maxPerSlot = 1)
+            ItemInsertRoute(intArrayOf(SLOT_CONTAINER_INPUT), matcher = { canPlaceItem(SLOT_CONTAINER_INPUT, it) }, maxPerSlot = 1)
         ),
         extractSlots = intArrayOf(SLOT_CONTAINER_INPUT, SLOT_CONTAINER_OUTPUT),
         setChanged = { setChanged() }
@@ -285,7 +286,7 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxStackSize)
+        return current.isEmpty || (ItemStack.isSameItemSameComponents(current, toInsert) && current.count < current.maxStackSize)
     }
 
     // ====== tick 逻辑：应用升级 → 产中子流体；容器槽自动装填 ======
@@ -399,7 +400,7 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.getContainerSize())
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 
@@ -408,7 +409,7 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
         super.loadAdditional(nbt, lookup)
         sync.restoreEnergy(nbt.getLong(NeutronFabricatorSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
         syncedData.readNbt(nbt)
-        readInventoryWithMigration(nbt)
+        readInventoryWithMigration(nbt, lookup)
         val tankAmount = nbt.getLong("TankAmount")
         tankInternal.amount = tankAmount.coerceIn(0L, TANK_CAPACITY_DROPLETS)
         if (tankInternal.amount > 0L) tankInternal.variant = FluidVariant.of(NeutronFluid.NEUTRON_STILL)
@@ -420,16 +421,16 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
      * （0-3 升级 + 4 容器输入 + 5 容器输出）：旧槽 3/4 顺移为 4/5；旧充电槽 0-2 保留原位
      * （新布局下变成升级槽，若存有电池由玩家自行取出）。
      */
-    private fun readInventoryWithMigration(nbt: CompoundTag) {
+    private fun readInventoryWithMigration(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         val invNbt = nbt.getCompound("Inv")
         val oldSize = if (invNbt.contains("Size")) invNbt.getInt("Size") else INVENTORY_SIZE
-        val items = invNbt.getList("Items", Tag.COMPOUND_TYPE.toInt())
+        val items = invNbt.getList("Items", Tag.TAG_COMPOUND.toInt())
         for (i in 0 until items.size) {
             val slotNbt = items.getCompound(i)
             val oldSlot = slotNbt.getInt("Slot")
             val newSlot = if (oldSize <= 5 && oldSlot >= SLOT_CONTAINER_INPUT) oldSlot + 1 else oldSlot
             if (newSlot !in inventory.indices) continue
-            inventory[newSlot] = ItemStack.fromNbt(slotNbt)
+            inventory[newSlot] = ItemStack.parseOptional(lookup, slotNbt)
         }
     }
 
@@ -437,7 +438,7 @@ class NeutronFabricatorBlockEntity(pos: BlockPos, state: BlockState) :
         super.saveAdditional(nbt, lookup)
         nbt.putLong(NeutronFabricatorSync.NBT_ENERGY, sync.amount)
         syncedData.writeNbt(nbt)
-        nbt.put("Inv", ContainerHelper.saveAllItems(CompoundTag(), inventory))
+        nbt.put("Inv", ContainerHelper.saveAllItems(CompoundTag(), inventory, lookup))
         nbt.putLong("TankAmount", tankInternal.amount)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
     }

@@ -31,27 +31,27 @@ class NeutronFabricatorScreen(
         imageWidth = 176
         imageHeight = 166
         // 隐藏父类 AbstractContainerScreen 默认绘制的容器 title（由本类 render 手动居中绘制，避免重复）
-        titleX = -1000
+        titleLabelX = -1000
         titleLabelY = -1000
         // 玩家背包标题位置（贴图默认）
-        playerInventoryTitleY = imageHeight - 94
+        inventoryLabelY = imageHeight - 94
     }
 
-    override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.blit(TEXTURE, x, y, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
+    override fun renderBg(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context)
+        renderBackground(context, mouseX, mouseY, delta)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
         // 标题居中
         context.drawString(
-            textRenderer, title,
-            left + (imageWidth - textRenderer.getWidth(title)) / 2, top + 6,
+            font, title,
+            left + (imageWidth - font.width(title)) / 2, top + 6,
             0x404040, false
         )
 
@@ -59,7 +59,7 @@ class NeutronFabricatorScreen(
         drawFluidTank(context, left, top)
 
         // 流体槽容量标示纹理（物质制造机贴图的左侧液面刻度），有流体时叠加
-        if (handler.sync.fluidAmount > 0) {
+        if (menu.sync.fluidAmount > 0) {
             context.blit(
                 TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
                 TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
@@ -68,9 +68,9 @@ class NeutronFabricatorScreen(
         }
 
         // 能量进度文本（百分比）
-        val pct = handler.sync.progress.coerceIn(0, 100)
+        val pct = menu.sync.progress.coerceIn(0, 100)
         context.drawString(
-            textRenderer,
+            font,
             Component.translatable("gui.ic2_120.matter_generator.progress_pct", pct),
             left + 12, top + 43, 0x000000, false
         )
@@ -81,8 +81,8 @@ class NeutronFabricatorScreen(
 
         // 流体槽悬停
         if (relX in TANK_X until TANK_X + TANK_W && relY in TANK_Y until TANK_Y + TANK_H) {
-            val amt = handler.sync.fluidAmount.coerceAtLeast(0)
-            val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
+            val amt = menu.sync.fluidAmount.coerceAtLeast(0)
+            val cap = menu.sync.fluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
                 listOf(
                     Component.translatable("fluid.ic2_120_industrial_upgrade.neutron"),
@@ -91,7 +91,7 @@ class NeutronFabricatorScreen(
             } else {
                 listOf(Component.literal("空"))
             }
-            context.renderComponentTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
 
         renderTooltip(context, mouseX, mouseY)
@@ -99,9 +99,9 @@ class NeutronFabricatorScreen(
 
     /** 绘制中子流体槽内的流体（按填充比例着色平铺） */
     private fun drawFluidTank(context: GuiGraphics, left: Int, top: Int) {
-        val amt = handler.sync.fluidAmount.coerceAtLeast(0)
+        val amt = menu.sync.fluidAmount.coerceAtLeast(0)
         if (amt <= 0) return
-        val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
+        val cap = menu.sync.fluidCapacity.coerceAtLeast(1)
         val fraction = (amt.toFloat() / cap).coerceIn(0f, 1f)
         val fillH = (TANK_H * fraction).toInt().coerceAtLeast(1)
         val sx = left + TANK_X
@@ -118,7 +118,24 @@ class NeutronFabricatorScreen(
             val tileH = minOf(16, sy + TANK_H - cy)
             for (cx in sx until (sx + TANK_W) step 16) {
                 val tileW = minOf(16, sx + TANK_W - cx)
-                context.drawSpriteM(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                context.bufferSource().let { buffers ->
+                    val vs = buffers.getBuffer(net.minecraft.client.renderer.RenderType.entityCutoutNoCull(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS))
+                    val m = context.pose().last()
+                    val c = ((r.coerceIn(0f, 1f)) * 255f).toInt().shl(16) or ((g.coerceIn(0f, 1f)) * 255f).toInt().shl(8) or ((b.coerceIn(0f, 1f)) * 255f).toInt()
+                    val x0 = cx.toFloat(); val x1 = (cx + tileW).toFloat()
+                    val y0 = cy.toFloat(); val y1 = (cy + tileH).toFloat()
+                    val uv = arrayOf(
+                        floatArrayOf(sprite.u0, sprite.v0), floatArrayOf(sprite.u1, sprite.v0),
+                        floatArrayOf(sprite.u1, sprite.v1), floatArrayOf(sprite.u0, sprite.v1)
+                    )
+                    val xy = arrayOf(floatArrayOf(x0, y0), floatArrayOf(x1, y0), floatArrayOf(x1, y1), floatArrayOf(x0, y1))
+                    for (i in 0 until 4) {
+                        vs.addVertex(m, xy[i][0], xy[i][1], 0f)
+                            .setColor((c shr 16) and 0xFF, (c shr 8) and 0xFF, c and 0xFF, 255)
+                            .setUv(uv[i][0], uv[i][1])
+                            .setLight(net.minecraft.client.renderer.LightTexture.FULL_BRIGHT)
+                    }
+                }
             }
         }
         context.disableScissor()
@@ -144,8 +161,8 @@ class NeutronFabricatorScreen(
         private const val TANK_OVERLAY_Y = 27
 
         private val neutronSprite by lazy {
-            FluidRenderHandlerRegistry.INSTANCE.getValue(NeutronFluid.NEUTRON_STILL)
-                ?.getFluidSprites(null, null, NeutronFluid.NEUTRON_STILL.defaultBlockState())?.getOrNull(0)
+            FluidRenderHandlerRegistry.INSTANCE.get(NeutronFluid.NEUTRON_STILL)
+                ?.getFluidSprites(null, null, NeutronFluid.NEUTRON_STILL.defaultFluidState())?.getOrNull(0)
         }
     }
 }

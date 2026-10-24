@@ -20,6 +20,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.core.BlockPos
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers
+import ic2_120.content.network.ConfigSyncChunkPayload
 
 object IC2AdvancedSolarAddonClient : ClientModInitializer {
     private val configReceiver = ChunkedConfigReceiver { json ->
@@ -48,23 +49,17 @@ object IC2AdvancedSolarAddonClient : ClientModInitializer {
         // Register item renderer for Molecular Transformer
         val mtBlock = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "molecular_transformer"))
         val mtItemEntity = MolecularTransformerBlockEntity(
-            BlockPos.ORIGIN,
+            BlockPos.ZERO,
             mtBlock.defaultBlockState().setValue(MolecularTransformerBlock.ACTIVE, false)
         )
         BuiltinItemRendererRegistry.INSTANCE.register(mtBlock.asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
-            Minecraft.getInstance().blockEntityRenderDispatcher.renderEntity(
-                mtItemEntity,
-                matrices,
-                vertexConsumers,
-                light,
-                overlay
-            )
+            Minecraft.getInstance().blockEntityRenderDispatcher.getRenderer(mtItemEntity)!!.render(mtItemEntity, 1.0f, matrices, vertexConsumers, light, overlay)
         }
 
         // 注册配置同步接收（分包）
-        ClientPlayNetworking.registerGlobalReceiver(IC2AdvancedSolarAddon.id("config_sync")) { client, _, buf, _ ->
-            val packet = ConfigSyncPacket.read(buf)
-            minecraft.execute {
+        ClientPlayNetworking.registerGlobalReceiver(ConfigSyncChunkPayload.ID) { payload, _ ->
+            val packet = ConfigSyncPacket(payload.totalChunks, payload.chunkIndex, payload.chunkData)
+            Minecraft.getInstance().execute {
                 configReceiver.accept(packet.totalChunks, packet.chunkIndex, packet.chunkData)
             }
         }

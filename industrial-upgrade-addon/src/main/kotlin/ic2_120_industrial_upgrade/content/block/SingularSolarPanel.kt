@@ -21,6 +21,9 @@ import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
+import ic2_120.compat.*
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // i18n: block.ic2_120_industrial_upgrade.singular_solar_panel
 // zh_cn: 奇点太阳能发电机
@@ -35,7 +38,7 @@ class SingularSolarPanelBlock : IndustrialSolarPanelBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 十字：4 个质子太阳能 + 1 个奇点核心
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SingularSolarPanelBlock::class.item(), 1)
                 .pattern(" B ")
@@ -43,7 +46,7 @@ class SingularSolarPanelBlock : IndustrialSolarPanelBlock() {
                 .pattern(" B ")
                 .define('B', ProtonSolarPanelBlock::class.item())
                 .define('A', SingularCore::class.instance())
-                .unlockedBy(has(ProtonSolarPanelBlock::class.item()), has(ProtonSolarPanelBlock::class.item()))
+                .unlockedBy(getHasName(ProtonSolarPanelBlock::class.item()), has(ProtonSolarPanelBlock::class.item()))
                 .save(exporter, IC2IndustrialUpgrade.id("singular_solar_panel"))
         }
     }

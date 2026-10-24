@@ -23,6 +23,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
 import net.minecraft.world.inventory.Slot
 import net.minecraft.core.Direction
+import ic2_120.compat.*
 
 @ModScreenHandler(names = ["advanced_solar_panel", "hybrid_solar_panel", "ultimate_solar_panel", "quantum_solar_panel"])
 class SolarPanelScreenHandler(
@@ -86,7 +87,7 @@ class SolarPanelScreenHandler(
         var stack = ItemStack.EMPTY
         val slot = slots[index]
         if (slot .hasItem()) {
-            val stackInSlot = slot.stack
+            val stackInSlot = slot.item
             stack = stackInSlot.copy()
 
             val beSlot = (slot as? PredicateSlot)?.index ?: -1
@@ -95,7 +96,7 @@ class SolarPanelScreenHandler(
                 // Machine charge slots -> player inventory
                 beSlot >= 0 -> {
                     if (!moveItemStackTo(stackInSlot, machineSlotCount, hotbarEnd, true)) return ItemStack.EMPTY
-                    slot.onTake(stackInSlot, stack)
+                    slot.onTake(player, stackInSlot)
                 }
                 // Player inventory -> machine (via RoutedItemStorage routes)
                 index in machineSlotCount until hotbarEnd -> {
@@ -119,7 +120,7 @@ class SolarPanelScreenHandler(
                 }
             }
 
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.set(ItemStack.EMPTY)
             else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
             slot.onTake(player, stackInSlot)
@@ -128,7 +129,7 @@ class SolarPanelScreenHandler(
     }
 
     override fun stillValid(player: Player): Boolean =
-        context.get({ world, pos ->
+        context.evaluate({ world, pos ->
             player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
@@ -165,7 +166,7 @@ class SolarPanelScreenHandler(
             val propertyCount = buf.readVarInt()
             val chargeSlots = buf.readVarInt()
             val tier = buf.readVarInt()
-            val context = ContainerLevelAccess.create(playerInventory.player.world, pos)
+            val context = ContainerLevelAccess.create(playerInventory.player.level(), pos)
             val propertyDelegate = SimpleContainerData(propertyCount)
             val chargeInv = if (chargeSlots > 0) SimpleContainer(chargeSlots) else null
             return SolarPanelScreenHandler(syncId, playerInventory, context, propertyDelegate, chargeInv, chargeSlots, tier)

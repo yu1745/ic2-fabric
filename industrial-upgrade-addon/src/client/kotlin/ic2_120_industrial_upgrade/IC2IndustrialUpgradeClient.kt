@@ -34,7 +34,7 @@ object IC2IndustrialUpgradeClient : ClientModInitializer {
             )
         )
         BlockRenderLayerMap.INSTANCE.putFluids(
-            RenderType.getTranslucent(),
+            RenderType.translucent(),
             NeutronFluid.NEUTRON_STILL,
             NeutronFluid.NEUTRON_FLOWING
         )

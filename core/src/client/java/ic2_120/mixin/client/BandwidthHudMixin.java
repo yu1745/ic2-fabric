@@ -24,17 +24,17 @@ public abstract class BandwidthHudMixin {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void ic2_120$renderBandwidthHud(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
-        if (client.getDebugHud().shouldShowDebugHud() || client.options.hudHidden || !BandwidthHudState.INSTANCE.getEnabled()) {
+        if (client.getDebugOverlay().showDebugScreen() || client.options.hideGui || !BandwidthHudState.INSTANCE.getEnabled()) {
             return;
         }
 
-        var tr = client.textRenderer;
+        var tr = client.font;
         int x = 6;
         int y = 6;
         int line = 10;
 
         long serverBps = BandwidthHudState.INSTANCE.getServerBytesPerSecond();
-        context.drawText(tr, Component.literal("IC2 Net Out: " + formatBps(serverBps)), x, y, 0xFF8FE38F, true);
+        context.drawString(tr, Component.literal("IC2 Net Out: " + formatBps(serverBps)), x, y, 0xFF8FE38F, true);
         y += line;
 
         List<BandwidthPlayerStat> players = BandwidthHudState.INSTANCE.getPlayers();
@@ -42,7 +42,7 @@ public abstract class BandwidthHudMixin {
         for (int i = 0; i < shown; i++) {
             BandwidthPlayerStat stat = players.get(i);
             String text = stat.getName() + ": " + formatBps(stat.getBytesPerSecond());
-            context.drawText(tr, Component.literal(text), x, y, 0xFFFFFFFF, true);
+            context.drawString(tr, Component.literal(text), x, y, 0xFFFFFFFF, true);
             y += line;
         }
     }

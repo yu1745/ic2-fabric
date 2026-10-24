@@ -7,6 +7,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.properties.BooleanProperty
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
+import ic2_120.compat.*
 
 /**
  * Sun 变体太阳能发电机抽象基类（日光镜 sunlinse 升级）。
@@ -48,19 +49,19 @@ abstract class SunPanelBlockEntity(
         }
 
         // 末地永远白天、无天气变化，直接按白天发电（与原版 Sun 面板行为一致）
-        if (world.registryKey == Level.END) {
+        if (world.dimension() == Level.END) {
             generationState = GenerationState.DAY
             setChanged()
             return
         }
 
-        if (world.registryKey != Level.OVERWORLD) {
+        if (world.dimension() != Level.OVERWORLD) {
             generationState = GenerationState.NONE
             setChanged()
             return
         }
 
-        val time = world.timeOfDay % 24000
+        val time = world.dayTime % 24000
         val isRaining = world.isRaining || world.isThundering
         val canRain = world.getBiome(pos).value().hasPrecipitation()
         val isDaytime = time in DAY_START_TICK..DAY_END_TICK

@@ -28,18 +28,20 @@ import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
 import net.minecraft.world.MenuProvider
+import ic2_120.compat.*
+import net.minecraft.world.level.block.state.BlockBehaviour
 
 @ModBlock(name = "iron_engine", registerItem = true, tab = CreativeTab.BUILDCRAFT)
-class IronEngineBlock : BaseEntityBlock(
-    Settings.create().strength(5.0f, 10.0f) .noOcclusion()
-), EntityBlock {
+class IronEngineBlock(properties: BlockBehaviour.Properties = Properties.of().strength(5.0f, 10.0f).noOcclusion()) : BaseEntityBlock(properties), EntityBlock {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = simpleCodec(::IronEngineBlock)
+
 
     companion object {
-        private val SHAPE_ENGINE: VoxelShape = Shapes.fullCube()
+        private val SHAPE_ENGINE: VoxelShape = Shapes.block()
     }
 
     init {
-        registerDefaultState(stateManager.defaultBlockState.setValue(BlockStateProperties.FACING, Direction.UP))
+        registerDefaultState(defaultBlockState().setValue(BlockStateProperties.FACING, Direction.UP))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -61,7 +63,7 @@ class IronEngineBlock : BaseEntityBlock(
         return InteractionResult.SUCCESS
     }
 
-    override fun onPlaced(world: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
+    override fun setPlacedBy(world: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? IronEngineBlockEntity ?: return
             be.currentDirection = state.getValue(BlockStateProperties.FACING)
@@ -70,11 +72,11 @@ class IronEngineBlock : BaseEntityBlock(
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
-        return defaultState.setValue(BlockStateProperties.FACING, ctx.side.opposite)
+        return defaultBlockState().setValue(BlockStateProperties.FACING, ctx.clickedFace.opposite)
     }
 
-    override fun neighborUpdate(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
-        super.neighborUpdate(state, world, pos, sourceBlock, sourcePos, notify)
+    override fun neighborChanged(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
+        super.neighborChanged(state, world, pos, sourceBlock, sourcePos, notify)
         val be = world.getBlockEntity(pos) as? IronEngineBlockEntity ?: return
         be.checkRedstonePower()
     }
@@ -95,17 +97,8 @@ class IronEngineBlock : BaseEntityBlock(
         return SHAPE_ENGINE
     }
 
-    override fun getCullingShape(state: BlockState, world: BlockGetter, pos: BlockPos): VoxelShape {
-        return Shapes.empty()
-    }
 
-    override fun isTransparent(state: BlockState, world: BlockGetter, pos: BlockPos): Boolean {
-        return true
-    }
 
-    override fun hasSidedTransparency(state: BlockState): Boolean {
-        return true
-    }
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? {

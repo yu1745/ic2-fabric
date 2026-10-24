@@ -1,55 +1,53 @@
 package ic2_120_advanced_weapons_addon.content.item
 
-import com.google.common.collect.ImmutableMultimap
-import com.google.common.collect.Multimap
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
-import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.ChatFormatting
+import net.minecraft.core.component.DataComponents
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.tags.BlockTags
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResultHolder
+import net.minecraft.world.entity.EquipmentSlotGroup
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.ai.attributes.Attribute
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.SwordItem
 import net.minecraft.world.item.Tier
+import net.minecraft.world.item.component.ItemAttributeModifiers
 import net.minecraft.world.item.crafting.Ingredient
-import net.minecraft.network.chat.Component
-import net.minecraft.ChatFormatting
-import net.minecraft.world.InteractionHand
-import net.minecraft.world.InteractionResultHolder
 import net.minecraft.world.level.Level
-import java.util.UUID
+import net.minecraft.world.level.block.Block
+import ic2_120.compat.*
 
 private object QuantumSaberMaterial : Tier {
-    override fun getDurability() = 1
-    override fun getMiningSpeedMultiplier() = 1.0f
-    override fun getAttackDamage() = 0f
-    override fun getMiningLevel() = 0
-    override fun getEnchantability() = 0
+    override fun getUses() = 1
+    override fun getSpeed() = 1.0f
+    override fun getAttackDamageBonus() = 0f
+    override fun getIncorrectBlocksForDrops(): net.minecraft.tags.TagKey<Block> = BlockTags.INCORRECT_FOR_WOODEN_TOOL
+    override fun getEnchantmentValue() = 0
     override fun getRepairIngredient(): Ingredient = Ingredient.EMPTY
 }
 
 @ModItem(name = "quantum_saber", tab = CreativeTab.IC2_ADVANCED_WEAPONS, group = "electric_tools")
 class QuantumSaber : SwordItem(
     QuantumSaberMaterial,
-    0,
-    -2.4f,
-    Item.Properties().stacksTo(1)
+    Item.Properties().stacksTo(1).attributes(SwordItem.createAttributes(QuantumSaberMaterial, 0, -2.4f))
 ), IElectricTool {
 
     companion object {
         private const val NBT_ACTIVE = "QuantumSaberActive"
         private const val ENERGY_PER_HIT = 1000L
 
-        private val ATTACK_DAMAGE_MODIFIER_ID = UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5CF")
-        private val ATTACK_SPEED_MODIFIER_ID = UUID.fromString("FA233E1C-4180-4865-B01B-BCCE9785ACA3")
-
         private const val DAMAGE_INACTIVE_TOTAL = 5.0
         private const val DAMAGE_ACTIVE_TOTAL = 31.0
 
-        fun isActive(stack: ItemStack): Boolean = stack.orCreateNbt = stack.orCreateNbt.apply { getBoolean(NBT_ACTIVE) }
+        fun isActive(stack: ItemStack): Boolean = stack.orCreateNbt.getBoolean(NBT_ACTIVE)
 
         fun toggleActive(stack: ItemStack): Boolean {
             val nbt = stack.orCreateNbt
@@ -65,8 +63,6 @@ class QuantumSaber : SwordItem(
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
 
-    override fun isDamageable() = false
-
     override fun isEnchantable(stack: ItemStack) = false
 
     private fun weaponAttackModifier(stack: ItemStack): Double {
@@ -76,40 +72,37 @@ class QuantumSaber : SwordItem(
         return total - 1.0
     }
 
-    override fun getAttributeModifiers(
-        stack: ItemStack,
-        slot: EquipmentSlot
-    ): Multimap<Attribute, AttributeModifier> {
-        if (slot != EquipmentSlot.MAINHAND) {
-            return super.getAttributeModifiers(stack, slot)
-        }
-        val builder = ImmutableMultimap.builder<Attribute, AttributeModifier>()
-        builder.put(
-            Attributes.GENERIC_ATTACK_DAMAGE,
-            AttributeModifier(
-                ATTACK_DAMAGE_MODIFIER_ID,
-                "Weapon modifier",
-                weaponAttackModifier(stack),
-                AttributeModifier.Operation.ADDITION
+    /** 1.20.5+ 属性走 DataComponents：每次状态变化时重写组件 */
+    private fun syncAttributeModifiers(stack: ItemStack) {
+        val mods = ItemAttributeModifiers.builder()
+            .add(
+                Attributes.ATTACK_DAMAGE,
+                AttributeModifier(
+                    ResourceLocation.withDefaultNamespace("quantum_saber_attack_damage"),
+                    weaponAttackModifier(stack),
+                    AttributeModifier.Operation.ADD_VALUE
+                ),
+                EquipmentSlotGroup.MAINHAND
             )
-        )
-        builder.put(
-            Attributes.GENERIC_ATTACK_SPEED,
-            AttributeModifier(
-                ATTACK_SPEED_MODIFIER_ID,
-                "Weapon modifier",
-                -2.4,
-                AttributeModifier.Operation.ADDITION
+            .add(
+                Attributes.ATTACK_SPEED,
+                AttributeModifier(
+                    ResourceLocation.withDefaultNamespace("quantum_saber_attack_speed"),
+                    -2.4,
+                    AttributeModifier.Operation.ADD_VALUE
+                ),
+                EquipmentSlotGroup.MAINHAND
             )
-        )
-        return builder.build()
+            .build()
+        stack.set(DataComponents.ATTRIBUTE_MODIFIERS, mods)
     }
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
         val stack = user.getItemInHand(hand)
         if (!world.isClient) {
             val on = toggleActive(stack)
-            user.sendMessage(
+            syncAttributeModifiers(stack)
+            user.displayClientMessage(
                 Component.translatable(
                     if (on) "message.ic2_120_advanced_weapons_addon.quantum_saber.active_on"
                     else "message.ic2_120_advanced_weapons_addon.quantum_saber.active_off"
@@ -117,17 +110,20 @@ class QuantumSaber : SwordItem(
                 true
             )
         }
-        return InteractionResultHolder.success(stack, world.isClient)
+        return InteractionResultHolder.success(stack)
     }
 
-    override fun postHit(stack: ItemStack, target: LivingEntity, attacker: LivingEntity): Boolean {
-        if (!attacker.world.isClient && isActive(stack) && getEnergy(stack) >= ENERGY_PER_HIT) {
+    override fun inventoryTick(stack: ItemStack, world: Level, entity: net.minecraft.world.entity.Entity, slot: Int, selected: Boolean) {
+        syncAttributeModifiers(stack)
+    }
+
+    override fun postHurtEnemy(stack: ItemStack, target: LivingEntity, attacker: LivingEntity) {
+        if (!attacker.level().isClientSide && isActive(stack) && getEnergy(stack) >= ENERGY_PER_HIT) {
             setEnergy(stack, getEnergy(stack) - ENERGY_PER_HIT)
         }
-        return true
     }
 
-    override fun postMine(
+    override fun mineBlock(
         stack: ItemStack,
         world: Level,
         state: net.minecraft.world.level.block.state.BlockState,
@@ -139,11 +135,10 @@ class QuantumSaber : SwordItem(
 
     override fun appendHoverText(
         stack: ItemStack,
-        world: net.minecraft.world.level.Level?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: net.minecraft.client.item.TooltipContext
+        type: net.minecraft.world.item.TooltipFlag
     ) {
-        super.appendHoverText(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
         val key = if (isActive(stack))
             "tooltip.ic2_120_advanced_weapons_addon.quantum_saber.active"

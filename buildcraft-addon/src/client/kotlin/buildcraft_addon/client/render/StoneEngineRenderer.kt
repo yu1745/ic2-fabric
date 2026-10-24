@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.inventory.InventoryMenu
 import net.minecraft.resources.ResourceLocation
+import ic2_120.compat.*
 
 class StoneEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
     BlockEntityRenderer<StoneEngineBlockEntity> {
@@ -27,8 +28,8 @@ class StoneEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
 
     private fun ensureSprites() {
         if (spritesLoaded) return
-        val atlas = Minecraft.getInstance().bakedModelManager.getAtlas(InventoryMenu.BLOCK_ATLAS_TEXTURE)
-        fun sprite(path: String) = atlas.getSprite(ResourceLocation(BuildCraftAddon.MOD_ID, path))
+        val atlas = Minecraft.getInstance().modelManager.getAtlas(InventoryMenu.BLOCK_ATLAS)
+        fun sprite(path: String) = atlas.getSprite(ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, path))
         trunkBlue = sprite("block/engine/trunk_blue")
         trunkGreen = sprite("block/engine/trunk_green")
         trunkYellow = sprite("block/engine/trunk_yellow")
@@ -58,7 +59,7 @@ class StoneEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
         overlay: Int
     ) {
         ensureSprites()
-        val buffer = vertexConsumers.getBuffer(RenderType.getCutout())
+        val buffer = vertexConsumers.getBuffer(RenderType.cutout())
         EngineRenderHelper.renderEngine(
             matrices = matrices,
             buffer = buffer,
@@ -66,7 +67,7 @@ class StoneEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
             overlay = overlay,
             progress = entity.progress,
             stage = entity.currentStage,
-            facing = entity.cachedState.getValue(et.minecraft.world.level.block.state.properties.BlockStateProperties.FACING),
+            facing = entity.cachedState.getValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING),
             world = entity.world,
             pos = entity.pos,
             backSprite = backSprite,
@@ -76,5 +77,5 @@ class StoneEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
         )
     }
 
-    override fun rendersOutsideBoundingBox(entity: StoneEngineBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(entity: StoneEngineBlockEntity): Boolean = true
 }

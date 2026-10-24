@@ -18,6 +18,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import org.joml.Matrix3f
 import org.joml.Matrix4f
+import ic2_120.compat.*
 
 class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
     BlockEntityRenderer<PumpBlockEntity> {
@@ -29,8 +30,8 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
 
     private fun ensureSprites() {
         if (spritesLoaded) return
-        val atlas = Minecraft.getInstance().bakedModelManager.getAtlas(InventoryMenu.BLOCK_ATLAS_TEXTURE)
-        fun sprite(path: String) = atlas.getSprite(ResourceLocation(BuildCraftAddon.MOD_ID, path))
+        val atlas = Minecraft.getInstance().modelManager.getAtlas(InventoryMenu.BLOCK_ATLAS)
+        fun sprite(path: String) = atlas.getSprite(ResourceLocation.fromNamespaceAndPath(BuildCraftAddon.MOD_ID, path))
         tubeSprite = sprite("block/pump/tube")
         ledGreen = sprite("block/pump/led_green")
         ledRed = sprite("block/pump/led_red")
@@ -48,7 +49,7 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
         ensureSprites()
         val world = entity.world ?: return
         val pos = entity.pos
-        val buffer = vertexConsumers.getBuffer(RenderType.getCutout())
+        val buffer = vertexConsumers.getBuffer(RenderType.cutout())
 
         // ========== 管道渲染 ==========
         // PoseStack 已平移到方块位置，使用局部坐标
@@ -66,7 +67,7 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
         }
 
         // ========== LED 指示灯 ==========
-        val pumpLight = LevelRenderer.getLightmapCoordinates(world, pos)
+        val pumpLight = LevelRenderer.getLightColor(world, pos)
         val active = entity.isActive
         val tankFill = if (entity.tank.capacity > 0)
             entity.tank.amount.toFloat() / entity.tank.capacity.toFloat() else 0f
@@ -101,8 +102,6 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float
     ) {
         val ctx = matrices.last()
-        val pm = ctx.positionMatrix
-        val nm = ctx.normalMatrix
 
         val height = y2 - y1
         val fullBlocks = kotlin.math.floor(height.toDouble()).toInt()
@@ -114,8 +113,8 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
             val segTop = y1 + frac
             // 取该格的世界坐标算光照
             val worldY = pos.y + kotlin.math.floor(segBot.toDouble()).toInt()
-            val segLight = LevelRenderer.getLightmapCoordinates(world, BlockPos(pos.x, worldY, pos.z))
-            renderTubeSegment(pm, nm, buffer, segLight, overlay, x1, segBot, z1, x2, segTop, z2, frac)
+            val segLight = LevelRenderer.getLightColor(world, BlockPos(pos.x, worldY, pos.z))
+            renderTubeSegment(ctx, buffer, segLight, overlay, x1, segBot, z1, x2, segTop, z2, frac)
         }
 
         // 完整格
@@ -123,13 +122,13 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
             val segBot = y1 + frac + i
             val segTop = segBot + 1f
             val worldY = pos.y + kotlin.math.floor(segBot.toDouble()).toInt()
-            val segLight = LevelRenderer.getLightmapCoordinates(world, BlockPos(pos.x, worldY, pos.z))
-            renderTubeSegment(pm, nm, buffer, segLight, overlay, x1, segBot, z1, x2, segTop, z2, 1f)
+            val segLight = LevelRenderer.getLightColor(world, BlockPos(pos.x, worldY, pos.z))
+            renderTubeSegment(ctx, buffer, segLight, overlay, x1, segBot, z1, x2, segTop, z2, 1f)
         }
     }
 
     private fun renderTubeSegment(
-        pm: Matrix4f, nm: Matrix3f, buffer: VertexConsumer, light: Int, overlay: Int,
+        entry: PoseStack.Pose, buffer: VertexConsumer, light: Int, overlay: Int,
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float,
         vScale: Float
     ) {
@@ -138,21 +137,21 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
         val vb = 1f - vScale
 
         // NORTH (z=z1)
-        emitQuadBothSides(buffer, pm, nm, light, overlay,
+        emitQuadBothSides(buffer, entry, light, overlay,
             x1, y1, z1, x2, y1, z1, x2, y2, z1, x1, y2, z1,
-            sp.minU, vt, sp.maxU, vt, sp.maxU, vb, sp.minU, vb, 0f, 0f, -1f, sp)
+            sp.u0, vt, sp.u1, vt, sp.u1, vb, sp.u0, vb, 0f, 0f, -1f, sp)
         // SOUTH (z=z2)
-        emitQuadBothSides(buffer, pm, nm, light, overlay,
+        emitQuadBothSides(buffer, entry, light, overlay,
             x2, y1, z2, x1, y1, z2, x1, y2, z2, x2, y2, z2,
-            sp.minU, vt, sp.maxU, vt, sp.maxU, vb, sp.minU, vb, 0f, 0f, 1f, sp)
+            sp.u0, vt, sp.u1, vt, sp.u1, vb, sp.u0, vb, 0f, 0f, 1f, sp)
         // WEST (x=x1)
-        emitQuadBothSides(buffer, pm, nm, light, overlay,
+        emitQuadBothSides(buffer, entry, light, overlay,
             x1, y1, z2, x1, y1, z1, x1, y2, z1, x1, y2, z2,
-            sp.minU, vt, sp.maxU, vt, sp.maxU, vb, sp.minU, vb, -1f, 0f, 0f, sp)
+            sp.u0, vt, sp.u1, vt, sp.u1, vb, sp.u0, vb, -1f, 0f, 0f, sp)
         // EAST (x=x2)
-        emitQuadBothSides(buffer, pm, nm, light, overlay,
+        emitQuadBothSides(buffer, entry, light, overlay,
             x2, y1, z1, x2, y1, z2, x2, y2, z2, x2, y2, z1,
-            sp.minU, vt, sp.maxU, vt, sp.maxU, vb, sp.minU, vb, 1f, 0f, 0f, sp)
+            sp.u0, vt, sp.u1, vt, sp.u1, vb, sp.u0, vb, 1f, 0f, 0f, sp)
     }
 
     private fun renderLedSide(
@@ -161,16 +160,14 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
         side: Direction, sprite: TextureAtlasSprite, brightness: Float
     ) {
         val ctx = matrices.last()
-        val pm = ctx.positionMatrix
-        val nm = ctx.normalMatrix
         val size = 0.8f / 16f
 
         fun quad(nx: Float, ny: Float, nz: Float, offset: Float) {
-            emitQuadBothSides(buffer, pm, nm, light, overlay,
+            emitQuadBothSides(buffer, ctx, light, overlay,
                 x + size, y - size, z + offset, x - size, y - size, z + offset,
                 x - size, y + size, z + offset, x + size, y + size, z + offset,
-                sprite.minU, sprite.minV, sprite.maxU, sprite.minV,
-                sprite.maxU, sprite.maxV, sprite.minU, sprite.maxV,
+                sprite.u0, sprite.v0, sprite.u1, sprite.v0,
+                sprite.u1, sprite.v1, sprite.u0, sprite.v1,
                 nx, ny, nz, sprite)
         }
 
@@ -183,5 +180,5 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
         }
     }
 
-    override fun rendersOutsideBoundingBox(entity: PumpBlockEntity): Boolean = true
+    override fun shouldRenderOffScreen(entity: PumpBlockEntity): Boolean = true
 }

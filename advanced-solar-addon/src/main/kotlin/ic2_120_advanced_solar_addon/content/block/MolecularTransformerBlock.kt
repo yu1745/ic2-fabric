@@ -38,13 +38,15 @@ import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
 import java.util.function.Consumer
+import ic2_120.compat.*
+import net.minecraft.data.recipes.RecipeProvider.has
 
 // i18n: block.ic2_120_advanced_solar_addon.molecular_transformer
 // zh_cn: 分子重组仪
 // en_us: Molecular Transformer
 @ModBlock(name = "molecular_transformer", registerItem = true, tab = CreativeTab.IC2_SOLAR, group = "machine")
 class MolecularTransformerBlock : MachineBlock(
-    defaultMachineSettings().luminance { state -> if (state.getValue(LIT)) 7 else 0 }
+    defaultMachineSettings().lightLevel { state -> if (state.getValue(LIT)) 7 else 0 }
 ) {
 
     companion object {
@@ -55,7 +57,7 @@ class MolecularTransformerBlock : MachineBlock(
         val LIT: BooleanProperty = BooleanProperty.create("lit")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val mtCore = MtCore::class.instance()
             val casing = AdvancedMachineCasingBlock::class.item()
             val transformer = HvTransformerBlock::class.item()
@@ -104,8 +106,4 @@ class MolecularTransformerBlock : MachineBlock(
 
     override fun getRenderShape(state: BlockState): RenderShape = RenderShape.INVISIBLE
 
-    // BER model is smaller than a full cube, so this block must not occlude neighbor faces.
-    @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
-    override fun getCullingShape(state: BlockState, world: BlockGetter, pos: BlockPos): VoxelShape =
-        Shapes.empty()
 }
