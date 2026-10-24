@@ -31,15 +31,15 @@ public class PathAwareEntityMixin {
     )
     private void ic2$skipLeashPullingForKineticGenerator(CallbackInfo ci) {
         PathfinderMob self = (PathfinderMob) (Object) this;
-        Entity holdingEntity = self.getHoldingEntity();
+        Entity holdingEntity = self.getLeashHolder();
 
         if (holdingEntity instanceof ArmorStand armorStand
             && armorStand.isInvisible()
-            && armorStand.hasNoGravity()) {
+            && armorStand.isNoGravity()) {
             // 兜底：距离过远时断开拴绳
             float distance = self.distanceTo(holdingEntity);
             if (!self.isAlive() || !holdingEntity.isAlive() || distance > 20.0F) {
-                self.detachLeash(true, true);
+                self.dropLeash(true, true);
             }
             ci.cancel();
         }

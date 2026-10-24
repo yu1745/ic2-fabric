@@ -98,16 +98,16 @@ class ModBlockLootTableProvider(
         val notWrenchConditionBuilder = InvertedLootItemCondition.invert(wrenchConditionBuilder)
 
         return LootTable.lootTable()
-            .pool(
+            .withPool(
                 LootPool.lootPool()
                     .setRolls(ConstantValue.exactly(1f))
-                    .when(wrenchConditionBuilder)
+                    .`when`(wrenchConditionBuilder)
                     .add(LootItem.lootTableItem(blockItem).apply(ApplyExplosionDecay.explosionDecay()))
             )
-            .pool(
+            .withPool(
                 LootPool.lootPool()
                     .setRolls(ConstantValue.exactly(1f))
-                    .when(notWrenchConditionBuilder)
+                    .`when`(notWrenchConditionBuilder)
                     .add(LootItem.lootTableItem(casingItem).apply(ApplyExplosionDecay.explosionDecay()))
             )
     }
@@ -163,18 +163,18 @@ class ModBlockLootTableProvider(
 
         return LootTable.lootTable()
             // 剪刀/精准采集 → 掉树叶本身
-            .pool(
+            .withPool(
                 LootPool.lootPool()
                     .setRolls(ConstantValue.exactly(1f))
-                    .when(silkTouchOrShears)
-                    .add(addSurvivesExplosionCondition(block, LootItem.lootTableItem(leafItem)))
+                    .`when`(silkTouchOrShears)
+                    .add(applyExplosionCondition(block, LootItem.lootTableItem(leafItem)))
             )
             // 保底绑定叶 → 必掉 1 个树苗（世界生成/树苗生长时由 bindLeaves 写入方块状态，运行时可判定）
-            .pool(
+            .withPool(
                 LootPool.lootPool()
                     .setRolls(ConstantValue.exactly(1f))
-                    .when(notSilkTouchOrShears)
-                    .when(boundLeaf)
+                    .`when`(notSilkTouchOrShears)
+                    .`when`(boundLeaf)
                     .add(LootItem.lootTableItem(saplingItem))
             )
     }

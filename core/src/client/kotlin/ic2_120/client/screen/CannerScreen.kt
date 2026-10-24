@@ -19,31 +19,31 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = CannerBlock::class)
 class CannerScreen(
-    handler: CannerScreenHandler, playerInventory: Inventory, title: Component
+    val handler: CannerScreenHandler, playerInventory: Inventory, title: Component
 ) : AbstractContainerScreen<CannerScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 184
+        imageWidth = 176
+        imageHeight = 184
         titleY = -1000
         playerInventoryTitleY = -1000
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
-        val mode = handler.sync.getMode()
+        val left = leftPos
+        val top = topPos
+        val mode = menu.sync.getMode()
 
         // 居中置顶标题
         val title = Component.translatable("block.ic2_120.canner")
-        context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title, leftPos + (imageWidth - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
         // 能量条
         drawEnergyBar(context, left, top)
@@ -53,38 +53,38 @@ class CannerScreen(
 
         // 左侧流体槽
         drawFluidTank(context, left = left, top = top, tankX = TANK_L_X, tankY = TANK_L_Y,
-            tankW = TANK_W, tankH = TANK_H, fluidRawId = handler.sync.leftFluidRawId,
-            amountMb = handler.sync.leftFluidAmount, capacityMb = handler.sync.leftFluidCapacity)
+            tankW = TANK_W, tankH = TANK_H, fluidRawId = menu.sync.leftFluidRawId,
+            amountMb = menu.sync.leftFluidAmount, capacityMb = menu.sync.leftFluidCapacity)
 
         // 右侧流体槽
         drawFluidTank(context, left = left, top = top, tankX = TANK_R_X, tankY = TANK_R_Y,
-            tankW = TANK_W, tankH = TANK_H, fluidRawId = handler.sync.rightFluidRawId,
-            amountMb = handler.sync.rightFluidAmount, capacityMb = handler.sync.rightFluidCapacity)
+            tankW = TANK_W, tankH = TANK_H, fluidRawId = menu.sync.rightFluidRawId,
+            amountMb = menu.sync.rightFluidAmount, capacityMb = menu.sync.rightFluidCapacity)
 
         // 左侧容量标示 (182,124)-(194,171) = 12×47 → (43,47)，有流体时渲染
-        if (handler.sync.leftFluidAmount > 0) {
-            context.drawTexture(TEXTURE, left + 43, top + 47, 182f, 124f, 12, 47, TEX_SIZE, TEX_SIZE)
+        if (menu.sync.leftFluidAmount > 0) {
+            context.blit(TEXTURE, left + 43, top + 47, 182f, 124f, 12, 47, TEX_SIZE, TEX_SIZE)
         }
         // 右侧容量标示 (182,124)-(194,171) = 12×47 → (121,47)，有流体时渲染
-        if (handler.sync.rightFluidAmount > 0) {
-            context.drawTexture(TEXTURE, left + 121, top + 47, 182f, 124f, 12, 47, TEX_SIZE, TEX_SIZE)
+        if (menu.sync.rightFluidAmount > 0) {
+            context.blit(TEXTURE, left + 121, top + 47, 182f, 124f, 12, 47, TEX_SIZE, TEX_SIZE)
         }
 
         // 模式标识纹理
         drawModeTexture(context, left, top, mode)
 
         // uptips
-        context.drawTexture(UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y, 0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE)
+        context.blit(UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y, 0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE)
 
         // 悬停高亮 & 提示
         drawHoverHighlights(context, mouseX, mouseY, left, top, mode)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     private fun drawEnergyBar(context: GuiGraphics, left: Int, top: Int) {
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+        val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
         val fraction = (energy.toFloat() / cap).coerceIn(0f, 1f)
         if (fraction <= 0f) return
         val fillH = (ENERGY_BAR_H * fraction).toInt().coerceAtLeast(1)
@@ -94,14 +94,14 @@ class CannerScreen(
             left + ENERGY_BAR_X + ENERGY_BAR_W,
             top + ENERGY_BAR_Y + ENERGY_BAR_H
         )
-        context.drawTexture(TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
+        context.blit(TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
             ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
             ENERGY_BAR_W, ENERGY_BAR_H, TEX_SIZE, TEX_SIZE)
         context.disableScissor()
     }
 
     private fun drawProgressBar(context: GuiGraphics, left: Int, top: Int) {
-        val progress = handler.sync.progress.coerceIn(0, CannerSync.PROGRESS_MAX)
+        val progress = menu.sync.progress.coerceIn(0, CannerSync.PROGRESS_MAX)
         val fraction = progress.toFloat() / CannerSync.PROGRESS_MAX
         if (fraction <= 0f) return
         val fillW = (PROGRESS_W * fraction).toInt().coerceAtLeast(1)
@@ -111,7 +111,7 @@ class CannerScreen(
             left + PROGRESS_X + fillW,
             top + PROGRESS_Y + PROGRESS_H
         )
-        context.drawTexture(TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
+        context.blit(TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
             PROGRESS_U.toFloat(), PROGRESS_V.toFloat(),
             PROGRESS_W, PROGRESS_H, TEX_SIZE, TEX_SIZE)
         context.disableScissor()
@@ -140,7 +140,7 @@ class CannerScreen(
             val tileH = minOf(16, sy + tankH - cy)
             for (cx in sx until (sx + tankW) step 16) {
                 val tileW = minOf(16, sx + tankW - cx)
-                context.drawSprite(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                context.blit(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
             }
         }
         context.disableScissor()
@@ -153,18 +153,18 @@ class CannerScreen(
             CannerSync.Mode.BOTTLE_LIQUID -> MODE_BOTTLE
             CannerSync.Mode.ENRICH_LIQUID -> MODE_ENRICH
         }
-        context.drawTexture(TEXTURE, left + MODE_TEX_X, top + MODE_TEX_Y, u.toFloat(), v.toFloat(), w, h, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, left + MODE_TEX_X, top + MODE_TEX_Y, u.toFloat(), v.toFloat(), w, h, TEX_SIZE, TEX_SIZE)
 
         // 额外纹理
         when (mode) {
             CannerSync.Mode.EMPTY_LIQUID -> {
-                context.drawTexture(TEXTURE, left + EXTRA_EB_X, top + EXTRA_EB_Y,
+                context.blit(TEXTURE, left + EXTRA_EB_X, top + EXTRA_EB_Y,
                     EXTRA_EB_U.toFloat(), EXTRA_EB_V.toFloat(), EXTRA_EB_W, EXTRA_EB_H, TEX_SIZE, TEX_SIZE)
             }
             CannerSync.Mode.BOTTLE_LIQUID -> {
-                context.drawTexture(TEXTURE, left + EXTRA_EB_X, top + EXTRA_EB_Y,
+                context.blit(TEXTURE, left + EXTRA_EB_X, top + EXTRA_EB_Y,
                     EXTRA_EB_U.toFloat(), EXTRA_EB_V.toFloat(), EXTRA_EB_W, EXTRA_EB_H, TEX_SIZE, TEX_SIZE)
-                context.drawTexture(TEXTURE, left + EXTRA_ENRICH_X, top + EXTRA_ENRICH_Y - 1,
+                context.blit(TEXTURE, left + EXTRA_ENRICH_X, top + EXTRA_ENRICH_Y - 1,
                     EXTRA_ENRICH_U.toFloat(), EXTRA_ENRICH_V.toFloat(), EXTRA_ENRICH_W, EXTRA_ENRICH_H, TEX_SIZE, TEX_SIZE)
             }
             else -> {}
@@ -178,7 +178,7 @@ class CannerScreen(
         // 流体交换区域
         if (relX in SWAP_X1..SWAP_X2 && relY in SWAP_Y1..SWAP_Y2) {
             context.fill(left + SWAP_X1, top + SWAP_Y1, left + SWAP_X2 + 1, top + SWAP_Y2 + 1, 0x80FFFFFF.toInt())
-            context.drawTooltip(textRenderer, listOf(Component.translatable("gui.ic2_120.canner.swap_tanks")), mouseX, mouseY)
+            context.renderComponentTooltip(font, listOf(Component.translatable("gui.ic2_120.canner.swap_tanks")), mouseX, mouseY)
         }
 
         // 模式切换区域
@@ -190,49 +190,49 @@ class CannerScreen(
                 CannerSync.Mode.BOTTLE_LIQUID -> Component.translatable("gui.ic2_120.canner.mode_bottle_liquid")
                 CannerSync.Mode.ENRICH_LIQUID -> Component.translatable("gui.ic2_120.canner.mode_enrich_liquid")
             }
-            context.drawTooltip(textRenderer, listOf(modeText), mouseX, mouseY)
+            context.renderComponentTooltip(font, listOf(modeText), mouseX, mouseY)
         }
 
         // 电量条悬停
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-            val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
-            context.drawTooltip(textRenderer,
+            val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+            val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
+            context.renderComponentTooltip(font,
                 listOf(Component.literal("储能：${EnergyFormatUtils.formatEu(energy)} / ${EnergyFormatUtils.formatEu(cap)} EU")),
                 mouseX, mouseY)
         }
 
         // 左侧流体槽悬停
         if (relX in TANK_L_X until TANK_L_X + TANK_W && relY in TANK_L_Y until TANK_L_Y + TANK_H) {
-            val amt = handler.sync.leftFluidAmount.coerceAtLeast(0)
-            val cap = handler.sync.leftFluidCapacity.coerceAtLeast(1)
+            val amt = menu.sync.leftFluidAmount.coerceAtLeast(0)
+            val cap = menu.sync.leftFluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
-                val name = BuiltInRegistries.FLUID.getValue(andler.sync.leftFluidRawId).defaultBlockState.blockState.block.name.string
+                val name = BuiltInRegistries.FLUID.getValue(andler.sync.leftFluidRawId).defaultBlockState().blockState.block.name.string
                 listOf(Component.literal(name), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Component.literal("空"))
             }
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
 
         // 右侧流体槽悬停
         if (relX in TANK_R_X until TANK_R_X + TANK_W && relY in TANK_R_Y until TANK_R_Y + TANK_H) {
-            val amt = handler.sync.rightFluidAmount.coerceAtLeast(0)
-            val cap = handler.sync.rightFluidCapacity.coerceAtLeast(1)
+            val amt = menu.sync.rightFluidAmount.coerceAtLeast(0)
+            val cap = menu.sync.rightFluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
-                val name = BuiltInRegistries.FLUID.getValue(andler.sync.rightFluidRawId).defaultBlockState.blockState.block.name.string
+                val name = BuiltInRegistries.FLUID.getValue(andler.sync.rightFluidRawId).defaultBlockState().blockState.block.name.string
                 listOf(Component.literal(name), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Component.literal("空"))
             }
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
 
         // uptips悬停
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE && relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE) {
-            context.drawTooltip(textRenderer, listOf(
+            context.renderComponentTooltip(font, listOf(
                 Component.translatable("gui.ic2_120.canner.uptips"),
                 Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
                 Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
@@ -246,16 +246,16 @@ class CannerScreen(
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         if (button == 0) {
-            val relX = mouseX.toInt() - x
-            val relY = mouseY.toInt() - y
+            val relX = mouseX.toInt() - leftPos
+            val relY = mouseY.toInt() - topPos
             if (relX in SWAP_X1..SWAP_X2 && relY in SWAP_Y1..SWAP_Y2) {
-                client?.player?.networkHandler?.sendPacket(
-                    ServerboundContainerButtonClickPacket(handler.syncId, CannerScreenHandler.BUTTON_ID_SWAP_TANKS))
+                minecraft.connection?.send(
+                    ServerboundContainerButtonClickPacket(menu.containerId, CannerScreenHandler.BUTTON_ID_SWAP_TANKS))
                 return true
             }
             if (relX in MODE_CLICK_X1..MODE_CLICK_X2 && relY in MODE_CLICK_Y1..MODE_CLICK_Y2) {
-                client?.player?.networkHandler?.sendPacket(
-                    ServerboundContainerButtonClickPacket(handler.syncId, CannerScreenHandler.BUTTON_ID_MODE_CYCLE))
+                minecraft.connection?.send(
+                    ServerboundContainerButtonClickPacket(menu.containerId, CannerScreenHandler.BUTTON_ID_MODE_CYCLE))
                 return true
             }
         }
@@ -339,7 +339,7 @@ class CannerScreen(
 
 private fun getFluidStillSprite(fluid: Fluid): net.minecraft.client.renderer.texture.TextureAtlasSprite? {
     val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
-    return handler.getFluidSprites(null, null, fluid.defaultBlockState).getOrNull(0)
+    return handler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()).getOrNull(0)
 }
 
 private data class Quad(val u: Int, val v: Int, val w: Int, val h: Int)

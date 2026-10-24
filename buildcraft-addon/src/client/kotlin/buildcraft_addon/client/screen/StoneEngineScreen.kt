@@ -32,18 +32,18 @@ class StoneEngineScreen(
     }
 
     init {
-        backgroundWidth = BG_WIDTH
-        backgroundHeight = BG_HEIGHT
+        imageWidth = BG_WIDTH
+        imageHeight = BG_HEIGHT
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_WIDTH, BG_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, x, y, 0f, 0f, BG_WIDTH, BG_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // Animated flame (bottom-up burn indicator)
         val burnProgress = handler.getBurnProgress()
         if (burnProgress > 0f) {
             val flameHeight = (burnProgress * FLAME_H).toInt().coerceIn(0, FLAME_H)
-            context.drawTexture(
+            context.blit(
                 TEXTURE,
                 x + FLAME_X, y + FLAME_Y + FLAME_H - flameHeight,
                 FLAME_TEX_U.toFloat(), (FLAME_TEX_V + FLAME_H - flameHeight).toFloat(),
@@ -55,11 +55,11 @@ class StoneEngineScreen(
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         super.render(context, mouseX, mouseY, delta)
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     override fun drawForeground(context: GuiGraphics, mouseX: Int, mouseY: Int) {
-        context.drawText(textRenderer, title, backgroundWidth / 2 - textRenderer.getWidth(title) / 2, 6, 0x404040, false)
-        context.drawText(textRenderer, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
+        context.drawString(textRenderer, title, imageWidth / 2 - textRenderer.getWidth(title) / 2, 6, 0x404040, false)
+        context.drawString(textRenderer, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
     }
 }

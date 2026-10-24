@@ -17,7 +17,7 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = IronFurnaceBlock::class)
 class IronFurnaceScreen(
-    handler: IronFurnaceScreenHandler,
+    val handler: IronFurnaceScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<IronFurnaceScreenHandler>(handler, playerInventory, title) {
@@ -25,41 +25,41 @@ class IronFurnaceScreen(
     private lateinit var collectXpBtn: Button
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun init() {
         super.init()
 
-        collectXpBtn = addDrawableChild(
+        collectXpBtn = addRenderableWidget(
             Button.builder(Component.empty()) { btn ->
-                client?.player?.networkHandler?.sendPacket(
-                    ServerboundContainerButtonClickPacket(handler.syncId, IronFurnaceScreenHandler.BUTTON_ID_COLLECT_XP)
+                minecraft.connection?.send(
+                    ServerboundContainerButtonClickPacket(menu.containerId, IronFurnaceScreenHandler.BUTTON_ID_COLLECT_XP)
                 )
-            }.dimensions(x + XP_BTN_X, y + XP_BTN_Y, XP_BTN_SIZE, XP_BTN_SIZE).build()
+            }.bounds(leftPos + XP_BTN_X, topPos + XP_BTN_Y, XP_BTN_SIZE, XP_BTN_SIZE).build()
         )
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
         val cookFrac = if (IronFurnaceSync.COOK_TIME_MAX > 0) {
-            (handler.sync.cookTime.coerceIn(0, IronFurnaceSync.COOK_TIME_MAX).toFloat() / IronFurnaceSync.COOK_TIME_MAX)
+            (menu.sync.cookTime.coerceIn(0, IronFurnaceSync.COOK_TIME_MAX).toFloat() / IronFurnaceSync.COOK_TIME_MAX)
                 .coerceIn(0f, 1f)
         } else 0f
-        val totalBurn = handler.sync.totalBurnTime.coerceAtLeast(1)
-        val burnFrac = (handler.sync.burnTime.coerceIn(0, totalBurn).toFloat() / totalBurn).coerceIn(0f, 1f)
+        val totalBurn = menu.sync.totalBurnTime.coerceAtLeast(1)
+        val burnFrac = (menu.sync.burnTime.coerceIn(0, totalBurn).toFloat() / totalBurn).coerceIn(0f, 1f)
 
         // 燃烧值纹理 (180,5)-(193,18) = 13×13，自下而上
         if (burnFrac > 0f) {
@@ -70,7 +70,7 @@ class IronFurnaceScreen(
                 left + FLAME_X + FLAME_W,
                 top + FLAME_Y + FLAME_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + FLAME_X, top + FLAME_Y,
                 FLAME_U.toFloat(), FLAME_V.toFloat(),
                 FLAME_W, FLAME_H,
@@ -88,7 +88,7 @@ class IronFurnaceScreen(
                 left + ARROW_X + arrowWidth,
                 top + ARROW_Y + ARROW_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + ARROW_X, top + ARROW_Y,
                 ARROW_U.toFloat(), ARROW_V.toFloat(),
                 ARROW_W, ARROW_H,
@@ -98,13 +98,13 @@ class IronFurnaceScreen(
         }
 
         // 经验瓶纹理（按钮居中）
-        context.drawItem(
+        context.renderItem(
             ItemStack(Items.EXPERIENCE_BOTTLE),
             left + XP_BTN_X + 2,
             top + XP_BTN_Y + 2
         )
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         // XP 按钮悬停提示
         val relX = mouseX - left
@@ -112,11 +112,11 @@ class IronFurnaceScreen(
         if (relX in XP_BTN_X until XP_BTN_X + XP_BTN_SIZE &&
             relY in XP_BTN_Y until XP_BTN_Y + XP_BTN_SIZE
         ) {
-            val xpRaw = handler.sync.experienceDisplay
+            val xpRaw = menu.sync.experienceDisplay
             val xpWhole = xpRaw / 10
             val xpFrac = xpRaw % 10
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 Component.literal("XP: $xpWhole.$xpFrac"),
                 mouseX, mouseY
             )

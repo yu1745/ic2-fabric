@@ -35,20 +35,20 @@ class ComposeDebugBlockEntityRenderer(
         light: Int,
         overlay: Int
     ) {
-        val world = entity.world ?: return
-        val time = world.time + tickDelta
+        val world = entity.level() ?: return
+        val time = world.gameTime + tickDelta
         val bob = sin(time * 0.08f) * 0.09f
         val spinDeg = time * 3.0f
 
         val vc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
 
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(0.5, 0.0, 0.5)
 
         drawHalo(matrices, vc, spinDeg, bob, light, overlay)
         drawArrow(matrices, vc, spinDeg, bob, light, overlay)
 
-        matrices.pop()
+        matrices.popPose()
     }
 
     private fun drawHalo(
@@ -67,9 +67,9 @@ class ComposeDebugBlockEntityRenderer(
 
         repeat(RING_SEGMENTS) { i ->
             val angle = spinDeg + (360.0f * i / RING_SEGMENTS)
-            matrices.push()
+            matrices.pushPose()
             matrices.translate(0.0, y.toDouble(), 0.0)
-            matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(angle))
+            matrices.mulPose(Axis.YP.rotationDegrees(angle))
             matrices.translate(radius.toDouble(), 0.0, 0.0)
             drawCuboid(
                 matrices, vc, light, overlay,
@@ -78,7 +78,7 @@ class ComposeDebugBlockEntityRenderer(
                 minZ = -segmentArcHalf, maxZ = segmentArcHalf,
                 red = 80, green = 235, blue = 255, alpha = 150
             )
-            matrices.pop()
+            matrices.popPose()
         }
     }
 
@@ -91,9 +91,9 @@ class ComposeDebugBlockEntityRenderer(
         overlay: Int
     ) {
         val baseY = 1.28f + bob
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(0.0, baseY.toDouble(), 0.0)
-        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(-spinDeg * 1.2f))
+        matrices.mulPose(Axis.YP.rotationDegrees(-spinDeg * 1.2f))
 
         drawCuboid(
             matrices, vc, light, overlay,
@@ -110,7 +110,7 @@ class ComposeDebugBlockEntityRenderer(
             baseHalf = 0.12f,
             red = 125, green = 250, blue = 255, alpha = 195
         )
-        matrices.pop()
+        matrices.popPose()
     }
 
     private fun drawPyramid(
@@ -126,7 +126,7 @@ class ComposeDebugBlockEntityRenderer(
         blue: Int,
         alpha: Int
     ) {
-        val entry = matrices.peek()
+        val entry = matrices.last()
 
         val bx1 = -baseHalf
         val bz1 = -baseHalf
@@ -162,7 +162,7 @@ class ComposeDebugBlockEntityRenderer(
         blue: Int,
         alpha: Int
     ) {
-        val entry = matrices.peek()
+        val entry = matrices.last()
 
         quadColor(vc, entry, light, overlay, minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ, red, green, blue, alpha, 0f, 0f, 1f)
         quadColor(vc, entry, light, overlay, maxX, minY, minZ, minX, minY, minZ, minX, maxY, minZ, maxX, maxY, minZ, red, green, blue, alpha, 0f, 0f, -1f)
@@ -174,7 +174,7 @@ class ComposeDebugBlockEntityRenderer(
 
     private fun quadColor(
         vc: VertexConsumer,
-        entry: PoseStack.Entry,
+        entry: PoseStack.Pose,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float,
@@ -192,7 +192,7 @@ class ComposeDebugBlockEntityRenderer(
 
     private fun vertex(
         vc: VertexConsumer,
-        entry: PoseStack.Entry,
+        entry: PoseStack.Pose,
         x: Float,
         y: Float,
         z: Float,
@@ -206,10 +206,10 @@ class ComposeDebugBlockEntityRenderer(
         ny: Float,
         nz: Float
     ) {
-        vc.vertex(entry.positionMatrix, x, y, z)
+        vc.vertex(entry.pose(), x, y, z)
             .color(red, green, blue, alpha)
-            .texture(0f, 0f)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV)
+            .uv(0f, 0f)
+            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
             .light(light)
             .normal(entry, nx, ny, nz)
     }

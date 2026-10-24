@@ -32,8 +32,8 @@ class ConsumeTreetapShapedRecipe(
 ) : ShapedRecipe(group, CraftingBookCategory.MISC, ShapedRecipePattern.of(patternKeys, patternRows), result, true) {
     override fun getRemainingItems(input: CraftingInput): NonNullList<ItemStack> {
         // 消耗参与合成的木龙头，其余材料按原版余物规则返回
-        val remainder = NonNullList.withSize(input.size, ItemStack.EMPTY)
-        for (slot in 0 until input.size) {
+        val remainder = NonNullList.withSize(input.size(), ItemStack.EMPTY)
+        for (slot in 0 until input.size()) {
             val stack = input.getItem(slot)
             if (stack.isEmpty) continue
             remainder[slot] = if (stack.item is Treetap) ItemStack.EMPTY else stack.item.getRecipeRemainder(stack)

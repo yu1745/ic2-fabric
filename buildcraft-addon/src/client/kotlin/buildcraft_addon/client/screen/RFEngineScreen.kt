@@ -50,19 +50,19 @@ class RFEngineScreen(
     }
 
     init {
-        backgroundWidth = BG_WIDTH
-        backgroundHeight = BG_HEIGHT
+        imageWidth = BG_WIDTH
+        imageHeight = BG_HEIGHT
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_WIDTH, BG_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, x, y, 0f, 0f, BG_WIDTH, BG_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // RF battery bar (bottom-up)
         val rfLevel = handler.getCurrentRF()
         val rfHeight = (rfLevel.toFloat() / MAX_RF * RF_BAR_H).toInt().coerceIn(0, RF_BAR_H)
         if (rfHeight > 0) {
             // Draw the RF bar from the texture, clipped
-            context.drawTexture(
+            context.blit(
                 TEXTURE,
                 x + RF_BAR_X, y + RF_BAR_Y + RF_BAR_H - rfHeight,
                 RF_TEX_U.toFloat(), (RF_TEX_V + RF_BAR_H - rfHeight).toFloat(),
@@ -72,7 +72,7 @@ class RFEngineScreen(
         }
 
         // Semi-transparent overlay over gear area
-        context.drawTexture(
+        context.blit(
             TEXTURE,
             x + OVERLAY_TEX_X, y + OVERLAY_TEX_Y,
             OVERLAY_TEX_X.toFloat(), OVERLAY_TEX_Y.toFloat(),
@@ -81,17 +81,17 @@ class RFEngineScreen(
         )
 
         // Render gear icons as item stacks (matching BC8 behavior)
-        context.drawItem(ItemStack(Items.IRON_INGOT), x + IRON_GEAR_X, y + IRON_GEAR_Y)
-        context.drawItem(ItemStack(Items.GOLD_INGOT), x + GOLD_GEAR_X, y + GOLD_GEAR_Y)
+        context.renderItem(ItemStack(Items.IRON_INGOT), x + IRON_GEAR_X, y + IRON_GEAR_Y)
+        context.renderItem(ItemStack(Items.GOLD_INGOT), x + GOLD_GEAR_X, y + GOLD_GEAR_Y)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         super.render(context, mouseX, mouseY, delta)
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     override fun drawForeground(context: GuiGraphics, mouseX: Int, mouseY: Int) {
-        context.drawText(textRenderer, title, backgroundWidth / 2 - textRenderer.getWidth(title) / 2, 6, 0x404040, false)
-        context.drawText(textRenderer, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
+        context.drawString(textRenderer, title, imageWidth / 2 - textRenderer.getWidth(title) / 2, 6, 0x404040, false)
+        context.drawString(textRenderer, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
     }
 }

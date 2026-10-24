@@ -19,71 +19,71 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = GeoGeneratorBlock::class)
 class GeoGeneratorScreen(
-    handler: GeoGeneratorScreenHandler,
+    val handler: GeoGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<GeoGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 161
+        imageWidth = 176
+        imageHeight = 161
     }
 
     private val lavaSprite: TextureAtlasSprite? by lazy {
-        val handler = FluidRenderHandlerRegistry.INSTANCE.getValue(luids.LAVA) ?: return@lazy null
-        handler.getFluidSprites(null, null, Fluids.LAVA.defaultBlockState)?.getOrNull(0)
+        val handler = FluidRenderHandlerRegistry.INSTANCE.get(luids.LAVA) ?: return@lazy null
+        handler.getFluidSprites(null, null, Fluids.Fluids.LAVA.defaultFluidState().createLegacyBlock())?.getOrNull(0)
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 161, 256, 256)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 161, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
         val cap = GeoGeneratorSync.ENERGY_CAPACITY
         val energyFrac = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
 
-        val lavaMb = handler.sync.lavaAmount.coerceAtLeast(0)
+        val lavaMb = menu.sync.lavaAmount.coerceAtLeast(0)
         val lavaCapMb = LAVA_TANK_DROPLETS
         val lavaFrac = if (lavaCapMb > 0) (lavaMb.toFloat() / lavaCapMb).coerceIn(0f, 1f) else 0f
 
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val outputRate = handler.sync.getSyncedExtractedAmount()
+        val inputRate = menu.sync.getSyncedInsertedAmount()
+        val outputRate = menu.sync.getSyncedExtractedAmount()
 
         // 能量条位于 (120, 19)-(144, 35)，纹理源 (178,2)-(202,18) = 24×16
-        drawEnergyGauge(context, x + ENERGY_BAR_X, y + ENERGY_BAR_Y, energyFrac)
+        drawEnergyGauge(context, leftPos + ENERGY_BAR_X, topPos + ENERGY_BAR_Y, energyFrac)
 
         // 岩浆储量条：区域 (82,23)-(94,69) = 12×46，流体纹理+颜色渲染
-        drawFluidTank(context, x + LAVA_BAR_X, y + LAVA_BAR_Y, LAVA_BAR_W, LAVA_BAR_H, lavaFrac, lavaSprite, Fluids.LAVA)
+        drawFluidTank(context, leftPos + LAVA_BAR_X, topPos + LAVA_BAR_Y, LAVA_BAR_W, LAVA_BAR_H, lavaFrac, lavaSprite, Fluids.LAVA)
 
         // 容量标示纹理 (178,21)-(190,68) = 12×47 → (82,23)，有岩浆时渲染在流体之上
         if (lavaMb > 0) {
-            context.drawTexture(TEXTURE, x + 82, y + 23, 178f, 21f, 12, 47, 256, 256)
+            context.blit(TEXTURE, leftPos + 82, topPos + 23, 178f, 21f, 12, 47, 256, 256)
         }
 
         // 标题文字居中于 y=6
-        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title, leftPos + (176 - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
         // EU发电/输出文字显示在左侧
         val generateText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
         val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
-        val sideTextWidth = maxOf(textRenderer.getWidth(generateText), textRenderer.getWidth(outputText))
-        val sideTextX = x - sideTextWidth - 4
-        context.drawText(textRenderer, generateText, sideTextX, y + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, sideTextX, y + 20, 0xAAAAAA, false)
+        val sideTextWidth = maxOf(font.width(generateText), font.width(outputText))
+        val sideTextX = leftPos - sideTextWidth - 4
+        context.drawString(font, generateText, sideTextX, topPos + 8, 0xAAAAAA, false)
+        context.drawString(font, outputText, sideTextX, topPos + 20, 0xAAAAAA, false)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         // 悬停提示
-        val relX = mouseX - x
-        val relY = mouseY - y
+        val relX = mouseX - leftPos
+        val relY = mouseY - topPos
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.drawTooltip(textRenderer,
+            context.renderComponentTooltip(font,
                 listOf(Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU")),
                 mouseX, mouseY)
         }
@@ -95,7 +95,7 @@ class GeoGeneratorScreen(
             } else {
                 listOf(Component.translatable("ic2.generic.text.empty"))
             }
-            context.drawTooltip(textRenderer, lavaLines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lavaLines, mouseX, mouseY)
         }
     }
 
@@ -105,7 +105,7 @@ class GeoGeneratorScreen(
         val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
         if (fillW <= 0) return
         context.enableScissor(gx, gy, gx + fillW, gy + barH)
-        context.drawTexture(TEXTURE, gx, gy, 178f, 2f, barW, barH, 256, 256)
+        context.blit(TEXTURE, gx, gy, 178f, 2f, barW, barH, 256, 256)
         context.disableScissor()
     }
 
@@ -124,7 +124,7 @@ class GeoGeneratorScreen(
                 val tileH = minOf(16, gy + h - sy)
                 for (sx in gx until (gx + w) step 16) {
                     val tileW = minOf(16, gx + w - sx)
-                    context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                    context.blit(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
                 }
             }
         }

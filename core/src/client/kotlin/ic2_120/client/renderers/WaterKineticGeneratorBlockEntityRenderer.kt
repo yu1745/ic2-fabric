@@ -76,18 +76,18 @@ class WaterKineticGeneratorBlockEntityRenderer(
             ((world.time + tickDelta) * 1.8f) % 360.0f
         }
 
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(0.5, 0.5, 0.5)
-        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(yawFromFacing(facing)))
+        matrices.mulPose(Axis.YP.rotationDegrees(yawFromFacing(facing)))
         matrices.translate(0.0, 0.0, -FRONT_OFFSET_FROM_CENTER)
-        matrices.multiply(Axis.POSITIVE_Z.rotationDegrees(angle))
+        matrices.mulPose(Axis.ZP.rotationDegrees(angle))
 
         val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(rotorTexture))
 
         repeat(4) { i ->
-            matrices.push()
-            matrices.multiply(Axis.POSITIVE_Z.rotationDegrees((i * 90).toFloat()))
-            matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(BLADE_PITCH_DEGREES))
+            matrices.pushPose()
+            matrices.mulPose(Axis.ZP.rotationDegrees((i * 90).toFloat()))
+            matrices.mulPose(Axis.YP.rotationDegrees(BLADE_PITCH_DEGREES))
             drawCuboid(
                 matrices,
                 vc,
@@ -97,7 +97,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
                 minY = BLADE_INNER_OFFSET, maxY = getRotorRadius(rotor),
                 minZ = -BLADE_THICKNESS_HALF, maxZ = BLADE_THICKNESS_HALF
             )
-            matrices.pop()
+            matrices.popPose()
         }
 
         drawCuboid(
@@ -120,7 +120,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
             minZ = -BLADE_THICKNESS_HALF, maxZ = BLADE_THICKNESS_HALF
         )
 
-        matrices.pop()
+        matrices.popPose()
     }
 
     private fun textureForRotor(stack: ItemStack): ResourceLocation? =
@@ -154,9 +154,9 @@ class WaterKineticGeneratorBlockEntityRenderer(
         minZ: Float,
         maxZ: Float
     ) {
-        val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
+        val entry = matrices.last()
+        val pos = entry.pose()
+        val normal = entry.normal()
 
         quad(vc, pos, normal, light, overlay,
             minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ,
@@ -220,7 +220,7 @@ class WaterKineticGeneratorBlockEntityRenderer(
         vc.vertex(pos, x, y, z)
             .color(255, 255, 255, 255)
             .texture(u, v)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV)
+            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
             .light(light)
             .normal(normal, nx, ny, nz)
             .next()

@@ -115,7 +115,7 @@ class RubberTreeFeature : Feature<TreeConfiguration>(TreeConfiguration.CODEC) {
         RubberSaplingGrowth.hasClearArea(context.level(), origin)
 
     private fun hasClearNaturalGenerationArea(context: FeaturePlaceContext<TreeConfiguration>, origin: BlockPos): Boolean {
-        val world = context.level
+        val world = context.level()
         val ignoreVines = Ic2Config.current.worldgen.rubberTree.normalized().ignoreVines
 
         // 树木和其他硬障碍都阻止本次生成，避免破坏原版树木或结构。

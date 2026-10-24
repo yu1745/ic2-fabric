@@ -61,7 +61,7 @@ class MolecularTransformerBlockEntityRenderer(
 
         val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(TEXTURE))
 
-        matrices.push()
+        matrices.pushPose()
 
         // Static model parts (use actual block light)
         renderBox(vc, matrices, light, ov, CORE_BOTTOM, 0, 0, 10, 3, 10)
@@ -73,28 +73,28 @@ class MolecularTransformerBlockEntityRenderer(
         renderBox(vc, matrices, light, ov, EL_BOTTOM, 49, 16, 3, 5, 6)
 
         // Second electrode: Y rotation -120°
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(0.5, 0.5, 0.5)
-        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(-120f))
+        matrices.mulPose(Axis.YP.rotationDegrees(-120f))
         matrices.translate(-0.5, -0.5, -0.5)
         renderBox(vc, matrices, light, ov, EL_TOP, 20, 16, 4, 3, 10)
         renderBox(vc, matrices, light, ov, EL_BOTTOM, 49, 16, 3, 5, 6)
-        matrices.pop()
+        matrices.popPose()
 
         // Third electrode: Y rotation +120°
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(0.5, 0.5, 0.5)
-        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(120f))
+        matrices.mulPose(Axis.YP.rotationDegrees(120f))
         matrices.translate(-0.5, -0.5, -0.5)
         renderBox(vc, matrices, light, ov, EL_TOP, 20, 16, 4, 3, 10)
         renderBox(vc, matrices, light, ov, EL_BOTTOM, 49, 16, 3, 5, 6)
-        matrices.pop()
+        matrices.popPose()
 
         // Translucent coreWorkZone
         val vcTrans = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(TEXTURE))
         renderBox(vcTrans, matrices, light, ov, CORE_WORK_ZONE, 0, 44, 6, 9, 6)
 
-        matrices.pop()
+        matrices.popPose()
 
         // Active core effect
         if (isActive) {
@@ -122,7 +122,7 @@ class MolecularTransformerBlockEntityRenderer(
         texU: Int, texV: Int,
         sizeX: Int, sizeY: Int, sizeZ: Int
     ) {
-        val entry = matrices.peek()
+        val entry = matrices.last()
         val pos = entry.positionMatrix
         val norm = entry.normalMatrix
 

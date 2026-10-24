@@ -21,6 +21,6 @@ public abstract class LivingEntityScaffoldFabricMixin {
         require = 0
     )
     private boolean ic2_120$treatIc2ScaffoldAsScaffolding(BlockState state, Block vanillaScaffolding) {
-        return state.isOf(vanillaScaffolding) || state.getBlock() instanceof Ic2ScaffoldBlock;
+        return state.is(vanillaScaffolding) || state.getBlock() instanceof Ic2ScaffoldBlock;
     }
 }

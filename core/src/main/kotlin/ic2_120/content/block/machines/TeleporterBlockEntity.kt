@@ -263,7 +263,7 @@ class TeleporterBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
 
         nbt.putBoolean("RedstoneInverted", redstoneInverted)

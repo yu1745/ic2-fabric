@@ -14,55 +14,55 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = RtGeneratorBlock::class)
 class RtGeneratorScreen(
-    handler: RtGeneratorScreenHandler,
+    val handler: RtGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<RtGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 161
+        imageWidth = 176
+        imageHeight = 161
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 161, 256, 256)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 161, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
         val cap = RtGeneratorSync.ENERGY_CAPACITY
         val energyFrac = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
 
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val outputRate = handler.sync.getSyncedExtractedAmount()
+        val inputRate = menu.sync.getSyncedInsertedAmount()
+        val outputRate = menu.sync.getSyncedExtractedAmount()
 
         // 能量条渲染区域 (116,34)-(140,50)，纹理 (178,3)-(202,19)，由左至右平铺
-        drawEnergyGauge(context, x + 116, y + 34, energyFrac)
+        drawEnergyGauge(context, leftPos + 116, topPos + 34, energyFrac)
 
         // 标题文字居中于 y=6
-        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title, leftPos + (176 - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
         // EU发电/输出文字显示在左侧
         val generateText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatRaw(inputRate))
         val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatRaw(outputRate))
-        val sideTextWidth = maxOf(textRenderer.getWidth(generateText), textRenderer.getWidth(outputText))
-        val sideTextX = x - sideTextWidth - 4
-        context.drawText(textRenderer, generateText, sideTextX, y + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, sideTextX, y + 20, 0xAAAAAA, false)
+        val sideTextWidth = maxOf(font.width(generateText), font.width(outputText))
+        val sideTextX = leftPos - sideTextWidth - 4
+        context.drawString(font, generateText, sideTextX, topPos + 8, 0xAAAAAA, false)
+        context.drawString(font, outputText, sideTextX, topPos + 20, 0xAAAAAA, false)
 
         // 能量条悬停 (116,34)-(140,50) = 24×16
-        if (mouseX in x + 116 until x + 140 && mouseY in y + 34 until y + 50) {
-            context.drawTooltip(
-                textRenderer,
+        if (mouseX in leftPos + 116 until leftPos + 140 && mouseY in topPos + 34 until topPos + 50) {
+            context.renderComponentTooltip(
+                font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     private fun drawEnergyGauge(context: GuiGraphics, gx: Int, gy: Int, fraction: Float) {
@@ -71,7 +71,7 @@ class RtGeneratorScreen(
         val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
         if (fillW <= 0) return
         context.enableScissor(gx, gy, gx + fillW, gy + barH)
-        context.drawTexture(TEXTURE, gx, gy, 178f, 3f, barW, barH, 256, 256)
+        context.blit(TEXTURE, gx, gy, 178f, 3f, barW, barH, 256, 256)
         context.disableScissor()
     }
 

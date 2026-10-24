@@ -42,7 +42,6 @@ import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Item
-import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.tags.ItemTags

@@ -28,7 +28,6 @@ import ic2_120.registry.annotation.ModBlock
 import net.fabricmc.fabric.api.registry.FlammableBlockRegistry
 import net.fabricmc.fabric.api.registry.StrippableBlockRegistry
 import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.state.BlockBehaviour
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.ButtonBlock
 import net.minecraft.world.level.block.DoorBlock
@@ -485,7 +484,7 @@ class RubberLeavesBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Pro
         neighborPos: BlockPos
     ): BlockState {
         if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, net.minecraft.world.level.material.Fluids.WATER, net.minecraft.world.level.material.Fluids.WATER.tickDelay(world))
+            world.scheduleTick(pos, net.minecraft.world.level.material.Fluids.WATER, net.minecraft.world.level.material.Fluids.WATER.getTickDelay(world))
         }
         world.scheduleTick(pos, this, 1)
         return state

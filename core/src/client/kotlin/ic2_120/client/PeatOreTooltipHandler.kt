@@ -16,7 +16,7 @@ object PeatOreTooltipHandler {
     private val PEAT_ORE_ID = ResourceLocation.fromNamespaceAndPath("ic2_120", "peat_ore")
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, _, lines ->
+        ItemTooltipCallback.EVENT.register { stack, _, _, lines ->
             val itemId = BuiltInRegistries.ITEM.getId(stack.item)
             if (itemId != PEAT_ORE_ID) return@register
 

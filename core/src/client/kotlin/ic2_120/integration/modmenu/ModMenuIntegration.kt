@@ -26,17 +26,17 @@ class ModMenuIntegration : ModMenuApi {
         val text = Component.literal("IC2 Config")
         return object : Screen(text) {
             override fun init() {
-                addDrawableChild(
+                addRenderableWidget(
                     net.minecraft.client.gui.components.Button.builder(
                         Component.literal("§c$message"),
                         { client!!.setScreen(parent) }
-                    ).dimensions(width / 2 - 100, height / 2 - 10, 200, 20).build()
+                    ).bounds(width / 2 - 100, height / 2 - 10, 200, 20).build()
                 )
-                addDrawableChild(
+                addRenderableWidget(
                     net.minecraft.client.gui.components.Button.builder(
                         Component.literal("返回"),
                         { client!!.setScreen(parent) }
-                    ).dimensions(width / 2 - 50, height / 2 + 20, 100, 20).build()
+                    ).bounds(width / 2 - 50, height / 2 + 20, 100, 20).build()
                 )
             }
         }

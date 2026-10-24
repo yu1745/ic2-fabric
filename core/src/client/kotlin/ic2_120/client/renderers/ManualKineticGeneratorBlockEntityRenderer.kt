@@ -64,19 +64,19 @@ class ManualKineticGeneratorBlockEntityRenderer(
 
         val angle = entity.clientTurnAngle + if (entity.sync.isTurning) tickDelta * 15f else 0f
 
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(0.5, 0.5, 0.5)
         
         rotateForFacing(matrices, facing)
         
         matrices.translate(0.0, 0.5, 0.0)
-        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(angle))
+        matrices.mulPose(Axis.YP.rotationDegrees(angle))
 
         drawShaft(matrices, vc, light, overlay)
         drawArm(matrices, vc, light, overlay)
         drawHandle(matrices, vc, light, overlay)
 
-        matrices.pop()
+        matrices.popPose()
     }
 
     private fun getTextureForMaterial(material: CrankMaterial): ResourceLocation =
@@ -90,9 +90,9 @@ class ManualKineticGeneratorBlockEntityRenderer(
     private fun rotateForFacing(matrices: PoseStack, facing: Direction) {
         when (facing) {
             Direction.NORTH -> { }
-            Direction.SOUTH -> matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(180f))
-            Direction.WEST -> matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(90f))
-            Direction.EAST -> matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(-90f))
+            Direction.SOUTH -> matrices.mulPose(Axis.YP.rotationDegrees(180f))
+            Direction.WEST -> matrices.mulPose(Axis.YP.rotationDegrees(90f))
+            Direction.EAST -> matrices.mulPose(Axis.YP.rotationDegrees(-90f))
             else -> { }
         }
     }
@@ -117,14 +117,14 @@ class ManualKineticGeneratorBlockEntityRenderer(
         overlay: Int
     ) {
         val totalLength = ARM_LENGTH + SHAFT_HALF + HANDLE_HALF
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(0f, 0f, -ARM_LENGTH * 0.5f + (HANDLE_HALF - SHAFT_HALF) * 0.5f)
         drawCuboid(
             matrices, vc, light, overlay,
             -ARM_HALF, -ARM_HALF, -totalLength * 0.5f,
             ARM_HALF, ARM_HALF, totalLength * 0.5f
         )
-        matrices.pop()
+        matrices.popPose()
     }
 
     private fun drawHandle(
@@ -133,14 +133,14 @@ class ManualKineticGeneratorBlockEntityRenderer(
         light: Int,
         overlay: Int
     ) {
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(0f, 0f, -ARM_LENGTH)
         drawCuboid(
             matrices, vc, light, overlay,
             -HANDLE_HALF, -ARM_HALF, -HANDLE_HALF,
             HANDLE_HALF, HANDLE_LENGTH, HANDLE_HALF
         )
-        matrices.pop()
+        matrices.popPose()
     }
 
     private fun drawCuboid(
@@ -155,9 +155,9 @@ class ManualKineticGeneratorBlockEntityRenderer(
         maxY: Float,
         maxZ: Float
     ) {
-        val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
+        val entry = matrices.last()
+        val pos = entry.pose()
+        val normal = entry.normal()
 
         quad(vc, pos, normal, light, overlay,
             minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ,
@@ -221,7 +221,7 @@ class ManualKineticGeneratorBlockEntityRenderer(
         vc.vertex(pos, x, y, z)
             .color(255, 255, 255, 255)
             .texture(u, v)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV)
+            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
             .light(light)
             .normal(normal, nx, ny, nz)
             .next()

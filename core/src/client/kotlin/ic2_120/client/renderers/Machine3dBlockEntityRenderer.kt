@@ -83,16 +83,16 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
      * 原版 BlockModelRenderer 的矩阵渲染路径不做面朝向明暗，运动件会整体发白；
      * 这里按"变换后的法线"套用 MC 固定面亮度（上 1.0 / 南北 0.8 / 东西 0.6 / 下 0.5）。
      */
-    private fun emitShaded(entry: PoseStack.Entry, consumer: VertexConsumer, model: BakedModel, light: Int) {
+    private fun emitShaded(entry: PoseStack.Pose, consumer: VertexConsumer, model: BakedModel, light: Int) {
         lights.fill(light)
         for (face in FACES) {
             for (quad in model.getQuads(null, face, random)) {
                 val n = quad.face.unitVector
-                normal.set(n.x, n.y, n.z).mul(entry.normalMatrix)
+                normal.set(n.x, n.y, n.z).mul(entry.normal())
                 val shade = normal.x * normal.x * 0.6f + normal.z * normal.z * 0.8f +
                     normal.y * normal.y * (if (normal.y > 0) 1f else 0.5f)
                 brightness.fill(shade)
-                consumer.quad(entry, quad, brightness, 1f, 1f, 1f, lights, OverlayTexture.DEFAULT_UV, true)
+                consumer.quad(entry, quad, brightness, 1f, 1f, 1f, lights, OverlayTexture.NO_OVERLAY, true)
             }
         }
     }
@@ -114,26 +114,26 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
         // 运动件从正面露出：取正前方方块的光照（机器自身格子光照会低一级）
         val frontLight = LevelRenderer.getLightmapCoordinates(world, entity.pos.offset(facing))
 
-        matrices.push()
+        matrices.pushPose()
         // 与 blockstate 的 y 旋转一致：北为 0°，顺时针
         matrices.translate(0.5, 0.0, 0.5)
-        matrices.multiply(Axis.NEGATIVE_Y.rotationDegrees(facing.asRotation() - 180f))
+        matrices.mulPose(Axis.YN.rotationDegrees(facing.asRotation() - 180f))
         matrices.translate(-0.5, 0.0, -0.5)
         for (part in parts) {
-            matrices.push()
+            matrices.pushPose()
             if (part.rotate) {
                 val angle = Math.toRadians(((t * part.speed) % 360f).toDouble()).toFloat()
                 matrices.translate(part.pivot.x, part.pivot.y, part.pivot.z)
-                matrices.multiply(Quaternionf().rotationAxis(angle, part.axis.x, part.axis.y, part.axis.z))
+                matrices.mulPose(Quaternionf().rotationAxis(angle, part.axis.x, part.axis.y, part.axis.z))
                 matrices.translate(-part.pivot.x, -part.pivot.y, -part.pivot.z)
             } else {
                 val k = part.amplitude * (0.5f - 0.5f * cos((2.0 * Math.PI * t / part.period).toFloat()))
                 matrices.translate(part.axis.x * k, part.axis.y * k, part.axis.z * k)
             }
             val id = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "block/machine3d/${machine}_rotor_${part.index}" + if (active) "_active" else "")
-            manager.getModel(id)?.let { emitShaded(matrices.peek(), consumer, it, frontLight) }
-            matrices.pop()
+            manager.getModel(id)?.let { emitShaded(matrices.last(), consumer, it, frontLight) }
+            matrices.popPose()
         }
-        matrices.pop()
+        matrices.popPose()
     }
 }

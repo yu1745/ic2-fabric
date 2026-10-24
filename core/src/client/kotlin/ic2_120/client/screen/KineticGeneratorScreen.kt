@@ -13,59 +13,59 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = KineticGeneratorBlock::class)
 class KineticGeneratorScreen(
-    handler: KineticGeneratorScreenHandler,
+    val handler: KineticGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<KineticGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 166, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
         val cap = KineticGeneratorSync.ENERGY_CAPACITY
         val energyFrac = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
-        val kuIn = handler.sync.currentKu.coerceAtLeast(0)
-        val euOut = handler.sync.outputEu.coerceAtLeast(0)
+        val kuIn = menu.sync.currentKu.coerceAtLeast(0)
+        val euOut = menu.sync.outputEu.coerceAtLeast(0)
 
         // 能量条：渲染区域 (60,23)-(117,37) = 57×14，纹理区域 (179,3)-(236,17) = 57×14，宽度一致
-        drawEnergyGauge(context, x + 60, y + 23, energyFrac)
+        drawEnergyGauge(context, leftPos + 60, topPos + 23, energyFrac)
 
         // 标题居中于 y=6
-        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title, leftPos + (176 - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
         // 输入/输出文本：区域 (41,49)-(138,63)，居中常显，缩放至 7px
         val infoText = "输入：${kuIn} KU/t  输出：${EnergyFormatUtils.formatRaw(euOut.toLong())} EU/t"
-        val scale = 6f / textRenderer.fontHeight
-        val scaledWidth = (textRenderer.getWidth(infoText) * scale).toInt()
-        val scaledHeight = (textRenderer.fontHeight * scale).toInt()
-        val textX = x + 41 + (97 - scaledWidth) / 2
-        val textY = y + 49 + (14 - scaledHeight) / 2
-        context.matrices.push()
-        context.matrices.translate(textX.toDouble(), textY.toDouble(), 0.0)
-        context.matrices.scale(scale, scale, 1.0f)
-        context.drawText(textRenderer, infoText, 0, 0, 0xFFADD8E6.toInt(), false)
-        context.matrices.pop()
+        val scale = 6f / font.lineHeight
+        val scaledWidth = (font.width(infoText) * scale).toInt()
+        val scaledHeight = (font.lineHeight * scale).toInt()
+        val textX = leftPos + 41 + (97 - scaledWidth) / 2
+        val textY = topPos + 49 + (14 - scaledHeight) / 2
+        context.pose().pushPose()
+        context.pose().translate(textX.toDouble(), textY.toDouble(), 0.0)
+        context.pose().scale(scale, scale, 1.0f)
+        context.drawString(font, infoText, 0, 0, 0xFFADD8E6.toInt(), false)
+        context.pose().popPose()
 
         // 能量条悬停 (60,23)-(117,37) = 57×14
-        if (mouseX in x + 60 until x + 117 && mouseY in y + 23 until y + 37) {
-            context.drawTooltip(
-                textRenderer,
+        if (mouseX in leftPos + 60 until leftPos + 117 && mouseY in topPos + 23 until topPos + 37) {
+            context.renderComponentTooltip(
+                font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     /**
@@ -77,7 +77,7 @@ class KineticGeneratorScreen(
         val fillW = (fraction.coerceIn(0f, 1f) * barW).toInt()
         if (fillW <= 0) return
         context.enableScissor(gx, gy, gx + fillW, gy + barH)
-        context.drawTexture(TEXTURE, gx, gy, 179f, 3f, barW, barH, 256, 256)
+        context.blit(TEXTURE, gx, gy, 179f, 3f, barW, barH, 256, 256)
         context.disableScissor()
     }
 

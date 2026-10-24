@@ -23,7 +23,7 @@ import java.util.concurrent.Executors
 
 @ModScreen(block = ChunkLoaderBlock::class)
 class ChunkLoaderScreen(
-    handler: ChunkLoaderScreenHandler,
+    val handler: ChunkLoaderScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<ChunkLoaderScreenHandler>(handler, playerInventory, title) {
@@ -73,41 +73,41 @@ class ChunkLoaderScreen(
     private var samplingInProgress = false
 
     init {
-        backgroundWidth = GUI_WIDTH
-        backgroundHeight = GUI_HEIGHT
+        imageWidth = GUI_WIDTH
+        imageHeight = GUI_HEIGHT
         titleY = 6
         setSlotPositions()
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
         drawTitle(context, left, top)
         drawMap(context, left, top, mouseX, mouseY)
         drawSideText(context, left, top)
-        context.drawTexture(
+        context.blit(
             UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
             0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
             UPTIPS_SIZE, UPTIPS_SIZE
         )
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         val relX = mouseX - left
         val relY = mouseY - top
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
             relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 Component.translatable("gui.ic2_120.chunk_loader.restart_bootstrap_hint"),
                 mouseX, mouseY
             )
@@ -118,20 +118,20 @@ class ChunkLoaderScreen(
         for (row in 0 until 3) {
             for (col in 0 until 9) {
                 val idx = ChunkLoaderScreenHandler.PLAYER_INV_START + row * 9 + col
-                handler.slots[idx].x = 8 + col * GuiSize.SLOT_SIZE
-                handler.slots[idx].y = PLAYER_INV_Y + row * GuiSize.SLOT_SIZE
+                menu.slots[idx].x = 8 + col * GuiSize.SLOT_SIZE
+                menu.slots[idx].y = PLAYER_INV_Y + row * GuiSize.SLOT_SIZE
             }
         }
         for (col in 0 until 9) {
             val idx = ChunkLoaderScreenHandler.PLAYER_INV_START + 27 + col
-            handler.slots[idx].x = 8 + col * GuiSize.SLOT_SIZE
-            handler.slots[idx].y = HOTBAR_Y
+            menu.slots[idx].x = 8 + col * GuiSize.SLOT_SIZE
+            menu.slots[idx].y = HOTBAR_Y
         }
     }
 
     private fun drawTitle(context: GuiGraphics, left: Int, top: Int) {
-        val tx = left + (backgroundWidth - textRenderer.getWidth(title)) / 2
-        context.drawText(textRenderer, title, tx, top + 6, 0x404040, false)
+        val tx = left + (imageWidth - font.width(title)) / 2
+        context.drawString(font, title, tx, top + 6, 0x404040, false)
     }
 
     private fun drawMap(context: GuiGraphics, left: Int, top: Int, mouseX: Int, mouseY: Int) {
@@ -140,7 +140,7 @@ class ChunkLoaderScreen(
         val mapTop = top + MAP_TOP
 
         // 144×144 纹理一次性绘制
-        context.drawTexture(textureId, mapLeft, mapTop, 0f, 0f, MAP_SIZE, MAP_SIZE, MAP_SIZE, MAP_SIZE)
+        context.blit(textureId, mapLeft, mapTop, 0f, 0f, MAP_SIZE, MAP_SIZE, MAP_SIZE, MAP_SIZE)
 
         // 逐格叠加加载蒙层 + 悬停高亮
         for (row in 0 until GRID) {
@@ -149,7 +149,7 @@ class ChunkLoaderScreen(
                 val cx = mapLeft + col * CELL_SIZE
                 val cy = mapTop + row * CELL_SIZE
                 val isCenter = index == CENTER_INDEX
-                val isEnabled = handler.sync.isChunkEnabled(index)
+                val isEnabled = menu.sync.isChunkEnabled(index)
                 val isHovered = mouseX in cx until cx + CELL_SIZE && mouseY in cy until cy + CELL_SIZE
 
                 // 已加载区块 → 叠加 60% 透明绿色
@@ -179,30 +179,30 @@ class ChunkLoaderScreen(
             context.fill(mapLeft, lineY, mapLeft + MAP_SIZE, lineY + 1, gridColor)
         }
         // 地图外边框
-        context.drawBorder(mapLeft, mapTop, MAP_SIZE, MAP_SIZE, 0xFF888888.toInt())
+        context.renderOutline(mapLeft, mapTop, MAP_SIZE, MAP_SIZE, 0xFF888888.toInt())
 
     }
 
     private fun drawSideText(context: GuiGraphics, left: Int, top: Int) {
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
         val cap = ChunkLoaderSync.ENERGY_CAPACITY
-        val chunkCount = handler.sync.getChunkCount()
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val consumeRate = handler.sync.getSyncedConsumedAmount()
+        val chunkCount = menu.sync.getChunkCount()
+        val inputRate = menu.sync.getSyncedInsertedAmount()
+        val consumeRate = menu.sync.getSyncedConsumedAmount()
 
         val energyText = "${"%,d".format(energy)} / ${"%,d".format(cap)} EU"
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
         val consumeText = t("gui.ic2_120.chunk_loader.consume_chunks", EnergyFormatUtils.formatEu(consumeRate), chunkCount)
         val sideTextWidth = maxOf(
-            textRenderer.getWidth(energyText),
-            textRenderer.getWidth(inputText),
-            textRenderer.getWidth(consumeText)
+            font.width(energyText),
+            font.width(inputText),
+            font.width(consumeText)
         )
         val sideTextX = left - sideTextWidth - 4
 
-        context.drawText(textRenderer, energyText, sideTextX, top + 8, 0xFFFFFF, false)
-        context.drawText(textRenderer, inputText, sideTextX, top + 20, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, sideTextX, top + 32, 0xAAAAAA, false)
+        context.drawString(font, energyText, sideTextX, top + 8, 0xFFFFFF, false)
+        context.drawString(font, inputText, sideTextX, top + 20, 0xAAAAAA, false)
+        context.drawString(font, consumeText, sideTextX, top + 32, 0xAAAAAA, false)
     }
 
     /**
@@ -213,7 +213,7 @@ class ChunkLoaderScreen(
      * 改造前是主线程同步采样 20k 像素（卡首帧），现在后台跑，玩家看到的是"地图延迟 1-2 帧出现"。
      */
     private fun getMapTexture(): ResourceLocation? {
-        val bePos = handler.machinePos
+        val bePos = menu.machinePos
         if (bePos == BlockPos.ORIGIN) return null
 
         mapTextureCache[bePos]?.let {
@@ -238,7 +238,7 @@ class ChunkLoaderScreen(
         val client = Minecraft.getInstance()
         val textureId = ResourceLocation.fromNamespaceAndPath("ic2_120", "chunk_map_${machinePos.asLong()}")
         // 主线程捕获 world 引用，避免后台线程访问 client 实例（client 非线程安全）
-        val world = client.world
+        val world = minecraft.level
         val centerX = machinePos.x shr 4
         val centerZ = machinePos.z shr 4
         val bottomY = world?.bottomY ?: 0
@@ -248,7 +248,7 @@ class ChunkLoaderScreen(
                 if (world == null) return@execute
                 val image = sampleMapImage(world, centerX, centerZ, bottomY)
                 // 上传必须在主线程：TextureManager.registerTexture 操作非并发 HashMap
-                client.execute {
+                minecraft.execute {
                     try {
                         if (mapTextureCache.containsKey(machinePos) && !force) {
                             // 期间已被其它路径填入，丢弃本次结果避免覆盖
@@ -341,8 +341,8 @@ class ChunkLoaderScreen(
         if (button == 0) {
             val mx = mouseX.toInt()
             val my = mouseY.toInt()
-            val mapLeft = x + MAP_LEFT
-            val mapTop = y + MAP_TOP
+            val mapLeft = leftPos + MAP_LEFT
+            val mapTop = topPos + MAP_TOP
             val mapRight = mapLeft + MAP_SIZE
             val mapBottom = mapTop + MAP_SIZE
             if (mx in mapLeft until mapRight && my in mapTop until mapBottom) {
@@ -351,8 +351,8 @@ class ChunkLoaderScreen(
                 if (col in 0 until GRID && row in 0 until GRID) {
                     val index = row * GRID + col
                     if (index != CENTER_INDEX) {
-                        client?.player?.networkHandler?.sendPacket(
-                            ServerboundContainerButtonClickPacket(handler.syncId, index)
+                        minecraft.connection?.send(
+                            ServerboundContainerButtonClickPacket(menu.containerId, index)
                         )
                     }
                     return true
@@ -375,7 +375,7 @@ class ChunkLoaderScreen(
         super.handledScreenTick()
         tickCount++
         if (tickCount % 100L == 0L) {
-            val bePos = handler.machinePos
+            val bePos = menu.machinePos
             if (bePos != BlockPos.ORIGIN) {
                 triggerAsyncSampling(bePos, force = true)
             }
@@ -393,7 +393,7 @@ class ChunkLoaderScreen(
      */
     override fun removed() {
         super.removed()
-        val bePos = handler.machinePos
+        val bePos = menu.machinePos
         if (bePos == BlockPos.ORIGIN) return
         val id = mapTextureCache.remove(bePos) ?: return
         mapImageCache.remove(id)?.close()

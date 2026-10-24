@@ -10,27 +10,27 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handler = "containment_box")
 class ContainmentBoxScreen(
-    handler: ContainmentBoxScreenHandler,
+    val handler: ContainmentBoxScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<ContainmentBoxScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title, leftPos + (imageWidth - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     companion object {

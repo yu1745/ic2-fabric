@@ -43,30 +43,30 @@ class LeashKineticGeneratorBlockEntityRenderer(
 
         val angle = entity.sync.animalAngle
 
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(0.5, 1.0, 0.5)
-        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(-angle))
+        matrices.mulPose(Axis.YP.rotationDegrees(-angle))
 
         // Render single oak fence post (centered, no connections in default state)
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(-0.5, -0.5, -0.5)
         Minecraft.getInstance().blockRenderManager.renderBlockAsEntity(
-            Blocks.OAK_FENCE.defaultBlockState,
+            Blocks.OAK_FENCE.defaultBlockState(),
             matrices,
             vertexConsumers,
             renderLight,
-            OverlayTexture.DEFAULT_UV
+            OverlayTexture.NO_OVERLAY
         )
-        matrices.pop()
+        matrices.popPose()
 
         // Render leash knot on top of the fence post
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(0.0, 0.4, 0.0)
         matrices.scale(-1.0f, -1.0f, 1.0f)
         val vertexConsumer = vertexConsumers.getBuffer(leashKnotModel.getLayer(LEASH_KNOT_TEXTURE))
-        leashKnotModel.render(matrices, vertexConsumer, renderLight, OverlayTexture.DEFAULT_UV, 1f, 1f, 1f, 1f)
-        matrices.pop()
+        leashKnotModel.render(matrices, vertexConsumer, renderLight, OverlayTexture.NO_OVERLAY, 1f, 1f, 1f, 1f)
+        matrices.popPose()
 
-        matrices.pop()
+        matrices.popPose()
     }
 }

@@ -18,7 +18,7 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = ElectricFurnaceBlock::class)
 class ElectricFurnaceScreen(
-    handler: ElectricFurnaceScreenHandler,
+    val handler: ElectricFurnaceScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<ElectricFurnaceScreenHandler>(handler, playerInventory, title) {
@@ -26,42 +26,42 @@ class ElectricFurnaceScreen(
     private lateinit var collectXpBtn: Button
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun init() {
         super.init()
 
-        collectXpBtn = addDrawableChild(
+        collectXpBtn = addRenderableWidget(
             Button.builder(Component.empty()) { btn ->
-                client?.player?.networkHandler?.sendPacket(
-                    ServerboundContainerButtonClickPacket(handler.syncId, ElectricFurnaceScreenHandler.BUTTON_ID_COLLECT_XP)
+                minecraft.connection?.send(
+                    ServerboundContainerButtonClickPacket(menu.containerId, ElectricFurnaceScreenHandler.BUTTON_ID_COLLECT_XP)
                 )
-            }.dimensions(x + XP_BTN_X, y + XP_BTN_Y, XP_BTN_SIZE, XP_BTN_SIZE).build()
+            }.bounds(leftPos + XP_BTN_X, topPos + XP_BTN_Y, XP_BTN_SIZE, XP_BTN_SIZE).build()
         )
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+        val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
         val energyFraction = (energy.toFloat() / cap).coerceIn(0f, 1f)
-        val progressFrac = (handler.sync.progress.coerceIn(0, ElectricFurnaceSync.PROGRESS_MAX)
+        val progressFrac = (menu.sync.progress.coerceIn(0, ElectricFurnaceSync.PROGRESS_MAX)
             .toFloat() / ElectricFurnaceSync.PROGRESS_MAX).coerceIn(0f, 1f)
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val consumeRate = handler.sync.getSyncedConsumedAmount()
+        val inputRate = menu.sync.getSyncedInsertedAmount()
+        val consumeRate = menu.sync.getSyncedConsumedAmount()
 
         // 电量条 (178,2)-(191,15) = 13×13，自下而上
         if (energyFraction > 0f) {
@@ -72,7 +72,7 @@ class ElectricFurnaceScreen(
                 left + ENERGY_BAR_X + ENERGY_BAR_W,
                 top + ENERGY_BAR_Y + ENERGY_BAR_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
                 ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
                 ENERGY_BAR_W, ENERGY_BAR_H,
@@ -82,7 +82,7 @@ class ElectricFurnaceScreen(
         }
 
         // 验证电炉纹理 (178,48)-(199,62) = 21×14
-        context.drawTexture(
+        context.blit(
             TEXTURE, left + VERIFY_X, top + VERIFY_Y,
             VERIFY_U.toFloat(), VERIFY_V.toFloat(),
             VERIFY_W, VERIFY_H,
@@ -98,7 +98,7 @@ class ElectricFurnaceScreen(
                 left + PROGRESS_X + arrowWidth,
                 top + PROGRESS_Y + PROGRESS_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
                 PROGRESS_U.toFloat(), PROGRESS_V.toFloat(),
                 PROGRESS_W, PROGRESS_H,
@@ -108,14 +108,14 @@ class ElectricFurnaceScreen(
         }
 
         // uptips 纹理
-        context.drawTexture(
+        context.blit(
             UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
             0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
             UPTIPS_SIZE, UPTIPS_SIZE
         )
 
         // 经验瓶纹理（按钮居中）
-        context.drawItem(
+        context.renderItem(
             ItemStack(Items.EXPERIENCE_BOTTLE),
             left + XP_BTN_X + 2,
             top + XP_BTN_Y + 2
@@ -124,12 +124,12 @@ class ElectricFurnaceScreen(
         // 侧边文本
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
         val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatRaw(consumeRate))
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
+        val sideTextWidth = maxOf(font.width(inputText), font.width(consumeText))
         val sideTextX = left - sideTextWidth - 4
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
+        context.drawString(font, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawString(font, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         // 悬停提示
         val relX = mouseX - left
@@ -139,8 +139,8 @@ class ElectricFurnaceScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
@@ -150,11 +150,11 @@ class ElectricFurnaceScreen(
         if (relX in XP_BTN_X until XP_BTN_X + XP_BTN_SIZE &&
             relY in XP_BTN_Y until XP_BTN_Y + XP_BTN_SIZE
         ) {
-            val xpRaw = handler.sync.experienceDisplay
+            val xpRaw = menu.sync.experienceDisplay
             val xpWhole = xpRaw / 10
             val xpFrac = xpRaw % 10
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 Component.literal("XP: $xpWhole.$xpFrac"),
                 mouseX, mouseY
             )
@@ -164,8 +164,8 @@ class ElectricFurnaceScreen(
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
             relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 listOf(
                     Component.translatable("gui.ic2_120.electric_furnace.uptips"),
                     Component.literal(" §7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),

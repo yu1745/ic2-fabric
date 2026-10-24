@@ -187,8 +187,8 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
             // 按效果类别动态覆盖所有负面效果（包括坚守者的 DARKNESS 以及模组效果）。
             val harmfulEffects = player.activeEffects
                 .filter {
-                    it.effect.value.category == MobEffectCategory.HARMFUL ||
-                        it.effect.value === ModStatusEffects.RADIATION
+                    it.effect.value().category == MobEffectCategory.HARMFUL ||
+                        it.effect.value() === ModStatusEffects.RADIATION
                 }
             for (effect in harmfulEffects) {
                 if (energy < CURE_EFFECT_COST) break

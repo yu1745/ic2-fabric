@@ -130,7 +130,7 @@ abstract class BasePipeBlock(
         neighborPos: BlockPos
     ): BlockState {
         if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         val be = world.getBlockEntity(pos) as? PipeBlockEntity
         val property = propertyFor(direction)
@@ -158,7 +158,7 @@ abstract class BasePipeBlock(
         if (!canPlaceLiquid(null, world, pos, state, fluidState.getType())) return false
         if (!state.getValue(BlockStateProperties.WATERLOGGED)) {
             world.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, true), Block.UPDATE_ALL)
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         return true
     }
@@ -286,16 +286,19 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
     }
 
     init {
-        registerDefaultState(stateDefinition.any())
-            .setValue(BlockStateProperties.WATERLOGGED, false)
-            .setValue(NORTH, false)
-            .setValue(SOUTH, false)
-            .setValue(EAST, false)
-            .setValue(WEST, false)
-            .setValue(UP, false)
-            .setValue(DOWN, false)
-            .setValue(TRANSPARENT, false)
-            .setValue(BlockStateProperties.FACING, Direction.NORTH)
+        // registerDefaultState 返回 void：先在 stateDefinition.any() 上链式 setValue 再注册
+        registerDefaultState(
+            stateDefinition.any()
+                .setValue(BlockStateProperties.WATERLOGGED, false)
+                .setValue(NORTH, false)
+                .setValue(SOUTH, false)
+                .setValue(EAST, false)
+                .setValue(WEST, false)
+                .setValue(UP, false)
+                .setValue(DOWN, false)
+                .setValue(TRANSPARENT, false)
+                .setValue(BlockStateProperties.FACING, Direction.NORTH)
+        )
         // Rebuild cache with our overridden pipeShape() and the expanded state space (includes FACING)
         buildShapeCache()
     }

@@ -11,49 +11,49 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = SolidHeatGeneratorBlock::class)
 class SolidHeatGeneratorScreen(
-    handler: SolidHeatGeneratorScreenHandler,
+    val handler: SolidHeatGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<SolidHeatGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 166, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val total = handler.sync.burnTotal.coerceAtLeast(1)
-        val current = handler.sync.burnTime.coerceIn(0, total)
+        val total = menu.sync.burnTotal.coerceAtLeast(1)
+        val current = menu.sync.burnTime.coerceIn(0, total)
         val burnFrac = (current.toFloat() / total).coerceIn(0f, 1f)
-        val outputRate = handler.sync.getSyncedOutputHeat().coerceAtLeast(0L)
+        val outputRate = menu.sync.getSyncedOutputHeat().coerceAtLeast(0L)
 
         // 标题居中于 y=6
-        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title, leftPos + (176 - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
         // 燃烧进度条：纹理 (179,2)-(192,15) = 13×13，渲染区域 (82,29)-(94,41) = 12×12，自底向上填充
-        drawBurnBar(context, x + 82, y + 29, burnFrac)
+        drawBurnBar(context, leftPos + 82, topPos + 29, burnFrac)
 
         // 输出文本：区域 (48,65)-(128,79)，居中常显，7px
         val infoText = "输出：${outputRate} HU/t"
-        val scale = 7f / textRenderer.fontHeight
-        val scaledWidth = (textRenderer.getWidth(infoText) * scale).toInt()
-        val scaledHeight = (textRenderer.fontHeight * scale).toInt()
-        val textX = x + 48 + (80 - scaledWidth) / 2
-        val textY = y + 65 + (14 - scaledHeight) / 2
-        context.matrices.push()
-        context.matrices.translate(textX.toDouble(), textY.toDouble(), 0.0)
-        context.matrices.scale(scale, scale, 1.0f)
-        context.drawText(textRenderer, infoText, 0, 0, 0xFFADD8E6.toInt(), false)
-        context.matrices.pop()
+        val scale = 7f / font.lineHeight
+        val scaledWidth = (font.width(infoText) * scale).toInt()
+        val scaledHeight = (font.lineHeight * scale).toInt()
+        val textX = leftPos + 48 + (80 - scaledWidth) / 2
+        val textY = topPos + 65 + (14 - scaledHeight) / 2
+        context.pose().pushPose()
+        context.pose().translate(textX.toDouble(), textY.toDouble(), 0.0)
+        context.pose().scale(scale, scale, 1.0f)
+        context.drawString(font, infoText, 0, 0, 0xFFADD8E6.toInt(), false)
+        context.pose().popPose()
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     /**
@@ -65,7 +65,7 @@ class SolidHeatGeneratorScreen(
         val fillH = (fraction.coerceIn(0f, 1f) * barH).toInt()
         if (fillH <= 0) return
         context.enableScissor(gx, gy + barH - fillH, gx + barW, gy + barH)
-        context.drawTexture(TEXTURE, gx, gy, 179f, 2f, barW, barH, 256, 256)
+        context.blit(TEXTURE, gx, gy, 179f, 2f, barW, barH, 256, 256)
         context.disableScissor()
     }
 

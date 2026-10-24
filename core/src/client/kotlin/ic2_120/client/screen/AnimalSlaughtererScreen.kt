@@ -13,22 +13,22 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = AnimalSlaughtererBlock::class)
 class AnimalSlaughtererScreen(
-    handler: AnimalSlaughtererScreenHandler,
+    val handler: AnimalSlaughtererScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<AnimalSlaughtererScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // 剪刀纹理 (180,21)-(198,39) = 18x18，常渲染至 15,17（物品层之下）
-        context.drawTexture(
-            TEXTURE, x + SHEARS_TEX_X, y + SHEARS_TEX_Y,
+        context.blit(
+            TEXTURE, leftPos + SHEARS_TEX_X, topPos + SHEARS_TEX_Y,
             SHEARS_TEX_U.toFloat(), SHEARS_TEX_V.toFloat(),
             SHEARS_TEX_W, SHEARS_TEX_H,
             TEXTURE_SIZE, TEXTURE_SIZE
@@ -39,16 +39,16 @@ class AnimalSlaughtererScreen(
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+        val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val consumeRate = handler.sync.getSyncedConsumedAmount()
+        val inputRate = menu.sync.getSyncedInsertedAmount()
+        val consumeRate = menu.sync.getSyncedConsumedAmount()
 
         // 电量条 (180,4)-(194,18) = 14x14，自下而上
         if (energyFraction > 0f) {
@@ -59,7 +59,7 @@ class AnimalSlaughtererScreen(
                 left + ENERGY_BAR_X + ENERGY_BAR_W,
                 top + ENERGY_BAR_Y + ENERGY_BAR_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
                 ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
                 ENERGY_BAR_W, ENERGY_BAR_H,
@@ -69,14 +69,14 @@ class AnimalSlaughtererScreen(
         }
 
         // uptips 纹理
-        context.drawTexture(
+        context.blit(
             UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
             0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
             UPTIPS_SIZE, UPTIPS_SIZE
         )
 
         // 侧边文本
-        val animalCount = handler.sync.animalCount
+        val animalCount = menu.sync.animalCount
         val statusText = when {
             animalCount >= 32 -> t("gui.ic2_120.animal_slaughterer.slaughtering")
             animalCount >= 16 -> t("gui.ic2_120.animal_slaughterer.breeding")
@@ -85,23 +85,23 @@ class AnimalSlaughtererScreen(
         val animalText = t("gui.ic2_120.animal_slaughterer.animal_count", animalCount, statusText)
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
         val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatRaw(consumeRate))
-        val hasShears = handler.getSlot(AnimalSlaughtererScreenHandler.SLOT_SHEARS_INDEX) .hasItem()
+        val hasShears = menu.getSlot(AnimalSlaughtererScreenHandler.SLOT_SHEARS_INDEX) .hasItem()
         val needShearsText = if (!hasShears) t("gui.ic2_120.animal_slaughterer.need_shears") else ""
         val sideTextWidth = maxOf(
-            textRenderer.getWidth(animalText),
-            textRenderer.getWidth(inputText),
-            textRenderer.getWidth(consumeText),
-            if (!hasShears) textRenderer.getWidth(needShearsText) else 0
+            font.width(animalText),
+            font.width(inputText),
+            font.width(consumeText),
+            if (!hasShears) font.width(needShearsText) else 0
         )
         val sideX = left - sideTextWidth - 4
-        context.drawText(textRenderer, animalText, sideX, top + 8, 0x55FF55, false)
-        context.drawText(textRenderer, inputText, sideX, top + 20, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, sideX, top + 32, 0xAAAAAA, false)
+        context.drawString(font, animalText, sideX, top + 8, 0x55FF55, false)
+        context.drawString(font, inputText, sideX, top + 20, 0xAAAAAA, false)
+        context.drawString(font, consumeText, sideX, top + 32, 0xAAAAAA, false)
         if (!hasShears) {
-            context.drawText(textRenderer, needShearsText, sideX, top + 44, 0xFF5555, false)
+            context.drawString(font, needShearsText, sideX, top + 44, 0xFF5555, false)
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         val relX = mouseX - left
         val relY = mouseY - top
@@ -110,8 +110,8 @@ class AnimalSlaughtererScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
@@ -121,8 +121,8 @@ class AnimalSlaughtererScreen(
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
             relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 listOf(
                     Component.translatable("gui.ic2_120.animal_slaughterer.uptips"),
                     Component.literal("§7").append(Component.translatable("item.ic2_120.energy_storage_upgrade")),

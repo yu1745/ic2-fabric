@@ -84,7 +84,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
             else -> stack.getFluidCellVariant()?.fluid ?: return null
         }
         if (fluid == Fluids.EMPTY) return null
-        val state = fluid.defaultBlockState
+        val state = fluid.defaultFluidState().createLegacyBlock()
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
         val sprite = handler.getFluidSprites(null, null, state).firstOrNull() ?: return null
         val color = handler.getFluidColor(null, null, state)
@@ -100,7 +100,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         overlay: Int,
     ) {
         val client = Minecraft.getInstance()
-        val entry = matrices.peek()
+        val entry = matrices.last()
 
         val solid = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(InventoryMenu.BLOCK_ATLAS_TEXTURE))
         val shell = client.bakedModelManager.getModel(SHELL) ?: return
@@ -125,15 +125,15 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
      * 液面法线（物品局部坐标）。世界中：世界"上"（叠加晃动）→ 视图空间（相机旋转）→ 局部（法线矩阵逆）。
      * 渲染世界与第一人称手部时矩阵栈都在同一视图空间，故统一处理；GUI 直接取局部向上。
      */
-    private fun surfaceNormal(mode: ItemDisplayContext, entry: PoseStack.Entry, client: Minecraft): Vector3f {
-        if (mode == ItemDisplayContext.GUI || client.world == null) return Vector3f(0f, 1f, 0f)
+    private fun surfaceNormal(mode: ItemDisplayContext, entry: PoseStack.Pose, client: Minecraft): Vector3f {
+        if (mode == ItemDisplayContext.GUI || minecraft.level == null) return Vector3f(0f, 1f, 0f)
         val world = if (isFirstPerson(mode)) Slosh.normal(client.tickDelta) else Vector3f(0f, 1f, 0f)
         val cam = client.gameRenderer.camera
         val view = Quaternionf()
             .rotationX(cam.pitch * Mth.RADIANS_PER_DEGREE)
             .rotateY((cam.yaw + 180f) * Mth.RADIANS_PER_DEGREE)
             .transform(world)
-        val local = Matrix3f(entry.normalMatrix).invert().transform(view).normalize()
+        val local = Matrix3f(entry.normal()).invert().transform(view).normalize()
         // 倒置/横放时液面法线朝下会让液柱翻出，限制为至少略微朝上
         if (local.y < 0.3f) local.y = 0.3f
         return local.normalize()
@@ -145,7 +145,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
     }
 
     private fun drawFluid(
-        entry: PoseStack.Entry, vc: VertexConsumer, c: Contents, up: Vector3f, light: Int, overlay: Int, agitation: Float,
+        entry: PoseStack.Pose, vc: VertexConsumer, c: Contents, up: Vector3f, light: Int, overlay: Int, agitation: Float,
     ) {
         val pts = ring(FLUID_R)
         val center = Y0 + (Y1 - Y0) * FILL
@@ -162,9 +162,9 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         val b = (c.color and 0xFF)
         val sp = c.sprite
         fun v(x: Float, y: Float, z: Float, u: Float, vv: Float, nx: Float, ny: Float, nz: Float) {
-            vc.vertex(entry.positionMatrix, x, y, z).color(r, g, b, 255)
+            vc.vertex(entry.pose(), x, y, z).color(r, g, b, 255)
                 .texture(sp.getFrameU(u * 16.0), sp.getFrameV(vv * 16.0))
-                .overlay(overlay).light(light).normal(entry.normalMatrix, nx, ny, nz).next()
+                .overlay(overlay).light(light).normal(entry.normal(), nx, ny, nz).next()
         }
         for (k in 0 until SIDES) {
             val a = pts[k]
@@ -190,12 +190,12 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         }
     }
 
-    private fun drawGlass(entry: PoseStack.Entry, vc: VertexConsumer, sp: TextureAtlasSprite, light: Int, overlay: Int) {
+    private fun drawGlass(entry: PoseStack.Pose, vc: VertexConsumer, sp: TextureAtlasSprite, light: Int, overlay: Int) {
         val pts = ring(GLASS_R)
         fun v(x: Float, y: Float, z: Float, u: Float, vv: Float, nx: Float, nz: Float) {
-            vc.vertex(entry.positionMatrix, x, y, z).color(255, 255, 255, 64)
+            vc.vertex(entry.pose(), x, y, z).color(255, 255, 255, 64)
                 .texture(sp.getFrameU(u * 16.0), sp.getFrameV(vv * 16.0))
-                .overlay(overlay).light(light).normal(entry.normalMatrix, nx, 0f, nz).next()
+                .overlay(overlay).light(light).normal(entry.normal(), nx, 0f, nz).next()
         }
         for (k in 0 until SIDES) {
             val a = pts[k]
@@ -235,7 +235,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
         val ripple get() = cfg.ripple.toFloat()
 
         fun tick(client: Minecraft) {
-            val player = client.player ?: run { lastHand = null; return }
+            val player = minecraft.player ?: run { lastHand = null; return }
             val right = Vec3.fromPolar(0f, player.yaw + 90f)
             val hand = player.eyePos.add(player.rotationVector.multiply(0.6)).add(right.multiply(0.35))
             // 传送/重生等瞬移不算运动

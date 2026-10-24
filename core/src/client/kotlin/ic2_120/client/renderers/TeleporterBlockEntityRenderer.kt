@@ -110,7 +110,7 @@ class TeleporterBlockEntityRenderer(
             cache.sz += (target.z - cache.sz) * lerp
         }
 
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(
             cache.sx - entity.pos.x,
             cache.sy - entity.pos.y,
@@ -128,7 +128,7 @@ class TeleporterBlockEntityRenderer(
             drawBeam(matrices, vc, fullLight, overlay, beamHeight, 70, 220, 255, (alpha + 20).coerceAtMost(230))
         }
 
-        matrices.pop()
+        matrices.popPose()
     }
 
     private fun drawRingBand(
@@ -144,9 +144,9 @@ class TeleporterBlockEntityRenderer(
         blue: Int,
         alpha: Int
     ) {
-        val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
+        val entry = matrices.last()
+        val pos = entry.pose()
+        val normal = entry.normal()
         val step = (2.0 * PI / SEGMENTS).toFloat()
 
         for (i in 0 until SEGMENTS) {
@@ -187,9 +187,9 @@ class TeleporterBlockEntityRenderer(
         val half = 0.06f
         val y0 = 0.03f
         val y1 = y0 + height
-        val entry = matrices.peek()
-        val pos = entry.positionMatrix
-        val normal = entry.normalMatrix
+        val entry = matrices.last()
+        val pos = entry.pose()
+        val normal = entry.normal()
 
         quadColor(vc, pos, normal, light, overlay, -half, y0, -half, -half, y1, -half, half, y1, -half, half, y0, -half, red, green, blue, alpha, 0f, 0f, -1f)
         quadColor(vc, pos, normal, light, overlay, half, y0, half, half, y1, half, -half, y1, half, -half, y0, half, red, green, blue, alpha, 0f, 0f, 1f)
@@ -235,8 +235,8 @@ class TeleporterBlockEntityRenderer(
     ) {
         vc.vertex(pos, x, y, z)
             .color(red, green, blue, alpha)
-            .texture(0f, 0f)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV)
+            .uv(0f, 0f)
+            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
             .light(light)
             .normal(normal, nx, ny, nz)
             .next()

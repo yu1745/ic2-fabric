@@ -19,10 +19,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemEntity.class)
 public abstract class CoalDustWaterTransformMixin {
     @Unique
-    private static final ResourceLocation IC2_COAL_DUST = new ResourceLocation.of("ic2_120", "coal_dust");
+    private static final ResourceLocation IC2_COAL_DUST = ResourceLocation.fromNamespaceAndPath("ic2_120", "coal_dust");
 
     @Unique
-    private static final ResourceLocation IC2_COAL_FUEL_DUST = new ResourceLocation.of("ic2_120", "coal_fuel_dust");
+    private static final ResourceLocation IC2_COAL_FUEL_DUST = ResourceLocation.fromNamespaceAndPath("ic2_120", "coal_fuel_dust");
 
     @Unique
     private int ic2$coalWaterTransformTicks;
@@ -36,9 +36,9 @@ public abstract class CoalDustWaterTransformMixin {
     @Inject(method = "tick", at = @At("TAIL"))
     private void ic2$transformCoalDustInWater(CallbackInfo ci) {
         ItemEntity entity = (ItemEntity) (Object) this;
-        Level world = entity.getWorld();
+        Level world = entity.level();
 
-        if (world.isClient || entity.isRemoved()) {
+        if (world.isClientSide || entity.isRemoved()) {
             return;
         }
 
@@ -52,8 +52,8 @@ public abstract class CoalDustWaterTransformMixin {
         int y = Mth.floor((entity.getBoundingBox().minY + entity.getBoundingBox().maxY) / 2.0D);
         int z = Mth.floor(entity.getZ());
         BlockPos fluidPos = new BlockPos(x, y, z);
-        if (!world.getFluidState(fluidPos).isOf(Fluids.WATER)
-                && !world.getFluidState(fluidPos).isOf(Fluids.FLOWING_WATER)) {
+        if (!world.getFluidState(fluidPos).is(Fluids.WATER)
+                && !world.getFluidState(fluidPos).is(Fluids.FLOWING_WATER)) {
             this.ic2$coalWaterTransformTicks = 0;
             return;
         }
@@ -70,8 +70,8 @@ public abstract class CoalDustWaterTransformMixin {
         } else {
             this.setStack(stack);
             ItemEntity outputEntity = new ItemEntity(world, entity.getX(), entity.getY(), entity.getZ(), output);
-            outputEntity.setPickupDelay(10);
-            world.spawnEntity(outputEntity);
+            outputEntity.setPickUpDelay(10);
+            world.addFreshEntity(outputEntity);
         }
     }
 }

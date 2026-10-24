@@ -70,7 +70,7 @@ enum class BevelPlane(private val key: String) : StringRepresentable {
     XZ("xz"),
     YZ("yz");
 
-    override val serializedName: String get() = key
+    override fun getSerializedName(): String = key
 
     fun includes(axis: Direction.Axis): Boolean = when (this) {
         XY -> axis == Direction.Axis.X || axis == Direction.Axis.Y
@@ -121,7 +121,7 @@ abstract class BaseTransmissionBlock(
         neighborPos: BlockPos
     ): BlockState {
         if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         if (world is net.minecraft.world.level.Level && !world.isClient) {
             KineticNetworkManager.invalidateConnectionCachesAt(world, pos)
@@ -145,7 +145,7 @@ abstract class BaseTransmissionBlock(
         if (!canPlaceLiquid(null, world, pos, state, fluidState.getType())) return false
         if (!state.getValue(BlockStateProperties.WATERLOGGED)) {
             world.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, true), Block.UPDATE_ALL)
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         return true
     }
@@ -358,7 +358,7 @@ class BevelGearBlock(
         neighborPos: BlockPos
     ): BlockState {
         if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         val axes = connectedAxes(world, pos)
         val plane = selectPlane(axes, state.getValue(PLANE), direction.axis)

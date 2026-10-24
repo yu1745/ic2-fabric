@@ -14,32 +14,32 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = MagnetizerBlock::class)
 class MagnetizerScreen(
-    handler: MagnetizerScreenHandler,
+    val handler: MagnetizerScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<MagnetizerScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        imageWidth = GUI_SIZE.width
+        imageHeight = GUI_SIZE.height
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
         // 能量条 (180,5)-(194,18) = 14×13 → (10,30)，自下而上
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+        val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
         if (energyFraction > 0f) {
             val fillH = (ENERGY_BAR_H * energyFraction).toInt().coerceAtLeast(1)
@@ -49,36 +49,36 @@ class MagnetizerScreen(
                 left + ENERGY_BAR_X + ENERGY_BAR_W,
                 top + ENERGY_BAR_Y + ENERGY_BAR_H
             )
-            context.drawTexture(TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
+            context.blit(TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
                 ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
                 ENERGY_BAR_W, ENERGY_BAR_H, TEX_SIZE, TEX_SIZE)
             context.disableScissor()
         }
 
         // 状态文本
-        val hasBoots = handler.sync.isWearingMetalBoots != 0
+        val hasBoots = menu.sync.isWearingMetalBoots != 0
         val bootsText = if (hasBoots)
             Component.translatable("gui.ic2_120.magnetizer.metal_boots_detected")
         else
             Component.translatable("gui.ic2_120.magnetizer.metal_boots_not_detected")
         val bootsColor = if (hasBoots) 0x55FF55 else 0xFF5555
 
-        context.drawText(textRenderer, bootsText, left + 31, top + 62, bootsColor, false)
+        context.drawString(font, bootsText, left + 31, top + 62, bootsColor, false)
 
         // uptips
-        context.drawTexture(UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y, 0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE)
+        context.blit(UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y, 0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE)
 
         // 侧边文字
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val consumeRate = handler.sync.getSyncedConsumedAmount()
+        val inputRate = menu.sync.getSyncedInsertedAmount()
+        val consumeRate = menu.sync.getSyncedConsumedAmount()
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(inputRate))
         val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(consumeRate))
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
+        val sideTextWidth = maxOf(font.width(inputText), font.width(consumeText))
         val sideTextX = left - sideTextWidth - 4
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
+        context.drawString(font, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawString(font, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         val relX = mouseX - left
         val relY = mouseY - top
@@ -87,14 +87,14 @@ class MagnetizerScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.drawTooltip(textRenderer,
+            context.renderComponentTooltip(font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY)
         }
 
         // uptips 悬停
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE && relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE) {
-            context.drawTooltip(textRenderer, listOf(
+            context.renderComponentTooltip(font, listOf(
                 Component.translatable("gui.ic2_120.magnetizer.uptips"),
                 Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
                 Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),

@@ -18,42 +18,42 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = OreWashingPlantBlock::class)
 class OreWashingPlantScreen(
-    handler: OreWashingPlantScreenHandler,
+    val handler: OreWashingPlantScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<OreWashingPlantScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+        val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
         val progressFrac = if (OreWashingPlantSync.PROGRESS_MAX > 0) {
-            (handler.sync.progress.coerceIn(0, OreWashingPlantSync.PROGRESS_MAX).toFloat() / OreWashingPlantSync.PROGRESS_MAX).coerceIn(0f, 1f)
+            (menu.sync.progress.coerceIn(0, OreWashingPlantSync.PROGRESS_MAX).toFloat() / OreWashingPlantSync.PROGRESS_MAX).coerceIn(0f, 1f)
         } else 0f
-        val waterAmountDroplets = handler.sync.waterAmount.toLong().coerceAtLeast(0)
+        val waterAmountDroplets = menu.sync.waterAmount.toLong().coerceAtLeast(0)
         val waterCapacityDroplets = FluidConstants.BUCKET * 8
         val waterFraction = if (waterCapacityDroplets > 0) (waterAmountDroplets.toFloat() / waterCapacityDroplets).coerceIn(0f, 1f) else 0f
         val waterAmountMb = waterAmountDroplets / DROPLETS_PER_MB
         val waterCapacityMb = waterCapacityDroplets / DROPLETS_PER_MB
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val consumeRate = handler.sync.getSyncedConsumedAmount()
+        val inputRate = menu.sync.getSyncedInsertedAmount()
+        val consumeRate = menu.sync.getSyncedConsumedAmount()
 
         // 电量条 (179,3)-(193,17) = 14x14，自下而上
         if (energyFraction > 0f) {
@@ -64,7 +64,7 @@ class OreWashingPlantScreen(
                 left + ENERGY_BAR_X + ENERGY_BAR_W,
                 top + ENERGY_BAR_Y + ENERGY_BAR_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
                 ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
                 ENERGY_BAR_W, ENERGY_BAR_H,
@@ -77,7 +77,7 @@ class OreWashingPlantScreen(
         if (waterAmountDroplets > 0) run {
             val fluid = Fluids.WATER
             val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return@run
-            val sprite = handler.getFluidSprites(null, null, fluid.defaultBlockState).getOrNull(0) ?: return@run
+            val sprite = handler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()).getOrNull(0) ?: return@run
             val color = FluidUtils.getFluidColor(fluid)
             if (color == -1) return@run
             val r = ((color shr 16) and 0xFF) / 255f
@@ -92,7 +92,7 @@ class OreWashingPlantScreen(
                 val tileH = minOf(16, sy + WATER_H - cy)
                 for (cx in sx until (sx + WATER_W) step 16) {
                     val tileW = minOf(16, sx + WATER_W - cx)
-                    context.drawSprite(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                    context.blit(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
                 }
             }
             context.disableScissor()
@@ -100,7 +100,7 @@ class OreWashingPlantScreen(
 
         // 容量标示纹理 (182,48)-(193,94) = 11x46，有流体时渲染在流体纹理之上
         if (waterAmountDroplets > 0) {
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
                 TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
                 TANK_OVERLAY_W, TANK_OVERLAY_H,
@@ -117,7 +117,7 @@ class OreWashingPlantScreen(
                 left + PROGRESS_X + arrowWidth,
                 top + PROGRESS_Y + PROGRESS_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
                 PROGRESS_U.toFloat(), PROGRESS_V.toFloat(),
                 PROGRESS_W, PROGRESS_H,
@@ -127,7 +127,7 @@ class OreWashingPlantScreen(
         }
 
         // uptips 纹理
-        context.drawTexture(
+        context.blit(
             UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
             0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
             UPTIPS_SIZE, UPTIPS_SIZE
@@ -136,12 +136,12 @@ class OreWashingPlantScreen(
         // 侧边文本
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
         val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatRaw(consumeRate))
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
+        val sideTextWidth = maxOf(font.width(inputText), font.width(consumeText))
         val sideTextX = left - sideTextWidth - 4
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
+        context.drawString(font, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawString(font, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         val relX = mouseX - left
         val relY = mouseY - top
@@ -150,8 +150,8 @@ class OreWashingPlantScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
@@ -163,15 +163,15 @@ class OreWashingPlantScreen(
         ) {
             val lines = if (waterAmountDroplets > 0) listOf(Component.literal("水"), Component.literal("${"%,d".format(waterAmountMb)} / ${"%,d".format(waterCapacityMb)} mB"))
                         else listOf(Component.literal("空"))
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
 
         // uptips 悬停
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
             relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 listOf(
                     Component.translatable("gui.ic2_120.ore_washing_plant.uptips"),
                     Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),

@@ -20,7 +20,7 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handler = "cropnalyzer")
 class CropnalyzerScreen(
-    handler: CropnalyzerScreenHandler,
+    val handler: CropnalyzerScreenHandler,
     playerInventory: Inventory,
     title: McText
 ) : AbstractContainerScreen<CropnalyzerScreenHandler>(handler, playerInventory, title) {
@@ -49,35 +49,35 @@ class CropnalyzerScreen(
     }
 
     init {
-        backgroundWidth = GUI_WIDTH
-        backgroundHeight = GUI_HEIGHT
+        imageWidth = GUI_WIDTH
+        imageHeight = GUI_HEIGHT
         titleY = 6
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
         setSlotPositions()
 
         val inset = GuiBackground.SLOT_ANCHOR_INSET
         GuiBackground.drawVanillaLikeSlot(
             context,
-            left + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].x - inset,
-            top + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].y - inset,
+            left + menu.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].leftPos - inset,
+            top + menu.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].topPos - inset,
             GuiSize.SLOT_SIZE, GuiSize.SLOT_SIZE
         )
         GuiBackground.drawVanillaLikeSlot(
             context,
-            left + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].x - inset,
-            top + handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].y - inset,
+            left + menu.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].leftPos - inset,
+            top + menu.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].topPos - inset,
             GuiSize.SLOT_SIZE, GuiSize.SLOT_SIZE
         )
         GuiBackground.drawPlayerInventorySlotBorders(
@@ -88,32 +88,32 @@ class CropnalyzerScreen(
         drawButton(context, left, top, mouseX, mouseY)
         drawResultText(context, left, top)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     private fun setSlotPositions() {
-        handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].x = 8
-        handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].y = 7
-        handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].x = 41
-        handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].y = 7
+        menu.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].x = 8
+        menu.slots[CropnalyzerScreenHandler.SLOT_INDEX_INPUT].y = 7
+        menu.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].x = 41
+        menu.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].y = 7
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
                 val idx = CropnalyzerScreenHandler.PLAYER_INV_START + col + row * 9
-                handler.slots[idx].x = 8 + col * GuiSize.SLOT_SIZE
-                handler.slots[idx].y = PLAYER_INV_Y + row * GuiSize.SLOT_SIZE
+                menu.slots[idx].x = 8 + col * GuiSize.SLOT_SIZE
+                menu.slots[idx].y = PLAYER_INV_Y + row * GuiSize.SLOT_SIZE
             }
         }
         for (col in 0 until 9) {
             val idx = CropnalyzerScreenHandler.PLAYER_INV_START + 27 + col
-            handler.slots[idx].x = 8 + col * GuiSize.SLOT_SIZE
-            handler.slots[idx].y = HOTBAR_Y
+            menu.slots[idx].x = 8 + col * GuiSize.SLOT_SIZE
+            menu.slots[idx].y = HOTBAR_Y
         }
     }
 
     private fun drawTitle(context: GuiGraphics, left: Int, top: Int) {
-        val tx = left + (backgroundWidth - textRenderer.getWidth(title)) / 2
-        context.drawText(textRenderer, title, tx, top + 6, 0x404040, false)
+        val tx = left + (imageWidth - font.width(title)) / 2
+        context.drawString(font, title, tx, top + 6, 0x404040, false)
     }
 
     private fun drawButton(context: GuiGraphics, left: Int, top: Int, mouseX: Int, mouseY: Int) {
@@ -137,14 +137,14 @@ class CropnalyzerScreen(
         context.fill(x1 - 2, by + 1, x1 - 1, y1 - 1, 0xFF555555.toInt())
 
         val text = t("gui.ic2_120.cropnalyzer.scan")
-        val tw = textRenderer.getWidth(text)
+        val tw = font.width(text)
         val tx = bx + (BTN_W - tw) / 2
-        val ty = by + (BTN_H - textRenderer.fontHeight) / 2
-        context.drawTextWithShadow(textRenderer, text, tx, ty, 0xFFE0E0E0.toInt())
+        val ty = by + (BTN_H - font.lineHeight) / 2
+        context.drawTextWithShadow(font, text, tx, ty, 0xFFE0E0E0.toInt())
     }
 
     private fun drawResultText(context: GuiGraphics, left: Int, top: Int) {
-        val outputSeed = handler.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].stack
+        val outputSeed = menu.slots[CropnalyzerScreenHandler.SLOT_INDEX_OUTPUT].stack
         if (outputSeed.item !is CropSeedBagItem) return
         val type = CropSeedData.readType(outputSeed) ?: return
         val stats = CropSeedData.readStats(outputSeed)
@@ -157,7 +157,7 @@ class CropnalyzerScreen(
 
         val x0 = left + RESULT_X
         val x1 = left + RESULT_X + RESULT_W
-        val lineH = textRenderer.fontHeight
+        val lineH = font.lineHeight
         val gap = 5
 
         // Line 1: 作物名（左）| Tier: N（右）
@@ -186,21 +186,21 @@ class CropnalyzerScreen(
     }
 
     private fun drawSplitLine(context: GuiGraphics, leftText: String, rightText: String, x0: Int, x1: Int, y: Int, leftColor: Int, rightColor: Int) {
-        context.drawText(textRenderer, leftText, x0, y, leftColor, false)
-        val rw = textRenderer.getWidth(rightText)
-        context.drawText(textRenderer, rightText, x1 - rw, y, rightColor, false)
+        context.drawString(font, leftText, x0, y, leftColor, false)
+        val rw = font.width(rightText)
+        context.drawString(font, rightText, x1 - rw, y, rightColor, false)
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         if (button == 0) {
-            val bx = x + BTN_X
-            val by = y + BTN_Y
+            val bx = leftPos + BTN_X
+            val by = topPos + BTN_Y
            if (mouseX in bx.toDouble()..(bx + BTN_W).toDouble() && mouseY in by.toDouble()..(by + BTN_H).toDouble()) {
                 Minecraft.getInstance().soundManager.play(
                     SimpleSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f)
                 )
-                client?.player?.networkHandler?.sendPacket(
-                    ServerboundContainerButtonClickPacket(handler.syncId, CropnalyzerScreenHandler.BUTTON_ID_SCAN)
+                minecraft.connection?.send(
+                    ServerboundContainerButtonClickPacket(menu.containerId, CropnalyzerScreenHandler.BUTTON_ID_SCAN)
                 )
                 return true
             }

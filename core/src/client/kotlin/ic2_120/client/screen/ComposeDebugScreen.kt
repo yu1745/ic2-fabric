@@ -22,7 +22,7 @@ import net.minecraft.network.chat.Component
  */
 @ModScreen(block = ComposeDebugBlock::class)
 class ComposeDebugScreen(
-    handler: ComposeDebugScreenHandler,
+    val handler: ComposeDebugScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<ComposeDebugScreenHandler>(handler, playerInventory, title) {
@@ -30,8 +30,8 @@ class ComposeDebugScreen(
     private val ui = ComposeUI()
 
     init {
-        backgroundWidth = GuiSize.DEBUG.width
-        backgroundHeight = GuiSize.DEBUG.height
+        imageWidth = GuiSize.DEBUG.width
+        imageHeight = GuiSize.DEBUG.height
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
@@ -39,8 +39,8 @@ class ComposeDebugScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
         val gui = GuiSize.DEBUG
 
         val results = buildDemoResults()
@@ -50,23 +50,23 @@ class ComposeDebugScreen(
         }
 
         // 1) 预布局（不绘制）→ 2) 套用 slot 坐标
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = uiContent)
+        val layout = ui.layout(context, font, mouseX, mouseY, content = uiContent)
         applyAnchoredSlots(layout, left, top)
 
         // 3) 先绘制面板背景
-        GuiBackground.draw(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.draw(context, leftPos, topPos, imageWidth, imageHeight)
 
         // 4) 再绘制 UI（slot 背景），确保它们在物品下方
-        ui.render(context, textRenderer, mouseX, mouseY, content = uiContent)
+        ui.render(context, font, mouseX, mouseY, content = uiContent)
 
         // 5) 最后绘制物品（包括耐久条），确保物品在顶层
         super.render(context, mouseX, mouseY, delta)
 
         val tooltip = ui.getTooltipAt(mouseX, mouseY)
         if (tooltip != null) {
-            context.drawTooltip(textRenderer, tooltip, mouseX, mouseY)
+            context.renderComponentTooltip(font, tooltip, mouseX, mouseY)
         } else {
-            drawMouseoverTooltip(context, mouseX, mouseY)   
+            renderTooltip(context, mouseX, mouseY)   
         }
     }
 
@@ -185,7 +185,7 @@ class ComposeDebugScreen(
     }
 
     private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
+        menu.slots.forEachIndexed { index, slot ->
             val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
             slot.x = anchor.x - left
             slot.y = anchor.y - top

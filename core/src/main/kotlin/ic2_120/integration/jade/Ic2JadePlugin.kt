@@ -1,6 +1,7 @@
 package ic2_120.integration.jade
 
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.BlockPos
 
 import ic2_120.compat.time
 

@@ -35,8 +35,8 @@ class DamageToolShapelessRecipe(
     group: String = "",
 ) : ShapelessRecipe(group, CraftingBookCategory.MISC, result, NonNullList.of(Ingredient.EMPTY, *recipeIngredients.toTypedArray())) {
     override fun getRemainingItems(input: CraftingInput): NonNullList<ItemStack> {
-        val remainder = NonNullList.withSize(input.size, ItemStack.EMPTY)
-        for (slot in 0 until input.size) {
+        val remainder = NonNullList.withSize(input.size(), ItemStack.EMPTY)
+        for (slot in 0 until input.size()) {
             val stack = input.getItem(slot)
             if (stack.isEmpty) continue
             val item = stack.item

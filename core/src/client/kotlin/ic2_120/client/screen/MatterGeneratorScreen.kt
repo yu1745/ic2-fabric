@@ -19,46 +19,46 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = MatterGeneratorBlock::class)
 class MatterGeneratorScreen(
-    handler: MatterGeneratorScreenHandler, playerInventory: Inventory, title: Component
+    val handler: MatterGeneratorScreenHandler, playerInventory: Inventory, title: Component
 ) : AbstractContainerScreen<MatterGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
         // 流体槽 (100,26)-(112,73) 12×47
         drawFluidTank(context, left, top)
 
         // 容量标示纹理 (181,6)-(192,52) = 11×46 渲染至 (101,27)
-        if (handler.sync.fluidAmount > 0) {
-            context.drawTexture(TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
+        if (menu.sync.fluidAmount > 0) {
+            context.blit(TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
                 TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(), TANK_OVERLAY_W, TANK_OVERLAY_H, TEX_SIZE, TEX_SIZE)
         }
 
         // 进度文本 (12,43) — 百分比
-        val pct = (handler.sync.progress.toFloat() / MatterGeneratorSync.PROGRESS_MAX * 100).toInt().coerceIn(0, 100)
-        context.drawText(textRenderer, t("gui.ic2_120.matter_generator.progress_pct", pct), left + 12, top + 43, 0x000000, false)
+        val pct = (menu.sync.progress.toFloat() / MatterGeneratorSync.PROGRESS_MAX * 100).toInt().coerceIn(0, 100)
+        context.drawString(font, t("gui.ic2_120.matter_generator.progress_pct", pct), left + 12, top + 43, 0x000000, false)
 
         // uptips (4,4) 16×16
-        context.drawTexture(UPTIPS_TEXTURE, left + 4, top + 4, 0f, 0f, 16, 16, 16, 16)
+        context.blit(UPTIPS_TEXTURE, left + 4, top + 4, 0f, 0f, 16, 16, 16, 16)
 
         // 服务端禁用废料加速时显示警告图标；使用压缩机 GUI 的叹号贴图。
         if (!Ic2Config.current.matterGenerator.allowScrapBoost) {
-            context.drawTexture(UPTIPS_TEXTURE, left + SCRAP_WARNING_X, top + SCRAP_WARNING_Y,
+            context.blit(UPTIPS_TEXTURE, left + SCRAP_WARNING_X, top + SCRAP_WARNING_Y,
                 0f, 0f, 16, 16, 16, 16)
         }
 
@@ -68,16 +68,16 @@ class MatterGeneratorScreen(
 
         // 流体槽悬停
         if (relX in TANK_X until TANK_X + TANK_W && relY in TANK_Y until TANK_Y + TANK_H) {
-            val amt = handler.sync.fluidAmount.coerceAtLeast(0)
-            val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
+            val amt = menu.sync.fluidAmount.coerceAtLeast(0)
+            val cap = menu.sync.fluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) listOf(Component.literal("UU物质"), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
                         else listOf(Component.literal("空"))
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
 
         // uptips悬停
         if (relX in 4 until 20 && relY in 4 until 20) {
-            context.drawTooltip(textRenderer, listOf(
+            context.renderComponentTooltip(font, listOf(
                 Component.translatable("gui.ic2_120.matter_generator.uptips"),
                 Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
                 Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
@@ -91,18 +91,18 @@ class MatterGeneratorScreen(
             relX in SCRAP_WARNING_X until SCRAP_WARNING_X + 16 &&
             relY in SCRAP_WARNING_Y until SCRAP_WARNING_Y + 16
         ) {
-            context.drawTooltip(textRenderer, listOf(
+            context.renderComponentTooltip(font, listOf(
                 Component.translatable("gui.ic2_120.matter_generator.scrap_boost_disabled")
             ), mouseX, mouseY)
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     private fun drawFluidTank(context: GuiGraphics, left: Int, top: Int) {
-        val amt = handler.sync.fluidAmount.coerceAtLeast(0)
+        val amt = menu.sync.fluidAmount.coerceAtLeast(0)
         if (amt <= 0) return
-        val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
+        val cap = menu.sync.fluidCapacity.coerceAtLeast(1)
         val fraction = (amt.toFloat() / cap).coerceIn(0f, 1f)
         val fillH = (TANK_H * fraction).toInt().coerceAtLeast(1)
         val sx = left + TANK_X
@@ -119,7 +119,7 @@ class MatterGeneratorScreen(
             val tileH = minOf(16, sy + TANK_H - cy)
             for (cx in sx until (sx + TANK_W) step 16) {
                 val tileW = minOf(16, sx + TANK_W - cx)
-                context.drawSprite(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                context.blit(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
             }
         }
         context.disableScissor()
@@ -147,8 +147,8 @@ class MatterGeneratorScreen(
         private const val SCRAP_WARNING_Y = 4
 
         private val uuMatterSprite by lazy {
-            FluidRenderHandlerRegistry.INSTANCE.getValue(ModFluids.UU_MATTER_STILL)
-                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultBlockState)?.getOrNull(0)
+            FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.UU_MATTER_STILL)
+                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultFluidState().createLegacyBlock())?.getOrNull(0)
         }
     }
 }

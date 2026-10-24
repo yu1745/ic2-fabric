@@ -10,6 +10,7 @@ import ic2_120.Ic2_120
 import ic2_120.content.block.CompressedCoalBall
 import ic2_120.content.block.cables.CopperCableBlock
 import ic2_120.content.uu.appendUuTemplateTooltip
+import ic2_120.compat.orCreateNbt
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.id
 import ic2_120.registry.instance

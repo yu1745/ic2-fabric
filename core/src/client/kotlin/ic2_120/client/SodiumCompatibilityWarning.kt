@@ -21,7 +21,7 @@ object SodiumCompatibilityWarning {
     fun register() {
         ClientPlayConnectionEvents.JOIN.register(ClientPlayConnectionEvents.Join { _, _, client ->
             if (!shouldWarn()) return@Join
-            client.execute {
+            minecraft.execute {
                 warnPlayer(client)
             }
         })
@@ -51,7 +51,7 @@ object SodiumCompatibilityWarning {
     }
 
     private fun warnPlayer(client: Minecraft) {
-        val player = client.player ?: return
+        val player = minecraft.player ?: return
         val warningText = Component.translatable("message.ic2_120.sodium_without_indium")
         logger.warn(
             "Detected Sodium without Indium. Rubber log rendering may be broken on this client. " +
@@ -66,31 +66,31 @@ object SodiumCompatibilityWarning {
 
     private fun renderWarning(drawContext: net.minecraft.client.gui.GuiGraphics, client: Minecraft) {
         if (System.currentTimeMillis() >= warningUntilMs) return
-        if (client.player == null) return
+        if (minecraft.player == null) return
 
-        val textRenderer = client.textRenderer
+        val textRenderer = client.font
         val warningText = Component.translatable("message.ic2_120.sodium_without_indium")
         val warningLines = warningText.string.split('\n')
-        val matrices = drawContext.matrices
-        val scaledWidth = client.window.scaledWidth
-        val scaledHeight = client.window.scaledHeight
+        val matrices = drawContext.pose()
+        val scaledWidth = minecraft.getWindow().scaledWidth
+        val scaledHeight = minecraft.getWindow().scaledHeight
         val scaledCenterX = scaledWidth / (2.0f * WARNING_SCALE)
         val scaledCenterY = scaledHeight / (2.0f * WARNING_SCALE)
         val drawX = scaledCenterX.toInt()
-        val totalTextHeight = warningLines.size * textRenderer.fontHeight
+        val totalTextHeight = warningLines.size * textRenderer.lineHeight
         val startY = (scaledCenterY - totalTextHeight / 2.0f).toInt()
 
-        matrices.push()
+        matrices.pushPose()
         matrices.scale(WARNING_SCALE, WARNING_SCALE, 1.0f)
         warningLines.forEachIndexed { index, line ->
             drawContext.drawCenteredTextWithShadow(
                 textRenderer,
                 line,
                 drawX,
-                startY + index * textRenderer.fontHeight,
+                startY + index * textRenderer.lineHeight,
                 WARNING_COLOR
             )
         }
-        matrices.pop()
+        matrices.popPose()
     }
 }

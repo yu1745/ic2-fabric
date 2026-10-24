@@ -18,11 +18,11 @@ object EngineRenderHelper {
         if (direction == Direction.UP) return
         matrices.translate(0.5, 0.5, 0.5)
         when (direction) {
-            Direction.DOWN ->  matrices.multiply(Quaternionf().rotateX(Math.toRadians(180.0).toFloat()))
-            Direction.NORTH -> matrices.multiply(Quaternionf().rotateX(Math.toRadians(-90.0).toFloat()))
-            Direction.SOUTH -> matrices.multiply(Quaternionf().rotateX(Math.toRadians(90.0).toFloat()))
-            Direction.WEST ->  matrices.multiply(Quaternionf().rotateZ(Math.toRadians(90.0).toFloat()))
-            Direction.EAST ->  matrices.multiply(Quaternionf().rotateZ(Math.toRadians(-90.0).toFloat()))
+            Direction.DOWN ->  matrices.mulPose(Quaternionf().rotateX(Math.toRadians(180.0).toFloat()))
+            Direction.NORTH -> matrices.mulPose(Quaternionf().rotateX(Math.toRadians(-90.0).toFloat()))
+            Direction.SOUTH -> matrices.mulPose(Quaternionf().rotateX(Math.toRadians(90.0).toFloat()))
+            Direction.WEST ->  matrices.mulPose(Quaternionf().rotateZ(Math.toRadians(90.0).toFloat()))
+            Direction.EAST ->  matrices.mulPose(Quaternionf().rotateZ(Math.toRadians(-90.0).toFloat()))
             Direction.UP ->    {}
         }
         matrices.translate(-0.5, -0.5, -0.5)
@@ -50,7 +50,7 @@ object EngineRenderHelper {
         }
         val ps = progressSize / 16f
 
-        matrices.push()
+        matrices.pushPose()
         applyDirectionRotation(matrices, facing)
 
         val baseLight = if (world != null) {
@@ -83,7 +83,7 @@ object EngineRenderHelper {
                 chamberSprite)
         }
 
-        matrices.pop()
+        matrices.popPose()
     }
 
     fun renderTrunkBox(
@@ -91,7 +91,7 @@ object EngineRenderHelper {
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float,
         sprite: TextureAtlasSprite
     ) {
-        val ctx = matrices.peek()
+        val ctx = matrices.last()
         val posMat = ctx.positionMatrix
         val normMat = ctx.normalMatrix
 
@@ -120,7 +120,7 @@ object EngineRenderHelper {
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float,
         sprite: TextureAtlasSprite
     ) {
-        val ctx = matrices.peek()
+        val ctx = matrices.last()
         val posMat = ctx.positionMatrix
         val normMat = ctx.normalMatrix
         val vBottom = progressSize.coerceIn(0f, 16f)
@@ -145,7 +145,7 @@ object EngineRenderHelper {
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float,
         topBottomSprite: TextureAtlasSprite, sideSprite: TextureAtlasSprite, allFaces: Boolean
     ) {
-        val ctx = matrices.peek()
+        val ctx = matrices.last()
         val posMat = ctx.positionMatrix
         val normMat = ctx.normalMatrix
 

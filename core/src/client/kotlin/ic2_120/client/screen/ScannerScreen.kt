@@ -18,14 +18,14 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handler = "scanner")
 class ScannerScreen(
-    handler: ScannerScreenHandler,
+    val handler: ScannerScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<ScannerScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 231
+        imageWidth = 176
+        imageHeight = 231
         titleY = 6
     }
 
@@ -39,65 +39,65 @@ class ScannerScreen(
         for (row in 0 until 3) {
             for (col in 0 until 9) {
                 val idx = ScannerScreenHandler.PLAYER_INV_START + row * 9 + col
-                handler.slots[idx].x = INV_X + col * 18
-                handler.slots[idx].y = INV_Y + row * 18
+                menu.slots[idx].x = INV_X + col * 18
+                menu.slots[idx].y = INV_Y + row * 18
             }
         }
         // 快捷栏槽位
         for (col in 0 until 9) {
             val idx = ScannerScreenHandler.PLAYER_INV_START + 27 + col
-            handler.slots[idx].x = INV_X + col * 18
-            handler.slots[idx].y = HOTBAR_Y
+            menu.slots[idx].x = INV_X + col * 18
+            menu.slots[idx].y = HOTBAR_Y
         }
 
-        scanBtn = addDrawableChild(Button.builder(
+        scanBtn = addRenderableWidget(Button.builder(
             Component.literal("")
         ) {
-            client?.player?.networkHandler?.sendPacket(
-                ServerboundContainerButtonClickPacket(handler.syncId, ScannerScreenHandler.BUTTON_ID_SCAN)
+            minecraft.connection?.send(
+                ServerboundContainerButtonClickPacket(menu.containerId, ScannerScreenHandler.BUTTON_ID_SCAN)
             )
-        }.dimensions(x + SCAN_BTN_X, y + SCAN_BTN_Y, SCAN_BTN_W, SCAN_BTN_H).build())
+        }.bounds(leftPos + SCAN_BTN_X, topPos + SCAN_BTN_Y, SCAN_BTN_W, SCAN_BTN_H).build())
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val stack = handler.playerInventory.getItem(handler.playerInventory.selectedSlot)
+        val stack = menu.playerInventory.getItem(menu.playerInventory.selectedSlot)
         val type = OdScannerItem.getScannerType(stack)
         val results = lastResults
 
         // 标题
         val scannerTitle = if (type.tier == 3) "OV 扫描仪" else "OD 扫描仪"
-        context.drawText(textRenderer, Component.literal(scannerTitle), x + 8, y + 6, 0x404040, false)
+        context.drawString(font, Component.literal(scannerTitle), leftPos + 8, topPos + 6, 0x404040, false)
 
         // 扫描按钮文字（7px）
-        drawScanButtonText(context, x + SCAN_BTN_X, y + SCAN_BTN_Y)
+        drawScanButtonText(context, leftPos + SCAN_BTN_X, topPos + SCAN_BTN_Y)
 
-        val scissorLeft = x + RESULTS_X
-        val scissorTop = y + RESULTS_Y
+        val scissorLeft = leftPos + RESULTS_X
+        val scissorTop = topPos + RESULTS_Y
         val scrollAreaTop = scissorTop + 22
         val scrollAreaH = RESULTS_H - 22
 
         if (results.isEmpty()) {
             // 空状态提示
-            context.drawText(
-                textRenderer, Component.literal("点击扫描按钮开始扫描"), scissorLeft, scissorTop + 4, 0x666666, false
+            context.drawString(
+                font, Component.literal("点击扫描按钮开始扫描"), scissorLeft, scissorTop + 4, 0x666666, false
             )
         } else {
             // 扫描结果： 固定标题，不滚动
-            context.drawText(
-                textRenderer, Component.literal("扫描结果："), scissorLeft, scissorTop, RESULTS_TITLE_COLOR, false
+            context.drawString(
+                font, Component.literal("扫描结果："), scissorLeft, scissorTop, RESULTS_TITLE_COLOR, false
             )
 
             // 列头：名称（左） 数量（中），7px 亮绿色，不滚动
             drawSmallText(context, "名称", scissorLeft, scissorTop + 12, RESULTS_TITLE_COLOR)
             val qtyText = "数量"
-            val qtyX = scissorLeft + (RESULTS_W - (textRenderer.getWidth(qtyText) * 7f / textRenderer.fontHeight).toInt()) / 2
+            val qtyX = scissorLeft + (RESULTS_W - (font.width(qtyText) * 7f / font.lineHeight).toInt()) / 2
             drawSmallText(context, qtyText, qtyX, scissorTop + 12, RESULTS_TITLE_COLOR)
 
             // 结果行滚动区域
@@ -111,17 +111,17 @@ class ScannerScreen(
                 val oreStack = entryToItemStack(entry)
                 val label = "${oreStack.name.string}"
 
-                context.drawText(textRenderer, Component.literal(label), scissorLeft, rowY + 4, 0xFFFFFF, false)
-                context.drawText(textRenderer, Component.literal("${entry.count}"), scissorLeft + RESULTS_W / 2, rowY + 4, 0xFFFFFF, false)
+                context.drawString(font, Component.literal(label), scissorLeft, rowY + 4, 0xFFFFFF, false)
+                context.drawString(font, Component.literal("${entry.count}"), scissorLeft + RESULTS_W / 2, rowY + 4, 0xFFFFFF, false)
                 if (!oreStack.isEmpty) {
-                    context.drawItem(oreStack, scissorLeft + RESULTS_W - 18, rowY)
+                    context.renderItem(oreStack, scissorLeft + RESULTS_W - 18, rowY)
                 }
             }
 
             context.disableScissor()
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     override fun removed() {
@@ -133,8 +133,8 @@ class ScannerScreen(
     override fun mouseScrolled(mouseX: Double, mouseY: Double, amount: Double): Boolean {
         if (lastResults.isEmpty()) return false
 
-        val relX = mouseX - x
-        val relY = mouseY - y
+        val relX = mouseX - leftPos
+        val relY = mouseY - topPos
         if (relX < RESULTS_X || relX > RESULTS_X + RESULTS_W ||
             relY < RESULTS_Y || relY > RESULTS_Y + RESULTS_H
         ) return false
@@ -147,24 +147,24 @@ class ScannerScreen(
     }
 
     private fun drawSmallText(context: GuiGraphics, text: String, tx: Int, ty: Int, color: Int) {
-        val scale = 7f / textRenderer.fontHeight
-        context.matrices.push()
-        context.matrices.translate(tx.toDouble(), ty.toDouble(), 0.0)
-        context.matrices.scale(scale, scale, 1f)
-        context.drawText(textRenderer, text, 0, 0, color, false)
-        context.matrices.pop()
+        val scale = 7f / font.lineHeight
+        context.pose().pushPose()
+        context.pose().translate(tx.toDouble(), ty.toDouble(), 0.0)
+        context.pose().scale(scale, scale, 1f)
+        context.drawString(font, text, 0, 0, color, false)
+        context.pose().popPose()
     }
 
     private fun drawScanButtonText(context: GuiGraphics, bx: Int, by: Int) {
         val text = "扫描"
-        val scale = 8f / textRenderer.fontHeight
-        val tw = textRenderer.getWidth(text)
+        val scale = 8f / font.lineHeight
+        val tw = font.width(text)
 
-        context.matrices.push()
-        context.matrices.translate((bx + SCAN_BTN_W / 2).toDouble(), (by + SCAN_BTN_H / 2).toDouble(), 0.0)
-        context.matrices.scale(scale, scale, 1f)
-        context.drawText(textRenderer, text, -tw / 2, -textRenderer.fontHeight / 2, 0xFFFFFF, false)
-        context.matrices.pop()
+        context.pose().pushPose()
+        context.pose().translate((bx + SCAN_BTN_W / 2).toDouble(), (by + SCAN_BTN_H / 2).toDouble(), 0.0)
+        context.pose().scale(scale, scale, 1f)
+        context.drawString(font, text, -tw / 2, -font.lineHeight / 2, 0xFFFFFF, false)
+        context.pose().popPose()
     }
 
     companion object {

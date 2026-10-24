@@ -37,7 +37,7 @@ class EmptyFluidCellToEmptyCellRecipe(
         if (!super.matches(inventory, world)) return false
 
         var found = false
-        for (slot in 0 until inventory.size) {
+        for (slot in 0 until inventory.size()) {
             val stack = inventory.getItem(slot)
             if (stack.isEmpty) continue
             if (stack.item != fluidCellItem) return false
@@ -49,7 +49,7 @@ class EmptyFluidCellToEmptyCellRecipe(
     }
 
     override fun getRemainingItems(inventory: CraftingInput): NonNullList<ItemStack> =
-        NonNullList.withSize(inventory.size, ItemStack.EMPTY)
+        NonNullList.withSize(inventory.size(), ItemStack.EMPTY)
 
     override fun getSerializer(): RecipeSerializer<*> = EmptyFluidCellToEmptyCellRecipeSerializer
 }

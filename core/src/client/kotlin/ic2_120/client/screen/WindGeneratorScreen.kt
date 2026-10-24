@@ -15,54 +15,54 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = WindGeneratorBlock::class)
 class WindGeneratorScreen(
-    handler: WindGeneratorScreenHandler,
+    val handler: WindGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<WindGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        imageWidth = GUI_SIZE.width
+        imageHeight = GUI_SIZE.height
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
         // 侧边文字
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val outputRate = handler.sync.getSyncedExtractedAmount()
+        val inputRate = menu.sync.getSyncedInsertedAmount()
+        val outputRate = menu.sync.getSyncedExtractedAmount()
         val inputText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
         val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
-        val statusKey = if (handler.sync.status == WindGeneratorBlockEntity.STATUS_TOO_LOW) {
+        val statusKey = if (menu.sync.status == WindGeneratorBlockEntity.STATUS_TOO_LOW) {
             "gui.ic2_120.wind_generator.too_low"
         } else {
             "gui.ic2_120.wind_generator.generating"
         }
         val statusText = t(statusKey)
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(outputText), textRenderer.getWidth(statusText))
+        val sideTextWidth = maxOf(font.width(inputText), font.width(outputText), font.width(statusText))
         val sideTextX = left - sideTextWidth - 4
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
-        context.drawText(
-            textRenderer,
+        context.drawString(font, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawString(font, outputText, sideTextX, top + 20, 0xAAAAAA, false)
+        context.drawString(
+            font,
             statusText,
             sideTextX,
             top + 32,
-            if (handler.sync.status == WindGeneratorBlockEntity.STATUS_TOO_LOW) 0xFF5555 else 0x55FF55,
+            if (menu.sync.status == WindGeneratorBlockEntity.STATUS_TOO_LOW) 0xFF5555 else 0x55FF55,
             false
         )
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     companion object {

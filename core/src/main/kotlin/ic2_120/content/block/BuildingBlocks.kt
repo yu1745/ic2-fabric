@@ -192,7 +192,7 @@ class FoamBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClientSide) return InteractionResult.SUCCESS
-        val stack = player.getItemInHand(hand)
+        val stack = player.getItemInHand(player.usedItemHand)
         if (!stack.`is`(Items.SAND)) return InteractionResult.PASS
         val wall = LightGrayWallBlock::class.instance().defaultBlockState()
         world.setBlock(pos, wall, Block.UPDATE_ALL)
@@ -228,7 +228,7 @@ class ReinforcedFoamBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClientSide) return InteractionResult.SUCCESS
-        val stack = player.getItemInHand(hand)
+        val stack = player.getItemInHand(player.usedItemHand)
         if (!stack.`is`(Items.SAND)) return InteractionResult.PASS
         val stone = ReinforcedStoneBlock::class.instance().defaultBlockState()
         world.setBlock(pos, stone, Block.UPDATE_ALL)
@@ -358,7 +358,7 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
     ): BlockState {
         // 与原版含水方块一致：含水时调度水 tick，不在这里反推 WATERLOGGED。
         if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         return state.setValue(propertyFor(direction), canConnect(world, pos, direction))
     }
@@ -382,7 +382,7 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
         if (!canPlaceLiquid(null, world, pos, state, fluidState.getType())) return false
         if (!state.getValue(WATERLOGGED)) {
             world.setBlock(pos, state.setValue(WATERLOGGED, true), Block.UPDATE_ALL)
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         return true
     }
@@ -610,7 +610,7 @@ abstract class Ic2ScaffoldBlock(
         if (world.isClientSide) return InteractionResult.SUCCESS
         if (player.isCrouching || !isVerticalPillar(world, pos)) return InteractionResult.PASS
 
-        val stack = player.getItemInHand(hand)
+        val stack = player.getItemInHand(player.usedItemHand)
         val target: BlockState
         val required: Int
         val sound: net.minecraft.sounds.SoundEvent
@@ -673,7 +673,7 @@ abstract class Ic2ScaffoldBlock(
     private fun isVerticalPillar(world: Level, pos: BlockPos): Boolean {
         var cursor = pos
         while (isScaffold(world.getBlockState(cursor).block)) cursor = cursor.below()
-        return world.getBlockState(cursor).isSideSolidFullSquare(world, cursor, Direction.UP)
+        return world.getBlockState(cursor).isFaceSturdy(world, cursor, Direction.UP, net.minecraft.world.level.block.SupportType.FULL)
     }
 
     private fun checkSupport(world: ServerLevel, start: BlockPos) {

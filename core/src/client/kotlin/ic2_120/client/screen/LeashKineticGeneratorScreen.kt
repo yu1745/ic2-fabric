@@ -14,7 +14,7 @@ import net.minecraft.network.chat.Component as McText
 
 @ModScreen(block = LeashKineticGeneratorBlock::class)
 class LeashKineticGeneratorScreen(
-    handler: LeashKineticGeneratorScreenHandler,
+    val handler: LeashKineticGeneratorScreenHandler,
     playerInventory: Inventory,
     title: McText
 ) : AbstractContainerScreen<LeashKineticGeneratorScreenHandler>(handler, playerInventory, title) {
@@ -22,8 +22,8 @@ class LeashKineticGeneratorScreen(
     private val ui = ComposeUI()
 
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        imageWidth = GUI_SIZE.width
+        imageHeight = GUI_SIZE.height
         titleY = -1000
     }
 
@@ -32,13 +32,13 @@ class LeashKineticGeneratorScreen(
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x
-        val top = y
-        val generatedKu = handler.sync.generatedKu.coerceAtLeast(0)
-        val outputKu = handler.sync.outputKu.coerceAtLeast(0)
-        val hasAnimal = handler.sync.hasAnimal
-        val leashLengthCm = handler.sync.leashLengthCm.coerceAtLeast(0)
-        val angularVelocityDegPerSec = handler.sync.angularVelocityDegPerSec.coerceAtLeast(0)
+        val left = leftPos
+        val top = topPos
+        val generatedKu = menu.sync.generatedKu.coerceAtLeast(0)
+        val outputKu = menu.sync.outputKu.coerceAtLeast(0)
+        val hasAnimal = menu.sync.hasAnimal
+        val leashLengthCm = menu.sync.leashLengthCm.coerceAtLeast(0)
+        val angularVelocityDegPerSec = menu.sync.angularVelocityDegPerSec.coerceAtLeast(0)
 
         val genText = t("gui.ic2_120.leash_kinetic.generated", generatedKu)
         val outText = t("gui.ic2_120.leash_kinetic.output", outputKu)
@@ -49,7 +49,7 @@ class LeashKineticGeneratorScreen(
         val velocityText = t("gui.ic2_120.leash_kinetic.angular_velocity", angularVelocityDegPerSec)
 
         val sideTexts = listOf(genText, outText, animalText, lengthText, velocityText)
-        val sideTextWidth = sideTexts.maxOf { textRenderer.getWidth(it) }
+        val sideTextWidth = sideTexts.maxOf { font.width(it) }
         val sideTextX = left - sideTextWidth - 4
 
         val content: UiScope.() -> Unit = {
@@ -73,33 +73,33 @@ class LeashKineticGeneratorScreen(
                 hotbarY = GUI_SIZE.hotbarY
             )
         }
-        val layout = ui.layout(context, textRenderer, mouseX, mouseY, content = content)
+        val layout = ui.layout(context, font, mouseX, mouseY, content = content)
         applyAnchoredSlots(layout, left, top)
 
         // 先绘制面板背景
-        GuiBackground.drawVanillaLikePanel(context, x, y, backgroundWidth, backgroundHeight)
+        GuiBackground.drawVanillaLikePanel(context, leftPos, topPos, imageWidth, imageHeight)
         GuiBackground.drawPlayerInventorySlotBorders(
-            context, x, y,
+            context, leftPos, topPos,
             GUI_SIZE.playerInvY,
             GUI_SIZE.hotbarY,
             GuiSize.SLOT_SIZE
         )
 
         // 再绘制 UI（slot 背景等），确保它们在物品下方
-        ui.render(context, textRenderer, mouseX, mouseY, content = content)
+        ui.render(context, font, mouseX, mouseY, content = content)
 
         // 最后绘制物品（包括耐久条），确保物品在顶层
         super.render(context, mouseX, mouseY, delta)
         var textY = top + 8
         for (text in sideTexts) {
-            context.drawText(textRenderer, text, sideTextX, textY, 0xAAAAAA, false)
+            context.drawString(font, text, sideTextX, textY, 0xAAAAAA, false)
             textY += 12
         }
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     private fun applyAnchoredSlots(layout: ComposeUI.LayoutSnapshot, left: Int, top: Int) {
-        handler.slots.forEachIndexed { index, slot ->
+        menu.slots.forEachIndexed { index, slot ->
             val anchor = layout.anchors[slotAnchorId(index)] ?: return@forEachIndexed
             slot.x = anchor.x - left
             slot.y = anchor.y - top

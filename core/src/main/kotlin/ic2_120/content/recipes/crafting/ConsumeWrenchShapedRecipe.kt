@@ -60,7 +60,7 @@ class ConsumeWrenchShapedRecipe(
 
     override fun getRemainingItems(input: CraftingInput): NonNullList<ItemStack> {
         // 完全消耗所有材料，不返回任何东西
-        return NonNullList.withSize(input.size, ItemStack.EMPTY)
+        return NonNullList.withSize(input.size(), ItemStack.EMPTY)
     }
 
     override fun getSerializer(): RecipeSerializer<*> = ConsumeWrenchShapedRecipeSerializer
@@ -68,7 +68,7 @@ class ConsumeWrenchShapedRecipe(
 
 private fun sumEnergyFromIngredients(inventory: CraftingInput): Long {
     var total = 0L
-    for (slot in 0 until inventory.size) {
+    for (slot in 0 until inventory.size()) {
         val stack = inventory.getItem(slot)
         if (stack.isEmpty) continue
         total = total.saturatingAdd(getEnergyFromStack(stack))

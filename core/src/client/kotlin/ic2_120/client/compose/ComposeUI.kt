@@ -186,7 +186,7 @@ class ComposeUI {
         val idGen: () -> Int = { counter++ }
 
         renderCtx.drawContext = drawContext
-        renderCtx.textRenderer = textRenderer
+        renderCtx.font = font
         renderCtx.mouseX = mouseX
         renderCtx.mouseY = mouseY
         renderCtx.drawEnabled = draw

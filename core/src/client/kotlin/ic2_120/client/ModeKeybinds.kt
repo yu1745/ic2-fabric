@@ -43,7 +43,7 @@ object ModeKeybinds {
 
     fun register() {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
-            if (!client.options.useKey.isPressed) {
+            if (!minecraft.options.useKey.isDown) {
                 modeToggleConsumedForCurrentUse = false
             }
 
@@ -123,10 +123,7 @@ object ModeKeybinds {
     private fun toggleFoamModeOnceThisTick(playerAge: Int) {
         if (playerAge == lastFoamToggleAge) return
         lastFoamToggleAge = playerAge
-        ClientPlayNetworking.send(
-            NetworkManager.TOGGLE_FOAM_SPRAYER_MODE_PACKET,
-            FriendlyByteBuf(Unpooled.buffer())
-        )
+        ClientPlayNetworking.send(ToggleFoamSprayerModePayload)
     }
 
 }

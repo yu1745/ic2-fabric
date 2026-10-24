@@ -14,14 +14,14 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = TeleporterBlock::class)
 class TeleporterScreen(
-    handler: TeleporterScreenHandler,
+    val handler: TeleporterScreenHandler,
     playerInventory: Inventory,
     title: McText
 ) : AbstractContainerScreen<TeleporterScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 162
+        imageWidth = 176
+        imageHeight = 162
         titleY = 6
     }
 
@@ -33,51 +33,51 @@ class TeleporterScreen(
 
         // 升级槽位（2个，无间隔）
         for (i in 0 until 2) {
-            handler.slots[TeleporterScreenHandler.SLOT_UPGRADE_INDEX_START + i].x = UPGRADE_SLOT_X
-            handler.slots[TeleporterScreenHandler.SLOT_UPGRADE_INDEX_START + i].y = UPGRADE_SLOT_Y + i * 18
+            menu.slots[TeleporterScreenHandler.SLOT_UPGRADE_INDEX_START + i].x = UPGRADE_SLOT_X
+            menu.slots[TeleporterScreenHandler.SLOT_UPGRADE_INDEX_START + i].y = UPGRADE_SLOT_Y + i * 18
         }
 
         // 玩家背包槽位
         for (row in 0 until 3) {
             for (col in 0 until 9) {
                 val idx = TeleporterScreenHandler.PLAYER_INV_START + row * 9 + col
-                handler.slots[idx].x = PLAYER_INV_X + col * 18
-                handler.slots[idx].y = PLAYER_INV_Y + row * 18
+                menu.slots[idx].x = PLAYER_INV_X + col * 18
+                menu.slots[idx].y = PLAYER_INV_Y + row * 18
             }
         }
 
         // 快捷栏槽位
         for (col in 0 until 9) {
             val idx = TeleporterScreenHandler.PLAYER_INV_START + 27 + col
-            handler.slots[idx].x = PLAYER_INV_X + col * 18
-            handler.slots[idx].y = HOTBAR_Y
+            menu.slots[idx].x = PLAYER_INV_X + col * 18
+            menu.slots[idx].y = HOTBAR_Y
         }
 
-        range1Btn = addDrawableChild(Button.builder(
+        range1Btn = addRenderableWidget(Button.builder(
             McText.literal("")
         ) {
-            client?.player?.networkHandler?.sendPacket(
-                ServerboundContainerButtonClickPacket(handler.syncId, TeleporterScreenHandler.BUTTON_ID_RANGE_1)
+            minecraft.connection?.send(
+                ServerboundContainerButtonClickPacket(menu.containerId, TeleporterScreenHandler.BUTTON_ID_RANGE_1)
             )
-        }.dimensions(x + 26, y + 15, 45, 20).build())
+        }.bounds(leftPos + 26, topPos + 15, 45, 20).build())
 
-        range3Btn = addDrawableChild(Button.builder(
+        range3Btn = addRenderableWidget(Button.builder(
             McText.literal("")
         ) {
-            client?.player?.networkHandler?.sendPacket(
-                ServerboundContainerButtonClickPacket(handler.syncId, TeleporterScreenHandler.BUTTON_ID_RANGE_3)
+            minecraft.connection?.send(
+                ServerboundContainerButtonClickPacket(menu.containerId, TeleporterScreenHandler.BUTTON_ID_RANGE_3)
             )
-        }.dimensions(x + 26, y + 40, 45, 20).build())
+        }.bounds(leftPos + 26, topPos + 40, 45, 20).build())
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // 升级槽背景
         for (i in 0 until 2) {
-            context.drawTexture(
+            context.blit(
                 TEXTURE,
-                x + UPGRADE_SLOT_BG_X, y + UPGRADE_SLOT_BG_Y + i * 18,
+                leftPos + UPGRADE_SLOT_BG_X, topPos + UPGRADE_SLOT_BG_Y + i * 18,
                 SLOT_BG_U.toFloat(), SLOT_BG_V.toFloat(),
                 SLOT_BG_SIZE, SLOT_BG_SIZE,
                 TEXTURE_SIZE, TEXTURE_SIZE
@@ -85,42 +85,42 @@ class TeleporterScreen(
         }
 
         // 升级提示图标
-        context.drawTexture(UPTIPS, x + UPTIPS_X, y + UPTIPS_Y, 0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE)
+        context.blit(UPTIPS, leftPos + UPTIPS_X, topPos + UPTIPS_Y, 0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val isRange1 = handler.sync.teleportRange == TeleporterBlockEntity.TELEPORT_RANGE_MIN
+        val isRange1 = menu.sync.teleportRange == TeleporterBlockEntity.TELEPORT_RANGE_MIN
 
         // 标题
-        context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title, leftPos + (imageWidth - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
         // 玩家背包标签
-        context.drawText(textRenderer, playerInventoryTitle, x + 8, y + PLAYER_INV_Y - 12, 0x404040, false)
+        context.drawString(font, playerInventoryTitle, leftPos + 8, topPos + PLAYER_INV_Y - 12, 0x404040, false)
 
         // 按钮内居中显示模式文本（缩放到 45×20）
-        drawButtonText(context, "范围1x1x1", x + 26, y + 15, if (isRange1) 0xFFFFFF else MODE_INACTIVE_COLOR)
-        drawButtonText(context, "范围3x3x3", x + 26, y + 40, if (!isRange1) 0xFFFFFF else MODE_INACTIVE_COLOR)
+        drawButtonText(context, "范围1x1x1", leftPos + 26, topPos + 15, if (isRange1) 0xFFFFFF else MODE_INACTIVE_COLOR)
+        drawButtonText(context, "范围3x3x3", leftPos + 26, topPos + 40, if (!isRange1) 0xFFFFFF else MODE_INACTIVE_COLOR)
 
         // 激活模式按钮旁渲染扳手
-        val wrenchX = x + 26 + 45 + 6
+        val wrenchX = leftPos + 26 + 45 + 6
         val wrenchY = if (isRange1) {
-            y + 15 + (20 - WRENCH_SIZE) / 2
+            topPos + 15 + (20 - WRENCH_SIZE) / 2
         } else {
-            y + 40 + (20 - WRENCH_SIZE) / 2
+            topPos + 40 + (20 - WRENCH_SIZE) / 2
         }
-        context.drawTexture(WRENCH, wrenchX, wrenchY, 0f, 0f, WRENCH_SIZE, WRENCH_SIZE, WRENCH_SIZE, WRENCH_SIZE)
+        context.blit(WRENCH, wrenchX, wrenchY, 0f, 0f, WRENCH_SIZE, WRENCH_SIZE, WRENCH_SIZE, WRENCH_SIZE)
 
         // 升级提示悬停
-        if (mouseX >= x + UPTIPS_X && mouseX < x + UPTIPS_X + UPTIPS_SIZE &&
-            mouseY >= y + UPTIPS_Y && mouseY < y + UPTIPS_Y + UPTIPS_SIZE
+        if (mouseX >= leftPos + UPTIPS_X && mouseX < leftPos + UPTIPS_X + UPTIPS_SIZE &&
+            mouseY >= topPos + UPTIPS_Y && mouseY < topPos + UPTIPS_Y + UPTIPS_SIZE
         ) {
-            context.drawTooltip(textRenderer, handler.getUpgradeTooltips(), mouseX, mouseY)
+            context.renderComponentTooltip(font, menu.getUpgradeTooltips(), mouseX, mouseY)
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     private fun drawButtonText(
@@ -132,14 +132,14 @@ class TeleporterScreen(
     ) {
         val bw = 45
         val bh = 20
-        val tw = textRenderer.getWidth(text)
-        val scale = 7f / textRenderer.fontHeight
+        val tw = font.width(text)
+        val scale = 7f / font.lineHeight
 
-        context.matrices.push()
-        context.matrices.translate((bx + bw / 2).toDouble(), (by + bh / 2).toDouble(), 0.0)
-        context.matrices.scale(scale, scale, 1f)
-        context.drawText(textRenderer, text, -tw / 2, -textRenderer.fontHeight / 2, color, false)
-        context.matrices.pop()
+        context.pose().pushPose()
+        context.pose().translate((bx + bw / 2).toDouble(), (by + bh / 2).toDouble(), 0.0)
+        context.pose().scale(scale, scale, 1f)
+        context.drawString(font, text, -tw / 2, -font.lineHeight / 2, color, false)
+        context.pose().popPose()
     }
 
     companion object {

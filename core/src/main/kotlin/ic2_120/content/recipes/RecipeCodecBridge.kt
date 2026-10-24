@@ -33,8 +33,9 @@ object RecipeCodecBridge {
             runCatching {
                 val json = JsonObject()
                 input.entries().forEach { pair ->
-                    val key: JsonElement = ops.convertTo(JsonOps.INSTANCE, pair.first).result().orElseThrow()
-                    val value: JsonElement = ops.convertTo(JsonOps.INSTANCE, pair.second).result().orElseThrow()
+                    // DFU 8：convertTo 直接返回目标类型（非 DataResult）
+                    val key: JsonElement = ops.convertTo(JsonOps.INSTANCE, pair.first)
+                    val value: JsonElement = ops.convertTo(JsonOps.INSTANCE, pair.second)
                     json.add(key.asString, value)
                 }
                 decode(DUMMY_ID, json)
@@ -49,16 +50,17 @@ object RecipeCodecBridge {
                 encode(json, input)
                 if (!json.has("type")) json.addProperty("type", jsonType)
                 val el: JsonElement = JsonParser.parseString(json.toString())
-                val converted: O = JsonOps.INSTANCE.convertTo(ops, el).result().orElseThrow()
+                val converted: O = JsonOps.INSTANCE.convertTo(ops, el)
                 ops.getMapValues(converted).ifSuccess { pairs ->
                     pairs.forEach { pair -> prefix.add(pair.first, pair.second) }
                 }
+                prefix
             } catch (t: Throwable) {
                 prefix
             }
 
-        override fun <O : Any?> keys(ops: DynamicOps<O>): DataResult<Stream<com.mojang.datafixers.util.Pair<O, O>>> =
-            DataResult.success(Stream.empty())
+        // DFU 8.0.16：MapCodec.keys 抽象签名为 <T> Stream<T> keys(DynamicOps<T>)（javap 实锤）
+        override fun <O : Any?> keys(ops: DynamicOps<O>): Stream<O> = Stream.empty()
     }
 }
 

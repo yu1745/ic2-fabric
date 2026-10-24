@@ -13,41 +13,41 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handler = "tank")
 class TankScreen(
-    handler: TankScreenHandler,
+    val handler: TankScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<TankScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // 与压缩机相同的升级提示图标，复用上游 uptips 资源。
-        context.drawTexture(
-            UPTIPS_TEXTURE, x + UPTIPS_X, y + UPTIPS_Y,
+        context.blit(
+            UPTIPS_TEXTURE, leftPos + UPTIPS_X, topPos + UPTIPS_Y,
             0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
             UPTIPS_SIZE, UPTIPS_SIZE
         )
 
         // 槽位纹理 (179,3)-(197,21) = 18x18
-        context.drawTexture(
-            TEXTURE, x + SLOT_X, y + SLOT_Y,
+        context.blit(
+            TEXTURE, leftPos + SLOT_X, topPos + SLOT_Y,
             SLOT_U.toFloat(), SLOT_V.toFloat(),
             SLOT_SIZE, SLOT_SIZE,
             TEXTURE_SIZE, TEXTURE_SIZE
         )
 
         // 流体全铺渲染至 (79,27)-(97,45) = 18x18，使用 FluidUtils 着色
-        val fluidId = handler.sync.fluidId ?: return
+        val fluidId = menu.sync.fluidId ?: return
         val fluid = BuiltInRegistries.FLUID.getValue(fluidId)
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
-        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultBlockState)
+        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock())
         val sprite = sprites[0]
-        val amount = handler.sync.fluidAmount
+        val amount = menu.sync.fluidAmount
         if (amount <= 0) return
         val color = FluidUtils.getFluidColor(fluid)
         val (r, g, b) = if (color != -1) {
@@ -55,8 +55,8 @@ class TankScreen(
         } else {
             Triple(1f, 1f, 1f)
         }
-        context.drawSprite(
-            x + FLUID_X, y + FLUID_Y, 0,
+        context.blit(
+            leftPos + FLUID_X, topPos + FLUID_Y, 0,
             FLUID_W, FLUID_H, sprite,
             r, g, b, 1f
         )
@@ -66,25 +66,25 @@ class TankScreen(
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title, leftPos + (imageWidth - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
-        val relX = mouseX - x
-        val relY = mouseY - y
+        val relX = mouseX - leftPos
+        val relY = mouseY - topPos
 
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
             relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 listOf(
                     Component.translatable("gui.ic2_120.tank.level_change"),
-                    Component.translatable("gui.ic2_120.tank.level_change_1s", formatRate(handler.sync.levelChange1s)),
-                    Component.translatable("gui.ic2_120.tank.level_change_5s", formatRate(handler.sync.levelChange5s)),
-                    Component.translatable("gui.ic2_120.tank.level_change_15s", formatRate(handler.sync.levelChange15s)),
-                    Component.translatable("gui.ic2_120.tank.level_change_30s", formatRate(handler.sync.levelChange30s)),
-                    Component.translatable("gui.ic2_120.tank.level_change_60s", formatRate(handler.sync.levelChange60s))
+                    Component.translatable("gui.ic2_120.tank.level_change_1s", formatRate(menu.sync.levelChange1s)),
+                    Component.translatable("gui.ic2_120.tank.level_change_5s", formatRate(menu.sync.levelChange5s)),
+                    Component.translatable("gui.ic2_120.tank.level_change_15s", formatRate(menu.sync.levelChange15s)),
+                    Component.translatable("gui.ic2_120.tank.level_change_30s", formatRate(menu.sync.levelChange30s)),
+                    Component.translatable("gui.ic2_120.tank.level_change_60s", formatRate(menu.sync.levelChange60s))
                 ),
                 mouseX, mouseY
             )
@@ -93,15 +93,15 @@ class TankScreen(
         if (relX in FLUID_X until FLUID_X + FLUID_W &&
             relY in FLUID_Y until FLUID_Y + FLUID_H
         ) {
-            context.drawBorder(
-                x + FLUID_X, y + FLUID_Y,
+            context.renderOutline(
+                leftPos + FLUID_X, topPos + FLUID_Y,
                 FLUID_W, FLUID_H,
                 0xFFFFFFFF.toInt()
             )
 
-            val fluidId = handler.sync.fluidId
-            val amount = handler.sync.fluidAmount
-            val capacity = handler.sync.capacity
+            val fluidId = menu.sync.fluidId
+            val amount = menu.sync.fluidAmount
+            val capacity = menu.sync.capacity
 
             val lines = if (fluidId != null && amount > 0) {
                 val fluid = BuiltInRegistries.FLUID.getValue(fluidId)
@@ -113,7 +113,7 @@ class TankScreen(
                 listOf(Component.literal("空"))
             }
 
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
     }
 

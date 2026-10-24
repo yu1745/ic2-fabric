@@ -5,6 +5,7 @@ import net.minecraft.data.recipes.RecipeProvider.getHasName
 import net.minecraft.data.recipes.RecipeProvider.has
 
 import ic2_120.compat.isClient
+import ic2_120.getCustomData
 
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.block.cables.InsulatedTinCableBlock
@@ -521,7 +522,7 @@ class SingleUseBatteryItem : BatteryItemBase(
     * 无 NBT 时返回满电量，有 NBT 时返回实际剩余电量。
     */
    override fun getCurrentCharge(stack: net.minecraft.world.item.ItemStack): Long {
-       val nbt = stack.tag
+       val nbt = stack.getCustomData()
        if (nbt == null || !nbt.contains(BatteryItemBase.ENERGY_KEY)) return maxCapacity
        return super.getCurrentCharge(stack)
    }

@@ -47,10 +47,10 @@ public class MobEntityMixin {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/mob/Mob;detachLeash(ZZ)V")
     )
     private void keepLeashOnKineticGenerator(Mob instance, boolean sendPacket, boolean dropItem) {
-        if (instance.getHoldingEntity() instanceof ArmorStand) {
+        if (instance.getLeashHolder() instanceof ArmorStand) {
             return;
         }
-        instance.detachLeash(sendPacket, dropItem);
+        instance.dropLeash(sendPacket, dropItem);
     }
 
     /**
@@ -64,7 +64,7 @@ public class MobEntityMixin {
         at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/mob/Mob;stopRiding()V")
     )
     private void keepRidingOnLeashAttach(Mob instance) {
-        if (instance.getHoldingEntity() instanceof ArmorStand) {
+        if (instance.getLeashHolder() instanceof ArmorStand) {
             return;
         }
         instance.stopRiding();

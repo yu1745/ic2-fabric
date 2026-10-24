@@ -4,7 +4,7 @@ import ic2_120.Ic2_120
 import ic2_120.content.item.ElectricJetpack
 import ic2_120.content.item.armor.JetpackItem
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.minecraft.client.player.LocalPlayer
+import net.minecraft.minecraft.player.LocalPlayer
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.sounds.SoundSource
@@ -25,7 +25,7 @@ object JetpackSoundController {
     fun register() {
         logger.info("Jetpack sound controller registered. soundId={}", JETPACK_SOUND_ID)
         ClientTickEvents.END_CLIENT_TICK.register { client ->
-            val player = client.player
+            val player = minecraft.player
             val active = player != null && isJetpackFlightActive(player)
 
             if (active && !lastActive) {
@@ -40,7 +40,7 @@ object JetpackSoundController {
                 if (current == null || current.isDone) {
                     val created = JetpackLoopSoundInstance(player)
                     loopSound = created
-                    client.soundManager.play(created)
+                    minecraft.getSoundManager().play(created)
                 } else {
                     current.setFadingOut(false)
                 }

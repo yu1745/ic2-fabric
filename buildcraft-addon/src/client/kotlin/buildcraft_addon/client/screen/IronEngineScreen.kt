@@ -37,12 +37,12 @@ class IronEngineScreen(
     }
 
     init {
-        backgroundWidth = BG_WIDTH
-        backgroundHeight = BG_HEIGHT
+        imageWidth = BG_WIDTH
+        imageHeight = BG_HEIGHT
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_WIDTH, BG_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, x, y, 0f, 0f, BG_WIDTH, BG_HEIGHT, TEXTURE_SIZE, TEXTURE_SIZE)
 
         // Draw tank overlays + fluid levels for 3 tanks
         drawTank(context, TANK_X, handler.getFuelAmount(), 0xFFFF4444.toInt())    // Red-ish for fuel
@@ -52,7 +52,7 @@ class IronEngineScreen(
         // Draw tank backgrounds (overlay texture)
         for (i in 0..2) {
             val tx = x + TANK_X + i * TANK_SPACING
-            context.drawTexture(TEXTURE, tx, y + TANK_Y, TANK_TEX_U.toFloat(), TANK_TEX_V.toFloat(), TANK_W, TANK_H, TEXTURE_SIZE, TEXTURE_SIZE)
+            context.blit(TEXTURE, tx, y + TANK_Y, TANK_TEX_U.toFloat(), TANK_TEX_V.toFloat(), TANK_W, TANK_H, TEXTURE_SIZE, TEXTURE_SIZE)
         }
     }
 
@@ -65,11 +65,11 @@ class IronEngineScreen(
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         super.render(context, mouseX, mouseY, delta)
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     override fun drawForeground(context: GuiGraphics, mouseX: Int, mouseY: Int) {
-        context.drawText(textRenderer, title, backgroundWidth / 2 - textRenderer.getWidth(title) / 2, 6, 0x404040, false)
-        context.drawText(textRenderer, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
+        context.drawString(textRenderer, title, imageWidth / 2 - textRenderer.getWidth(title) / 2, 6, 0x404040, false)
+        context.drawString(textRenderer, playerInventoryTitle, 8, BG_HEIGHT - 96, 0x404040, false)
     }
 }

@@ -156,7 +156,7 @@ class WindGeneratorBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.getContainerSize())
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 

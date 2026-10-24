@@ -67,11 +67,11 @@ class TransmissionBlockEntityRenderer(
                 val axis = if (isItem) Direction.Axis.Y else state.getValue(BlockStateProperties.AXIS)
                 val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(WHITE_TEXTURE))
                 val materialColor = baseColorForMaterial(block.material)
-                matrices.push()
+                matrices.pushPose()
                 matrices.translate(0.5, 0.5, 0.5)
                 rotateByAxis(matrices, axis, angle)
                 drawShaftAlongAxis(matrices, vc, light, overlay, axis, materialColor)
-                matrices.pop()
+                matrices.popPose()
             }
 
             is BevelGearBlock -> {
@@ -82,7 +82,7 @@ class TransmissionBlockEntityRenderer(
                 val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(WHITE_TEXTURE))
                 val materialColor = intArrayOf(122, 126, 132)
 
-                matrices.push()
+                matrices.pushPose()
                 matrices.translate(0.5, 0.5, 0.5)
 
                 if (isItem) {
@@ -90,17 +90,17 @@ class TransmissionBlockEntityRenderer(
                     val firstAxis = Direction.Axis.X
                     val secondAxis = Direction.Axis.Z
 
-                    matrices.push()
+                    matrices.pushPose()
                     translateAlongAxis(matrices, firstAxis, gearOffset)
                     rotateByAxis(matrices, firstAxis, angle)
                     drawGear8Teeth(matrices, vc, light, overlay, firstAxis, pitchRadius, gearFaceWidthHalf, materialColor)
-                    matrices.pop()
+                    matrices.popPose()
 
-                    matrices.push()
+                    matrices.pushPose()
                     translateAlongAxis(matrices, secondAxis, -gearOffset)
                     rotateByAxis(matrices, secondAxis, angle + MESH_PHASE_OFFSET_DEGREES)
                     drawGear8Teeth(matrices, vc, light, overlay, secondAxis, pitchRadius, gearFaceWidthHalf, materialColor)
-                    matrices.pop()
+                    matrices.popPose()
                 } else {
                     val renderDirs = bevelRenderDirections(world, entity.pos)
 
@@ -110,17 +110,17 @@ class TransmissionBlockEntityRenderer(
                         val firstSideSign = gearSideSign(world, entity.pos, firstAxis, preferPositive = true)
                         val secondSideSign = gearSideSign(world, entity.pos, secondAxis, preferPositive = false)
 
-                        matrices.push()
+                        matrices.pushPose()
                         translateAlongAxis(matrices, firstAxis, gearOffset * firstSideSign)
                         rotateByAxis(matrices, firstAxis, angle)
                         drawGear8Teeth(matrices, vc, light, overlay, firstAxis, pitchRadius, gearFaceWidthHalf, materialColor)
-                        matrices.pop()
+                        matrices.popPose()
 
-                        matrices.push()
+                        matrices.pushPose()
                         translateAlongAxis(matrices, secondAxis, gearOffset * secondSideSign)
                         rotateByAxis(matrices, secondAxis, angle + MESH_PHASE_OFFSET_DEGREES)
                         drawGear8Teeth(matrices, vc, light, overlay, secondAxis, pitchRadius, gearFaceWidthHalf, materialColor)
-                        matrices.pop()
+                        matrices.popPose()
                     } else {
                         for (i in renderDirs.indices) {
                             val direction = renderDirs[i]
@@ -128,16 +128,16 @@ class TransmissionBlockEntityRenderer(
                             val sideSign = directionSign(direction)
                             val phase = angle + MESH_PHASE_OFFSET_DEGREES * i
 
-                            matrices.push()
+                            matrices.pushPose()
                             translateAlongAxis(matrices, axis, gearOffset * sideSign)
                             rotateByAxis(matrices, axis, phase)
                             drawGear8Teeth(matrices, vc, light, overlay, axis, pitchRadius, gearFaceWidthHalf, materialColor)
-                            matrices.pop()
+                            matrices.popPose()
                         }
                     }
                 }
 
-                matrices.pop()
+                matrices.popPose()
             }
         }
     }
@@ -259,9 +259,9 @@ class TransmissionBlockEntityRenderer(
 
     private fun rotateByAxis(matrices: PoseStack, axis: Direction.Axis, angle: Float) {
         when (axis) {
-            Direction.Axis.X -> matrices.multiply(Axis.POSITIVE_X.rotationDegrees(angle))
-            Direction.Axis.Y -> matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(angle))
-            Direction.Axis.Z -> matrices.multiply(Axis.POSITIVE_Z.rotationDegrees(angle))
+            Direction.Axis.X -> matrices.mulPose(Axis.XP.rotationDegrees(angle))
+            Direction.Axis.Y -> matrices.mulPose(Axis.YP.rotationDegrees(angle))
+            Direction.Axis.Z -> matrices.mulPose(Axis.ZP.rotationDegrees(angle))
         }
     }
 
@@ -286,7 +286,7 @@ class TransmissionBlockEntityRenderer(
         radius: Float,
         baseColor: IntArray
     ) {
-        val entry = matrices.peek()
+        val entry = matrices.last()
 
         val basis = basisForAxis(axis)
         val ax = basis[0]
@@ -484,7 +484,7 @@ class TransmissionBlockEntityRenderer(
         baseColor: IntArray
     ) {
         if (outline.size < 3) return
-        val entry = matrices.peek()
+        val entry = matrices.last()
 
         fun to3D(u: Float, v: Float, depth: Float): FloatArray = when (axis) {
             Direction.Axis.X -> floatArrayOf(depth, u, v)
@@ -581,7 +581,7 @@ class TransmissionBlockEntityRenderer(
         minZ: Float,
         maxZ: Float
     ) {
-        val entry = matrices.peek()
+        val entry = matrices.last()
         val fallbackColor = intArrayOf(128, 128, 128)
 
         quad(vc, entry, light, overlay, minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ, 0f, 0f, 1f, fallbackColor)
@@ -594,7 +594,7 @@ class TransmissionBlockEntityRenderer(
 
     private fun quad(
         vc: VertexConsumer,
-        entry: PoseStack.Entry,
+        entry: PoseStack.Pose,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float,
@@ -617,7 +617,7 @@ class TransmissionBlockEntityRenderer(
 
     private fun quadUv(
         vc: VertexConsumer,
-        entry: PoseStack.Entry,
+        entry: PoseStack.Pose,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float, u1: Float, v1: Float,
@@ -635,7 +635,7 @@ class TransmissionBlockEntityRenderer(
 
     private fun triangleUv(
         vc: VertexConsumer,
-        entry: PoseStack.Entry,
+        entry: PoseStack.Pose,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float, u1: Float, v1: Float,
@@ -654,7 +654,7 @@ class TransmissionBlockEntityRenderer(
 
     private fun vertex(
         vc: VertexConsumer,
-        entry: PoseStack.Entry,
+        entry: PoseStack.Pose,
         x: Float,
         y: Float,
         z: Float,
@@ -667,10 +667,10 @@ class TransmissionBlockEntityRenderer(
         nz: Float,
         baseColor: IntArray
     ) {
-        vc.vertex(entry.positionMatrix, x, y, z)
+        vc.vertex(entry.pose(), x, y, z)
             .color(baseColor[0], baseColor[1], baseColor[2], 255)
             .texture(u, v)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV)
+            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
             .light(light)
             .normal(entry, nx, ny, nz)
     }

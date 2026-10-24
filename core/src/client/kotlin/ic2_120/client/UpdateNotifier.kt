@@ -80,7 +80,7 @@ object UpdateNotifier {
                 if (remoteRelease == null || remoteRelease.runNumber <= buildInfo.ciRunNumber) {
                     return@thenAccept
                 }
-                client.execute {
+                minecraft.execute {
                     showUpdateMessage(client, remoteRelease, buildInfo.ciRunNumber)
                 }
             }
@@ -138,7 +138,7 @@ object UpdateNotifier {
             false
         )
 
-        val player = client.player ?: return
+        val player = minecraft.player ?: return
         if (!remoteRelease.htmlUrl.isNullOrBlank()) {
             val clickableUrl = Component.literal(remoteRelease.htmlUrl)
                 .styled {

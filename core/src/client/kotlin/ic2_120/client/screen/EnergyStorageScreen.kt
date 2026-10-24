@@ -19,7 +19,7 @@ import net.minecraft.resources.ResourceLocation
     ]
 )
 class EnergyStorageScreen(
-    handler: EnergyStorageScreenHandler,
+    val handler: EnergyStorageScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<EnergyStorageScreenHandler>(handler, playerInventory, title) {
@@ -28,7 +28,7 @@ class EnergyStorageScreen(
    private val useEquipmentSlots: Boolean = resolveUseEquipmentSlots()
 
     private fun resolveCapacity(): Long {
-        return handler.context.get({ world, pos ->
+        return menu.context.get({ world, pos ->
             val block = world.getBlockState(pos).block
             val id = BuiltInRegistries.BLOCK.getId(block)
             EnergyStorageConfig.fromBlockPath(id.path)?.capacity ?: EnergyStorageConfig.BATBOX.capacity
@@ -36,7 +36,7 @@ class EnergyStorageScreen(
     }
 
     private fun resolveUseEquipmentSlots(): Boolean {
-        return handler.context.get({ world, pos ->
+        return menu.context.get({ world, pos ->
             val block = world.getBlockState(pos).block
             val id = BuiltInRegistries.BLOCK.getId(block)
             EnergyStorageConfig.fromBlockPath(id.path)?.useEquipmentSlots ?: false
@@ -44,55 +44,55 @@ class EnergyStorageScreen(
     }
 
     init {
-        backgroundWidth = 179
-        backgroundHeight = 196
+        imageWidth = 179
+        imageHeight = 196
     }
 
    override fun init() {
        super.init()
-       if (handler.supportsRedstoneMode) {
-           addDrawableChild(
+       if (menu.supportsRedstoneMode) {
+           addRenderableWidget(
                net.minecraft.client.gui.components.Button.builder(Component.empty()) {
-                   client?.player?.networkHandler?.sendPacket(
+                   minecraft.connection?.send(
                        net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket(
-                           handler.syncId, EnergyStorageScreenHandler.BUTTON_REDSTONE_MODE
+                           menu.containerId, EnergyStorageScreenHandler.BUTTON_REDSTONE_MODE
                        )
                    )
-               }.dimensions(x + backgroundWidth - 24, y + 4, 18, 14).build()
+               }.bounds(leftPos + imageWidth - 24, topPos + 4, 18, 14).build()
            )
        }
    }
 
    /** 服务端切换后聊天栏提示模式名；GUI 内鼠标悬停也显示当前模式。 */
-   override fun drawMouseoverTooltip(context: GuiGraphics, mouseX: Int, mouseY: Int) {
-       super.drawMouseoverTooltip(context, mouseX, mouseY)
-       val btnX = x + backgroundWidth - 24
-       val btnY = y + 4
-       if (handler.supportsRedstoneMode && mouseX in btnX until btnX + 18 && mouseY in btnY until btnY + 14) {
-           context.drawTooltip(
-               textRenderer,
-               Component.translatable("gui.ic2_120.eu_storage.redstone_mode${handler.currentRedstoneMode}"),
+   override fun renderTooltip(context: GuiGraphics, mouseX: Int, mouseY: Int) {
+       super.renderTooltip(context, mouseX, mouseY)
+       val btnX = leftPos + imageWidth - 24
+       val btnY = topPos + 4
+       if (menu.supportsRedstoneMode && mouseX in btnX until btnX + 18 && mouseY in btnY until btnY + 14) {
+           context.renderComponentTooltip(
+               font,
+               Component.translatable("gui.ic2_120.eu_storage.redstone_mode${menu.currentRedstoneMode}"),
                mouseX, mouseY
            )
        }
    }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
        renderBackground(context)
        super.render(context, mouseX, mouseY, delta)
 
-       val left = x
-        val top = y
+       val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val outputRate = handler.sync.getSyncedExtractedAmount()
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+        val inputRate = menu.sync.getSyncedInsertedAmount()
+        val outputRate = menu.sync.getSyncedExtractedAmount()
         val cap = capacity
         val fraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
 
@@ -104,7 +104,7 @@ class EnergyStorageScreen(
                 left + ENERGY_BAR_X + fillWidth,
                 top + ENERGY_BAR_Y + ENERGY_BAR_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE,
                 left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
                 ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
@@ -119,24 +119,24 @@ class EnergyStorageScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 Component.literal("${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
         }
 
         // 红石模式按钮：原版红石粉图标（居中于 18x14 按钮）
-        if (handler.supportsRedstoneMode) {
-            context.drawItem(
+        if (menu.supportsRedstoneMode) {
+            context.renderItem(
                 net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.REDSTONE),
-                x + backgroundWidth - 24 + (18 - 16) / 2,
-                y + 4 + (14 - 16) / 2
+                leftPos + imageWidth - 24 + (18 - 16) / 2,
+                topPos + 4 + (14 - 16) / 2
             )
         }
 
         if (!useEquipmentSlots) {
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + OVERLAY_X, top + OVERLAY_Y,
                 OVERLAY_U.toFloat(), OVERLAY_V.toFloat(),
                 OVERLAY_W, OVERLAY_H,
@@ -146,12 +146,12 @@ class EnergyStorageScreen(
 
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
         val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatRaw(outputRate))
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(outputText))
+        val sideTextWidth = maxOf(font.width(inputText), font.width(outputText))
         val sideTextX = left - sideTextWidth - 4
-        context.drawText(textRenderer, inputText, sideTextX, top + 4, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, sideTextX, top + 16, 0xAAAAAA, false)
+        context.drawString(font, inputText, sideTextX, top + 4, 0xAAAAAA, false)
+        context.drawString(font, outputText, sideTextX, top + 16, 0xAAAAAA, false)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     companion object {

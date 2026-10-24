@@ -42,8 +42,9 @@ import kotlin.math.min
 open class JetpackItem : ArmorItem(
     ModArmorMaterials.JETPACK_ARMOR,
     ArmorItem.Type.CHESTPLATE,
-    // ArmorItem 会通过 maxDamageIfAbsent 自动注入材质耐久；-1 让 ItemStack.isDamageable() 返回 false。
-    Item.Properties().stacksTo(1).durability(-1)
+    // 1.21.1: ArmorItem 不再注入耐久，Item#isDamageable 已移除。不设置 durability 即
+    // 不含 MAX_DAMAGE/DAMAGE 组件，ItemStack.isDamageableItem() 恒为 false（原语义）。
+    Item.Properties().stacksTo(1)
 ), ICreativeFullVariant {
 
     companion object {
@@ -163,11 +164,6 @@ open class JetpackItem : ArmorItem(
         tooltip.add(Component.literal("剩余飞行: $timeText").withStyle(ChatFormatting.GRAY))
     }
 
-    /**
-     * 喷气背包使用燃料系统，不走原版耐久系统。
-     * 若不禁用，受伤时会累积 Damage NBT 导致耐久条混乱。
-     */
-    override fun isDamageable(stack: ItemStack): Boolean = false
 
     override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.level

@@ -20,7 +20,7 @@ import net.minecraft.world.phys.Vec3
 object QuantumLeggingsSpeedController {
     fun register() {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
-            val player = client.player ?: return@register
+            val player = minecraft.player ?: return@register
             if (player.hasVehicle() || player.abilities.flying || player.isSpectator) return@register
 
             val stack = player.getItemBySlot(EquipmentSlot.LEGS)

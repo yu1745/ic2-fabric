@@ -53,7 +53,7 @@ open class Ic2BoatItem(
             }
             if (!world.isClient) {
                 world.addFreshEntity(boat)
-                world.gameEvent(user, GameEvent.ENTITY_PLACE, hitResult.clickLocation)
+                world.gameEvent(user, GameEvent.ENTITY_PLACE, hitResult.location)
                 if (!user.isCreative) {
                     stack.shrink(1)
                 }

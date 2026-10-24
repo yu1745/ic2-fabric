@@ -13,37 +13,37 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = UvLampBlock::class)
 class UvLampScreen(
-    handler: UvLampScreenHandler,
+    val handler: UvLampScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<UvLampScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 162
+        imageWidth = 176
+        imageHeight = 162
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val capacity = handler.sync.energyCapacity.toLong().coerceAtLeast(1L)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+        val capacity = menu.sync.energyCapacity.toLong().coerceAtLeast(1L)
         val energyFraction = (energy.toFloat() / capacity).coerceIn(0f, 1f)
-        val growthMultiplier = handler.sync.growthMultiplier
+        val growthMultiplier = menu.sync.growthMultiplier
 
-        val inputRateText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(handler.sync.getSyncedInsertedAmount()))
-        val consumeRateText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(handler.sync.getSyncedConsumedAmount()))
+        val inputRateText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatEu(menu.sync.getSyncedInsertedAmount()))
+        val consumeRateText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatEu(menu.sync.getSyncedConsumedAmount()))
 
         // 标题居中
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
         // 电量条 (180,4)-(194,18) = 14×14，自下而上渲染至 (9,58)
         if (energyFraction > 0f) {
@@ -54,7 +54,7 @@ class UvLampScreen(
                 left + ENERGY_BAR_X + ENERGY_BAR_W,
                 top + ENERGY_BAR_Y + ENERGY_BAR_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
                 ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
                 ENERGY_BAR_W, ENERGY_BAR_H,
@@ -66,18 +66,18 @@ class UvLampScreen(
         // 文本区域 (49,59)-(127,71) 居中显示
         val boostColor = if (growthMultiplier > 0) 0xDDA0FF else 0xAAAAAA
         val growthText = t("gui.ic2_120.uv_lamp_growth", if (growthMultiplier > 0) "${growthMultiplier}x" else "-")
-        val textWidth = textRenderer.getWidth(growthText)
+        val textWidth = font.width(growthText)
         val textX = left + 49 + (127 - 49 - textWidth) / 2
-        val textY = top + 59 + (71 - 59 - textRenderer.fontHeight) / 2
-        context.drawText(textRenderer, growthText, textX, textY, boostColor, false)
+        val textY = top + 59 + (71 - 59 - font.lineHeight) / 2
+        context.drawString(font, growthText, textX, textY, boostColor, false)
 
         // 侧边文本
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputRateText), textRenderer.getWidth(consumeRateText))
+        val sideTextWidth = maxOf(font.width(inputRateText), font.width(consumeRateText))
         val sideX = left - sideTextWidth - 4
-        context.drawText(textRenderer, inputRateText, sideX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeRateText, sideX, top + 20, 0xAAAAAA, false)
+        context.drawString(font, inputRateText, sideX, top + 8, 0xAAAAAA, false)
+        context.drawString(font, consumeRateText, sideX, top + 20, 0xAAAAAA, false)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         // 电量条悬停提示
         val relX = mouseX - left
@@ -85,8 +85,8 @@ class UvLampScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(capacity)} EU"),
                 mouseX, mouseY
             )

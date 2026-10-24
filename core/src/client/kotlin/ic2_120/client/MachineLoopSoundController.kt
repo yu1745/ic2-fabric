@@ -39,8 +39,8 @@ object MachineLoopSoundController {
 
     fun register() {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
-            val world = client.world
-            val player = client.player
+            val world = minecraft.level
+            val player = minecraft.player
             if (world == null || player == null) {
                 activeSounds.values.forEach { it.stop() }
                 activeSounds.clear()
@@ -108,7 +108,7 @@ object MachineLoopSoundController {
                 val pos = BlockPos.fromLong(key)
                 val created = BlockLoopSoundInstance(pos, def)
                 activeSounds[key] = created
-                client.soundManager.play(created)
+                minecraft.getSoundManager().play(created)
             } else {
                 existing.setFadingOut(false)
             }

@@ -17,34 +17,34 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = CokeKilnBlock::class)
 class CokeKilnScreen(
-    handler: CokeKilnScreenHandler,
+    val handler: CokeKilnScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<CokeKilnScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        imageWidth = GUI_SIZE.width
+        imageHeight = GUI_SIZE.height
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
         // 工作进度 (181,8)-(195,21) = 14×13 → (81,27)，满纹理从上至下减少
         val progressFrac = if (CokeKilnSync.PROGRESS_MAX > 0) {
-            (handler.sync.progress.coerceIn(0, CokeKilnSync.PROGRESS_MAX).toFloat() / CokeKilnSync.PROGRESS_MAX).coerceIn(0f, 1f)
+            (menu.sync.progress.coerceIn(0, CokeKilnSync.PROGRESS_MAX).toFloat() / CokeKilnSync.PROGRESS_MAX).coerceIn(0f, 1f)
         } else 0f
-        if (handler.sync.progress > 0) {
+        if (menu.sync.progress > 0) {
             val drainedH = (PROGRESS_H * progressFrac).toInt()
             context.enableScissor(
                 left + PROGRESS_X,
@@ -52,18 +52,18 @@ class CokeKilnScreen(
                 left + PROGRESS_X + PROGRESS_W,
                 top + PROGRESS_Y + PROGRESS_H
             )
-            context.drawTexture(TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
+            context.blit(TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
                 PROGRESS_U.toFloat(), PROGRESS_V.toFloat(),
                 PROGRESS_W, PROGRESS_H, TEX_SIZE, TEX_SIZE)
             context.disableScissor()
         }
 
         // 流体槽 (115,41) 16×16，有流体时满平铺
-        val fluidAmount = handler.sync.fluidAmount.coerceAtLeast(0)
+        val fluidAmount = menu.sync.fluidAmount.coerceAtLeast(0)
         if (fluidAmount > 0) run {
             val fluid = BuiltInRegistries.FLUID.getValue(andler.sync.fluidRawId)
             val fluidHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return@run
-            val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultBlockState).getOrNull(0) ?: return@run
+            val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()).getOrNull(0) ?: return@run
             val color = FluidUtils.getFluidColor(fluid)
             if (color == -1) return@run
             val r = ((color shr 16) and 0xFF) / 255f
@@ -76,12 +76,12 @@ class CokeKilnScreen(
                 val tileH = minOf(16, sy + TANK_S - cy)
                 for (cx in sx until (sx + TANK_S) step 16) {
                     val tileW = minOf(16, sx + TANK_S - cx)
-                    context.drawSprite(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                    context.blit(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
                 }
             }
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         // 流体槽悬停
         val relX = mouseX - left
@@ -91,12 +91,12 @@ class CokeKilnScreen(
                 val fluid = BuiltInRegistries.FLUID.getValue(andler.sync.fluidRawId)
                 val mb = fluidAmount / DROPLETS_PER_MB
                 val capMb = 8 * FluidConstants.BUCKET / DROPLETS_PER_MB
-                listOf(Component.literal(fluid.defaultBlockState.blockState.block.name.string),
+                listOf(Component.literal(fluid.defaultFluidState().createLegacyBlock().blockState.block.name.string),
                     Component.literal("${"%,d".format(mb)} / ${"%,d".format(capMb)} mB"))
             } else {
                 listOf(Component.literal("空"))
             }
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
     }
 

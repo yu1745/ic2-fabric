@@ -54,7 +54,7 @@ object Ic2_120Client : ClientModInitializer {
 		if (FabricLoader.getInstance().isModLoaded("jei")) {
 			ic2_120.integration.jei.LiveRecipeSource.scheduleOnClientThread = { action ->
 				val client = Minecraft.getInstance()
-				if (client.isOnThread) false else { client.execute(action); true }
+				if (client.isSameThread) false else { client.execute(action); true }
 			}
 		}
 

@@ -20,41 +20,41 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = PumpBlock::class)
 class PumpScreen(
-    handler: PumpScreenHandler,
+    val handler: PumpScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<PumpScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+        val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
         val progressFrac = if (PumpSync.PROGRESS_MAX > 0) {
-            (handler.sync.progress.coerceIn(0, PumpSync.PROGRESS_MAX).toFloat() / PumpSync.PROGRESS_MAX).coerceIn(0f, 1f)
+            (menu.sync.progress.coerceIn(0, PumpSync.PROGRESS_MAX).toFloat() / PumpSync.PROGRESS_MAX).coerceIn(0f, 1f)
         } else 0f
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val consumeRate = handler.sync.getSyncedConsumedAmount()
-        val fluidAmount = handler.sync.fluidAmount.toLong().coerceAtLeast(0)
+        val inputRate = menu.sync.getSyncedInsertedAmount()
+        val consumeRate = menu.sync.getSyncedConsumedAmount()
+        val fluidAmount = menu.sync.fluidAmount.toLong().coerceAtLeast(0)
         val fluidCapacity = FluidConstants.BUCKET * 8
         val fluidFraction = if (fluidCapacity > 0) (fluidAmount.toFloat() / fluidCapacity).coerceIn(0f, 1f) else 0f
-        val fluidRawId = handler.sync.fluidRawId
+        val fluidRawId = menu.sync.fluidRawId
 
         // 电量条 (179,3)-(193,17) = 14x14，自下而上
         if (energyFraction > 0f) {
@@ -65,7 +65,7 @@ class PumpScreen(
                 left + ENERGY_BAR_X + ENERGY_BAR_W,
                 top + ENERGY_BAR_Y + ENERGY_BAR_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
                 ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
                 ENERGY_BAR_W, ENERGY_BAR_H,
@@ -83,7 +83,7 @@ class PumpScreen(
                 left + PROGRESS_X + arrowWidth,
                 top + PROGRESS_Y + PROGRESS_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
                 PROGRESS_U.toFloat(), PROGRESS_V.toFloat(),
                 PROGRESS_W, PROGRESS_H,
@@ -110,14 +110,14 @@ class PumpScreen(
                 } else {
                     Triple(1f, 1f, 1f)
                 }
-                context.drawSprite(left + TANK_X, top + TANK_Y, 0, TANK_W, TANK_H, sprite, cr, cg, cb, 1f)
+                context.blit(left + TANK_X, top + TANK_Y, 0, TANK_W, TANK_H, sprite, cr, cg, cb, 1f)
                 context.disableScissor()
             }
         }
 
         // 容量标示 (183,49)-(194,96) = 11x47，有流体时渲染在流体纹理之上
         if (fluidAmount > 0) {
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
                 TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
                 TANK_OVERLAY_W, TANK_OVERLAY_H,
@@ -126,7 +126,7 @@ class PumpScreen(
         }
 
         // uptips 纹理
-        context.drawTexture(
+        context.blit(
             UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
             0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
             UPTIPS_SIZE, UPTIPS_SIZE
@@ -135,12 +135,12 @@ class PumpScreen(
         // 侧边文本
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
         val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatRaw(consumeRate))
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
+        val sideTextWidth = maxOf(font.width(inputText), font.width(consumeText))
         val sideTextX = left - sideTextWidth - 4
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
+        context.drawString(font, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawString(font, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         val relX = mouseX - left
         val relY = mouseY - top
@@ -149,8 +149,8 @@ class PumpScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )
@@ -162,20 +162,20 @@ class PumpScreen(
         ) {
             val lines = if (fluidAmount > 0 && fluidRawId != -1) {
                 val fluid = BuiltInRegistries.FLUID.get(fluidRawId)
-                val fluidName = fluid.defaultBlockState.blockState.block.name.string
+                val fluidName = fluid.defaultFluidState().createLegacyBlock().blockState.block.name.string
                 listOf(Component.literal(fluidName), Component.literal("${"%,d".format(fluidAmount / DROPLETS_PER_MB)} / ${"%,d".format(fluidCapacity / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Component.literal("空"))
             }
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
 
         // uptips 悬停
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
             relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 listOf(
                     Component.translatable("gui.ic2_120.pump.uptips"),
                     Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
@@ -237,5 +237,5 @@ class PumpScreen(
 
 private fun getFluidStillSprite(fluid: Fluid): TextureAtlasSprite? {
     val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
-    return handler.getFluidSprites(null, null, fluid.defaultBlockState).getOrNull(0)
+    return handler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()).getOrNull(0)
 }

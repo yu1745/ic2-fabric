@@ -824,11 +824,13 @@ class AlloyChestplate : ArmorItem(Holder.direct(ALLOY_ARMOR.material), ArmorItem
 class CfPack : ArmorItem(
     Holder.direct(CF_PACK_ARMOR.material),
     ArmorItem.Type.CHESTPLATE,
-    Item.Properties().stacksTo(1).durability(-1)
+    // 1.21.1: 不设置 durability 即不含 MAX_DAMAGE/DAMAGE 组件，ItemStack.isDamageableItem() 恒为 false
+    // （原 durability(-1)+isDamageable=false 的『不走原版耐久』语义）；stacksTo(1) 已限制单叠。
+    Item.Properties().stacksTo(1)
 ), ICreativeFullVariant {
-    override fun isDamageable(stack: ItemStack): Boolean = false
+    // 1.21.1: Item#isDamageable(ItemStack) 覆写点已移除（耐久组件驱动，见上方 Properties 注释）
 
-    override fun useOn(context: UseOnContext): InteractionResult {
+    override fun useOn(context: UseOnContext): net.minecraft.world.InteractionResult {
         val world = context.level
         val player = context.player ?: return net.minecraft.world.InteractionResult.PASS
         if (world.isClientSide) return net.minecraft.world.InteractionResult.SUCCESS
@@ -915,7 +917,7 @@ class CfPack : ArmorItem(
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: java.util.function.Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val sprayer = FoamSprayerItem::class.instance()
             val circuit = Circuit::class.instance()
             val emptyCell = EmptyCell::class.instance()
@@ -1068,7 +1070,9 @@ class ElectricJetpack : ElectricArmorItem(
 class NightVisionGoggles : ArmorItem(
     Holder.direct(NIGHT_VISION_ARMOR.material),
     ArmorItem.Type.HELMET,
-    Item.Properties().stacksTo(1).durability(-1)
+    // 1.21.1: 不设置 durability 即不含 MAX_DAMAGE/DAMAGE 组件，ItemStack.isDamageableItem() 恒为 false
+    // （原 durability(-1)+isDamageable=false 的『不走原版耐久』语义）；stacksTo(1) 已限制单叠。
+    Item.Properties().stacksTo(1)
 ), IBatteryItem {
     override val tier: Int = 2
     override val maxCapacity: Long
@@ -1134,11 +1138,8 @@ class NightVisionGoggles : ArmorItem(
 
     private fun isEnabled(stack: ItemStack): Boolean = stack.orCreateNbt.getBoolean(ENABLED_KEY)
 
-    /**
-     * 夜视镜使用电量系统，不走原版耐久系统。
-     * 若不禁用，受伤时会累积 Damage NBT 导致耐久条混乱。
-     */
-    override fun isDamageable(stack: ItemStack): Boolean = false
+    // 夜视镜使用电量系统，不走原版耐久系统。
+    // 1.21.1: Item#isDamageable(ItemStack) 覆写点已移除，改由『不注入 durability 组件』实现同一语义。
 
     override fun inventoryTick(stack: ItemStack, world: Level, entity: net.minecraft.world.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
@@ -1233,7 +1234,9 @@ abstract class BatteryPackArmorItem(
 ) : ArmorItem(
     Holder.direct(armorMaterial),
     ArmorItem.Type.CHESTPLATE,
-    Item.Properties().stacksTo(1).durability(-1)
+    // 1.21.1: 不设置 durability 即不含 MAX_DAMAGE/DAMAGE 组件，ItemStack.isDamageableItem() 恒为 false
+    // （原 durability(-1)+isDamageable=false 的『不走原版耐久』语义）；stacksTo(1) 已限制单叠。
+    Item.Properties().stacksTo(1)
 ), IBatteryItem {
 
     init {
@@ -1247,13 +1250,9 @@ abstract class BatteryPackArmorItem(
      */
     override val canChargeWireless: Boolean = true
 
-    /**
-     * 电池背包不走原版耐久系统，完全由 EU 能量驱动。
-     *
-     * 若不禁用，原版 [net.minecraft.world.entity.LivingEntity.damageArmor]
-     * 会在每次受击时消耗原版耐久度，导致背包耐久条下降。
-     */
-    override fun isDamageable(stack: ItemStack): Boolean = false
+    // 电池背包不走原版耐久系统，完全由 EU 能量驱动。
+    // 1.21.1: Item#isDamageable(ItemStack) 覆写点已移除，改由『不注入 durability 组件』实现同一语义
+    // （原版 LivingEntity.damageArmor 会检查 ItemStack.isDamageableItem()，无 MAX_DAMAGE 组件即跳过）。
 
     override fun getCurrentCharge(stack: ItemStack): Long =
         BatteryItemBase.getEnergy(stack).coerceIn(0L, maxCapacity)

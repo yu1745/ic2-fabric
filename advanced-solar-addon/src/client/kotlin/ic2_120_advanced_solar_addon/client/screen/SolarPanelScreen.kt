@@ -16,13 +16,13 @@ class SolarPanelScreen(
 ) : AbstractContainerScreen<SolarPanelScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = GUI_WIDTH
-        backgroundHeight = GUI_HEIGHT
+        imageWidth = GUI_WIDTH
+        imageHeight = GUI_HEIGHT
         playerInventoryTitleY = -20000
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, GUI_WIDTH, GUI_HEIGHT, TEX_WIDTH, TEX_HEIGHT)
+        context.blit(TEXTURE, x, y, 0f, 0f, GUI_WIDTH, GUI_HEIGHT, TEX_WIDTH, TEX_HEIGHT)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
@@ -43,7 +43,7 @@ class SolarPanelScreen(
         val fillW = (BAR_TEX_W * energyFraction).toInt().coerceAtLeast(0)
         if (fillW > 0) {
             context.enableScissor(barX, barY, barX + fillW, barY + BAR_TEX_H)
-            context.drawTexture(TEXTURE, barX, barY, BAR_TEX_U.toFloat(), BAR_TEX_V.toFloat(), BAR_TEX_W, BAR_TEX_H, TEX_WIDTH, TEX_HEIGHT)
+            context.blit(TEXTURE, barX, barY, BAR_TEX_U.toFloat(), BAR_TEX_V.toFloat(), BAR_TEX_W, BAR_TEX_H, TEX_WIDTH, TEX_HEIGHT)
             context.disableScissor()
         }
 
@@ -52,26 +52,26 @@ class SolarPanelScreen(
         val iconY = y + ICON_RENDER_Y
         when (state) {
             GENERATION_STATE_DAY -> {
-                context.drawTexture(TEXTURE, iconX, iconY, SUN_TEX_U.toFloat(), SUN_TEX_V.toFloat(), ICON_TEX_W, ICON_TEX_H, TEX_WIDTH, TEX_HEIGHT)
+                context.blit(TEXTURE, iconX, iconY, SUN_TEX_U.toFloat(), SUN_TEX_V.toFloat(), ICON_TEX_W, ICON_TEX_H, TEX_WIDTH, TEX_HEIGHT)
             }
             GENERATION_STATE_NIGHT -> {
-                context.drawTexture(TEXTURE, iconX, iconY, MOON_TEX_U.toFloat(), MOON_TEX_V.toFloat(), ICON_TEX_W, ICON_TEX_H, TEX_WIDTH, TEX_HEIGHT)
+                context.blit(TEXTURE, iconX, iconY, MOON_TEX_U.toFloat(), MOON_TEX_V.toFloat(), ICON_TEX_W, ICON_TEX_H, TEX_WIDTH, TEX_HEIGHT)
             }
         }
 
         // 标题居中
         val titleWidth = textRenderer.getWidth(title)
-        context.drawText(textRenderer, title, x + (GUI_WIDTH - titleWidth) / 2, y + 6, 0xFFFFFF, false)
+        context.drawString(textRenderer, title, x + (GUI_WIDTH - titleWidth) / 2, y + 6, 0xFFFFFF, false)
 
         // 存储: a/b  (52, 23)
         val storageLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.storage").string + ": "
         val storageValue = "$energy/$capacity"
-        context.drawText(textRenderer, storageLabel + storageValue, x + TEXT_X, y + TEXT_Y_STORAGE, 0xFFFFFF, false)
+        context.drawString(textRenderer, storageLabel + storageValue, x + TEXT_X, y + TEXT_Y_STORAGE, 0xFFFFFF, false)
 
         // 最大输出: b EU/t  (52, 33)
         val maxOutputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.max_output").string
         val maxOutputValue = maxOutput.toString() + " EU/t"
-        context.drawText(textRenderer, maxOutputLabel + maxOutputValue, x + TEXT_X, y + TEXT_Y_MAX_OUTPUT, 0xFFFFFF, false)
+        context.drawString(textRenderer, maxOutputLabel + maxOutputValue, x + TEXT_X, y + TEXT_Y_MAX_OUTPUT, 0xFFFFFF, false)
 
         // 产生: c EU/t  (52, 43)
         val genLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.generating").string
@@ -81,12 +81,12 @@ class SolarPanelScreen(
             else -> 0
         }
         val genValue = currentGen.toString() + " EU/t"
-        context.drawText(textRenderer, genLabel + genValue, x + TEXT_X, y + TEXT_Y_GEN, 0xFFFFFF, false)
+        context.drawString(textRenderer, genLabel + genValue, x + TEXT_X, y + TEXT_Y_GEN, 0xFFFFFF, false)
 
         // 太阳/月亮图标悬停提示
         if (mouseX in iconX until (iconX + ICON_TEX_W) && mouseY in iconY until (iconY + ICON_TEX_H)) {
             if (currentGen > 0) {
-                context.drawTooltip(textRenderer,
+                context.renderComponentTooltip(textRenderer,
                     Component.literal(Component.translatable("gui.ic2_120_advanced_solar_addon.generate").string + ": " + currentGen + " EU/t"),
                     mouseX, mouseY)
             }
@@ -94,12 +94,12 @@ class SolarPanelScreen(
 
         // 能量条悬停提示
         if (mouseX in barX until (barX + BAR_TEX_W) && mouseY in barY until (barY + BAR_TEX_H)) {
-            context.drawTooltip(textRenderer,
+            context.renderComponentTooltip(textRenderer,
                 Component.literal(energy.toString() + " / " + capacity.toString() + " EU"),
                 mouseX, mouseY)
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     companion object {

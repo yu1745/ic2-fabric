@@ -24,16 +24,16 @@ public class PassiveEntityMixin {
     /**
      * 在自然年龄推进的 tick 期间打开标记，只拦截该路径下的 setBreedingAge。
      */
-    @Inject(method = "tickMovement", at = @At("HEAD"))
+    @Inject(method = "aiStep", at = @At("HEAD"))
     private void ic2AnimalmatronStartNaturalGrowthGuard(CallbackInfo ci) {
         AgeableMob entity = (AgeableMob) (Object) this;
         this.ic2_120$blockingNaturalGrowth =
-                entity.getWorld() instanceof net.minecraft.server.level.ServerLevel &&
+                entity.level() instanceof net.minecraft.server.level.ServerLevel &&
                         entity.isBaby() &&
                         AnimalFoodMapping.isManagedAnimal(entity);
     }
 
-    @Inject(method = "tickMovement", at = @At("RETURN"))
+    @Inject(method = "aiStep", at = @At("RETURN"))
     private void ic2AnimalmatronStopNaturalGrowthGuard(CallbackInfo ci) {
         this.ic2_120$blockingNaturalGrowth = false;
     }
@@ -49,7 +49,7 @@ public class PassiveEntityMixin {
 
         AgeableMob entity = (AgeableMob) (Object) this;
 
-        if (age <= entity.getBreedingAge()) {
+        if (age <= entity.getAge()) {
             return;
         }
 

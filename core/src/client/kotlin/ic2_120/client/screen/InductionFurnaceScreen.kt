@@ -14,35 +14,35 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = InductionFurnaceBlock::class)
 class InductionFurnaceScreen(
-    handler: InductionFurnaceScreenHandler,
+    val handler: InductionFurnaceScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<InductionFurnaceScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+        val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
         val energyFraction = if (cap > 0) (energy.toFloat() / cap).coerceIn(0f, 1f) else 0f
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val consumeRate = handler.sync.getSyncedConsumedAmount()
-        val heatPercent = handler.sync.heat / 100
+        val inputRate = menu.sync.getSyncedInsertedAmount()
+        val consumeRate = menu.sync.getSyncedConsumedAmount()
+        val heatPercent = menu.sync.heat / 100
 
         // 电量条 (181,4)-(195,18) = 14×14，自下而上
         if (energyFraction > 0f) {
@@ -53,7 +53,7 @@ class InductionFurnaceScreen(
                 left + ENERGY_BAR_X + ENERGY_BAR_W,
                 top + ENERGY_BAR_Y + ENERGY_BAR_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
                 ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
                 ENERGY_BAR_W, ENERGY_BAR_H,
@@ -63,8 +63,8 @@ class InductionFurnaceScreen(
         }
 
         // 工作进度纹理 (181,23)-(203,38) = 22×15，自左向右（仅处理物品时渲染）
-        if (handler.sync.progress > 0) {
-            val progressFrac = (handler.sync.progress.toFloat() / InductionFurnaceSync.PROGRESS_THRESHOLD).coerceIn(0f, 1f)
+        if (menu.sync.progress > 0) {
+            val progressFrac = (menu.sync.progress.toFloat() / InductionFurnaceSync.PROGRESS_THRESHOLD).coerceIn(0f, 1f)
             val arrowWidth = (PROGRESS_W * progressFrac).toInt().coerceAtLeast(1)
             context.enableScissor(
                 left + PROGRESS_X,
@@ -72,7 +72,7 @@ class InductionFurnaceScreen(
                 left + PROGRESS_X + arrowWidth,
                 top + PROGRESS_Y + PROGRESS_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + PROGRESS_X, top + PROGRESS_Y,
                 PROGRESS_U.toFloat(), PROGRESS_V.toFloat(),
                 PROGRESS_W, PROGRESS_H,
@@ -82,15 +82,15 @@ class InductionFurnaceScreen(
         }
 
         // uptips 纹理
-        context.drawTexture(
+        context.blit(
             UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
             0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
             UPTIPS_SIZE, UPTIPS_SIZE
         )
 
         // 热量文本
-        context.drawText(
-            textRenderer,
+        context.drawString(
+            font,
             Component.literal("热量：${heatPercent}%"),
             left + 64, top + 64, 0xFFFFFF, false
         )
@@ -98,12 +98,12 @@ class InductionFurnaceScreen(
         // 侧边文本
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
         val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatRaw(consumeRate))
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(consumeText))
+        val sideTextWidth = maxOf(font.width(inputText), font.width(consumeText))
         val sideTextX = left - sideTextWidth - 4
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
+        context.drawString(font, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawString(font, consumeText, sideTextX, top + 20, 0xAAAAAA, false)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         // 悬停提示
         val relX = mouseX - left
@@ -113,8 +113,8 @@ class InductionFurnaceScreen(
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE &&
             relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 listOf(
                     Component.translatable("gui.ic2_120.induction_furnace.uptips"),
                     Component.literal(" §7").append(Component.translatable("item.ic2_120.ejector_upgrade")),
@@ -128,8 +128,8 @@ class InductionFurnaceScreen(
         if (relX in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             relY in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 Component.literal("储能：${EnergyFormatUtils.formatRaw(energy)} / ${EnergyFormatUtils.formatRaw(cap)} EU"),
                 mouseX, mouseY
             )

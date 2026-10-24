@@ -12,35 +12,35 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = WaterKineticGeneratorBlock::class)
 class WaterKineticGeneratorScreen(
-    handler: WaterKineticGeneratorScreenHandler,
+    val handler: WaterKineticGeneratorScreenHandler,
     playerInventory: Inventory,
     title: McText
 ) : AbstractContainerScreen<WaterKineticGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 166, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
-        val generatedKu = handler.sync.generatedKu.coerceAtLeast(0)
-        val outputKu = handler.sync.outputKu.coerceAtLeast(0)
-        val blocked = handler.sync.isStuck != 0
-        val submerged = handler.sync.isSubmerged != 0
-        val flowBonus = handler.sync.waterFlowBonus != 0
-        val rotorLifetimeTenthsHours = handler.sync.rotorLifetimeTenthsHours.coerceAtLeast(0)
+        val left = leftPos
+        val top = topPos
+        val generatedKu = menu.sync.generatedKu.coerceAtLeast(0)
+        val outputKu = menu.sync.outputKu.coerceAtLeast(0)
+        val blocked = menu.sync.isStuck != 0
+        val submerged = menu.sync.isSubmerged != 0
+        val flowBonus = menu.sync.waterFlowBonus != 0
+        val rotorLifetimeTenthsHours = menu.sync.rotorLifetimeTenthsHours.coerceAtLeast(0)
 
         // 标题居中于 y=6
-        context.drawText(textRenderer, title, left + (176 - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (176 - font.width(title)) / 2, top + 6, 0x404040, false)
 
         // 状态信息（左侧）
         val generatedText = McText.translatable("ic2_120.jade.water_ku_generated", generatedKu).string
@@ -59,7 +59,7 @@ class WaterKineticGeneratorScreen(
         ).string
 
         val texts = listOfNotNull(generatedText, outputText, statusText, flowText.takeIf { it.isNotEmpty() }, lifetimeText)
-        val sideTextWidth = texts.maxOf { textRenderer.getWidth(it) }
+        val sideTextWidth = texts.maxOf { font.width(it) }
         val sideTextX = left - sideTextWidth - 4
         var textY = top + 8
         val statusColor = when {
@@ -73,11 +73,11 @@ class WaterKineticGeneratorScreen(
                 flowText -> 0x55AAFF
                 else -> 0xAAAAAA
             }
-            context.drawText(textRenderer, text, sideTextX, textY, color, false)
+            context.drawString(font, text, sideTextX, textY, color, false)
             textY += 12
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     companion object {

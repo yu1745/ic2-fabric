@@ -19,13 +19,13 @@ class MolecularTransformerScreen(
 ) : AbstractContainerScreen<MolecularTransformerScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = GUI_WIDTH
-        backgroundHeight = GUI_HEIGHT
+        imageWidth = GUI_WIDTH
+        imageHeight = GUI_HEIGHT
         playerInventoryTitleY = -20000
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, GUI_WIDTH, GUI_HEIGHT, TEX_WIDTH, TEX_HEIGHT)
+        context.blit(TEXTURE, x, y, 0f, 0f, GUI_WIDTH, GUI_HEIGHT, TEX_WIDTH, TEX_HEIGHT)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
@@ -45,7 +45,7 @@ class MolecularTransformerScreen(
         if (fillH > 0) {
             // 从上到下填充
             context.enableScissor(gaugeX, gaugeY, gaugeX + GAUGE_TEX_W, gaugeY + fillH)
-            context.drawTexture(TEXTURE, gaugeX, gaugeY, GAUGE_TEX_U.toFloat(), GAUGE_TEX_V.toFloat(), GAUGE_TEX_W, GAUGE_TEX_H, TEX_WIDTH, TEX_HEIGHT)
+            context.blit(TEXTURE, gaugeX, gaugeY, GAUGE_TEX_U.toFloat(), GAUGE_TEX_V.toFloat(), GAUGE_TEX_W, GAUGE_TEX_H, TEX_WIDTH, TEX_HEIGHT)
             context.disableScissor()
         }
 
@@ -53,43 +53,43 @@ class MolecularTransformerScreen(
 
         // 输入: itemName at (59, 25)
         val inputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.input").string
-        context.drawText(textRenderer, inputLabel, tx, y + TEXT_Y_INPUT, 0xFFFFFF, false)
+        context.drawString(textRenderer, inputLabel, tx, y + TEXT_Y_INPUT, 0xFFFFFF, false)
         if (hasRecipe) {
             val inputName = getItemName(handler.sync.inputItemId)
-            context.drawText(textRenderer, inputName, tx + textRenderer.getWidth(inputLabel), y + TEXT_Y_INPUT, 0xFFFFFF, false)
+            context.drawString(textRenderer, inputName, tx + textRenderer.getWidth(inputLabel), y + TEXT_Y_INPUT, 0xFFFFFF, false)
         }
 
         // 输出: outputName at (59, 38)
         val outputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.output").string
-        context.drawText(textRenderer, outputLabel, tx, y + TEXT_Y_OUTPUT, 0xFFFFFF, false)
+        context.drawString(textRenderer, outputLabel, tx, y + TEXT_Y_OUTPUT, 0xFFFFFF, false)
         if (hasRecipe) {
             val outputName = getItemName(handler.sync.outputItemId)
-            context.drawText(textRenderer, outputName, tx + textRenderer.getWidth(outputLabel), y + TEXT_Y_OUTPUT, 0xFFFFFF, false)
+            context.drawString(textRenderer, outputName, tx + textRenderer.getWidth(outputLabel), y + TEXT_Y_OUTPUT, 0xFFFFFF, false)
         }
 
         // 能耗: total required EU at (59, 51)
         val energyLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.energy_per_operation").string
-        context.drawText(textRenderer, energyLabel, tx, y + TEXT_Y_ENERGY, 0xFFFFFF, false)
+        context.drawString(textRenderer, energyLabel, tx, y + TEXT_Y_ENERGY, 0xFFFFFF, false)
         if (hasRecipe) {
-            context.drawText(textRenderer, formatNum(requiredEnergy) + " EU", tx + textRenderer.getWidth(energyLabel), y + TEXT_Y_ENERGY, 0xFFFFFF, false)
+            context.drawString(textRenderer, formatNum(requiredEnergy) + " EU", tx + textRenderer.getWidth(energyLabel), y + TEXT_Y_ENERGY, 0xFFFFFF, false)
         }
 
         // EU输入: avgInserted at (59, 64)
         val euInputLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.energy_per_tick").string
-        context.drawText(textRenderer, euInputLabel, tx, y + TEXT_Y_EU_INPUT, 0xFFFFFF, false)
+        context.drawString(textRenderer, euInputLabel, tx, y + TEXT_Y_EU_INPUT, 0xFFFFFF, false)
         if (hasRecipe) {
-            context.drawText(textRenderer, formatNum(inputEuPerTick) + " EU/t", tx + textRenderer.getWidth(euInputLabel), y + TEXT_Y_EU_INPUT, 0xFFFFFF, false)
+            context.drawString(textRenderer, formatNum(inputEuPerTick) + " EU/t", tx + textRenderer.getWidth(euInputLabel), y + TEXT_Y_EU_INPUT, 0xFFFFFF, false)
         }
 
         // 进度: percentage% at (59, 77)
         val progressLabel = Component.translatable("gui.ic2_120_advanced_solar_addon.progress").string
-        context.drawText(textRenderer, progressLabel, tx, y + TEXT_Y_PROGRESS, 0xFFFFFF, false)
+        context.drawString(textRenderer, progressLabel, tx, y + TEXT_Y_PROGRESS, 0xFFFFFF, false)
         if (hasRecipe) {
             val progressPercent = String.format("%d%%", (progressFraction * 100f).toInt())
-            context.drawText(textRenderer, progressPercent, tx + textRenderer.getWidth(progressLabel), y + TEXT_Y_PROGRESS, 0xFFFFFF, false)
+            context.drawString(textRenderer, progressPercent, tx + textRenderer.getWidth(progressLabel), y + TEXT_Y_PROGRESS, 0xFFFFFF, false)
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     private fun getItemName(rawId: Int): String {

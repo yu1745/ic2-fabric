@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(net.minecraft.server.network.ServerCommonNetworkHandler.class)
+@Mixin(net.minecraft.server.network.ServerCommonPacketListenerImpl.class)
 public abstract class ServerPlayNetworkHandlerMixin {
     @Inject(method = "sendPacket", at = @At("HEAD"))
     private void ic2_120$recordOutgoingPacket(Packet<?> packet, CallbackInfo ci) {

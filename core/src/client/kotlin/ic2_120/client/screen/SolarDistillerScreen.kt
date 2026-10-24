@@ -18,47 +18,47 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = SolarDistillerBlock::class)
 class SolarDistillerScreen(
-    handler: SolarDistillerScreenHandler,
+    val handler: SolarDistillerScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<SolarDistillerScreenHandler>(handler, playerInventory, title) {
 
     private val waterFlowSprite: TextureAtlasSprite? by lazy {
-        FluidRenderHandlerRegistry.INSTANCE.getValue(luids.WATER)
-            ?.getFluidSprites(null, null, Fluids.WATER.defaultBlockState)
+        FluidRenderHandlerRegistry.INSTANCE.get(luids.WATER)
+            ?.getFluidSprites(null, null, Fluids.Fluids.WATER.defaultFluidState().createLegacyBlock())
             ?.getOrNull(1)
     }
 
     private val waterColor: Int by lazy { FluidUtils.getFluidColor(Fluids.WATER) }
 
     private val distilledFlowSprite: TextureAtlasSprite? by lazy {
-        FluidRenderHandlerRegistry.INSTANCE.getValue(ModFluids.DISTILLED_WATER_STILL)
-            ?.getFluidSprites(null, null, ModFluids.DISTILLED_WATER_STILL.defaultBlockState)
+        FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.DISTILLED_WATER_STILL)
+            ?.getFluidSprites(null, null, ModFluids.DISTILLED_WATER_STILL.defaultFluidState().createLegacyBlock())
             ?.getOrNull(1)
     }
 
     private val distilledColor: Int by lazy { FluidUtils.getFluidColor(ModFluids.DISTILLED_WATER_STILL) }
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 184
+        imageWidth = 176
+        imageHeight = 184
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
-        val waterMb = handler.sync.waterInput.coerceAtLeast(0)
-        val distilledMb = handler.sync.distilledOutput.coerceAtLeast(0)
+        val waterMb = menu.sync.waterInput.coerceAtLeast(0)
+        val distilledMb = menu.sync.distilledOutput.coerceAtLeast(0)
         val waterFraction = (waterMb.toFloat() / TANK_CAPACITY_DROPLETS).coerceIn(0f, 1f)
         val distilledFraction = (distilledMb.toFloat() / TANK_CAPACITY_DROPLETS).coerceIn(0f, 1f)
 
@@ -77,8 +77,8 @@ class SolarDistillerScreen(
         }
 
         // 工作状态纹理 (4,190)-(100,218) = 96×28
-        if (handler.sync.isWorking != 0) {
-            context.drawTexture(
+        if (menu.sync.isWorking != 0) {
+            context.blit(
                 TEXTURE, left + STATUS_X, top + STATUS_Y,
                 STATUS_U.toFloat(), STATUS_V.toFloat(),
                 STATUS_W, STATUS_H,
@@ -87,7 +87,7 @@ class SolarDistillerScreen(
         }
 
         // uptips 纹理
-        context.drawTexture(
+        context.blit(
             UPTIPS_TEXTURE, left + UPTIPS_X, top + UPTIPS_Y,
             0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE,
             UPTIPS_SIZE, UPTIPS_SIZE
@@ -102,7 +102,7 @@ class SolarDistillerScreen(
             } else {
                 listOf(Component.translatable("ic2.generic.text.empty"))
             }
-            context.drawTooltip(textRenderer, waterLines, mouseX, mouseY)
+            context.renderComponentTooltip(font, waterLines, mouseX, mouseY)
         }
 
         // 蒸馏水槽悬停提示
@@ -112,13 +112,13 @@ class SolarDistillerScreen(
             } else {
                 listOf(Component.translatable("ic2.generic.text.empty"))
             }
-            context.drawTooltip(textRenderer, distilledLines, mouseX, mouseY)
+            context.renderComponentTooltip(font, distilledLines, mouseX, mouseY)
         }
 
         // uptips 悬停提示
         if (relX in UPTIPS_X until UPTIPS_X + UPTIPS_SIZE && relY in UPTIPS_Y until UPTIPS_Y + UPTIPS_SIZE) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 listOf(
                     Component.translatable("gui.ic2_120.solar_distiller.uptips"),
                     Component.literal(" §7").append(Component.translatable("item.ic2_120.fluid_ejector_upgrade")),
@@ -128,7 +128,7 @@ class SolarDistillerScreen(
             )
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     /** 自下而上平铺流体 flowing 纹理 + 颜色着色 */
@@ -143,7 +143,7 @@ class SolarDistillerScreen(
             val tileH = minOf(16, gy + h - sy)
             for (sx in gx until (gx + w) step 16) {
                 val tileW = minOf(16, gx + w - sx)
-                context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                context.blit(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
             }
         }
         context.disableScissor()

@@ -29,9 +29,9 @@ public class LivingEntityJumpMixin {
         if (!QuantumBoots.consumeJumpEnergy(boots)) return;
 
         // 倍率跳跃高度
-        Vec3 vel = player.getVelocity();
+        Vec3 vel = player.getDeltaMovement();
         double multiplier = QuantumBoots.getJumpHeightMultiplier();
-        player.setVelocity(vel.x, vel.y * multiplier, vel.z);
+        player.setDeltaMovement(vel.x, vel.y * multiplier, vel.z);
 
         if (!QuantumBoots.isPermanentFallProtectionEnabled()) {
             // 常驻保护关闭时，保护状态属于本次跳跃的玩家，不能跟随靴子 NBT 持久化或转移。

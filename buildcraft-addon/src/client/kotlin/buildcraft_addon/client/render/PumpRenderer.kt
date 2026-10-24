@@ -54,7 +54,7 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
         // PoseStack 已平移到方块位置，使用局部坐标
         val depth = entity.getRenderTubeDepth(tickDelta).toFloat()
         if (depth > 0.01f) {
-            matrices.push()
+            matrices.pushPose()
             val halfTube = 1.0f / 16.0f
             val cx = 0.5f
             val cz = 0.5f
@@ -62,7 +62,7 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
             renderTubeColumn(matrices, buffer, world, pos, overlay,
                 cx - halfTube, -depth, cz - halfTube,
                 cx + halfTube, 0f, cz + halfTube)
-            matrices.pop()
+            matrices.popPose()
         }
 
         // ========== LED 指示灯 ==========
@@ -100,7 +100,7 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
         world: net.minecraft.world.level.Level, pos: BlockPos, overlay: Int,
         x1: Float, y1: Float, z1: Float, x2: Float, y2: Float, z2: Float
     ) {
-        val ctx = matrices.peek()
+        val ctx = matrices.last()
         val pm = ctx.positionMatrix
         val nm = ctx.normalMatrix
 
@@ -160,7 +160,7 @@ class PumpRenderer(ctx: BlockEntityRendererProvider.Context) :
         x: Float, y: Float, z: Float,
         side: Direction, sprite: TextureAtlasSprite, brightness: Float
     ) {
-        val ctx = matrices.peek()
+        val ctx = matrices.last()
         val pm = ctx.positionMatrix
         val nm = ctx.normalMatrix
         val size = 0.8f / 16f

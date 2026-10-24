@@ -144,7 +144,7 @@ class CokeKilnGrateBlock : net.minecraft.world.level.block.BaseEntityBlock(Block
         if (!world.isClient && !state.`is`(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
-    override fun codec(): com.mojang.serialization.MapCodec<out net.minecraft.world.level.block.entity.BaseEntityBlock> =
+    override fun codec(): com.mojang.serialization.MapCodec<out net.minecraft.world.level.block.BaseEntityBlock> =
         BlockBehaviour.simpleCodec { CokeKilnGrateBlock() }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =

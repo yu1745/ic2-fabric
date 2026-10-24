@@ -19,103 +19,103 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = FermenterBlock::class)
 class FermenterScreen(
-    handler: FermenterScreenHandler,
+    val handler: FermenterScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<FermenterScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 175
-        backgroundHeight = 184
+        imageWidth = 175
+        imageHeight = 184
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, 175, 184, 256, 256)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 175, 184, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val inputBiomassMb = handler.sync.inputBiomass.coerceAtLeast(0)
-        val outputBiogasMb = handler.sync.outputBiogas.coerceAtLeast(0)
-        val bufferedHeat = handler.sync.bufferedHeat.coerceAtLeast(0)
-        val progress = handler.sync.progress.coerceIn(0, FermenterSync.PROCESS_INTERVAL_TICKS)
-        val isWorking = handler.sync.isWorking != 0
-        val fertilizerProgress = handler.sync.fertilizerProgress.coerceAtLeast(0)
+        val inputBiomassMb = menu.sync.inputBiomass.coerceAtLeast(0)
+        val outputBiogasMb = menu.sync.outputBiogas.coerceAtLeast(0)
+        val bufferedHeat = menu.sync.bufferedHeat.coerceAtLeast(0)
+        val progress = menu.sync.progress.coerceIn(0, FermenterSync.PROCESS_INTERVAL_TICKS)
+        val isWorking = menu.sync.isWorking != 0
+        val fertilizerProgress = menu.sync.fertilizerProgress.coerceAtLeast(0)
 
         // 标题居中于 y=6
-        context.drawText(textRenderer, title, x + (175 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title, leftPos + (175 - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
         // 升级提示图标 (3,3) 16×16
-        context.drawTexture(UPTIPS, x + 3, y + 3, 0f, 0f, 16, 16, 16, 16)
+        context.blit(UPTIPS, leftPos + 3, topPos + 3, 0f, 0f, 16, 16, 16, 16)
 
         // 生物质流体槽：区域 (37,48)-(85,78) = 48×30
-        val inputFluid = handler.sync.fluidTypeToFluid(handler.sync.inputFluidType)
+        val inputFluid = menu.sync.fluidTypeToFluid(menu.sync.inputFluidType)
         val inputSprite = getFluidSprite(inputFluid)
         val inputColor = if (inputFluid != null) FluidUtils.getFluidColor(inputFluid) else -1
-        drawFluidTank(context, x + 37, y + 48, 48, 30, inputBiomassMb, TANK_CAPACITY_DROPLETS, inputSprite, inputColor)
+        drawFluidTank(context, leftPos + 37, topPos + 48, 48, 30, inputBiomassMb, TANK_CAPACITY_DROPLETS, inputSprite, inputColor)
 
         // 工作进度纹理：(178,3)-(219,7) = 41×4，工作进行时自左向右绘制
         if (isWorking) {
             val progFrac = progress.toFloat() / FermenterSync.PROCESS_INTERVAL_TICKS
-            drawProgressH(context, x + 41, y + 40, 41, 4, 178f, 3f, progFrac)
+            drawProgressH(context, leftPos + 41, topPos + 40, 41, 4, 178f, 3f, progFrac)
         }
 
         // 热量条：区域 (107,58)-(111,99) = 4×41
         val heatFrac = (bufferedHeat.toFloat() / 40000f).coerceIn(0f, 1f)
-        drawHeatBar(context, x + 107, y + 58, heatFrac)
+        drawHeatBar(context, leftPos + 107, topPos + 58, heatFrac)
 
         // 生物燃料流体槽：区域 (128,25)-(140,72) = 12×47
-        val outputFluid = handler.sync.fluidTypeToFluid(handler.sync.outputFluidType)
+        val outputFluid = menu.sync.fluidTypeToFluid(menu.sync.outputFluidType)
         val outputSprite = getFluidSprite(outputFluid)
         val outputColor = if (outputFluid != null) FluidUtils.getFluidColor(outputFluid) else -1
-        drawFluidTank(context, x + 128, y + 25, 12, 47, outputBiogasMb, TANK_CAPACITY_DROPLETS, outputSprite, outputColor)
+        drawFluidTank(context, leftPos + 128, topPos + 25, 12, 47, outputBiogasMb, TANK_CAPACITY_DROPLETS, outputSprite, outputColor)
 
         // 容量标示覆盖层，有生物燃料时渲染
         if (outputBiogasMb > 0) {
-            context.drawTexture(TEXTURE, x + 129, y + 26, 180f, 10f, 12, 47, 256, 256)
+            context.blit(TEXTURE, leftPos + 129, topPos + 26, 180f, 10f, 12, 47, 256, 256)
         }
 
         // 肥料进度纹理：(178,80)-(219,88) = 41×8，自左向右
         val fertFrac = (fertilizerProgress.toFloat() / FermenterSync.FERTILIZER_PER_BIOMASS_BUCKET_DROPLETS).coerceIn(0f, 1f)
-        drawProgressH(context, x + 37, y + 87, 41, 8, 178f, 80f, fertFrac)
+        drawProgressH(context, leftPos + 37, topPos + 87, 41, 8, 178f, 80f, fertFrac)
 
         // 工具提示
-        val biomassX = x + 37; val biomassY = y + 48; val biomassW = 48; val biomassH = 30
-        val heatX = x + 107; val heatY = y + 58; val heatW = 4; val heatH = 41
-        val biofuelX = x + 128; val biofuelY = y + 25; val biofuelW = 12; val biofuelH = 47
+        val biomassX = leftPos + 37; val biomassY = topPos + 48; val biomassW = 48; val biomassH = 30
+        val heatX = leftPos + 107; val heatY = topPos + 58; val heatW = 4; val heatH = 41
+        val biofuelX = leftPos + 128; val biofuelY = topPos + 25; val biofuelW = 12; val biofuelH = 47
 
         if (mouseX in biomassX until (biomassX + biomassW) && mouseY in biomassY until (biomassY + biomassH)) {
             val lines = if (inputBiomassMb > 0) listOf(Component.literal("生物质"), Component.literal("${"%,d".format(inputBiomassMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_CAPACITY_MB)} mB"))
                         else listOf(Component.literal("空"))
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
         if (mouseX in heatX until (heatX + heatW) && mouseY in heatY until (heatY + heatH)) {
-            context.drawTooltip(textRenderer, Component.literal("热量: ${bufferedHeat} / 40000 HU"), mouseX, mouseY)
+            context.renderComponentTooltip(font, Component.literal("热量: ${bufferedHeat} / 40000 HU"), mouseX, mouseY)
         }
         if (mouseX in biofuelX until (biofuelX + biofuelW) && mouseY in biofuelY until (biofuelY + biofuelH)) {
             val lines = if (outputBiogasMb > 0) listOf(Component.literal("生物燃料"), Component.literal("${"%,d".format(outputBiogasMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_CAPACITY_MB)} mB"))
                         else listOf(Component.literal("空"))
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
-        if (mouseX in (x + 3) until (x + 19) && mouseY in (y + 3) until (y + 19)) {
+        if (mouseX in (leftPos + 3) until (leftPos + 19) && mouseY in (topPos + 3) until (topPos + 19)) {
             val upgradeTooltip = mutableListOf<Component>()
             upgradeTooltip.add(Component.translatable("gui.ic2_120.upgrade_slots"))
             for (id in SUPPORTED_UPGRADES) {
                 val item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("ic2_120", id))
                 upgradeTooltip.add(item.name)
             }
-            context.drawTooltip(textRenderer, upgradeTooltip, mouseX, mouseY)
+            context.renderComponentTooltip(font, upgradeTooltip, mouseX, mouseY)
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     private fun getFluidSprite(fluid: Fluid?): TextureAtlasSprite? {
         if (fluid == null) return null
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
-        return handler.getFluidSprites(null, null, fluid.defaultBlockState)?.getOrNull(0)
+        return handler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock())?.getOrNull(0)
     }
 
     /** 平铺流体纹理在槽内，自下而上 scissor 限制不超出区域，调用流体颜色渲染 */
@@ -135,7 +135,7 @@ class FermenterScreen(
                 val h = minOf(16, gy + tankH - sy)
                 for (sx in gx until (gx + tankW) step 16) {
                     val w = minOf(16, gx + tankW - sx)
-                    context.drawSprite(sx, sy, 0, w, h, sprite, r, g, b, 1f)
+                    context.blit(sx, sy, 0, w, h, sprite, r, g, b, 1f)
                 }
             }
         }
@@ -147,7 +147,7 @@ class FermenterScreen(
         val fillW = (frac.coerceIn(0f, 1f) * w).toInt()
         if (fillW <= 0) return
         context.enableScissor(gx, gy, gx + fillW, gy + h)
-        context.drawTexture(TEXTURE, gx, gy, u, v, w, h, 256, 256)
+        context.blit(TEXTURE, gx, gy, u, v, w, h, 256, 256)
         context.disableScissor()
     }
 
@@ -158,7 +158,7 @@ class FermenterScreen(
         val fillH = (frac.coerceIn(0f, 1f) * barH).toInt()
         if (fillH <= 0) return
         context.enableScissor(gx, gy + barH - fillH, gx + barW, gy + barH)
-        context.drawTexture(TEXTURE, gx, gy, 199f, 13f, barW, barH, 256, 256)
+        context.blit(TEXTURE, gx, gy, 199f, 13f, barW, barH, 256, 256)
         context.disableScissor()
     }
 

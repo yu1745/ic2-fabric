@@ -35,26 +35,26 @@ import net.minecraft.resources.ResourceLocation
  */
 @ModScreen(block = SteamKineticGeneratorBlock::class)
 class SteamKineticGeneratorScreen(
-    handler: SteamKineticGeneratorScreenHandler,
+    val handler: SteamKineticGeneratorScreenHandler,
     playerInventory: Inventory,
     title: McText
 ) : AbstractContainerScreen<SteamKineticGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176; backgroundHeight = 166
+        imageWidth = 176; imageHeight = 166
         titleX = 999
     }
 
     private val waterSprite: TextureAtlasSprite? by lazy {
-        val handler = FluidRenderHandlerRegistry.INSTANCE.getValue(luids.WATER) ?: return@lazy null
-        handler.getFluidSprites(null, null, Fluids.WATER.defaultBlockState)?.getOrNull(0)
+        val handler = FluidRenderHandlerRegistry.INSTANCE.get(luids.WATER) ?: return@lazy null
+        handler.getFluidSprites(null, null, Fluids.Fluids.WATER.defaultFluidState().createLegacyBlock())?.getOrNull(0)
     }
 
     // ==== 背景 — 先填充再纹理 ====
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         renderBackground(context)
-        val left = x; val top = y
-        val sync = handler.sync
+        val left = leftPos; val top = topPos
+        val sync = menu.sync
 
         // 蒸馏水罐填充 (TankGauge Plain at 75,21, 26×26) - fluid sprite + color rendering
         // distilledWaterAmount 现在是 droplets，容量为 1 BUCKET
@@ -75,7 +75,7 @@ class SteamKineticGeneratorScreen(
                     val tileH = minOf(16, ty + th - sy)
                     for (sx in tx until (tx + tw) step 16) {
                         val tileW = minOf(16, tx + tw - sx)
-                        context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                        context.blit(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
                     }
                 }
             }
@@ -83,11 +83,11 @@ class SteamKineticGeneratorScreen(
         }
 
         // 纹理
-        context.drawTexture(TEXTURE, left, top, 0f, 0f, backgroundWidth, backgroundHeight, 256, 256)
+        context.blit(TEXTURE, left, top, 0f, 0f, imageWidth, imageHeight, 256, 256)
 
         // 警告图标
         val iconU = 176; val iconV = 0; val iconW = 30; val iconH = 26
-        if (sync.waterBlocked != 0) context.drawTexture(TEXTURE, left + 110, top + 20, iconU.toFloat(), iconV.toFloat(), iconW, iconH, 256, 256)
+        if (sync.waterBlocked != 0) context.blit(TEXTURE, left + 110, top + 20, iconU.toFloat(), iconV.toFloat(), iconW, iconH, 256, 256)
 
         // 玩家背包槽位边框
         GuiBackground.drawPlayerInventorySlotBorders(context, left, top, PLAYER_INV_Y, HOTBAR_Y, SLOT_SIZE)
@@ -95,8 +95,8 @@ class SteamKineticGeneratorScreen(
 
     // ==== 前景 ====
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
-        val left = x; val top = y
-        val sync = handler.sync
+        val left = leftPos; val top = topPos
+        val sync = menu.sync
         val hasTurbine = sync.hasTurbine != 0
         val waterBlocked = sync.waterBlocked != 0
         val kuOutput = sync.kuOutput.coerceAtLeast(0)
@@ -115,18 +115,18 @@ class SteamKineticGeneratorScreen(
         drawCentered(context, t("gui.ic2_120.kinetic_output", kuOutput), left + 8, top + 68, 160, 13, 0xFF20EE7E.toInt())
 
         // uptips 纹理 (4,4)
-        context.drawTexture(UPTIPS_TEXTURE, left + 4, top + 4, 0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE)
+        context.blit(UPTIPS_TEXTURE, left + 4, top + 4, 0f, 0f, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE, UPTIPS_SIZE)
 
         // 物品渲染（涡轮 + 背包 + hotbar）
         super.render(context, mouseX, mouseY, delta)
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         // uptips 悬停提示
         val relX = mouseX - left
         val relY = mouseY - top
         if (relX in 4 until 4 + UPTIPS_SIZE && relY in 4 until 4 + UPTIPS_SIZE) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 listOf(
                     McText.translatable("gui.ic2_120.steam_kinetic_generator.uptips"),
                     McText.literal("§7").append(McText.translatable("item.ic2_120.pulling_upgrade")),
@@ -139,8 +139,8 @@ class SteamKineticGeneratorScreen(
     }
 
     private fun drawCentered(ctx: GuiGraphics, text: String, ax: Int, ay: Int, aw: Int, ah: Int, color: Int) {
-        val tw = textRenderer.getWidth(text)
-        ctx.drawText(textRenderer, text, ax + (aw - tw) / 2, ay + (ah - 8) / 2, color, true)
+        val tw = font.width(text)
+        ctx.drawString(font, text, ax + (aw - tw) / 2, ay + (ah - 8) / 2, color, true)
     }
 
     companion object {

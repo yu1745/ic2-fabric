@@ -60,7 +60,7 @@ object ProgressBar {
                 context.fill(x, y, x + filledW, y + height, solidColor)
             }
         }
-        context.drawBorder(x, y, width, height, BORDER_COLOR)
+        context.renderOutline(x, y, width, height, BORDER_COLOR)
     }
 
     /** 岩浆条纯色（橙红） */
@@ -123,7 +123,7 @@ object ProgressBar {
         }
 
         // 绘制边框
-        context.drawBorder(x, y, width, height, BORDER_COLOR)
+        context.renderOutline(x, y, width, height, BORDER_COLOR)
     }
 
     /**
@@ -156,7 +156,7 @@ object ProgressBar {
                 context.fill(x + i, y, x + i + 1, y + height, color)
             }
         }
-        context.drawBorder(x, y, width, height, BORDER_COLOR)
+        context.renderOutline(x, y, width, height, BORDER_COLOR)
     }
 
     /**

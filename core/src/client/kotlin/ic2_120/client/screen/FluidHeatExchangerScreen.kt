@@ -17,25 +17,25 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = FluidHeatExchangerBlock::class)
 class FluidHeatExchangerScreen(
-    handler: FluidHeatExchangerScreenHandler, playerInventory: Inventory, title: McText
+    val handler: FluidHeatExchangerScreenHandler, playerInventory: Inventory, title: McText
 ) : AbstractContainerScreen<FluidHeatExchangerScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 179
-        backgroundHeight = 204
+        imageWidth = 179
+        imageHeight = 204
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
-        val sync = handler.sync
+        val left = leftPos
+        val top = topPos
+        val sync = menu.sync
 
         val inputMb = sync.inputFluid.coerceAtLeast(0)
         val outputMb = sync.outputFluid.coerceAtLeast(0)
@@ -46,7 +46,7 @@ class FluidHeatExchangerScreen(
         val outputRate = sync.getSyncedOutputHeat()
 
         // 标题居中
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
         // 输入流体槽 (19,47)-(31,91) = 12×44
         val inputFluid = sync.fluidTypeToFluid(sync.inputFluidType)
@@ -62,22 +62,22 @@ class FluidHeatExchangerScreen(
 
         // 文本区域 (18,29)-(159,40) — 显示产热速率和输出速率，居中，淡蓝色，7px
         val heatText = t("gui.ic2_120.fluid_heat_exchanger.heat_line", generatedRate, outputRate)
-        val textScale = 7f / textRenderer.fontHeight
-        val scaledW = (textRenderer.getWidth(heatText) * textScale).toInt()
+        val textScale = 7f / font.lineHeight
+        val scaledW = (font.width(heatText) * textScale).toInt()
         val textAreaW = 159 - 18
         val textAreaY = top + 29
         val textAreaCY = textAreaY + (40 - 29) / 2
         val scaledTextX = left + 18 + (textAreaW - scaledW) / 2
-        context.matrices.push()
-        context.matrices.translate(scaledTextX.toDouble(), textAreaCY - 3.5, 0.0)
-        context.matrices.scale(textScale, textScale, 1f)
-        context.drawText(textRenderer, heatText, 0, 0, 0xFF88CCFF.toInt(), false)
-        context.matrices.pop()
+        context.pose().pushPose()
+        context.pose().translate(scaledTextX.toDouble(), textAreaCY - 3.5, 0.0)
+        context.pose().scale(textScale, textScale, 1f)
+        context.drawString(font, heatText, 0, 0, 0xFF88CCFF.toInt(), false)
+        context.pose().popPose()
 
         // uptips 纹理 (4,4)
-        context.drawTexture(UPTIPS_TEXTURE, left + 4, top + 4, 0f, 0f, 16, 16, 16, 16)
+        context.blit(UPTIPS_TEXTURE, left + 4, top + 4, 0f, 0f, 16, 16, 16, 16)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         // 悬停提示
         val relX = mouseX - left
@@ -85,8 +85,8 @@ class FluidHeatExchangerScreen(
 
         // uptips 悬停
         if (relX in 4 until 20 && relY in 4 until 20) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 listOf(
                     McText.translatable("gui.ic2_120.fluid_heat_exchanger.uptips"),
                     McText.literal("§7").append(McText.translatable("item.ic2_120.pulling_upgrade")),
@@ -101,21 +101,21 @@ class FluidHeatExchangerScreen(
         // 输入流体槽悬停
         if (relX in 19 until 31 && relY in 47 until 91) {
             val lines = if (inputMb > 0 && inputFluid != null) {
-                listOf(inputFluid.defaultBlockState.blockState.block.name, McText.literal("${"%,d".format(inputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
+                listOf(inputFluid.defaultBlockState().blockState.block.name, McText.literal("${"%,d".format(inputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(McText.literal("空"))
             }
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
 
         // 输出流体槽悬停
         if (relX in 145 until 157 && relY in 47 until 91) {
             val lines = if (outputMb > 0 && outputFluid != null) {
-                listOf(outputFluid.defaultBlockState.blockState.block.name, McText.literal("${"%,d".format(outputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
+                listOf(outputFluid.defaultFluidState().createLegacyBlock().blockState.block.name, McText.literal("${"%,d".format(outputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(McText.literal("空"))
             }
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
     }
 
@@ -125,7 +125,7 @@ class FluidHeatExchangerScreen(
         if (fillH <= 0) return
 
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
-        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultBlockState) ?: return
+        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()) ?: return
         val sprite = sprites[0]
 
         val color = FluidUtils.getFluidColor(fluid)
@@ -142,7 +142,7 @@ class FluidHeatExchangerScreen(
             val tileH = minOf(16, gy + h - sy)
             for (sx in gx until (gx + w) step 16) {
                 val tileW = minOf(16, gx + w - sx)
-                context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                context.blit(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
             }
         }
 

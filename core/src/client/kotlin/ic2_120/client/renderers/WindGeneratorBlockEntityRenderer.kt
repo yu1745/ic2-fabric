@@ -48,17 +48,17 @@ class WindGeneratorBlockEntityRenderer(
         val speed = if (generating) BASE_SPEED_DEG_PER_TICK + outputEuPerTick * SPEED_PER_EU else 0.0f
         val angle = if (speed > 0.0f) ((world.time + tickDelta) * speed) % 360.0f else 0.0f
 
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(0.5, 0.5, 0.5)
-        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(yawFromFacing(facing)))
+        matrices.mulPose(Axis.YP.rotationDegrees(yawFromFacing(facing)))
         matrices.translate(0.0, 0.0, -0.505)
-        matrices.multiply(Axis.POSITIVE_Z.rotationDegrees(angle))
+        matrices.mulPose(Axis.ZP.rotationDegrees(angle))
 
         val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(WHITE_TEXTURE))
 
         repeat(4) { i ->
-            matrices.push()
-            matrices.multiply(Axis.POSITIVE_Z.rotationDegrees((i * 90).toFloat()))
+            matrices.pushPose()
+            matrices.mulPose(Axis.ZP.rotationDegrees((i * 90).toFloat()))
             drawCuboid(
                 matrices,
                 vc,
@@ -68,7 +68,7 @@ class WindGeneratorBlockEntityRenderer(
                 minY = 0.06f, maxY = 0.38f,
                 minZ = -0.01f, maxZ = 0.01f
             )
-            matrices.pop()
+            matrices.popPose()
         }
 
         drawCuboid(
@@ -81,7 +81,7 @@ class WindGeneratorBlockEntityRenderer(
             minZ = -0.02f, maxZ = 0.02f
         )
 
-        matrices.pop()
+        matrices.popPose()
     }
 
     private fun yawFromFacing(facing: Direction): Float =
@@ -105,8 +105,8 @@ class WindGeneratorBlockEntityRenderer(
         minZ: Float,
         maxZ: Float
     ) {
-        val entry = matrices.peek()
-        val pos = entry.positionMatrix
+        val entry = matrices.last()
+        val pos = entry.pose()
 
         quad(vc, pos, entry, light, overlay,
             minX, minY, maxZ, maxX, minY, maxZ, maxX, maxY, maxZ, minX, maxY, maxZ,
@@ -137,7 +137,7 @@ class WindGeneratorBlockEntityRenderer(
     private fun quad(
         vc: VertexConsumer,
         pos: Matrix4f,
-        entry: PoseStack.Entry,
+        entry: PoseStack.Pose,
         light: Int,
         overlay: Int,
         x1: Float, y1: Float, z1: Float,
@@ -155,7 +155,7 @@ class WindGeneratorBlockEntityRenderer(
     private fun vertex(
         vc: VertexConsumer,
         pos: Matrix4f,
-        entry: PoseStack.Entry,
+        entry: PoseStack.Pose,
         x: Float,
         y: Float,
         z: Float,
@@ -167,8 +167,8 @@ class WindGeneratorBlockEntityRenderer(
     ) {
         vc.vertex(pos, x, y, z)
             .color(0, 0, 0, 255)
-            .texture(0f, 0f)
-            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV)
+            .uv(0f, 0f)
+            .overlay(overlay.takeUnless { it == 0 } ?: OverlayTexture.NO_OVERLAY)
             .light(light)
             .normal(entry, nx, ny, nz)
     }

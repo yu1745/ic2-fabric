@@ -41,7 +41,7 @@ object FluidUtils {
      */
     private fun sampleColorFromFluidTexture(fluid: Fluid): Int {
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return -1
-        val sprites = handler.getFluidSprites(null, null, fluid.defaultBlockState)
+        val sprites = handler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock())
         if (sprites.isEmpty()) return -1
 
         val stillSprite = sprites[0]

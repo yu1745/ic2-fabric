@@ -11,7 +11,7 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handlers = ["trade_o_mat"])
 class TradeOMatScreen(
-    handler: TradeOMatScreenHandler,
+    val handler: TradeOMatScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<TradeOMatScreenHandler>(handler, playerInventory, title) {
@@ -19,23 +19,23 @@ class TradeOMatScreen(
     private val isOwner = handler.isOwner
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(
+        context.blit(
             if (isOwner) TEXTURE_OPEN else TEXTURE_CLOSED,
-            x, y, 0f, 0f, backgroundWidth, backgroundHeight, 256, 256
+            leftPos, topPos, 0f, 0f, imageWidth, imageHeight, 256, 256
         )
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
-        context.drawText(textRenderer, title,
-            x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        context.drawString(font, title,
+            leftPos + (imageWidth - font.width(title)) / 2, topPos + 6, 0x404040, false)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     companion object {

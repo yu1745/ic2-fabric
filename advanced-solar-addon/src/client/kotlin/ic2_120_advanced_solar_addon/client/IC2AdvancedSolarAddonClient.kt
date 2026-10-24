@@ -49,7 +49,7 @@ object IC2AdvancedSolarAddonClient : ClientModInitializer {
         val mtBlock = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "molecular_transformer"))
         val mtItemEntity = MolecularTransformerBlockEntity(
             BlockPos.ORIGIN,
-            mtBlock.defaultBlockState.setValue(MolecularTransformerBlock.ACTIVE, false)
+            mtBlock.defaultBlockState().setValue(MolecularTransformerBlock.ACTIVE, false)
         )
         BuiltinItemRendererRegistry.INSTANCE.register(mtBlock.asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
             Minecraft.getInstance().blockEntityRenderDispatcher.renderEntity(
@@ -64,7 +64,7 @@ object IC2AdvancedSolarAddonClient : ClientModInitializer {
         // 注册配置同步接收（分包）
         ClientPlayNetworking.registerGlobalReceiver(IC2AdvancedSolarAddon.id("config_sync")) { client, _, buf, _ ->
             val packet = ConfigSyncPacket.read(buf)
-            client.execute {
+            minecraft.execute {
                 configReceiver.accept(packet.totalChunks, packet.chunkIndex, packet.chunkData)
             }
         }

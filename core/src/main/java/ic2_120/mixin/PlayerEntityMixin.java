@@ -66,11 +66,11 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
     public void ic2$activateSuperJumpProtection(ItemStack boots) {
         Player player = (Player) (Object) this;
         this.ic2$superJumpProtectionActive = true;
-        this.ic2$superJumpLeftGround = !player.isOnGround();
+        this.ic2$superJumpLeftGround = !player.onGround();
         this.ic2$superJumpGroundedSinceAge = -1;
-        this.ic2$superJumpProtectionStartAge = player.age;
+        this.ic2$superJumpProtectionStartAge = player.tickCount;
         this.ic2$superJumpProtectionBoots = boots;
-        this.ic2$superJumpProtectionWorld = player.getWorld();
+        this.ic2$superJumpProtectionWorld = player.level();
     }
 
     @Unique
@@ -97,30 +97,30 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
         }
 
         Player player = (Player) (Object) this;
-        int protectionAge = player.age - this.ic2$superJumpProtectionStartAge;
+        int protectionAge = player.tickCount - this.ic2$superJumpProtectionStartAge;
         if (protectionAge < 0
                 || protectionAge > IC2_SUPER_JUMP_PROTECTION_MAX_TICKS
                 || !player.isAlive()
-                || player.getWorld() != this.ic2$superJumpProtectionWorld
+                || player.level() != this.ic2$superJumpProtectionWorld
                 || !this.ic2$isProtectedBootsStillEquipped(player)
-                || player.isTouchingWater()
-                || player.isClimbing()
-                || player.hasVehicle()
+                || player.isInWater()
+                || player.onClimbable()
+                || player.isVehicle()
                 || player.getAbilities().flying
                 || player.isFallFlying()
-                || player.hasStatusEffect(MobEffects.LEVITATION)) {
+                || player.hasEffect(MobEffects.LEVITATION)) {
             this.ic2$clearSuperJumpProtection();
             return;
         }
 
-        if (!player.isOnGround()) {
+        if (!player.onGround()) {
             this.ic2$superJumpLeftGround = true;
             this.ic2$superJumpGroundedSinceAge = -1;
         } else if (this.ic2$superJumpLeftGround) {
             if (this.ic2$superJumpGroundedSinceAge < 0) {
                 // 服务端可能先在玩家 tick 中观察到 onGround，再处理触发摔落伤害的移动包。
-                this.ic2$superJumpGroundedSinceAge = player.age;
-            } else if (player.age - this.ic2$superJumpGroundedSinceAge >= 2) {
+                this.ic2$superJumpGroundedSinceAge = player.tickCount;
+            } else if (player.tickCount - this.ic2$superJumpGroundedSinceAge >= 2) {
                 // 两 tick 内仍没有 handleFallDamage，视为无伤落地并结束本次保护。
                 this.ic2$clearSuperJumpProtection();
             }
@@ -135,7 +135,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
             CallbackInfoReturnable<Boolean> cir
     ) {
         Player player = (Player) (Object) this;
-        if (player.getWorld().isClient()) {
+        if (player.level().isClientSide()) {
             return;
         }
 
@@ -155,7 +155,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
         }
 
         boolean shouldProtect = this.ic2$isProtectedBootsStillEquipped(player)
-                && player.getWorld() == this.ic2$superJumpProtectionWorld;
+                && player.level() == this.ic2$superJumpProtectionWorld;
         this.ic2$clearSuperJumpProtection();
 
         if (shouldProtect) {
@@ -166,7 +166,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
     /**
      * 纳米剑对穿戴纳米套的玩家：替换为无视原版护甲的伤害类型；量子护甲时不替换（见 {@link NanoSaberDamageHelper}）。
      */
-    @ModifyVariable(method = "damage", at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    @ModifyVariable(method = "hurt", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private DamageSource ic2ReplaceDamageSourceForNanoSaber(DamageSource source) {
         Player player = (Player) (Object) this;
         if (NanoSaberDamageHelper.shouldReplaceWithPierce(player, source)) {
@@ -175,7 +175,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
         return source;
     }
 
-    @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "hurt", at = @At("HEAD"), cancellable = true)
     private void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         Player player = (Player) (Object) this;
 
@@ -183,7 +183,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
             return;
         }
 
-        if (source.getName().equals("outOfWorld")) {
+        if (source.getMsgId().equals("outOfWorld")) {
             return;
         }
 
@@ -279,7 +279,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
 
         IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE.set(true);
         try {
-            cir.setReturnValue(player.damage(source, reducedDamage));
+            cir.setReturnValue(player.hurt(source, reducedDamage));
         } finally {
             IC2_ELECTRIC_ARMOR_DAMAGE_RECURSE.set(false);
         }
@@ -290,22 +290,22 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
      * 复刻原版 LivingEntity.damage 在伤害已被护甲吸收为 0 时仍保留的受击反馈。
      */
     private static void applyVanillaHitReaction(Player player, DamageSource source) {
-        player.timeUntilRegen = 20;
-        player.maxHurtTime = 10;
-        player.hurtTime = player.maxHurtTime;
+        player.invulnerableTime = 20;
+        player.hurtDuration = 10;
+        player.hurtTime = player.hurtDuration;
 
-        if (source.getAttacker() != null && !source.isIn(DamageTypeTags.IS_EXPLOSION)) {
-            double x = source.getAttacker().getX() - player.getX();
-            double z = source.getAttacker().getZ() - player.getZ();
+        if (source.getEntity() != null && !source.is(DamageTypeTags.IS_EXPLOSION)) {
+            double x = source.getEntity().getX() - player.getX();
+            double z = source.getEntity().getZ() - player.getZ();
             while (x * x + z * z < 1.0E-4) {
                 x = (Math.random() - Math.random()) * 0.01;
                 z = (Math.random() - Math.random()) * 0.01;
             }
-            player.takeKnockback(0.4, x, z);
+            player.knockback(0.4, x, z);
         }
 
-        if (!player.getWorld().isClient) {
-            player.getWorld().sendEntityDamage(player, source);
+        if (!player.level().isClientSide) {
+            player.level().broadcastDamageEvent(player, source);
         }
     }
 }

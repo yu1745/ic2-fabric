@@ -640,7 +640,7 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
     ): BlockState {
         if (state.getValue(ACTIVE)) {
             if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-                world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
+                world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
             }
             return state.setValue(propertyFor(direction), false)
         }

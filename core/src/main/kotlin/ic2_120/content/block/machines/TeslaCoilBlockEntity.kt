@@ -178,7 +178,7 @@ class TeslaCoilBlockEntity(
     private fun damageArmorDurability(world: Level, entity: LivingEntity, min: Int, max: Int) {
         val amount = if (min >= max) min else world.random.nextIntBetweenInclusive(min, max)
         for (slot in EquipmentSlot.entries) {
-            if (slot.type != EquipmentSlot.Type.ARMOR) continue
+            if (!slot.isArmor()) continue
             val stack = entity.getItemBySlot(slot)
             if (!stack.isEmpty && stack.item is ArmorItem) {
                 stack.hurtAndBreak(amount, entity, slot)

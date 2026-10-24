@@ -424,7 +424,7 @@ class PumpBlockEntity(
             tx.commit()
         }
         val targetState = world.getBlockState(targetPos)
-        if (targetState.contains(BlockStateProperties.WATERLOGGED) && targetState.getValue(BlockStateProperties.WATERLOGGED)) {
+        if (targetState.hasProperty(BlockStateProperties.WATERLOGGED) && targetState.getValue(BlockStateProperties.WATERLOGGED)) {
             // 抽取含水方块中的水时保留方块本体，只移除含水状态。
             world.setBlock(targetPos, targetState.setValue(BlockStateProperties.WATERLOGGED, false), 3)
         } else {

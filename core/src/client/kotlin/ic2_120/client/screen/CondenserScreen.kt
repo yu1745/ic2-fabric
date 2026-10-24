@@ -29,14 +29,14 @@ import net.minecraft.resources.ResourceLocation
  */
 @ModScreen(block = CondenserBlock::class)
 class CondenserScreen(
-    handler: CondenserScreenHandler,
+    val handler: CondenserScreenHandler,
     playerInventory: Inventory,
     title: McText
 ) : AbstractContainerScreen<CondenserScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 184
+        imageWidth = 176
+        imageHeight = 184
     }
 
     // ==== 背景纹理 + 标题 — 对齐 ic2_origin drawBackgroundAndTitle ====
@@ -44,12 +44,12 @@ class CondenserScreen(
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         renderBackground(context)
         // 背景: guicondenser.png (0,0) 到 (176,184)
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, 256, 256)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, 256, 256)
         // 标题: 居中, 颜色 0x404040 (4210752) — 与 Ic2Gui.drawXCenteredString 一致
-        context.drawText(
-            textRenderer, title,
-            x + (backgroundWidth - textRenderer.getWidth(title)) / 2,
-            y + 6,
+        context.drawString(
+            font, title,
+            leftPos + (imageWidth - font.width(title)) / 2,
+            topPos + 6,
             0x404040, false
         )
     }
@@ -59,12 +59,12 @@ class CondenserScreen(
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val steamAmount = handler.sync.steamAmount.coerceAtLeast(0)
-        val waterAmount = handler.sync.waterAmount.coerceAtLeast(0)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+        val steamAmount = menu.sync.steamAmount.coerceAtLeast(0)
+        val waterAmount = menu.sync.waterAmount.coerceAtLeast(0)
 
         // ==== 电量条 (178,2)-(192,15) = 14×13，自下而上渲染至 (9,25) ====
         val energyFrac = if (CondenserSync.ENERGY_CAPACITY > 0) energy.toFloat() / CondenserSync.ENERGY_CAPACITY else 0f
@@ -76,7 +76,7 @@ class CondenserScreen(
                 left + ENERGY_BAR_X + ENERGY_BAR_W,
                 top + ENERGY_BAR_Y + ENERGY_BAR_H
             )
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + ENERGY_BAR_X, top + ENERGY_BAR_Y,
                 ENERGY_BAR_U.toFloat(), ENERGY_BAR_V.toFloat(),
                 ENERGY_BAR_W, ENERGY_BAR_H,
@@ -94,17 +94,17 @@ class CondenserScreen(
         drawFluidTank(context, left + 46, top + 73, 84, 15, waterFrac, ModFluids.DISTILLED_WATER_STILL)
 
         // ==== 进度条 ====
-        val progFrac = if (CondenserSync.PROGRESS_MAX > 0) handler.sync.progress.toFloat() / CondenserSync.PROGRESS_MAX else 0f
+        val progFrac = if (CondenserSync.PROGRESS_MAX > 0) menu.sync.progress.toFloat() / CondenserSync.PROGRESS_MAX else 0f
         val progW = (progFrac.coerceIn(0f, 1f) * PROGRESS_WIDTH).toInt()
         if (progW > 0) {
-            context.drawTexture(TEXTURE, left + 47, top + 63, 1f, 185f, progW, 7, 256, 256)
+            context.blit(TEXTURE, left + 47, top + 63, 1f, 185f, progW, 7, 256, 256)
         }
 
         // ==== 左侧提示：散热口耗电但 EU 不足 ====
-        if (handler.sync.ventCount > 0 && handler.sync.coolingRate <= 0) {
+        if (menu.sync.ventCount > 0 && menu.sync.coolingRate <= 0) {
             val warning = McText.translatable("gui.ic2_120.condenser.no_power_warning")
-            context.drawText(textRenderer, warning,
-                left - textRenderer.getWidth(warning) - 4,
+            context.drawString(font, warning,
+                left - font.width(warning) - 4,
                 top + 28, 0xFF5555, false)
         }
 
@@ -112,26 +112,26 @@ class CondenserScreen(
         val mx = mouseX - left
         val my = mouseY - top
         var handled = false
-        val hoveredSlot = handler.slots.firstOrNull { s ->
-            mx >= s.x - 1 && mx < s.x + 17 && my >= s.y - 1 && my < s.y + 17
+        val hoveredSlot = menu.slots.firstOrNull { s ->
+            mx >= s.leftPos - 1 && mx < s.leftPos + 17 && my >= s.topPos - 1 && my < s.topPos + 17
         }
         if (hoveredSlot != null && !hoveredSlot .hasItem()) {
             for ((sx, sy, key) in SLOT_TOOLTIPS) {
-                if (hoveredSlot.x == sx && hoveredSlot.y == sy) {
-                    context.drawTooltip(textRenderer, McText.translatable(key), mouseX, mouseY)
+                if (hoveredSlot.leftPos == sx && hoveredSlot.topPos == sy) {
+                    context.renderComponentTooltip(font, McText.translatable(key), mouseX, mouseY)
                     handled = true
                     break
                 }
             }
         }
-        if (!handled) drawMouseoverTooltip(context, mouseX, mouseY)
+        if (!handled) renderTooltip(context, mouseX, mouseY)
 
         // 电量条悬停
         if (mx in ENERGY_BAR_X until ENERGY_BAR_X + ENERGY_BAR_W &&
             my in ENERGY_BAR_Y until ENERGY_BAR_Y + ENERGY_BAR_H
         ) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 McText.literal("储能：$energy / ${CondenserSync.ENERGY_CAPACITY} EU"),
                 mouseX, mouseY
             )
@@ -139,18 +139,18 @@ class CondenserScreen(
 
         // 蒸汽槽悬停 (46,26)-(130,59)
         if (mx in 46 until 130 && my in 26 until 59) {
-            val name = ModFluids.STEAM_STILL.defaultBlockState.blockState.block.name
+            val name = ModFluids.STEAM_STILL.defaultFluidState().createLegacyBlock().blockState.block.name
             val lines = if (steamAmount > 0) listOf(name, McText.literal("${"%,d".format(steamAmount / DROPLETS_PER_MB)} / ${"%,d".format(STEAM_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
                         else listOf(McText.literal("空"))
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
 
         // 蒸馏水槽悬停 (46,73)-(130,88)
         if (mx in 46 until 130 && my in 73 until 88) {
-            val name = ModFluids.DISTILLED_WATER_STILL.defaultBlockState.blockState.block.name
+            val name = ModFluids.DISTILLED_WATER_STILL.defaultFluidState().createLegacyBlock().blockState.block.name
             val lines = if (waterAmount > 0) listOf(name, McText.literal("${"%,d".format(waterAmount / DROPLETS_PER_MB)} / ${"%,d".format(WATER_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
                         else listOf(McText.literal("空"))
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
     }
 
@@ -160,7 +160,7 @@ class CondenserScreen(
         if (fillH <= 0) return
 
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
-        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultBlockState) ?: return
+        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()) ?: return
         val sprite = sprites[0]
 
         val color = FluidUtils.getFluidColor(fluid)
@@ -177,7 +177,7 @@ class CondenserScreen(
             val tileH = minOf(16, gy + h - sy)
             for (sx in gx until (gx + w) step 16) {
                 val tileW = minOf(16, gx + w - sx)
-                context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                context.blit(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
             }
         }
 

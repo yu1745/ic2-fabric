@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handler = "splitter_cable")
 class SplitterCableScreen(
-    handler: SplitterCableScreenHandler,
+    val handler: SplitterCableScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<SplitterCableScreenHandler>(handler, playerInventory, title) {
@@ -21,35 +21,35 @@ class SplitterCableScreen(
     private lateinit var invertedButton: Button
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun init() {
         super.init()
         val client = client ?: return
 
-        addDrawableChild(Button.builder(Component.literal("-")) {
-            client.networkHandler?.sendPacket(
-                ServerboundContainerButtonClickPacket(handler.syncId, SplitterCableScreenHandler.BUTTON_THRESHOLD_MINUS)
+        addRenderableWidget(Button.builder(Component.literal("-")) {
+            minecraft.getConnection()?.send(
+                ServerboundContainerButtonClickPacket(menu.containerId, SplitterCableScreenHandler.BUTTON_THRESHOLD_MINUS)
             )
-        }.dimensions(x + 35, y + 19, 24, 20).build())
+        }.bounds(leftPos + 35, topPos + 19, 24, 20).build())
 
-        addDrawableChild(Button.builder(Component.literal("+")) {
-            client.networkHandler?.sendPacket(
-                ServerboundContainerButtonClickPacket(handler.syncId, SplitterCableScreenHandler.BUTTON_THRESHOLD_PLUS)
+        addRenderableWidget(Button.builder(Component.literal("+")) {
+            minecraft.getConnection()?.send(
+                ServerboundContainerButtonClickPacket(menu.containerId, SplitterCableScreenHandler.BUTTON_THRESHOLD_PLUS)
             )
-        }.dimensions(x + 117, y + 19, 24, 20).build())
+        }.bounds(leftPos + 117, topPos + 19, 24, 20).build())
 
-        invertedButton = addDrawableChild(Button.builder(invertedButtonText()) {
-            client.networkHandler?.sendPacket(
-                ServerboundContainerButtonClickPacket(handler.syncId, SplitterCableScreenHandler.BUTTON_TOGGLE_INVERTED)
+        invertedButton = addRenderableWidget(Button.builder(invertedButtonText()) {
+            minecraft.getConnection()?.send(
+                ServerboundContainerButtonClickPacket(menu.containerId, SplitterCableScreenHandler.BUTTON_TOGGLE_INVERTED)
             )
-        }.dimensions(x + 48, y + 47, 80, 20).build())
+        }.bounds(leftPos + 48, topPos + 47, 80, 20).build())
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
@@ -57,22 +57,22 @@ class SplitterCableScreen(
         if (::invertedButton.isInitialized) invertedButton.message = invertedButtonText()
         super.render(context, mouseX, mouseY, delta)
 
-        context.drawText(
-            textRenderer, title,
-            x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6,
+        context.drawString(
+            font, title,
+            leftPos + (imageWidth - font.width(title)) / 2, topPos + 6,
             0x404040, false
         )
 
-        val thresholdText = t("gui.ic2_120.splitter_cable.threshold", handler.threshold)
-        context.drawText(
-            textRenderer, thresholdText,
-            x + (backgroundWidth - textRenderer.getWidth(thresholdText)) / 2, y + 25,
+        val thresholdText = t("gui.ic2_120.splitter_cable.threshold", menu.threshold)
+        context.drawString(
+            font, thresholdText,
+            leftPos + (imageWidth - font.width(thresholdText)) / 2, topPos + 25,
             0x55FF55, false
         )
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
-    private fun invertedButtonText(): Component = if (handler.inverted) {
+    private fun invertedButtonText(): Component = if (menu.inverted) {
         Component.translatable("gui.ic2_120.splitter_cable.inverted.on")
     } else {
         Component.translatable("gui.ic2_120.splitter_cable.inverted.off")

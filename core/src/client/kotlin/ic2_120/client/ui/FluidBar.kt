@@ -82,7 +82,7 @@ class FluidBarNode(
             }
         }
 
-        ctx.drawContext.drawBorder(x, y, w, h, 0xFF888888.toInt())
+        ctx.drawContext.renderOutline(x, y, w, h, 0xFF888888.toInt())
     }
 
     private fun lerpArgb(a: Int, b: Int, t: Float): Int {

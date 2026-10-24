@@ -28,17 +28,17 @@ class NeutronFabricatorScreen(
 ) : AbstractContainerScreen<NeutronFabricatorScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
         // 隐藏父类 AbstractContainerScreen 默认绘制的容器 title（由本类 render 手动居中绘制，避免重复）
         titleX = -1000
         titleY = -1000
         // 玩家背包标题位置（贴图默认）
-        playerInventoryTitleY = backgroundHeight - 94
+        playerInventoryTitleY = imageHeight - 94
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, x, y, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
@@ -49,9 +49,9 @@ class NeutronFabricatorScreen(
         val top = y
 
         // 标题居中
-        context.drawText(
+        context.drawString(
             textRenderer, title,
-            left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6,
+            left + (imageWidth - textRenderer.getWidth(title)) / 2, top + 6,
             0x404040, false
         )
 
@@ -60,7 +60,7 @@ class NeutronFabricatorScreen(
 
         // 流体槽容量标示纹理（物质制造机贴图的左侧液面刻度），有流体时叠加
         if (handler.sync.fluidAmount > 0) {
-            context.drawTexture(
+            context.blit(
                 TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
                 TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
                 TANK_OVERLAY_W, TANK_OVERLAY_H, TEX_SIZE, TEX_SIZE
@@ -69,7 +69,7 @@ class NeutronFabricatorScreen(
 
         // 能量进度文本（百分比）
         val pct = handler.sync.progress.coerceIn(0, 100)
-        context.drawText(
+        context.drawString(
             textRenderer,
             Component.translatable("gui.ic2_120.matter_generator.progress_pct", pct),
             left + 12, top + 43, 0x000000, false
@@ -91,10 +91,10 @@ class NeutronFabricatorScreen(
             } else {
                 listOf(Component.literal("空"))
             }
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(textRenderer, lines, mouseX, mouseY)
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     /** 绘制中子流体槽内的流体（按填充比例着色平铺） */
@@ -118,7 +118,7 @@ class NeutronFabricatorScreen(
             val tileH = minOf(16, sy + TANK_H - cy)
             for (cx in sx until (sx + TANK_W) step 16) {
                 val tileW = minOf(16, sx + TANK_W - cx)
-                context.drawSprite(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                context.drawSpriteM(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
             }
         }
         context.disableScissor()
@@ -145,7 +145,7 @@ class NeutronFabricatorScreen(
 
         private val neutronSprite by lazy {
             FluidRenderHandlerRegistry.INSTANCE.getValue(NeutronFluid.NEUTRON_STILL)
-                ?.getFluidSprites(null, null, NeutronFluid.NEUTRON_STILL.defaultBlockState)?.getOrNull(0)
+                ?.getFluidSprites(null, null, NeutronFluid.NEUTRON_STILL.defaultBlockState())?.getOrNull(0)
         }
     }
 }

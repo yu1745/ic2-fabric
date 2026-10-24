@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = EnergyOMatBlock::class)
 class EnergyOMatScreen(
-    handler: EnergyOMatScreenHandler,
+    val handler: EnergyOMatScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<EnergyOMatScreenHandler>(handler, playerInventory, title) {
@@ -22,8 +22,8 @@ class EnergyOMatScreen(
     private val buttons = mutableListOf<Button>()
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun init() {
@@ -45,18 +45,18 @@ class EnergyOMatScreen(
             val row = buttons.size / 3
             val col = buttons.size % 3
             val btn = Button.builder(Component.literal(label)) {
-                client?.player?.networkHandler?.sendPacket(
-                    ServerboundContainerButtonClickPacket(handler.syncId, buttonId)
+                minecraft.connection?.send(
+                    ServerboundContainerButtonClickPacket(menu.containerId, buttonId)
                 )
-            }.dimensions(x + 88 + col * 30, y + 16 + row * 20, 28, 18).build()
-            buttons.add(addDrawableChild(btn))
+            }.bounds(leftPos + 88 + col * 30, topPos + 16 + row * 20, 28, 18).build()
+            buttons.add(addRenderableWidget(btn))
         }
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(
+        context.blit(
             if (isOwner) TEXTURE_OPEN else TEXTURE_CLOSED,
-            x, y, 0f, 0f, backgroundWidth, backgroundHeight, 256, 256
+            leftPos, topPos, 0f, 0f, imageWidth, imageHeight, 256, 256
         )
     }
 
@@ -64,27 +64,27 @@ class EnergyOMatScreen(
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        context.drawText(textRenderer, title,
-            x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title,
+            leftPos + (imageWidth - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
         if (isOwner) {
             // EU 单价
-            val offerText = Component.literal("${handler.sync.euOffer} EU / item")
-            context.drawText(textRenderer, offerText,
-                x + 88, y + 60, 0x404040, false)
+            val offerText = Component.literal("${menu.sync.euOffer} EU / item")
+            context.drawString(font, offerText,
+                leftPos + 88, topPos + 60, 0x404040, false)
 
             // 已支付额度
-            val paidText = Component.literal("Paid: ${handler.sync.paidFor} EU")
-            context.drawText(textRenderer, paidText,
-                x + 88, y + 72, 0x404040, false)
+            val paidText = Component.literal("Paid: ${menu.sync.paidFor} EU")
+            context.drawString(font, paidText,
+                leftPos + 88, topPos + 72, 0x404040, false)
 
             // 缓冲能量
-            val bufText = Component.literal("Buffer: ${handler.sync.energy} EU")
-            context.drawText(textRenderer, bufText,
-                x + 88, y + 84, 0x404040, false)
+            val bufText = Component.literal("Buffer: ${menu.sync.energy} EU")
+            context.drawString(font, bufText,
+                leftPos + 88, topPos + 84, 0x404040, false)
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     companion object {

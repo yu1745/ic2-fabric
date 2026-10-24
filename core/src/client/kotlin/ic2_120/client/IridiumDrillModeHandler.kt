@@ -43,9 +43,6 @@ object IridiumDrillModeHandler {
     private fun sendToggleOnceThisTick(playerAge: Int) {
         if (playerAge == lastToggleSentOnPlayerAge) return
         lastToggleSentOnPlayerAge = playerAge
-        ClientPlayNetworking.send(
-            NetworkManager.TOGGLE_IRIDIUM_SILK_TOUCH_PACKET,
-            FriendlyByteBuf(Unpooled.buffer())
-        )
+        ClientPlayNetworking.send(ToggleIridiumSilkTouchPayload)
     }
 }

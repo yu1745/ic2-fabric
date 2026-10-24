@@ -79,7 +79,7 @@ class ModBlockTagProvider(
         "iridium_tank",
     )
 
-    override fun configure(registries: HolderLookup.Provider) {
+    override fun addTags(provider: HolderLookup.Provider) {
         val pickaxeBuilder = getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE).setReplace(false)
         val ironToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL).setReplace(false)
         val stoneToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_STONE_TOOL).setReplace(false)

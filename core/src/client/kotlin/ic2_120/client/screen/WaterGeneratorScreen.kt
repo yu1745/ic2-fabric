@@ -18,36 +18,36 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = WaterGeneratorBlock::class)
 class WaterGeneratorScreen(
-    handler: WaterGeneratorScreenHandler,
+    val handler: WaterGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<WaterGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = GUI_SIZE.width
-        backgroundHeight = GUI_SIZE.height
+        imageWidth = GUI_SIZE.width
+        imageHeight = GUI_SIZE.height
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, BG_W, BG_H, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
-        val waterDroplets = handler.sync.waterAmount.coerceAtLeast(0)
+        val waterDroplets = menu.sync.waterAmount.coerceAtLeast(0)
 
         // 流体纹理 (82,22)-(94,69) = 12×47，自下而上
         if (waterDroplets > 0) run {
             val fluid = Fluids.WATER
             val fluidHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return@run
-            val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultBlockState).getOrNull(0) ?: return@run
+            val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock()).getOrNull(0) ?: return@run
             val color = FluidUtils.getFluidColor(fluid)
             if (color == -1) return@run
             val r = ((color shr 16) and 0xFF) / 255f
@@ -64,28 +64,28 @@ class WaterGeneratorScreen(
                 val tileH = minOf(16, sy + TANK_H - cy)
                 for (cx in sx until (sx + TANK_W) step 16) {
                     val tileW = minOf(16, sx + TANK_W - cx)
-                    context.drawSprite(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                    context.blit(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
                 }
             }
             context.disableScissor()
 
             // 容量标示 (178,21)-(190,69) = 12×48，有流体时渲染在流体之上
-            context.drawTexture(TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
+            context.blit(TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
                 TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(),
                 TANK_OVERLAY_W, TANK_OVERLAY_H, TEX_SIZE, TEX_SIZE)
         }
 
         // 侧边文字
-        val inputRate = handler.sync.getSyncedInsertedAmount()
-        val outputRate = handler.sync.getSyncedExtractedAmount()
+        val inputRate = menu.sync.getSyncedInsertedAmount()
+        val outputRate = menu.sync.getSyncedExtractedAmount()
         val inputText = t("gui.ic2_120.generate_eu", EnergyFormatUtils.formatEu(inputRate))
         val outputText = t("gui.ic2_120.output_eu", EnergyFormatUtils.formatEu(outputRate))
-        val sideTextWidth = maxOf(textRenderer.getWidth(inputText), textRenderer.getWidth(outputText))
+        val sideTextWidth = maxOf(font.width(inputText), font.width(outputText))
         val sideTextX = left - sideTextWidth - 4
-        context.drawText(textRenderer, inputText, sideTextX, top + 8, 0xAAAAAA, false)
-        context.drawText(textRenderer, outputText, sideTextX, top + 20, 0xAAAAAA, false)
+        context.drawString(font, inputText, sideTextX, top + 8, 0xAAAAAA, false)
+        context.drawString(font, outputText, sideTextX, top + 20, 0xAAAAAA, false)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
 
         // 流体槽悬停提示
         val relX = mouseX - left
@@ -98,7 +98,7 @@ class WaterGeneratorScreen(
             } else {
                 listOf(Component.literal("空"))
             }
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
     }
 

@@ -24,38 +24,38 @@ import net.minecraft.resources.ResourceLocation
  *
  * Ic2Gui(Ic2Gui, Inventory, Component, 220) 调用:
  *   this(container, inv, title, 176, 220)
- *   → backgroundWidth=176, backgroundHeight=220
+ *   → imageWidth=176, imageHeight=220
  *
  * 纹理: ic2:textures/gui/guisteamgenerator.png (256×256)
  * 仅绘制 (0,0)-(176,220) 区域。
  */
 @ModScreen(block = SteamGeneratorBlock::class)
 class SteamGeneratorScreen(
-    handler: SteamGeneratorScreenHandler,
+    val handler: SteamGeneratorScreenHandler,
     playerInventory: Inventory,
     title: McText
 ) : AbstractContainerScreen<SteamGeneratorScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 220
+        imageWidth = 176
+        imageHeight = 220
     }
 
     private val waterSprite: TextureAtlasSprite? by lazy {
-        val handler = FluidRenderHandlerRegistry.INSTANCE.getValue(luids.WATER) ?: return@lazy null
-        handler.getFluidSprites(null, null, Fluids.WATER.defaultBlockState)?.getOrNull(0)
+        val handler = FluidRenderHandlerRegistry.INSTANCE.get(luids.WATER) ?: return@lazy null
+        handler.getFluidSprites(null, null, Fluids.Fluids.WATER.defaultFluidState().createLegacyBlock())?.getOrNull(0)
     }
 
     // ==== 背景纹理 + 标题 — 对齐 ic2_origin drawBackgroundAndTitle ====
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         renderBackground(context)
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, 256, 256)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, 256, 256)
         // 标题居中，颜色 0x404040 — 与 Ic2Gui.drawXCenteredString 一致
-        context.drawText(
-            textRenderer, title,
-            x + (backgroundWidth - textRenderer.getWidth(title)) / 2,
-            y + 6,
+        context.drawString(
+            font, title,
+            leftPos + (imageWidth - font.width(title)) / 2,
+            topPos + 6,
             0x404040, false
         )
     }
@@ -66,8 +66,8 @@ class SteamGeneratorScreen(
         // super.render() → AbstractContainerScreen.render → drawBackground(背景纹理) + 槽位, 先画
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x; val top = y
-        val sync = handler.sync
+        val left = leftPos; val top = topPos
+        val sync = menu.sync
 
         // waterAmount 和 WATER_TANK_CAPACITY 现在都是 droplets，分数计算一致
         val waterFrac = if (SteamGeneratorSync.WATER_TANK_CAPACITY > 0)
@@ -94,7 +94,7 @@ class SteamGeneratorScreen(
                     val tileH = minOf(16, tankY + tankH - sy)
                     for (sx in tankX until (tankX + tankW) step 16) {
                         val tileW = minOf(16, tankX + tankW - sx)
-                        context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                        context.blit(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
                     }
                 }
             }
@@ -122,8 +122,8 @@ class SteamGeneratorScreen(
         // ==== tooltips ====
         // 热量条 tooltip: 显示系统温度
         if (mouseX in (left + 13) until (left + 20) && mouseY in (top + 70) until (top + 70 + 76)) {
-            context.drawTooltip(
-                textRenderer,
+            context.renderComponentTooltip(
+                font,
                 McText.literal("System Heat: ${"%.1f".format(sync.systemHeatMilli / 1000f)}°C / 500°C"),
                 mouseX, mouseY
             )
@@ -139,7 +139,7 @@ class SteamGeneratorScreen(
             } else {
                 listOf(McText.literal("空"))
             }
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
     }
 
@@ -147,7 +147,7 @@ class SteamGeneratorScreen(
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         if (button != 0) return super.mouseClicked(mouseX, mouseY, button)
-        val l = x; val t = y
+        val l = leftPos; val t = topPos
         val bw = 9; val bh = 9
 
         fun hit(bx: Int, by: Int): Boolean =
@@ -169,14 +169,14 @@ class SteamGeneratorScreen(
     }
 
     private fun sendClick(id: Int) {
-        Minecraft.getInstance().player?.networkHandler?.sendPacket(ServerboundContainerButtonClickPacket(handler.syncId, id))
+        Minecraft.getInstance().player?.networkHandler?.sendPacket(ServerboundContainerButtonClickPacket(menu.containerId, id))
     }
 
     // ==== 绘制辅助 ====
 
     private fun drawCentered(ctx: GuiGraphics, text: String, ax: Int, ay: Int, aw: Int, ah: Int, color: Int) {
-        val tw = textRenderer.getWidth(text)
-        ctx.drawText(textRenderer, text, ax + (aw - tw) / 2, ay + (ah - 8) / 2, color, true)
+        val tw = font.width(text)
+        ctx.drawString(font, text, ax + (aw - tw) / 2, ay + (ah - 8) / 2, color, true)
     }
 
     companion object {

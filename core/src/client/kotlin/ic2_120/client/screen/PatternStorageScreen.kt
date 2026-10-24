@@ -20,32 +20,32 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = PatternStorageBlock::class)
 class PatternStorageScreen(
-    handler: PatternStorageScreenHandler, playerInventory: net.minecraft.world.entity.player.Container, title: Component
+    val handler: PatternStorageScreenHandler, playerInventory: net.minecraft.world.entity.player.Container, title: Component
 ) : AbstractContainerScreen<PatternStorageScreenHandler>(handler, playerInventory, title) {
 
     private var templates: List<UuTemplateEntry> = emptyList()
     private var selectedIndex = -1
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
         val world = client?.world ?: client?.player?.world
-        val storage = world?.let(handler::getPatternStorage)
+        val storage = world?.let(menu::getPatternStorage)
         templates = storage?.getTemplatesSnapshot().orEmpty()
         selectedIndex = storage?.selectedTemplateIndex ?: -1
 
@@ -62,12 +62,12 @@ class PatternStorageScreen(
         // 读取水晶 (10,37)-(26,45)
         if (relX in READ_X1..READ_X2 && relY in READ_Y1..READ_Y2) {
             context.fill(left + READ_X1, top + READ_Y1, left + READ_X2 + 1, top + READ_Y2 + 1, 0x80FFFFFF.toInt())
-            context.drawTooltip(textRenderer, listOf(Component.translatable("gui.ic2_120.pattern_storage.import_crystal")), mouseX, mouseY)
+            context.renderComponentTooltip(font, listOf(Component.translatable("gui.ic2_120.pattern_storage.import_crystal")), mouseX, mouseY)
         }
         // 写入水晶 (26,37)-(42,45)
         if (relX in WRITE_X1..WRITE_X2 && relY in WRITE_Y1..WRITE_Y2) {
             context.fill(left + WRITE_X1, top + WRITE_Y1, left + WRITE_X2 + 1, top + WRITE_Y2 + 1, 0x80FFFFFF.toInt())
-            context.drawTooltip(textRenderer, listOf(Component.translatable("gui.ic2_120.pattern_storage.write_crystal")), mouseX, mouseY)
+            context.renderComponentTooltip(font, listOf(Component.translatable("gui.ic2_120.pattern_storage.write_crystal")), mouseX, mouseY)
         }
         // 向左 (7,19)-(16,37)
         if (templates.size > 1 && relX in NAV_L_X1..NAV_L_X2 && relY in NAV_Y1..NAV_Y2) {
@@ -78,14 +78,14 @@ class PatternStorageScreen(
             context.fill(left + NAV_R_X1, top + NAV_Y1, left + NAV_R_X2 + 1, top + NAV_Y2 + 1, 0x80FFFFFF.toInt())
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     private fun drawTemplateItem(context: GuiGraphics, left: Int, top: Int) {
         val template = templates.getOrNull(selectedIndex) ?: return
         val stack = templateToStack(template)
         if (stack.isEmpty) return
-        context.drawItem(stack, left + TEMPLATE_ITEM_X, top + TEMPLATE_ITEM_Y)
+        context.renderItem(stack, left + TEMPLATE_ITEM_X, top + TEMPLATE_ITEM_Y)
     }
 
     private fun drawTemplateInfo(context: GuiGraphics, left: Int, top: Int) {
@@ -96,27 +96,27 @@ class PatternStorageScreen(
             t("gui.ic2_120.pattern_storage.no_select_info")
         }
         val scale = 7f / 9f
-        context.matrices.push()
-        context.matrices.scale(scale, scale, 1f)
+        context.pose().pushPose()
+        context.pose().scale(scale, scale, 1f)
         val sx = ((left + INFO_X1) / scale).toInt()
         val sy = ((top + INFO_Y + 2) / scale).toInt()
-        context.drawText(textRenderer, text, sx, sy, 0xFFFFFF, false)
-        context.matrices.pop()
+        context.drawString(font, text, sx, sy, 0xFFFFFF, false)
+        context.pose().popPose()
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         if (button == 0) {
-            val relX = mouseX.toInt() - x
-            val relY = mouseY.toInt() - y
+            val relX = mouseX.toInt() - leftPos
+            val relY = mouseY.toInt() - topPos
 
             if (relX in READ_X1..READ_X2 && relY in READ_Y1..READ_Y2) {
-                client?.player?.networkHandler?.sendPacket(
-                    ServerboundContainerButtonClickPacket(handler.syncId, PatternStorageScreenHandler.BUTTON_IMPORT_FROM_CRYSTAL))
+                minecraft.connection?.send(
+                    ServerboundContainerButtonClickPacket(menu.containerId, PatternStorageScreenHandler.BUTTON_IMPORT_FROM_CRYSTAL))
                 return true
             }
             if (relX in WRITE_X1..WRITE_X2 && relY in WRITE_Y1..WRITE_Y2) {
-                client?.player?.networkHandler?.sendPacket(
-                    ServerboundContainerButtonClickPacket(handler.syncId, PatternStorageScreenHandler.BUTTON_EXPORT_TO_CRYSTAL))
+                minecraft.connection?.send(
+                    ServerboundContainerButtonClickPacket(menu.containerId, PatternStorageScreenHandler.BUTTON_EXPORT_TO_CRYSTAL))
                 return true
             }
             if (templates.size > 1 && relX in NAV_L_X1..NAV_L_X2 && relY in NAV_Y1..NAV_Y2) {
@@ -135,7 +135,7 @@ class PatternStorageScreen(
         if (templates.isEmpty()) return
         val newIndex = ((selectedIndex + delta) % templates.size + templates.size) % templates.size
         val buf = FriendlyByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(handler.blockPos)
+        buf.writeBlockPos(menu.blockPos)
         buf.writeVarInt(newIndex)
         ClientPlayNetworking.send(NetworkManager.SELECT_TEMPLATE_PACKET, buf)
     }

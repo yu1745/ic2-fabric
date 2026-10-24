@@ -59,60 +59,48 @@ object ArmorKeybinds {
 
     fun register() {
         ClientTickEvents.END_CLIENT_TICK.register { client ->
-            val player = client.player ?: return@register
+            val player = minecraft.player ?: return@register
 
-            while (toggleVisionKey.wasPressed()) {
+            while (toggleVisionKey.consumeClick()) {
                 if (!isAltDown(client)) continue
 
                 // 优先级 1：头盔 → 夜视眼镜
                 val helmet = player.getItemBySlot(EquipmentSlot.HEAD)
                 if (helmet.item is NightVisionGoggles) {
-                    ClientPlayNetworking.send(
-                        NetworkManager.TOGGLE_NIGHT_VISION_GOGGLES_PACKET,
-                        FriendlyByteBuf(Unpooled.buffer())
-                    )
+                    ClientPlayNetworking.send(ToggleNightVisionGogglesPayload)
                     return@register
                 }
 
                 // 优先级 2：头盔 → 纳米/量子头盔夜视
                 if (helmet.item is NanoHelmet || helmet.item is QuantumHelmet) {
-                    ClientPlayNetworking.send(
-                        NetworkManager.TOGGLE_NANO_VISION_PACKET,
-                        FriendlyByteBuf(Unpooled.buffer())
-                    )
+                    ClientPlayNetworking.send(ToggleNanoVisionPayload)
                 }
             }
 
-            while (toggleSpeedKey.wasPressed()) {
+            while (toggleSpeedKey.consumeClick()) {
                 if (!isAltDown(client)) continue
 
                 val legs = player.getItemBySlot(EquipmentSlot.LEGS)
                 if (legs.item is QuantumLeggings) {
-                    ClientPlayNetworking.send(
-                        NetworkManager.TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET,
-                        FriendlyByteBuf(Unpooled.buffer())
-                    )
+                    ClientPlayNetworking.send(ToggleQuantumLeggingsSpeedPayload)
                 }
             }
 
-            while (toggleJumpKey.wasPressed()) {
+            while (toggleJumpKey.consumeClick()) {
                 if (!isAltDown(client)) continue
 
                 val feet = player.getItemBySlot(EquipmentSlot.FEET)
                 if (feet.item is QuantumBoots) {
-                    ClientPlayNetworking.send(
-                        NetworkManager.TOGGLE_QUANTUM_BOOTS_JUMP_PACKET,
-                        FriendlyByteBuf(Unpooled.buffer())
-                    )
+                    ClientPlayNetworking.send(ToggleQuantumBootsJumpPayload)
                 }
             }
         }
     }
 
     private fun isAltDown(client: net.minecraft.client.Minecraft): Boolean {
-        val window = client.window.handle
-        return InputConstants.isKeyPressed(window, GLFW.GLFW_KEY_LEFT_ALT) ||
-               InputConstants.isKeyPressed(window, GLFW.GLFW_KEY_RIGHT_ALT)
+        val window = minecraft.getWindow().handle
+        return InputConstants..isDown.takeIf { it } != null || window, GLFW.GLFW_KEY_LEFT_ALT) ||
+               InputConstants..isDown.takeIf { it } != null || window, GLFW.GLFW_KEY_RIGHT_ALT)
     }
 
     fun getVisionKey(): KeyMapping = toggleVisionKey

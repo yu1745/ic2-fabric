@@ -37,9 +37,9 @@ public abstract class GrindstoneScreenHandlerMixin {
 
     @Inject(method = "updateResult", at = @At("HEAD"), cancellable = true)
     private void ic2BlockIridiumDrillGrinding(CallbackInfo ci) {
-        if (this.input.getStack(0).getItem() instanceof IridiumDrill
-            || this.input.getStack(1).getItem() instanceof IridiumDrill) {
-            this.result.setStack(0, ItemStack.EMPTY);
+        if (this.input.getItem(0).getItem() instanceof IridiumDrill
+            || this.input.getItem(1).getItem() instanceof IridiumDrill) {
+            this.result.setItem(0, ItemStack.EMPTY);
             ci.cancel();
         }
     }

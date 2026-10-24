@@ -33,7 +33,7 @@ import net.minecraft.core.BlockPos
 object ModItemTooltip {
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, context, type, lines ->
+        ItemTooltipCallback.EVENT.register { stack, _, _, lines ->
             // 导线 tooltip
             val item = stack.item
             if (item is BlockItem) {
@@ -114,7 +114,7 @@ object ModItemTooltip {
                 item is BlockItem && item.block is ITiered -> (item.block as ITiered).tier
                 item is BlockItem -> {
                     val beType = ClassScanner.getBlockEntityTypeForBlock(item.block)
-                    val be = beType?.instantiate(BlockPos.ORIGIN, item.block.defaultBlockState)
+                    val be = beType?.instantiate(BlockPos.ORIGIN, item.block.defaultBlockState())
                     (be as? ITieredMachine)?.tier
                 }
                 else -> null

@@ -288,7 +288,7 @@ class ObsidianDust : Item(Item.Properties()) {
         fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ObsidianDust::class.instance(), 1).pattern("SSS")
                 .pattern("SSS").pattern("SSS").define('S', Ingredient.of(ModTags.Compat.Items.SMALL_DUSTS_OBSIDIAN)).unlockedBy(
-                    has(SmallObsidianDust::class.instance()),
+                    getHasName(SmallObsidianDust::class.instance()),
                     has(SmallObsidianDust::class.instance())
                 ).save(exporter, ObsidianDust::class.recipeId("from_small"))
 

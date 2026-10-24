@@ -22,6 +22,6 @@ public abstract class LivingEntityScaffoldForgeMixin {
         require = 0
     )
     private boolean ic2_120$treatIc2ScaffoldAsScaffolding(BlockState state, LivingEntity entity) {
-        return state.isOf(Blocks.SCAFFOLDING) || state.getBlock() instanceof Ic2ScaffoldBlock;
+        return state.is(Blocks.SCAFFOLDING) || state.getBlock() instanceof Ic2ScaffoldBlock;
     }
 }

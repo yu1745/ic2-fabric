@@ -49,16 +49,16 @@ class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
         val yawDeg = Math.toDegrees(atan2(vx, vz)).toFloat()
         val pitchDeg = Math.toDegrees(atan2(vy, horizontal)).toFloat()
 
-        matrices.push()
+        matrices.pushPose()
         // 在“当前被挖掘目标方块”中心附近渲染钻头。
         val dx = renderX - entity.pos.x
         val dy = renderY - entity.pos.y
         val dz = renderZ - entity.pos.z
         matrices.translate(dx, dy, dz)
         // Billboard：始终朝向玩家视角，避免 2D 贴图在侧视角不可见。
-        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(yawDeg))
-        matrices.multiply(Axis.POSITIVE_X.rotationDegrees(-pitchDeg))
-        matrices.multiply(Axis.POSITIVE_Y.rotationDegrees(180.0f))
+        matrices.mulPose(Axis.YP.rotationDegrees(yawDeg))
+        matrices.mulPose(Axis.XP.rotationDegrees(-pitchDeg))
+        matrices.mulPose(Axis.YP.rotationDegrees(180.0f))
         matrices.scale(0.85f, 0.85f, 0.85f)
 
         itemRenderer.renderItem(
@@ -71,7 +71,7 @@ class MinerBlockEntityRenderer<T : BaseMinerBlockEntity>(
             world,
             0
         )
-        matrices.pop()
+        matrices.popPose()
     }
 
     override fun rendersOutsideBoundingBox(blockEntity: T): Boolean = true

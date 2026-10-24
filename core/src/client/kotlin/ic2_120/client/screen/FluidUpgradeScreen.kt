@@ -19,38 +19,38 @@ import net.minecraft.client.renderer.Rect2i
 
 @ModScreen(handler = "fluid_upgrade")
 class FluidUpgradeScreen(
-    handler: FluidUpgradeScreenHandler,
+    val handler: FluidUpgradeScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<FluidUpgradeScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun init() {
         super.init()
         val client = client ?: return
 
-        addDrawableChild(Button.builder(Component.empty()) {
-            client.networkHandler?.sendPacket(ServerboundContainerButtonClickPacket(handler.syncId, FluidUpgradeScreenHandler.BUTTON_CLEAR_FILTER))
-        }.dimensions(x + 27, y + 37, 20, 14).build())
+        addRenderableWidget(Button.builder(Component.empty()) {
+            minecraft.getConnection()?.send(ServerboundContainerButtonClickPacket(menu.containerId, FluidUpgradeScreenHandler.BUTTON_CLEAR_FILTER))
+        }.bounds(leftPos + 27, topPos + 37, 20, 14).build())
 
         // 六个方向分别独立开关，避免用一个循环按钮无法表达任意组合。
         for (dirIdx in Direction.entries.indices) {
-            addDrawableChild(Button.builder(Component.empty()) {
-                client.networkHandler?.sendPacket(
+            addRenderableWidget(Button.builder(Component.empty()) {
+                minecraft.getConnection()?.send(
                     ServerboundContainerButtonClickPacket(
-                        handler.syncId,
+                        menu.containerId,
                         FluidUpgradeScreenHandler.BUTTON_TOGGLE_DIR + dirIdx
                     )
                 )
-            }.dimensions(x + 9 + dirIdx * 16, y + 59, 16, 14).build())
+            }.bounds(leftPos + 9 + dirIdx * 16, topPos + 59, 16, 14).build())
         }
     }
 
@@ -63,46 +63,46 @@ class FluidUpgradeScreen(
 
         drawJeiHint(context, mouseX, mouseY)
 
-        context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title, leftPos + (imageWidth - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
         // 流体限制文本 (9,18)-(104,32)
-        val filterName = if (handler.fluidRawId > 0) {
+        val filterName = if (menu.fluidRawId > 0) {
             val fluid = BuiltInRegistries.FLUID.getValue(andler.fluidRawId)
-            fluid.defaultBlockState.blockState.block.name.string
+            fluid.defaultFluidState().createLegacyBlock().blockState.block.name.string
         } else {
             t("gui.ic2_120.fluid_upgrade.no_filter")
         }
         val filterText = t("gui.ic2_120.fluid_upgrade.filter_display", filterName)
-        context.drawText(textRenderer, filterText, x + 9, y + 18 + (14 - textRenderer.fontHeight) / 2, 0x55FF55, false)
+        context.drawString(font, filterText, leftPos + 9, topPos + 18 + (14 - font.lineHeight) / 2, 0x55FF55, false)
 
         drawDirectionButtons(context)
 
         // 7px 按钮文字覆盖
-        draw7pxText(context, x + 27, y + 37, 20, 14, t("gui.ic2_120.fluid_upgrade.clear_filter"))
+        draw7pxText(context, leftPos + 27, topPos + 37, 20, 14, t("gui.ic2_120.fluid_upgrade.clear_filter"))
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     private fun drawFilterFluid(context: GuiGraphics) {
-        if (handler.fluidRawId <= 0) return
+        if (menu.fluidRawId <= 0) return
         val fluid = BuiltInRegistries.FLUID.getValue(andler.fluidRawId)
-        context.drawTexture(TEXTURE, x + 7, y + 34, 179f, 3f, 18, 18, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, leftPos + 7, topPos + 34, 179f, 3f, 18, 18, TEX_SIZE, TEX_SIZE)
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid)
-        val sprite = renderHandler?.getFluidSprites(null, null, fluid.defaultBlockState)?.getOrNull(0) ?: return
+        val sprite = renderHandler?.getFluidSprites(null, null, fluid.defaultFluidState().createLegacyBlock())?.getOrNull(0) ?: return
         val color = FluidUtils.getFluidColor(fluid)
         val (r, g, b) = if (color != -1) {
             Triple(((color shr 16) and 0xFF) / 255f, ((color shr 8) and 0xFF) / 255f, (color and 0xFF) / 255f)
         } else {
             Triple(1f, 1f, 1f)
         }
-        context.drawSprite(x + 8, y + 35, 0, 16, 16, sprite, r, g, b, 1f)
+        context.blit(leftPos + 8, topPos + 35, 0, 16, 16, sprite, r, g, b, 1f)
     }
 
     private fun drawJeiHint(context: GuiGraphics, mouseX: Int, mouseY: Int) {
         if (!FabricLoader.getInstance().isModLoaded("jei")) return
-        context.drawTexture(UPTIPS_TEXTURE, x + HINT_X, y + HINT_Y, 0f, 0f, HINT_SIZE, HINT_SIZE, HINT_SIZE, HINT_SIZE)
-        if (mouseX - x in HINT_X until HINT_X + HINT_SIZE && mouseY - y in HINT_Y until HINT_Y + HINT_SIZE) {
-            context.drawTooltip(textRenderer, Component.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
+        context.blit(UPTIPS_TEXTURE, leftPos + HINT_X, topPos + HINT_Y, 0f, 0f, HINT_SIZE, HINT_SIZE, HINT_SIZE, HINT_SIZE)
+        if (mouseX - leftPos in HINT_X until HINT_X + HINT_SIZE && mouseY - topPos in HINT_Y until HINT_Y + HINT_SIZE) {
+            context.renderComponentTooltip(font, Component.translatable("gui.ic2_120.jei.drag_filter_hint"), mouseX, mouseY)
         }
     }
 
@@ -116,25 +116,25 @@ class FluidUpgradeScreen(
                 Direction.WEST -> "W"
                 Direction.EAST -> "E"
             }
-            val color = if (handler.isDirectionActive(index)) 0x55FF55 else 0xFFFFFF
-            val glyphX = x + 17 + index * 16 - textRenderer.getWidth(glyph) / 2
-            context.drawText(textRenderer, glyph, glyphX, y + 62, color, false)
+            val color = if (menu.isDirectionActive(index)) 0x55FF55 else 0xFFFFFF
+            val glyphX = leftPos + 17 + index * 16 - font.width(glyph) / 2
+            context.drawString(font, glyph, glyphX, topPos + 62, color, false)
         }
     }
 
-    fun ghostFilterArea(): Rect2i = Rect2i(x + 8, y + 35, 16, 16)
+    fun ghostFilterArea(): Rect2i = Rect2i(leftPos + 8, topPos + 35, 16, 16)
 
     private fun draw7pxText(context: GuiGraphics, bx: Int, by: Int, bw: Int, bh: Int, text: String) {
-        val scale = 7f / textRenderer.fontHeight
-        val textW = textRenderer.getWidth(text)
+        val scale = 7f / font.lineHeight
+        val textW = font.width(text)
         val scaledW = textW * scale
         val textX = bx + (bw - scaledW) / 2f
         val textY = by + (bh - 7f) / 2f
-        context.matrices.push()
-        context.matrices.translate(textX.toDouble(), textY.toDouble(), 0.0)
-        context.matrices.scale(scale, scale, 1f)
-        context.drawText(textRenderer, text, 0, 0, 0xFFFFFFFF.toInt(), false)
-        context.matrices.pop()
+        context.pose().pushPose()
+        context.pose().translate(textX.toDouble(), textY.toDouble(), 0.0)
+        context.pose().scale(scale, scale, 1f)
+        context.drawString(font, text, 0, 0, 0xFFFFFFFF.toInt(), false)
+        context.pose().popPose()
     }
 
     companion object {

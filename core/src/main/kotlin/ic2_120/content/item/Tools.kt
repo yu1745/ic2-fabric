@@ -1,6 +1,7 @@
 package ic2_120.content.item
 
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.Registries
 
 import ic2_120.compat.orCreateNbt
 
@@ -100,7 +101,7 @@ object BronzeToolMaterial : Tier {
     override fun getUses() = 250
     override fun getSpeed() = 4.0f
     override fun getAttackDamageBonus() = 2.0f
-    override fun getIncorrectBlocksForDrops(): TagKey<Block> = BlockTags.INCORRECT_FOR_IRON
+    override fun getIncorrectBlocksForDrops(): TagKey<Block> = BlockTags.INCORRECT_FOR_IRON_TOOL
     override fun getEnchantmentValue() = 10
     override fun getRepairIngredient(): Ingredient =
         Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
@@ -197,7 +198,7 @@ class BronzeHoe : HoeItem(BronzeToolMaterial, Item.Properties().stacksTo(1).attr
 }
 
 @ModItem(name = "bronze_sword", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeSword : SwordItem(BronzeToolMaterial, Item.Properties().stacksTo(1).attributes(SwordItem.createAttributes(BronzeToolMaterial, 3f, -2.4f))) {
+class BronzeSword : SwordItem(BronzeToolMaterial, Item.Properties().stacksTo(1).attributes(SwordItem.createAttributes(BronzeToolMaterial, 3, -2.4f))) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -454,7 +455,7 @@ class ToolBox : Item(Item.Properties().stacksTo(1)) {
         super.appendHoverText(stack, context, tooltip, type)
         tooltip.add(Component.translatable("tooltip.ic2_120.tool_box.hint").withStyle(ChatFormatting.DARK_GRAY))
         tooltip.add(Component.translatable("tooltip.ic2_120.tool_box.hint_detail").withStyle(ChatFormatting.DARK_GRAY))
-        val internal = loadInternal(stack, context.registryAccess())
+        val internal = loadInternal(stack, context.registries()!!)
         val filled = internal.count { !it.isEmpty }
         if (filled == 0) {
             tooltip.add(Component.translatable("tooltip.ic2_120.tool_box.empty").withStyle(ChatFormatting.GRAY))
@@ -1067,32 +1068,37 @@ class IridiumDrill : ElectricMiningDrillItem(
             Enchantments.EFFICIENCY
         )
 
-        // 1.21.1：Enchantments.X 为 ResourceKey，注册到 Holder 需查表
-        private fun enchantHolder(key: net.minecraft.resources.ResourceKey<net.minecraft.world.item.enchantment.Enchantment>): Holder<net.minecraft.world.item.enchantment.Enchantment> =
-            BuiltInRegistries.ENCHANTMENT.getHolderOrThrow(key)
+        // 1.21.1：附魔是动态注册表（无 BuiltInRegistries.ENCHANTMENT），须通过 Level 的
+        // registryAccess 查 ResourceKey 对应 Holder；Enchantments.X 已是 ResourceKey
+        private fun enchantHolder(
+            level: Level,
+            key: net.minecraft.resources.ResourceKey<net.minecraft.world.item.enchantment.Enchantment>
+        ): Holder<net.minecraft.world.item.enchantment.Enchantment> =
+            level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key)
 
         private fun getExpectedEnchantments(
             stack: ItemStack,
+            level: Level,
             hasEnergyForCurrentMode: Boolean
         ): Map<Holder<net.minecraft.world.item.enchantment.Enchantment>, Int> {
             if (!hasEnergyForCurrentMode) return emptyMap()
             return if (isSilkTouchEnabled(stack)) {
-                mapOf(enchantHolder(Enchantments.SILK_TOUCH) to 1)
+                mapOf(enchantHolder(level, Enchantments.SILK_TOUCH) to 1)
             } else {
                 mapOf(
-                    enchantHolder(Enchantments.FORTUNE) to 3,
-                    enchantHolder(Enchantments.EFFICIENCY) to 3
+                    enchantHolder(level, Enchantments.FORTUNE) to 3,
+                    enchantHolder(level, Enchantments.EFFICIENCY) to 3
                 )
             }
         }
 
-        fun syncVirtualEnchantments(stack: ItemStack, hasEnergyForCurrentMode: Boolean) {
+        fun syncVirtualEnchantments(stack: ItemStack, level: Level, hasEnergyForCurrentMode: Boolean) {
             val mutable = ItemEnchantments.Mutable(EnchantmentHelper.getEnchantmentsForCrafting(stack))
             mutable.removeIf { holder ->
                 VIRTUAL_ENCHANT_KEYS.any { key -> holder.`is`(key) }
             }
-            for ((key, level) in getExpectedEnchantments(stack, hasEnergyForCurrentMode)) {
-                mutable.set(key, level)
+            for ((key, enchLevel) in getExpectedEnchantments(stack, level, hasEnergyForCurrentMode)) {
+                mutable.set(key, enchLevel)
             }
             EnchantmentHelper.setEnchantments(stack, mutable.toImmutable())
         }
@@ -1113,7 +1119,7 @@ class IridiumDrill : ElectricMiningDrillItem(
     ) {
         super.inventoryTick(stack, world, entity, slot, selected)
         val enoughEnergy = getEnergy(stack) >= getEnergyCostPerBlock(stack)
-        syncVirtualEnchantments(stack, enoughEnergy)
+        syncVirtualEnchantments(stack, world, enoughEnergy)
     }
 
     override fun appendHoverText(
@@ -1135,7 +1141,7 @@ private object NanoSaberMaterial : Tier {
     override fun getUses() = 1
     override fun getSpeed() = 1.0f
     override fun getAttackDamageBonus() = 0f
-    override fun getIncorrectBlocksForDrops(): TagKey<Block> = BlockTags.INCORRECT_FOR_WOOD
+    override fun getIncorrectBlocksForDrops(): TagKey<Block> = BlockTags.INCORRECT_FOR_WOODEN_TOOL
     override fun getEnchantmentValue() = 15
     override fun getRepairIngredient(): Ingredient = Ingredient.EMPTY
 }
@@ -1147,7 +1153,7 @@ private object NanoSaberMaterial : Tier {
 @ModItem(name = "nano_saber", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
 class NanoSaber : SwordItem(
     NanoSaberMaterial,
-    Item.Properties().stacksTo(1).attributes(SwordItem.createAttributes(NanoSaberMaterial, 0f, -2.4f))
+    Item.Properties().stacksTo(1).attributes(SwordItem.createAttributes(NanoSaberMaterial, 0, -2.4f))
 ), IElectricTool {
 
     companion object {
@@ -1258,7 +1264,9 @@ class NanoSaber : SwordItem(
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
 
-    override fun isDamageable(stack: ItemStack) = false
+    // 1.21.1: Item#isDamageable 覆写点已移除（耐久改组件驱动）。原版耐久消耗点
+    // postHurtEnemy/mineBlock 本类均已覆写且不走 super.hurtAndBreak，原语义
+    // （"纳米剑不走原版耐久、仅消耗 EU"）保持不变，故无需替代覆写。
 
     private fun weaponAttackModifier(stack: ItemStack): Double {
         val active = isActive(stack)

@@ -11,22 +11,22 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = ReactorFluidPortBlock::class)
 class ReactorFluidPortScreen(
-    handler: ReactorFluidPortScreenHandler,
+    val handler: ReactorFluidPortScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<ReactorFluidPortScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 162
+        imageWidth = 176
+        imageHeight = 162
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         // 主 PNG 背景
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEXTURE_SIZE, TEXTURE_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEXTURE_SIZE, TEXTURE_SIZE)
         // 升级槽背景 (179,3)-(197,21) = 18×18，渲染至 (79,30) — 必须在 drawBackground 内，早于 super.render 的物品绘制
-        context.drawTexture(
-            TEXTURE, x + SLOT_BG_X, y + SLOT_BG_Y,
+        context.blit(
+            TEXTURE, leftPos + SLOT_BG_X, topPos + SLOT_BG_Y,
             SLOT_BG_U.toFloat(), SLOT_BG_V.toFloat(),
             SLOT_BG_SIZE, SLOT_BG_SIZE,
             TEXTURE_SIZE, TEXTURE_SIZE
@@ -38,9 +38,9 @@ class ReactorFluidPortScreen(
         super.render(context, mouseX, mouseY, delta)
 
         // 标题居中
-        context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title, leftPos + (imageWidth - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     companion object {

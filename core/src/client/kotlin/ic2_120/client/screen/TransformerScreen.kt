@@ -19,14 +19,14 @@ import net.minecraft.resources.ResourceLocation
  */
 @ModScreen(handlers = ["lv_transformer", "mv_transformer", "hv_transformer", "ev_transformer"])
 class TransformerScreen(
-    handler: TransformerScreenHandler,
+    val handler: TransformerScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<TransformerScreenHandler>(handler, playerInventory, title) {
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 219
+        imageWidth = 176
+        imageHeight = 219
         titleY = 4
     }
 
@@ -37,39 +37,39 @@ class TransformerScreen(
         super.init()
 
         // 固定升压按钮
-        stepUpBtn = addDrawableChild(Button.builder(
+        stepUpBtn = addRenderableWidget(Button.builder(
             Component.literal("固定升压")
         ) { btn ->
             stepDownBtn.setFocused(false)
-            client?.player?.networkHandler?.sendPacket(
-                ServerboundContainerButtonClickPacket(handler.syncId, TransformerScreenHandler.BUTTON_ID_STEP_UP)
+            minecraft.connection?.send(
+                ServerboundContainerButtonClickPacket(menu.containerId, TransformerScreenHandler.BUTTON_ID_STEP_UP)
             )
-        }.dimensions(x + 21, y + 69, 74, 20).build())
+        }.bounds(leftPos + 21, topPos + 69, 74, 20).build())
 
         // 固定降压按钮
-        stepDownBtn = addDrawableChild(Button.builder(
+        stepDownBtn = addRenderableWidget(Button.builder(
             Component.literal("固定降压")
         ) { btn ->
             stepUpBtn.setFocused(false)
-            client?.player?.networkHandler?.sendPacket(
-                ServerboundContainerButtonClickPacket(handler.syncId, TransformerScreenHandler.BUTTON_ID_STEP_DOWN)
+            minecraft.connection?.send(
+                ServerboundContainerButtonClickPacket(menu.containerId, TransformerScreenHandler.BUTTON_ID_STEP_DOWN)
             )
-        }.dimensions(x + 21, y + 90, 74, 20).build())
+        }.bounds(leftPos + 21, topPos + 90, 74, 20).build())
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 219, 256, 256)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 219, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val currentMode = handler.sync.getMode()
+        val currentMode = menu.sync.getMode()
         val isStepUp = currentMode == TransformerSync.Mode.STEP_UP
 
-        val lowEu = handler.sync.getLowEuPerTick()
-        val highEu = handler.sync.getHighEuPerTick()
+        val lowEu = menu.sync.getLowEuPerTick()
+        val highEu = menu.sync.getHighEuPerTick()
 
         val (inputRate, outputRate) = if (isStepUp) {
             "$lowEu" to "$highEu"
@@ -78,28 +78,28 @@ class TransformerScreen(
         }
 
         // 标题
-        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 4, 0x404040, false)
+        context.drawString(font, title, leftPos + (176 - font.width(title)) / 2, topPos + 4, 0x404040, false)
 
         // 文本：输入
-        context.drawText(textRenderer, Component.literal("输入："), x + 21, y + 27, 0x404040, false)
+        context.drawString(font, Component.literal("输入："), leftPos + 21, topPos + 27, 0x404040, false)
 
         // 文本：输出
-        context.drawText(textRenderer, Component.literal("输出："), x + 21, y + 43, 0x404040, false)
+        context.drawString(font, Component.literal("输出："), leftPos + 21, topPos + 43, 0x404040, false)
 
         // 文本：a（输入速率值）
-        context.drawText(textRenderer, Component.literal("${inputRate}EU/t"), x + 51, y + 29, INPUT_OUTPUT_COLOR, false)
+        context.drawString(font, Component.literal("${inputRate}EU/t"), leftPos + 51, topPos + 29, INPUT_OUTPUT_COLOR, false)
 
         // 文本：b（输出速率值）
-        context.drawText(textRenderer, Component.literal("${outputRate}EU/t"), x + 51, y + 45, INPUT_OUTPUT_COLOR, false)
+        context.drawString(font, Component.literal("${outputRate}EU/t"), leftPos + 51, topPos + 45, INPUT_OUTPUT_COLOR, false)
 
         // 扳手图标
         if (isStepUp) {
-            context.drawTexture(WRENCH, x + 103, y + 70, 0f, 0f, 16, 16, 16, 16)
+            context.blit(WRENCH, leftPos + 103, topPos + 70, 0f, 0f, 16, 16, 16, 16)
         } else {
-            context.drawTexture(WRENCH, x + 103, y + 91, 0f, 0f, 16, 16, 16, 16)
+            context.blit(WRENCH, leftPos + 103, topPos + 91, 0f, 0f, 16, 16, 16, 16)
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     companion object {

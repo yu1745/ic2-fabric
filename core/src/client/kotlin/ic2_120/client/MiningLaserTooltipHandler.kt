@@ -19,7 +19,7 @@ import org.lwjgl.glfw.GLFW
 object MiningLaserTooltipHandler {
 
     fun register() {
-        ItemTooltipCallback.EVENT.register { stack, _, type, lines ->
+        ItemTooltipCallback.EVENT.register { stack, _, _, lines ->
             if (stack.item !is MiningLaserItem) return@register
             val laser = stack.item as MiningLaserItem
             val mode = MiningLaserItem.getMode(stack)
@@ -68,7 +68,7 @@ object MiningLaserTooltipHandler {
 
     private fun isShiftDown(): Boolean {
         val handle = Minecraft.getInstance().window.handle
-        return InputConstants.isKeyPressed(handle, GLFW.GLFW_KEY_LEFT_SHIFT) ||
-            InputConstants.isKeyPressed(handle, GLFW.GLFW_KEY_RIGHT_SHIFT)
+        return InputConstants..isDown.takeIf { it } != null || handle, GLFW.GLFW_KEY_LEFT_SHIFT) ||
+            InputConstants..isDown.takeIf { it } != null || handle, GLFW.GLFW_KEY_RIGHT_SHIFT)
     }
 }

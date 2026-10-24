@@ -382,7 +382,7 @@ class WindKineticGeneratorBlockEntity(
             val stopThreshold = startThreshold * STOP_THRESHOLD_FACTOR
             val weather = weatherMultiplier(world)
             val effectiveWind = meanWindFromY(pos.y) * worldGustFactor(world, pos) * weather
-            val wasActive = state.contains(WindKineticGeneratorBlock.ACTIVE) && state.getValue(WindKineticGeneratorBlock.ACTIVE)
+            val wasActive = state.hasProperty(WindKineticGeneratorBlock.ACTIVE) && state.getValue(WindKineticGeneratorBlock.ACTIVE)
             val minWind = if (wasActive) stopThreshold else startThreshold
             val kuOut = if (effectiveWind >= minWind) {
                 floor(BASE_KU_AT_PEAK * rotorMultiplier * effectiveWind).toInt().coerceAtLeast(0)

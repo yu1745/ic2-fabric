@@ -643,7 +643,7 @@ object ClassScanner {
                 val itemGroup = FabricItemGroup.builder()
                     .icon(iconStackSupplier)
                     .title(Component.translatable("itemGroup.$modId.$name"))
-                    .displayItemsGenerator { _, collector ->
+                    .displayItems { _, collector ->
                         // 实时读取 tabItems（不能捕获构建时快照）：Connector/Forge 环境下附属 main
                         // 可能先于 core 的 registerWithAddons 执行，创造栏会早于附属导线注册构建；
                         // 快照会导致后注册的导线（ic2_120:cables entrypoint 贡献）缺失。

@@ -1,6 +1,7 @@
 package ic2_120.content.block.machines
 
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.Registries
 
 import io.netty.buffer.Unpooled
 
@@ -386,7 +387,7 @@ abstract class BaseMinerBlockEntity(
                     setChanged()
                     return recoverNormalPipes(world)
                 }
-                if (!canUseDrill(pipeState)) return false
+                if (!canUseDrill(world, pipeState)) return false
                 mineNormalBlock(world, pipe, drill)
                 return true
             }
@@ -469,7 +470,7 @@ abstract class BaseMinerBlockEntity(
     private fun findNormalTarget(world: ServerLevel, y: Int, range: Int): BlockPos? {
         for (x in pos.x - range..pos.x + range) for (z in pos.z - range..pos.z + range) {
             val p = BlockPos(x, y, z); val state = world.getBlockState(p)
-            if (!state.isAir && state.getDestroySpeed(world, p) >= 0f && isOreLike(world, p, state) && canUseDrill(state)) return p
+            if (!state.isAir && state.getDestroySpeed(world, p) >= 0f && isOreLike(world, p, state) && canUseDrill(world, state)) return p
         }
         return null
     }
@@ -509,7 +510,7 @@ abstract class BaseMinerBlockEntity(
         if (sync.progressTicks < duration) return true
         tool.setEnergy(drill, tool.getEnergy(drill) - toolCost)
         sync.consumeEnergy(depthCost)
-        harvest(world, target, getLootTool(false)); sync.progressTicks = 0; progressMode = -1
+        harvest(world, target, getLootTool(world, false)); sync.progressTicks = 0; progressMode = -1
         return true
     }
 
@@ -537,7 +538,7 @@ abstract class BaseMinerBlockEntity(
                 advancedTarget = next
                 if (sync.amount >= mineCost) {
                     sync.consumeEnergy(mineCost)
-                    harvest(world, next, getLootTool(sync.silkTouch != 0))
+                    harvest(world, next, getLootTool(world, sync.silkTouch != 0))
                 }
                 return true
             }
@@ -569,12 +570,12 @@ abstract class BaseMinerBlockEntity(
                 state.`is`(net.minecraft.world.level.block.Blocks.ANCIENT_DEBRIS) ||
                 BuiltInRegistries.BLOCK.getKey(state.block)!!.path.contains("ore") ||
                 BuiltInRegistries.BLOCK.getKey(state.block)!!.path == "ancient_debris")
-    private fun canUseDrill(state: BlockState): Boolean = !state.requiresCorrectToolForDrops() || getLootTool(false).isCorrectToolForDrops(state)
+    private fun canUseDrill(world: Level, state: BlockState): Boolean = !state.requiresCorrectToolForDrops() || getLootTool(world, false).isCorrectToolForDrops(state)
     private fun canMineAdvanced(world: ServerLevel, target: BlockPos, state: BlockState): Boolean {
         if (!state.fluidState.isEmpty || state.getDestroySpeed(world, target) < 0f) return false
         // IC2 OreValues excludes ordinary tile-entity blocks (machines, chests, etc.).
         if (state.block is ic2_120.content.block.MachineBlock || world.getBlockEntity(target) != null) return false
-        val drops = Block.getDrops(state, world, target, world.getBlockEntity(target), null, getLootTool(sync.silkTouch != 0))
+        val drops = Block.getDrops(state, world, target, world.getBlockEntity(target), null, getLootTool(world, sync.silkTouch != 0))
         if (drops.isEmpty()) return false
         val filters = SLOT_ITEM_INDICES.map { getItem(it) }.filter { !it.isEmpty }.toList()
         val blockStack = state.block.asItem().takeUnless { it === Items.AIR }?.let(::ItemStack)
@@ -588,15 +589,15 @@ abstract class BaseMinerBlockEntity(
         return if (sync.mode == 0) matched else !matched
     }
 
-    private fun getLootTool(silk: Boolean): ItemStack {
+    private fun getLootTool(world: Level, silk: Boolean): ItemStack {
         val drill = getItem(SLOT_DRILL).item
         val tool = if (advanced) ItemStack(Items.NETHERITE_PICKAXE) else when (drill) {
             is Drill -> ItemStack(Items.IRON_PICKAXE)
             is IridiumDrill -> ItemStack(Items.NETHERITE_PICKAXE)
             else -> ItemStack(Items.DIAMOND_PICKAXE)
         }
-        if (silk) tool.enchant(BuiltInRegistries.ENCHANTMENT.getHolderOrThrow(Enchantments.SILK_TOUCH), 1)
-        else if (!advanced && drill is IridiumDrill) tool.enchant(BuiltInRegistries.ENCHANTMENT.getHolderOrThrow(Enchantments.FORTUNE), 3)
+        if (silk) tool.enchant(world.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.SILK_TOUCH), 1)
+        else if (!advanced && drill is IridiumDrill) tool.enchant(world.registryAccess().registryOrThrow(Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.FORTUNE), 3)
         return tool
     }
     private fun harvest(world: ServerLevel, target: BlockPos, tool: ItemStack) {

@@ -38,7 +38,7 @@ object GuiBackground {
         borderColor: Int = BORDER_COLOR
     ) {
         context.fill(x, y, x + width, y + height, fillColor)
-        context.drawBorder(x, y, width, height, borderColor)
+        context.renderOutline(x, y, width, height, borderColor)
     }
 
     private const val VANILLA_BASE_GRAY = 0xFFC6C6C6.toInt()
@@ -143,7 +143,7 @@ object GuiBackground {
                     w
                 )
                 if (borderColor != BORDER_COLOR) {
-                    context.drawBorder(
+                    context.renderOutline(
                         screenX + slotX - SLOT_ANCHOR_INSET,
                         screenY + slotY - SLOT_ANCHOR_INSET,
                         w,
@@ -164,7 +164,7 @@ object GuiBackground {
                 w
             )
             if (borderColor != BORDER_COLOR) {
-                context.drawBorder(
+                context.renderOutline(
                     screenX + slotX - SLOT_ANCHOR_INSET,
                     screenY + hotbarY - SLOT_ANCHOR_INSET,
                     w,

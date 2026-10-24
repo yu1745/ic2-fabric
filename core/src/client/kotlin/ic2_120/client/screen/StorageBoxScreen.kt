@@ -10,7 +10,7 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(handler = "storage_box")
 class StorageBoxScreen(
-    handler: StorageBoxScreenHandler,
+    val handler: StorageBoxScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<StorageBoxScreenHandler>(handler, playerInventory, title) {
@@ -18,22 +18,22 @@ class StorageBoxScreen(
     private val boxType = BoxType.of(handler.inventory.getContainerSize())
 
     init {
-        backgroundWidth = boxType.guiWidth
-        backgroundHeight = boxType.guiHeight
+        imageWidth = boxType.guiWidth
+        imageHeight = boxType.guiHeight
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
         val type = boxType
         if (type.texture == null) return
 
-        context.drawTexture(type.texture, x, y, 0f, 0f, backgroundWidth, backgroundHeight, type.textureSize, type.textureSize)
+        context.blit(type.texture, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, type.textureSize, type.textureSize)
 
         for (row in 0 until type.rows) {
             for (col in 0 until type.columns) {
-                context.drawTexture(
+                context.blit(
                     type.texture,
-                    x + type.slotBgX + col * 18,
-                    y + type.slotBgY + row * 18,
+                    leftPos + type.slotBgX + col * 18,
+                    topPos + type.slotBgY + row * 18,
                     type.slotBgU.toFloat(), type.slotBgV.toFloat(),
                     SLOT_BG_SIZE, SLOT_BG_SIZE,
                     type.textureSize, type.textureSize
@@ -47,10 +47,10 @@ class StorageBoxScreen(
         super.render(context, mouseX, mouseY, delta)
 
         if (boxType.texture != null) {
-            context.drawText(textRenderer, title, x + (backgroundWidth - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+            context.drawString(font, title, leftPos + (imageWidth - font.width(title)) / 2, topPos + 6, 0x404040, false)
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     companion object {

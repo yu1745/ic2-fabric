@@ -30,7 +30,7 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = ReplicatorBlock::class)
 class ReplicatorScreen(
-    handler: ReplicatorScreenHandler, playerInventory: Inventory, title: Component
+    val handler: ReplicatorScreenHandler, playerInventory: Inventory, title: Component
 ) : AbstractContainerScreen<ReplicatorScreenHandler>(handler, playerInventory, title) {
 
     private var showTemplateInfo = false
@@ -43,40 +43,40 @@ class ReplicatorScreen(
     private var repeatBtn: Button? = null
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 184
+        imageWidth = 176
+        imageHeight = 184
     }
 
     override fun init() {
         super.init()
         cancelBtn = Button.builder(Component.empty()) {
             Minecraft.getInstance().player?.networkHandler?.sendPacket(
-                ServerboundContainerButtonClickPacket(handler.syncId, ReplicatorScreenHandler.BUTTON_CANCEL)
+                ServerboundContainerButtonClickPacket(menu.containerId, ReplicatorScreenHandler.BUTTON_CANCEL)
             )
-        }.dimensions(0, 0, 18, 18).build()
+        }.bounds(0, 0, 18, 18).build()
         singleBtn = Button.builder(Component.empty()) {
             Minecraft.getInstance().player?.networkHandler?.sendPacket(
-                ServerboundContainerButtonClickPacket(handler.syncId, ReplicatorScreenHandler.BUTTON_MODE_SINGLE)
+                ServerboundContainerButtonClickPacket(menu.containerId, ReplicatorScreenHandler.BUTTON_MODE_SINGLE)
             )
-        }.dimensions(0, 0, 18, 18).build()
+        }.bounds(0, 0, 18, 18).build()
         repeatBtn = Button.builder(Component.empty()) {
             Minecraft.getInstance().player?.networkHandler?.sendPacket(
-                ServerboundContainerButtonClickPacket(handler.syncId, ReplicatorScreenHandler.BUTTON_MODE_REPEAT)
+                ServerboundContainerButtonClickPacket(menu.containerId, ReplicatorScreenHandler.BUTTON_MODE_REPEAT)
             )
-        }.dimensions(0, 0, 18, 18).build()
-        addDrawableChild(cancelBtn!!)
-        addDrawableChild(singleBtn!!)
-        addDrawableChild(repeatBtn!!)
+        }.bounds(0, 0, 18, 18).build()
+        addRenderableWidget(cancelBtn!!)
+        addRenderableWidget(singleBtn!!)
+        addRenderableWidget(repeatBtn!!)
     }
 
     private fun updateButtons() {
-        cancelBtn?.setPosition(x + 71, y + 81)
-        singleBtn?.setPosition(x + 88, y + 81)
-        repeatBtn?.setPosition(x + 105, y + 81)
+        cancelBtn?.setPosition(leftPos + 71, topPos + 81)
+        singleBtn?.setPosition(leftPos + 88, topPos + 81)
+        repeatBtn?.setPosition(leftPos + 105, topPos + 81)
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight, TEX_SIZE, TEX_SIZE)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, imageWidth, imageHeight, TEX_SIZE, TEX_SIZE)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
@@ -84,17 +84,17 @@ class ReplicatorScreen(
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val left = x
-        val top = y
+        val left = leftPos
+        val top = topPos
 
-        context.drawText(textRenderer, title, left + (backgroundWidth - textRenderer.getWidth(title)) / 2, top + 6, 0x404040, false)
+        context.drawString(font, title, left + (imageWidth - font.width(title)) / 2, top + 6, 0x404040, false)
 
         val world = client?.world
-        val storage = world?.let { findUniqueAdjacentPatternStorage(it, handler.blockPos) }
+        val storage = world?.let { findUniqueAdjacentPatternStorage(it, menu.blockPos) }
         templates = storage?.getTemplatesSnapshot().orEmpty()
         selectedIndex = storage?.selectedTemplateIndex ?: -1
 
-        val status = handler.sync.status
+        val status = menu.sync.status
         if (status != lastStatus) {
             if (status == ReplicatorSync.STATUS_RUNNING || status == ReplicatorSync.STATUS_COMPLETE || status == ReplicatorSync.STATUS_CANCELLED) {
                 showTemplateInfo = false
@@ -103,7 +103,7 @@ class ReplicatorScreen(
         }
 
         // 模式切换纹理 (198,3)-(250,21) = 52×18 渲染至 (71,81)
-        context.drawTexture(TEXTURE, left + MODE_TEX_X, top + MODE_TEX_Y,
+        context.blit(TEXTURE, left + MODE_TEX_X, top + MODE_TEX_Y,
             MODE_TEX_U.toFloat(), MODE_TEX_V.toFloat(), MODE_TEX_W, MODE_TEX_H, TEX_SIZE, TEX_SIZE)
 
         // 电量条 (180,3)-(194,18) = 14×15 渲染至 (134,85)
@@ -113,8 +113,8 @@ class ReplicatorScreen(
         drawFluidTank(context, left, top)
 
         // 容量标示纹理 (181,25)-(192,71) = 11×46 → (32,35)，有流体时渲染
-        if (handler.sync.fluidAmount > 0) {
-            context.drawTexture(TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
+        if (menu.sync.fluidAmount > 0) {
+            context.blit(TEXTURE, left + TANK_OVERLAY_X, top + TANK_OVERLAY_Y,
                 TANK_OVERLAY_U.toFloat(), TANK_OVERLAY_V.toFloat(), TANK_OVERLAY_W, TANK_OVERLAY_H, TEX_SIZE, TEX_SIZE)
         }
 
@@ -125,7 +125,7 @@ class ReplicatorScreen(
         drawStatusText(context, left, top)
 
         // uptips (4,4) 16×16
-        context.drawTexture(UPTIPS_TEXTURE, left + 4, top + 4, 0f, 0f, 16, 16, 16, 16)
+        context.blit(UPTIPS_TEXTURE, left + 4, top + 4, 0f, 0f, 16, 16, 16, 16)
 
         // 悬停高亮和提示
         val relX = mouseX - left
@@ -142,36 +142,36 @@ class ReplicatorScreen(
 
         // 电量条悬停
         if (relX in ENERGY_X until ENERGY_X + ENERGY_W && relY in ENERGY_Y until ENERGY_Y + ENERGY_H) {
-            val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-            val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
-            context.drawTooltip(textRenderer,
+            val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+            val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
+            context.renderComponentTooltip(font,
                 listOf(Component.literal("储能：${"%,d".format(energy)} / ${"%,d".format(cap)} EU")),
                 mouseX, mouseY)
         }
 
         // 流体槽悬停
         if (relX in TANK_X until TANK_X + TANK_W && relY in TANK_Y until TANK_Y + TANK_H) {
-            val amt = handler.sync.fluidAmount.coerceAtLeast(0)
-            val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
+            val amt = menu.sync.fluidAmount.coerceAtLeast(0)
+            val cap = menu.sync.fluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) listOf(Component.literal("UU物质"), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
                         else listOf(Component.literal("空"))
-            context.drawTooltip(textRenderer, lines, mouseX, mouseY)
+            context.renderComponentTooltip(font, lines, mouseX, mouseY)
         }
 
         // 模式按钮悬停
         if (relX in 71..88 && relY in 81..98) {
-            context.drawTooltip(textRenderer, listOf(Component.translatable("gui.ic2_120.replicator.cancel")), mouseX, mouseY)
+            context.renderComponentTooltip(font, listOf(Component.translatable("gui.ic2_120.replicator.cancel")), mouseX, mouseY)
         }
         if (relX in 88..105 && relY in 81..98) {
-            context.drawTooltip(textRenderer, listOf(Component.translatable("gui.ic2_120.replicator.mode_single")), mouseX, mouseY)
+            context.renderComponentTooltip(font, listOf(Component.translatable("gui.ic2_120.replicator.mode_single")), mouseX, mouseY)
         }
         if (relX in 105..122 && relY in 81..98) {
-            context.drawTooltip(textRenderer, listOf(Component.translatable("gui.ic2_120.replicator.mode_repeat")), mouseX, mouseY)
+            context.renderComponentTooltip(font, listOf(Component.translatable("gui.ic2_120.replicator.mode_repeat")), mouseX, mouseY)
         }
 
         // uptips悬停
         if (relX in 4 until 20 && relY in 4 until 20) {
-            context.drawTooltip(textRenderer, listOf(
+            context.renderComponentTooltip(font, listOf(
                 Component.translatable("gui.ic2_120.replicator.uptips"),
                 Component.literal("§7").append(Component.translatable("item.ic2_120.overclocker_upgrade")),
                 Component.literal("§7").append(Component.translatable("item.ic2_120.transformer_upgrade")),
@@ -182,12 +182,12 @@ class ReplicatorScreen(
             ), mouseX, mouseY)
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     private fun drawEnergyBar(context: GuiGraphics, left: Int, top: Int) {
-        val energy = handler.sync.energy.toLong().coerceAtLeast(0)
-        val cap = handler.sync.energyCapacity.toLong().coerceAtLeast(1)
+        val energy = menu.sync.energy.toLong().coerceAtLeast(0)
+        val cap = menu.sync.energyCapacity.toLong().coerceAtLeast(1)
         val fraction = (energy.toFloat() / cap).coerceIn(0f, 1f)
         if (fraction <= 0f) return
         val fillH = (ENERGY_H * fraction).toInt().coerceAtLeast(1)
@@ -195,15 +195,15 @@ class ReplicatorScreen(
             left + ENERGY_X, top + ENERGY_Y + ENERGY_H - fillH,
             left + ENERGY_X + ENERGY_W, top + ENERGY_Y + ENERGY_H
         )
-        context.drawTexture(TEXTURE, left + ENERGY_X, top + ENERGY_Y,
+        context.blit(TEXTURE, left + ENERGY_X, top + ENERGY_Y,
             ENERGY_U.toFloat(), ENERGY_V.toFloat(), ENERGY_W, ENERGY_H, TEX_SIZE, TEX_SIZE)
         context.disableScissor()
     }
 
     private fun drawFluidTank(context: GuiGraphics, left: Int, top: Int) {
-        val amt = handler.sync.fluidAmount.coerceAtLeast(0)
+        val amt = menu.sync.fluidAmount.coerceAtLeast(0)
         if (amt <= 0) return
-        val cap = handler.sync.fluidCapacity.coerceAtLeast(1)
+        val cap = menu.sync.fluidCapacity.coerceAtLeast(1)
         val fraction = (amt.toFloat() / cap).coerceIn(0f, 1f)
         val fillH = (TANK_H * fraction).toInt().coerceAtLeast(1)
         val sx = left + TANK_X
@@ -220,7 +220,7 @@ class ReplicatorScreen(
             val tileH = minOf(16, sy + TANK_H - cy)
             for (cx in sx until (sx + TANK_W) step 16) {
                 val tileW = minOf(16, sx + TANK_W - cx)
-                context.drawSprite(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                context.blit(cx, cy, 0, tileW, tileH, sprite, r, g, b, 1f)
             }
         }
         context.disableScissor()
@@ -230,7 +230,7 @@ class ReplicatorScreen(
         val template = templates.getOrNull(selectedIndex) ?: return
         val stack = templateToStack(template)
         if (!stack.isEmpty) {
-            context.drawItem(stack, left + PRODUCT_X, top + PRODUCT_Y)
+            context.renderItem(stack, left + PRODUCT_X, top + PRODUCT_Y)
         }
     }
 
@@ -238,25 +238,25 @@ class ReplicatorScreen(
         val text = if (showTemplateInfo) {
             templateInfoText
         } else {
-            val base = statusText(handler.sync.status)
-            if (handler.sync.status == ReplicatorSync.STATUS_RUNNING) {
-                val pct = if (handler.sync.progressMaxUb > 0)
-                    (handler.sync.progressUb.toFloat() / handler.sync.progressMaxUb * 100).toInt().coerceIn(0, 100)
+            val base = statusText(menu.sync.status)
+            if (menu.sync.status == ReplicatorSync.STATUS_RUNNING) {
+                val pct = if (menu.sync.progressMaxUb > 0)
+                    (menu.sync.progressUb.toFloat() / menu.sync.progressMaxUb * 100).toInt().coerceIn(0, 100)
                 else 0
                 "$base($pct%)"
             } else base
         }
         if (text.isEmpty()) return
-        val tw = textRenderer.getWidth(text)
+        val tw = font.width(text)
         val areaCenterX = (STATUS_X1 + STATUS_X2) / 2
-        val color = if (showTemplateInfo) 0xFFFFFF else statusColor(handler.sync.status)
-        context.drawText(textRenderer, text, left + areaCenterX - tw / 2, top + STATUS_Y, color, false)
+        val color = if (showTemplateInfo) 0xFFFFFF else statusColor(menu.sync.status)
+        context.drawString(font, text, left + areaCenterX - tw / 2, top + STATUS_Y, color, false)
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         if (button == 0) {
-            val relX = mouseX.toInt() - x
-            val relY = mouseY.toInt() - y
+            val relX = mouseX.toInt() - leftPos
+            val relY = mouseY.toInt() - topPos
             if (templates.size > 1) {
                 if (relX in NAV_LEFT_X1..NAV_LEFT_X2 && relY in NAV_Y1..NAV_Y2) {
                     navigateTemplate(-1)
@@ -275,7 +275,7 @@ class ReplicatorScreen(
         if (templates.isEmpty()) return
         val newIndex = ((selectedIndex + delta) % templates.size + templates.size) % templates.size
         val buf = FriendlyByteBuf(Unpooled.buffer())
-        buf.writeBlockPos(handler.blockPos)
+        buf.writeBlockPos(menu.blockPos)
         buf.writeVarInt(newIndex)
         ClientPlayNetworking.send(NetworkManager.SELECT_TEMPLATE_PACKET, buf)
         // 更新本地显示
@@ -361,8 +361,8 @@ class ReplicatorScreen(
         private const val NAV_RIGHT_X2 = 118
 
         private val uuMatterSprite by lazy {
-            FluidRenderHandlerRegistry.INSTANCE.getValue(ModFluids.UU_MATTER_STILL)
-                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultBlockState)?.getOrNull(0)
+            FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.UU_MATTER_STILL)
+                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultFluidState().createLegacyBlock())?.getOrNull(0)
         }
     }
 }

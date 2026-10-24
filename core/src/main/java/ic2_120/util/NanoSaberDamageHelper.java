@@ -11,7 +11,7 @@ import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.resources.ResourceLocation;
@@ -24,27 +24,27 @@ public final class NanoSaberDamageHelper {
     private NanoSaberDamageHelper() {}
 
     public static final ResourceKey<DamageType> NANO_SABER_ARMOR_PIERCE_KEY =
-        ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.of("ic2_120", "nano_saber_armor_pierce"));
+        ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("ic2_120", "nano_saber_armor_pierce"));
 
     public static boolean isNanoSaberArmorPierceDamage(DamageSource source) {
-        return source.isOf(NANO_SABER_ARMOR_PIERCE_KEY);
+        return source.is(NANO_SABER_ARMOR_PIERCE_KEY);
     }
 
     /**
      * 攻击者为手持纳米剑的玩家、且近战；被击玩家任一件量子护甲则 false；被击玩家任一件纳米护甲则 true。
      */
     public static boolean shouldReplaceWithPierce(Player victim, DamageSource source) {
-        if (victim.getWorld().isClient()) {
+        if (victim.level().isClientSide()) {
             return false;
         }
-        if (!source.isOf(DamageTypes.PLAYER_ATTACK)) {
+        if (!source.is(DamageTypes.PLAYER_ATTACK)) {
             return false;
         }
-        Entity attackerEntity = source.getAttacker();
+        Entity attackerEntity = source.getEntity();
         if (!(attackerEntity instanceof Player attacker)) {
             return false;
         }
-        ItemStack mainHand = attacker.getMainHandStack();
+        ItemStack mainHand = attacker.getMainHandItem();
         if (!(mainHand.getItem() instanceof NanoSaber)) {
             return false;
         }
@@ -55,11 +55,11 @@ public final class NanoSaberDamageHelper {
     }
 
     public static DamageSource createPierceDamage(Player victim, DamageSource original) {
-        Player attacker = (Player) original.getAttacker();
-        ServerLevel world = (ServerLevel) victim.getWorld();
-        Holder<DamageType> entry = world.getRegistryManager()
-            .get(Registries.DAMAGE_TYPE)
-            .getEntry(NANO_SABER_ARMOR_PIERCE_KEY)
+        Player attacker = (Player) original.getEntity();
+        ServerLevel world = (ServerLevel) victim.level();
+        Holder<DamageType> entry = world.registryAccess()
+            .registryOrThrow(Registries.DAMAGE_TYPE)
+            .getHolder(NANO_SABER_ARMOR_PIERCE_KEY)
             .orElseThrow();
         return new DamageSource(entry, attacker, attacker);
     }

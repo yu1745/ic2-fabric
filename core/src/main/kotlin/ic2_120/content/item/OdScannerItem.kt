@@ -1,5 +1,9 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
 import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
@@ -18,11 +22,13 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
 import net.minecraft.data.recipes.RecipeCategory
+import net.minecraft.data.recipes.RecipeOutput
 import io.netty.buffer.Unpooled
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.FriendlyByteBuf
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.network.chat.Component
@@ -118,7 +124,7 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
                 }
                 override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
                     val buf = FriendlyByteBuf(Unpooled.buffer())
-                        val s = serverPlayer.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND)
+                        val s = player.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND)
                         val t = getScannerType(s)
                         buf.writeInt(IElectricTool.getEnergy(s).toInt().coerceAtMost(Int.MAX_VALUE))
                         buf.writeInt(t.energyCapacity.toInt().coerceAtMost(Int.MAX_VALUE))
@@ -170,7 +176,7 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
          * [绝缘铜质导线] [绝缘铜质导线] [绝缘铜质导线]
          */
         @RecipeProvider
-        fun generateRecipes(exporter: java.util.function.Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val circuit = ic2_120.content.item.AdvancedCircuit::class.instance()
             val battery = ic2_120.content.item.energy.ReBatteryItem::class.instance()
             val insulatedCopper = ic2_120.content.block.cables.InsulatedCopperCableBlock::class.item()
@@ -244,7 +250,7 @@ class AdvancedScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
          * [2x绝缘金质导线] [OD扫描器] [2x绝缘金质导线]
          */
         @RecipeProvider
-        fun generateRecipes(exporter: java.util.function.Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val goldCasing = ic2_120.content.item.GoldCasing::class.instance()
             val energyCrystal = ic2_120.content.item.energy.EnergyCrystalItem::class.instance()
             val glowstone = net.minecraft.world.item.Items.GLOWSTONE_DUST

@@ -572,7 +572,7 @@ object ModFluids {
                 if (!newState.equals(state)) {
                     val oldBlockState = world.getBlockState(pos)
                     val newBlockState = newState.createLegacyBlock().let { updated ->
-                        if (oldBlockState.contains(SteamFluidBlock.AGE) && updated.contains(SteamFluidBlock.AGE)) {
+                        if (oldBlockState.hasProperty(SteamFluidBlock.AGE) && updated.hasProperty(SteamFluidBlock.AGE)) {
                             updated.setValue(SteamFluidBlock.AGE, oldBlockState.getValue(SteamFluidBlock.AGE))
                         } else {
                             updated
@@ -639,10 +639,11 @@ object ModFluids {
         internal val bucketFluid: FlowingFluid, // 改名为 bucketFluid 避免与父类冲突
         private val placeFluidOverride: FlowingFluid? = null,
         settings: Item.Properties
-    ) : BucketItem(bucketFluid, settings.stacksTo(1)) {
-        // 1.21.1：配方余物改由 getItem/getCraftingRemainingItem 提供
-        override fun getCraftingRemainingItem(stack: ItemStack): ItemStack = ItemStack(Items.BUCKET)
-        override fun hasCraftingRemainingItem(stack: ItemStack): Boolean = true
+    ) : BucketItem(
+        bucketFluid,
+        // 1.21.1: Item#getCraftingRemainingItem() 已 final 且组件化，余物经 Properties.craftRemainder 注入
+        settings.stacksTo(1).craftRemainder(Items.BUCKET)
+    ) {
 
 
         /** 实际放置到世界的流体（用于蒸馏水等特殊情况） */

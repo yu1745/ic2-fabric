@@ -110,7 +110,7 @@ abstract class UiNode {
             ctx.drawContext.fill(x, y, x + measuredWidth, y + measuredHeight, color)
         }
         modifier.borderColor?.let { color ->
-            ctx.drawContext.drawBorder(x, y, measuredWidth, measuredHeight, color)
+            ctx.drawContext.renderOutline(x, y, measuredWidth, measuredHeight, color)
         }
     }
 
@@ -173,8 +173,8 @@ class TextNode(
 
     override fun measure(ctx: RenderContext, constraints: Constraints) {
         val pad = modifier.padding
-        val textW = ctx.textRenderer.getWidth(text)
-        val textH = ctx.textRenderer.fontHeight
+        val textW = ctx.font.width(text)
+        val textH = ctx.font.lineHeight
         measuredWidth = resolveMeasuredWidth(constraints, textW + pad.horizontal)
         measuredHeight = resolveMeasuredHeight(constraints, textH + pad.vertical)
     }
@@ -182,17 +182,17 @@ class TextNode(
     override fun render(ctx: RenderContext, originX: Int, originY: Int) {
         renderModifierDecoration(ctx, originX, originY)
         val pad = modifier.padding
-        val textW = ctx.textRenderer.getWidth(text)
-        val textH = ctx.textRenderer.fontHeight
+        val textW = ctx.font.width(text)
+        val textH = ctx.font.lineHeight
         val contentW = (measuredWidth - pad.horizontal).coerceAtLeast(0)
         val contentH = (measuredHeight - pad.vertical).coerceAtLeast(0)
         val tx = originX + pad.left + if (center) ((contentW - textW) / 2).coerceAtLeast(0) else 0
         val ty = originY + pad.top + if (center) ((contentH - textH) / 2).coerceAtLeast(0) else 0
         if (!ctx.drawEnabled) return
         if (shadow) {
-            ctx.drawContext.drawTextWithShadow(ctx.textRenderer, text, tx, ty, color)
+            ctx.drawContext.drawTextWithShadow(ctx.font, text, tx, ty, color)
         } else {
-            ctx.drawContext.drawText(ctx.textRenderer, text, tx, ty, color, false)
+            ctx.drawContext.drawString(ctx.font, text, tx, ty, color, false)
         }
         if (tooltip != null && ctx.interactionEnabled) {
             val hit = ctx.clipRect?.clamp(originX, originY, measuredWidth, measuredHeight)
@@ -241,7 +241,7 @@ class ImageNode(
         renderModifierDecoration(ctx, originX, originY)
         val pad = modifier.padding
         if (!ctx.drawEnabled) return
-        ctx.drawContext.drawTexture(
+        ctx.drawContext.blit(
             texture,
             originX + pad.left, originY + pad.top,
             u, v,
@@ -319,8 +319,8 @@ class ButtonNode(
         val pad = modifier.padding.let {
             if (it == Padding.ZERO) Padding(6, 4, 6, 4) else it
         }
-        val textW = ctx.textRenderer.getWidth(text)
-        val textH = ctx.textRenderer.fontHeight
+        val textW = ctx.font.width(text)
+        val textH = ctx.font.lineHeight
         measuredWidth = resolveMeasuredWidth(constraints, textW + pad.horizontal)
         measuredHeight = resolveMeasuredHeight(constraints, textH + pad.vertical)
     }
@@ -374,7 +374,7 @@ class ButtonNode(
         val tx = originX + pad.left + if (pressed) 1 else 0
         val ty = originY + pad.top + if (pressed) 1 else 0
         if (ctx.drawEnabled) {
-            ctx.drawContext.drawTextWithShadow(ctx.textRenderer, text, tx, ty, if (hovered) 0xFFFFE080.toInt() else 0xFFE0E0E0.toInt())
+            ctx.drawContext.drawTextWithShadow(ctx.font, text, tx, ty, if (hovered) 0xFFFFE080.toInt() else 0xFFE0E0E0.toInt())
         }
 
         if (ctx.interactionEnabled) {
@@ -429,7 +429,7 @@ class SlotAnchorNode(
             // Render a vanilla-like slot frame so anchored slots look close to native containers.
             GuiBackground.drawVanillaLikeSlot(ctx.drawContext, anchorX, anchorY, anchorW, anchorH)
             if (borderColor != GuiBackground.BORDER_COLOR) {
-                ctx.drawContext.drawBorder(anchorX, anchorY, anchorW, anchorH, borderColor)
+                ctx.drawContext.renderOutline(anchorX, anchorY, anchorW, anchorH, borderColor)
             }
             // ui.render happens after super.render, so we need to redraw slot hover highlight here.
             val mouseInClip = ctx.clipRect?.let {
@@ -959,7 +959,7 @@ class ScrollViewNode(
                 ctx.drawContext.fill(trackX, vpY, trackX + scrollbarWidth, vpY + vpH, scrollbarTrackColor)
                 ctx.drawContext.fill(trackX, thumbY, trackX + scrollbarWidth, thumbY + thumbH,
                     if (hovered) thumbHoverColor else thumbColor)
-                ctx.drawContext.drawBorder(trackX, vpY, scrollbarWidth, vpH, 0xFF444444.toInt())
+                ctx.drawContext.renderOutline(trackX, vpY, scrollbarWidth, vpH, 0xFF444444.toInt())
             }
 
             if (ctx.interactionEnabled) {

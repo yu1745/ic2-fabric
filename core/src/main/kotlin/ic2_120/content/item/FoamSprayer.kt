@@ -141,7 +141,7 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
         private fun canPlaceFoamAt(world: Level, pos: BlockPos): Boolean {
             @Suppress("DEPRECATION")
             if (!world.isLoaded(pos)) return false
-            if (!world.worldBorder.contains(pos)) return false
+            if (!world.worldBorder.isWithinBounds(pos)) return false
             val state = world.getBlockState(pos)
             return state.isAir
         }

@@ -15,41 +15,41 @@ import net.minecraft.resources.ResourceLocation
 
 @ModScreen(block = FluidHeatGeneratorBlock::class)
 class FluidHeatGeneratorScreen(
-    handler: FluidHeatGeneratorScreenHandler,
+    val handler: FluidHeatGeneratorScreenHandler,
     playerInventory: Inventory,
     title: Component
 ) : AbstractContainerScreen<FluidHeatGeneratorScreenHandler>(handler, playerInventory, title) {
 
     private val fluidSprite by lazy {
-        FluidRenderHandlerRegistry.INSTANCE.getValue(ModFluids.BIOFUEL_STILL)
-            ?.getFluidSprites(null, null, ModFluids.BIOFUEL_STILL.defaultBlockState)?.getOrNull(0)
+        FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.BIOFUEL_STILL)
+            ?.getFluidSprites(null, null, ModFluids.BIOFUEL_STILL.defaultFluidState().createLegacyBlock())?.getOrNull(0)
     }
 
     init {
-        backgroundWidth = 176
-        backgroundHeight = 166
+        imageWidth = 176
+        imageHeight = 166
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, 176, 166, 256, 256)
+        context.blit(TEXTURE, leftPos, topPos, 0f, 0f, 176, 166, 256, 256)
     }
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         renderBackground(context)
         super.render(context, mouseX, mouseY, delta)
 
-        val fuelAmount = handler.sync.fuelAmount.coerceAtLeast(0)
-        val outputRate = handler.sync.getSyncedOutputHeat().coerceAtLeast(0L)
+        val fuelAmount = menu.sync.fuelAmount.coerceAtLeast(0)
+        val outputRate = menu.sync.getSyncedOutputHeat().coerceAtLeast(0L)
 
         // 标题居中于 y=6
-        context.drawText(textRenderer, title, x + (176 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)
+        context.drawString(font, title, leftPos + (176 - font.width(title)) / 2, topPos + 6, 0x404040, false)
 
         // 流体槽：区域 (74,24)-(85,70) = 11×46
-        drawFluidTank(context, x + 74, y + 24, fuelAmount)
+        drawFluidTank(context, leftPos + 74, topPos + 24, fuelAmount)
 
         // 容量标示覆盖层：纹理 (180,3)-(191,49)，有流体时才渲染
         if (fuelAmount > 0) {
-            context.drawTexture(TEXTURE, x + 75, y + 24, 180f, 3f, 12, 46, 256, 256)
+            context.blit(TEXTURE, leftPos + 75, topPos + 24, 180f, 3f, 12, 46, 256, 256)
         }
 
         // 文本1：区域 (95,30)-(169,42)，当前输出 HU/t
@@ -59,17 +59,17 @@ class FluidHeatGeneratorScreen(
         drawScaledText(context, "最大输出热值：32 HU/t", 95, 49, 74, 6f)
 
         // 流体槽悬停 (74,24)-(86,70) = 12×46
-        if (mouseX in x + 74 until x + 86 && mouseY in y + 24 until y + 70) {
+        if (mouseX in leftPos + 74 until leftPos + 86 && mouseY in topPos + 24 until topPos + 70) {
             val fuelLines = if (fuelAmount > 0) {
                 val fuelAmountMb = fuelAmount / DROPLETS_PER_MB
                 listOf(Component.translatable("gui.ic2_120.fluid_heat_generator.fuel_tooltip", "%,d".format(fuelAmountMb), "8,000"))
             } else {
                 listOf(Component.translatable("ic2.generic.text.empty"))
             }
-            context.drawTooltip(textRenderer, fuelLines, mouseX, mouseY)
+            context.renderComponentTooltip(font, fuelLines, mouseX, mouseY)
         }
 
-        drawMouseoverTooltip(context, mouseX, mouseY)
+        renderTooltip(context, mouseX, mouseY)
     }
 
     private fun drawFluidTank(context: GuiGraphics, gx: Int, gy: Int, fuelAmount: Int) {
@@ -90,23 +90,23 @@ class FluidHeatGeneratorScreen(
             val tileH = minOf(16, gy + tankH - sy)
             for (sx in gx until (gx + tankW) step 16) {
                 val tileW = minOf(16, gx + tankW - sx)
-                context.drawSprite(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
+                context.blit(sx, sy, 0, tileW, tileH, sprite, r, g, b, 1f)
             }
         }
         context.disableScissor()
     }
 
     private fun drawScaledText(context: GuiGraphics, text: String, rx: Int, ry: Int, rw: Int, height: Float = 7f) {
-        val scale = height / textRenderer.fontHeight
-        val scaledWidth = (textRenderer.getWidth(text) * scale).toInt()
-        val scaledHeight = (textRenderer.fontHeight * scale).toInt()
-        val textX = x + rx + (rw - scaledWidth) / 2
-        val textY = y + ry + (12 - scaledHeight) / 2
-        context.matrices.push()
-        context.matrices.translate(textX.toDouble(), textY.toDouble(), 0.0)
-        context.matrices.scale(scale, scale, 1.0f)
-        context.drawText(textRenderer, text, 0, 0, 0xFFADD8E6.toInt(), false)
-        context.matrices.pop()
+        val scale = height / font.lineHeight
+        val scaledWidth = (font.width(text) * scale).toInt()
+        val scaledHeight = (font.lineHeight * scale).toInt()
+        val textX = leftPos + rx + (rw - scaledWidth) / 2
+        val textY = topPos + ry + (12 - scaledHeight) / 2
+        context.pose().pushPose()
+        context.pose().translate(textX.toDouble(), textY.toDouble(), 0.0)
+        context.pose().scale(scale, scale, 1.0f)
+        context.drawString(font, text, 0, 0, 0xFFADD8E6.toInt(), false)
+        context.pose().popPose()
     }
 
     companion object {

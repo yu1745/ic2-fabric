@@ -5,6 +5,7 @@ import net.minecraft.data.recipes.RecipeProvider.getHasName
 import net.minecraft.data.recipes.RecipeProvider.has
 
 import ic2_120.compat.isClient
+import ic2_120.compat.orCreateNbt
 
 import ic2_120.content.block.machines.PatternStorageBlockEntity
 import ic2_120.content.item.AdvancedCircuit
@@ -28,6 +29,7 @@ import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory

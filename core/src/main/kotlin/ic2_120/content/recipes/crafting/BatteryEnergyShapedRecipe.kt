@@ -69,7 +69,7 @@ class BatteryEnergyShapedRecipe(
 
 private fun sumEnergyFromIngredients(inventory: CraftingInput): Long {
     var total = 0L
-    for (slot in 0 until inventory.size) {
+    for (slot in 0 until inventory.size()) {
         val stack = inventory.getItem(slot)
         if (stack.isEmpty) continue
         total = total.saturatingAdd(getEnergyFromStack(stack))

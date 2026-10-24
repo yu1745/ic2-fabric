@@ -1,8 +1,6 @@
 package ic2_120.integration.jei
 
 import ic2_120.compat.orCreateNbt
-import net.minecraft.world.item.crafting.RecipeType
-import net.minecraft.world.item.crafting.Recipe
 import net.minecraft.core.registries.BuiltInRegistries
 
 import ic2_120.config.Ic2Config
@@ -328,10 +326,8 @@ class Ic2JeiPlugin : IModPlugin {
      */
     private inline fun <reified T : Recipe<*>> liveRecipes(): List<T>? {
         val rm = LiveRecipeSource.instance?.clientRecipeManager() ?: return null
-        val all = BuiltInRegistries.RECIPE_TYPE
-            .filterIsInstance<RecipeType<Recipe<*>>>()
-            .flatMap { rm.getAllRecipesFor(it) }
-        return all.map { it.value }.filterIsInstance<T>().takeIf { it.isNotEmpty() }
+        val all = rm.getRecipes()
+        return all.map { it.value() }.filterIsInstance<T>().takeIf { it.isNotEmpty() }
     }
 
     override fun registerRecipes(registration: IRecipeRegistration) {

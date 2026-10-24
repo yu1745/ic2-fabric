@@ -80,7 +80,7 @@ class LaserProjectileEntityRenderer(
         val dirYaw = Math.toDegrees(atan2(dir.x, dir.z)).toFloat()
         val dirPitch = Math.toDegrees(atan2(-dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z))).toFloat()
 
-        matrices.push()
+        matrices.pushPose()
         matrices.translate(
             renderX - entity.x,
             renderY - entity.y,
@@ -89,11 +89,11 @@ class LaserProjectileEntityRenderer(
 
         // 弹体尾端对齐实体位置（头部朝飞行方向前方）
         // 先旋转到飞行方向
-        matrices.multiply(com.mojang.math.Axis.POSITIVE_Y.rotationDegrees(dirYaw))
-        matrices.multiply(com.mojang.math.Axis.POSITIVE_X.rotationDegrees(dirPitch))
+        matrices.mulPose(com.mojang.math.Axis.YP.rotationDegrees(dirYaw))
+        matrices.mulPose(com.mojang.math.Axis.XP.rotationDegrees(dirPitch))
 
         val fullLight = LightTexture.MAX_LIGHT_COORDINATE
-        val overlay = OverlayTexture.DEFAULT_UV
+        val overlay = OverlayTexture.NO_OVERLAY
 
         // --- 外层辉光 ---
         val glowVc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
@@ -107,7 +107,7 @@ class LaserProjectileEntityRenderer(
         val tipVc = vertexConsumers.getBuffer(RenderType.getEntityTranslucent(WHITE_TEXTURE))
         drawTip(matrices, tipVc, fullLight, overlay, length, RADIUS, r, g, b, 220)
 
-        matrices.pop()
+        matrices.popPose()
     }
 
     /**
@@ -123,7 +123,7 @@ class LaserProjectileEntityRenderer(
         radius: Float,
         r: Float, g: Float, b: Float, a: Int
     ) {
-        val entry = matrices.peek()
+        val entry = matrices.last()
         val step = (2.0 * Math.PI / SIDES).toFloat()
 
         for (i in 0 until SIDES) {
@@ -158,7 +158,7 @@ class LaserProjectileEntityRenderer(
         radius: Float,
         r: Float, g: Float, b: Float, a: Int
     ) {
-        val entry = matrices.peek()
+        val entry = matrices.last()
         val step = (2.0 * Math.PI / SIDES).toFloat()
         val tipZ = length + radius * 0.6f // 锥尖比弹体再伸出一点
 
@@ -181,16 +181,16 @@ class LaserProjectileEntityRenderer(
 
     private fun vertex(
         vc: VertexConsumer,
-        entry: PoseStack.Entry,
+        entry: PoseStack.Pose,
         x: Float, y: Float, z: Float,
         light: Int,
         overlay: Int,
         r: Float, g: Float, b: Float, a: Int,
         nx: Float, ny: Float, nz: Float
     ) {
-        vc.vertex(entry.positionMatrix, x, y, z)
+        vc.vertex(entry.pose(), x, y, z)
             .color(r, g, b, a / 255f)
-            .texture(0f, 0f)
+            .uv(0f, 0f)
             .overlay(overlay)
             .light(light)
             .normal(entry, nx, ny, nz)

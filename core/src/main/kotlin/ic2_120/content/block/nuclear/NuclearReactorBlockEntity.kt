@@ -1510,7 +1510,7 @@ class NuclearReactorBlockEntity(
                             player.displayClientMessage(detail, false)
                             player.displayClientMessage(blocksMsg, false)
                             for (line in safetyLines) {
-                                player.displayClientMessage(Component.literal(line))
+                                player.displayClientMessage(Component.literal(line), false)
                             }
                         }
                     } else {
@@ -1575,7 +1575,7 @@ class NuclearReactorBlockEntity(
                 }
             }
             if (ClaimProtection.allAllowedUuid(world, fireTargets, ownerUuid, ClaimProtection.EDIT_BLOCK)) {
-                fireTargets.forEach { world.setBlock(it, Blocks.FIRE.defaultBlockState()) }
+                fireTargets.forEach { world.setBlock(it, Blocks.FIRE.defaultBlockState(), Block.UPDATE_ALL) }
             }
         }
 
@@ -1590,7 +1590,7 @@ class NuclearReactorBlockEntity(
                 }
             }
             if (ClaimProtection.allAllowedUuid(world, waterTargets, ownerUuid, ClaimProtection.EDIT_FLUID)) {
-                waterTargets.forEach { world.setBlock(it, Blocks.AIR.defaultBlockState()) }
+                waterTargets.forEach { world.setBlock(it, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL) }
             }
         }
 
@@ -1624,7 +1624,7 @@ class NuclearReactorBlockEntity(
                 }
             }
             if (ClaimProtection.allAllowedUuid(world, lavaTargets, ownerUuid, ClaimProtection.EDIT_FLUID)) {
-                lavaTargets.forEach { world.setBlock(it, Blocks.LAVA.defaultBlockState()) }
+                lavaTargets.forEach { world.setBlock(it, Blocks.LAVA.defaultBlockState(), Block.UPDATE_ALL) }
             }
         }
     }
