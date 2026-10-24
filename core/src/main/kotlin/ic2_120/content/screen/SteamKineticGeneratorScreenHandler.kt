@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.block.SteamKineticGeneratorBlock
 import ic2_120.content.block.machines.SteamKineticGeneratorBlockEntity
 import ic2_120.content.item.SteamTurbine
@@ -12,7 +14,7 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ContainerData
@@ -39,8 +41,8 @@ class SteamKineticGeneratorScreenHandler(
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
-        checkSize(blockInventory, SteamKineticGeneratorBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, SteamKineticGeneratorBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
         // 涡轮槽
         addSlot(Slot(blockInventory, SteamKineticGeneratorBlockEntity.SLOT_TURBINE, TURBINE_SLOT_X, TURBINE_SLOT_Y))
         beSlotToHandlerIndex[SteamKineticGeneratorBlockEntity.SLOT_TURBINE] = SLOT_TURBINE_INDEX
@@ -56,23 +58,23 @@ class SteamKineticGeneratorScreenHandler(
             addSlot(Slot(playerInventory, col, PLAYER_INV_X + col * 18, HOTBAR_Y))
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val s = slot.stack; stack = s.copy()
             when (index) {
                 SLOT_TURBINE_INDEX -> {
-                    if (!insertItem(s, PLAYER_INV_START, PLAYER_INV_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(s, PLAYER_INV_START, PLAYER_INV_END, true)) return ItemStack.EMPTY
                 }
                 SLOT_UPGRADE_INDEX -> {
-                    if (!insertItem(s, PLAYER_INV_START, PLAYER_INV_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(s, PLAYER_INV_START, PLAYER_INV_END, true)) return ItemStack.EMPTY
                 }
                 in PLAYER_INV_START until PLAYER_INV_END -> {
                     val storage = itemStorage
                     if (storage == null) return ItemStack.EMPTY
                     if (s.item is SteamTurbine) {
-                        if (!insertItem(s, SLOT_TURBINE_INDEX, SLOT_TURBINE_INDEX + 1, false)) return ItemStack.EMPTY
+                        if (!moveItemStackTo(s, SLOT_TURBINE_INDEX, SLOT_TURBINE_INDEX + 1, false)) return ItemStack.EMPTY
                     } else {
                         val moved = SlotMoveHelper.insertFromRoutes(s, storage, storage.insertRoutes, beSlotToHandlerIndex, slots)
                         if (!moved) return ItemStack.EMPTY
@@ -82,20 +84,20 @@ class SteamKineticGeneratorScreenHandler(
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-                    if (!insertItem(s, PLAYER_INV_START, PLAYER_INV_END, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(s, PLAYER_INV_START, PLAYER_INV_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (s.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
+            if (s.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
             if (s.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, s)
+            slot.onTake(player, s)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is SteamKineticGeneratorBlock &&
-                player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+                player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     companion object {

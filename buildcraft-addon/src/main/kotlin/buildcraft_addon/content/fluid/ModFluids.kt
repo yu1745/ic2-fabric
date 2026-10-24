@@ -119,8 +119,8 @@ object ModFluids {
         fluidTintColors[flowing] = colorArgb
 
         // 2. LiquidBlock
-        val blockSettings = BlockBehaviour.Settings.copy(Blocks.WATER)
-            .noCollision().dropsNothing()
+        val blockSettings = BlockBehaviour.Properties.ofFullCopy(Blocks.WATER)
+            .noCollision().noLootTable()
         val block = Registry.register(
             BuiltInRegistries.BLOCK, BuildCraftAddon.id(name),
             LiquidBlock(still, blockSettings)
@@ -129,7 +129,7 @@ object ModFluids {
         // 3. 注册桶
         val bucket = Registry.register(
             BuiltInRegistries.ITEM, BuildCraftAddon.id("${name}_bucket"),
-            BucketItem(still, Item.Settings().maxCount(1))
+            BucketItem(still, Item.Properties().maxStackSize(1))
         )
         BcOilFluid.bucketLookup[name] = bucket
 
@@ -167,7 +167,7 @@ object ModFluids {
         override fun getBucketItem(): Item = bucketLookup[fluidName] ?: Items.AIR
         override fun toBlockState(state: FluidState): BlockState {
             val block = BuiltInRegistries.BLOCK.get(ResourceLocation(BuildCraftAddon.MOD_ID, fluidName))
-            return block.defaultState.with(LiquidBlock.LEVEL, getBlockStateLevel(state))
+            return block.defaultBlockState.setValue(LiquidBlock.LEVEL, getBlockStateLevel(state))
         }
         override fun matchesType(fluid: Fluid): Boolean = fluid == ref.first || fluid == ref.second
         override fun isInfinite(world: Level): Boolean = false
@@ -187,10 +187,10 @@ object ModFluids {
         }
 
         class Flowing(override val fluidName: String) : BcOilFluid() {
-            override fun appendProperties(builder: StateDefinition.Builder<Fluid, FluidState>) {
-                super.appendProperties(builder); builder.add(LEVEL)
+            override fun createBlockStateDefinition(builder: StateDefinition.Builder<Fluid, FluidState>) {
+                super.createBlockStateDefinition(builder); builder.add(LEVEL)
             }
-            override fun getLevel(state: FluidState): Int = state.get(LEVEL)
+            override fun getLevel(state: FluidState): Int = state.getValue(LEVEL)
             override fun isStill(state: FluidState): Boolean = false
         }
     }

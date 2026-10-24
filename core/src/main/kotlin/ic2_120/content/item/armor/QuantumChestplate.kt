@@ -45,7 +45,7 @@ import java.util.function.Consumer
  * - 能量从所有量子装备均匀扣除
  */
 @ModItem(name = "quantum_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
+class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Properties().maxStackSize(1)) {
 
     companion object {
         private const val FLIGHT_REMAINDER_KEY = "QuantumChestplateFlightRemainder"
@@ -103,7 +103,7 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
     }
 
     override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.level.Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val energy = getEnergy(stack)
 
         val remainingSeconds = if (energy > 0) {
@@ -117,8 +117,8 @@ class QuantumChestplate : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, Armo
             "${remainingSeconds.toInt()}秒"
         }
 
-        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_chestplate.flight_time", timeText).formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_chestplate.flight_time", timeText).withStyle(ChatFormatting.GRAY))
         val pct = "%.0f".format(getDamageReduction() * 100)
-        tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).withStyle(ChatFormatting.GRAY))
     }
 }

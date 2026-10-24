@@ -65,7 +65,7 @@ object ArmorKeybinds {
                 if (!isAltDown(client)) continue
 
                 // 优先级 1：头盔 → 夜视眼镜
-                val helmet = player.getEquippedStack(EquipmentSlot.HEAD)
+                val helmet = player.getItemBySlot(EquipmentSlot.HEAD)
                 if (helmet.item is NightVisionGoggles) {
                     ClientPlayNetworking.send(
                         NetworkManager.TOGGLE_NIGHT_VISION_GOGGLES_PACKET,
@@ -86,7 +86,7 @@ object ArmorKeybinds {
             while (toggleSpeedKey.wasPressed()) {
                 if (!isAltDown(client)) continue
 
-                val legs = player.getEquippedStack(EquipmentSlot.LEGS)
+                val legs = player.getItemBySlot(EquipmentSlot.LEGS)
                 if (legs.item is QuantumLeggings) {
                     ClientPlayNetworking.send(
                         NetworkManager.TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET,
@@ -98,7 +98,7 @@ object ArmorKeybinds {
             while (toggleJumpKey.wasPressed()) {
                 if (!isAltDown(client)) continue
 
-                val feet = player.getEquippedStack(EquipmentSlot.FEET)
+                val feet = player.getItemBySlot(EquipmentSlot.FEET)
                 if (feet.item is QuantumBoots) {
                     ClientPlayNetworking.send(
                         NetworkManager.TOGGLE_QUANTUM_BOOTS_JUMP_PACKET,

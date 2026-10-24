@@ -11,10 +11,10 @@ class AddonConfigSyncPacket(
     val chunkIndex: Int,
     val chunkData: ByteArray
 ) : CustomPacketPayload {
-    override fun getId(): CustomPacketPayload.Id<*> = ID
+    override fun type(): CustomPacketPayload.Type<*> = ID
 
     companion object {
-        val ID = CustomPacketPayload.Id<AddonConfigSyncPacket>(ResourceLocation.fromNamespaceAndPath(IC2AdvancedSolarAddon.MOD_ID, "config_sync"))
+        val ID = CustomPacketPayload.Type<AddonConfigSyncPacket>(ResourceLocation.fromNamespaceAndPath(IC2AdvancedSolarAddon.MOD_ID, "config_sync"))
         const val MAX_CHUNK_BYTES = 20000
 
         val CODEC: StreamCodec<FriendlyByteBuf, AddonConfigSyncPacket> = StreamCodec.of(

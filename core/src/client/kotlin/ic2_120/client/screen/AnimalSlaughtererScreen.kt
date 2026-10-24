@@ -7,7 +7,7 @@ import ic2_120.content.screen.AnimalSlaughtererScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 
@@ -85,7 +85,7 @@ class AnimalSlaughtererScreen(
         val animalText = t("gui.ic2_120.animal_slaughterer.animal_count", animalCount, statusText)
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
         val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatRaw(consumeRate))
-        val hasShears = handler.getSlot(AnimalSlaughtererScreenHandler.SLOT_SHEARS_INDEX).hasStack()
+        val hasShears = handler.getSlot(AnimalSlaughtererScreenHandler.SLOT_SHEARS_INDEX) .hasItem()
         val needShearsText = if (!hasShears) t("gui.ic2_120.animal_slaughterer.need_shears") else ""
         val sideTextWidth = maxOf(
             textRenderer.getWidth(animalText),

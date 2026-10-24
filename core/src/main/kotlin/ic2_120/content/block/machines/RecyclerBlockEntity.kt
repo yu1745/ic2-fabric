@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.item.IUpgradeItem
 import ic2_120.content.item.energy.IBatteryItem
 import ic2_120.content.recipes.RecyclerRecipes
@@ -33,7 +40,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -119,12 +126,12 @@ class RecyclerBlockEntity(
         private val SCRAP_ID = ResourceLocation.fromNamespaceAndPath("ic2_120", "scrap")
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
-    private val cachedScrapItem by lazy { BuiltInRegistries.ITEM.get(SCRAP_ID) }
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val cachedScrapItem by lazy { BuiltInRegistries.ITEM.getValue(SCRAP_ID) }
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
@@ -132,7 +139,7 @@ class RecyclerBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust }, maxPerSlot = 1)
         ),
         extractSlots = intArrayOf(SLOT_OUTPUT),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -168,19 +175,19 @@ class RecyclerBlockEntity(
             stack.count = 1
         }
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
 
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() {
-        super.markDirty()
+    override fun setChanged() {
+        super.setChanged()
     }
 
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> isRecyclerInput(stack)
@@ -207,9 +214,9 @@ class RecyclerBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(RecyclerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -223,9 +230,9 @@ class RecyclerBlockEntity(
         energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(RecyclerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -283,7 +290,7 @@ class RecyclerBlockEntity(
         }
         val outputSlot = getStack(SLOT_OUTPUT)
         val canAcceptScrap = outputSlot.isEmpty ||
-                (outputSlot.item == scrapItem && outputSlot.count < outputSlot.maxCount)
+                (outputSlot.item == scrapItem && outputSlot.count < outputSlot.maxStackSize)
 
         if (!canAcceptScrap) {
             resetProgress()
@@ -294,7 +301,7 @@ class RecyclerBlockEntity(
 
         if (progressF >= RecyclerSync.PROGRESS_MAX) {
             // 消耗输入物品
-            input.decrement(1)
+            input.shrink(1)
 
             // 1/8 概率产出废料
             val roll = RandomSource.nextInt(RecyclerSync.SCRAP_CHANCE_DENOMINATOR)
@@ -308,7 +315,7 @@ class RecyclerBlockEntity(
             progressF = 0f
             energyDebtF = 0f
             sync.progress = 0
-            markDirty()
+            setChanged()
             // 完工不振荡（2026-08-26 perf）：下 tick 早退分支自然关灯
             sync.syncCurrentTickFlow()
             return
@@ -323,7 +330,7 @@ class RecyclerBlockEntity(
             // 浮点进度：1.4286^n 直接累加；封顶 50 防止极端超频（+Inf）造成免费完工
             progressF = (progressF + speedMultiplier).coerceAtMost(RecyclerSync.PROGRESS_MAX.toFloat())
             sync.progress = progressF.toInt()
-            markDirty()
+            setChanged()
             setActiveState(world, pos, state, true)
         } else {
             // 停顿期间不累计债务：避免恢复供电后 need 超过容量导致 all-or-nothing 永久卡死
@@ -344,7 +351,7 @@ class RecyclerBlockEntity(
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
+        setChanged()
     }
 
     private fun getScrapItem(): Item? {

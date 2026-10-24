@@ -1,11 +1,13 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.world
+
 import ic2_120.content.sync.TransformerSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.SimpleContainer
 import net.minecraft.network.FriendlyByteBuf
 
@@ -41,11 +43,11 @@ class TransformerScreenHandler(
 
     private fun getFacingDirection(): Direction {
         return context.get({ world, pos ->
-            world.getBlockState(pos).get(BlockStateProperties.FACING)
+            world.getBlockState(pos).getValue(BlockStateProperties.FACING)
         }, Direction.NORTH)
     }
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos)
             if (be is ic2_120.content.block.machines.TransformerBlockEntity) {
@@ -60,7 +62,7 @@ class TransformerScreenHandler(
     }
 
     init {
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
 
         // 玩家物品栏
         for (row in 0 until 3) {
@@ -73,14 +75,14 @@ class TransformerScreenHandler(
         }
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             val block = world.getBlockState(pos).block
             block is ic2_120.content.block.TransformerBlock &&
-                    player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+                    player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
-    override fun quickMove(player: Player, slot: Int): net.minecraft.world.item.ItemStack =
+    override fun quickMoveStack(player: Player, slot: Int): net.minecraft.world.item.ItemStack =
         net.minecraft.world.item.ItemStack.EMPTY
 
     companion object {

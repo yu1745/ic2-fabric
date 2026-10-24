@@ -1,5 +1,7 @@
 package ic2_120.content.upgrade
 
+import ic2_120.compat.time
+
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.FluidEjectorUpgrade
 import ic2_120.content.item.FluidPullingUpgrade

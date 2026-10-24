@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.RecipeCacheEpoch
 import ic2_120.Ic2_120
 import ic2_120.content.block.CannerBlock
@@ -51,7 +58,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
@@ -150,11 +157,11 @@ class CannerBlockEntity(
         }
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
@@ -163,7 +170,7 @@ class CannerBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && (it.item is IBatteryItem || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust) }, maxPerSlot = 1)
         ),
         extractSlots = intArrayOf(SLOT_INPUT, SLOT_MATERIAL, SLOT_OUTPUT, SLOT_DISCHARGING),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -193,7 +200,7 @@ class CannerBlockEntity(
             sync.leftFluidAmount = amount.toInt().coerceAtLeast(0)
             sync.leftFluidCapacity = TANK_CAPACITY.toInt()
             sync.leftFluidRawId = if (variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(variant.fluid)
-            markDirty()
+            setChanged()
         }
     }
 
@@ -212,7 +219,7 @@ class CannerBlockEntity(
             sync.rightFluidAmount = amount.toInt().coerceAtLeast(0)
             sync.rightFluidCapacity = TANK_CAPACITY.toInt()
             sync.rightFluidRawId = if (variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(variant.fluid)
-            markDirty()
+            setChanged()
         }
     }
 
@@ -252,15 +259,15 @@ class CannerBlockEntity(
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     private fun cannerIsFilledFluidContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
@@ -319,9 +326,9 @@ class CannerBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         CannerScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CannerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -346,9 +353,9 @@ class CannerBlockEntity(
         sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(rightTankInternal.variant.fluid)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(CannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -417,7 +424,7 @@ class CannerBlockEntity(
                     energyDebtF = 0f
                     sync.progress = 0
                 }
-                markDirty()
+                setChanged()
                 setActiveState(world, pos, state, true)
             } else {
                 // 停顿期间不累计债务：防恢复供电后 need 超容量 all-or-nothing 卡死
@@ -435,7 +442,7 @@ class CannerBlockEntity(
     fun cycleMode() {
         sync.cycleMode()
         resetProgress()
-        markDirty()
+        setChanged()
     }
 
     fun swapTanks(): Boolean {
@@ -468,7 +475,7 @@ class CannerBlockEntity(
         sync.rightFluidAmount = rightTankInternal.amount.toInt().coerceAtLeast(0)
         sync.rightFluidRawId = if (rightTankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(rightTankInternal.variant.fluid)
         resetProgress()
-        markDirty()
+        setChanged()
         return beforeLeft != leftTankInternal.amount ||
             beforeRight != rightTankInternal.amount ||
             beforeLeftVariant != leftTankInternal.variant ||
@@ -640,7 +647,7 @@ class CannerBlockEntity(
 
     private fun canAcceptOutput(outputSlot: ItemStack, result: ItemStack): Boolean {
         if (outputSlot.isEmpty) return true
-        return ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= result.maxCount
+        return ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= result.maxStackSize
     }
 
     private fun completeCurrentOperationByMode() {
@@ -686,14 +693,14 @@ class CannerBlockEntity(
             if (rightTankInternal.insert(outputVariant, plan.tankFluidAmount, tx) != plan.tankFluidAmount) return@use
             tx.commit()
 
-            material.decrement(recipe.inputSolidCount)
+            material.shrink(recipe.inputSolidCount)
             if (material.isEmpty) setStack(SLOT_MATERIAL, ItemStack.EMPTY)
             if (!filledContainer.isEmpty) {
-                container.decrement(1)
+                container.shrink(1)
                 if (container.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
                 if (plan.containerFullAfterFill) {
                     if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, filledContainer)
-                    else outputSlot.increment(filledContainer.count)
+                    else outputSlot.grow(filledContainer.count)
                 } else {
                     setStack(SLOT_INPUT, filledContainer)
                 }
@@ -710,13 +717,13 @@ class CannerBlockEntity(
         val material = getStack(SLOT_MATERIAL)
         val outputSlot = getStack(SLOT_OUTPUT)
         val recipe = solidCanningRecipeFor(container, material) ?: return
-        container.decrement(recipe.slot0Count)
-        material.decrement(recipe.slot1Count)
+        container.shrink(recipe.slot0Count)
+        material.shrink(recipe.slot1Count)
         if (container.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
         if (material.isEmpty) setStack(SLOT_MATERIAL, ItemStack.EMPTY)
         val result = recipe.output.copy()
         if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, result)
-        else outputSlot.increment(result.count)
+        else outputSlot.grow(result.count)
     }
 
     private fun completePourOutToLeft() {
@@ -741,10 +748,10 @@ class CannerBlockEntity(
                             val outputSlot = getStack(SLOT_OUTPUT)
                             if (!canAcceptOutput(outputSlot, emptyResult)) return@use
                             tx.commit()
-                            container.decrement(1)
+                            container.shrink(1)
                             if (container.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
                             if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, emptyResult)
-                            else outputSlot.increment(1)
+                            else outputSlot.grow(1)
                             sync.leftFluidAmount = leftTankInternal.amount.toInt().coerceAtLeast(0)
                             sync.leftFluidRawId = if (leftTankInternal.variant.isBlank) -1 else BuiltInRegistries.FLUID.getRawId(leftTankInternal.variant.fluid)
                             return
@@ -775,12 +782,12 @@ class CannerBlockEntity(
             if (plan.fullAfterFill && !canAcceptOutput(getStack(SLOT_OUTPUT), filled)) return@use
             tx.commit()
 
-            container.decrement(1)
+            container.shrink(1)
             if (container.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
             if (plan.fullAfterFill) {
                 val output = getStack(SLOT_OUTPUT)
                 if (output.isEmpty) setStack(SLOT_OUTPUT, filled)
-                else output.increment(filled.count)
+                else output.grow(filled.count)
             } else {
                 setStack(SLOT_INPUT, filled)
             }
@@ -796,6 +803,6 @@ class CannerBlockEntity(
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
+        setChanged()
     }
 }

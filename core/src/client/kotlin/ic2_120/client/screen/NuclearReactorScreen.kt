@@ -14,7 +14,7 @@ import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.chat.Component
@@ -31,12 +31,12 @@ class NuclearReactorScreen(
     private var lockButton: Button? = null
 
     private val coolantSprite by lazy {
-        FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.COOLANT_STILL)
-            ?.getFluidSprites(null, null, ModFluids.COOLANT_STILL.defaultState)?.getOrNull(0)
+        FluidRenderHandlerRegistry.INSTANCE.getValue(ModFluids.COOLANT_STILL)
+            ?.getFluidSprites(null, null, ModFluids.COOLANT_STILL.defaultBlockState)?.getOrNull(0)
     }
     private val hotCoolantSprite by lazy {
-        FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.HOT_COOLANT_STILL)
-            ?.getFluidSprites(null, null, ModFluids.HOT_COOLANT_STILL.defaultState)?.getOrNull(0)
+        FluidRenderHandlerRegistry.INSTANCE.getValue(ModFluids.HOT_COOLANT_STILL)
+            ?.getFluidSprites(null, null, ModFluids.HOT_COOLANT_STILL.defaultBlockState)?.getOrNull(0)
     }
     private val coolantColor by lazy { FluidUtils.getFluidColor(ModFluids.COOLANT_STILL) }
     private val hotCoolantColor by lazy { FluidUtils.getFluidColor(ModFluids.HOT_COOLANT_STILL) }
@@ -228,7 +228,7 @@ class NuclearReactorScreen(
         val reactor = handler.reactor ?: return
         for (i in 0 until handler.reactorSlotCount) {
             val slot = handler.slots[i]
-            if (slot.hasStack()) continue
+            if (slot .hasItem()) continue
             val lockedItem = reactor.getLockedItemForSlot(i) ?: continue
             val ghostStack = ItemStack(lockedItem)
             val sx = x + slot.x

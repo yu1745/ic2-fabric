@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.network.chat.Component as McText
 import net.minecraft.resources.ResourceLocation
@@ -101,7 +101,7 @@ class FluidHeatExchangerScreen(
         // 输入流体槽悬停
         if (relX in 19 until 31 && relY in 47 until 91) {
             val lines = if (inputMb > 0 && inputFluid != null) {
-                listOf(inputFluid.defaultState.blockState.block.name, McText.literal("${"%,d".format(inputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
+                listOf(inputFluid.defaultBlockState.blockState.block.name, McText.literal("${"%,d".format(inputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(McText.literal("空"))
             }
@@ -111,7 +111,7 @@ class FluidHeatExchangerScreen(
         // 输出流体槽悬停
         if (relX in 145 until 157 && relY in 47 until 91) {
             val lines = if (outputMb > 0 && outputFluid != null) {
-                listOf(outputFluid.defaultState.blockState.block.name, McText.literal("${"%,d".format(outputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
+                listOf(outputFluid.defaultBlockState.blockState.block.name, McText.literal("${"%,d".format(outputMb / DROPLETS_PER_MB)} / ${"%,d".format(TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(McText.literal("空"))
             }
@@ -125,7 +125,7 @@ class FluidHeatExchangerScreen(
         if (fillH <= 0) return
 
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
-        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultState) ?: return
+        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultBlockState) ?: return
         val sprite = sprites[0]
 
         val color = FluidUtils.getFluidColor(fluid)

@@ -49,11 +49,11 @@ object MolecularTransformerCommand {
                                             source.sendFeedback(
                                                 {
                                                     Component.literal("")
-                                                        .append(Component.literal("成功设置 ").formatted(ChatFormatting.GREEN))
-                                                        .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
-                                                        .append(Component.literal(" 的分子重组仪所需电量为 ").formatted(ChatFormatting.GREEN))
-                                                        .append(Component.literal("$energy EU").formatted(ChatFormatting.AQUA))
-                                                        .append(Component.literal("（已写入配置文件）").formatted(ChatFormatting.GRAY))
+                                                        .append(Component.literal("成功设置 ").withStyle(ChatFormatting.GREEN))
+                                                        .append(Component.literal(itemId).withStyle(ChatFormatting.YELLOW))
+                                                        .append(Component.literal(" 的分子重组仪所需电量为 ").withStyle(ChatFormatting.GREEN))
+                                                        .append(Component.literal("$energy EU").withStyle(ChatFormatting.AQUA))
+                                                        .append(Component.literal("（已写入配置文件）").withStyle(ChatFormatting.GRAY))
                                                 },
                                                 true
                                             )
@@ -92,9 +92,9 @@ object MolecularTransformerCommand {
                                     source.sendFeedback(
                                         {
                                             Component.literal("")
-                                                .append(Component.literal("成功移除 ").formatted(ChatFormatting.GREEN))
-                                                .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
-                                                .append(Component.literal(" 的分子重组仪配置").formatted(ChatFormatting.GREEN))
+                                                .append(Component.literal("成功移除 ").withStyle(ChatFormatting.GREEN))
+                                                .append(Component.literal(itemId).withStyle(ChatFormatting.YELLOW))
+                                                .append(Component.literal(" 的分子重组仪配置").withStyle(ChatFormatting.GREEN))
                                         },
                                         true
                                     )
@@ -130,13 +130,13 @@ object MolecularTransformerCommand {
                                     source.sendFeedback(
                                         {
                                             Component.literal("")
-                                                .append(Component.literal("物品 ").formatted(ChatFormatting.WHITE))
-                                                .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
-                                                .append(Component.literal(" 的分子重组仪配置:").formatted(ChatFormatting.WHITE))
-                                                .append(Component.literal("\n  - 所需电量: ").formatted(ChatFormatting.GREEN))
-                                                .append(Component.literal("${currentRecipe.energy} EU").formatted(ChatFormatting.AQUA))
-                                                .append(Component.literal("\n  - 输出物品: ").formatted(ChatFormatting.GREEN))
-                                                .append(Component.literal(currentRecipe.output).formatted(ChatFormatting.YELLOW))
+                                                .append(Component.literal("物品 ").withStyle(ChatFormatting.WHITE))
+                                                .append(Component.literal(itemId).withStyle(ChatFormatting.YELLOW))
+                                                .append(Component.literal(" 的分子重组仪配置:").withStyle(ChatFormatting.WHITE))
+                                                .append(Component.literal("\n  - 所需电量: ").withStyle(ChatFormatting.GREEN))
+                                                .append(Component.literal("${currentRecipe.energy} EU").withStyle(ChatFormatting.AQUA))
+                                                .append(Component.literal("\n  - 输出物品: ").withStyle(ChatFormatting.GREEN))
+                                                .append(Component.literal(currentRecipe.output).withStyle(ChatFormatting.YELLOW))
                                         },
                                         false
                                     )
@@ -144,9 +144,9 @@ object MolecularTransformerCommand {
                                     source.sendFeedback(
                                         {
                                             Component.literal("")
-                                                .append(Component.literal("物品 ").formatted(ChatFormatting.WHITE))
-                                                .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
-                                                .append(Component.literal(" 未配置分子重组仪配方").formatted(ChatFormatting.RED))
+                                                .append(Component.literal("物品 ").withStyle(ChatFormatting.WHITE))
+                                                .append(Component.literal(itemId).withStyle(ChatFormatting.YELLOW))
+                                                .append(Component.literal(" 未配置分子重组仪配方").withStyle(ChatFormatting.RED))
                                         },
                                         false
                                     )
@@ -177,7 +177,7 @@ object MolecularTransformerCommand {
             .sortedBy { it.input }
 
         if (allRecipes.isEmpty()) {
-            source.sendFeedback({ Component.literal("分子重组仪配方列表为空").formatted(ChatFormatting.YELLOW) }, false)
+            source.sendFeedback({ Component.literal("分子重组仪配方列表为空").withStyle(ChatFormatting.YELLOW) }, false)
             return Command.SINGLE_SUCCESS
         }
 
@@ -188,7 +188,7 @@ object MolecularTransformerCommand {
         val endIndex = minOf(startIndex + itemsPerPage, allRecipes.size)
 
         source.sendFeedback(
-            { Component.literal("=== 分子重组仪配方列表 (第 $actualPage/$totalPages 页) ===").formatted(ChatFormatting.GOLD) },
+            { Component.literal("=== 分子重组仪配方列表 (第 $actualPage/$totalPages 页) ===").withStyle(ChatFormatting.GOLD) },
             false
         )
 
@@ -198,21 +198,21 @@ object MolecularTransformerCommand {
                 val item = ResourceLocation.tryParse(id)?.let { BuiltInRegistries.ITEM.get(it) }
                 return if (item != null && item !== Items.AIR) {
                     Component.translatable(item.translationKey)
-                        .formatted(ChatFormatting.YELLOW)
-                        .append(Component.literal(" ($id)").formatted(ChatFormatting.DARK_GRAY))
+                        .withStyle(ChatFormatting.YELLOW)
+                        .append(Component.literal(" ($id)").withStyle(ChatFormatting.DARK_GRAY))
                 } else {
-                    Component.literal(id).formatted(ChatFormatting.WHITE)
+                    Component.literal(id).withStyle(ChatFormatting.WHITE)
                 }
             }
             source.sendFeedback(
                 {
                     Component.literal("")
-                        .append(Component.literal("• ").formatted(ChatFormatting.GRAY))
+                        .append(Component.literal("• ").withStyle(ChatFormatting.GRAY))
                         .append(itemDisplay(recipe.input))
-                        .append(Component.literal(" -> ").formatted(ChatFormatting.GRAY))
+                        .append(Component.literal(" -> ").withStyle(ChatFormatting.GRAY))
                         .append(itemDisplay(recipe.output))
-                        .append(Component.literal(": ").formatted(ChatFormatting.GRAY))
-                        .append(Component.literal("${recipe.energy} EU").formatted(ChatFormatting.AQUA))
+                        .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
+                        .append(Component.literal("${recipe.energy} EU").withStyle(ChatFormatting.AQUA))
                 },
                 false
             )
@@ -220,7 +220,7 @@ object MolecularTransformerCommand {
 
         if (actualPage < totalPages) {
             source.sendFeedback(
-                { Component.literal("使用 /ic2mt list ${actualPage + 1} 查看下一页").formatted(ChatFormatting.GRAY) },
+                { Component.literal("使用 /ic2mt list ${actualPage + 1} 查看下一页").withStyle(ChatFormatting.GRAY) },
                 false
             )
         }

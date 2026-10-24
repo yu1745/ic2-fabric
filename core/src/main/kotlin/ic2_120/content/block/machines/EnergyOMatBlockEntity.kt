@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.EnergyOMatBlock
 import ic2_120.content.energy.EnergyTier
@@ -29,7 +36,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -86,12 +93,12 @@ class EnergyOMatBlockEntity(
         private const val NBT_PAID_FOR = "PaidFor"
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
 
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(SLOT_UPGRADE), matcher = { it.item is ic2_120.content.item.IUpgradeItem }),
@@ -99,7 +106,7 @@ class EnergyOMatBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { matchesDemand(it) })
         ),
         extractSlots = intArrayOf(SLOT_CHARGE),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -109,7 +116,7 @@ class EnergyOMatBlockEntity(
     @RegisterEnergy
     val sync = EnergyOMatSync(
         syncedData,
-        { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        { world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         { world?.time },
         { capacityBonus },
         { TransformerUpgradeComponent.maxInsertForTier(1 + voltageTierBonus) }
@@ -136,15 +143,15 @@ class EnergyOMatBlockEntity(
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot == SLOT_CHARGE && stack.count > 1) stack.count = 1
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_DEMAND -> true
@@ -194,9 +201,9 @@ class EnergyOMatBlockEntity(
         buf.writeBoolean(isOwner(player))
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(EnergyOMatSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -206,9 +213,9 @@ class EnergyOMatBlockEntity(
 
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(EnergyOMatSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_EU_OFFER, sync.euOffer)
@@ -217,7 +224,7 @@ class EnergyOMatBlockEntity(
 
     fun adjustEuOffer(delta: Int) {
         sync.euOffer = (sync.euOffer + delta).coerceAtLeast(100)
-        markDirty()
+        setChanged()
     }
 
     private var prevTickAmount: Long = 0L
@@ -264,13 +271,13 @@ class EnergyOMatBlockEntity(
         if (canDistribute < demandAmount) return
 
         // 实际执行：消耗 input，送入相邻库存
-        input.decrement(demand.count)
+        input.shrink(demand.count)
         if (input.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
         distributeToAdjacent(world, pos, demandVariant, demandAmount)
 
         // 累计 EU 额度
         sync.paidFor += sync.euOffer
-        markDirty()
+        setChanged()
     }
 
     private fun simulateDistribute(world: Level, pos: BlockPos, variant: ItemVariant, amount: Long): Long {

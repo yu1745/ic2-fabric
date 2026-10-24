@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.world
+
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.LuminatorFlatBlock
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -8,7 +13,6 @@ import ic2_120.content.syncs.SyncedData
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
-import ic2_120.registry.type
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.nbt.CompoundTag
@@ -69,7 +73,7 @@ class LuminatorFlatBlockEntity(
             cycleTicks = 0
             if (sync.consumeEnergy(LuminatorSync.ENERGY_PER_CYCLE) > 0L) {
                 setActiveState(world, pos, state, true)
-                markDirty()
+                setChanged()
                 sync.syncCurrentTickFlow()
                 return
             }
@@ -81,8 +85,8 @@ class LuminatorFlatBlockEntity(
         sync.syncCurrentTickFlow()
     }
     private fun setActiveState(world: Level, pos: BlockPos, state: BlockState, active: Boolean) {
-        if (state.get(LuminatorFlatBlock.ACTIVE) != active) {
-            world.setBlockState(pos, state.with(LuminatorFlatBlock.ACTIVE, active))
+        if (state.getValue(LuminatorFlatBlock.ACTIVE) != active) {
+            world.setBlock(pos, state.setValue(LuminatorFlatBlock.ACTIVE, active))
         }
     }
 }

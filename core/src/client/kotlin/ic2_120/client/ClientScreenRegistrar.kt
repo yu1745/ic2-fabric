@@ -5,7 +5,7 @@ import ic2_120.registry.type
 import net.minecraft.world.level.block.Block
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.screens.MenuScreens
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.MenuType

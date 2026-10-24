@@ -1,5 +1,7 @@
 package ic2_120.content.effect
 
+import ic2_120.compat.world
+
 import ic2_120.Ic2_120
 import ic2_120.registry.annotation.ModStatusEffect
 import net.minecraft.world.entity.LivingEntity
@@ -22,7 +24,7 @@ class RadiationStatusEffect : MobEffect(MobEffectCategory.HARMFUL, 0x55FF55) {
         val world = entity.world
         if (world !is ServerLevel) return false
 
-        val registry = world.registryManager.get(Registries.DAMAGE_TYPE)
+        val registry = world.registryManager.getValue(egistries.DAMAGE_TYPE)
         val key = ResourceKey.of(
             Registries.DAMAGE_TYPE,
             ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "radiation")

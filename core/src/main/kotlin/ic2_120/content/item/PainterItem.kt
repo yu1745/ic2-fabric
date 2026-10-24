@@ -1,5 +1,14 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import ic2_120.compat.stack
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+import ic2_120.compat.world
+
 import ic2_120.integration.ftbchunks.ClaimProtection
 
 import ic2_120.content.block.BlackWallBlock
@@ -25,8 +34,6 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.DyeItem
@@ -51,7 +58,7 @@ import java.util.function.Consumer
  * 进行染色。未固化泡沫和强化泡沫不会被染色，符合原版 IC2 Painter 的目标范围。
  */
 @ModItem(name = "painter", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class PainterItem : Item(Item.Settings().maxCount(1).maxDamage(MAX_DAMAGE)) {
+class PainterItem : Item(Item.Properties().maxStackSize(1).maxDamage(MAX_DAMAGE)) {
 
     override fun getName(stack: ItemStack): Component {
         val color = getColor(stack)
@@ -60,10 +67,10 @@ class PainterItem : Item(Item.Settings().maxCount(1).maxDamage(MAX_DAMAGE)) {
         )
     }
 
-    override fun useOnBlock(context: UseOnContext): InteractionResult {
+    override fun useOn(context: UseOnContext): InteractionResult {
         val player = context.player ?: return InteractionResult.PASS
         val stack = context.stack
-        val dye = player.getStackInHand(InteractionHand.OFF_HAND).item as? DyeItem
+        val dye = player.getItemInHand(InteractionHand.OFF_HAND).item as? DyeItem
         if (dye != null) {
             if (setColor(stack, dye.color, player, InteractionHand.OFF_HAND)) {
                 return if (context.world.isClient) InteractionResult.SUCCESS else InteractionResult.CONSUME
@@ -78,7 +85,7 @@ class PainterItem : Item(Item.Settings().maxCount(1).maxDamage(MAX_DAMAGE)) {
             if (!context.world.isClient && ClaimProtection.isProtected(context.world, context.blockPos, player, ClaimProtection.EDIT_BLOCK)) {
                 return InteractionResult.FAIL
             }
-            context.world.setBlockState(context.blockPos, target.defaultState)
+            context.world.setBlock(context.blockPos, target.defaultBlockState)
             if (!context.world.isClient) damagePainter(stack, player, context.hand)
             return InteractionResult.CONSUME
         }
@@ -86,9 +93,9 @@ class PainterItem : Item(Item.Settings().maxCount(1).maxDamage(MAX_DAMAGE)) {
     }
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getStackInHand(hand)
+        val stack = user.getItemInHand(hand)
         val dyeHand = if (hand == InteractionHand.MAIN_HAND) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
-        val dye = user.getStackInHand(dyeHand).item as? DyeItem
+        val dye = user.getItemInHand(dyeHand).item as? DyeItem
         if (dye != null && setColor(stack, dye.color, user, dyeHand)) {
             return InteractionResultHolder.success(stack, world.isClient)
         }
@@ -101,29 +108,29 @@ class PainterItem : Item(Item.Settings().maxCount(1).maxDamage(MAX_DAMAGE)) {
         tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext,
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val color = getColor(stack)
         tooltip.add(
             Component.translatable(
                 if (color == null) "tooltip.ic2_120.painter.uncolored" else "tooltip.ic2_120.painter.color",
                 color?.getName() ?: "",
-            ).formatted(ChatFormatting.GRAY)
+            ).withStyle(ChatFormatting.GRAY)
         )
         tooltip.add(
             Component.translatable(
                 "tooltip.ic2_120.painter.durability",
                 (stack.maxDamage - stack.damage).coerceAtLeast(0),
                 stack.maxDamage,
-            ).formatted(ChatFormatting.GRAY)
+            ).withStyle(ChatFormatting.GRAY)
         )
     }
 
-    override fun isItemBarVisible(stack: ItemStack): Boolean = true
+    override fun isBarVisible(stack: ItemStack): Boolean = true
 
     private fun setColor(stack: ItemStack, color: DyeColor, player: Player, dyeHand: InteractionHand): Boolean {
         if (getColor(stack) == color) return false
         stack.orCreateNbt.putInt(COLOR_KEY, color.id)
-        if (!player.abilities.creativeMode) player.getStackInHand(dyeHand).decrement(1)
+        if (!player.abilities.creativeMode) player.getItemInHand(dyeHand).shrink(1)
         return true
     }
 
@@ -145,7 +152,7 @@ class PainterItem : Item(Item.Settings().maxCount(1).maxDamage(MAX_DAMAGE)) {
 
         fun getColor(stack: ItemStack): DyeColor? {
             val nbt = stack.nbt ?: return null
-            if (!nbt.contains(COLOR_KEY)) return null
+            if (!nbt.hasProperty(COLOR_KEY)) return null
             return DyeColor.byId(nbt.getInt(COLOR_KEY))
         }
 
@@ -179,14 +186,14 @@ class PainterItem : Item(Item.Settings().maxCount(1).maxDamage(MAX_DAMAGE)) {
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, PainterItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, PainterItem::class.instance(), 1)
                 .pattern("II ")
                 .pattern(" IS")
                 .pattern("  I")
-                .input('I', Items.IRON_INGOT)
-                .input('S', Items.STICK)
-                .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
-                .offerTo(exporter, PainterItem::class.id())
+                .define('I', Items.IRON_INGOT)
+                .define('S', Items.STICK)
+                .unlockedBy(getHasName(Items.IRON_INGOT), has(Items.IRON_INGOT))
+                .save(exporter, PainterItem::class.id())
         }
     }
 }

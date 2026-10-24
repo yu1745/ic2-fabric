@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.AnimalSlaughtererBlock
 import ic2_120.content.entity.AnimalFoodMapping
 import ic2_120.content.energy.charge.BatteryDischargerComponent
@@ -28,7 +35,7 @@ import net.minecraft.world.entity.AgeableMob
 import net.minecraft.world.entity.animal.Sheep
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -65,11 +72,11 @@ class AnimalSlaughtererBlockEntity(
     override var capacityBonus: Long = 0L
     override var voltageTierBonus: Int = 0
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
@@ -77,7 +84,7 @@ class AnimalSlaughtererBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_SHEARS), matcher = { !it.isEmpty && it.item == Items.SHEARS }, maxPerSlot = 1)
         ),
         extractSlots = SLOT_CONTENT_INDICES + SLOT_UPGRADE_INDICES + intArrayOf(SLOT_DISCHARGING, SLOT_SHEARS),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -104,17 +111,17 @@ class AnimalSlaughtererBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
-    override fun markDirty() = super.markDirty()
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
+    override fun setChanged() = super.setChanged()
 
     override fun setStack(slot: Int, stack: ItemStack) {
         if ((slot == SLOT_DISCHARGING || slot == SLOT_SHEARS) && stack.count > 1) stack.count = 1
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
@@ -143,18 +150,18 @@ class AnimalSlaughtererBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(AnimalSlaughtererSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(AnimalSlaughtererSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -240,7 +247,7 @@ class AnimalSlaughtererBlockEntity(
             report.slaughtered++
         }
 
-        markDirty()
+        setChanged()
         return report
     }
 
@@ -307,7 +314,7 @@ class AnimalSlaughtererBlockEntity(
         for (slot in SLOT_CONTENT_INDICES) {
             val stack = getStack(slot)
             if (stack.isEmpty) return false
-            val limit = minOf(stack.maxCount, maxCountPerStack)
+            val limit = minOf(stack.maxStackSize, net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE)
             if (stack.count < limit) return false
         }
         return true
@@ -321,24 +328,24 @@ class AnimalSlaughtererBlockEntity(
             val existing = getStack(slot)
             if (existing.isEmpty) continue
             if (!ItemStack.canCombine(existing, remaining)) continue
-            val limit = minOf(existing.maxCount, maxCountPerStack)
+            val limit = minOf(existing.maxStackSize, net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE)
             val room = (limit - existing.count).coerceAtLeast(0)
             if (room <= 0) continue
             val move = minOf(room, remaining.count)
-            existing.increment(move)
-            remaining.decrement(move)
+            existing.grow(move)
+            remaining.shrink(move)
         }
 
         for (slot in SLOT_CONTENT_INDICES) {
             if (remaining.isEmpty) break
             val existing = getStack(slot)
             if (!existing.isEmpty) continue
-            val toInsert = minOf(remaining.count, maxCountPerStack)
+            val toInsert = minOf(remaining.count, net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE)
             if (toInsert <= 0) break
             val inserted = remaining.copy()
             inserted.count = toInsert
             setStack(slot, inserted)
-            remaining.decrement(toInsert)
+            remaining.shrink(toInsert)
         }
 
         return remaining
@@ -352,7 +359,7 @@ class AnimalSlaughtererBlockEntity(
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
+        setChanged()
     }
 
     private fun tryConsumeShearsDurability(): Boolean {
@@ -365,7 +372,7 @@ class AnimalSlaughtererBlockEntity(
         } else {
             shears.damage = currentDamage + 1
         }
-        markDirty()
+        setChanged()
         return true
     }
 

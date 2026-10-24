@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.Ic2_120
 import ic2_120.content.block.FermenterBlock
 import ic2_120.content.fluid.ModFluids
@@ -38,7 +43,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
@@ -116,11 +121,11 @@ class FermenterBlockEntity(
         }
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is FluidEjectorUpgrade || it.item is FluidPullingUpgrade }),
@@ -134,7 +139,7 @@ class FermenterBlockEntity(
             SLOT_OUTPUT_FILLED_CONTAINER,
             SLOT_OUTPUT_FERTILIZER
         ),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -169,7 +174,7 @@ class FermenterBlockEntity(
         override fun onFinalCommit() {
             sync.inputBiomass = toMilliBuckets(amount)
             sync.inputFluidType = sync.fluidToType(if (amount > 0L) variant.fluid else null)
-            markDirty()
+            setChanged()
         }
 
         fun getStoredAmount(): Long = amount
@@ -194,7 +199,7 @@ class FermenterBlockEntity(
                 tx.commit()
                 sync.inputBiomass = toMilliBuckets(amount)
                 sync.inputFluidType = sync.fluidToType(variant.fluid)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -211,7 +216,7 @@ class FermenterBlockEntity(
                 tx.commit()
                 sync.inputBiomass = toMilliBuckets(amount)
                 sync.inputFluidType = sync.fluidToType(if (becameEmpty) null else variant.fluid)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -234,7 +239,7 @@ class FermenterBlockEntity(
         override fun onFinalCommit() {
             sync.outputBiogas = toMilliBuckets(amount)
             sync.outputFluidType = sync.fluidToType(if (amount > 0L) variant.fluid else null)
-            markDirty()
+            setChanged()
         }
 
         fun getStoredAmount(): Long = amount
@@ -261,7 +266,7 @@ class FermenterBlockEntity(
                 tx.commit()
                 sync.outputBiogas = toMilliBuckets(amount)
                 sync.outputFluidType = sync.fluidToType(variant.fluid)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -278,7 +283,7 @@ class FermenterBlockEntity(
                 tx.commit()
                 sync.outputBiogas = toMilliBuckets(amount)
                 sync.outputFluidType = sync.fluidToType(if (becameEmpty) null else variant.fluid)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -330,11 +335,11 @@ class FermenterBlockEntity(
     override fun getInventory(): Container = this
     override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_FILLED_CONTAINER -> isBiomassFilledContainer(stack)
@@ -346,14 +351,14 @@ class FermenterBlockEntity(
         else -> false
     }
 
-    override fun markDirty() {
-        super.markDirty()
+    override fun setChanged() {
+        super.setChanged()
     }
 
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
 
     override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
@@ -373,9 +378,9 @@ class FermenterBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         inputTankInternal.setStoredFluid(nbt.getLong(NBT_INPUT_TANK))
         outputTankInternal.setStoredFluid(nbt.getLong(NBT_OUTPUT_TANK))
@@ -383,9 +388,9 @@ class FermenterBlockEntity(
         sync.bufferedHeat = heatBuffer.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_INPUT_TANK, inputTankInternal.getStoredAmount())
         nbt.putLong(NBT_OUTPUT_TANK, outputTankInternal.getStoredAmount())
@@ -400,7 +405,7 @@ class FermenterBlockEntity(
         heatBuffer += accepted
         heatReceivedThisTick += accepted
         sync.bufferedHeat = heatBuffer.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
+        setChanged()
         return accepted
     }
 
@@ -444,7 +449,7 @@ class FermenterBlockEntity(
                     sync.bufferedHeat = heatBuffer.toInt().coerceIn(0, Int.MAX_VALUE)
                 }
                 sync.progress = 0
-                markDirty()
+                setChanged()
             }
         } else if (sync.progress != 0) {
             sync.progress = 0
@@ -474,11 +479,11 @@ class FermenterBlockEntity(
         val inserted = inputTankInternal.insertInternal(FluidConstants.BUCKET)
         if (inserted < FluidConstants.BUCKET) return
 
-        input.decrement(1)
+        input.shrink(1)
         if (input.isEmpty) setStack(SLOT_INPUT_FILLED_CONTAINER, ItemStack.EMPTY)
         if (emptyOutput.isEmpty) setStack(SLOT_INPUT_EMPTY_CONTAINER, emptyContainer.copy())
-        else emptyOutput.increment(1)
-        markDirty()
+        else emptyOutput.grow(1)
+        setChanged()
     }
 
     private fun fillOutputBiogasContainers() {
@@ -503,11 +508,11 @@ class FermenterBlockEntity(
         val consumed = outputTankInternal.consumeInternal(FluidConstants.BUCKET)
         if (consumed < FluidConstants.BUCKET) return
 
-        emptyInput.decrement(1)
+        emptyInput.shrink(1)
         if (emptyInput.isEmpty) setStack(SLOT_OUTPUT_EMPTY_CONTAINER, ItemStack.EMPTY)
         if (filledOutput.isEmpty) setStack(SLOT_OUTPUT_FILLED_CONTAINER, filled.copy())
-        else filledOutput.increment(1)
-        markDirty()
+        else filledOutput.grow(1)
+        setChanged()
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
@@ -520,12 +525,12 @@ class FermenterBlockEntity(
         if (!canMergeIntoSlot(currentOutput, fertilizerStack)) return
         sync.fertilizerProgress -= FermenterSync.FERTILIZER_PER_BIOMASS_BUCKET_DROPLETS
         if (currentOutput.isEmpty) setStack(SLOT_OUTPUT_FERTILIZER, fertilizerStack.copy())
-        else currentOutput.increment(1)
-        markDirty()
+        else currentOutput.grow(1)
+        setChanged()
     }
 
     private fun getFrontFacing(): Direction =
-        world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
+        world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
 
     private fun isBiomass(fluid: Fluid): Boolean =
         fluid == ModFluids.BIOMASS_STILL || fluid == ModFluids.BIOMASS_FLOWING
@@ -538,7 +543,7 @@ class FermenterBlockEntity(
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
+        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxStackSize)
     }
 
     private fun isBiomassFilledContainer(stack: ItemStack): Boolean {

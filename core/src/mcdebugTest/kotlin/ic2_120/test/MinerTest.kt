@@ -54,7 +54,7 @@ class MinerTest {
         // 钻头/扫描器都预充：避免 charger 组件抽走机器电导致 livelock。
         setSlot(ctx, ctx.origin, SLOT_SCANNER, "ic2_120:scanner", 1, mapOf("Energy" to 100_000))
         setSlot(ctx, ctx.origin, SLOT_DRILL, "ic2_120:drill", 1, mapOf("Energy" to 100_000))
-        insertItem(ctx, ctx.origin, "ic2_120:mining_pipe", 32, SLOT_PIPE)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:mining_pipe", 32, SLOT_PIPE)
     }
 
     @Test
@@ -103,7 +103,7 @@ class MinerTest {
     private fun setupFastMinerEquipOnly(ctx: TestContext) {
         setSlot(ctx, ctx.origin, SLOT_SCANNER, "ic2_120:scanner", 1, mapOf("Energy" to 100_000))
         setSlot(ctx, ctx.origin, SLOT_DRILL, "ic2_120:drill", 1, mapOf("Energy" to 100_000))
-        insertItem(ctx, ctx.origin, "ic2_120:mining_pipe", 32, SLOT_PIPE)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:mining_pipe", 32, SLOT_PIPE)
     }
 }
 
@@ -129,7 +129,7 @@ class AdvancedMinerTest {
         setBeField(ctx, mfe, "EnergyStored", 2_000_000)
         place(ctx, ctx.origin, "ic2_120:advanced_miner")
         setSlot(ctx, ctx.origin, SLOT_SCANNER, "ic2_120:advanced_scanner", 1, mapOf("Energy" to 1_000_000))
-        insertItem(ctx, ctx.origin, "ic2_120:mining_pipe", 32, SLOT_PIPE)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:mining_pipe", 32, SLOT_PIPE)
     }
 
     @Test

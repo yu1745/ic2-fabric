@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.block.transmission.BevelGearBlock
 import ic2_120.content.block.transmission.IKineticMachinePort
@@ -15,7 +21,7 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -144,7 +150,7 @@ class WindKineticGeneratorBlockEntity(
     }
 
     override val tier: Int = 1
-    private val inventory = NonNullList.ofSize(1, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(1, ItemStack.EMPTY)
 
     /** 同步数据（服务端） */
     private val syncedData = SyncedData()
@@ -180,7 +186,7 @@ class WindKineticGeneratorBlockEntity(
     fun receiveRotorState(isStuck: Boolean, stuckAngle: Float) {
         kineticSync.isStuck = if (isStuck) 1 else 0
         kineticSync.stuckAngle = stuckAngle.toInt()
-        markDirty()
+        setChanged()
     }
 
     constructor(pos: BlockPos, state: BlockState) : this(
@@ -214,7 +220,7 @@ class WindKineticGeneratorBlockEntity(
         if (!simulate && extracted > 0) {
             pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
             kineticSync.outputKu = (kineticSync.outputKu + extracted).coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
         return extracted
     }
@@ -233,7 +239,7 @@ class WindKineticGeneratorBlockEntity(
     }
 
     fun onUse(player: Player, hand: InteractionHand): InteractionResult {
-        val held = player.getStackInHand(hand)
+        val held = player.getItemInHand(hand)
         val rotor = inventory[ROTOR_SLOT]
 
         // 空手右键取出转子
@@ -243,7 +249,7 @@ class WindKineticGeneratorBlockEntity(
             inventory[ROTOR_SLOT] = ItemStack.EMPTY
             markDirtyAndSync()
             if (!player.giveItemStack(extracted)) {
-                player.dropItem(extracted, false)
+                player.spawnAtLocation(extracted, false)
             }
             return InteractionResult.SUCCESS
         }
@@ -258,7 +264,7 @@ class WindKineticGeneratorBlockEntity(
         inserted.count = 1
         inventory[ROTOR_SLOT] = inserted
         if (!player.abilities.creativeMode) {
-            held.decrement(1)
+            held.shrink(1)
         }
         markDirtyAndSync()
         return InteractionResult.SUCCESS
@@ -371,7 +377,7 @@ class WindKineticGeneratorBlockEntity(
             val stopThreshold = startThreshold * STOP_THRESHOLD_FACTOR
             val weather = weatherMultiplier(world)
             val effectiveWind = meanWindFromY(pos.y) * worldGustFactor(world, pos) * weather
-            val wasActive = state.contains(WindKineticGeneratorBlock.ACTIVE) && state.get(WindKineticGeneratorBlock.ACTIVE)
+            val wasActive = state.contains(WindKineticGeneratorBlock.ACTIVE) && state.getValue(WindKineticGeneratorBlock.ACTIVE)
             val minWind = if (wasActive) stopThreshold else startThreshold
             val kuOut = if (effectiveWind >= minWind) {
                 floor(BASE_KU_AT_PEAK * rotorMultiplier * effectiveWind).toInt().coerceAtLeast(0)
@@ -432,7 +438,7 @@ class WindKineticGeneratorBlockEntity(
                 nbt.remove(ROTOR_WEAR_REMAINDER_KEY)
             }
         }
-        markDirty()
+        setChanged()
         return false
     }
 
@@ -642,12 +648,12 @@ class WindKineticGeneratorBlockEntity(
         }
 
     private fun markDirtyAndSync() {
-        markDirty()
+        setChanged()
         val world = world ?: return
         if (!world.isClient) {
             val state = world.getBlockState(pos)
             world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
-            (world as? ServerLevel)?.chunkManager?.markForUpdate(pos)
+            (world as? ServerLevel)?.chunkSource?.markForUpdate(pos)
         }
     }
 
@@ -657,16 +663,16 @@ class WindKineticGeneratorBlockEntity(
 
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
-    override fun removeStack(slot: Int, amount: Int): ItemStack {
-        val result = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeItem(slot: Int, amount: Int): ItemStack {
+        val result = ContainerHelper.removeItem(inventory, slot, amount)
         if (!result.isEmpty) {
             markDirtyAndSync()
         }
         return result
     }
 
-    override fun removeStack(slot: Int): ItemStack {
-        val result = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItemNoUpdate(slot: Int): ItemStack {
+        val result = ContainerHelper.takeItem(inventory, slot)
         if (!result.isEmpty) {
             markDirtyAndSync()
         }
@@ -690,19 +696,19 @@ class WindKineticGeneratorBlockEntity(
         markDirtyAndSync()
     }
 
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.readNbt(nbt, lookup)
         // ContainerHelper.readNbt 不会在 nbt 中缺失该槽位时自动清空旧值，先清槽避免客户端残留渲染状态
         inventory[ROTOR_SLOT] = ItemStack.EMPTY
-        ContainerHelper.readNbt(nbt, inventory, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
     override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        ContainerHelper.writeNbt(nbt, inventory, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 

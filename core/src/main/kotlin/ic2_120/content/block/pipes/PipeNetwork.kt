@@ -1,5 +1,9 @@
 package ic2_120.content.block.pipes
 
+import ic2_120.compat.time
+
+import ic2_120.compat.cachedState
+
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -307,7 +311,7 @@ class PipeNetwork {
             val sourceState = world.getBlockState(sourcePos)
             if (sourceState.block !is PumpAttachmentBlock) continue
             // 泵附件只能从正面抽取
-            if (sourceState.get(BlockStateProperties.FACING) != edge.lookupFromNeighborSide.opposite) continue
+            if (sourceState.getValue(BlockStateProperties.FACING) != edge.lookupFromNeighborSide.opposite) continue
             val neighborPos = BlockPos.fromLong(edge.neighborPosLong)
             val storage = FluidStorage.SIDED.find(world, neighborPos, edge.lookupFromNeighborSide) ?: continue
             if (!storage.supportsExtraction()) continue
@@ -346,7 +350,7 @@ class PipeNetwork {
         val sourceState = world.getBlockState(sourcePos)
         val block = sourceState.block
         if (block !is PumpAttachmentBlock) return false
-        return sourceState.get(BlockStateProperties.FACING) == edge.lookupFromNeighborSide.opposite
+        return sourceState.getValue(BlockStateProperties.FACING) == edge.lookupFromNeighborSide.opposite
     }
 
     private fun simulateInsertion(storage: Storage<FluidVariant>, variant: FluidVariant, amount: Long): Long =

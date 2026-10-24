@@ -1,5 +1,9 @@
 package ic2_120.content
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+
 import ic2_120.Ic2_120
 import ic2_120.content.block.RubberFaceState
 import ic2_120.content.block.RubberLogBlock
@@ -28,8 +32,8 @@ object RubberTreetapHandler {
     private val TREETAP_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "treetap")
     private val ELECTRIC_TREETAP_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "electric_treetap")
     private val RESIN_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "resin")
-    private val TREETAP_SOUND = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "item.treetap.use"))
-    private val ELECTRIC_TREETAP_SOUND = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "item.treetap.electric.use"))
+    private val TREETAP_SOUND = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "item.treetap.use"))
+    private val ELECTRIC_TREETAP_SOUND = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "item.treetap.electric.use"))
     private const val EU_PER_USE = 50L
 
     fun isTreetap(stack: ItemStack): Boolean {
@@ -46,7 +50,7 @@ object RubberTreetapHandler {
 
     fun register() {
         UseBlockCallback.EVENT.register { player, world, hand, hitResult ->
-            val stack = player.getStackInHand(hand)
+            val stack = player.getItemInHand(hand)
             if (!isExtractor(stack)) return@register InteractionResult.PASS
 
             val pos = hitResult.blockPos
@@ -77,7 +81,7 @@ object RubberTreetapHandler {
             if (faceState == RubberFaceState.DRY) {
                 var changed = false
                 if (world.random.nextInt(5) == 0) {
-                    world.setBlockState(pos, state.with(RubberLogBlock.propFor(face), RubberFaceState.NONE))
+                    world.setBlock(pos, state.setValue(RubberLogBlock.propFor(face), RubberFaceState.NONE))
                     changed = true
                 }
                 resinCount = if (world.random.nextInt(5) == 0) 1 else null
@@ -89,7 +93,7 @@ object RubberTreetapHandler {
             }
 
             if (resinCount != null) {
-                val resin = BuiltInRegistries.ITEM.get(RESIN_ID)
+                val resin = BuiltInRegistries.ITEM.getValue(RESIN_ID)
                 val resinStack = ItemStack(resin, resinCount)
                 val spawnX = pos.x + 0.5 + face.offsetX * 0.6
                 val spawnY = pos.y + 0.5 + face.offsetY * 0.35
@@ -102,11 +106,11 @@ object RubberTreetapHandler {
                     face.offsetZ * 0.08
                 )
                 itemEntity.setToDefaultPickupDelay()
-                world.spawnEntity(itemEntity)
+                world.addFreshEntity(itemEntity)
             }
 
             if (faceState == RubberFaceState.WET) {
-                world.setBlockState(pos, block.setFaceDry(state, face))
+                world.setBlock(pos, block.setFaceDry(state, face))
             }
 
             // 记录提取时间，供 Jade 显示已过时间

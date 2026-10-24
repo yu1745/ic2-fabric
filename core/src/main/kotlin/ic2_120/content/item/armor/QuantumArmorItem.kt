@@ -40,7 +40,7 @@ import net.minecraft.core.Holder
 abstract class QuantumArmorItem(
     material: Holder<ArmorMaterial>,
     type: Type,
-    settings: Item.Settings
+    settings: Item.Properties
 ) : ElectricArmorItem(material, type, settings) {
 
     override val tier: Int = 4
@@ -49,7 +49,7 @@ abstract class QuantumArmorItem(
         /** 检查玩家是否穿戴全套量子护甲 */
         fun hasFullQuantumArmor(player: Player): Boolean {
             val slots = arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
-            return slots.all { player.getEquippedStack(it).item is QuantumArmorItem }
+            return slots.all { player.getItemBySlot(it).item is QuantumArmorItem }
         }
     }
     override val maxCapacity: Long = 10_000_000L

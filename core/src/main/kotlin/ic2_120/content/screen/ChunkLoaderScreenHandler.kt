@@ -7,7 +7,7 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -33,7 +33,7 @@ class ChunkLoaderScreenHandler(
     }
 
     init {
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
         for (row in 0 until 3) {
             for (col in 0 until 9) {
                 addSlot(Slot(playerInventory, col + row * 9 + 9, 0, 0))
@@ -52,9 +52,9 @@ class ChunkLoaderScreenHandler(
      * 在 count ≤ 最大堆叠数/2 时直接把槽内数量翻倍——凭空复制物品。
      * 与其它无槽位 GUI（Steam/KineticGenerator 等）保持一致：返回 EMPTY 即 no-op。
      */
-    override fun quickMove(player: Player, index: Int): ItemStack = ItemStack.EMPTY
+    override fun quickMoveStack(player: Player, index: Int): ItemStack = ItemStack.EMPTY
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (id < 0 || id >= ChunkLoaderSync.CHUNK_COUNT) return false
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? ChunkLoaderBlockEntity ?: return@get
@@ -63,9 +63,9 @@ class ChunkLoaderScreenHandler(
         return true
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
-            world.getBlockState(pos).block is ChunkLoaderBlock && player.squaredDistanceTo(
+            world.getBlockState(pos).block is ChunkLoaderBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)

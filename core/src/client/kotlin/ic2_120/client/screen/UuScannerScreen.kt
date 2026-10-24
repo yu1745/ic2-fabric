@@ -7,7 +7,7 @@ import ic2_120.content.sync.UuScannerSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
@@ -64,7 +64,7 @@ class UuScannerScreen(
             val cost = handler.sync.currentCostUb
             val rawId = handler.sync.cachedItemRawId
             if (rawId > 0 && cost > 0) {
-                val item = BuiltInRegistries.ITEM.get(rawId)
+                val item = BuiltInRegistries.ITEM.getValue(rawId)
                 val name = item.name.string
                 val scale = 7f / textRenderer.fontHeight
                 val infoX = left + 102

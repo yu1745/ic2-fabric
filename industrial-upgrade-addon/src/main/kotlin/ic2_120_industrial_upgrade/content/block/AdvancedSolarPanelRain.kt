@@ -11,8 +11,6 @@ import ic2_120_advanced_solar_addon.content.block.AdvancedSolarPanelBlock
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import ic2_120_industrial_upgrade.content.item.RainLinse
 import net.minecraft.network.chat.Component
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -29,7 +27,7 @@ import java.util.function.Consumer
 // zh_cn: 高级雨能太阳能发电机  en_us: Advanced Rain Panel
 @ModBlock(name = "advanced_solar_panelrain", registerItem = true, tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "solar_panel")
 class AdvancedSolarPanelRainBlock : AdvancedSolarPanelBlock() {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         AdvancedSolarPanelRainBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
@@ -38,24 +36,24 @@ class AdvancedSolarPanelRainBlock : AdvancedSolarPanelBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, AdvancedSolarPanelRainBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else BlockEntityType.validateTicker(world, type, AdvancedSolarPanelRainBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // "BA"：高级太阳能发电机（ASA）+ RainLinse
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, AdvancedSolarPanelRainBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedSolarPanelRainBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
-                .input('B', AdvancedSolarPanelBlock::class.item())
-                .input('A', RainLinse::class.instance())
-                .criterion(hasItem(AdvancedSolarPanelBlock::class.item()), conditionsFromItem(AdvancedSolarPanelBlock::class.item()))
-                .offerTo(exporter, IC2IndustrialUpgrade.id("advanced_solar_panelrain"))
+                .define('B', AdvancedSolarPanelBlock::class.item())
+                .define('A', RainLinse::class.instance())
+                .unlockedBy(has(AdvancedSolarPanelBlock::class.item()), has(AdvancedSolarPanelBlock::class.item()))
+                .save(exporter, IC2IndustrialUpgrade.id("advanced_solar_panelrain"))
             // 变体回退：变体 → 原版（透镜不返还）
-            ShapelessRecipeBuilder.create(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
-                .input(AdvancedSolarPanelRainBlock::class.item())
-                .criterion(hasItem(AdvancedSolarPanelRainBlock::class.item()), conditionsFromItem(AdvancedSolarPanelRainBlock::class.item()))
-                .offerTo(exporter, IC2IndustrialUpgrade.id("advanced_solar_panelrain_revert"))
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
+                .requires(AdvancedSolarPanelRainBlock::class.item())
+                .unlockedBy(has(AdvancedSolarPanelRainBlock::class.item()), has(AdvancedSolarPanelRainBlock::class.item()))
+                .save(exporter, IC2IndustrialUpgrade.id("advanced_solar_panelrain_revert"))
         }
     }
 }

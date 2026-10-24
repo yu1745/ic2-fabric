@@ -49,7 +49,7 @@ class CreativeEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
             overlay = overlay,
             progress = entity.progress,
             stage = PowerStage.BLACK,
-            facing = entity.cachedState.get(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING),
+            facing = entity.cachedState.getValue(et.minecraft.world.level.block.state.properties.BlockStateProperties.FACING),
             world = entity.world,
             pos = entity.pos,
             backSprite = backSprite,

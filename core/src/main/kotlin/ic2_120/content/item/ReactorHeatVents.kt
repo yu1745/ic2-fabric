@@ -1,5 +1,9 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
 import ic2_120.content.reactor.AbstractDamageableReactorComponent
 import ic2_120.content.reactor.AbstractReactorComponent
 import ic2_120.content.reactor.IReactor
@@ -11,8 +15,6 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Item
@@ -26,7 +28,7 @@ import net.minecraft.data.recipes.RecipeCategory
  * selfVent: 每周期自身蒸发热量；reactorVent: 每周期从堆吸收热量。
  */
 abstract class ReactorHeatVentBase(
-    settings: Item.Settings,
+    settings: Item.Properties,
     heatStorage: Int,
     private val selfVent: Int,
     private val reactorVent: Int
@@ -103,71 +105,71 @@ abstract class ReactorHeatVentBase(
 }
 
 @ModItem(name = "heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class HeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 6, 0) {
+class HeatVentItem : ReactorHeatVentBase(Item.Properties(), 1000, 6, 0) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val plate = IronPlate::class.instance()
             val motor = ElectricMotor::class.instance()
             if (plate != Items.AIR && motor != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, HeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HeatVentItem::class.instance(), 1)
                     .pattern("BIB").pattern("IMI").pattern("BIB")
-                    .input('B', Items.IRON_BARS).input('I', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON)).input('M', motor)
-                    .criterion(hasItem(plate), conditionsFromItem(plate))
-                    .offerTo(exporter, HeatVentItem::class.id())
+                    .define('B', Items.IRON_BARS).define('I', Ingredient.of(ModTags.Compat.Items.PLATES_IRON)).define('M', motor)
+                    .unlockedBy(getHasName(plate), has(plate))
+                    .save(exporter, HeatVentItem::class.id())
             }
         }
     }
 }
 
 @ModItem(name = "reactor_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ReactorHeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 5, 5) {
+class ReactorHeatVentItem : ReactorHeatVentBase(Item.Properties(), 1000, 5, 5) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val plate = CopperPlate::class.instance()
             val vent = HeatVentItem::class.instance()
             if (plate != Items.AIR && vent != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorHeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorHeatVentItem::class.instance(), 1)
                     .pattern("CCC").pattern("CVC").pattern("CCC")
-                    .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER)).input('V', vent)
-                    .criterion(hasItem(vent), conditionsFromItem(vent))
-                    .offerTo(exporter, ReactorHeatVentItem::class.id())
+                    .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER)).define('V', vent)
+                    .unlockedBy(getHasName(vent), has(vent))
+                    .save(exporter, ReactorHeatVentItem::class.id())
             }
         }
     }
 }
 
 @ModItem(name = "advanced_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class AdvancedHeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 12, 0) {
+class AdvancedHeatVentItem : ReactorHeatVentBase(Item.Properties(), 1000, 12, 0) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val vent = HeatVentItem::class.instance()
             if (vent != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, AdvancedHeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedHeatVentItem::class.instance(), 1)
                     .pattern("IHI").pattern("IDI").pattern("IHI")
-                    .input('I', Items.IRON_BARS).input('H', vent).input('D', Items.DIAMOND)
-                    .criterion(hasItem(vent), conditionsFromItem(vent))
-                    .offerTo(exporter, AdvancedHeatVentItem::class.id())
+                    .define('I', Items.IRON_BARS).define('H', vent).define('D', Items.DIAMOND)
+                    .unlockedBy(getHasName(vent), has(vent))
+                    .save(exporter, AdvancedHeatVentItem::class.id())
             }
         }
     }
 }
 
 @ModItem(name = "overclocked_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class OverclockedHeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 20, 36) {
+class OverclockedHeatVentItem : ReactorHeatVentBase(Item.Properties(), 1000, 20, 36) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val gold = GoldPlate::class.instance()
             val reactorVent = ReactorHeatVentItem::class.instance()
             if (gold != Items.AIR && reactorVent != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, OverclockedHeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, OverclockedHeatVentItem::class.instance(), 1)
                     .pattern(" G ").pattern("GRG").pattern(" G ")
-                    .input('G', Ingredient.fromTag(ModTags.Compat.Items.PLATES_GOLD)).input('R', reactorVent)
-                    .criterion(hasItem(reactorVent), conditionsFromItem(reactorVent))
-                    .offerTo(exporter, OverclockedHeatVentItem::class.id())
+                    .define('G', Ingredient.of(ModTags.Compat.Items.PLATES_GOLD)).define('R', reactorVent)
+                    .unlockedBy(getHasName(reactorVent), has(reactorVent))
+                    .save(exporter, OverclockedHeatVentItem::class.id())
             }
         }
     }
@@ -175,7 +177,7 @@ class OverclockedHeatVentItem : ReactorHeatVentBase(Item.Settings(), 1000, 20, 3
 
 /** 元件散热片：无热容量，向四方向邻接可储热组件蒸发 4 点热量 */
 @ModItem(name = "component_heat_vent", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ComponentHeatVentItem(settings: Item.Settings = Item.Settings()) : AbstractReactorComponent(settings) {
+class ComponentHeatVentItem(settings: Item.Properties = Item.Properties()) : AbstractReactorComponent(settings) {
 
     private val sideVent = 4
 
@@ -217,11 +219,11 @@ class ComponentHeatVentItem(settings: Item.Settings = Item.Settings()) : Abstrac
             val tin = TinPlate::class.instance()
             val vent = HeatVentItem::class.instance()
             if (tin != Items.AIR && vent != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, ComponentHeatVentItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ComponentHeatVentItem::class.instance(), 1)
                     .pattern("TBT").pattern("BVB").pattern("TBT")
-                    .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN)).input('B', Items.IRON_BARS).input('V', vent)
-                    .criterion(hasItem(vent), conditionsFromItem(vent))
-                    .offerTo(exporter, ComponentHeatVentItem::class.id())
+                    .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN)).define('B', Items.IRON_BARS).define('V', vent)
+                    .unlockedBy(getHasName(vent), has(vent))
+                    .save(exporter, ComponentHeatVentItem::class.id())
             }
         }
     }

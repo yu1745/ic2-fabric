@@ -12,7 +12,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
@@ -30,8 +30,8 @@ class GeoGeneratorScreen(
     }
 
     private val lavaSprite: TextureAtlasSprite? by lazy {
-        val handler = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.LAVA) ?: return@lazy null
-        handler.getFluidSprites(null, null, Fluids.LAVA.defaultState)?.getOrNull(0)
+        val handler = FluidRenderHandlerRegistry.INSTANCE.getValue(luids.LAVA) ?: return@lazy null
+        handler.getFluidSprites(null, null, Fluids.LAVA.defaultBlockState)?.getOrNull(0)
     }
 
     override fun drawBackground(context: GuiGraphics, delta: Float, mouseX: Int, mouseY: Int) {

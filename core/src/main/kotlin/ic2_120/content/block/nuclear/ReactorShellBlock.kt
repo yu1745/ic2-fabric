@@ -1,5 +1,7 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.world
+
 import ic2_120.content.block.MachineBlock
 import net.minecraft.world.level.block.state.BlockBehaviour
 import net.minecraft.world.level.block.Block
@@ -23,7 +25,7 @@ import net.minecraft.world.level.LevelAccessor
  * - 六向连接属性（相邻是外壳或反应堆核心即为连接）：方块模型只在"两侧面都未连接"的棱上画铅框，
  *   整个 5×5×3 外壳只剩外轮廓一圈框（multipart，见 tools/model3d/reactor_shell.py）。
  */
-abstract class ReactorShellBlock(settings: BlockBehaviour.Settings = shellSettings()) : MachineBlock(settings) {
+abstract class ReactorShellBlock(settings: BlockBehaviour.Properties = shellSettings()) : MachineBlock(settings) {
 
     companion object {
         /** 六向连接属性：该方向相邻的是外壳或反应堆核心 */
@@ -33,25 +35,25 @@ abstract class ReactorShellBlock(settings: BlockBehaviour.Settings = shellSettin
             Direction.UP to BlockStateProperties.UP, Direction.DOWN to BlockStateProperties.DOWN,
         )
 
-        fun shellSettings(): BlockBehaviour.Settings =
-            BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
-                .sounds(SoundType.GLASS).nonOpaque()
+        fun shellSettings(): BlockBehaviour.Properties =
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
+                .sounds(SoundType.GLASS) .noOcclusion()
                 .solidBlock { _, _, _ -> false }.suffocates { _, _, _ -> false }.blockVision { _, _, _ -> false }
     }
 
     init {
-        defaultState = CONNECT.values.fold(defaultState) { st, prop -> st.with(prop, false) }
+        defaultState = CONNECT.values.fold(defaultState) { st, prop -> st.setValue(prop, false) }
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         CONNECT.values.forEach { builder.add(it) }
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? {
-        var state = super.getPlacementState(ctx) ?: return null
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? {
+        var state = super.getStateForPlacement(ctx) ?: return null
         for ((dir, prop) in CONNECT) {
-            state = state.with(prop, connects(ctx.world.getBlockState(ctx.blockPos.offset(dir))))
+            state = state.setValue(prop, connects(ctx.world.getBlockState(ctx.blockPos.offset(dir))))
         }
         return state
     }
@@ -61,7 +63,7 @@ abstract class ReactorShellBlock(settings: BlockBehaviour.Settings = shellSettin
         state: BlockState, direction: Direction, neighborState: BlockState,
         world: LevelAccessor, pos: BlockPos, neighborPos: BlockPos,
     ): BlockState = super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos)
-        .let { if (it.block === this) it.with(CONNECT.getValue(direction), connects(neighborState)) else it }
+        .let { if (it.block === this) it.setValue(CONNECT.getValue(direction), connects(neighborState)) else it }
 
     private fun connects(neighbor: BlockState): Boolean =
         neighbor.block is ReactorShellBlock || neighbor.block is NuclearReactorBlock

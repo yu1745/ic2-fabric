@@ -45,7 +45,7 @@ import java.util.function.Consumer
  * - 能量从所有量子装备均匀扣除
  */
 @ModItem(name = "quantum_boots", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.BOOTS, Item.Settings().maxCount(1)) {
+class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.BOOTS, Item.Properties().maxStackSize(1)) {
 
     companion object {
         private const val SUPER_JUMP_KEY = "SuperJumpEnabled"
@@ -131,7 +131,7 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
     }
 
     override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.level.Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val jumpEnabled = stack.orCreateNbt.getBoolean(SUPER_JUMP_KEY)
         val energy = getEnergy(stack)
         val jumpCount = if (jumpEnergyCost > 0) energy / jumpEnergyCost else 0L
@@ -139,8 +139,8 @@ class QuantumBoots : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem
                 tooltip.add(Component.translatable("tooltip.ic2_120.quantum_boots.jump",
             Component.translatable(if (jumpEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off"),
             jumpCount
-        ).formatted(ChatFormatting.GRAY))
+        ).withStyle(ChatFormatting.GRAY))
         val pct = "%.0f".format(getDamageReduction() * 100)
-        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_boots.damage_reduction", pct).formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_boots.damage_reduction", pct).withStyle(ChatFormatting.GRAY))
     }
 }

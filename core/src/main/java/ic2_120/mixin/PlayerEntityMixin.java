@@ -85,7 +85,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
 
     @Unique
     private boolean ic2$isProtectedBootsStillEquipped(Player player) {
-        ItemStack equippedBoots = player.getEquippedStack(EquipmentSlot.FEET);
+        ItemStack equippedBoots = player.getItemBySlot(EquipmentSlot.FEET);
         return equippedBoots == this.ic2$superJumpProtectionBoots
                 && equippedBoots.getItem() instanceof QuantumBoots;
     }
@@ -143,7 +143,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
             if (this.ic2$superJumpProtectionActive) {
                 this.ic2$clearSuperJumpProtection();
             }
-            ItemStack equippedBoots = player.getEquippedStack(EquipmentSlot.FEET);
+            ItemStack equippedBoots = player.getItemBySlot(EquipmentSlot.FEET);
             if (QuantumBoots.tryAbsorbPermanentFallDamage(equippedBoots, fallDistance)) {
                 cir.setReturnValue(false);
             }
@@ -196,7 +196,7 @@ public abstract class PlayerEntityMixin implements SuperJumpProtectionAccess {
         Map<ElectricArmorItem, ItemStack> armorItems = new HashMap<>();
 
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            ItemStack stack = player.getEquippedStack(slot);
+            ItemStack stack = player.getItemBySlot(slot);
             if (stack.getItem() instanceof ElectricArmorItem) {
                 ElectricArmorItem armor = (ElectricArmorItem) stack.getItem();
                 float reduction = armor.getDamageReduction();

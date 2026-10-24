@@ -1,5 +1,13 @@
 package ic2_120.content.block.nuclear
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.world.level.block.entity.BlockEntityType
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+
 import ic2_120.Ic2_120
 import ic2_120.content.block.GeneratorBlock
 import ic2_120.content.block.MachineBlock
@@ -14,7 +22,6 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
-import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.entity.player.Player
@@ -31,8 +38,6 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
 import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
@@ -42,23 +47,23 @@ import ic2_120.registry.annotation.RecipeProvider
  * 支持 facing 与 active 状态以正确显示模型。
  */
 @ModBlock(name = "nuclear_reactor", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor")
-class NuclearReactorBlock(settings: BlockBehaviour.Settings = BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
+class NuclearReactorBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
 
     init {
-        defaultState = stateManager.defaultState
-            .with(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)
-            .with(ACTIVE, false)
+        defaultState = stateManager.defaultBlockState
+            .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)
+            .setValue(ACTIVE, false)
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
-        super.getPlacementState(ctx)?.with(ACTIVE, false)
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
+        super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         NuclearReactorBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
@@ -67,27 +72,15 @@ class NuclearReactorBlock(settings: BlockBehaviour.Settings = BlockBehaviour.Set
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, NuclearReactorBlockEntity::class.type()) { w, p, s, be ->
+        else BlockEntityType.validateTicker(world, type, NuclearReactorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
-    override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): net.minecraft.world.MenuProvider? {
-        val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.world.MenuProvider
-    }
-
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            createScreenHandlerFactory(state, world, pos)?.let { factory ->
-                player.openHandledScreen(factory)
+            getMenuProvider(state, world, pos)?.let { factory ->
+                player.openMenu(factory)
             }
         }
         return InteractionResult.SUCCESS
@@ -110,7 +103,7 @@ class NuclearReactorBlock(settings: BlockBehaviour.Settings = BlockBehaviour.Set
     }
 
     companion object {
-        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+        val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -120,11 +113,11 @@ class NuclearReactorBlock(settings: BlockBehaviour.Settings = BlockBehaviour.Set
             val reactorChamber = ReactorChamberBlock::class.item()
             if (generator != Items.AIR && denseLeadPlate != Items.AIR && advancedCircuit != Items.AIR &&
                 reactorChamber != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, NuclearReactorBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, NuclearReactorBlock::class.item(), 1)
                     .pattern("DCD").pattern("RRR").pattern("DGD")
-                    .input('D', denseLeadPlate).input('C', advancedCircuit).input('R', reactorChamber).input('G', generator)
-                    .criterion(hasItem(reactorChamber), conditionsFromItem(reactorChamber))
-                    .offerTo(exporter, NuclearReactorBlock::class.id())
+                    .define('D', denseLeadPlate).define('C', advancedCircuit).define('R', reactorChamber).define('G', generator)
+                    .unlockedBy(getHasName(reactorChamber), has(reactorChamber))
+                    .save(exporter, NuclearReactorBlock::class.id())
             }
         }
     }

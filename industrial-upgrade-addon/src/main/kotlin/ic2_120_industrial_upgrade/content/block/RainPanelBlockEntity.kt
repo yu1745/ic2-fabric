@@ -41,14 +41,14 @@ abstract class RainPanelBlockEntity(
 
         if (!hasSkyAccess(world, pos)) {
             generationState = GenerationState.NONE
-            markDirty()
+            setChanged()
             return
         }
 
         // Rain 变体仅在主世界生效（末地下雨面板不发电）
         if (world.registryKey != Level.OVERWORLD) {
             generationState = GenerationState.NONE
-            markDirty()
+            setChanged()
             return
         }
 
@@ -56,6 +56,6 @@ abstract class RainPanelBlockEntity(
         val canRain = world.getBiome(pos).value().hasPrecipitation()
 
         generationState = if (canRain && isRaining) GenerationState.RAIN else GenerationState.NONE
-        markDirty()
+        setChanged()
     }
 }

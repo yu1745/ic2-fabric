@@ -575,7 +575,7 @@ object Ic2Config {
     fun getReplicationCostUb(itemId: String): Int? {
         val normalized = itemId.trim()
         if (normalized.isEmpty()) return null
-        syncedReplicationCosts?.get(normalized)?.takeIf { it > 0 }?.let { return it }
+        syncedReplicationCosts?.getValue(normalized)?.takeIf { it > 0 }?.let { return it }
         // 1. 白名单优先（手工定价，硬约束）
         current.uuReplication.replicationWhitelist[normalized]?.takeIf { it > 0 }?.let { return it }
         // 2. 动态计算补全（服务器启动后可用）
@@ -858,12 +858,12 @@ object Ic2Config {
         declaredConfigFields(instance.javaClass).forEach { field ->
             field.isAccessible = true
             val fieldName = field.name
-            val valueElement = jsonObject.get(fieldName) ?: return@forEach
+            val valueElement = jsonObject.getValue(fieldName) ?: return@forEach
             field.getAnnotation(ConfigComment::class.java)?.let { annotation ->
                 result.put("_comment_$fieldName", formatComment(annotation))
             }
 
-            val fieldValue = field.get(instance)
+            val fieldValue = field.getValue(instance)
             val isNestedConfigObject =
                 fieldValue != null &&
                     valueElement is ObjectNode &&

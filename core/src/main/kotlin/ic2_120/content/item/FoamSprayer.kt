@@ -1,5 +1,13 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import ic2_120.compat.isClient
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.world
+
 import ic2_120.content.block.FoamBlock
 import ic2_120.content.block.IronScaffoldBlock
 import ic2_120.content.block.ReinforcedFoamBlock
@@ -38,8 +46,6 @@ import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 import java.util.ArrayDeque
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.sounds.SoundSource
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.InteractionResult
@@ -53,9 +59,9 @@ import net.minecraft.world.level.gameevent.GameEvent
  * 按住 Alt 并右键切换单格 / 多格喷涂模式。
  */
 @ModItem(name = "foam_sprayer", tab = CreativeTab.IC2_MATERIALS, group = "construction_foam")
-class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant {
+class FoamSprayerItem : Item(Item.Properties().maxStackSize(1)), ICreativeFullVariant {
 
-    override fun useOnBlock(context: UseOnContext): InteractionResult {
+    override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.world
         val player = context.player ?: return InteractionResult.PASS
         val hand = context.hand
@@ -72,22 +78,22 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
             return InteractionResult.SUCCESS
         }
 
-        val stack = player.getStackInHand(hand)
+        val stack = player.getItemInHand(hand)
         if (stack.item != this) return InteractionResult.PASS
 
         val placed = tryPlaceFoam(world, player, stack, hit)
         return if (placed) InteractionResult.SUCCESS else InteractionResult.PASS
     }
 
-    override fun isItemBarVisible(stack: ItemStack): Boolean = true
+    override fun isBarVisible(stack: ItemStack): Boolean = true
 
-    override fun getItemBarStep(stack: ItemStack): Int {
+    override fun getBarWidth(stack: ItemStack): Int {
         val amt = getFluidAmount(stack)
         if (amt <= 0L) return 0
         return (13.0 * amt.toDouble() / CAPACITY_DROPLETS.toDouble()).toInt().coerceIn(1, 13)
     }
 
-    override fun getItemBarColor(stack: ItemStack): Int = 0xFF_6B8E9F.toInt()
+    override fun getBarColor(stack: ItemStack): Int = 0xFF_6B8E9F.toInt()
 
     override fun createFullVariant(): ItemStack {
         return ItemStack(this).also { setFluidAmount(it, CAPACITY_DROPLETS) }
@@ -161,9 +167,9 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
             block is ReinforcedIronScaffoldBlock
 
     private fun tryPlaceFoam(world: Level, player: Player, stack: ItemStack, hit: BlockHitResult): Boolean {
-            val foamState = FoamBlock::class.instance().defaultState
-            val reinforcedFoamState = ReinforcedFoamBlock::class.instance().defaultState
-            val cfPackStack = player.getEquippedStack(EquipmentSlot.CHEST)
+            val foamState = FoamBlock::class.instance().defaultBlockState
+            val reinforcedFoamState = ReinforcedFoamBlock::class.instance().defaultBlockState
+            val cfPackStack = player.getItemBySlot(EquipmentSlot.CHEST)
             val useCfPack = cfPackStack.item is CfPack
 
             var budget = if (useCfPack) {
@@ -201,17 +207,17 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
                     isWoodScaffold(stateAt.block) -> {
                         // 原版喷枪会先按脚手架自身掉落表掉落，再替换为普通泡沫。
                         Block.dropStacks(stateAt, world, pos)
-                        world.setBlockState(pos, foamState, Block.NOTIFY_ALL)
+                        world.setBlock(pos, foamState, Block.NOTIFY_ALL)
                     }
                     isReinforcedIronScaffold(stateAt.block) -> {
                         // 强化铁脚手架只额外掉落铁栅栏，随后变为强化泡沫。
-                        Block.dropStack(world, pos, ItemStack(IronFenceBlock::class.item()))
-                        world.setBlockState(pos, reinforcedFoamState, Block.NOTIFY_ALL)
+                        Block.spawnAtLocation(world, pos, ItemStack(IronFenceBlock::class.item()))
+                        world.setBlock(pos, reinforcedFoamState, Block.NOTIFY_ALL)
                     }
                     stateAt.block is IronScaffoldBlock ->
-                        world.setBlockState(pos, reinforcedFoamState, Block.NOTIFY_ALL)
+                        world.setBlock(pos, reinforcedFoamState, Block.NOTIFY_ALL)
                     canPlaceFoamAt(world, pos) ->
-                        world.setBlockState(pos, foamState, Block.NOTIFY_ALL)
+                        world.setBlock(pos, foamState, Block.NOTIFY_ALL)
                     else -> false
                 }
                 if (!placed) continue
@@ -307,14 +313,14 @@ class FoamSprayerItem : Item(Item.Settings().maxCount(1)), ICreativeFullVariant 
             val iron = IronCasing::class.instance()
             val emptyCell = EmptyCell::class.instance()
             if (iron != Items.AIR && emptyCell != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, FoamSprayerItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, FoamSprayerItem::class.instance(), 1)
                     .pattern("I  ")
                     .pattern(" I ")
                     .pattern(" FI")
-                    .input('I', iron)
-                    .input('F', emptyCell)
-                    .criterion(hasItem(iron), conditionsFromItem(iron))
-                    .offerTo(exporter, FoamSprayerItem::class.id())
+                    .define('I', iron)
+                    .define('F', emptyCell)
+                    .unlockedBy(getHasName(iron), has(iron))
+                    .save(exporter, FoamSprayerItem::class.id())
             }
         }
     }

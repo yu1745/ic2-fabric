@@ -1,5 +1,13 @@
 package ic2_120.content.recipes.centrifuge
 
+import ic2_120.content.recipes.RecipeCodecBridge
+
+import net.minecraft.network.codec.StreamCodec
+
+import net.minecraft.network.RegistryFriendlyByteBuf
+
+import com.mojang.serialization.MapCodec
+
 import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -28,8 +36,8 @@ import net.minecraft.util.GsonHelper
  */
 @ModMachineRecipe(id = "centrifuging", recipeClass = CentrifugeRecipe::class)
 object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
-    override fun read(id: ResourceLocation, json: JsonObject): CentrifugeRecipe {
-        val ingredient = Ingredient.fromJson(GsonHelper.getObject(json, "ingredient"))
+    private fun fromJson(id: ResourceLocation, json: JsonObject): CentrifugeRecipe {
+        val ingredient = INGREDIENT_CODEC(GsonHelper.getObject(json, "ingredient"))
         val inputCount = GsonHelper.getInt(json, "input_count", 1)
         val minHeat = GsonHelper.getInt(json, "min_heat")
 
@@ -47,8 +55,8 @@ object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
         return CentrifugeRecipe(id, ingredient, inputCount, minHeat, outputs)
     }
 
-    override fun read(id: ResourceLocation, buf: FriendlyByteBuf): CentrifugeRecipe {
-        val ingredient = Ingredient.fromPacket(buf)
+    private fun read(buf: RegistryFriendlyByteBuf): CentrifugeRecipe {
+        val ingredient = Ingredient.CONTENTS_STREAM_CODEC.decode(buf)
         val inputCount = buf.readVarInt()
         val minHeat = buf.readVarInt()
 
@@ -56,20 +64,29 @@ object CentrifugeRecipeSerializer : RecipeSerializer<CentrifugeRecipe> {
         val outputs = mutableListOf<ItemStack>()
 
         repeat(outputCount) {
-            outputs.add(buf.readItemStack())
+            outputs.add(bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf))
         }
 
         return CentrifugeRecipe(id, ingredient, inputCount, minHeat, outputs)
     }
 
-    override fun write(buf: FriendlyByteBuf, recipe: CentrifugeRecipe) {
-        recipe.ingredient.write(buf)
+    private fun write(buf: FriendlyByteBuf, recipe: CentrifugeRecipe) {
+        Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.ingredient)
         buf.writeVarInt(recipe.inputCount)
         buf.writeVarInt(recipe.minHeat)
 
         buf.writeVarInt(recipe.outputs.size)
         recipe.outputs.forEach { output ->
-            buf.writeItemStack(output.copy())
+            bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, output.copy())
         }
     }
 }
+
+    override fun codec(): MapCodec<CentrifugeRecipe> = RecipeCodecBridge.jsonMapCodec(
+        "ic2_120:centrifuging",
+        { id, json -> fromJson(id, json) },
+        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+    )
+
+    override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, CentrifugeRecipe> =
+        StreamCodec.ofMember({ recipe, buf -> write(buf, recipe) }, { buf -> read(buf) })

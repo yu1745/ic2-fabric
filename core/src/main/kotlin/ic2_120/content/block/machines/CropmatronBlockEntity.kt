@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.Ic2_120
 import ic2_120.content.block.CropmatronBlock
 import ic2_120.content.crop.CropCareTarget
@@ -47,7 +54,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.FarmBlock
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
@@ -102,11 +109,11 @@ class CropmatronBlockEntity(
     /** 浮点耗能债务：1.6^n 的小数余数跨次结转（扫描费/施加费按次收取，无进度概念）。 */
     private var energyDebtF = 0f
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
@@ -115,7 +122,7 @@ class CropmatronBlockEntity(
             ItemInsertRoute(SLOT_FERTILIZER_INDICES, matcher = { isValid(SLOT_FERTILIZER_0, it) })
         ),
         extractSlots = IntArray(INVENTORY_SIZE) { it },
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -147,7 +154,7 @@ class CropmatronBlockEntity(
 
         override fun onFinalCommit() {
             sync.waterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
 
         fun setStoredFluid(newAmount: Long) {
@@ -167,7 +174,7 @@ class CropmatronBlockEntity(
                 if (variant.isBlank) variant = FluidVariant.of(Fluids.WATER)
                 tx.commit()
                 sync.waterAmount = amount.toInt().coerceAtLeast(0)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -182,7 +189,7 @@ class CropmatronBlockEntity(
                 if (amount <= 0L) variant = FluidVariant.blank()
                 tx.commit()
                 sync.waterAmount = amount.toInt().coerceAtLeast(0)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -203,7 +210,7 @@ class CropmatronBlockEntity(
 
         override fun onFinalCommit() {
             sync.weedExAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
 
         fun setStoredFluid(newAmount: Long) {
@@ -223,7 +230,7 @@ class CropmatronBlockEntity(
                 if (variant.isBlank) variant = FluidVariant.of(ModFluids.WEED_EX_STILL)
                 tx.commit()
                 sync.weedExAmount = amount.toInt().coerceAtLeast(0)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -238,7 +245,7 @@ class CropmatronBlockEntity(
                 if (amount <= 0L) variant = FluidVariant.blank()
                 tx.commit()
                 sync.weedExAmount = amount.toInt().coerceAtLeast(0)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -293,15 +300,15 @@ class CropmatronBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
 
     private fun cropmatronMatchesWaterInput(stack: ItemStack): Boolean {
@@ -364,9 +371,9 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
             itemStorage
         )
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CropmatronSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -378,9 +385,9 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         workOffset = nbt.getInt(NBT_WORK_OFFSET).coerceIn(0, WORK_INTERVAL_TICKS - 1)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(CropmatronSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("EnergyDebt", energyDebtF)
@@ -523,7 +530,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
     private fun tryHydrateFarmland(world: Level, pos: BlockPos): Boolean {
         val state = world.getBlockState(pos)
         if (state.block !is FarmBlock) return false
-        val moisture = state.get(FarmBlock.MOISTURE)
+        val moisture = state.getValue(FarmBlock.MOISTURE)
         if (moisture >= 7) return false
 
         val waterMb = waterTankInternal.getStoredWater().toInt()
@@ -531,7 +538,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         if (add <= 0) return false
 
         waterTankInternal.consumeInternal(mbToDroplets(add))
-        world.setBlockState(pos, state.with(FarmBlock.MOISTURE, moisture + add), 2)
+        world.setBlock(pos, state.setValue(FarmBlock.MOISTURE, moisture + add), 2)
         return true
     }
 
@@ -558,10 +565,10 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         if (!canMergeIntoSlot(out, emptyRemainder)) return
 
         waterTankInternal.insertInternal(FluidConstants.BUCKET)
-        input.decrement(1)
+        input.shrink(1)
         if (input.isEmpty) setStack(SLOT_WATER_INPUT, ItemStack.EMPTY)
-        if (out.isEmpty) setStack(SLOT_WATER_OUTPUT, emptyRemainder.copy()) else out.increment(1)
-        markDirty()
+        if (out.isEmpty) setStack(SLOT_WATER_OUTPUT, emptyRemainder.copy()) else out.grow(1)
+        setChanged()
     }
 
     private fun processWeedExInputContainer() {
@@ -586,10 +593,10 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         if (!canMergeIntoSlot(out, emptyRemainder)) return
 
         weedExTankInternal.insertInternal(FluidConstants.BUCKET)
-        input.decrement(1)
+        input.shrink(1)
         if (input.isEmpty) setStack(SLOT_WEED_EX_INPUT, ItemStack.EMPTY)
-        if (out.isEmpty) setStack(SLOT_WEED_EX_OUTPUT, emptyRemainder.copy()) else out.increment(1)
-        markDirty()
+        if (out.isEmpty) setStack(SLOT_WEED_EX_OUTPUT, emptyRemainder.copy()) else out.grow(1)
+        setChanged()
     }
 
     private fun hasFertilizer(): Boolean {
@@ -604,9 +611,9 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
         for (slot in SLOT_FERTILIZER_INDICES) {
             val stack = getStack(slot)
             if (!stack.isEmpty && stack.item == Fertilizer::class.instance()) {
-                stack.decrement(1)
+                stack.shrink(1)
                 if (stack.isEmpty) setStack(slot, ItemStack.EMPTY)
-                markDirty()
+                setChanged()
                 return true
             }
         }
@@ -621,9 +628,9 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
                 setStack(slot, fertilizer)
                 return
             }
-            if (ItemStack.canCombine(stack, fertilizer) && stack.count < stack.maxCount) {
-                stack.increment(1)
-                markDirty()
+            if (ItemStack.canCombine(stack, fertilizer) && stack.count < stack.maxStackSize) {
+                stack.grow(1)
+                setChanged()
                 return
             }
         }
@@ -631,7 +638,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
+        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxStackSize)
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
@@ -639,7 +646,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
     }
 
     private fun getFrontFacing(): Direction =
-        world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
+        world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
 
     private fun isWater(fluid: net.minecraft.world.level.material.Fluid): Boolean =
         fluid == Fluids.WATER || fluid == Fluids.FLOWING_WATER ||

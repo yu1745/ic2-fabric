@@ -11,8 +11,6 @@ import ic2_120.registry.type
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import net.minecraft.network.chat.Component
 import ic2_120_industrial_upgrade.content.item.NeutronCore
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -29,24 +27,24 @@ import java.util.function.Consumer
 // en_us: Neutron Solar Panel
 @ModBlock(name = "neutron_solar_panel", registerItem = true, tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "solar_panel")
 class NeutronSolarPanelBlock : IndustrialSolarPanelBlock() {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = NeutronSolarPanelBlockEntity(pos, state)
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = NeutronSolarPanelBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, NeutronSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else BlockEntityType.validateTicker(world, type, NeutronSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 十字：4 个光子太阳能 + 1 个中子核心
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, NeutronSolarPanelBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, NeutronSolarPanelBlock::class.item(), 1)
                 .pattern(" B ")
                 .pattern("BAB")
                 .pattern(" B ")
-                .input('B', PhotonicSolarPanelBlock::class.item())
-                .input('A', NeutronCore::class.instance())
-                .criterion(hasItem(PhotonicSolarPanelBlock::class.item()), conditionsFromItem(PhotonicSolarPanelBlock::class.item()))
-                .offerTo(exporter, IC2IndustrialUpgrade.id("neutron_solar_panel"))
+                .define('B', PhotonicSolarPanelBlock::class.item())
+                .define('A', NeutronCore::class.instance())
+                .unlockedBy(has(PhotonicSolarPanelBlock::class.item()), has(PhotonicSolarPanelBlock::class.item()))
+                .save(exporter, IC2IndustrialUpgrade.id("neutron_solar_panel"))
         }
     }
 }

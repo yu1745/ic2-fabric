@@ -12,7 +12,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
@@ -51,11 +51,11 @@ class SolarPanelScreenHandler(
     private val hotbarEnd: Int get() = machineSlotCount + 36
 
     init {
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
 
         // Charge slots: x=17 + i*18, y=59
         if (chargeInventory != null && chargeSlotCount > 0) {
-            checkSize(chargeInventory, chargeSlotCount)
+            checkContainerSize(chargeInventory, chargeSlotCount)
             for (i in 0 until chargeSlotCount) {
                 addTrackedSlot(chargeInventory, i, CHARGE_SLOT_X + i * SLOT_SIZE, CHARGE_SLOT_Y)
             }
@@ -80,12 +80,12 @@ class SolarPanelScreenHandler(
         addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         if (index !in slots.indices) return ItemStack.EMPTY
 
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
 
@@ -94,7 +94,7 @@ class SolarPanelScreenHandler(
             when {
                 // Machine charge slots -> player inventory
                 beSlot >= 0 -> {
-                    if (!insertItem(stackInSlot, machineSlotCount, hotbarEnd, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, machineSlotCount, hotbarEnd, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 // Player inventory -> machine (via RoutedItemStorage routes)
@@ -115,21 +115,21 @@ class SolarPanelScreenHandler(
                 }
                 // Hotbar <-> main inventory swap
                 else -> {
-                    if (!insertItem(stackInSlot, machineSlotCount, hotbarEnd, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, machineSlotCount, hotbarEnd, false)) return ItemStack.EMPTY
                 }
             }
 
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
-            else slot.markDirty()
+            else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
-            player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+            player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     companion object {

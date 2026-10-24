@@ -1,5 +1,6 @@
 package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.CokeKilnGrateBlock
 import ic2_120.content.fluid.ModFluids
 import ic2_120.registry.annotation.ModBlockEntity
@@ -50,7 +51,7 @@ class CokeKilnGrateBlockEntity(
             (variant.fluid == ModFluids.CREOSOTE_STILL || variant.fluid == ModFluids.CREOSOTE_FLOWING) && !variant.isBlank
 
         override fun onFinalCommit() {
-            markDirty()
+            setChanged()
         }
     }
 
@@ -97,21 +98,21 @@ class CokeKilnGrateBlockEntity(
             creosoteTank.amount += moved
             if (creosoteTank.variant.isBlank) creosoteTank.variant = FluidVariant.of(ModFluids.CREOSOTE_STILL)
             tx.commit()
-            markDirty()
+            setChanged()
             moved
         }
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         val tankNbt = CompoundTag()
         tankNbt.put("Variant", creosoteTank.variant.toNbt())
         tankNbt.putLong("Amount", creosoteTank.amount)
         nbt.put(NBT_TANK, tankNbt)
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         val tankNbt = nbt.getCompound(NBT_TANK)
         if (!tankNbt.isEmpty) {
             creosoteTank.variant = FluidVariant.fromNbt(tankNbt.getCompound("Variant"))

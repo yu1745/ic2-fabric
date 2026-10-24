@@ -36,7 +36,7 @@ import java.util.function.Consumer
  * - 能量从所有纳米装备均匀扣除
  */
 @ModItem(name = "nano_chestplate", tab = CreativeTab.IC2_MATERIALS, group = "nano_armor")
-class NanoChestplate : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Settings().maxCount(1)) {
+class NanoChestplate : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.CHESTPLATE, Item.Properties().maxStackSize(1)) {
 
     companion object {
         @RecipeProvider
@@ -59,8 +59,8 @@ class NanoChestplate : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Typ
     }
 
     override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.level.Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
                 val pct = "%.2f".format(getDamageReduction() * 100).trimEnd('0').trimEnd('.')
-        tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).withStyle(ChatFormatting.GRAY))
     }
 }

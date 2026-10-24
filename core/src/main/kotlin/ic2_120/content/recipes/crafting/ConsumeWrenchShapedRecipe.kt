@@ -59,7 +59,7 @@ class ConsumeWrenchShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
 
     override fun getRemainder(inventory: CraftingContainer): NonNullList<ItemStack> {
         // 完全消耗所有材料，不返回任何东西
-        return NonNullList.ofSize(inventory.size(), ItemStack.EMPTY)
+        return NonNullList.withSize(inventory.size(), ItemStack.EMPTY)
     }
 
     override fun getSerializer(): RecipeSerializer<*> = ConsumeWrenchShapedRecipeSerializer
@@ -134,7 +134,7 @@ private fun Long.saturatingAdd(other: Long): Long {
 
 @ModMachineRecipe(id = "consume_wrench_shaped", recipeClass = ConsumeWrenchShapedRecipe::class)
 object ConsumeWrenchShapedRecipeSerializer : RecipeSerializer<ConsumeWrenchShapedRecipe> {
-    override fun read(id: ResourceLocation, json: JsonObject): ConsumeWrenchShapedRecipe {
+    override fun fromJson(id: ResourceLocation, json: JsonObject, lookup: HolderLookup.Provider): ConsumeWrenchShapedRecipe {
         val shaped = RecipeSerializer.SHAPED.read(id, json)
         return ConsumeWrenchShapedRecipe(shaped)
     }

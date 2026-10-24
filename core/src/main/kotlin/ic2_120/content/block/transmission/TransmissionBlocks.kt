@@ -1,5 +1,14 @@
 package ic2_120.content.block.transmission
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.world.level.block.entity.BlockEntityType
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+import ic2_120.compat.world
+
 import ic2_120.content.item.CarbonPlate
 import ic2_120.content.item.IronPlate
 import ic2_120.content.item.SteelPlate
@@ -20,7 +29,6 @@ import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.level.block.SimpleWaterloggedBlock
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
-import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.level.material.Fluid
@@ -43,8 +51,6 @@ import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.LevelAccessor
 import net.minecraft.world.level.LevelReader
 import java.util.function.Consumer
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 
 enum class ShaftMaterial(
     val texturePath: String
@@ -85,20 +91,20 @@ enum class BevelPlane(private val key: String) : StringRepresentable {
 }
 
 abstract class BaseTransmissionBlock(
-    settings: BlockBehaviour.Settings = BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(2.0f, 3.0f)
+    settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(2.0f, 3.0f)
 ) : BaseEntityBlock(settings), SimpleWaterloggedBlock {
 
     init {
-        defaultState = stateManager.defaultState.with(BlockStateProperties.WATERLOGGED, false)
+        defaultState = stateManager.defaultBlockState.setValue(BlockStateProperties.WATERLOGGED, false)
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
         builder.add(BlockStateProperties.WATERLOGGED)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState {
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
         val fluidState = ctx.world.getFluidState(ctx.blockPos)
-        return defaultState.with(BlockStateProperties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
+        return defaultState.setValue(BlockStateProperties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -110,7 +116,7 @@ abstract class BaseTransmissionBlock(
         pos: BlockPos,
         neighborPos: BlockPos
     ): BlockState {
-        if (state.get(BlockStateProperties.WATERLOGGED)) {
+        if (state.getValue(BlockStateProperties.WATERLOGGED)) {
             world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
         }
         if (world is net.minecraft.world.level.Level && !world.isClient) {
@@ -121,10 +127,10 @@ abstract class BaseTransmissionBlock(
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getFluidState(state: BlockState): FluidState =
-        if (state.get(BlockStateProperties.WATERLOGGED)) Fluids.WATER.getStill(false) else Fluids.EMPTY.getDefaultState()
+        if (state.getValue(BlockStateProperties.WATERLOGGED)) Fluids.WATER.getStill(false) else Fluids.EMPTY.getDefaultState()
 
     override fun canFillWithFluid(world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
-        !state.get(BlockStateProperties.WATERLOGGED) && fluid == Fluids.WATER
+        !state.getValue(BlockStateProperties.WATERLOGGED) && fluid == Fluids.WATER
 
     override fun tryFillWithFluid(
         world: LevelAccessor,
@@ -133,8 +139,8 @@ abstract class BaseTransmissionBlock(
         fluidState: FluidState
     ): Boolean {
         if (!canFillWithFluid(world, pos, state, fluidState.fluid)) return false
-        if (!state.get(BlockStateProperties.WATERLOGGED)) {
-            world.setBlockState(pos, state.with(BlockStateProperties.WATERLOGGED, true), Block.NOTIFY_ALL)
+        if (!state.getValue(BlockStateProperties.WATERLOGGED)) {
+            world.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, true), Block.NOTIFY_ALL)
             world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
         }
         return true
@@ -143,10 +149,10 @@ abstract class BaseTransmissionBlock(
     override fun tryDrainFluid(world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack =
         ItemStack.EMPTY
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         TransmissionBlockEntity(pos, state)
 
-    override fun getRenderType(state: BlockState): RenderShape = RenderShape.INVISIBLE
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.INVISIBLE
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(
@@ -156,7 +162,7 @@ abstract class BaseTransmissionBlock(
         newState: BlockState,
         moved: Boolean
     ) {
-        if (!state.isOf(newState.block)) {
+        if (!state.`is`(newState.block)) {
             KineticNetworkManager.invalidateAt(world, pos)
         }
         super.onStateReplaced(state, world, pos, newState, moved)
@@ -168,7 +174,7 @@ abstract class BaseTransmissionBlock(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, TransmissionBlockEntity.TYPE) { w, _, _, be ->
+        else BlockEntityType.validateTicker(world, type, TransmissionBlockEntity.TYPE) { w, _, _, be ->
             be.tick(w)
         }
 }
@@ -177,20 +183,20 @@ abstract class TransmissionShaftBlock(
     val material: ShaftMaterial
 ) : BaseTransmissionBlock() {
     init {
-        defaultState = defaultState.with(BlockStateProperties.AXIS, Direction.Axis.Y)
+        defaultState = defaultState.setValue(BlockStateProperties.AXIS, Direction.Axis.Y)
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(BlockStateProperties.AXIS)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState {
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
         val fluidState = ctx.world.getFluidState(ctx.blockPos)
         val axis = preferredNeighborAxis(ctx.world, ctx.blockPos, ctx.side.axis) ?: ctx.side.axis
         return defaultState
-            .with(BlockStateProperties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
-            .with(BlockStateProperties.AXIS, axis)
+            .setValue(BlockStateProperties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
+            .setValue(BlockStateProperties.AXIS, axis)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -199,7 +205,7 @@ abstract class TransmissionShaftBlock(
         world: BlockGetter,
         pos: BlockPos,
         context: CollisionContext
-    ): VoxelShape = shapeForAxis(state.get(BlockStateProperties.AXIS))
+    ): VoxelShape = shapeForAxis(state.getValue(BlockStateProperties.AXIS))
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getCollisionShape(
@@ -207,7 +213,7 @@ abstract class TransmissionShaftBlock(
         world: BlockGetter,
         pos: BlockPos,
         context: CollisionContext
-    ): VoxelShape = shapeForAxis(state.get(BlockStateProperties.AXIS))
+    ): VoxelShape = shapeForAxis(state.getValue(BlockStateProperties.AXIS))
 
     private fun preferredNeighborAxis(world: LevelAccessor, pos: BlockPos, preferred: Direction.Axis): Direction.Axis? {
         val preferredNeighbor = Direction.entries.firstOrNull { direction ->
@@ -227,14 +233,14 @@ abstract class TransmissionShaftBlock(
     private fun isShaftNeighborWithAxis(world: LevelAccessor, neighborPos: BlockPos, axis: Direction.Axis): Boolean {
         val neighborState = world.getBlockState(neighborPos)
         val neighborBlock = neighborState.block
-        return neighborBlock is TransmissionShaftBlock && neighborState.get(BlockStateProperties.AXIS) == axis
+        return neighborBlock is TransmissionShaftBlock && neighborState.getValue(BlockStateProperties.AXIS) == axis
     }
 
     companion object {
         private const val HALF = 1.0 / 6.0
-        private val SHAPE_X = Shapes.cuboid(0.0, 0.5 - HALF, 0.5 - HALF, 1.0, 0.5 + HALF, 0.5 + HALF)
-        private val SHAPE_Y = Shapes.cuboid(0.5 - HALF, 0.0, 0.5 - HALF, 0.5 + HALF, 1.0, 0.5 + HALF)
-        private val SHAPE_Z = Shapes.cuboid(0.5 - HALF, 0.5 - HALF, 0.0, 0.5 + HALF, 0.5 + HALF, 1.0)
+        private val SHAPE_X = Shapes.box(0.0, 0.5 - HALF, 0.5 - HALF, 1.0, 0.5 + HALF, 0.5 + HALF)
+        private val SHAPE_Y = Shapes.box(0.5 - HALF, 0.0, 0.5 - HALF, 0.5 + HALF, 1.0, 0.5 + HALF)
+        private val SHAPE_Z = Shapes.box(0.5 - HALF, 0.5 - HALF, 0.0, 0.5 + HALF, 0.5 + HALF, 1.0)
 
         fun shapeForAxis(axis: Direction.Axis): VoxelShape = when (axis) {
             Direction.Axis.X -> SHAPE_X
@@ -249,13 +255,13 @@ class WoodTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.WOOD) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, WoodTransmissionShaftBlock::class.instance(), 16)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WoodTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
                 .pattern("xxx")
-                .input('x', ItemTags.PLANKS)
-                .criterion(hasItem(net.minecraft.world.item.Items.OAK_PLANKS), conditionsFromItem(net.minecraft.world.item.Items.OAK_PLANKS))
-                .offerTo(exporter, WoodTransmissionShaftBlock::class.recipeId("from_planks"))
+                .define('x', ItemTags.PLANKS)
+                .unlockedBy(getHasName(net.minecraft.world.item.Items.OAK_PLANKS), has(net.minecraft.world.item.Items.OAK_PLANKS))
+                .save(exporter, WoodTransmissionShaftBlock::class.recipeId("from_planks"))
         }
     }
 }
@@ -265,13 +271,13 @@ class IronTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.IRON) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, IronTransmissionShaftBlock::class.instance(), 16)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IronTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
                 .pattern("xxx")
-                .input('x', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, IronTransmissionShaftBlock::class.recipeId("from_plates"))
+                .define('x', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .save(exporter, IronTransmissionShaftBlock::class.recipeId("from_plates"))
         }
     }
 }
@@ -281,13 +287,13 @@ class SteelTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.STEEL) 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, SteelTransmissionShaftBlock::class.instance(), 16)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SteelTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
                 .pattern("xxx")
-                .input('x', Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL))
-                .criterion(hasItem(SteelPlate::class.instance()), conditionsFromItem(SteelPlate::class.instance()))
-                .offerTo(exporter, SteelTransmissionShaftBlock::class.recipeId("from_plates"))
+                .define('x', Ingredient.of(ModTags.Compat.Items.PLATES_STEEL))
+                .unlockedBy(has(SteelPlate::class.instance()), has(SteelPlate::class.instance()))
+                .save(exporter, SteelTransmissionShaftBlock::class.recipeId("from_plates"))
         }
     }
 }
@@ -297,13 +303,13 @@ class CarbonTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.CARBON
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, CarbonTransmissionShaftBlock::class.instance(), 16)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
                 .pattern("xxx")
-                .input('x', CarbonPlate::class.instance())
-                .criterion(hasItem(CarbonPlate::class.instance()), conditionsFromItem(CarbonPlate::class.instance()))
-                .offerTo(exporter, CarbonTransmissionShaftBlock::class.recipeId("from_plates"))
+                .define('x', CarbonPlate::class.instance())
+                .unlockedBy(has(CarbonPlate::class.instance()), has(CarbonPlate::class.instance()))
+                .save(exporter, CarbonTransmissionShaftBlock::class.recipeId("from_plates"))
         }
     }
 }
@@ -313,21 +319,21 @@ class BevelGearBlock(
     val gearThickness: Float = DEFAULT_GEAR_THICKNESS
 ) : BaseTransmissionBlock() {
     init {
-        defaultState = defaultState.with(PLANE, BevelPlane.XZ)
+        defaultState = defaultState.setValue(PLANE, BevelPlane.XZ)
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(PLANE)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState {
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
         val fluidState = ctx.world.getFluidState(ctx.blockPos)
         val axes = connectedAxes(ctx.world, ctx.blockPos)
         val plane = selectPlane(axes, defaultPlaneForSide(ctx.side.axis), ctx.side.axis)
         return defaultState
-            .with(BlockStateProperties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
-            .with(PLANE, plane)
+            .setValue(BlockStateProperties.WATERLOGGED, fluidState.fluid == Fluids.WATER)
+            .setValue(PLANE, plane)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -342,15 +348,15 @@ class BevelGearBlock(
         pos: BlockPos,
         neighborPos: BlockPos
     ): BlockState {
-        if (state.get(BlockStateProperties.WATERLOGGED)) {
+        if (state.getValue(BlockStateProperties.WATERLOGGED)) {
             world.scheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
         }
         val axes = connectedAxes(world, pos)
-        val plane = selectPlane(axes, state.get(PLANE), direction.axis)
+        val plane = selectPlane(axes, state.getValue(PLANE), direction.axis)
         if (world is net.minecraft.world.level.Level && !world.isClient) {
             KineticNetworkManager.invalidateConnectionCachesAt(world, pos)
         }
-        return state.with(PLANE, plane)
+        return state.setValue(PLANE, plane)
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -359,7 +365,7 @@ class BevelGearBlock(
         world: BlockGetter,
         pos: BlockPos,
         context: CollisionContext
-    ): VoxelShape = shapeForPlane(state.get(PLANE))
+    ): VoxelShape = shapeForPlane(state.getValue(PLANE))
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getCollisionShape(
@@ -367,13 +373,13 @@ class BevelGearBlock(
         world: BlockGetter,
         pos: BlockPos,
         context: CollisionContext
-    ): VoxelShape = shapeForPlane(state.get(PLANE))
+    ): VoxelShape = shapeForPlane(state.getValue(PLANE))
 
     private fun connectedAxes(world: BlockGetter, pos: BlockPos): Set<Direction.Axis> {
         val axes = mutableSetOf<Direction.Axis>()
         for (direction in Direction.entries) {
             val neighborState = world.getBlockState(pos.offset(direction))
-            if (neighborState.block is TransmissionShaftBlock && neighborState.get(BlockStateProperties.AXIS) == direction.axis) {
+            if (neighborState.block is TransmissionShaftBlock && neighborState.getValue(BlockStateProperties.AXIS) == direction.axis) {
                 axes.add(direction.axis)
                 continue
             }
@@ -448,15 +454,15 @@ class BevelGearBlock(
     }
 
     companion object {
-        val PLANE: EnumProperty<BevelPlane> = EnumProperty.of("plane", BevelPlane::class.java)
+        val PLANE: EnumProperty<BevelPlane> = EnumProperty.create("plane", BevelPlane::class.java)
         // 轴向齿厚/齿轮高度。渲染端以其中线作为分度圆所在面。
         const val DEFAULT_GEAR_THICKNESS = 0.13f
 
         private const val HALF = 1.0 / 6.0
-        private val CORE = Shapes.cuboid(0.25, 0.25, 0.25, 0.75, 0.75, 0.75)
-        private val BAR_X = Shapes.cuboid(0.0, 0.5 - HALF, 0.5 - HALF, 1.0, 0.5 + HALF, 0.5 + HALF)
-        private val BAR_Y = Shapes.cuboid(0.5 - HALF, 0.0, 0.5 - HALF, 0.5 + HALF, 1.0, 0.5 + HALF)
-        private val BAR_Z = Shapes.cuboid(0.5 - HALF, 0.5 - HALF, 0.0, 0.5 + HALF, 0.5 + HALF, 1.0)
+        private val CORE = Shapes.box(0.25, 0.25, 0.25, 0.75, 0.75, 0.75)
+        private val BAR_X = Shapes.box(0.0, 0.5 - HALF, 0.5 - HALF, 1.0, 0.5 + HALF, 0.5 + HALF)
+        private val BAR_Y = Shapes.box(0.5 - HALF, 0.0, 0.5 - HALF, 0.5 + HALF, 1.0, 0.5 + HALF)
+        private val BAR_Z = Shapes.box(0.5 - HALF, 0.5 - HALF, 0.0, 0.5 + HALF, 0.5 + HALF, 1.0)
 
         private val SHAPE_XY = Shapes.union(CORE, BAR_X, BAR_Y)
         private val SHAPE_XZ = Shapes.union(CORE, BAR_X, BAR_Z)
@@ -470,13 +476,13 @@ class BevelGearBlock(
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, BevelGearBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BevelGearBlock::class.instance(), 1)
                 .pattern("s s")
                 .pattern("s s")
                 .pattern("sss")
-                .input('s', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, BevelGearBlock::class.recipeId("from_plates"))
+                .define('s', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .save(exporter, BevelGearBlock::class.recipeId("from_plates"))
         }
     }
 }

@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.block.StirlingGeneratorBlock
 import ic2_120.content.block.machines.StirlingGeneratorBlockEntity
 import ic2_120.content.sync.StirlingGeneratorSync
@@ -8,7 +10,7 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ContainerData
@@ -31,8 +33,8 @@ class StirlingGeneratorScreenHandler(
     )
 
     init {
-        checkSize(blockInventory, StirlingGeneratorBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, StirlingGeneratorBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -44,26 +46,26 @@ class StirlingGeneratorScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             if (index in 0..26) {
-                if (!insertItem(stackInSlot, 27, 36, false)) return ItemStack.EMPTY
-            } else if (!insertItem(stackInSlot, 0, 27, false)) return ItemStack.EMPTY
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
+                if (!moveItemStackTo(stackInSlot, 27, 36, false)) return ItemStack.EMPTY
+            } else if (!moveItemStackTo(stackInSlot, 0, 27, false)) return ItemStack.EMPTY
+            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is StirlingGeneratorBlock &&
-                player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+                player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     companion object {

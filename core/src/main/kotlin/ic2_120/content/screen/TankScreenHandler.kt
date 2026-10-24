@@ -1,11 +1,13 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.sync.TankSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -23,7 +25,7 @@ class TankScreenHandler(
     val sync = TankSync(SyncedDataView(propertyDelegate)) { 0 }
 
     init {
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -35,24 +37,24 @@ class TankScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var moved = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stack = slot.stack
             moved = stack.copy()
             if (index < 27) {
-                if (!insertItem(stack, 27, 36, false)) return ItemStack.EMPTY
-            } else if (!insertItem(stack, 0, 27, false)) {
+                if (!moveItemStackTo(stack, 27, 36, false)) return ItemStack.EMPTY
+            } else if (!moveItemStackTo(stack, 0, 27, false)) {
                 return ItemStack.EMPTY
             }
             if (stack.isEmpty) slot.stack = ItemStack.EMPTY
-            else slot.markDirty()
+            else slot.setChanged()
         }
         return moved
     }
 
-    override fun canUse(player: Player): Boolean = true
+    override fun stillValid(player: Player): Boolean = true
 
     companion object {
     }

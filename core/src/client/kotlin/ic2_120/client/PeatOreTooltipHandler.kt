@@ -22,26 +22,26 @@ object PeatOreTooltipHandler {
 
             if (Screen.hasShiftDown()) {
                 val config = Ic2Config.current.worldgen.peatOre
-                lines.add(Component.translatable("tooltip.ic2_120.peat_ore.recipes").formatted(ChatFormatting.GOLD))
-                lines.add(Component.translatable("tooltip.ic2_120.peat_ore.coke_oven").formatted(ChatFormatting.DARK_GRAY))
-                lines.add(Component.translatable("tooltip.ic2_120.peat_ore.centrifuge").formatted(ChatFormatting.DARK_GRAY))
-                lines.add(Component.translatable("tooltip.ic2_120.peat_ore.canner").formatted(ChatFormatting.DARK_GRAY))
+                lines.add(Component.translatable("tooltip.ic2_120.peat_ore.recipes").withStyle(ChatFormatting.GOLD))
+                lines.add(Component.translatable("tooltip.ic2_120.peat_ore.coke_oven").withStyle(ChatFormatting.DARK_GRAY))
+                lines.add(Component.translatable("tooltip.ic2_120.peat_ore.centrifuge").withStyle(ChatFormatting.DARK_GRAY))
+                lines.add(Component.translatable("tooltip.ic2_120.peat_ore.canner").withStyle(ChatFormatting.DARK_GRAY))
 
-                lines.add(Component.translatable("tooltip.ic2_120.peat_ore.spawn_header").formatted(ChatFormatting.GOLD))
+                lines.add(Component.translatable("tooltip.ic2_120.peat_ore.spawn_header").withStyle(ChatFormatting.GOLD))
                 if (config.enabled) {
                     config.biomes.forEach { biomeId ->
                         val biomeName = Component.translatable("biome.${biomeId.replace(':', '.')}")
-                        lines.add(Component.literal("  ").append(biomeName).formatted(ChatFormatting.DARK_GRAY))
+                        lines.add(Component.literal("  ").append(biomeName).withStyle(ChatFormatting.DARK_GRAY))
                     }
                     lines.add(
                         Component.translatable("tooltip.ic2_120.peat_ore.spawn_range", config.minY, config.maxY)
-                            .formatted(ChatFormatting.DARK_GRAY)
+                            .withStyle(ChatFormatting.DARK_GRAY)
                     )
                 } else {
-                    lines.add(Component.translatable("tooltip.ic2_120.peat_ore.spawn_disabled").formatted(ChatFormatting.RED))
+                    lines.add(Component.translatable("tooltip.ic2_120.peat_ore.spawn_disabled").withStyle(ChatFormatting.RED))
                 }
             } else {
-                lines.add(Component.translatable("tooltip.ic2_120.peat_ore.hint").formatted(ChatFormatting.DARK_GRAY))
+                lines.add(Component.translatable("tooltip.ic2_120.peat_ore.hint").withStyle(ChatFormatting.DARK_GRAY))
             }
         }
     }

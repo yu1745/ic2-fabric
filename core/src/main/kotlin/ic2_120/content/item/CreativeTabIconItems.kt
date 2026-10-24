@@ -10,7 +10,7 @@ import net.minecraft.resources.ResourceLocation
  * 不使用类扫描注解，由 [CreativeTabIconItemsRegistration] 在 [ic2_120.Ic2_120] 中手动注册。
  * 贴图路径映射见 [ic2_120.registry.CreativeTabIconProvider]。
  */
-class TabIconIc2ToolsItem : Item(Item.Settings())
+class TabIconIc2ToolsItem : Item(Item.Properties())
 
 object CreativeTabIconItemsRegistration {
     fun register(modId: String) {

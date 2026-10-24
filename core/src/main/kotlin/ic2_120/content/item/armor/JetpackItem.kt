@@ -1,5 +1,9 @@
 package ic2_120.content.item.armor
 
+import ic2_120.compat.isClient
+
+import ic2_120.compat.world
+
 import ic2_120.config.Ic2Config
 import ic2_120.content.fluid.FluidFuelRegistry
 import ic2_120.content.fluid.ModFluids
@@ -33,7 +37,7 @@ open class JetpackItem : ArmorItem(
     ModArmorMaterials.JETPACK_ARMOR,
     ArmorItem.Type.CHESTPLATE,
     // ArmorItem 会通过 maxDamageIfAbsent 自动注入材质耐久；-1 让 ItemStack.isDamageable() 返回 false。
-    Item.Settings().maxCount(1).maxDamage(-1)
+    Item.Properties().maxStackSize(1).maxDamage(-1)
 ), ICreativeFullVariant {
 
     companion object {
@@ -127,7 +131,7 @@ open class JetpackItem : ArmorItem(
         tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
 
         val fuel = getFuel(stack)
         val ratio = if (maxFuel > 0) fuel.toDouble() / maxFuel else 0.0
@@ -150,7 +154,7 @@ open class JetpackItem : ArmorItem(
 
         val fuelName = getFuelFluid(stack)?.let { net.minecraft.core.registries.BuiltInRegistries.FLUID.getId(it).toString() } ?: "无"
         tooltip.add(Component.literal("燃料: $fuelName %,d / %,d mB (%.1f%%)".format(fuelMb, maxFuelMb, ratio * 100)))
-        tooltip.add(Component.literal("剩余飞行: $timeText").formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.literal("剩余飞行: $timeText").withStyle(ChatFormatting.GRAY))
     }
 
     /**
@@ -159,7 +163,7 @@ open class JetpackItem : ArmorItem(
      */
     override fun isDamageable(): Boolean = false
 
-    override fun useOnBlock(context: UseOnContext): InteractionResult {
+    override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.world
         val player = context.player ?: return InteractionResult.PASS
         if (world.isClient) return InteractionResult.SUCCESS
@@ -170,12 +174,12 @@ open class JetpackItem : ArmorItem(
         } else InteractionResult.PASS
     }
 
-    override fun isItemBarVisible(stack: ItemStack): Boolean = true
+    override fun isBarVisible(stack: ItemStack): Boolean = true
 
-    override fun getItemBarStep(stack: ItemStack): Int =
+    override fun getBarWidth(stack: ItemStack): Int =
         ((getFuel(stack).toDouble() / maxFuel) * 13).toInt().coerceIn(0, 13)
 
-    override fun getItemBarColor(stack: ItemStack): Int {
+    override fun getBarColor(stack: ItemStack): Int {
         val ratio = getFuel(stack).toDouble() / maxFuel
         return when {
             ratio > 0.5 -> 0x4AFF4A

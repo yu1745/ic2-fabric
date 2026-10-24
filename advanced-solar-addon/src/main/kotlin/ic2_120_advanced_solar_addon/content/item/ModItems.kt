@@ -1,5 +1,7 @@
 package ic2_120_advanced_solar_addon.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.*
 import ic2_120.content.block.ReinforcedGlassBlock
@@ -9,8 +11,6 @@ import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.instance
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Item
@@ -23,28 +23,28 @@ import java.util.function.Consumer
 // zh_cn: 阳光化合物
 // en_us: Sunnarium
 @ModItem(name = "sunnarium", tab = CreativeTab.IC2_SOLAR, group = "material")
-class Sunnarium : Item(Item.Settings()) {
+class Sunnarium : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 配方 1: UU物质 + 荧石粉
-//            ShapedRecipeBuilder.create(RecipeCategory.MISC, Sunnarium::class.instance(), 1)
+//            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, Sunnarium::class.instance(), 1)
 //                .pattern("UUU")
 //                .pattern("GGG")
 //                .pattern("UUU")
-//                .input('U', ModFluids.UU_MATTER_BUCKET)
-//                .input('G', Items.GLOWSTONE_DUST)
-//                .criterion(hasItem(ModFluids.UU_MATTER_BUCKET), conditionsFromItem(ModFluids.UU_MATTER_BUCKET))
-//                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_from_uu"))
+//                .define('U', ModFluids.UU_MATTER_BUCKET)
+//                .define('G', Items.GLOWSTONE_DUST)
+//                .unlockedBy(getHasName(ModFluids.UU_MATTER_BUCKET), has(ModFluids.UU_MATTER_BUCKET))
+//                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_from_uu"))
 
             // 配方 2: 9个小块阳光化合物
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, Sunnarium::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, Sunnarium::class.instance(), 1)
                 .pattern("SSS")
                 .pattern("SSS")
                 .pattern("SSS")
-                .input('S', SunnariumPart::class.instance())
-                .criterion(hasItem(SunnariumPart::class.instance()), conditionsFromItem(SunnariumPart::class.instance()))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_from_parts"))
+                .define('S', SunnariumPart::class.instance())
+                .unlockedBy(has(SunnariumPart::class.instance()), has(SunnariumPart::class.instance()))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_from_parts"))
         }
     }
 }
@@ -53,18 +53,18 @@ class Sunnarium : Item(Item.Settings()) {
 // zh_cn: 小块阳光化合物
 // en_us: Sunnarium Part
 @ModItem(name = "sunnarium_part", tab = CreativeTab.IC2_SOLAR, group = "material")
-class SunnariumPart : Item(Item.Settings()) {
+class SunnariumPart : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-//            ShapedRecipeBuilder.create(RecipeCategory.MISC, SunnariumPart::class.instance(), 1)
+//            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SunnariumPart::class.instance(), 1)
 //                .pattern(" U ")
 //                .pattern(" G ")
 //                .pattern(" U ")
-//                .input('U', ModFluids.UU_MATTER_BUCKET)
-//                .input('G', Items.GLOWSTONE_DUST)
-//                .criterion(hasItem(ModFluids.UU_MATTER_BUCKET), conditionsFromItem(ModFluids.UU_MATTER_BUCKET))
-//                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_part"))
+//                .define('U', ModFluids.UU_MATTER_BUCKET)
+//                .define('G', Items.GLOWSTONE_DUST)
+//                .unlockedBy(getHasName(ModFluids.UU_MATTER_BUCKET), has(ModFluids.UU_MATTER_BUCKET))
+//                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_part"))
         }
     }
 }
@@ -73,18 +73,18 @@ class SunnariumPart : Item(Item.Settings()) {
 // zh_cn: 阳光合金
 // en_us: Sunnarium Alloy
 @ModItem(name = "sunnarium_alloy", tab = CreativeTab.IC2_SOLAR, group = "material")
-class SunnariumAlloy : Item(Item.Settings()) {
+class SunnariumAlloy : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, SunnariumAlloy::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SunnariumAlloy::class.instance(), 1)
                 .pattern("III")
                 .pattern("ISI")
                 .pattern("III")
-                .input('I', PhotovoltaicIridiumPlate::class.instance())
-                .input('S', Sunnarium::class.instance())
-                .criterion(hasItem(PhotovoltaicIridiumPlate::class.instance()), conditionsFromItem(PhotovoltaicIridiumPlate::class.instance()))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_alloy"))
+                .define('I', PhotovoltaicIridiumPlate::class.instance())
+                .define('S', Sunnarium::class.instance())
+                .unlockedBy(has(PhotovoltaicIridiumPlate::class.instance()), has(PhotovoltaicIridiumPlate::class.instance()))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("sunnarium_alloy"))
         }
     }
 }
@@ -93,20 +93,20 @@ class SunnariumAlloy : Item(Item.Settings()) {
 // zh_cn: 光伏铱板
 // en_us: Photovoltaic Iridium Plate
 @ModItem(name = "photovoltaic_iridium_plate", tab = CreativeTab.IC2_SOLAR, group = "material")
-class PhotovoltaicIridiumPlate : Item(Item.Settings()) {
+class PhotovoltaicIridiumPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 与 core 强化铱板相同，仅将铱矿石替换为高级太阳能附属的铱锭
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, PhotovoltaicIridiumPlate::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PhotovoltaicIridiumPlate::class.instance(), 1)
                 .pattern("IAI")
                 .pattern("ADA")
                 .pattern("IAI")
-                .input('I', IridiumIngot::class.instance())
-                .input('A', Alloy::class.instance())
-                .input('D', Ingredient.fromTag(ModTags.Compat.Items.GEMS_DIAMOND))
-                .criterion(hasItem(IridiumIngot::class.instance()), conditionsFromItem(IridiumIngot::class.instance()))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("photovoltaic_iridium_plate"))
+                .define('I', IridiumIngot::class.instance())
+                .define('A', Alloy::class.instance())
+                .define('D', Ingredient.of(ModTags.Compat.Items.GEMS_DIAMOND))
+                .unlockedBy(has(IridiumIngot::class.instance()), has(IridiumIngot::class.instance()))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("photovoltaic_iridium_plate"))
         }
     }
 }
@@ -115,18 +115,18 @@ class PhotovoltaicIridiumPlate : Item(Item.Settings()) {
 // zh_cn: 光辉铀锭
 // en_us: Irradiant Uranium
 @ModItem(name = "irradiant_uranium", tab = CreativeTab.IC2_SOLAR, group = "material")
-class IrradiantUranium : Item(Item.Settings()) {
+class IrradiantUranium : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, IrradiantUranium::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IrradiantUranium::class.instance(), 1)
                 .pattern(" G ")
                 .pattern("GUG")
                 .pattern(" G ")
-                .input('G', Items.GLOWSTONE_DUST)
-                .input('U', ic2_120.content.item.UraniumIngot::class.instance())
-                .criterion(hasItem(ic2_120.content.item.UraniumIngot::class.instance()), conditionsFromItem(ic2_120.content.item.UraniumIngot::class.instance()))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("irradiant_uranium"))
+                .define('G', Items.GLOWSTONE_DUST)
+                .define('U', ic2_120.content.item.UraniumIngot::class.instance())
+                .unlockedBy(has(ic2_120.content.item.UraniumIngot::class.instance()), has(ic2_120.content.item.UraniumIngot::class.instance()))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("irradiant_uranium"))
         }
     }
 }
@@ -135,18 +135,18 @@ class IrradiantUranium : Item(Item.Settings()) {
 // zh_cn: 富集阳光化合物
 // en_us: Enriched Sunnarium
 @ModItem(name = "enriched_sunnarium", tab = CreativeTab.IC2_SOLAR, group = "material")
-class EnrichedSunnarium : Item(Item.Settings()) {
+class EnrichedSunnarium : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, EnrichedSunnarium::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnrichedSunnarium::class.instance(), 1)
                 .pattern("III")
                 .pattern("ISI")
                 .pattern("III")
-                .input('I', IrradiantUranium::class.instance())
-                .input('S', Sunnarium::class.instance())
-                .criterion(hasItem(IrradiantUranium::class.instance()), conditionsFromItem(IrradiantUranium::class.instance()))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("enriched_sunnarium"))
+                .define('I', IrradiantUranium::class.instance())
+                .define('S', Sunnarium::class.instance())
+                .unlockedBy(has(IrradiantUranium::class.instance()), has(IrradiantUranium::class.instance()))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("enriched_sunnarium"))
         }
     }
 }
@@ -155,18 +155,18 @@ class EnrichedSunnarium : Item(Item.Settings()) {
 // zh_cn: 富集阳光合金
 // en_us: Enriched Sunnarium Alloy
 @ModItem(name = "enriched_sunnarium_alloy", tab = CreativeTab.IC2_SOLAR, group = "material")
-class EnrichedSunnariumAlloy : Item(Item.Settings()) {
+class EnrichedSunnariumAlloy : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, EnrichedSunnariumAlloy::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnrichedSunnariumAlloy::class.instance(), 1)
                 .pattern(" E ")
                 .pattern("EAE")
                 .pattern(" E ")
-                .input('E', EnrichedSunnarium::class.instance())
-                .input('A', SunnariumAlloy::class.instance())
-                .criterion(hasItem(EnrichedSunnarium::class.instance()), conditionsFromItem(EnrichedSunnarium::class.instance()))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("enriched_sunnarium_alloy"))
+                .define('E', EnrichedSunnarium::class.instance())
+                .define('A', SunnariumAlloy::class.instance())
+                .unlockedBy(has(EnrichedSunnarium::class.instance()), has(EnrichedSunnarium::class.instance()))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("enriched_sunnarium_alloy"))
         }
     }
 }
@@ -175,19 +175,19 @@ class EnrichedSunnariumAlloy : Item(Item.Settings()) {
 // zh_cn: 光辉玻璃板
 // en_us: Irradiant Glass Pane
 @ModItem(name = "irradiant_glass_pane", tab = CreativeTab.IC2_SOLAR, group = "material")
-class IrradiantGlassPane : Item(Item.Settings()) {
+class IrradiantGlassPane : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, IrradiantGlassPane::class.instance(), 6)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IrradiantGlassPane::class.instance(), 6)
                 .pattern("GGG")
                 .pattern("IXI")
                 .pattern("GGG")
-                .input('G', ReinforcedGlassBlock::class.instance())
-                .input('I', IrradiantUranium::class.instance())
-                .input('X', Items.GLOWSTONE_DUST)
-                .criterion(hasItem(ReinforcedGlassBlock::class.instance()), conditionsFromItem(ReinforcedGlassBlock::class.instance()))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("irradiant_glass_pane"))
+                .define('G', ReinforcedGlassBlock::class.instance())
+                .define('I', IrradiantUranium::class.instance())
+                .define('X', Items.GLOWSTONE_DUST)
+                .unlockedBy(has(ReinforcedGlassBlock::class.instance()), has(ReinforcedGlassBlock::class.instance()))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("irradiant_glass_pane"))
         }
     }
 }
@@ -196,28 +196,28 @@ class IrradiantGlassPane : Item(Item.Settings()) {
 // zh_cn: 铱铁合金板
 // en_us: Iridium Iron Plate
 @ModItem(name = "iridium_iron_plate", tab = CreativeTab.IC2_SOLAR, group = "material")
-class IridiumIronPlate : Item(Item.Settings()) {
+class IridiumIronPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 配方 1: 铁锭 + 铱锭
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
                 .pattern("III")
                 .pattern("IOI")
                 .pattern("III")
-                .input('I', Items.IRON_INGOT)
-                .input('O', IridiumIngot::class.instance())
-                .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_iron_plate"))
+                .define('I', Items.IRON_INGOT)
+                .define('O', IridiumIngot::class.instance())
+                .unlockedBy(getHasName(Items.IRON_INGOT), has(Items.IRON_INGOT))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_iron_plate"))
 
             // // 配方 2: 铁板 + 铱锭 (简单模式)
-            // ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
+            // ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumIronPlate::class.instance(), 1)
             //     .pattern("III")
             //     .pattern("I I")
             //     .pattern("III")
-            //     .input('I', IronPlate::class.instance())
-            //     .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-            //     .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_iron_plate_from_plate"))
+            //     .define('I', IronPlate::class.instance())
+            //     .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+            //     .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_iron_plate_from_plate"))
         }
     }
 }
@@ -226,19 +226,19 @@ class IridiumIronPlate : Item(Item.Settings()) {
 // zh_cn: 强化铱铁合金板
 // en_us: Reinforced Iridium Iron Plate
 @ModItem(name = "reinforced_iridium_iron_plate", tab = CreativeTab.IC2_SOLAR, group = "material")
-class ReinforcedIridiumIronPlate : Item(Item.Settings()) {
+class ReinforcedIridiumIronPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, ReinforcedIridiumIronPlate::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReinforcedIridiumIronPlate::class.instance(), 1)
                 .pattern("ACA")
                 .pattern("CPC")
                 .pattern("ACA")
-                .input('A', Alloy::class.instance())
-                .input('C', CarbonPlate::class.instance())
-                .input('P', IridiumIronPlate::class.instance())
-                .criterion(hasItem(IridiumIronPlate::class.instance()), conditionsFromItem(IridiumIronPlate::class.instance()))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("reinforced_iridium_iron_plate"))
+                .define('A', Alloy::class.instance())
+                .define('C', CarbonPlate::class.instance())
+                .define('P', IridiumIronPlate::class.instance())
+                .unlockedBy(has(IridiumIronPlate::class.instance()), has(IridiumIronPlate::class.instance()))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("reinforced_iridium_iron_plate"))
         }
     }
 }
@@ -247,21 +247,21 @@ class ReinforcedIridiumIronPlate : Item(Item.Settings()) {
 // zh_cn: 光辉铱铁合金板
 // en_us: Irradiant Reinforced Plate
 @ModItem(name = "irradiant_reinforced_plate", tab = CreativeTab.IC2_SOLAR, group = "material")
-class IrradiantReinforcedPlate : Item(Item.Settings()) {
+class IrradiantReinforcedPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, IrradiantReinforcedPlate::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IrradiantReinforcedPlate::class.instance(), 1)
                 .pattern("RPR")
                 .pattern("LIL")
                 .pattern("RDR")
-                .input('R', Items.REDSTONE)
-                .input('D', Items.DIAMOND)
-                .input('L', Items.LAPIS_LAZULI)
-                .input('P', SunnariumPart::class.instance())
-                .input('I', ReinforcedIridiumIronPlate::class.instance())
-                .criterion(hasItem(SunnariumPart::class.instance()), conditionsFromItem(SunnariumPart::class.instance()))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("irradiant_reinforced_plate"))
+                .define('R', Items.REDSTONE)
+                .define('D', Items.DIAMOND)
+                .define('L', Items.LAPIS_LAZULI)
+                .define('P', SunnariumPart::class.instance())
+                .define('I', ReinforcedIridiumIronPlate::class.instance())
+                .unlockedBy(has(SunnariumPart::class.instance()), has(SunnariumPart::class.instance()))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("irradiant_reinforced_plate"))
         }
     }
 }
@@ -270,28 +270,28 @@ class IrradiantReinforcedPlate : Item(Item.Settings()) {
 // zh_cn: 铱锭
 // en_us: Iridium Ingot
 @ModItem(name = "iridium_ingot", tab = CreativeTab.IC2_SOLAR, group = "material")
-class IridiumIngot : Item(Item.Settings()) {
+class IridiumIngot : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // // 配方 1: 8个铱矿石杆
-            // ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
+            // ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
             //     .pattern("III")
             //     .pattern("I I")
             //     .pattern("III")
-            //     .input('I', IridiumOreItem::class.instance())
-            //     .criterion(hasItem(IridiumOreItem::class.instance()), conditionsFromItem(IridiumOreItem::class.instance()))
-            //     .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_ingot_from_ore"))
+            //     .define('I', IridiumOreItem::class.instance())
+            //     .unlockedBy(has(IridiumOreItem::class.instance()), has(IridiumOreItem::class.instance()))
+            //     .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_ingot_from_ore"))
 
            // // 配方 3: 强化铱板 + 充电电池
-            // ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
+            // ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumIngot::class.instance(), 1)
             //     .pattern(" I ")
             //     .pattern("   ")
             //     .pattern(" B ")
-            //     .input('I', IridiumPlate::class.instance())
-            //     .input('B', ReBatteryItem::class.instance())
-            //     .criterion(hasItem(IridiumPlate::class.instance()), conditionsFromItem(IridiumPlate::class.instance()))
-            //     .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_ingot_from_plate_battery"))
+            //     .define('I', IridiumPlate::class.instance())
+            //     .define('B', ReBatteryItem::class.instance())
+            //     .unlockedBy(has(IridiumPlate::class.instance()), has(IridiumPlate::class.instance()))
+            //     .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("iridium_ingot_from_plate_battery"))
         }
     }
 }
@@ -300,18 +300,18 @@ class IridiumIngot : Item(Item.Settings()) {
 // zh_cn: 分子重组核心
 // en_us: MT Core
 @ModItem(name = "mt_core", tab = CreativeTab.IC2_SOLAR, group = "component")
-class MtCore : Item(Item.Settings()) {
+class MtCore : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, MtCore::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MtCore::class.instance(), 1)
                 .pattern("GNG")
                 .pattern("G G")
                 .pattern("GNG")
-                .input('G', IrradiantGlassPane::class.instance())
-                .input('N', ThickNeutronReflectorItem::class.instance())
-                .criterion(hasItem(IrradiantGlassPane::class.instance()), conditionsFromItem(IrradiantGlassPane::class.instance()))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("mt_core"))
+                .define('G', IrradiantGlassPane::class.instance())
+                .define('N', ThickNeutronReflectorItem::class.instance())
+                .unlockedBy(has(IrradiantGlassPane::class.instance()), has(IrradiantGlassPane::class.instance()))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("mt_core"))
         }
     }
 }
@@ -320,19 +320,19 @@ class MtCore : Item(Item.Settings()) {
 // zh_cn: 量子核心
 // en_us: Quantum Core
 @ModItem(name = "quantum_core", tab = CreativeTab.IC2_SOLAR, group = "component")
-class QuantumCore : Item(Item.Settings()) {
+class QuantumCore : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, QuantumCore::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuantumCore::class.instance(), 1)
                 .pattern("ESE")
                 .pattern("SNS")
                 .pattern("ESE")
-                .input('E', EnrichedSunnariumAlloy::class.instance())
-                .input('S', Items.NETHER_STAR)
-                .input('N', Items.ENDER_EYE)
-                .criterion(hasItem(Items.NETHER_STAR), conditionsFromItem(Items.NETHER_STAR))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("quantum_core"))
+                .define('E', EnrichedSunnariumAlloy::class.instance())
+                .define('S', Items.NETHER_STAR)
+                .define('N', Items.ENDER_EYE)
+                .unlockedBy(getHasName(Items.NETHER_STAR), has(Items.NETHER_STAR))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("quantum_core"))
         }
     }
 }

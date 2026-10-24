@@ -1,5 +1,11 @@
 package ic2_120.content.block.nuclear
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+
 import ic2_120.Ic2_120
 import ic2_120.content.block.MachineBlock
 import ic2_120.content.block.MachineCasingBlock
@@ -26,8 +32,6 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
 import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
@@ -37,17 +41,10 @@ import ic2_120.registry.annotation.RecipeProvider
  * 与核反应堆相邻时，右键等效于右键反应堆，打开反应堆的 UI。
  */
 @ModBlock(name = "reactor_chamber", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor")
-class ReactorChamberBlock(settings: BlockBehaviour.Settings = BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
+class ReactorChamberBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
         for (dir in Direction.values()) {
             val neighborPos = pos.offset(dir)
@@ -55,7 +52,7 @@ class ReactorChamberBlock(settings: BlockBehaviour.Settings = BlockBehaviour.Set
             if (neighborState.block is NuclearReactorBlock) {
                 val be = world.getBlockEntity(neighborPos)
                 if (be is net.minecraft.world.MenuProvider) {
-                    player.openHandledScreen(be)
+                    player.openMenu(be)
                     return InteractionResult.SUCCESS
                 }
             }
@@ -63,7 +60,7 @@ class ReactorChamberBlock(settings: BlockBehaviour.Settings = BlockBehaviour.Set
         return InteractionResult.PASS
     }
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         ReactorChamberBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
@@ -85,11 +82,11 @@ class ReactorChamberBlock(settings: BlockBehaviour.Settings = BlockBehaviour.Set
             val machine = MachineCasingBlock::class.item()
             val leadPlate = ic2_120.content.item.LeadPlate::class.instance()
             if (machine != Items.AIR && leadPlate != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorChamberBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorChamberBlock::class.item(), 1)
                     .pattern("L L").pattern(" M ").pattern("L L")
-                    .input('L', leadPlate).input('M', machine)
-                    .criterion(hasItem(leadPlate), conditionsFromItem(leadPlate))
-                    .offerTo(exporter, ReactorChamberBlock::class.id())
+                    .define('L', leadPlate).define('M', machine)
+                    .unlockedBy(getHasName(leadPlate), has(leadPlate))
+                    .save(exporter, ReactorChamberBlock::class.id())
             }
         }
     }

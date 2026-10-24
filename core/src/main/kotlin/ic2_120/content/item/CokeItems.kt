@@ -6,4 +6,4 @@ import net.minecraft.world.item.Item
 
 /** 焦炭 */
 @ModItem(name = "coke", tab = CreativeTab.IC2_MATERIALS, group = "carbon_materials")
-class Coke : Item(Item.Settings())
+class Coke : Item(Item.Properties())

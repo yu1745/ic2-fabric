@@ -14,8 +14,6 @@ import net.minecraft.network.chat.Component
 import ic2_120_industrial_upgrade.content.item.Photoniy
 import ic2_120_industrial_upgrade.content.item.SolarSplitter
 import ic2_120_industrial_upgrade.content.item.SpectralCore
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -32,24 +30,24 @@ import java.util.function.Consumer
 // en_us: Spectral Solar Panel
 @ModBlock(name = "spectral_solar_panel", registerItem = true, tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "solar_panel")
 class SpectralSolarPanelBlock : IndustrialSolarPanelBlock() {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = SpectralSolarPanelBlockEntity(pos, state)
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = SpectralSolarPanelBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, SpectralSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else BlockEntityType.validateTicker(world, type, SpectralSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 十字：4 个量子太阳能 + 1 个光谱核心
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, SpectralSolarPanelBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SpectralSolarPanelBlock::class.item(), 1)
                 .pattern(" B ")
                 .pattern("BAB")
                 .pattern(" B ")
-                .input('B', QuantumSolarPanelBlock::class.item())
-                .input('A', SpectralCore::class.instance())
-                .criterion(hasItem(QuantumSolarPanelBlock::class.item()), conditionsFromItem(QuantumSolarPanelBlock::class.item()))
-                .offerTo(exporter, IC2IndustrialUpgrade.id("spectral_solar_panel"))
+                .define('B', QuantumSolarPanelBlock::class.item())
+                .define('A', SpectralCore::class.instance())
+                .unlockedBy(has(QuantumSolarPanelBlock::class.item()), has(QuantumSolarPanelBlock::class.item()))
+                .save(exporter, IC2IndustrialUpgrade.id("spectral_solar_panel"))
         }
     }
 }

@@ -51,7 +51,7 @@ class LeashKineticGeneratorBlockEntityRenderer(
         matrices.push()
         matrices.translate(-0.5, -0.5, -0.5)
         Minecraft.getInstance().blockRenderManager.renderBlockAsEntity(
-            Blocks.OAK_FENCE.defaultState,
+            Blocks.OAK_FENCE.defaultBlockState,
             matrices,
             vertexConsumers,
             renderLight,

@@ -9,7 +9,7 @@ import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.network.chat.Component as McText
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
@@ -115,7 +115,7 @@ class CondenserScreen(
         val hoveredSlot = handler.slots.firstOrNull { s ->
             mx >= s.x - 1 && mx < s.x + 17 && my >= s.y - 1 && my < s.y + 17
         }
-        if (hoveredSlot != null && !hoveredSlot.hasStack()) {
+        if (hoveredSlot != null && !hoveredSlot .hasItem()) {
             for ((sx, sy, key) in SLOT_TOOLTIPS) {
                 if (hoveredSlot.x == sx && hoveredSlot.y == sy) {
                     context.drawTooltip(textRenderer, McText.translatable(key), mouseX, mouseY)
@@ -139,7 +139,7 @@ class CondenserScreen(
 
         // 蒸汽槽悬停 (46,26)-(130,59)
         if (mx in 46 until 130 && my in 26 until 59) {
-            val name = ModFluids.STEAM_STILL.defaultState.blockState.block.name
+            val name = ModFluids.STEAM_STILL.defaultBlockState.blockState.block.name
             val lines = if (steamAmount > 0) listOf(name, McText.literal("${"%,d".format(steamAmount / DROPLETS_PER_MB)} / ${"%,d".format(STEAM_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
                         else listOf(McText.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
@@ -147,7 +147,7 @@ class CondenserScreen(
 
         // 蒸馏水槽悬停 (46,73)-(130,88)
         if (mx in 46 until 130 && my in 73 until 88) {
-            val name = ModFluids.DISTILLED_WATER_STILL.defaultState.blockState.block.name
+            val name = ModFluids.DISTILLED_WATER_STILL.defaultBlockState.blockState.block.name
             val lines = if (waterAmount > 0) listOf(name, McText.literal("${"%,d".format(waterAmount / DROPLETS_PER_MB)} / ${"%,d".format(WATER_TANK_DROPLETS / DROPLETS_PER_MB)} mB"))
                         else listOf(McText.literal("空"))
             context.drawTooltip(textRenderer, lines, mouseX, mouseY)
@@ -160,7 +160,7 @@ class CondenserScreen(
         if (fillH <= 0) return
 
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
-        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultState) ?: return
+        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultBlockState) ?: return
         val sprite = sprites[0]
 
         val color = FluidUtils.getFluidColor(fluid)

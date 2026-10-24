@@ -1,5 +1,7 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.has
+
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.instance
 import ic2_120.registry.item
@@ -18,8 +20,6 @@ import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import ic2_120.registry.annotation.RecipeProvider
 
 // 铜锭：使用原版 minecraft:copper_ingot，此处不再注册
@@ -28,22 +28,22 @@ import ic2_120.registry.annotation.RecipeProvider
  * 锡锭。
  */
 @ModItem(name = "tin_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/tin"])
-class TinIngot : Item(Item.Settings()) {
+class TinIngot : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.create(RecipeCategory.MISC, TinIngot::class.instance(), 9)
-                .input(TinBlock::class.instance())
-                .criterion(hasItem(TinBlock::class.instance()), conditionsFromItem(TinBlock::class.instance()))
-                .offerTo(exporter, TinIngot::class.recipeId("from_block"))
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, TinIngot::class.instance(), 9)
+                .requires(TinBlock::class.instance())
+                .unlockedBy(has(TinBlock::class.instance()), has(TinBlock::class.instance()))
+                .save(exporter, TinIngot::class.recipeId("from_block"))
 
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, TinBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, TinBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_TIN))
-                .criterion(hasItem(TinIngot::class.instance()), conditionsFromItem(TinIngot::class.instance()))
-                .offerTo(exporter, TinBlock::class.recipeId("from_ingot"))
+                .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_TIN))
+                .unlockedBy(has(TinIngot::class.instance()), has(TinIngot::class.instance()))
+                .save(exporter, TinBlock::class.recipeId("from_ingot"))
 
             SimpleCookingRecipeBuilder.createSmelting(
                 Ingredient.ofItems(TinOreBlock::class.item()),
@@ -52,8 +52,8 @@ class TinIngot : Item(Item.Settings()) {
                 0.1f,
                 200
             )
-                .criterion(hasItem(TinOreBlock::class.item()), conditionsFromItem(TinOreBlock::class.item()))
-                .offerTo(exporter, TinIngot::class.recipeId("from_tin_ore_smelting"))
+                .unlockedBy(has(TinOreBlock::class.item()), has(TinOreBlock::class.item()))
+                .save(exporter, TinIngot::class.recipeId("from_tin_ore_smelting"))
 
             SimpleCookingRecipeBuilder.createSmelting(
                 Ingredient.ofItems(DeepslateTinOreBlock::class.item()),
@@ -62,11 +62,11 @@ class TinIngot : Item(Item.Settings()) {
                 0.1f,
                 200
             )
-                .criterion(
-                    hasItem(DeepslateTinOreBlock::class.item()),
-                    conditionsFromItem(DeepslateTinOreBlock::class.item())
+                .unlockedBy(
+                    has(DeepslateTinOreBlock::class.item()),
+                    has(DeepslateTinOreBlock::class.item())
                 )
-                .offerTo(exporter, TinIngot::class.recipeId("from_deepslate_tin_ore_smelting"))
+                .save(exporter, TinIngot::class.recipeId("from_deepslate_tin_ore_smelting"))
 
             SimpleCookingRecipeBuilder.createSmelting(
                 Ingredient.ofItems(RawTin::class.instance()),
@@ -75,8 +75,8 @@ class TinIngot : Item(Item.Settings()) {
                 0.1f,
                 200
             )
-                .criterion(hasItem(RawTin::class.instance()), conditionsFromItem(RawTin::class.instance()))
-                .offerTo(exporter, TinIngot::class.recipeId("from_raw_tin_smelting"))
+                .unlockedBy(has(RawTin::class.instance()), has(RawTin::class.instance()))
+                .save(exporter, TinIngot::class.recipeId("from_raw_tin_smelting"))
 
             SimpleCookingRecipeBuilder.createSmelting(
                 Ingredient.ofItems(CrushedTin::class.instance()),
@@ -85,8 +85,8 @@ class TinIngot : Item(Item.Settings()) {
                 0.1f,
                 200
             )
-                .criterion(hasItem(CrushedTin::class.instance()), conditionsFromItem(CrushedTin::class.instance()))
-                .offerTo(exporter, TinIngot::class.recipeId("from_crushed_tin_smelting"))
+                .unlockedBy(has(CrushedTin::class.instance()), has(CrushedTin::class.instance()))
+                .save(exporter, TinIngot::class.recipeId("from_crushed_tin_smelting"))
 
             SimpleCookingRecipeBuilder.createSmelting(
                 Ingredient.ofItems(PurifiedTin::class.instance()),
@@ -95,8 +95,8 @@ class TinIngot : Item(Item.Settings()) {
                 0.1f,
                 200
             )
-                .criterion(hasItem(PurifiedTin::class.instance()), conditionsFromItem(PurifiedTin::class.instance()))
-                .offerTo(exporter, TinIngot::class.recipeId("from_purified_tin_smelting"))
+                .unlockedBy(has(PurifiedTin::class.instance()), has(PurifiedTin::class.instance()))
+                .save(exporter, TinIngot::class.recipeId("from_purified_tin_smelting"))
         }
     }
 }
@@ -105,22 +105,22 @@ class TinIngot : Item(Item.Settings()) {
  * 青铜锭。
  */
 @ModItem(name = "bronze_ingot", tab = CreativeTab.IC2_MATERIALS, group = "ingots", materialTags = ["ingots/bronze"])
-class BronzeIngot : Item(Item.Settings()) {
+class BronzeIngot : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.create(RecipeCategory.MISC, BronzeIngot::class.instance(), 9)
-                .input(BronzeBlock::class.instance())
-                .criterion(hasItem(BronzeBlock::class.instance()), conditionsFromItem(BronzeBlock::class.instance()))
-                .offerTo(exporter, BronzeIngot::class.recipeId("from_block"))
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, BronzeIngot::class.instance(), 9)
+                .requires(BronzeBlock::class.instance())
+                .unlockedBy(has(BronzeBlock::class.instance()), has(BronzeBlock::class.instance()))
+                .save(exporter, BronzeIngot::class.recipeId("from_block"))
 
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, BronzeBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzeBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("III")
                 .pattern("III")
-                .input('I', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE))
-                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
-                .offerTo(exporter, BronzeBlock::class.recipeId("from_ingot"))
+                .define('I', Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE))
+                .unlockedBy(has(BronzeIngot::class.instance()), has(BronzeIngot::class.instance()))
+                .save(exporter, BronzeBlock::class.recipeId("from_ingot"))
         }
     }
 }
@@ -129,5 +129,5 @@ class BronzeIngot : Item(Item.Settings()) {
  * 橡胶。
  */
 @ModItem(name = "rubber", tab = CreativeTab.IC2_MATERIALS, group = "materials", materialTags = ["rubber"])
-class RubberItem : Item(Item.Settings())
+class RubberItem : Item(Item.Properties())
 

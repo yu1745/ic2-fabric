@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.world
+
 import ic2_120.content.block.IOwned
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.sound.MachineSoundConfig
@@ -36,10 +41,10 @@ abstract class MachineBlockEntity(
 
     /**
      * Compatibility alias retained for existing call sites. All machine
-     * dirty marking is throttled centrally by [markDirty].
+     * dirty marking is throttled centrally by [setChanged].
      */
     protected fun markDirtyThrottled() {
-        markDirty()
+        setChanged()
     }
 
     companion object {
@@ -67,17 +72,17 @@ abstract class MachineBlockEntity(
     }
 
     /**
-     * 客户端跳过 markDirty；服务端每台机器最多每 20 tick 标脏一次。
+     * 客户端跳过 setChanged；服务端每台机器最多每 20 tick 标脏一次。
      *
      * Create 等模组在装配 contraption（矿车、轴承等）时会用 [net.minecraft.world.level.Level] 的
      * 虚拟实现（如 VirtualRenderWorld）通过 be.load(nbt) 重建 BlockEntity。这类世界的 chunk
-     * 不是原版 [net.minecraft.world.level.chunk.LevelChunk]，基类 markDirty 会强转失败导致客户端 ClassCastException 崩溃。
-     * 客户端 markDirty 本就是空操作，跳过既安全又无副作用。
+     * 不是原版 [net.minecraft.world.level.chunk.LevelChunk]，基类 setChanged 会强转失败导致客户端 ClassCastException 崩溃。
+     * 客户端 setChanged 本就是空操作，跳过既安全又无副作用。
      *
      * 全局限流是明确的性能/崩溃恢复取舍：正常区块卸载与关服仍会序列化当前内存状态；
      * 若进程在两次标脏之间崩溃，机器的库存、配置、能量或进度最多可能回退约 20 tick。
      */
-    override fun markDirty() {
+    override fun setChanged() {
         val world = world
         if (world != null && world.isClient) return
         if (world != null) {
@@ -89,7 +94,7 @@ abstract class MachineBlockEntity(
                 now + DIRTY_INTERVAL_TICKS
             }
         }
-        super.markDirty()
+        super.setChanged()
     }
 
     override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
@@ -132,17 +137,17 @@ abstract class MachineBlockEntity(
      * 统一的 setActiveState 实现。
      *
      * 行为：
-     * 1. 比较 wasActive = state.get(activeProperty)
-     * 2. 状态变化时写回 world.setBlockState(...)
+     * 1. 比较 wasActive = state.getValue(activeProperty)
+     * 2. 状态变化时写回 world.setBlock(...)
      * 3. 仅服务端播放声音
      * 4. 持续音按 loopIntervalTicks 节流播放
      *
      * 子类可通过覆写此方法并在末尾调用 super.setActiveState() 来扩展行为。
      */
     protected open fun setActiveState(world: Level, pos: BlockPos, state: BlockState, active: Boolean) {
-        val wasActive = state.get(activeProperty)
+        val wasActive = state.getValue(activeProperty)
         if (wasActive == active) return
-        world.setBlockState(pos, state.with(activeProperty, active))
+        world.setBlock(pos, state.setValue(activeProperty, active))
 
         if (world.isClient) return
 

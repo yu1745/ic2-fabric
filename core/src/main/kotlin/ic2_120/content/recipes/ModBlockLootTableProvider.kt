@@ -38,7 +38,6 @@ import net.minecraft.advancements.critereon.EnchantmentPredicate
 import net.minecraft.advancements.critereon.ItemPredicate
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceKey
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.HolderLookup
 import net.minecraft.resources.ResourceLocation
 import java.util.concurrent.CompletableFuture
@@ -97,13 +96,13 @@ class ModBlockLootTableProvider(
                 LootPool.builder()
                     .rolls(ConstantValue.create(1f))
                     .conditionally(wrenchConditionBuilder)
-                    .with(LootItem.builder(blockItem).apply(ApplyExplosionDecay.builder()))
+                    .setValue(LootItem.builder(blockItem).apply(ApplyExplosionDecay.builder()))
             )
             .pool(
                 LootPool.builder()
                     .rolls(ConstantValue.create(1f))
                     .conditionally(notWrenchConditionBuilder)
-                    .with(LootItem.builder(casingItem).apply(ApplyExplosionDecay.builder()))
+                    .setValue(LootItem.builder(casingItem).apply(ApplyExplosionDecay.builder()))
             )
     }
 
@@ -156,7 +155,7 @@ class ModBlockLootTableProvider(
                 LootPool.builder()
                     .rolls(ConstantValue.create(1f))
                     .conditionally(silkTouchOrShears)
-                    .with(addSurvivesExplosionCondition(block, LootItem.builder(leafItem)))
+                    .setValue(addSurvivesExplosionCondition(block, LootItem.builder(leafItem)))
             )
             // 保底绑定叶 → 必掉 1 个树苗（世界生成/树苗生长时由 bindLeaves 写入方块状态，运行时可判定）
             .pool(
@@ -164,7 +163,7 @@ class ModBlockLootTableProvider(
                     .rolls(ConstantValue.create(1f))
                     .conditionally(notSilkTouchOrShears)
                     .conditionally(boundLeaf)
-                    .with(LootItem.builder(saplingItem))
+                    .setValue(LootItem.builder(saplingItem))
             )
     }
 }

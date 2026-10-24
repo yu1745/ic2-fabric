@@ -12,7 +12,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
@@ -44,7 +44,7 @@ class MolecularTransformerScreenHandler(
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
 
         // Input slot: 20, 27
         addTrackedSlot(blockInventory, MolecularTransformerBlock.INPUT_SLOT, INPUT_SLOT_X, INPUT_SLOT_Y)
@@ -74,10 +74,10 @@ class MolecularTransformerScreenHandler(
         addSlot(PredicateSlot(inventory, beSlotIndex, x, y, spec))
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
 
@@ -86,7 +86,7 @@ class MolecularTransformerScreenHandler(
             when {
                 // Machine slots -> player inventory
                 beSlot >= 0 -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 // Player inventory -> machine (via RoutedItemStorage routes)
@@ -104,21 +104,21 @@ class MolecularTransformerScreenHandler(
                 }
                 // Hotbar <-> main inventory swap
                 else -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
 
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
-            else slot.markDirty()
+            else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
-            player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+            player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     companion object {

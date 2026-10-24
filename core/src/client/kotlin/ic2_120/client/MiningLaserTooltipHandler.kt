@@ -29,37 +29,37 @@ object MiningLaserTooltipHandler {
 
             lines.add(
                 Component.translatable("tooltip.ic2_120.mining_laser.current_mode")
-                    .formatted(ChatFormatting.GRAY)
-                    .append(Component.translatable(mode.translationKey).formatted(ChatFormatting.AQUA))
+                    .withStyle(ChatFormatting.GRAY)
+                    .append(Component.translatable(mode.translationKey).withStyle(ChatFormatting.AQUA))
             )
 
             lines.add(
                 Component.translatable("tooltip.ic2_120.mining_laser.remaining_shots", shots)
-                    .formatted(ChatFormatting.GRAY)
+                    .withStyle(ChatFormatting.GRAY)
             )
 
             lines.add(
                 Component.translatable("tooltip.ic2_120.mining_laser.toggle_mode_prefix")
-                    .formatted(ChatFormatting.GRAY)
-                    .append(Component.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").formatted(ChatFormatting.YELLOW))
+                    .withStyle(ChatFormatting.GRAY)
+                    .append(Component.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").withStyle(ChatFormatting.YELLOW))
             )
 
             val shift = isShiftDown()
             if (!shift) {
-                lines.add(Component.translatable(mode.descriptionKey).formatted(ChatFormatting.DARK_GRAY))
+                lines.add(Component.translatable(mode.descriptionKey).withStyle(ChatFormatting.DARK_GRAY))
                 lines.add(
                     Component.translatable("tooltip.ic2_120.mining_laser.shift_hint")
-                        .formatted(ChatFormatting.DARK_GRAY)
+                        .withStyle(ChatFormatting.DARK_GRAY)
                 )
             } else {
-                lines.add(Component.translatable("tooltip.ic2_120.mining_laser.modes_header").formatted(ChatFormatting.GOLD))
+                lines.add(Component.translatable("tooltip.ic2_120.mining_laser.modes_header").withStyle(ChatFormatting.GOLD))
                 for (m in LaserMode.entries) {
                     lines.add(
                         Component.literal("• ")
-                            .formatted(ChatFormatting.GRAY)
-                            .append(Component.translatable(m.translationKey).formatted(ChatFormatting.AQUA))
-                            .append(Component.literal(" — ").formatted(ChatFormatting.DARK_GRAY))
-                            .append(Component.translatable(m.descriptionKey).formatted(ChatFormatting.GRAY))
+                            .withStyle(ChatFormatting.GRAY)
+                            .append(Component.translatable(m.translationKey).withStyle(ChatFormatting.AQUA))
+                            .append(Component.literal(" — ").withStyle(ChatFormatting.DARK_GRAY))
+                            .append(Component.translatable(m.descriptionKey).withStyle(ChatFormatting.GRAY))
                     )
                 }
             }

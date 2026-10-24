@@ -38,13 +38,13 @@ object BandwidthStatsService {
         lastSecondTick = tick
 
         val statsByPlayer = HashMap<UUID, PlayerCounter>()
-        for (player in server.playerManager.playerList) {
+        for (player in server.playerList.playerList) {
             val counter = counters.computeIfAbsent(player.uuid) { PlayerCounter(player.name.string) }
             counter.lastBytesPerSecond = counter.secondBytes.sumThenReset()
             statsByPlayer[player.uuid] = counter
         }
 
-        val snapshot = server.playerManager.playerList.map { player ->
+        val snapshot = server.playerList.playerList.map { player ->
             val stat = statsByPlayer[player.uuid] ?: PlayerCounter(player.name.string)
             BandwidthPlayerStat(
                 name = player.name.string,
@@ -55,7 +55,7 @@ object BandwidthStatsService {
 
         val serverBps = snapshot.sumOf { it.bytesPerSecond }
         val packet = BandwidthHudPacket(serverBytesPerSecond = serverBps, players = snapshot)
-        for (player in server.playerManager.playerList) {
+        for (player in server.playerList.playerList) {
             ServerPlayNetworking.send(player, packet)
         }
     }

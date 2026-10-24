@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.StirlingGeneratorBlock
 import ic2_120.content.block.IGenerator
@@ -13,14 +20,13 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
-import ic2_120.registry.type
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -56,13 +62,13 @@ class StirlingGeneratorBlockEntity(
     }
 
     override val tier: Int = STIRLING_TIER
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     val syncedData = SyncedData()
 
     @RegisterEnergy
     val sync = StirlingGeneratorSync(
         syncedData,
-        { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        { world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         { world?.time }
     )
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
@@ -79,10 +85,10 @@ class StirlingGeneratorBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun setStack(slot: Int, stack: ItemStack) {}
 
@@ -104,9 +110,9 @@ class StirlingGeneratorBlockEntity(
             syncedData
         )
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(StirlingGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, StirlingGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -115,9 +121,9 @@ class StirlingGeneratorBlockEntity(
         sync.heatBuffered = heatBuffered.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(StirlingGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_HEAT_BUFFERED, heatBuffered)
@@ -131,7 +137,7 @@ class StirlingGeneratorBlockEntity(
         }
         heatBuffered += toAdd
         sync.heatBuffered = heatBuffered.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
-        markDirty()
+        setChanged()
         return toAdd
     }
 
@@ -149,7 +155,7 @@ class StirlingGeneratorBlockEntity(
                 sync.generateEnergy(actualGenerate)
                 heatBuffered -= actualGenerate * HU_PER_EU
                 sync.heatBuffered = heatBuffered.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
-                markDirty()
+                setChanged()
             }
         }
         val active = sync.amount < StirlingGeneratorSync.ENERGY_CAPACITY &&
@@ -169,6 +175,6 @@ class StirlingGeneratorBlockEntity(
     }
 
     fun onNeighborUpdate() {
-        markDirty()
+        setChanged()
     }
 }

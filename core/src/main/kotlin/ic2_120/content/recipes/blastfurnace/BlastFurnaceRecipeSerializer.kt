@@ -1,5 +1,13 @@
 package ic2_120.content.recipes.blastfurnace
 
+import ic2_120.content.recipes.RecipeCodecBridge
+
+import net.minecraft.network.codec.StreamCodec
+
+import net.minecraft.network.RegistryFriendlyByteBuf
+
+import com.mojang.serialization.MapCodec
+
 import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonObject
 import net.minecraft.world.item.ItemStack
@@ -23,35 +31,44 @@ import net.minecraft.util.GsonHelper
  */
 @ModMachineRecipe(id = "blast_furnacing", recipeClass = BlastFurnaceRecipe::class)
 object BlastFurnaceRecipeSerializer : RecipeSerializer<BlastFurnaceRecipe> {
-    override fun read(id: ResourceLocation, json: JsonObject): BlastFurnaceRecipe {
-        val ingredient = Ingredient.fromJson(GsonHelper.getObject(json, "ingredient"))
+    private fun fromJson(id: ResourceLocation, json: JsonObject): BlastFurnaceRecipe {
+        val ingredient = INGREDIENT_CODEC(GsonHelper.getObject(json, "ingredient"))
 
         val steelOutputJson = GsonHelper.getObject(json, "steel_output")
         val steelItemId = ResourceLocation.parse(GsonHelper.getString(steelOutputJson, "item"))
-        val steelItem = BuiltInRegistries.ITEM.get(steelItemId)
+        val steelItem = BuiltInRegistries.ITEM.getValue(steelItemId)
         val steelCount = GsonHelper.getInt(steelOutputJson, "count", 1)
         val steelOutput = ItemStack(steelItem, steelCount)
 
         val slagOutputJson = GsonHelper.getObject(json, "slag_output")
         val slagItemId = ResourceLocation.parse(GsonHelper.getString(slagOutputJson, "item"))
-        val slagItem = BuiltInRegistries.ITEM.get(slagItemId)
+        val slagItem = BuiltInRegistries.ITEM.getValue(slagItemId)
         val slagCount = GsonHelper.getInt(slagOutputJson, "count", 1)
         val slagOutput = ItemStack(slagItem, slagCount)
 
         return BlastFurnaceRecipe(id, ingredient, steelOutput, slagOutput)
     }
 
-    override fun read(id: ResourceLocation, buf: FriendlyByteBuf): BlastFurnaceRecipe {
-        val ingredient = Ingredient.fromPacket(buf)
-        val steelOutput = buf.readItemStack()
-        val slagOutput = buf.readItemStack()
+    private fun read(buf: RegistryFriendlyByteBuf): BlastFurnaceRecipe {
+        val ingredient = Ingredient.CONTENTS_STREAM_CODEC.decode(buf)
+        val steelOutput = bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
+        val slagOutput = bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
 
         return BlastFurnaceRecipe(id, ingredient, steelOutput, slagOutput)
     }
 
-    override fun write(buf: FriendlyByteBuf, recipe: BlastFurnaceRecipe) {
-        recipe.ingredient.write(buf)
-        buf.writeItemStack(recipe.steelOutput.copy())
-        buf.writeItemStack(recipe.slagOutput.copy())
+    private fun write(buf: FriendlyByteBuf, recipe: BlastFurnaceRecipe) {
+        Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.ingredient)
+        bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.steelOutput.copy())
+        bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.slagOutput.copy())
     }
 }
+
+    override fun codec(): MapCodec<BlastFurnaceRecipe> = RecipeCodecBridge.jsonMapCodec(
+        "ic2_120:blast_furnacing",
+        { id, json -> fromJson(id, json) },
+        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+    )
+
+    override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, BlastFurnaceRecipe> =
+        StreamCodec.ofMember({ recipe, buf -> write(buf, recipe) }, { buf -> read(buf) })

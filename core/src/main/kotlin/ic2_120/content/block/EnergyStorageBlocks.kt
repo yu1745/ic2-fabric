@@ -1,5 +1,13 @@
 package ic2_120.content.block
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.world.level.block.entity.BlockEntityType
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+
 
 import ic2_120.content.block.cables.DoubleInsulatedGoldCableBlock
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
@@ -24,13 +32,10 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
-import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Item
@@ -47,7 +52,7 @@ import net.minecraft.world.level.Level
 
 @ModBlock(name = "batbox", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
 class BatBoxBlock : EnergyStorageBlock(EnergyStorageConfig.BATBOX) {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.BatBoxBlockEntity(pos, state)
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
@@ -59,20 +64,20 @@ class BatBoxBlock : EnergyStorageBlock(EnergyStorageConfig.BATBOX) {
             val tinCable = InsulatedTinCableBlock::class.item()
             val battery = ReBatteryItem::class.instance()
             if (tinCable != Items.AIR && battery != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, BatBoxBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BatBoxBlock::class.item(), 1)
                     .pattern("WTW")
                     .pattern("BBB")
                     .pattern("WWW")
-                    .input('W', ItemTags.PLANKS)
-                    .input('T', tinCable)
-                    .input('B', battery)
-                    .criterion(hasItem(battery), conditionsFromItem(battery))
-                    .offerTo(exporter, BatBoxBlock::class.id())
+                    .define('W', ItemTags.PLANKS)
+                    .define('T', tinCable)
+                    .define('B', battery)
+                    .unlockedBy(getHasName(battery), has(battery))
+                    .save(exporter, BatBoxBlock::class.id())
             }
         }
     }
 
-    class BatBoxBlockItem(block: Block, settings: Item.Settings) :
+    class BatBoxBlockItem(block: Block, settings: Item.Properties) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.BATBOX) {
         override val translationKeyFull: String = "block.ic2_120.batbox_full"
     }
@@ -80,7 +85,7 @@ class BatBoxBlock : EnergyStorageBlock(EnergyStorageConfig.BATBOX) {
 
 @ModBlock(name = "cesu", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
 class CesuBlock : EnergyStorageBlock(EnergyStorageConfig.CESU) {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.CesuBlockEntity(pos, state)
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
@@ -93,20 +98,20 @@ class CesuBlock : EnergyStorageBlock(EnergyStorageConfig.CESU) {
             val battery = AdvancedReBatteryItem::class.instance()
             val plate = BronzePlate::class.instance()
             if (copperCable != Items.AIR && battery != Items.AIR && plate != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, CesuBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CesuBlock::class.item(), 1)
                     .pattern("WTW")
                     .pattern("BBB")
                     .pattern("WWW")
-                    .input('W', Ingredient.fromTag(ModTags.Compat.Items.PLATES_BRONZE))
-                    .input('T', copperCable)
-                    .input('B', battery)
-                    .criterion(hasItem(battery), conditionsFromItem(battery))
-                    .offerTo(exporter, CesuBlock::class.id())
+                    .define('W', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
+                    .define('T', copperCable)
+                    .define('B', battery)
+                    .unlockedBy(getHasName(battery), has(battery))
+                    .save(exporter, CesuBlock::class.id())
             }
         }
     }
 
-    class CesuBlockItem(block: Block, settings: Item.Settings) :
+    class CesuBlockItem(block: Block, settings: Item.Properties) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.CESU) {
         override val translationKeyFull: String = "block.ic2_120.cesu_full"
     }
@@ -114,7 +119,7 @@ class CesuBlock : EnergyStorageBlock(EnergyStorageConfig.CESU) {
 
 @ModBlock(name = "mfe", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
 class MfeBlock : EnergyStorageBlock(EnergyStorageConfig.MFE) {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.MfeBlockEntity(pos, state)
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
@@ -127,20 +132,20 @@ class MfeBlock : EnergyStorageBlock(EnergyStorageConfig.MFE) {
             val crystal = EnergyCrystalItem::class.instance()
             val machine = MachineCasingBlock::class.item()
             if (goldCable != Items.AIR && crystal != Items.AIR && machine != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, MfeBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MfeBlock::class.item(), 1)
                     .pattern("GEG")
                     .pattern("EME")
                     .pattern("GEG")
-                    .input('G', goldCable)
-                    .input('E', crystal)
-                    .input('M', machine)
-                    .criterion(hasItem(crystal), conditionsFromItem(crystal))
-                    .offerTo(exporter, MfeBlock::class.id())
+                    .define('G', goldCable)
+                    .define('E', crystal)
+                    .define('M', machine)
+                    .unlockedBy(getHasName(crystal), has(crystal))
+                    .save(exporter, MfeBlock::class.id())
             }
         }
     }
 
-    class MfeBlockItem(block: Block, settings: Item.Settings) :
+    class MfeBlockItem(block: Block, settings: Item.Properties) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.MFE) {
         override val translationKeyFull: String = "block.ic2_120.mfe_full"
     }
@@ -149,7 +154,7 @@ class MfeBlock : EnergyStorageBlock(EnergyStorageConfig.MFE) {
 @ModBlock(name = "mfsu", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
 class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
     override fun getCasingDrop() = AdvancedMachineCasingBlock::class.item()
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.MfsuBlockEntity(pos, state)
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
@@ -163,21 +168,21 @@ class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
             val mfe = MfeBlock::class.item()
             val advCasing = AdvancedMachineCasingBlock::class.item()
             if (lapotron != Items.AIR && advCircuit != Items.AIR && mfe != Items.AIR && advCasing != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, MfsuBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MfsuBlock::class.item(), 1)
                     .pattern("LAL")
                     .pattern("LFL")
                     .pattern("LCL")
-                    .input('L', lapotron)
-                    .input('A', advCircuit)
-                    .input('F', mfe)
-                    .input('C', advCasing)
-                    .criterion(hasItem(mfe), conditionsFromItem(mfe))
-                    .offerTo(exporter, MfsuBlock::class.id())
+                    .define('L', lapotron)
+                    .define('A', advCircuit)
+                    .define('F', mfe)
+                    .define('C', advCasing)
+                    .unlockedBy(getHasName(mfe), has(mfe))
+                    .save(exporter, MfsuBlock::class.id())
             }
         }
     }
 
-    class MfsuBlockItem(block: Block, settings: Item.Settings) :
+    class MfsuBlockItem(block: Block, settings: Item.Properties) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.MFSU) {
         override val translationKeyFull: String = "block.ic2_120.mfsu_full"
     }
@@ -186,15 +191,15 @@ class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
 /**
  * 充电座方块。与储电箱共用 EnergyStorageBlockEntity（含红石模式系统）与 GUI。
  */
-abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(defaultMachineSettings().nonOpaque()) { // 3D 模型：关闭相邻面剔除
+abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(defaultMachineSettings() .noOcclusion()) { // 3D 模型：关闭相邻面剔除
     init {
-        defaultState = stateManager.defaultState
-            .with(BlockStateProperties.HORIZONTAL_FACING, net.minecraft.core.Direction.NORTH)
-            .with(EnergyStorageBlock.ACTIVE, false)
+        defaultState = stateManager.defaultBlockState
+            .setValue(BlockStateProperties.HORIZONTAL_FACING, net.minecraft.core.Direction.NORTH)
+            .setValue(EnergyStorageBlock.ACTIVE, false)
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         // ACTIVE 已在 EnergyStorageBlock.appendProperties 中添加
     }
 
@@ -212,27 +217,17 @@ abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(de
         return if (be.emitsRedstoneNow) 15 else 0
     }
 
-    override fun createScreenHandlerFactory(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos
-    ): net.minecraft.world.MenuProvider? {
-        val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.world.MenuProvider
-    }
-
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onUse(
+    override fun useWithoutItem(
         state: BlockState,
         world: Level,
         pos: BlockPos,
-        player: net.minecraft.world.entity.player.Player,
-        hand: net.minecraft.world.InteractionHand,
-        hit: net.minecraft.world.phys.BlockHitResult
-    ): net.minecraft.world.InteractionResult {
+        player: Player,
+        hit: BlockHitResult
+    ): InteractionResult {
         if (!world.isClient) {
-            createScreenHandlerFactory(state, world, pos)?.let { factory ->
-                player.openHandledScreen(factory)
+            getMenuProvider(state, world, pos)?.let { factory ->
+                player.openMenu(factory)
             }
         }
         return net.minecraft.world.InteractionResult.SUCCESS
@@ -256,13 +251,13 @@ abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(de
 
     companion object {
         /** 去掉顶部的 1/16，与模型视觉对齐 */
-        private val FULL_MINUS_TOP = net.minecraft.world.phys.shapes.Shapes.cuboid(0.0, 0.0, 0.0, 1.0, 15.0 / 16.0, 1.0)
+        private val FULL_MINUS_TOP = net.minecraft.world.phys.shapes.Shapes.box(0.0, 0.0, 0.0, 1.0, 15.0 / 16.0, 1.0)
     }
 }
 
 @ModBlock(name = "batbox_chargepad", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
 class BatBoxChargepadBlock : ChargepadBlock(EnergyStorageConfig.BATBOX_CHARGEPAD) {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.BatBoxChargepadBlockEntity(pos, state)
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
@@ -275,20 +270,20 @@ class BatBoxChargepadBlock : ChargepadBlock(EnergyStorageConfig.BATBOX_CHARGEPAD
             val rubber = RubberItem::class.instance()
             val base = BatBoxBlock::class.item()
             if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, BatBoxChargepadBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BatBoxChargepadBlock::class.item(), 1)
                     .pattern("CPC")
                     .pattern("RBR")
-                    .input('C', circuit)
-                    .input('P', Items.STONE_PRESSURE_PLATE)
-                    .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
-                    .input('B', base)
-                    .criterion(hasItem(base), conditionsFromItem(base))
-                    .offerTo(exporter, BatBoxChargepadBlock::class.id())
+                    .define('C', circuit)
+                    .define('P', Items.STONE_PRESSURE_PLATE)
+                    .define('R', Ingredient.of(ModTags.Compat.Items.RUBBER))
+                    .define('B', base)
+                    .unlockedBy(getHasName(base), has(base))
+                    .save(exporter, BatBoxChargepadBlock::class.id())
             }
         }
     }
 
-    class BatBoxChargepadBlockItem(block: Block, settings: Item.Settings) :
+    class BatBoxChargepadBlockItem(block: Block, settings: Item.Properties) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.BATBOX_CHARGEPAD) {
         override val translationKeyFull: String = "block.ic2_120.batbox_chargepad_full"
     }
@@ -296,7 +291,7 @@ class BatBoxChargepadBlock : ChargepadBlock(EnergyStorageConfig.BATBOX_CHARGEPAD
 
 @ModBlock(name = "cesu_chargepad", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
 class CesuChargepadBlock : ChargepadBlock(EnergyStorageConfig.CESU_CHARGEPAD) {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.CesuChargepadBlockEntity(pos, state)
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
@@ -309,20 +304,20 @@ class CesuChargepadBlock : ChargepadBlock(EnergyStorageConfig.CESU_CHARGEPAD) {
             val rubber = RubberItem::class.instance()
             val base = CesuBlock::class.item()
             if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, CesuChargepadBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CesuChargepadBlock::class.item(), 1)
                     .pattern("CPC")
                     .pattern("RBR")
-                    .input('C', circuit)
-                    .input('P', Items.STONE_PRESSURE_PLATE)
-                    .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
-                    .input('B', base)
-                    .criterion(hasItem(base), conditionsFromItem(base))
-                    .offerTo(exporter, CesuChargepadBlock::class.id())
+                    .define('C', circuit)
+                    .define('P', Items.STONE_PRESSURE_PLATE)
+                    .define('R', Ingredient.of(ModTags.Compat.Items.RUBBER))
+                    .define('B', base)
+                    .unlockedBy(getHasName(base), has(base))
+                    .save(exporter, CesuChargepadBlock::class.id())
             }
         }
     }
 
-    class CesuChargepadBlockItem(block: Block, settings: Item.Settings) :
+    class CesuChargepadBlockItem(block: Block, settings: Item.Properties) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.CESU_CHARGEPAD) {
         override val translationKeyFull: String = "block.ic2_120.cesu_chargepad_full"
     }
@@ -330,7 +325,7 @@ class CesuChargepadBlock : ChargepadBlock(EnergyStorageConfig.CESU_CHARGEPAD) {
 
 @ModBlock(name = "mfe_chargepad", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
 class MfeChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFE_CHARGEPAD) {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.MfeChargepadBlockEntity(pos, state)
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
@@ -343,20 +338,20 @@ class MfeChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFE_CHARGEPAD) {
             val rubber = RubberItem::class.instance()
             val base = MfeBlock::class.item()
             if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, MfeChargepadBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MfeChargepadBlock::class.item(), 1)
                     .pattern("CPC")
                     .pattern("RBR")
-                    .input('C', circuit)
-                    .input('P', Items.STONE_PRESSURE_PLATE)
-                    .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
-                    .input('B', base)
-                    .criterion(hasItem(base), conditionsFromItem(base))
-                    .offerTo(exporter, MfeChargepadBlock::class.id())
+                    .define('C', circuit)
+                    .define('P', Items.STONE_PRESSURE_PLATE)
+                    .define('R', Ingredient.of(ModTags.Compat.Items.RUBBER))
+                    .define('B', base)
+                    .unlockedBy(getHasName(base), has(base))
+                    .save(exporter, MfeChargepadBlock::class.id())
             }
         }
     }
 
-    class MfeChargepadBlockItem(block: Block, settings: Item.Settings) :
+    class MfeChargepadBlockItem(block: Block, settings: Item.Properties) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.MFE_CHARGEPAD) {
         override val translationKeyFull: String = "block.ic2_120.mfe_chargepad_full"
     }
@@ -365,7 +360,7 @@ class MfeChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFE_CHARGEPAD) {
 @ModBlock(name = "mfsu_chargepad", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "bat_box")
 class MfsuChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFSU_CHARGEPAD) {
     override fun getCasingDrop() = AdvancedMachineCasingBlock::class.item()
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         EnergyStorageBlockEntity.MfsuChargepadBlockEntity(pos, state)
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
@@ -378,20 +373,20 @@ class MfsuChargepadBlock : ChargepadBlock(EnergyStorageConfig.MFSU_CHARGEPAD) {
             val rubber = RubberItem::class.instance()
             val base = MfsuBlock::class.item()
             if (circuit != Items.AIR && rubber != Items.AIR && base != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, MfsuChargepadBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MfsuChargepadBlock::class.item(), 1)
                     .pattern("CPC")
                     .pattern("RBR")
-                    .input('C', circuit)
-                    .input('P', Items.STONE_PRESSURE_PLATE)
-                    .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
-                    .input('B', base)
-                    .criterion(hasItem(base), conditionsFromItem(base))
-                    .offerTo(exporter, MfsuChargepadBlock::class.id())
+                    .define('C', circuit)
+                    .define('P', Items.STONE_PRESSURE_PLATE)
+                    .define('R', Ingredient.of(ModTags.Compat.Items.RUBBER))
+                    .define('B', base)
+                    .unlockedBy(getHasName(base), has(base))
+                    .save(exporter, MfsuChargepadBlock::class.id())
             }
         }
     }
 
-    class MfsuChargepadBlockItem(block: Block, settings: Item.Settings) :
+    class MfsuChargepadBlockItem(block: Block, settings: Item.Properties) :
         EnergyStorageBlockItem(block, settings, EnergyStorageConfig.MFSU_CHARGEPAD) {
         override val translationKeyFull: String = "block.ic2_120.mfsu_chargepad_full"
     }

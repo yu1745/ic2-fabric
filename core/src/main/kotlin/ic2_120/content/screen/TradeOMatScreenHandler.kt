@@ -1,5 +1,9 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.world
+
+import ic2_120.compat.stack
+
 import ic2_120.content.block.TradeOMatBlock
 import ic2_120.content.block.machines.TradeOMatBlockEntityBase
 import ic2_120.content.screen.slot.PredicateSlot
@@ -8,7 +12,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
@@ -27,7 +31,7 @@ class TradeOMatScreenHandler(
 ) : AbstractContainerMenu(TradeOMatScreenHandler::class.type(), syncId) {
 
     init {
-        checkSize(blockInventory, TradeOMatBlockEntityBase.INVENTORY_SIZE)
+        checkContainerSize(blockInventory, TradeOMatBlockEntityBase.INVENTORY_SIZE)
 
         if (isOwner) {
             // 所有者视图：demand/offer 左列，input/output 右列
@@ -61,21 +65,21 @@ class TradeOMatScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             if (index in MACHINE_SLOT_START..MACHINE_SLOT_END) {
                 if (!slot.canTakeItems(player)) return ItemStack.EMPTY
-                if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 slot.onQuickTransfer(stackInSlot, stack)
             } else {
-                if (!insertItem(stackInSlot, SLOT_INPUT_INDEX, SLOT_INPUT_INDEX + 1, false)) {
+                if (!moveItemStackTo(stackInSlot, SLOT_INPUT_INDEX, SLOT_INPUT_INDEX + 1, false)) {
                     if (isOwner) {
-                        if (!insertItem(stackInSlot, SLOT_DEMAND_INDEX, SLOT_DEMAND_INDEX + 1, false)) {
-                            insertItem(stackInSlot, SLOT_OFFER_INDEX, SLOT_OFFER_INDEX + 1, false)
+                        if (!moveItemStackTo(stackInSlot, SLOT_DEMAND_INDEX, SLOT_DEMAND_INDEX + 1, false)) {
+                            moveItemStackTo(stackInSlot, SLOT_OFFER_INDEX, SLOT_OFFER_INDEX + 1, false)
                         }
                     }
                     // 原兜底：向玩家背包区间 insertItem 已删除——目标区间含源槽自身，
@@ -84,17 +88,17 @@ class TradeOMatScreenHandler(
                 }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
-            else slot.markDirty()
+            else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is TradeOMatBlock &&
-                player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+                player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     companion object {

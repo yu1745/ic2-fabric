@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.block.FermenterBlock
 import ic2_120.content.block.machines.FermenterBlockEntity
 import ic2_120.content.fluid.ModFluids
@@ -16,7 +18,7 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -52,8 +54,8 @@ class FermenterScreenHandler(
     }
 
     init {
-        checkSize(blockInventory, FermenterBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, FermenterBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
 
         val inputFilledSpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_INPUT_FILLED_CONTAINER) ?: INPUT_FILLED_CONTAINER_SLOT_SPEC
         val inputEmptySpec = itemStorage?.deriveSlotSpec(FermenterBlockEntity.SLOT_INPUT_EMPTY_CONTAINER) ?: OUTPUT_ONLY_SLOT_SPEC
@@ -88,10 +90,10 @@ class FermenterScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (!slot.hasStack()) return stack
+        if (!slot .hasItem()) return stack
         val inSlot = slot.stack
         stack = inSlot.copy()
 
@@ -100,7 +102,7 @@ class FermenterScreenHandler(
             SLOT_OUTPUT_FILLED_CONTAINER_INDEX,
             SLOT_OUTPUT_FERTILIZER_INDEX,
             in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
-                if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
+                if (!moveItemStackTo(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
             in PLAYER_INV_START..HOTBAR_END -> {
                 val storage = itemStorage ?: return ItemStack.EMPTY
@@ -117,20 +119,20 @@ class FermenterScreenHandler(
                 // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                 // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                 if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-                if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, false)) return ItemStack.EMPTY
+                if (!moveItemStackTo(inSlot, PLAYER_INV_START, HOTBAR_END + 1, false)) return ItemStack.EMPTY
             }
         }
 
-        if (inSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
+        if (inSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
         if (inSlot.count == stack.count) return ItemStack.EMPTY
-        slot.onTakeItem(player, inSlot)
+        slot.onTake(player, inSlot)
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is FermenterBlock &&
-                player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+                player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     companion object {

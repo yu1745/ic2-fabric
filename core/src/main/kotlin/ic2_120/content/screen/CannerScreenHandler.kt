@@ -1,5 +1,9 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
+import ic2_120.compat.isClient
+
 import ic2_120.content.block.CannerBlock
 import ic2_120.content.block.machines.CannerBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
@@ -12,7 +16,7 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ContainerData
@@ -45,8 +49,8 @@ class CannerScreenHandler(
     }
 
     init {
-        checkSize(blockInventory, CannerBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, CannerBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
 
         // 左输入槽 (41,16)
         addTrackedSlot(PredicateSlot(blockInventory, CannerBlockEntity.SLOT_INPUT, 41, 16,
@@ -93,7 +97,7 @@ class CannerScreenHandler(
         }
     }
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos)
             if (be !== blockInventory) return@get
@@ -122,23 +126,23 @@ class CannerScreenHandler(
         return id == BUTTON_ID_MODE_CYCLE || id == BUTTON_ID_SWAP_TANKS
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
                 index == SLOT_OUTPUT_INDEX -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index == SLOT_DISCHARGING_INDEX -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
@@ -150,22 +154,22 @@ class CannerScreenHandler(
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
-            else slot.markDirty()
+            else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is CannerBlock &&
                 (world.isClient || world.getBlockEntity(pos) === blockInventory) &&
-                player.squaredDistanceTo(
+                player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)

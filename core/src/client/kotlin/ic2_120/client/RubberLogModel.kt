@@ -80,7 +80,7 @@ class RubberLogModel : UnbakedModel, BakedModel, FabricBakedModel {
     ) {
         if (state.block !is RubberLogBlock) return
         val block = state.block as RubberLogBlock
-        val axis = state.get(RotatedPillarBlock.AXIS) ?: Direction.Axis.Y
+        val axis = state.getValue(RotatedPillarBlock.AXIS) ?: Direction.Axis.Y
         val n = block.getRubberState(state, Direction.NORTH)
         val s = block.getRubberState(state, Direction.SOUTH)
         val e = block.getRubberState(state, Direction.EAST)

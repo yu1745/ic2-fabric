@@ -14,15 +14,13 @@ import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.resources.ResourceLocation
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.annotation.RecipeProvider
 
 // ========== 外壳类 ==========
 
 /** 青铜外壳 */
 @ModItem(name = "bronze_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class BronzeCasing : Item(Item.Settings()) {
+class BronzeCasing : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -33,7 +31,7 @@ class BronzeCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_BRONZE)
+                    Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE)
                 )
             )
         }
@@ -42,7 +40,7 @@ class BronzeCasing : Item(Item.Settings()) {
 
 /** 铜质外壳 */
 @ModItem(name = "copper_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class CopperCasing : Item(Item.Settings()) {
+class CopperCasing : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -53,7 +51,7 @@ class CopperCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER)
+                    Ingredient.of(ModTags.Compat.Items.PLATES_COPPER)
                 )
             )
         }
@@ -62,7 +60,7 @@ class CopperCasing : Item(Item.Settings()) {
 
 /** 黄金外壳 */
 @ModItem(name = "gold_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class GoldCasing : Item(Item.Settings()) {
+class GoldCasing : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -73,7 +71,7 @@ class GoldCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_GOLD)
+                    Ingredient.of(ModTags.Compat.Items.PLATES_GOLD)
                 )
             )
         }
@@ -82,7 +80,7 @@ class GoldCasing : Item(Item.Settings()) {
 
 /** 铁质外壳 */
 @ModItem(name = "iron_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class IronCasing : Item(Item.Settings()) {
+class IronCasing : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -93,7 +91,7 @@ class IronCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON)
+                    Ingredient.of(ModTags.Compat.Items.PLATES_IRON)
                 )
             )
         }
@@ -102,7 +100,7 @@ class IronCasing : Item(Item.Settings()) {
 
 /** 铅质外壳 */
 @ModItem(name = "lead_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class LeadCasing : Item(Item.Settings()) {
+class LeadCasing : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -113,7 +111,7 @@ class LeadCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_LEAD)
+                    Ingredient.of(ModTags.Compat.Items.PLATES_LEAD)
                 )
             )
         }
@@ -122,7 +120,7 @@ class LeadCasing : Item(Item.Settings()) {
 
 /** 钢质外壳 */
 @ModItem(name = "steel_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class SteelCasing : Item(Item.Settings()) {
+class SteelCasing : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -133,7 +131,7 @@ class SteelCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL)
+                    Ingredient.of(ModTags.Compat.Items.PLATES_STEEL)
                 )
             )
         }
@@ -142,7 +140,7 @@ class SteelCasing : Item(Item.Settings()) {
 
 /** 锡质外壳 */
 @ModItem(name = "tin_casing", tab = CreativeTab.IC2_MATERIALS, group = "casing")
-class TinCasing : Item(Item.Settings()) {
+class TinCasing : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -153,7 +151,7 @@ class TinCasing : Item(Item.Settings()) {
                 resultCount = 2,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN)
+                    Ingredient.of(ModTags.Compat.Items.PLATES_TIN)
                 )
             )
         }

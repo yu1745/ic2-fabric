@@ -1,5 +1,6 @@
 package buildcraft_addon.content.blockentity
 
+import net.minecraft.core.HolderLookup
 import ic2_120.integration.ftbchunks.ClaimProtection
 
 import buildcraft_addon.content.block.RFEngineBlock
@@ -12,7 +13,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
@@ -99,20 +100,20 @@ class RFEngineBlockEntity(
     override fun getDisplayName(): Component = Component.translatable("block.buildcraft_addon.rf_engine")
 
     // === 升级栏位 ===
-    private val upgradeInventory = NonNullList.ofSize(4, ItemStack.EMPTY)
+    private val upgradeInventory = NonNullList.withSize(4, ItemStack.EMPTY)
 
     override fun size(): Int = 4
     override fun getStack(slot: Int): ItemStack = upgradeInventory[slot]
     override fun setStack(slot: Int, stack: ItemStack) { upgradeInventory[slot] = stack }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = upgradeInventory[slot].split(amount)
-    override fun removeStack(slot: Int): ItemStack {
+    override fun removeItem(slot: Int, amount: Int): ItemStack = upgradeInventory[slot].split(amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack {
         val stack = upgradeInventory[slot]
         upgradeInventory[slot] = ItemStack.EMPTY
         return stack
     }
     override fun isEmpty(): Boolean = upgradeInventory.all { it.isEmpty }
     override fun clear() { upgradeInventory.fill(ItemStack.EMPTY) }
-    override fun canPlayerUse(player: Player): Boolean = true
+    override fun stillValid(player: Player): Boolean = true
 
     // === 热量 ===
     var heat: Double = MIN_HEAT
@@ -158,7 +159,7 @@ class RFEngineBlockEntity(
         val extracted = minOf(amount, pendingOutputKu.coerceAtLeast(0))
         if (!simulate && extracted > 0) {
             pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
         return extracted
     }
@@ -181,7 +182,7 @@ class RFEngineBlockEntity(
         val powered = world.isReceivingRedstonePower(pos)
         if (powered != isRedstonePowered) {
             isRedstonePowered = powered
-            markDirty()
+            setChanged()
         }
     }
 
@@ -189,8 +190,8 @@ class RFEngineBlockEntity(
         val world = world ?: return
         val next = Direction.entries[(current.ordinal + 1) % 6]
         currentDirection = next
-        world.setBlockState(pos, cachedState.with(BlockStateProperties.FACING, next))
-        markDirty()
+        world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, next))
+        setChanged()
     }
 
     // === 活塞速度（与铁引擎相同） ===
@@ -207,7 +208,7 @@ class RFEngineBlockEntity(
     fun serverTick() {
         val world = world ?: return
         if (world.isClient) return
-        currentDirection = cachedState.get(BlockStateProperties.FACING)
+        currentDirection = cachedState.getValue(BlockStateProperties.FACING)
         pendingOutputKu = 0
 
         isBurning = false
@@ -243,14 +244,14 @@ class RFEngineBlockEntity(
 
         currentStage = computePowerStage()
         tickPiston()
-        markDirty()
+        setChanged()
     }
 
     // === 客户端 tick ===
     fun clientTick() {
         val world = world ?: return
         if (!world.isClient) return
-        currentDirection = cachedState.get(BlockStateProperties.FACING)
+        currentDirection = cachedState.getValue(BlockStateProperties.FACING)
 
         val powered = world.isReceivingRedstonePower(pos)
         isRedstonePowered = powered
@@ -285,8 +286,8 @@ class RFEngineBlockEntity(
     }
 
     // === NBT ===
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putDouble("heat", heat)
         nbt.putFloat("progress", progress)
         nbt.putInt("progressPart", progressPart)
@@ -307,8 +308,8 @@ class RFEngineBlockEntity(
         nbt.put("upgradeInventory", invNbt)
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         heat = nbt.getDouble("heat")
         progress = nbt.getFloat("progress")
         progressPart = nbt.getInt("progressPart")

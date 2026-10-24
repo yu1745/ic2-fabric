@@ -1,5 +1,13 @@
 package ic2_120.content.recipes.orewashing
 
+import ic2_120.content.recipes.RecipeCodecBridge
+
+import net.minecraft.network.codec.StreamCodec
+
+import net.minecraft.network.RegistryFriendlyByteBuf
+
+import com.mojang.serialization.MapCodec
+
 import ic2_120.registry.annotation.ModMachineRecipe
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -28,8 +36,8 @@ import net.minecraft.util.GsonHelper
  */
 @ModMachineRecipe(id = "ore_washing", recipeClass = OreWashingRecipe::class)
 object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
-    override fun read(id: ResourceLocation, json: JsonObject): OreWashingRecipe {
-        val ingredient = Ingredient.fromJson(GsonHelper.getObject(json, "ingredient"))
+    private fun fromJson(id: ResourceLocation, json: JsonObject): OreWashingRecipe {
+        val ingredient = INGREDIENT_CODEC(GsonHelper.getObject(json, "ingredient"))
 
         val outputsArray = GsonHelper.getArray(json, "outputs")
         val outputs = outputsArray.map { element ->
@@ -47,12 +55,12 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
         return OreWashingRecipe(id, ingredient, outputs, waterConsumption)
     }
 
-    override fun read(id: ResourceLocation, buf: FriendlyByteBuf): OreWashingRecipe {
-        val ingredient = Ingredient.fromPacket(buf)
+    private fun read(buf: RegistryFriendlyByteBuf): OreWashingRecipe {
+        val ingredient = Ingredient.CONTENTS_STREAM_CODEC.decode(buf)
 
         val outputCount = buf.readVarInt()
         val outputs = (0 until outputCount).map {
-            buf.readItemStack()
+            bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
         }
 
         val waterConsumption = buf.readLong()
@@ -60,14 +68,23 @@ object OreWashingRecipeSerializer : RecipeSerializer<OreWashingRecipe> {
         return OreWashingRecipe(id, ingredient, outputs, waterConsumption)
     }
 
-    override fun write(buf: FriendlyByteBuf, recipe: OreWashingRecipe) {
-        recipe.ingredient.write(buf)
+    private fun write(buf: FriendlyByteBuf, recipe: OreWashingRecipe) {
+        Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.ingredient)
 
         buf.writeVarInt(recipe.outputItems.size)
         recipe.outputItems.forEach { output ->
-            buf.writeItemStack(output.copy())
+            bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, output.copy())
         }
 
         buf.writeLong(recipe.waterConsumptionDroplets)
     }
 }
+
+    override fun codec(): MapCodec<OreWashingRecipe> = RecipeCodecBridge.jsonMapCodec(
+        "ic2_120:ore_washing",
+        { id, json -> fromJson(id, json) },
+        { _, _ -> throw UnsupportedOperationException("recipe JSON is produced by datagen only") }
+    )
+
+    override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, OreWashingRecipe> =
+        StreamCodec.ofMember({ recipe, buf -> write(buf, recipe) }, { buf -> read(buf) })

@@ -1,5 +1,6 @@
 package ic2_120
 
+import net.minecraft.core.registries.Registries
 import ic2_120.content.RecipeCacheEpoch
 import ic2_120.analytics.AnalyticsReporter
 import ic2_120.content.CreativeGeneratorItemEntityHandler
@@ -57,7 +58,6 @@ import ic2_120.content.command.ItemIdCommand
 import ic2_120.registry.ClassScanner
 import ic2_120.registry.type
 import ic2_120.registry.CreativeTab
-import ic2_120.registry.type
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
@@ -78,7 +78,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceKey
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Direction
 import net.minecraft.resources.ResourceLocation
 import org.slf4j.LoggerFactory
@@ -130,7 +129,7 @@ object Ic2_120 : ModInitializer {
         )
 
         // 焦炭作为固体燃料：燃烧时间为煤炭 2 倍（影响原版熔炉、铁炉、发电机等读取 FuelRegistry 的设备）
-        val coalBurnTicks = FuelRegistry.INSTANCE.get(Items.COAL) ?: 1600
+        val coalBurnTicks = FuelRegistry.INSTANCE.getValue(tems.COAL) ?: 1600
         BuiltInRegistries.ITEM.getOrEmpty(ResourceLocation.fromNamespaceAndPath(MOD_ID, "coke")).ifPresent { cokeItem ->
             FuelRegistry.INSTANCE.add(cokeItem, coalBurnTicks * 2)
         }
@@ -214,7 +213,7 @@ object Ic2_120 : ModInitializer {
         }
 
         // 杂交作物初始种子袋（三维属性 1/1/1）加入作物种子物品栏
-        val ic2CropSeedsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation.fromNamespaceAndPath(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
+        val ic2CropSeedsKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, ResourceLocation.fromNamespaceAndPath(MOD_ID, CreativeTab.IC2_CROP_SEEDS.id))
         ItemGroupEvents.modifyEntriesEvent(ic2CropSeedsKey).register { entries ->
             val seedBag = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(MOD_ID, "crop_seed_bag"))
             val initialSeeds = CropSeedBagItem.createInitialSeedStacks()
@@ -226,7 +225,7 @@ object Ic2_120 : ModInitializer {
         }
 
         // 刷子 16 色变体（基础未染色刷子由 @ModItem 自动加入）
-        val ic2ToolsKey = ResourceKey.of(Registries.ITEM_GROUP, ResourceLocation.fromNamespaceAndPath(MOD_ID, CreativeTab.IC2_TOOLS.id))
+        val ic2ToolsKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, ResourceLocation.fromNamespaceAndPath(MOD_ID, CreativeTab.IC2_TOOLS.id))
         ItemGroupEvents.modifyEntriesEvent(ic2ToolsKey).register { entries ->
             val painter = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(MOD_ID, "painter"))
             val coloredPainters = PainterItem.createColoredStacks()

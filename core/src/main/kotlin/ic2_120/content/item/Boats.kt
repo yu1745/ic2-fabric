@@ -1,5 +1,9 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.entity.ModEntities
 import ic2_120.content.recipes.ModTags
@@ -11,8 +15,6 @@ import ic2_120.registry.item
 import ic2_120.registry.recipeId
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.data.recipes.ShapelessRecipeBuilder
@@ -23,34 +25,34 @@ import net.minecraft.data.recipes.RecipeCategory
 
 /** 破损的橡皮艇 - 使用后在水面生成可乘坐的船实体 */
 @ModItem(name = "broken_rubber_boat", tab = CreativeTab.IC2_TOOLS, group = "boats")
-class BrokenRubberBoatItem : Ic2BoatItem(ModEntities.BROKEN_RUBBER_BOAT, Item.Settings()) {
+class BrokenRubberBoatItem : Ic2BoatItem(ModEntities.BROKEN_RUBBER_BOAT, Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapelessRecipeBuilder.create(RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
-                .input(BrokenRubberBoatItem::class.instance())
-                .input(RubberItem::class.instance())
-                .criterion(hasItem(BrokenRubberBoatItem::class.instance()), conditionsFromItem(BrokenRubberBoatItem::class.instance()))
-                .offerTo(exporter, BrokenRubberBoatItem::class.recipeId("repair_to_rubber_boat"))
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
+                .requires(BrokenRubberBoatItem::class.instance())
+                .requires(RubberItem::class.instance())
+                .unlockedBy(has(BrokenRubberBoatItem::class.instance()), has(BrokenRubberBoatItem::class.instance()))
+                .save(exporter, BrokenRubberBoatItem::class.recipeId("repair_to_rubber_boat"))
         }
     }
 }
 
 /** 碳纤维轻艇 - 使用后在水面生成可乘坐的船实体 */
 @ModItem(name = "carbon_boat", tab = CreativeTab.IC2_TOOLS, group = "boats")
-class CarbonBoatItem : Ic2BoatItem(ModEntities.CARBON_BOAT, Item.Settings()) {
+class CarbonBoatItem : Ic2BoatItem(ModEntities.CARBON_BOAT, Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val plate = CarbonPlate::class.instance()
             if (plate != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.TRANSPORTATION, CarbonBoatItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.TRANSPORTATION, CarbonBoatItem::class.instance(), 1)
                     .pattern("   ")
                     .pattern("P P")
                     .pattern("PPP")
-                    .input('P', plate)
-                    .criterion(hasItem(plate), conditionsFromItem(plate))
-                    .offerTo(exporter, CarbonBoatItem::class.id())
+                    .define('P', plate)
+                    .unlockedBy(getHasName(plate), has(plate))
+                    .save(exporter, CarbonBoatItem::class.id())
             }
         }
     }
@@ -58,19 +60,19 @@ class CarbonBoatItem : Ic2BoatItem(ModEntities.CARBON_BOAT, Item.Settings()) {
 
 /** 橡皮艇 - 使用后在水面生成可乘坐的船实体 */
 @ModItem(name = "rubber_boat", tab = CreativeTab.IC2_TOOLS, group = "boats")
-class RubberBoatItem : Ic2BoatItem(ModEntities.RUBBER_BOAT, Item.Settings()) {
+class RubberBoatItem : Ic2BoatItem(ModEntities.RUBBER_BOAT, Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val rubber = RubberItem::class.instance()
             if (rubber != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.TRANSPORTATION, RubberBoatItem::class.instance(), 1)
                     .pattern("   ")
                     .pattern("R R")
                     .pattern("RRR")
-                    .input('R', Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
-                    .criterion(hasItem(rubber), conditionsFromItem(rubber))
-                    .offerTo(exporter, RubberBoatItem::class.id())
+                    .define('R', Ingredient.of(ModTags.Compat.Items.RUBBER))
+                    .unlockedBy(getHasName(rubber), has(rubber))
+                    .save(exporter, RubberBoatItem::class.id())
             }
         }
     }
@@ -78,7 +80,7 @@ class RubberBoatItem : Ic2BoatItem(ModEntities.RUBBER_BOAT, Item.Settings()) {
 
 /** 电动艇 - 使用后在水面生成可乘坐的船实体 */
 @ModItem(name = "electric_boat", tab = CreativeTab.IC2_TOOLS, group = "boats")
-class ElectricBoatItem : Ic2BoatItem(ModEntities.ELECTRIC_BOAT, Item.Settings()) {
+class ElectricBoatItem : Ic2BoatItem(ModEntities.ELECTRIC_BOAT, Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -87,16 +89,16 @@ class ElectricBoatItem : Ic2BoatItem(ModEntities.ELECTRIC_BOAT, Item.Settings())
             val motor = ElectricMotor::class.instance()
             val rotor = IronRotor::class.instance()
             if (cable != Items.AIR && plate != Items.AIR && motor != Items.AIR && rotor != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.TRANSPORTATION, ElectricBoatItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.TRANSPORTATION, ElectricBoatItem::class.instance(), 1)
                     .pattern("CCC")
                     .pattern("IMI")
                     .pattern("IRI")
-                    .input('C', cable)
-                    .input('I', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                    .input('M', motor)
-                    .input('R', rotor)
-                    .criterion(hasItem(cable), conditionsFromItem(cable))
-                    .offerTo(exporter, ElectricBoatItem::class.id())
+                    .define('C', cable)
+                    .define('I', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                    .define('M', motor)
+                    .define('R', rotor)
+                    .unlockedBy(getHasName(cable), has(cable))
+                    .save(exporter, ElectricBoatItem::class.id())
             }
         }
     }

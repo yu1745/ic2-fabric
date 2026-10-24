@@ -49,18 +49,18 @@ object TeleporterJadeProvider : IBlockComponentProvider, IServerDataProvider<Blo
         if (!accessor.serverData.contains("mfeEnergy")) return
         val data = accessor.serverData
 
-        tooltip.add(Component.translatable("ic2_120.jade.teleporter.header").formatted(ChatFormatting.WHITE))
+        tooltip.add(Component.translatable("ic2_120.jade.teleporter.header").withStyle(ChatFormatting.WHITE))
         val mfeEnergy = data.getLong("mfeEnergy")
         val cooldown = data.getInt("cooldown")
         tooltip.add(Component.translatable("ic2_120.jade.teleporter.mfe_energy", formatEnergy(mfeEnergy)))
-        if (cooldown > 0) tooltip.add(Component.translatable("ic2_120.jade.teleporter.cooldown", cooldown).formatted(ChatFormatting.RED))
+        if (cooldown > 0) tooltip.add(Component.translatable("ic2_120.jade.teleporter.cooldown", cooldown).withStyle(ChatFormatting.RED))
 
         if (data.getBoolean("targetSet")) {
             val tx = data.getInt("targetX"); val ty = data.getInt("targetY")
             val tz = data.getInt("targetZ"); val tdim = data.getString("targetDim").substringAfterLast(':')
             tooltip.add(Component.translatable("ic2_120.jade.teleporter.target", tx, ty, tz, tdim).setStyle(Style.EMPTY.withColor(ChatFormatting.GRAY)))
         } else {
-            tooltip.add(Component.translatable("ic2_120.jade.teleporter.target_none").formatted(ChatFormatting.RED))
+            tooltip.add(Component.translatable("ic2_120.jade.teleporter.target_none").withStyle(ChatFormatting.RED))
         }
 
         fun check(key: String, trans: String) {
@@ -75,15 +75,15 @@ object TeleporterJadeProvider : IBlockComponentProvider, IServerDataProvider<Blo
         check("chunkLoaded", "ic2_120.jade.teleporter.check.chunk")
         check("targetBeValid", "ic2_120.jade.teleporter.check.target_be")
         if (data.getBoolean("targetBeCooldown"))
-            tooltip.add(Component.literal("  \u2717 ").append(Component.translatable("ic2_120.jade.teleporter.check.target_be_cooldown")).formatted(ChatFormatting.RED))
+            tooltip.add(Component.literal("  \u2717 ").append(Component.translatable("ic2_120.jade.teleporter.check.target_be_cooldown")).withStyle(ChatFormatting.RED))
         check("redstonePowered", "ic2_120.jade.teleporter.check.redstone")
         check("entityInRange", "ic2_120.jade.teleporter.check.entity")
         check("charging", "ic2_120.jade.teleporter.check.charging")
 
         if (mfeEnergy < 10_000)
-            tooltip.add(Component.literal("  \u2717 ").append(Component.translatable("ic2_120.jade.teleporter.check.energy_insufficient", formatEnergy(mfeEnergy))).formatted(ChatFormatting.RED))
+            tooltip.add(Component.literal("  \u2717 ").append(Component.translatable("ic2_120.jade.teleporter.check.energy_insufficient", formatEnergy(mfeEnergy))).withStyle(ChatFormatting.RED))
         else
-            tooltip.add(Component.literal("  \u2713 ").append(Component.translatable("ic2_120.jade.teleporter.check.energy_sufficient", formatEnergy(mfeEnergy))).formatted(ChatFormatting.GREEN))
+            tooltip.add(Component.literal("  \u2713 ").append(Component.translatable("ic2_120.jade.teleporter.check.energy_sufficient", formatEnergy(mfeEnergy))).withStyle(ChatFormatting.GREEN))
     }
 
     private fun formatEnergy(value: Long): String = when {

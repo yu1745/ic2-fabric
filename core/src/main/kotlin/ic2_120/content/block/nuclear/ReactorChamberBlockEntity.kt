@@ -1,5 +1,9 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
@@ -78,18 +82,18 @@ class ReactorChamberBlockEntity(
     override fun size(): Int = findAdjacentReactor()?.size() ?: 0
     override fun getStack(slot: Int): ItemStack = findAdjacentReactor()?.getStack(slot) ?: ItemStack.EMPTY
     override fun setStack(slot: Int, stack: ItemStack) = findAdjacentReactor()?.setStack(slot, stack) ?: Unit
-    override fun removeStack(slot: Int, amount: Int): ItemStack =
-        findAdjacentReactor()?.removeStack(slot, amount) ?: ItemStack.EMPTY
-    override fun removeStack(slot: Int): ItemStack = findAdjacentReactor()?.removeStack(slot) ?: ItemStack.EMPTY
+    override fun removeItem(slot: Int, amount: Int): ItemStack =
+        findAdjacentReactor()?.remove(slot, amount) ?: ItemStack.EMPTY
+    override fun removeItemNoUpdate(slot: Int): ItemStack = findAdjacentReactor()?.remove(slot) ?: ItemStack.EMPTY
     override fun clear() = findAdjacentReactor()?.clear() ?: Unit
     override fun isEmpty(): Boolean = findAdjacentReactor()?.isEmpty() ?: true
-    override fun markDirty() {
-        findAdjacentReactor()?.markDirty()
-        super.markDirty()
+    override fun setChanged() {
+        findAdjacentReactor()?.setChanged()
+        super.setChanged()
     }
     override fun isValid(slot: Int, stack: ItemStack): Boolean =
         findAdjacentReactor()?.isValid(slot, stack) ?: true
-    override fun canPlayerUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         findAdjacentReactor()?.canPlayerUse(player) ?: false
 
     companion object {

@@ -47,7 +47,7 @@ import java.util.function.Consumer
  * - 能量从所有量子装备均匀扣除
  */
 @ModItem(name = "quantum_leggings", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.LEGGINGS, Item.Settings().maxCount(1)) {
+class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.LEGGINGS, Item.Properties().maxStackSize(1)) {
 
     companion object {
         private const val SPEED_TIER_KEY = "SpeedTier"
@@ -137,7 +137,7 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
     }
 
     override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.level.Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val tier = stack.orCreateNbt.getInt(SPEED_TIER_KEY)
         val energy = getEnergy(stack)
         val remainingSeconds = if (energy > 0 && maxCapacity > 0) {
@@ -158,8 +158,8 @@ class QuantumLeggings : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorI
             2 -> Component.translatable("tooltip.ic2_120.armor.speed_tier.2")
             else -> Component.translatable("tooltip.ic2_120.armor.speed_tier.off")
         }
-        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_leggings.speed", tierText, timeText).formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_leggings.speed", tierText, timeText).withStyle(ChatFormatting.GRAY))
         val pct = "%.0f".format(getDamageReduction() * 100)
-        tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).withStyle(ChatFormatting.GRAY))
     }
 }

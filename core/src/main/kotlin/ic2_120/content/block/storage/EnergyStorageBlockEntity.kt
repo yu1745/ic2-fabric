@@ -1,5 +1,12 @@
+import ic2_120.compat.time
+import ic2_120.compat.cachedState
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 ﻿package ic2_120.content.block.storage
 
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.*
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.sync.EnergyStorageSync
@@ -23,7 +30,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -58,11 +65,11 @@ abstract class EnergyStorageBlockEntity(
         const val DISCHARGE_SLOT = 1
     }
 
-    private val inventory = NonNullList.ofSize(config.slotCount, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(config.slotCount, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = buildList {
             add(
@@ -79,13 +86,13 @@ abstract class EnergyStorageBlockEntity(
                 ItemInsertRoute(intArrayOf(DISCHARGE_SLOT), matcher = { stack ->
                     when (val item = stack.item) {
                         is IBatteryItem -> item.tier <= config.tier
-                        else -> stack.isOf(Items.REDSTONE) || item is EnergiumDust
+                        else -> stack.`is`(Items.REDSTONE) || item is EnergiumDust
                     }
                 })
             )
         },
         extractSlots = IntArray(config.slotCount) { it },
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -129,21 +136,21 @@ abstract class EnergyStorageBlockEntity(
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
-        markDirty()
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         if (slot == DISCHARGE_SLOT) {
             return when (val item = stack.item) {
                 is IBatteryItem -> item.tier <= config.tier
-                else -> stack.isOf(Items.REDSTONE) || item is EnergiumDust
+                else -> stack.`is`(Items.REDSTONE) || item is EnergiumDust
             }
         }
         val item = stack.item
@@ -172,18 +179,18 @@ abstract class EnergyStorageBlockEntity(
         )
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(EnergyStorageSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(EnergyStorageSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -208,7 +215,7 @@ abstract class EnergyStorageBlockEntity(
     fun setRedstoneMode(mode: Int) {
         if (!config.emitRedstoneWhenNotFull) return
         sync.redstoneMode = mode.coerceIn(0, 6)
-        markDirty()
+        setChanged()
         // 输出电平可能随模式变化，立即刷新邻居
         world?.updateNeighborsAlways(pos, cachedState.block)
         // 原版行为：切换时聊天栏提示当前模式名
@@ -269,15 +276,15 @@ abstract class EnergyStorageBlockEntity(
     private fun consumeFuel() {
         val fuelStack = inventory[DISCHARGE_SLOT]
         val energyPerItem = when {
-            fuelStack.isOf(Items.REDSTONE) -> 800L
+            fuelStack.`is`(Items.REDSTONE) -> 800L
             fuelStack.item is EnergiumDust -> 16_000L
             else -> return
         }
 
         if (config.capacity - sync.amount < energyPerItem) return
-        fuelStack.decrement(1)
+        fuelStack.shrink(1)
         sync.amount += energyPerItem
-        markDirty()
+        setChanged()
     }
 
     private fun chargePlayersAbove(world: Level, pos: BlockPos): Long {
@@ -305,8 +312,8 @@ abstract class EnergyStorageBlockEntity(
    private fun updateActiveState(world: Level, pos: BlockPos, active: Boolean) {
        val current = world.getBlockState(pos)
        if (!current.contains(EnergyStorageBlock.ACTIVE)) return
-       if (current.get(EnergyStorageBlock.ACTIVE) == active) return
-       world.setBlockState(pos, current.with(EnergyStorageBlock.ACTIVE, active), Block.NOTIFY_LISTENERS)
+       if (current.getValue(EnergyStorageBlock.ACTIVE) == active) return
+       world.setBlock(pos, current.setValue(EnergyStorageBlock.ACTIVE, active), Block.NOTIFY_LISTENERS)
    }
 
     // ============== Concrete BlockEntities ==============

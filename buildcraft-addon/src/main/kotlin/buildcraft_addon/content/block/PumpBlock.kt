@@ -26,20 +26,20 @@ import net.minecraft.world.level.Level
 
 @ModBlock(name = "pump", registerItem = true, tab = CreativeTab.BUILDCRAFT)
 class PumpBlock : BaseEntityBlock(
-    Settings.create().strength(5.0f, 10.0f).nonOpaque()
+    Settings.create().strength(5.0f, 10.0f) .noOcclusion()
 ), EntityBlock {
 
     init {
-        defaultState = stateManager.defaultState
+        defaultState = stateManager.defaultBlockState
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {}
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {}
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity {
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity {
         return PumpBlockEntity(pos, state)
     }
 
-    override fun onUse(state: BlockState, world: Level, pos: BlockPos, player: Player, hand: InteractionHand, hit: BlockHitResult): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? PumpBlockEntity ?: return InteractionResult.PASS
             player.sendMessage(net.minecraft.network.chat.Component.literal("液泵: ${be.getTankInfo()}"), true)
@@ -55,7 +55,7 @@ class PumpBlock : BaseEntityBlock(
         }
     }
 
-    override fun getRenderType(state: BlockState): RenderShape = RenderShape.MODEL
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? {
@@ -73,17 +73,17 @@ class PumpBlock : BaseEntityBlock(
     @Suppress("DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
         // BC TileMiner.onRemove: 方块被破坏时清除管道
-        if (!state.isOf(newState.block) && !world.isClient) {
+        if (!state.`is`(newState.block) && !world.isClient) {
             val tubeBlock = BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("tube"))
             val planned = mutableListOf<BlockPos>()
             for (y in pos.y - 1 downTo pos.y - PumpBlockEntity.MAX_DEPTH) {
                 val bp = BlockPos(pos.x, y, pos.z)
-                if (world.getBlockState(bp).isOf(tubeBlock)) {
+                if (world.getBlockState(bp).`is`(tubeBlock)) {
                     planned.add(bp)
                 } else break
             }
             if (ClaimProtection.allAllowedUuid(world, planned, null, ClaimProtection.EDIT_BLOCK)) {
-                for (bp in planned) world.setBlockState(bp, Blocks.AIR.defaultState, 3)
+                for (bp in planned) world.setBlock(bp, Blocks.AIR.defaultBlockState, 3)
             }
         }
         super.onStateReplaced(state, world, pos, newState, moved)

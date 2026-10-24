@@ -54,13 +54,13 @@ class ModBlockLootTableProvider(output: FabricDataOutput) : FabricBlockLootTable
                 LootPool.builder()
                     .rolls(ConstantValue.create(1f))
                     .conditionally(wrenchConditionBuilder)
-                    .with(LootItem.builder(blockItem).apply(ApplyExplosionDecay.builder()))
+                    .setValue(LootItem.builder(blockItem).apply(ApplyExplosionDecay.builder()))
             )
             .pool(
                 LootPool.builder()
                     .rolls(ConstantValue.create(1f))
                     .conditionally(notWrenchConditionBuilder)
-                    .with(LootItem.builder(casingItem).apply(ApplyExplosionDecay.builder()))
+                    .setValue(LootItem.builder(casingItem).apply(ApplyExplosionDecay.builder()))
             )
     }
 }

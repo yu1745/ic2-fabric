@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.network.chat.Component
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
@@ -24,16 +24,16 @@ class SolarDistillerScreen(
 ) : AbstractContainerScreen<SolarDistillerScreenHandler>(handler, playerInventory, title) {
 
     private val waterFlowSprite: TextureAtlasSprite? by lazy {
-        FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER)
-            ?.getFluidSprites(null, null, Fluids.WATER.defaultState)
+        FluidRenderHandlerRegistry.INSTANCE.getValue(luids.WATER)
+            ?.getFluidSprites(null, null, Fluids.WATER.defaultBlockState)
             ?.getOrNull(1)
     }
 
     private val waterColor: Int by lazy { FluidUtils.getFluidColor(Fluids.WATER) }
 
     private val distilledFlowSprite: TextureAtlasSprite? by lazy {
-        FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.DISTILLED_WATER_STILL)
-            ?.getFluidSprites(null, null, ModFluids.DISTILLED_WATER_STILL.defaultState)
+        FluidRenderHandlerRegistry.INSTANCE.getValue(ModFluids.DISTILLED_WATER_STILL)
+            ?.getFluidSprites(null, null, ModFluids.DISTILLED_WATER_STILL.defaultBlockState)
             ?.getOrNull(1)
     }
 

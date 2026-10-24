@@ -10,8 +10,6 @@ import ic2_120.registry.type
 import ic2_120_industrial_upgrade.content.item.SunLinse
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import net.minecraft.network.chat.Component
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -28,7 +26,7 @@ import java.util.function.Consumer
 // zh_cn: 质子日光太阳能发电机  en_us: Proton Sun Panel
 @ModBlock(name = "proton_solar_panelsun", registerItem = true, tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "solar_panel")
 class ProtonSolarPanelSunBlock : IndustrialSolarPanelBlock() {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         ProtonSolarPanelSunBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
@@ -37,24 +35,24 @@ class ProtonSolarPanelSunBlock : IndustrialSolarPanelBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, ProtonSolarPanelSunBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else BlockEntityType.validateTicker(world, type, ProtonSolarPanelSunBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // "BA"：质子太阳能发电机 + SunLinse（ASA）
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, ProtonSolarPanelSunBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ProtonSolarPanelSunBlock::class.item(), 1)
                 .pattern("B")
                 .pattern("A")
-                .input('B', ProtonSolarPanelBlock::class.item())
-                .input('A', SunLinse::class.instance())
-                .criterion(hasItem(ProtonSolarPanelBlock::class.item()), conditionsFromItem(ProtonSolarPanelBlock::class.item()))
-                .offerTo(exporter, IC2IndustrialUpgrade.id("proton_solar_panelsun"))
+                .define('B', ProtonSolarPanelBlock::class.item())
+                .define('A', SunLinse::class.instance())
+                .unlockedBy(has(ProtonSolarPanelBlock::class.item()), has(ProtonSolarPanelBlock::class.item()))
+                .save(exporter, IC2IndustrialUpgrade.id("proton_solar_panelsun"))
             // 变体回退：变体 → 原版（透镜不返还）
-            ShapelessRecipeBuilder.create(RecipeCategory.MISC, ProtonSolarPanelBlock::class.item(), 1)
-                .input(ProtonSolarPanelSunBlock::class.item())
-                .criterion(hasItem(ProtonSolarPanelSunBlock::class.item()), conditionsFromItem(ProtonSolarPanelSunBlock::class.item()))
-                .offerTo(exporter, IC2IndustrialUpgrade.id("proton_solar_panelsun_revert"))
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, ProtonSolarPanelBlock::class.item(), 1)
+                .requires(ProtonSolarPanelSunBlock::class.item())
+                .unlockedBy(has(ProtonSolarPanelSunBlock::class.item()), has(ProtonSolarPanelSunBlock::class.item()))
+                .save(exporter, IC2IndustrialUpgrade.id("proton_solar_panelsun_revert"))
         }
     }
 }

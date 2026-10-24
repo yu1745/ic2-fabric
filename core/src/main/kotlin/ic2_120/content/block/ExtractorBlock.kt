@@ -1,5 +1,9 @@
 package ic2_120.content.block
 
+import net.minecraft.world.level.block.entity.BlockEntityType
+
+import ic2_120.compat.isClient
+
 
 import ic2_120.content.block.machines.ExtractorBlockEntity
 import ic2_120.content.item.Circuit
@@ -15,7 +19,6 @@ import ic2_120.registry.type
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
-import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.context.BlockPlaceContext
@@ -28,8 +31,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
 import java.util.function.Consumer
 
@@ -39,9 +40,9 @@ import java.util.function.Consumer
  */
 @ModBlock(name = "extractor", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
-class ExtractorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
+class ExtractorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         ExtractorBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
@@ -50,40 +51,28 @@ class ExtractorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, ExtractorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
-
-    override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): net.minecraft.world.MenuProvider? {
-        val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.world.MenuProvider
-    }
+        else BlockEntityType.validateTicker(world, type, ExtractorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            createScreenHandlerFactory(state, world, pos)?.let { factory ->
-                player.openHandledScreen(factory)
+            getMenuProvider(state, world, pos)?.let { factory ->
+                player.openMenu(factory)
             }
         }
         return InteractionResult.SUCCESS
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
-        super.getPlacementState(ctx)?.with(ACTIVE, false)
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
+        super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     companion object {
-        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+        val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {

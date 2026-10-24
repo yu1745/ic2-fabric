@@ -1,5 +1,10 @@
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 ﻿package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
 import ic2_120.Ic2_120
 import ic2_120.content.block.PatternStorageBlock
 import ic2_120.content.screen.PatternStorageScreenHandler
@@ -21,7 +26,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -52,17 +57,17 @@ class PatternStorageBlockEntity(
         private const val NBT_SELECTED_INDEX = "SelectedTemplateIndex"
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(SLOT_CRYSTAL), matcher = { it.isEmpty || isCrystalMemory(it) })
         ),
         extractSlots = intArrayOf(SLOT_CRYSTAL),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -147,22 +152,22 @@ class PatternStorageBlockEntity(
         } else {
             selectedTemplateIndex = selectedTemplateIndex.coerceIn(0, templates.lastIndex)
         }
-        markDirty()
+        setChanged()
         val world = world ?: return
         if (!world.isClient) {
             val state = world.getBlockState(pos)
             world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
-            (world as? ServerLevel)?.chunkManager?.markForUpdate(pos)
+            (world as? ServerLevel)?.chunkSource?.markForUpdate(pos)
         }
     }
 
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_CRYSTAL -> stack.isEmpty || isCrystalMemory(stack)
@@ -171,7 +176,7 @@ class PatternStorageBlockEntity(
 
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = if (slot == SLOT_CRYSTAL && !isCrystalMemory(stack)) ItemStack.EMPTY else stack
-        if (inventory[slot].count > maxCountPerStack) inventory[slot].count = maxCountPerStack
+        if (inventory[slot].count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) inventory[slot].count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         markDirtyAndSync()
     }
 
@@ -185,9 +190,9 @@ class PatternStorageBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         PatternStorageScreenHandler(syncId, playerInventory, this, pos, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), itemStorage)
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         templates.clear()
         templates += decodeUuTemplateList(nbt.getList(UU_TEMPLATE_LIST_NBT_KEY, 10))
         selectedTemplateIndex = nbt.getInt(NBT_SELECTED_INDEX)
@@ -196,9 +201,9 @@ class PatternStorageBlockEntity(
         }
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         nbt.put(UU_TEMPLATE_LIST_NBT_KEY, encodeUuTemplateList(templates))
         nbt.putInt(NBT_SELECTED_INDEX, selectedTemplateIndex)
     }

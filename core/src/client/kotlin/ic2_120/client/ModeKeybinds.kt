@@ -53,7 +53,7 @@ object ModeKeybinds {
         }
 
         UseBlockCallback.EVENT.register { player, world, hand, _ ->
-            if (world.isClient && isAltDown() && player.getStackInHand(hand).item is ic2_120.content.item.FoamSprayerItem) {
+            if (world.isClient && isAltDown() && player.getItemInHand(hand).item is ic2_120.content.item.FoamSprayerItem) {
                 toggleFoamModeOnceThisTick(player.age)
                 InteractionResult.FAIL
             } else {
@@ -62,11 +62,11 @@ object ModeKeybinds {
         }
 
         UseItemCallback.EVENT.register { player, world, hand ->
-            if (world.isClient && isAltDown() && player.getStackInHand(hand).item is ic2_120.content.item.FoamSprayerItem) {
+            if (world.isClient && isAltDown() && player.getItemInHand(hand).item is ic2_120.content.item.FoamSprayerItem) {
                 toggleFoamModeOnceThisTick(player.age)
-                InteractionResultHolder.fail(player.getStackInHand(hand))
+                InteractionResultHolder.fail(player.getItemInHand(hand))
             } else {
-                InteractionResultHolder.pass(player.getStackInHand(hand))
+                InteractionResultHolder.pass(player.getItemInHand(hand))
             }
         }
     }
@@ -103,7 +103,7 @@ object ModeKeybinds {
         val player = Minecraft.getInstance().player ?: return false
 
         val packet = InteractionHand.values().firstNotNullOfOrNull { hand ->
-            when (player.getStackInHand(hand).item) {
+            when (player.getItemInHand(hand).item) {
                 is FoamSprayerItem -> NetworkManager.TOGGLE_FOAM_SPRAYER_MODE_PACKET
                 is MiningLaserItem -> NetworkManager.TOGGLE_MINING_LASER_MODE_PACKET
                 is IridiumDrill -> NetworkManager.TOGGLE_IRIDIUM_SILK_TOUCH_PACKET

@@ -1,5 +1,6 @@
 package ic2_120.content.block
 
+import net.minecraft.core.HolderLookup
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.minecraft.world.level.block.state.BlockState
@@ -32,7 +33,7 @@ class RubberLogBlockEntity(
         val i = indexOf(face)
         if (i >= 0) {
             extractedAt[i] = worldTime
-            markDirty()
+            setChanged()
         }
     }
 
@@ -41,15 +42,15 @@ class RubberLogBlockEntity(
         return if (i >= 0) extractedAt[i] else 0L
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         for (i in 0..3) {
             extractedAt[i] = nbt.getLong("extracted_$i")
         }
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         for (i in 0..3) {
             nbt.putLong("extracted_$i", extractedAt[i])
         }

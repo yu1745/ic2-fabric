@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.block.SolarDistillerBlock
 import ic2_120.content.block.machines.SolarDistillerBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
@@ -11,7 +13,7 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ContainerData
@@ -34,8 +36,8 @@ class SolarDistillerScreenHandler(
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
-        checkSize(blockInventory, SolarDistillerBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, SolarDistillerBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
 
         addTrackedSlot(blockInventory, SolarDistillerBlockEntity.SLOT_INPUT_WATER, 17, 27)
         addTrackedSlot(blockInventory, SolarDistillerBlockEntity.SLOT_OUTPUT_EMPTY, 17, 45)
@@ -61,19 +63,19 @@ class SolarDistillerScreenHandler(
         addSlot(slot)
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (!slot.hasStack()) return stack
+        if (!slot .hasItem()) return stack
         val inSlot = slot.stack
         stack = inSlot.copy()
 
         when (index) {
             SLOT_OUTPUT_EMPTY_INDEX, SLOT_OUTPUT_CELL_INDEX -> {
-                if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
+                if (!moveItemStackTo(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
             SLOT_UPGRADE_0_INDEX, SLOT_UPGRADE_1_INDEX -> {
-                if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
+                if (!moveItemStackTo(inSlot, PLAYER_INV_START, HOTBAR_END + 1, true)) return ItemStack.EMPTY
             }
             in PLAYER_INV_START..HOTBAR_END -> {
                 val storage = itemStorage ?: return ItemStack.EMPTY
@@ -90,20 +92,20 @@ class SolarDistillerScreenHandler(
                 // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                 // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                 if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-                if (!insertItem(inSlot, PLAYER_INV_START, HOTBAR_END + 1, false)) return ItemStack.EMPTY
+                if (!moveItemStackTo(inSlot, PLAYER_INV_START, HOTBAR_END + 1, false)) return ItemStack.EMPTY
             }
         }
 
-        if (inSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
+        if (inSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
         if (inSlot.count == stack.count) return ItemStack.EMPTY
-        slot.onTakeItem(player, inSlot)
+        slot.onTake(player, inSlot)
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is SolarDistillerBlock &&
-                player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+                player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     companion object {

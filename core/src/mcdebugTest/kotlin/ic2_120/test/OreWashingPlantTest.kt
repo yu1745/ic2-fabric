@@ -29,8 +29,8 @@ class OreWashingPlantTest {
     /** 标准搭建：相邻 BatBox + 变压器升级（提 tier 接受更多能量）+ 双超频 + 预充水箱。 */
     private fun setupOreWasher(ctx: TestContext) {
         setupAdjacentBatbox(ctx, "ic2_120:ore_washing_plant")
-        insertItem(ctx, ctx.origin, "ic2_120:transformer_upgrade", 1, 7)
-        insertItem(ctx, ctx.origin, "ic2_120:overclocker_upgrade", 2, 8)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:transformer_upgrade", 1, 7)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:overclocker_upgrade", 2, 8)
         val inserted = ctx.api.fluid.insert(ctx.origin, "minecraft:water", WATER_BUCKET_DROPLETS.toLong(), index = 0)
             .asJsonObject.get("inserted").asLong
         if (inserted < WATER_BUCKET_DROPLETS) {
@@ -48,7 +48,7 @@ class OreWashingPlantTest {
     @Test
     fun crushedCopperToPurifiedAndDusts(ctx: TestContext) {
         setupOreWasher(ctx)
-        insertItem(ctx, ctx.origin, "ic2_120:crushed_copper", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:crushed_copper", 1, 0)
         waitUntil(ctx, invItemEquals(ctx.origin, 2, "ic2_120:purified_copper"), 20 * 20)
         assertSlotHas(ctx, ctx.origin, 2, "ic2_120:purified_copper")
     }
@@ -58,7 +58,7 @@ class OreWashingPlantTest {
     fun noPowerIdle(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:ore_washing_plant")
         ctx.api.fluid.insert(ctx.origin, "minecraft:water", WATER_BUCKET_DROPLETS.toLong(), index = 0)
-        insertItem(ctx, ctx.origin, "ic2_120:crushed_copper", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:crushed_copper", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "ic2_120:crushed_copper")
         assertSlotEmpty(ctx, ctx.origin, 2)
@@ -68,7 +68,7 @@ class OreWashingPlantTest {
     @Test
     fun noWaterIdle(ctx: TestContext) {
         setupAdjacentBatbox(ctx, "ic2_120:ore_washing_plant")
-        insertItem(ctx, ctx.origin, "ic2_120:crushed_copper", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:crushed_copper", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "ic2_120:crushed_copper")
         assertSlotEmpty(ctx, ctx.origin, 2)
@@ -77,7 +77,7 @@ class OreWashingPlantTest {
     @Test
     fun invalidInputDirt(ctx: TestContext) {
         setupOreWasher(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:dirt", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:dirt", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:dirt")
         assertSlotEmpty(ctx, ctx.origin, 2)

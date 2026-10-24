@@ -37,7 +37,7 @@ class DamageToolShapelessRecipe(delegate: ShapelessRecipe) : ShapelessRecipe(
     delegate.ingredients
 ) {
     override fun getRemainder(inventory: CraftingContainer): NonNullList<ItemStack> {
-        val remainder = NonNullList.ofSize(inventory.size(), ItemStack.EMPTY)
+        val remainder = NonNullList.withSize(inventory.size(), ItemStack.EMPTY)
         for (slot in 0 until inventory.size()) {
             val stack = inventory.getStack(slot)
             if (stack.isEmpty) continue
@@ -66,7 +66,7 @@ class DamageToolShapelessRecipe(delegate: ShapelessRecipe) : ShapelessRecipe(
 
 @ModMachineRecipe(id = "damage_tool_shapeless", recipeClass = DamageToolShapelessRecipe::class)
 object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapelessRecipe> {
-    override fun read(id: ResourceLocation, json: JsonObject): DamageToolShapelessRecipe {
+    override fun fromJson(id: ResourceLocation, json: JsonObject, lookup: HolderLookup.Provider): DamageToolShapelessRecipe {
         val shapeless = RecipeSerializer.SHAPELESS.read(id, json)
         return DamageToolShapelessRecipe(shapeless)
     }
@@ -93,7 +93,7 @@ object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapeles
  *     resultCount = 1,
  *     ingredients = listOf(
  *         DamageToolShapelessRecipeDatagen.toolIngredient<ForgeHammer>(),
- *         Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
+ *         Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
  *     ),
  *     category = "misc"
  * )

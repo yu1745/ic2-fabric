@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
@@ -134,7 +134,7 @@ class BlastFurnaceScreen(
         if (fillH <= 0) return
         val fluid = ModFluids.COMPRESSED_AIR_FLOWING
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
-        val sprites = handler.getFluidSprites(null, null, fluid.defaultState) ?: return
+        val sprites = handler.getFluidSprites(null, null, fluid.defaultBlockState) ?: return
         val sprite = sprites.getOrElse(1) { sprites[0] }
         val color = FluidUtils.getFluidColor(fluid)
         val a = ((color ushr 24) and 0xFF) / 255f

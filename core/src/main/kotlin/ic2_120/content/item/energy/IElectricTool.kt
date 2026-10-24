@@ -62,7 +62,7 @@ interface IElectricTool : ITiered {
         )
         tooltip.add(
             Component.literal("等级: $tier")
-                .formatted(net.minecraft.ChatFormatting.GRAY)
+                .withStyle(net.minecraft.ChatFormatting.GRAY)
         )
     }
 

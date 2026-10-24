@@ -1,5 +1,9 @@
 package ic2_120.content.block
 
+import net.minecraft.world.level.block.entity.BlockEntityType
+
+import ic2_120.compat.isClient
+
 import ic2_120.Ic2_120
 import ic2_120.content.block.MachineCasingBlock
 import ic2_120.content.block.machines.PumpBlockEntity
@@ -9,13 +13,11 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
-import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
-import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.entity.player.Player
@@ -30,16 +32,14 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
 import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 @ModBlock(name = "pump", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
-class PumpBlock : DirectionalMachineBlock(MachineBlock.defaultMachineSettings().nonOpaque()) {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
+class PumpBlock : DirectionalMachineBlock(MachineBlock.defaultMachineSettings() .noOcclusion()) {
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         PumpBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
@@ -48,49 +48,33 @@ class PumpBlock : DirectionalMachineBlock(MachineBlock.defaultMachineSettings().
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, PumpBlockEntity::class.type()) { w, p, s, be ->
+        else BlockEntityType.validateTicker(world, type, PumpBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
-    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
-        super.getPlacementState(ctx)?.with(ACTIVE, false)
-
-    override fun createScreenHandlerFactory(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos
-    ): net.minecraft.world.MenuProvider? {
-        val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.world.MenuProvider
-    }
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
+        super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
             val storage = FluidStorage.SIDED.find(world, pos, hit.side)
                 ?: FluidStorage.SIDED.find(world, pos, null)
             if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
                 return InteractionResult.SUCCESS
             }
-            createScreenHandlerFactory(state, world, pos)?.let(player::openHandledScreen)
+            getMenuProvider(state, world, pos)?.let(player::openHandledScreen)
         }
         return InteractionResult.SUCCESS
     }
 
     companion object {
-        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+        val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {

@@ -39,10 +39,10 @@ interface SyncSchema {
  * 服务端数据拥有者——实现 [ContainerData] 供 AbstractContainerMenu 同步（网络包下发客户端），
  * 同时实现 [SyncSchema] 供属性定义类注册字段。
  *
- * 属性写入**不会**触发 [net.minecraft.world.level.block.entity.BlockEntity.markDirty]：
+ * 属性写入**不会**触发 [net.minecraft.world.level.block.entity.BlockEntity.setChanged]：
  * 同步字段大多是每 tick 变化的运行时/显示数据，不该让区块持续变脏。
- * NBT 落盘由区块自然保存（卸载 / 关服 / 业务代码显式 markDirty）时调用 [writeNbt] 完成；
- * 需要即时保存的关键事件（模式切换、配置修改等）由业务代码显式调用 `markDirty()`。
+ * NBT 落盘由区块自然保存（卸载 / 关服 / 业务代码显式 setChanged）时调用 [writeNbt] 完成；
+ * 需要即时保存的关键事件（模式切换、配置修改等）由业务代码显式调用 `setChanged()`。
  */
 class SyncedData : ContainerData, SyncSchema {
     private val entries = mutableListOf<Entry>()
@@ -139,8 +139,8 @@ class SyncedDataView(private val delegate: ContainerData) : SyncSchema {
         val indexLow = nextIndex++
         return object : ReadWriteProperty<Any?, Int> {
             override fun getValue(thisRef: Any?, property: KProperty<*>): Int {
-                val high = delegate.get(indexHigh)
-                val low = delegate.get(indexLow)
+                val high = delegate.getValue(indexHigh)
+                val low = delegate.getValue(indexLow)
                 return (high shl 16) or (low and 0xFFFF)
             }
             override fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {

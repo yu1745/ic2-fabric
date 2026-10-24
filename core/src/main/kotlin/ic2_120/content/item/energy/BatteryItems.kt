@@ -1,5 +1,11 @@
 package ic2_120.content.item.energy
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
 import ic2_120.content.block.cables.InsulatedTinCableBlock
 import ic2_120.content.item.AdvancedCircuit
@@ -23,8 +29,6 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.recipeId
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Items
@@ -52,25 +56,25 @@ class ReBatteryItem : BatteryItemBase(
             val tinIngot = TinIngot::class.instance()
             val redstone = Items.REDSTONE
 
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, ReBatteryItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReBatteryItem::class.instance(), 1)
                 .pattern(" W ")
                 .pattern("CRC")
                 .pattern("CRC")
-                .input('W', tinCable)
-                .input('C', tinCasing)
-                .input('R', redstone)
-                .criterion(hasItem(tinCable), conditionsFromItem(tinCable))
-                .offerTo(exporter, ReBatteryItem::class.recipeId("from_tin_casing"))
+                .define('W', tinCable)
+                .define('C', tinCasing)
+                .define('R', redstone)
+                .unlockedBy(getHasName(tinCable), has(tinCable))
+                .save(exporter, ReBatteryItem::class.recipeId("from_tin_casing"))
 
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, ReBatteryItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReBatteryItem::class.instance(), 1)
                 .pattern(" W ")
                 .pattern("IRI")
                 .pattern("IRI")
-                .input('W', copperCable)
-                .input('I', tinIngot)
-                .input('R', redstone)
-                .criterion(hasItem(copperCable), conditionsFromItem(copperCable))
-                .offerTo(exporter, ReBatteryItem::class.recipeId("from_tin_ingots"))
+                .define('W', copperCable)
+                .define('I', tinIngot)
+                .define('R', redstone)
+                .unlockedBy(getHasName(copperCable), has(copperCable))
+                .save(exporter, ReBatteryItem::class.recipeId("from_tin_ingots"))
         }
     }
 }
@@ -88,16 +92,16 @@ class AdvancedReBatteryItem : BatteryItemBase(
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val copperCable = InsulatedCopperCableBlock::class.item()
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, AdvancedReBatteryItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedReBatteryItem::class.instance(), 1)
                 .pattern("WBW")
                 .pattern("BSB")
                 .pattern("BLB")
-                .input('W', copperCable)
-                .input('B', BronzeCasing::class.instance())
-                .input('S', SulfurDust::class.instance())
-                .input('L', LeadDust::class.instance())
-                .criterion(hasItem(copperCable), conditionsFromItem(copperCable))
-                .offerTo(exporter, AdvancedReBatteryItem::class.recipeId())
+                .define('W', copperCable)
+                .define('B', BronzeCasing::class.instance())
+                .define('S', SulfurDust::class.instance())
+                .define('L', LeadDust::class.instance())
+                .unlockedBy(getHasName(copperCable), has(copperCable))
+                .save(exporter, AdvancedReBatteryItem::class.recipeId())
         }
     }
 }
@@ -114,13 +118,13 @@ class EnergyCrystalItem : BatteryItemBase(
     name = "energy_crystal", tier = 3, maxCapacity = 1_000_000, canChargeWireless = false
 ) {
     override fun use(world: net.minecraft.world.level.Level, user: net.minecraft.world.entity.player.Player, hand: net.minecraft.world.InteractionHand): net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> {
-        val crystal = user.getStackInHand(hand)
+        val crystal = user.getItemInHand(hand)
         if (world.isClient) return net.minecraft.world.InteractionResultHolder.success(crystal)
 
         // 获取水晶当前电量
         val availableEnergy = getCurrentCharge(crystal)
         if (availableEnergy <= 0) {
-            user.sendMessage(net.minecraft.network.chat.Component.literal("§c能量水晶电量不足！"), true)
+            user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c能量水晶电量不足！", false), true)
             return net.minecraft.world.InteractionResultHolder.fail(crystal)
         }
 
@@ -219,7 +223,7 @@ class EnergyCrystalItem : BatteryItemBase(
                 true
             )
         } else {
-            user.sendMessage(net.minecraft.network.chat.Component.literal("§c没有物品需要充电！"), true)
+            user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c没有物品需要充电！", false), true)
         }
 
         return net.minecraft.world.InteractionResultHolder.success(crystal)
@@ -256,13 +260,13 @@ class LapotronCrystalItem : BatteryItemBase(
     }
 
     override fun use(world: net.minecraft.world.level.Level, user: net.minecraft.world.entity.player.Player, hand: net.minecraft.world.InteractionHand): net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> {
-        val crystal = user.getStackInHand(hand)
+        val crystal = user.getItemInHand(hand)
         if (world.isClient) return net.minecraft.world.InteractionResultHolder.success(crystal)
 
         // 获取水晶当前电量
         val availableEnergy = getCurrentCharge(crystal)
         if (availableEnergy <= 0) {
-            user.sendMessage(net.minecraft.network.chat.Component.literal("§c蓝波顿水晶电量不足！"), true)
+            user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c蓝波顿水晶电量不足！", false), true)
             return net.minecraft.world.InteractionResultHolder.fail(crystal)
         }
 
@@ -361,7 +365,7 @@ class LapotronCrystalItem : BatteryItemBase(
                 true
             )
         } else {
-            user.sendMessage(net.minecraft.network.chat.Component.literal("§c没有物品需要充电！"), true)
+            user.displayClientMessage(net.minecraft.network.chat.Component.literal("§c没有物品需要充电！", false), true)
         }
 
         return net.minecraft.world.InteractionResultHolder.success(crystal)
@@ -498,15 +502,15 @@ class SingleUseBatteryItem : BatteryItemBase(
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val copperCable = InsulatedCopperCableBlock::class.item()
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, SingleUseBatteryItem::class.instance(), 8)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SingleUseBatteryItem::class.instance(), 8)
                 .pattern(" W ")
                 .pattern(" R ")
                 .pattern(" F ")
-                .input('W', copperCable)
-                .input('R', Items.REDSTONE)
-                .input('F', CoalFuelDust::class.instance())
-                .criterion(hasItem(copperCable), conditionsFromItem(copperCable))
-                .offerTo(exporter, SingleUseBatteryItem::class.recipeId())
+                .define('W', copperCable)
+                .define('R', Items.REDSTONE)
+                .define('F', CoalFuelDust::class.instance())
+                .unlockedBy(getHasName(copperCable), has(copperCable))
+                .save(exporter, SingleUseBatteryItem::class.recipeId())
         }
     }
 

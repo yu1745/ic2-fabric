@@ -43,20 +43,20 @@ abstract class SunPanelBlockEntity(
 
         if (!hasSkyAccess(world, pos)) {
             generationState = GenerationState.NONE
-            markDirty()
+            setChanged()
             return
         }
 
         // 末地永远白天、无天气变化，直接按白天发电（与原版 Sun 面板行为一致）
         if (world.registryKey == Level.END) {
             generationState = GenerationState.DAY
-            markDirty()
+            setChanged()
             return
         }
 
         if (world.registryKey != Level.OVERWORLD) {
             generationState = GenerationState.NONE
-            markDirty()
+            setChanged()
             return
         }
 
@@ -71,6 +71,6 @@ abstract class SunPanelBlockEntity(
                 GenerationState.DAY
             else
                 GenerationState.NONE
-        markDirty()
+        setChanged()
     }
 }

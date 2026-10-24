@@ -1,5 +1,8 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.minecraft.world.level.block.state.BlockState
@@ -48,16 +51,16 @@ class ReactorAccessHatchBlockEntity(
     override fun size(): Int = getCentralReactor()?.size() ?: 0
     override fun getStack(slot: Int): ItemStack = getCentralReactor()?.getStack(slot) ?: ItemStack.EMPTY
     override fun setStack(slot: Int, stack: ItemStack) = getCentralReactor()?.setStack(slot, stack) ?: Unit
-    override fun removeStack(slot: Int, amount: Int): ItemStack =
-        getCentralReactor()?.removeStack(slot, amount) ?: ItemStack.EMPTY
-    override fun removeStack(slot: Int): ItemStack = getCentralReactor()?.removeStack(slot) ?: ItemStack.EMPTY
+    override fun removeItem(slot: Int, amount: Int): ItemStack =
+        getCentralReactor()?.remove(slot, amount) ?: ItemStack.EMPTY
+    override fun removeItemNoUpdate(slot: Int): ItemStack = getCentralReactor()?.remove(slot) ?: ItemStack.EMPTY
     override fun clear() = getCentralReactor()?.clear() ?: Unit
     override fun isEmpty(): Boolean = getCentralReactor()?.isEmpty() ?: true
-    override fun markDirty() {
-        getCentralReactor()?.markDirty()
-        super.markDirty()
+    override fun setChanged() {
+        getCentralReactor()?.setChanged()
+        super.setChanged()
     }
-    override fun canPlayerUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         getCentralReactor()?.canPlayerUse(player) ?: false
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean =

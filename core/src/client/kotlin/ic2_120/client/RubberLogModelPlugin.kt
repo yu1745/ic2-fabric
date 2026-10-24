@@ -22,7 +22,7 @@ object RubberLogModelPlugin {
     fun register() {
         ModelLoadingPlugin.register { ctx ->
             ctx.addModels(MODEL_ID)
-            val block = BuiltInRegistries.BLOCK.get(RUBBER_LOG_ID)
+            val block = BuiltInRegistries.BLOCK.getValue(RUBBER_LOG_ID)
             if (block is RubberLogBlock) {
                 ctx.registerBlockStateResolver(block, BlockStateResolver { resolverCtx ->
                     val model = DelegatingUnbakedModel(MODEL_ID)

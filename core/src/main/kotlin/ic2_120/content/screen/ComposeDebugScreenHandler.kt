@@ -4,7 +4,7 @@ import ic2_120.content.block.ComposeDebugBlock
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.Slot
@@ -28,10 +28,10 @@ class ComposeDebugScreenHandler(
         addSlot(Slot(playerInventory, 1, 0, 0))
     }
 
-    override fun quickMove(player: Player, index: Int): net.minecraft.world.item.ItemStack =
+    override fun quickMoveStack(player: Player, index: Int): net.minecraft.world.item.ItemStack =
         net.minecraft.world.item.ItemStack.EMPTY
 
-    override fun canUse(player: Player): Boolean = true
+    override fun stillValid(player: Player): Boolean = true
 
     companion object {
         const val GUI_WIDTH = 240

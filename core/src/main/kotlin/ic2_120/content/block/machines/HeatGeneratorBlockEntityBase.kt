@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 import ic2_120.content.heat.IHeatConsumer
 import ic2_120.content.heat.IHeatNode
 import ic2_120.content.sync.HeatFlowSync

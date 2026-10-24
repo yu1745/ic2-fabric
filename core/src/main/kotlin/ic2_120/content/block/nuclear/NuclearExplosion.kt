@@ -309,7 +309,7 @@ class NuclearExplosion private constructor(
             val pos = blocksToDestroy[destroyIndex]
             val state = world.getBlockState(pos)
             if (!state.isAir()) {
-                world.setBlockState(pos, Blocks.AIR.defaultState, Block.NOTIFY_ALL or Block.FORCE_STATE)
+                world.setBlock(pos, Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL or Block.FORCE_STATE)
                 state.block.onDestroyedByExplosion(world, pos, null)
             }
             destroyIndex++

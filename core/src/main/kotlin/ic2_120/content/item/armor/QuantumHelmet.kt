@@ -1,5 +1,7 @@
 package ic2_120.content.item.armor
 
+import ic2_120.compat.isClient
+
 import ic2_120.config.Ic2Config
 import ic2_120.Ic2_120
 import ic2_120.content.block.ReinforcedGlassBlock
@@ -60,7 +62,7 @@ import java.util.function.Consumer
  * - 能量从所有量子装备均匀扣除
  */
 @ModItem(name = "quantum_helmet", tab = CreativeTab.IC2_MATERIALS, group = "quantum_armor")
-class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)) {
+class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorItem.Type.HELMET, Item.Properties().maxStackSize(1)) {
 
     companion object {
         private const val FOOD_FILL_COST = 1000L
@@ -116,7 +118,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         if (world.isClient) return
 
         val player = entity as? Player ?: return
-        if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) return
+        if (player.getItemBySlot(EquipmentSlot.HEAD) !== stack) return
 
         val nbt = stack.orCreateNbt
         var energy = getEnergy(stack)
@@ -160,15 +162,15 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
 
         // 功能 3: 补充饱食度（自动从背包拿满锡罐食用）
-        if (player.hungerManager.foodLevel < 20 &&
+        if (player.foodData.foodLevel < 20 &&
             energy >= FOOD_FILL_COST
         ) {
             val cooldown = nbt.getInt(FOOD_CHECK_COOLDOWN_KEY)
             if (cooldown <= 0) {
                 if (consumeFilledTinCanIfAvailable(player)) {
                     energy -= FOOD_FILL_COST
-                    player.hungerManager.foodLevel = 20
-                    player.hungerManager.saturationLevel = 5f
+                    player.foodData.foodLevel = 20
+                    player.foodData.saturationLevel = 5f
                     nbt.putInt(FOOD_CHECK_COOLDOWN_KEY, 20)  // 1 秒冷却
                 }
             } else {
@@ -199,10 +201,10 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         val emptyCellItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell"))
         val slot = player.inventory.main.find { !it.isEmpty && it.item === airCellItem }
         if (slot != null) {
-            slot.decrement(1)
+            slot.shrink(1)
             val emptyCell = ItemStack(emptyCellItem)
-            if (!player.inventory.insertStack(emptyCell)) {
-                player.dropItem(emptyCell, false)
+            if (!player.inventory.safeInsert(emptyCell)) {
+                player.spawnAtLocation(emptyCell, false)
             }
             return true
         }
@@ -214,10 +216,10 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         val emptyCanItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "tin_can"))
         val slot = player.inventory.main.find { !it.isEmpty && it.item === filledCanItem }
         if (slot != null) {
-            slot.decrement(1)
+            slot.shrink(1)
             val emptyCan = ItemStack(emptyCanItem)
-            if (!player.inventory.insertStack(emptyCan)) {
-                player.dropItem(emptyCan, false)
+            if (!player.inventory.safeInsert(emptyCan)) {
+                player.spawnAtLocation(emptyCan, false)
             }
             return true
         }
@@ -236,7 +238,7 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
     }
 
     override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
         val energy = getEnergy(stack)
 
@@ -254,9 +256,9 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         tooltip.add(Component.translatable("tooltip.ic2_120.quantum_helmet.night_vision",
             Component.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off"),
             timeText
-        ).formatted(ChatFormatting.GRAY))
+        ).withStyle(ChatFormatting.GRAY))
         val pct = "%.0f".format(getDamageReduction() * 100)
-        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_helmet.features", pct).formatted(ChatFormatting.GRAY))
-        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_helmet.full_set").formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_helmet.features", pct).withStyle(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.quantum_helmet.full_set").withStyle(ChatFormatting.GRAY))
     }
 }

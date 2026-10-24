@@ -1,5 +1,9 @@
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 ﻿package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
 import ic2_120.Ic2_120
 import ic2_120.content.block.RtHeatGeneratorBlock
 import ic2_120.content.screen.RtHeatGeneratorScreenHandler
@@ -16,7 +20,7 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -69,18 +73,18 @@ class RtHeatGeneratorBlockEntity(
     }
 
     override val tier: Int = 1
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = (FUEL_SLOT_START..FUEL_SLOT_END).map { s ->
             ItemInsertRoute(intArrayOf(s), matcher = { isValid(s, it) }, maxPerSlot = 1)
         },
         // 靶丸无限耐久不消耗，仅 GUI 可取，禁止物流抽出（避免被管道静默抽空导致停机）
         extractSlots = intArrayOf(),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -119,30 +123,30 @@ class RtHeatGeneratorBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot in FUEL_SLOT_START..FUEL_SLOT_END && stack.count > 1) {
             stack.count = 1
         }
         inventory[slot] = stack
-        markDirty()
+        setChanged()
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean =
         slot in FUEL_SLOT_START..FUEL_SLOT_END && !stack.isEmpty && isRtgPellet(stack)
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
     }
 
@@ -159,7 +163,7 @@ class RtHeatGeneratorBlockEntity(
         countPelletSlots() > 0
 
     override fun getActiveState(state: BlockState): Boolean =
-        state.get(RtHeatGeneratorBlock.ACTIVE)
+        state.getValue(RtHeatGeneratorBlock.ACTIVE)
 
     fun tick(world: Level, pos: BlockPos, state: BlockState) {
         tickHeatMachine(world, pos, state)

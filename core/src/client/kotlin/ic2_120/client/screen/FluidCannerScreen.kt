@@ -11,7 +11,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
@@ -164,7 +164,7 @@ class FluidCannerScreen(
         ) {
             val lines = if (fluidAmount > 0 && fluidRawId != -1) {
                 val fluid = BuiltInRegistries.FLUID.get(fluidRawId)
-                val fluidName = fluid.defaultState.blockState.block.name.string
+                val fluidName = fluid.defaultBlockState.blockState.block.name.string
                 listOf(Component.literal(fluidName), Component.literal("${"%,d".format(fluidAmount / DROPLETS_PER_MB)} / ${"%,d".format(fluidCapacity / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Component.literal("空"))
@@ -235,5 +235,5 @@ class FluidCannerScreen(
 
 private fun getFluidStillSprite(fluid: Fluid): net.minecraft.client.renderer.texture.TextureAtlasSprite? {
     val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
-    return handler.getFluidSprites(null, null, fluid.defaultState).getOrNull(0)
+    return handler.getFluidSprites(null, null, fluid.defaultBlockState).getOrNull(0)
 }

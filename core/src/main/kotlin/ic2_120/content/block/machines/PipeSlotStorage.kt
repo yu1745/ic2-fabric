@@ -13,7 +13,7 @@ class PipeSlotStorage(
     private val slotIndex: Int,
     private val capacity: Int,
     private val pipeItem: () -> net.minecraft.world.item.Item,
-    private val markDirty: () -> Unit
+    private val setChanged: () -> Unit
 ) : SingleStackStorage() {
 
     override fun getStack(): ItemStack = inventory.getOrElse(slotIndex) { ItemStack.EMPTY }
@@ -22,18 +22,18 @@ class PipeSlotStorage(
         inventory[slotIndex] = stack
     }
 
-    override fun getCapacity(variant: ItemVariant): Int = if (variant.isOf(pipeItem())) capacity else 0
+    override fun getCapacity(variant: ItemVariant): Int = if (variant.`is`(pipeItem())) capacity else 0
 
     override fun canInsert(variant: ItemVariant): Boolean {
-        if (!variant.isOf(pipeItem())) return false
+        if (!variant.`is`(pipeItem())) return false
         val current = getStack()
         if (current.isEmpty) return true
         return current.count < capacity
     }
 
-    override fun canExtract(variant: ItemVariant): Boolean = variant.isOf(pipeItem()) && !getStack().isEmpty
+    override fun canExtract(variant: ItemVariant): Boolean = variant.`is`(pipeItem()) && !getStack().isEmpty
 
     override fun onFinalCommit() {
-        markDirty()
+        setChanged()
     }
 }

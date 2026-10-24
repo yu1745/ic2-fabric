@@ -1,5 +1,13 @@
 package ic2_120.content.block
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.world.level.block.entity.BlockEntityType
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+
 import ic2_120.content.block.machines.TradeOMatBlockEntity
 import ic2_120.content.block.machines.WirelessTradeOMatBlockEntity
 import ic2_120.registry.CreativeTab
@@ -12,7 +20,6 @@ import ic2_120.registry.type
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
-import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.entity.player.Player
@@ -26,8 +33,6 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import java.util.function.Consumer
 
 /**
@@ -36,9 +41,9 @@ import java.util.function.Consumer
  */
 @ModBlock(name = "trade_o_mat", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "personal")
 // 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
-class TradeOMatBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
+class TradeOMatBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         TradeOMatBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
@@ -47,46 +52,39 @@ class TradeOMatBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, TradeOMatBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else BlockEntityType.validateTicker(world, type, TradeOMatBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
             (world.getBlockEntity(pos) as? TradeOMatBlockEntity)?.let { be ->
-                player.openHandledScreen(be.getScreenHandlerFactory(player))
+                player.openMenu(be.getScreenHandlerFactory(player))
             }
         }
         return InteractionResult.SUCCESS
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
-        super.getPlacementState(ctx)?.with(ACTIVE, false)
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
+        super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     companion object {
-        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+        val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val machine = MachineCasingBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             if (machine != Items.AIR && circuit != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, TradeOMatBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, TradeOMatBlock::class.item(), 1)
                     .pattern("S S").pattern("SMS").pattern("SCS")
-                    .input('S', Items.IRON_INGOT).input('M', machine).input('C', circuit)
-                    .criterion(hasItem(machine), conditionsFromItem(machine))
-                    .offerTo(exporter, TradeOMatBlock::class.id())
+                    .define('S', Items.IRON_INGOT).define('M', machine).define('C', circuit)
+                    .unlockedBy(getHasName(machine), has(machine))
+                    .save(exporter, TradeOMatBlock::class.id())
             }
         }
     }
@@ -102,7 +100,7 @@ class TradeOMatBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
 //@ModBlock(name = "wireless_trade_o_mat", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "personal")
 class WirelessTradeOMatBlock : MachineBlock() {
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         WirelessTradeOMatBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
@@ -111,34 +109,27 @@ class WirelessTradeOMatBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, WirelessTradeOMatBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else BlockEntityType.validateTicker(world, type, WirelessTradeOMatBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
             (world.getBlockEntity(pos) as? WirelessTradeOMatBlockEntity)?.let { be ->
-                player.openHandledScreen(be.getScreenHandlerFactory(player))
+                player.openMenu(be.getScreenHandlerFactory(player))
             }
         }
         return InteractionResult.SUCCESS
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
-        super.getPlacementState(ctx)?.with(ACTIVE, false)
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
+        super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     companion object {
-        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+        val ACTIVE: BooleanProperty = BooleanProperty.create("active")
     }
 }

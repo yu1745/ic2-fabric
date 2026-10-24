@@ -58,11 +58,11 @@ fun ItemStack.setUuTemplate(entry: UuTemplateEntry?) {
 fun ItemStack.appendUuTemplateTooltip(tooltip: MutableList<Component>) {
     val template = getUuTemplate()
     if (template == null) {
-        tooltip.add(Component.literal("<空>").formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.literal("<空>").withStyle(ChatFormatting.GRAY))
         return
     }
-    tooltip.add(template.displayName().copy().formatted(ChatFormatting.AQUA))
-    tooltip.add(Component.literal("UU: ${template.uuCostUb} uB").formatted(ChatFormatting.GRAY))
+    tooltip.add(template.displayName().copy().withStyle(ChatFormatting.AQUA))
+    tooltip.add(Component.literal("UU: ${template.uuCostUb} uB").withStyle(ChatFormatting.GRAY))
 }
 
 fun encodeUuTemplateList(entries: List<UuTemplateEntry>): ListTag =

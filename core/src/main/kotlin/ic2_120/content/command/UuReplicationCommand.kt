@@ -48,11 +48,11 @@ object UuReplicationCommand {
                                             source.sendFeedback(
                                                 {
                                                     Component.literal("")
-                                                        .append(Component.literal("成功设置 ").formatted(ChatFormatting.GREEN))
-                                                        .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
-                                                        .append(Component.literal(" 的UU复制成本为 ").formatted(ChatFormatting.GREEN))
-                                                        .append(Component.literal("$uuCost uB").formatted(ChatFormatting.AQUA))
-                                                        .append(Component.literal("（已写入配置文件，使用 /ic2config reload 同步至客户端）").formatted(ChatFormatting.GRAY))
+                                                        .append(Component.literal("成功设置 ").withStyle(ChatFormatting.GREEN))
+                                                        .append(Component.literal(itemId).withStyle(ChatFormatting.YELLOW))
+                                                        .append(Component.literal(" 的UU复制成本为 ").withStyle(ChatFormatting.GREEN))
+                                                        .append(Component.literal("$uuCost uB").withStyle(ChatFormatting.AQUA))
+                                                        .append(Component.literal("（已写入配置文件，使用 /ic2config reload 同步至客户端）").withStyle(ChatFormatting.GRAY))
                                                 },
                                                 true
                                             )
@@ -83,11 +83,11 @@ object UuReplicationCommand {
                                                     source.sendFeedback(
                                                         {
                                                             Component.literal("")
-                                                                .append(Component.literal("成功设置 ").formatted(ChatFormatting.GREEN))
-                                                                .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
-                                                                .append(Component.literal(" 的UU复制成本为 ").formatted(ChatFormatting.GREEN))
-                                                                .append(Component.literal("$uuCost uB").formatted(ChatFormatting.AQUA))
-                                                                .append(Component.literal("（已写入配置文件，使用 /ic2config reload 同步至客户端）").formatted(ChatFormatting.GRAY))
+                                                                .append(Component.literal("成功设置 ").withStyle(ChatFormatting.GREEN))
+                                                                .append(Component.literal(itemId).withStyle(ChatFormatting.YELLOW))
+                                                                .append(Component.literal(" 的UU复制成本为 ").withStyle(ChatFormatting.GREEN))
+                                                                .append(Component.literal("$uuCost uB").withStyle(ChatFormatting.AQUA))
+                                                                .append(Component.literal("（已写入配置文件，使用 /ic2config reload 同步至客户端）").withStyle(ChatFormatting.GRAY))
                                                         },
                                                         true
                                                     )
@@ -128,10 +128,10 @@ object UuReplicationCommand {
                                     source.sendFeedback(
                                         {
                                             Component.literal("")
-                                                .append(Component.literal("成功移除 ").formatted(ChatFormatting.GREEN))
-                                                .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
-                                                .append(Component.literal(" 的UU复制配置").formatted(ChatFormatting.GREEN))
-                                                .append(Component.literal("（使用 /ic2config reload 同步至客户端）").formatted(ChatFormatting.GRAY))
+                                                .append(Component.literal("成功移除 ").withStyle(ChatFormatting.GREEN))
+                                                .append(Component.literal(itemId).withStyle(ChatFormatting.YELLOW))
+                                                .append(Component.literal(" 的UU复制配置").withStyle(ChatFormatting.GREEN))
+                                                .append(Component.literal("（使用 /ic2config reload 同步至客户端）").withStyle(ChatFormatting.GRAY))
                                         },
                                         true
                                     )
@@ -168,10 +168,10 @@ object UuReplicationCommand {
                                     source.sendFeedback(
                                         {
                                             Component.literal("")
-                                                .append(Component.literal("物品 ").formatted(ChatFormatting.WHITE))
-                                                .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
-                                                .append(Component.literal(" 的UU复制成本: ").formatted(ChatFormatting.WHITE))
-                                                .append(Component.literal("$currentCost uB").formatted(ChatFormatting.AQUA))
+                                                .append(Component.literal("物品 ").withStyle(ChatFormatting.WHITE))
+                                                .append(Component.literal(itemId).withStyle(ChatFormatting.YELLOW))
+                                                .append(Component.literal(" 的UU复制成本: ").withStyle(ChatFormatting.WHITE))
+                                                .append(Component.literal("$currentCost uB").withStyle(ChatFormatting.AQUA))
                                         },
                                         false
                                     )
@@ -179,9 +179,9 @@ object UuReplicationCommand {
                                     source.sendFeedback(
                                         {
                                             Component.literal("")
-                                                .append(Component.literal("物品 ").formatted(ChatFormatting.WHITE))
-                                                .append(Component.literal(itemId).formatted(ChatFormatting.YELLOW))
-                                                .append(Component.literal(" 未配置UU复制成本").formatted(ChatFormatting.RED))
+                                                .append(Component.literal("物品 ").withStyle(ChatFormatting.WHITE))
+                                                .append(Component.literal(itemId).withStyle(ChatFormatting.YELLOW))
+                                                .append(Component.literal(" 未配置UU复制成本").withStyle(ChatFormatting.RED))
                                         },
                                         false
                                     )
@@ -211,7 +211,7 @@ object UuReplicationCommand {
         val allCosts = Ic2Config.getAllReplicationCosts().toList().sortedBy { it.second }  // 按成本升序
 
         if (allCosts.isEmpty()) {
-            source.sendFeedback({ Component.literal("UU复制表为空").formatted(ChatFormatting.YELLOW) }, false)
+            source.sendFeedback({ Component.literal("UU复制表为空").withStyle(ChatFormatting.YELLOW) }, false)
             return Command.SINGLE_SUCCESS
         }
 
@@ -228,22 +228,22 @@ object UuReplicationCommand {
         source.sendFeedback(
             {
                 Component.literal("")
-                    .append(Component.literal("=== UU复制表 ").formatted(ChatFormatting.GOLD))
-                    .append(Component.literal("(第 $actualPage/$totalPages 页)").formatted(ChatFormatting.WHITE))
-                    .append(Component.literal(" ===").formatted(ChatFormatting.GOLD))
+                    .append(Component.literal("=== UU复制表 ").withStyle(ChatFormatting.GOLD))
+                    .append(Component.literal("(第 $actualPage/$totalPages 页)").withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal(" ===").withStyle(ChatFormatting.GOLD))
             },
             false
         )
         source.sendFeedback(
             {
                 Component.literal("")
-                    .append(Component.literal("总计 ").formatted(ChatFormatting.GRAY))
-                    .append(Component.literal("${allCosts.size}").formatted(ChatFormatting.AQUA))
-                    .append(Component.literal(" 项（白名单 ").formatted(ChatFormatting.GRAY))
-                    .append(Component.literal("$whitelistCount").formatted(ChatFormatting.YELLOW))
-                    .append(Component.literal(" + 动态 ").formatted(ChatFormatting.GRAY))
-                    .append(Component.literal("$dynamicCount").formatted(ChatFormatting.GREEN))
-                    .append(Component.literal("），按成本升序").formatted(ChatFormatting.GRAY))
+                    .append(Component.literal("总计 ").withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal("${allCosts.size}").withStyle(ChatFormatting.AQUA))
+                    .append(Component.literal(" 项（白名单 ").withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal("$whitelistCount").withStyle(ChatFormatting.YELLOW))
+                    .append(Component.literal(" + 动态 ").withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal("$dynamicCount").withStyle(ChatFormatting.GREEN))
+                    .append(Component.literal("），按成本升序").withStyle(ChatFormatting.GRAY))
             },
             false
         )
@@ -256,17 +256,17 @@ object UuReplicationCommand {
                 val item = BuiltInRegistries.ITEM.get(it)
                 if (item !== Items.AIR) {
                     Component.translatable(item.translationKey)
-                        .formatted(ChatFormatting.YELLOW)
-                        .append(Component.literal(" ($itemId)").formatted(ChatFormatting.DARK_GRAY))
+                        .withStyle(ChatFormatting.YELLOW)
+                        .append(Component.literal(" ($itemId)").withStyle(ChatFormatting.DARK_GRAY))
                 } else null
-            } ?: Component.literal(itemId).formatted(ChatFormatting.WHITE)
+            } ?: Component.literal(itemId).withStyle(ChatFormatting.WHITE)
             source.sendFeedback(
                 {
                     Component.literal("")
-                        .append(Component.literal("[$source2] ").formatted(if (isWhitelist) ChatFormatting.YELLOW else ChatFormatting.GREEN))
+                        .append(Component.literal("[$source2] ").withStyle(if (isWhitelist) ChatFormatting.YELLOW else ChatFormatting.GREEN))
                         .append(itemDisplay)
-                        .append(Component.literal(": ").formatted(ChatFormatting.GRAY))
-                        .append(Component.literal("$cost uB").formatted(ChatFormatting.AQUA))
+                        .append(Component.literal(": ").withStyle(ChatFormatting.GRAY))
+                        .append(Component.literal("$cost uB").withStyle(ChatFormatting.AQUA))
                 },
                 false
             )
@@ -274,7 +274,7 @@ object UuReplicationCommand {
 
         if (actualPage < totalPages) {
             source.sendFeedback(
-                { Component.literal("使用 /ic2uu list ${actualPage + 1} 查看下一页").formatted(ChatFormatting.GRAY) },
+                { Component.literal("使用 /ic2uu list ${actualPage + 1} 查看下一页").withStyle(ChatFormatting.GRAY) },
                 false
             )
         }

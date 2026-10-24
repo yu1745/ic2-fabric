@@ -1,5 +1,9 @@
 package ic2_120.content.block.energy
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.machines.TransformerBlockEntity
@@ -337,7 +341,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
     }
 
     private fun createCableShockDamageSource(world: ServerLevel): DamageSource {
-        val registry = world.registryManager.get(Registries.DAMAGE_TYPE)
+        val registry = world.registryManager.getValue(egistries.DAMAGE_TYPE)
         val key = ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("ic2_120", "cable_shock"))
         val entry = registry.getEntry(key).orElse(null)
             ?: registry.getEntry(ResourceKey.of(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("minecraft", "lightning")))

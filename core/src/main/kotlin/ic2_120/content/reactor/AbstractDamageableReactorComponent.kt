@@ -64,9 +64,9 @@ abstract class AbstractDamageableReactorComponent(
     private fun getRemainingFraction(stack: ItemStack): Double =
         1.0 - getUseFraction(stack)
 
-    override fun isItemBarVisible(stack: ItemStack): Boolean = true
+    override fun isBarVisible(stack: ItemStack): Boolean = true
 
-    override fun getItemBarColor(stack: ItemStack): Int {
+    override fun getBarColor(stack: ItemStack): Int {
         val remaining = getRemainingFraction(stack)
         return when {
             remaining > 0.75 -> 0x00FF00
@@ -76,14 +76,14 @@ abstract class AbstractDamageableReactorComponent(
         }
     }
 
-    override fun getItemBarStep(stack: ItemStack): Int {
+    override fun getBarWidth(stack: ItemStack): Int {
         val remaining = getRemainingFraction(stack)
         return (13.0 * remaining).toInt().coerceIn(0, 13)
     }
 
-    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+        super.appendTooltip(stack, context, tooltip, type)
         val remaining = maxUse - getUse(stack)
-        tooltip.add(Component.translatable("tooltip.ic2_120.reactor_durability", remaining, maxUse).formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.reactor_durability", remaining, maxUse).withStyle(ChatFormatting.GRAY))
     }
 }

@@ -100,8 +100,8 @@ class MatterIdleDrainTest {
         // 北侧箱子放废料，升级槽 3（SLOT_UPGRADE_0）放抽入升级
         val chest = ctx.pos(0, 0, -1)
         setBlocks(ctx, listOf(chest to "minecraft:chest"), emptyMap())
-        com.mcdebug.runner.insertItem(ctx, chest, "ic2_120:scrap", 16, 0)
-        com.mcdebug.runner.insertItem(ctx, ctx.origin, "ic2_120:pulling_upgrade", 1, 3)
+        com.mcdebug.runner.moveItemStackTo(ctx, chest, "ic2_120:scrap", 16, 0)
+        com.mcdebug.runner.moveItemStackTo(ctx, ctx.origin, "ic2_120:pulling_upgrade", 1, 3)
 
         ctx.api.be.tick(ctx.origin, 40)
         com.mcdebug.runner.assertSlotHas(ctx, ctx.origin, 0, "ic2_120:scrap")

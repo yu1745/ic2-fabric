@@ -24,7 +24,7 @@ class ExtractorTest {
     /** 标准搭建：相邻 BatBox + 两个超频。 */
     private fun setupExtractor(ctx: TestContext) {
         setupAdjacentBatbox(ctx, "ic2_120:extractor")
-        insertItem(ctx, ctx.origin, "ic2_120:overclocker_upgrade", 2, 3)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:overclocker_upgrade", 2, 3)
     }
 
     @Test
@@ -37,7 +37,7 @@ class ExtractorTest {
     @Test
     fun clayTo4ClayBalls(ctx: TestContext) {
         setupExtractor(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:clay", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:clay", 1, 0)
         waitUntil(ctx, invItemEquals(ctx.origin, 1, "minecraft:clay_ball"), 20 * 20)
         assertSlotHas(ctx, ctx.origin, 1, "minecraft:clay_ball")
         assertSlotCount(ctx, ctx.origin, 1, 4)
@@ -47,7 +47,7 @@ class ExtractorTest {
     @Test
     fun resinTo3Rubber(ctx: TestContext) {
         setupExtractor(ctx)
-        insertItem(ctx, ctx.origin, "ic2_120:resin", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:resin", 1, 0)
         waitUntil(ctx, invItemEquals(ctx.origin, 1, "ic2_120:rubber"), 20 * 20)
         assertSlotCount(ctx, ctx.origin, 1, 3)
     }
@@ -56,7 +56,7 @@ class ExtractorTest {
     @Test
     fun noPowerIdle(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:extractor")
-        insertItem(ctx, ctx.origin, "minecraft:clay", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:clay", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:clay")
         assertSlotEmpty(ctx, ctx.origin, 1)
@@ -66,7 +66,7 @@ class ExtractorTest {
     @Test
     fun invalidInputDirt(ctx: TestContext) {
         setupExtractor(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:dirt", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:dirt", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:dirt")
         assertSlotEmpty(ctx, ctx.origin, 1)
@@ -77,7 +77,7 @@ class ExtractorTest {
     fun outputFullBlocksNext(ctx: TestContext) {
         setupExtractor(ctx)
         setSlot(ctx, ctx.origin, 1, "minecraft:clay_ball", 64)
-        insertItem(ctx, ctx.origin, "minecraft:clay", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:clay", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:clay")
     }

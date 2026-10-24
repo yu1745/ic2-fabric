@@ -1,5 +1,9 @@
 package ic2_120.content.block.nuclear
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
 import ic2_120.content.block.ReinforcedGlassBlock
 import ic2_120.content.item.LeadPlate
 import ic2_120.registry.CreativeTab
@@ -8,8 +12,6 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.state.BlockBehaviour
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.data.recipes.RecipeOutput
@@ -24,19 +26,19 @@ import ic2_120.content.recipes.ModTags
  * 核反应堆压力容器。
  */
 @ModBlock(name = "reactor_vessel", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "reactor", renderLayer = "translucent")
-class ReactorVesselBlock(settings: BlockBehaviour.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
+class ReactorVesselBlock(settings: BlockBehaviour.Properties = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val leadPlate = LeadPlate::class.instance()
             if (leadPlate != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorVesselBlock::class.item(), 4)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorVesselBlock::class.item(), 4)
                     .pattern("LGL").pattern("GLG").pattern("LGL")
-                    .input('L', Ingredient.fromTag(ModTags.Compat.Items.PLATES_LEAD))
-                    .input('G', ReinforcedGlassBlock::class.item())  // 透明外壳：铅框 + 强化玻璃
-                    .criterion(hasItem(leadPlate), conditionsFromItem(leadPlate))
-                    .offerTo(exporter, ReactorVesselBlock::class.id())
+                    .define('L', Ingredient.of(ModTags.Compat.Items.PLATES_LEAD))
+                    .define('G', ReinforcedGlassBlock::class.item())  // 透明外壳：铅框 + 强化玻璃
+                    .unlockedBy(getHasName(leadPlate), has(leadPlate))
+                    .save(exporter, ReactorVesselBlock::class.id())
             }
         }
     }

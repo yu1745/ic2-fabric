@@ -96,7 +96,7 @@ class RedstoneEngineRenderer(ctx: BlockEntityRendererProvider.Context) :
         val ps = progressSize / 16f
 
         matrices.push()
-        val facing = entity.cachedState.get(BlockStateProperties.FACING)
+        val facing = entity.cachedState.getValue(BlockStateProperties.FACING)
         applyDirectionRotation(matrices, facing)
 
         val world = entity.world

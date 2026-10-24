@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.CreativeGeneratorBlock
 import ic2_120.content.block.IGenerator
@@ -47,15 +53,15 @@ class CreativeGeneratorBlockEntity(
         state
     )
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CreativeGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, CreativeGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CreativeGeneratorSync.NBT_ENERGY_STORED, sync.amount)
     }

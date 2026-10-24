@@ -1,5 +1,9 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.world
+
+import ic2_120.compat.stack
+
 import ic2_120.content.block.ReplicatorBlock
 import ic2_120.content.block.machines.ReplicatorBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
@@ -13,7 +17,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
@@ -48,8 +52,8 @@ class ReplicatorScreenHandler(
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
-        checkSize(blockInventory, ReplicatorBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, ReplicatorBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
 
         // 输出槽 (91,59)
         addTrackedSlot(PredicateSlot(blockInventory, ReplicatorBlockEntity.SLOT_OUTPUT, 91, 59,
@@ -88,7 +92,7 @@ class ReplicatorScreenHandler(
 
     private fun deriveSpec(beSlot: Int) = itemStorage?.deriveSlotSpec(beSlot) ?: SlotSpec()
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? ReplicatorBlockEntity ?: return@get
             when (id) {
@@ -101,16 +105,16 @@ class ReplicatorScreenHandler(
         return id == BUTTON_CANCEL || id == BUTTON_MODE_SINGLE || id == BUTTON_MODE_REPEAT
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
                 index == SLOT_CONTAINER_OUTPUT_INDEX || index == SLOT_OUTPUT_INDEX || index == SLOT_BATTERY_INDEX
                     || index in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
@@ -122,20 +126,20 @@ class ReplicatorScreenHandler(
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
+            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is ReplicatorBlock &&
-                player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+                player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     companion object {

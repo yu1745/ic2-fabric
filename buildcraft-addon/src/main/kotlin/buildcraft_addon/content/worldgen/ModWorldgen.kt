@@ -12,7 +12,6 @@ import net.minecraft.world.level.material.Fluids
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceKey
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
@@ -72,17 +71,17 @@ class WaterSpringFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneF
         // 1.18+ 基岩层在 world.bottomY，向上扫 5 格
         for (y in world.bottomY..(world.bottomY + 4)) {
             val pos = BlockPos(x, y, z)
-            if (world.getBlockState(pos).isOf(Blocks.BEDROCK)) {
+            if (world.getBlockState(pos).`is`(Blocks.BEDROCK)) {
                 val springPos = pos.up()
                 val springBlock = BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("spring"))
-                world.setBlockState(springPos,
-                    springBlock.defaultState.with(SpringBlock.SPRING_TYPE, SpringType.WATER),
+                world.setBlock(springPos,
+                    springBlock.defaultBlockState.setValue(SpringBlock.SPRING_TYPE, SpringType.WATER),
                     Block.NOTIFY_ALL)
 
                 for (j in y + 2 until world.topY) {
                     val columnPos = BlockPos(x, j, z)
                     if (world.isAir(columnPos)) break
-                    world.setBlockState(columnPos, Fluids.WATER.defaultState.blockState, Block.NOTIFY_ALL)
+                    world.setBlock(columnPos, Fluids.WATER.defaultBlockState.blockState, Block.NOTIFY_ALL)
                 }
                 return true
             }
@@ -333,14 +332,14 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
                 for (dy in 0..4) {
                     val ap = BlockPos(wp.x, topY + dy, wp.z)
                     if (inChunk(ap, min, max)) {
-                        world.setBlockState(ap, Blocks.AIR.defaultState, Block.NOTIFY_LISTENERS)
+                        world.setBlock(ap, Blocks.AIR.defaultBlockState, Block.NOTIFY_LISTENERS)
                     }
                 }
                 // BC: 放置原油
                 for (dy in 0 until depth) {
                     val op = BlockPos(wp.x, topY - dy, wp.z)
                     if (inChunk(op, min, max) && canReplaceForOil(world, op)) {
-                        world.setBlockState(op, ModFluids.CRUDE_OIL_BLOCK.defaultState, Block.NOTIFY_LISTENERS)
+                        world.setBlock(op, ModFluids.CRUDE_OIL_BLOCK.defaultBlockState, Block.NOTIFY_LISTENERS)
                         count++
                     }
                 }
@@ -360,7 +359,7 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
                     if (dx * dx + dy * dy + dz * dz <= radiusSq) {
                         val pos = center.add(dx, dy, dz)
                         if (inChunk(pos, min, max) && canReplaceForOil(world, pos)) {
-                            world.setBlockState(pos, ModFluids.CRUDE_OIL_BLOCK.defaultState, Block.NOTIFY_LISTENERS)
+                            world.setBlock(pos, ModFluids.CRUDE_OIL_BLOCK.defaultBlockState, Block.NOTIFY_LISTENERS)
                             count++
                         }
                     }
@@ -401,7 +400,7 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
                     if (dx * dx + dz * dz <= rsq) {
                         val pos = start.add(dx, dy, dz)
                         if (inChunk(pos, min, max) && canReplaceForOil(world, pos)) {
-                            world.setBlockState(pos, ModFluids.CRUDE_OIL_BLOCK.defaultState, Block.NOTIFY_LISTENERS)
+                            world.setBlock(pos, ModFluids.CRUDE_OIL_BLOCK.defaultBlockState, Block.NOTIFY_LISTENERS)
                             count++
                         }
                     }
@@ -415,7 +414,7 @@ class OilWellFeature(codec: Codec<NoneFeatureConfiguration>) : Feature<NoneFeatu
 
     private fun placeOilSpring(world: WorldGenLevel, pos: BlockPos, totalOilCount: Int) {
         val springBlock = BuiltInRegistries.BLOCK.get(BuildCraftAddon.id("spring"))
-        world.setBlockState(pos, springBlock.defaultState.with(SpringBlock.SPRING_TYPE, SpringType.OIL), Block.NOTIFY_ALL)
+        world.setBlock(pos, springBlock.defaultBlockState.setValue(SpringBlock.SPRING_TYPE, SpringType.OIL), Block.NOTIFY_ALL)
 
         // BC: 设置 totalSources 供抽油泵系统使用
         val be = world.getBlockEntity(pos)

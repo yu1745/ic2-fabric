@@ -25,8 +25,8 @@ class BlockCutterTest {
     /** 标准搭建：相邻 BatBox 供电 + 铁锯片 + 一个超频升级。 */
     private fun setupBlockCutter(ctx: TestContext) {
         setupAdjacentBatbox(ctx, "ic2_120:block_cutter")
-        insertItem(ctx, ctx.origin, "ic2_120:iron_block_cutting_blade", 1, 0)
-        insertItem(ctx, ctx.origin, "ic2_120:overclocker_upgrade", 2, 4)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:iron_block_cutting_blade", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:overclocker_upgrade", 2, 4)
     }
 
     @Test
@@ -39,7 +39,7 @@ class BlockCutterTest {
     @Test
     fun stoneTo9StoneSlab(ctx: TestContext) {
         setupBlockCutter(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:stone", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:stone", 1, 1)
         waitUntil(ctx, invItemEquals(ctx.origin, 3, "minecraft:stone_slab"), 15 * 20)
         assertSlotCount(ctx, ctx.origin, 3, 9)
     }
@@ -47,7 +47,7 @@ class BlockCutterTest {
     @Test
     fun noPowerIdle(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:block_cutter")
-        insertItem(ctx, ctx.origin, "minecraft:stone", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:stone", 1, 1)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 1, "minecraft:stone")
         assertSlotEmpty(ctx, ctx.origin, 3)
@@ -57,7 +57,7 @@ class BlockCutterTest {
     @Test
     fun noBladeIdle(ctx: TestContext) {
         setupAdjacentBatbox(ctx, "ic2_120:block_cutter")
-        insertItem(ctx, ctx.origin, "minecraft:stone", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:stone", 1, 1)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 1, "minecraft:stone")
         assertSlotEmpty(ctx, ctx.origin, 3)
@@ -66,7 +66,7 @@ class BlockCutterTest {
     @Test
     fun invalidInputDirt(ctx: TestContext) {
         setupBlockCutter(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:dirt", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:dirt", 1, 1)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 1, "minecraft:dirt")
         assertSlotEmpty(ctx, ctx.origin, 3)
@@ -76,7 +76,7 @@ class BlockCutterTest {
     fun outputFullBlocksNext(ctx: TestContext) {
         setupBlockCutter(ctx)
         setSlot(ctx, ctx.origin, 3, "minecraft:stone_slab", 64)
-        insertItem(ctx, ctx.origin, "minecraft:stone", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:stone", 1, 1)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 1, "minecraft:stone")
     }

@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.RecipeCacheEpoch
 import ic2_120.content.block.OreWashingPlantBlock
 import ic2_120.content.block.ITieredMachine
@@ -36,7 +43,6 @@ import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
-import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -47,7 +53,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
@@ -151,11 +157,11 @@ class OreWashingPlantBlockEntity(
         }
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
@@ -164,7 +170,7 @@ class OreWashingPlantBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust }, maxPerSlot = 1)
         ),
         extractSlots = intArrayOf(SLOT_OUTPUT_1, SLOT_OUTPUT_2, SLOT_OUTPUT_3, SLOT_OUTPUT_EMPTY),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -195,7 +201,7 @@ class OreWashingPlantBlockEntity(
 
         override fun onFinalCommit() {
             sync.waterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
 
         fun setStoredWater(newAmount: Long) {
@@ -251,15 +257,15 @@ class OreWashingPlantBlockEntity(
             stack.count = 1
         }
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_ORE -> isCrushedOreInput(stack)
@@ -281,9 +287,9 @@ class OreWashingPlantBlockEntity(
         OreWashingPlantScreenHandler(syncId, playerInventory, this,
             net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(OreWashingPlantSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -297,9 +303,9 @@ class OreWashingPlantBlockEntity(
         waterTankInternal.setStoredWater(nbt.getLong(NBT_WATER_AMOUNT))
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(OreWashingPlantSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -309,7 +315,7 @@ class OreWashingPlantBlockEntity(
 
     private fun getFluidStorageForSide(side: net.minecraft.core.Direction?): Storage<FluidVariant>? {
         // 前方不提供流体存储
-        val facing = world?.getBlockState(pos)?.get(OreWashingPlantBlock.ACTIVE)
+        val facing = world?.getBlockState(pos)?.getValue(OreWashingPlantBlock.ACTIVE)
         val front = when (facing) {
             true -> net.minecraft.core.Direction.SOUTH
             false -> net.minecraft.core.Direction.NORTH
@@ -414,11 +420,11 @@ class OreWashingPlantBlockEntity(
         val outputEmptySlot = getStack(SLOT_OUTPUT_EMPTY)
 
         val canAccept1 = output1Slot.isEmpty() ||
-            (ItemStack.areItemsEqual(output1Slot, output1) && output1Slot.count + output1.count <= output1.maxCount)
+            (ItemStack.areItemsEqual(output1Slot, output1) && output1Slot.count + output1.count <= output1.maxStackSize)
         val canAccept2 = output2Slot.isEmpty() ||
-            (ItemStack.areItemsEqual(output2Slot, output2) && output2Slot.count + output2.count <= output2.maxCount)
+            (ItemStack.areItemsEqual(output2Slot, output2) && output2Slot.count + output2.count <= output2.maxStackSize)
         val canAccept3 = output3Slot.isEmpty() ||
-            (ItemStack.areItemsEqual(output3Slot, output3) && output3Slot.count + output3.count <= output3.maxCount)
+            (ItemStack.areItemsEqual(output3Slot, output3) && output3Slot.count + output3.count <= output3.maxStackSize)
 
         if (!canAccept1 || !canAccept2 || !canAccept3) {
             resetProgress()
@@ -429,21 +435,21 @@ class OreWashingPlantBlockEntity(
 
         // 加工完成
         if (progressF >= OreWashingPlantSync.PROGRESS_MAX) {
-            input.decrement(1)
+            input.shrink(1)
             // 放入输出槽
             if (output1Slot.isEmpty()) setStack(SLOT_OUTPUT_1, output1)
-            else if (!output1.isEmpty) output1Slot.increment(output1.count)
+            else if (!output1.isEmpty) output1Slot.grow(output1.count)
 
             if (output2Slot.isEmpty()) setStack(SLOT_OUTPUT_2, output2)
-            else if (!output2.isEmpty) output2Slot.increment(output2.count)
+            else if (!output2.isEmpty) output2Slot.grow(output2.count)
 
             if (output3Slot.isEmpty()) setStack(SLOT_OUTPUT_3, output3)
-            else if (!output3.isEmpty) output3Slot.increment(output3.count)
+            else if (!output3.isEmpty) output3Slot.grow(output3.count)
 
             progressF = 0f
             energyDebtF = 0f
             sync.progress = 0
-            markDirty()
+            setChanged()
             sync.syncCurrentTickFlow()
             return
         }
@@ -467,7 +473,7 @@ class OreWashingPlantBlockEntity(
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
             progressF = nextProgressF
             sync.progress = nextProgress
-            markDirty()
+            setChanged()
             setActiveState(world, pos, state, true)
         } else {
             // 停顿期间不累计债务：防恢复供电后 need 超容量 all-or-nothing 卡死
@@ -488,7 +494,7 @@ class OreWashingPlantBlockEntity(
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
+        setChanged()
     }
 
     private fun extractFromWaterInputSlot() {
@@ -504,14 +510,14 @@ class OreWashingPlantBlockEntity(
             Items.WATER_BUCKET -> ItemStack(Items.BUCKET)
             is WaterCell -> {
                 val cellId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")
-                ItemStack(BuiltInRegistries.ITEM.get(cellId))
+                ItemStack(BuiltInRegistries.ITEM.getValue(cellId))
             }
             else -> return
         }
 
         // 检查空容器槽是否有空间
         val canAcceptEmpty = emptySlot.isEmpty() ||
-            (ItemStack.areItemsEqual(emptySlot, emptyStack) && emptySlot.count + 1 <= emptyStack.maxCount)
+            (ItemStack.areItemsEqual(emptySlot, emptyStack) && emptySlot.count + 1 <= emptyStack.maxStackSize)
 
         if (!canAcceptEmpty) return
 
@@ -519,14 +525,14 @@ class OreWashingPlantBlockEntity(
         waterTankInternal.setStoredWater(waterTankInternal.amount + FluidConstants.BUCKET)
 
         // 消耗水输入
-        waterInput.decrement(1)
+        waterInput.shrink(1)
         if (waterInput.isEmpty) setStack(SLOT_INPUT_WATER, ItemStack.EMPTY)
 
         // 放入空容器
         if (emptySlot.isEmpty) setStack(SLOT_OUTPUT_EMPTY, emptyStack)
-        else emptySlot.increment(1)
+        else emptySlot.grow(1)
 
-        markDirty()
+        setChanged()
     }
 
     private fun waterNeededForProgressRange(fromProgress: Int, toProgress: Int): Long {

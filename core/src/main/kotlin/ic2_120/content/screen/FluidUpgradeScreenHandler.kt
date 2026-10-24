@@ -6,7 +6,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenHandlerMode
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
@@ -46,9 +46,9 @@ class FluidUpgradeScreenHandler(
     /** 方向是否激活 */
     fun isDirectionActive(dirIdx: Int): Boolean = propertyDelegate.get(PROP_DIR_BASE + dirIdx) != 0
     /** 当前切换方向索引 */
-    val currentDirectionIndex: Int get() = propertyDelegate.get(PROP_DIR_INDEX)
+    val currentDirectionIndex: Int get() = propertyDelegate.getValue(PROP_DIR_INDEX)
     /** 流体的原始注册 ID（0=无过滤） */
-    val fluidRawId: Int get() = propertyDelegate.get(PROP_FLUID)
+    val fluidRawId: Int get() = propertyDelegate.getValue(PROP_FLUID)
 
     companion object {
         const val FILTER_SLOT = 0
@@ -67,7 +67,7 @@ class FluidUpgradeScreenHandler(
     }
 
     init {
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
 
         // 幽灵过滤区始终为空，只接受 onSlotClick 中的流体样本选择。
         addSlot(object : Slot(SimpleContainer(FILTER_SLOT_COUNT), FILTER_SLOT, 8, 35) {
@@ -89,8 +89,8 @@ class FluidUpgradeScreenHandler(
         refreshProperties()
     }
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
-        val upgradeStack = player.getStackInHand(hand)
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
+        val upgradeStack = player.getItemInHand(hand)
         if (upgradeStack.item !is FluidFilterUpgradeItem) return true
 
         when (id) {
@@ -135,7 +135,7 @@ class FluidUpgradeScreenHandler(
 
     /** 设置幽灵流体过滤器；JEI 拖放和真实容器取样共用。 */
     fun setFluidFilter(fluid: Fluid): Boolean {
-        val upgradeStack = playerInventory.player.getStackInHand(hand)
+        val upgradeStack = playerInventory.player.getItemInHand(hand)
         if (upgradeStack.item !is FluidFilterUpgradeItem) return false
         FluidPipeUpgradeComponent.writeFilter(upgradeStack, fluid)
         refreshProperties()
@@ -144,7 +144,7 @@ class FluidUpgradeScreenHandler(
     }
 
     private fun clearFluidFilter(): Boolean {
-        val upgradeStack = playerInventory.player.getStackInHand(hand)
+        val upgradeStack = playerInventory.player.getItemInHand(hand)
         if (upgradeStack.item !is FluidFilterUpgradeItem) return false
         FluidPipeUpgradeComponent.writeFilter(upgradeStack, null)
         refreshProperties()
@@ -152,10 +152,10 @@ class FluidUpgradeScreenHandler(
         return true
     }
 
-    override fun quickMove(player: Player, slotIndex: Int): ItemStack = ItemStack.EMPTY
+    override fun quickMoveStack(player: Player, slotIndex: Int): ItemStack = ItemStack.EMPTY
 
-    override fun canUse(player: Player): Boolean {
-        val stack = player.getStackInHand(hand)
+    override fun stillValid(player: Player): Boolean {
+        val stack = player.getItemInHand(hand)
         return stack.item is FluidFilterUpgradeItem
     }
 
@@ -163,14 +163,14 @@ class FluidUpgradeScreenHandler(
     private fun returnCursorToInventory() {
         val returning = cursorStack.copy()
         if (returning.isEmpty) return
-        playerInventory.insertStack(returning)
+        playerInventory.safeInsert(returning)
         cursorStack = if (returning.isEmpty) ItemStack.EMPTY else returning
     }
 
     /** 从升级物品中读取当前状态并写入 ContainerData。 */
     private fun refreshProperties() {
         val player = playerInventory.player
-        val upgradeStack = player.getStackInHand(hand)
+        val upgradeStack = player.getItemInHand(hand)
         if (upgradeStack.item !is FluidFilterUpgradeItem) {
             for (i in 0..5) propertyDelegate.set(PROP_DIR_BASE + i, 0)
             propertyDelegate.set(PROP_FLUID, 0)

@@ -5,7 +5,7 @@ import ic2_120_advanced_solar_addon.content.screen.MolecularTransformerScreenHan
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.chat.Component

@@ -16,10 +16,10 @@ data class SlotHeatEnergyInfo(
 )
 
 class ReactorHeatInfoPacket(val pos: BlockPos, val slotHeatInfo: Map<Int, SlotHeatEnergyInfo>) : CustomPacketPayload {
-    override fun getId(): CustomPacketPayload.Id<*> = ID
+    override fun type(): CustomPacketPayload.Type<*> = ID
 
     companion object {
-        val ID = CustomPacketPayload.Id<ReactorHeatInfoPacket>(ResourceLocation.fromNamespaceAndPath("ic2_120", "reactor_heat_info"))
+        val ID = CustomPacketPayload.Type<ReactorHeatInfoPacket>(ResourceLocation.fromNamespaceAndPath("ic2_120", "reactor_heat_info"))
         val CODEC: StreamCodec<FriendlyByteBuf, ReactorHeatInfoPacket> = StreamCodec.of(
             { value, buf -> write(value, buf) },
             { read(it) }

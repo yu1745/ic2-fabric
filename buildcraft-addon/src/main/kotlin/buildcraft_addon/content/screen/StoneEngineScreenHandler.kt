@@ -4,7 +4,7 @@ import buildcraft_addon.content.block.StoneEngineBlock
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.network.FriendlyByteBuf
@@ -27,7 +27,7 @@ class StoneEngineScreenHandler(
 ) : AbstractContainerMenu(StoneEngineScreenHandler::class.type(), syncId) {
 
     init {
-        checkSize(blockInventory, 1)
+        checkContainerSize(blockInventory, 1)
         checkDataCount(propertyDelegate, 2)
 
         // Fuel slot (BC8 pos: 80, 41)
@@ -48,7 +48,7 @@ class StoneEngineScreenHandler(
             addSlot(Slot(playerInventory, col, 8 + col * 18, 142))
         }
 
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
     }
 
     fun getBurnProgress(): Float {
@@ -57,29 +57,29 @@ class StoneEngineScreenHandler(
         return propertyDelegate.get(0).toFloat() / total.toFloat()
     }
 
-    override fun quickMove(player: Player, slotIndex: Int): net.minecraft.world.item.ItemStack {
+    override fun quickMoveStack(player: Player, slotIndex: Int): net.minecraft.world.item.ItemStack {
         val slot = slots[slotIndex] ?: return ItemStack.EMPTY
-        if (!slot.hasStack()) return ItemStack.EMPTY
+        if (!slot .hasItem()) return ItemStack.EMPTY
         val original = slot.stack
         val newStack = original.copy()
 
         if (slotIndex == 0) {
-            if (!insertItem(original, 1, 37, true)) return ItemStack.EMPTY
+            if (!moveItemStackTo(original, 1, 37, true)) return ItemStack.EMPTY
         } else if (slotIndex in 1..36) {
-            if (!insertItem(original, 0, 1, false)) return ItemStack.EMPTY
+            if (!moveItemStackTo(original, 0, 1, false)) return ItemStack.EMPTY
         }
 
         if (original.isEmpty) {
             slot.stack = ItemStack.EMPTY
         } else {
-            slot.markDirty()
+            slot.setChanged()
         }
         return newStack
     }
 
-    override fun canUse(player: Player): Boolean {
+    override fun stillValid(player: Player): Boolean {
         return context.get({ world, pos ->
-            world.getBlockState(pos).block is StoneEngineBlock && player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+            world.getBlockState(pos).block is StoneEngineBlock && player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
     }
 

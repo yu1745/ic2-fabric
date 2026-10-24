@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.block.SolidHeatGeneratorBlock
 import ic2_120.content.block.machines.SolidHeatGeneratorBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
@@ -11,7 +13,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.registry.FuelRegistry
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ContainerData
@@ -39,8 +41,8 @@ class SolidHeatGeneratorScreenHandler(
     val sync = SolidHeatGeneratorSync(syncedView, heatFlow)
 
     init {
-        checkSize(blockInventory, SolidHeatGeneratorBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, SolidHeatGeneratorBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
         addSlot(PredicateSlot(blockInventory, SolidHeatGeneratorBlockEntity.SLOT_FUEL, 80, 44, FUEL_SLOT_SPEC))
         addSlot(PredicateSlot(blockInventory, SolidHeatGeneratorBlockEntity.SLOT_OUTPUT, 113, 44, OUTPUT_SLOT_SPEC))
 
@@ -54,19 +56,19 @@ class SolidHeatGeneratorScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
                 index == SolidHeatGeneratorBlockEntity.SLOT_FUEL ||
                 index == SolidHeatGeneratorBlockEntity.SLOT_OUTPUT -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
-                    if (FUEL_SLOT_SPEC.canInsert(stackInSlot) && insertItem(stackInSlot, 0, 1, false)) return stack
+                    if (FUEL_SLOT_SPEC.canInsert(stackInSlot) && moveItemStackTo(stackInSlot, 0, 1, false)) return stack
                     // 原兜底：向玩家背包区间 insertItem 已删除——目标区间含源槽自身，
                     // 会与自身合并导致数量翻倍（物品复制，同 ChunkLoader bug）。
                     // 燃料槽插不进时物品留在原位，下方 count 相等检查会返回 EMPTY。
@@ -75,20 +77,20 @@ class SolidHeatGeneratorScreenHandler(
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
+            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is SolidHeatGeneratorBlock &&
-                player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+                player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     companion object {
@@ -96,7 +98,7 @@ class SolidHeatGeneratorScreenHandler(
         const val HOTBAR_END = 38
 
         private val FUEL_SLOT_SPEC = SlotSpec(canInsert = { stack ->
-            !stack.isEmpty && (FuelRegistry.INSTANCE.get(stack.item) ?: 0) > 0
+            !stack.isEmpty && (FuelRegistry.INSTANCE.getValue(stack.item) ?: 0) > 0
         })
         private val OUTPUT_SLOT_SPEC = SlotSpec(canInsert = { false })
 

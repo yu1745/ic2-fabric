@@ -71,16 +71,16 @@ abstract class ElectricArmorItem(
 
     // ========== UI 渲染 ==========
 
-    override fun isItemBarVisible(stack: ItemStack): Boolean = true
+    override fun isBarVisible(stack: ItemStack): Boolean = true
 
-    override fun getItemBarStep(stack: ItemStack): Int =
+    override fun getBarWidth(stack: ItemStack): Int =
         ((getEnergy(stack).toDouble() / maxCapacity) * 13).toInt().coerceIn(0, 13)
 
-    override fun getItemBarColor(stack: ItemStack): Int =
+    override fun getBarColor(stack: ItemStack): Int =
         getEnergyBarColor(stack)
 
     override fun appendTooltip(stack: ItemStack, world: net.minecraft.world.level.Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 }

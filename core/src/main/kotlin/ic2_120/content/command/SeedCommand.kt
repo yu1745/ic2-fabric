@@ -88,8 +88,8 @@ object SeedCommand {
 
         val itemStack = CropSeedBagItem.createStack(seedType, CropStats(growth, gain, resistance), scanLevel = 4)
 
-        if (!player.inventory.insertStack(itemStack)) {
-            player.dropItem(itemStack, true)
+        if (!player.inventory.safeInsert(itemStack)) {
+            player.spawnAtLocation(itemStack, true)
             source.sendFeedback(
                 { Component.literal("已给予种子（背包已满，丢在地上）") },
                 false

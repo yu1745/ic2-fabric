@@ -12,7 +12,7 @@ import ic2_120.registry.type
 import ic2_120_industrial_upgrade.content.block.NeutronFabricatorBlockEntity
 import ic2_120_industrial_upgrade.content.sync.NeutronFabricatorSync
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
@@ -86,10 +86,10 @@ class NeutronFabricatorScreenHandler(
     }
 
     init {
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
 
         if (blockInventory != null) {
-            checkSize(blockInventory, NeutronFabricatorBlockEntity.INVENTORY_SIZE)
+            checkContainerSize(blockInventory, NeutronFabricatorBlockEntity.INVENTORY_SIZE)
             // 升级槽（BlockEntity slot 0-3）：贴图左侧 152 列，纵向 8/26/44/62
             for (i in 0 until UpgradeSlotLayout.SLOT_COUNT) {
                 addSlot(PredicateSlot(blockInventory, NeutronFabricatorBlockEntity.SLOT_UPGRADE_INDICES[i], UPGRADE_SLOT_X, UPGRADE_SLOT_YS[i], upgradeSlotSpec))
@@ -113,29 +113,29 @@ class NeutronFabricatorScreenHandler(
 
     private val hotbarEnd: Int get() = machineSlotCount + 36
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         if (index !in slots.indices) return ItemStack.EMPTY
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             if (index < machineSlotCount) {
                 // 机器槽 → 玩家背包
-                if (!insertItem(stackInSlot, machineSlotCount, hotbarEnd, true)) return ItemStack.EMPTY
+                if (!moveItemStackTo(stackInSlot, machineSlotCount, hotbarEnd, true)) return ItemStack.EMPTY
             } else {
                 // 玩家背包 → 机器槽（由 PredicateSlot 的 spec 自动判定能否放入对应槽）
-                if (!insertItem(stackInSlot, 0, machineSlotCount, false)) return ItemStack.EMPTY
+                if (!moveItemStackTo(stackInSlot, 0, machineSlotCount, false)) return ItemStack.EMPTY
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
+            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
-            player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+            player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 }

@@ -38,7 +38,7 @@ class MetalFormerTest {
     @Test
     fun rollingIronIngotToIronPlate(ctx: TestContext) {
         setupMetalFormer(ctx, 0)
-        insertItem(ctx, ctx.origin, "minecraft:iron_ingot", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ingot", 1, 0)
         waitUntil(ctx, invItemEquals(ctx.origin, 1, "ic2_120:iron_plate"), 15 * 20)
         assertSlotHas(ctx, ctx.origin, 1, "ic2_120:iron_plate")
     }
@@ -47,7 +47,7 @@ class MetalFormerTest {
     @Test
     fun cuttingIronPlateTo4IronCable(ctx: TestContext) {
         setupMetalFormer(ctx, 1)
-        insertItem(ctx, ctx.origin, "ic2_120:iron_plate", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:iron_plate", 1, 0)
         waitUntil(ctx, invItemEquals(ctx.origin, 1, "ic2_120:iron_cable"), 15 * 20)
         assertSlotHas(ctx, ctx.origin, 1, "ic2_120:iron_cable")
     }
@@ -56,7 +56,7 @@ class MetalFormerTest {
     @Test
     fun extrudingIronIngotTo4IronCable(ctx: TestContext) {
         setupMetalFormer(ctx, 2)
-        insertItem(ctx, ctx.origin, "minecraft:iron_ingot", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ingot", 1, 0)
         waitUntil(ctx, invItemEquals(ctx.origin, 1, "ic2_120:iron_cable"), 15 * 20)
         assertSlotHas(ctx, ctx.origin, 1, "ic2_120:iron_cable")
     }
@@ -64,7 +64,7 @@ class MetalFormerTest {
     @Test
     fun noPowerIdle(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:metal_former")
-        insertItem(ctx, ctx.origin, "minecraft:iron_ingot", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ingot", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:iron_ingot")
         assertSlotEmpty(ctx, ctx.origin, 1)
@@ -74,7 +74,7 @@ class MetalFormerTest {
     @Test
     fun invalidInputDirtInRollingMode(ctx: TestContext) {
         setupMetalFormer(ctx, 0)
-        insertItem(ctx, ctx.origin, "minecraft:dirt", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:dirt", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:dirt")
         assertSlotEmpty(ctx, ctx.origin, 1)
@@ -84,7 +84,7 @@ class MetalFormerTest {
     fun outputFullBlocksNext(ctx: TestContext) {
         setupMetalFormer(ctx, 0)
         setSlot(ctx, ctx.origin, 1, "ic2_120:iron_plate", 64)
-        insertItem(ctx, ctx.origin, "minecraft:iron_ingot", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ingot", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:iron_ingot")
     }

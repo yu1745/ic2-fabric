@@ -35,7 +35,7 @@ sealed class MetalFormerRecipe(
     override fun getResult(lookup: HolderLookup.WrapperLookup): ItemStack = output.copy()
 
     override fun getRemainder(inventory: Input): net.minecraft.core.NonNullList<ItemStack> {
-        return net.minecraft.core.NonNullList.ofSize(1, ItemStack.EMPTY)
+        return net.minecraft.core.NonNullList.withSize(1, ItemStack.EMPTY)
     }
 
     class Input(val inputStack: ItemStack) : RecipeInput, net.minecraft.world.Container {
@@ -46,10 +46,10 @@ sealed class MetalFormerRecipe(
         override fun isEmpty(): Boolean = inputStack.isEmpty
         override fun clear() {}
         override fun setStack(slot: Int, stack: ItemStack) {}
-        override fun removeStack(slot: Int): ItemStack = ItemStack.EMPTY
-        override fun removeStack(slot: Int, amount: Int): ItemStack = ItemStack.EMPTY
-        override fun markDirty() {}
-        override fun canPlayerUse(player: net.minecraft.world.entity.player.Player): Boolean = true
+        override fun removeItemNoUpdate(slot: Int): ItemStack = ItemStack.EMPTY
+        override fun removeItem(slot: Int, amount: Int): ItemStack = ItemStack.EMPTY
+        override fun setChanged() {}
+        override fun stillValid(player: net.minecraft.world.entity.player.Player): Boolean = true
     }
 
     override fun getSerializer(): RecipeSerializer<*> = ModMachineRecipes.recipeSerializer(MetalFormerRecipe::class)

@@ -1,5 +1,9 @@
 package ic2_120.content.block.nuclear
 
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 import ic2_120.content.upgrade.IRedstoneControlSupport
 import ic2_120.content.upgrade.RedstoneControlComponent
 import ic2_120.registry.annotation.ModBlockEntity

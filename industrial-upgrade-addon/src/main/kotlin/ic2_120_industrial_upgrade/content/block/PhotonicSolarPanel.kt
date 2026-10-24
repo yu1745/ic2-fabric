@@ -11,8 +11,6 @@ import ic2_120.registry.type
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import net.minecraft.network.chat.Component
 import ic2_120_industrial_upgrade.content.item.QuantCore1
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -29,24 +27,24 @@ import java.util.function.Consumer
 // en_us: Photonic Solar Panel
 @ModBlock(name = "photonic_solar_panel", registerItem = true, tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "solar_panel")
 class PhotonicSolarPanelBlock : IndustrialSolarPanelBlock() {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = PhotonicSolarPanelBlockEntity(pos, state)
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = PhotonicSolarPanelBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, PhotonicSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else BlockEntityType.validateTicker(world, type, PhotonicSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 十字：4 个管理员太阳能 + 1 个量子核心I
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, PhotonicSolarPanelBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PhotonicSolarPanelBlock::class.item(), 1)
                 .pattern(" B ")
                 .pattern("BAB")
                 .pattern(" B ")
-                .input('B', AdminSolarPanelBlock::class.item())
-                .input('A', QuantCore1::class.instance())
-                .criterion(hasItem(AdminSolarPanelBlock::class.item()), conditionsFromItem(AdminSolarPanelBlock::class.item()))
-                .offerTo(exporter, IC2IndustrialUpgrade.id("photonic_solar_panel"))
+                .define('B', AdminSolarPanelBlock::class.item())
+                .define('A', QuantCore1::class.instance())
+                .unlockedBy(has(AdminSolarPanelBlock::class.item()), has(AdminSolarPanelBlock::class.item()))
+                .save(exporter, IC2IndustrialUpgrade.id("photonic_solar_panel"))
         }
     }
 }

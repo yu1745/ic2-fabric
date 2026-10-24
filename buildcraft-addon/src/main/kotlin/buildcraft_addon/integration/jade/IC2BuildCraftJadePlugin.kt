@@ -172,7 +172,7 @@ object BcJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccess
                     val id = ResourceLocation.tryParse(fid)
                     if (id != null) {
                         val fluid = net.minecraft.core.registries.BuiltInRegistries.FLUID.get(id)
-                        BuiltInRegistries.FLUID.getId(fluid).toTranslationKey().let { Component.translatable("block.$it") }
+                        BuiltInRegistries.FLUID.getId(fluid).toLanguageKey().let { Component.translatable("block.$it") }
                     } else null
                 } else null
 

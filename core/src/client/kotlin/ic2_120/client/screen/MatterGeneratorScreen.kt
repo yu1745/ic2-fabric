@@ -13,7 +13,7 @@ import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 
@@ -147,8 +147,8 @@ class MatterGeneratorScreen(
         private const val SCRAP_WARNING_Y = 4
 
         private val uuMatterSprite by lazy {
-            FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.UU_MATTER_STILL)
-                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultState)?.getOrNull(0)
+            FluidRenderHandlerRegistry.INSTANCE.getValue(ModFluids.UU_MATTER_STILL)
+                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultBlockState)?.getOrNull(0)
         }
     }
 }

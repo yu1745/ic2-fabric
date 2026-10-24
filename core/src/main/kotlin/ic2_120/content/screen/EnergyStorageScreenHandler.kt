@@ -1,5 +1,9 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.world
+
+import ic2_120.compat.stack
+
 import ic2_120.content.block.storage.EnergyStorageConfig
 import ic2_120.content.block.storage.EnergyStorageBlockEntity
 import ic2_120.content.block.ChargepadBlock
@@ -11,7 +15,7 @@ import ic2_120.content.screen.slot.SlotSpec
 import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModScreenHandler
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ArmorItem
@@ -76,8 +80,8 @@ class EnergyStorageScreenHandler(
     }
 
     init {
-        checkSize(blockInventory, machineSlotCount)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, machineSlotCount)
+        addDataSlots(propertyDelegate)
 
         // 1 个充电槽，所有等级都有（blockInventory slot 0）
         addTrackedSlot(blockInventory, 0, 56, 17)
@@ -127,22 +131,22 @@ class EnergyStorageScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         if (index !in slots.indices) return ItemStack.EMPTY
 
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
                 beSlot >= 0 -> {
-                    if (!insertItem(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 useEquipmentSlots && index in machineSlotCount until machineSlotCount + 4 -> {
-                    if (!insertItem(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, true)) return ItemStack.EMPTY
                 }
                 index in playerInventorySlotStart..hotbarEnd -> {
                     val storage = itemStorage
@@ -153,14 +157,14 @@ class EnergyStorageScreenHandler(
                     if (!moved) return ItemStack.EMPTY
                 }
                 else -> {
-                    if (!insertItem(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, playerInventorySlotStart, hotbarEnd + 1, false)) return ItemStack.EMPTY
                 }
             }
 
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
-            else slot.markDirty()
+            else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
@@ -170,11 +174,11 @@ class EnergyStorageScreenHandler(
    private val hotbarEnd: Int
        get() = playerInventorySlotStart + 35
 
-   override fun canUse(player: Player): Boolean =
+   override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             val block = world.getBlockState(pos).block
             (block is ic2_120.content.block.storage.EnergyStorageBlock || block is ChargepadBlock) &&
-                player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+                player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     /** 是否为可切红石模式的储电箱（非充电座）。 */
@@ -184,8 +188,8 @@ class EnergyStorageScreenHandler(
     val currentRedstoneMode: Int
         get() = sync.redstoneMode.coerceIn(0, 6)
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
-        if (id != BUTTON_REDSTONE_MODE) return super.onButtonClick(player, id)
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
+        if (id != BUTTON_REDSTONE_MODE) return super.clickMenuButton(player, id)
         context.run { world, pos ->
             val be = world.getBlockEntity(pos) as? EnergyStorageBlockEntity ?: return@run
             be.cycleRedstoneMode()

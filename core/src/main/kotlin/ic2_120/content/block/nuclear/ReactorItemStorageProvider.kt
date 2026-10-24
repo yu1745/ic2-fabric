@@ -40,7 +40,7 @@ private class ReactorItemStorage(
     override fun readSnapshot(snapshot: Unit) {}
 
     override fun onFinalCommit() {
-        reactor.markDirty()
+        reactor.setChanged()
     }
 
     override fun supportsInsertion(): Boolean = true

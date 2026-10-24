@@ -15,7 +15,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 
 /** 所有面板共用的 ACTIVE 属性，名称与 advanced-solar-addon 保持一致。 */
-val SOLAR_ACTIVE: BooleanProperty = BooleanProperty.of("active")
+val SOLAR_ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
 /**
  * 工业升级附属所有太阳能发电机的抽象方块基类。
@@ -26,16 +26,16 @@ abstract class IndustrialSolarPanelBlock : MachineBlock() {
         world.getBlockEntity(pos) as? MenuProvider
 
     @Deprecated("Override without InteractionHand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
-    override fun onUse(state: BlockState, world: Level, pos: BlockPos, player: Player, hand: InteractionHand, hit: BlockHitResult): InteractionResult {
-        if (!world.isClient) createScreenHandlerFactory(state, world, pos)?.let { player.openHandledScreen(it) }
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
+        if (!world.isClient) getMenuProvider(state, world, pos)?.let { player.openMenu(it) }
         return InteractionResult.SUCCESS
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(SOLAR_ACTIVE)
     }
 
     override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
-        super.getPlacementState(ctx)?.with(SOLAR_ACTIVE, false)
+        super.getStateForPlacement(ctx)?.setValue(SOLAR_ACTIVE, false)
 }

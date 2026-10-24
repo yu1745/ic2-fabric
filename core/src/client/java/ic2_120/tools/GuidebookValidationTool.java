@@ -287,7 +287,7 @@ public final class GuidebookValidationTool {
     }
 
     private static String readStringProperty(String json, String propertyName) {
-        Matcher matcher = Pattern.compile(JSON_STRING_PROPERTY.pattern().formatted(Pattern.quote(propertyName))).matcher(json);
+        Matcher matcher = Pattern.compile(JSON_STRING_PROPERTY.pattern().withStyle(Pattern.quote(propertyName))).matcher(json);
         return matcher.find() ? matcher.group(1) : null;
     }
 

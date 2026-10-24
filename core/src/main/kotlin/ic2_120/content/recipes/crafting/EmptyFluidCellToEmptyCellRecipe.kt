@@ -47,14 +47,14 @@ class EmptyFluidCellToEmptyCellRecipe(delegate: ShapelessRecipe) : ShapelessReci
     }
 
     override fun getRemainder(inventory: CraftingContainer): NonNullList<ItemStack> =
-        NonNullList.ofSize(inventory.size(), ItemStack.EMPTY)
+        NonNullList.withSize(inventory.size(), ItemStack.EMPTY)
 
     override fun getSerializer(): RecipeSerializer<*> = EmptyFluidCellToEmptyCellRecipeSerializer
 }
 
 @ModMachineRecipe(id = "empty_fluid_cell_to_empty_cell", recipeClass = EmptyFluidCellToEmptyCellRecipe::class)
 object EmptyFluidCellToEmptyCellRecipeSerializer : RecipeSerializer<EmptyFluidCellToEmptyCellRecipe> {
-    override fun read(id: ResourceLocation, json: JsonObject): EmptyFluidCellToEmptyCellRecipe {
+    override fun fromJson(id: ResourceLocation, json: JsonObject, lookup: HolderLookup.Provider): EmptyFluidCellToEmptyCellRecipe {
         val shapeless = RecipeSerializer.SHAPELESS.read(id, json)
         return EmptyFluidCellToEmptyCellRecipe(shapeless)
     }

@@ -1,5 +1,6 @@
 package buildcraft_addon.content.blockentity
 
+import net.minecraft.core.HolderLookup
 import buildcraft_addon.BuildCraftAddon
 import buildcraft_addon.content.block.PumpBlock
 import buildcraft_addon.content.fluid.ModFluids
@@ -134,7 +135,7 @@ class PumpBlockEntity(
         val accepted = minOf(amount, space)
         if (!simulate && accepted > 0) {
             receivedKuThisTick += accepted
-            markDirty()
+            setChanged()
         }
         return accepted
     }
@@ -150,7 +151,7 @@ class PumpBlockEntity(
         val powered = w.isReceivingRedstonePower(pos)
         if (powered != isRedstonePowered) {
             isRedstonePowered = powered
-            markDirty()
+            setChanged()
         }
     }
 
@@ -185,7 +186,7 @@ class PumpBlockEntity(
                 break
             }
             val bs = w.getBlockState(check)
-            if (!bs.isAir && !bs.isOf(tubeBlock)) break
+            if (!bs.isAir && !bs.`is`(tubeBlock)) break
         }
         if (found == null || targetFluid == null) {
             foundPos = null
@@ -195,7 +196,7 @@ class PumpBlockEntity(
         }
         foundPos = found
         val target = targetFluid!!
-        val targetBlock = target.defaultState.blockState.block
+        val targetBlock = target.defaultBlockState.blockState.block
 
         // 2. 6 邻接 BFS 收集半径内所有同流体方块
         // 复杂度 O(N)，N = 实际流体方块数（油井球体 ~4000），远低于原立方体暴力扫描
@@ -213,7 +214,7 @@ class PumpBlockEntity(
                 val nfs = w.getFluidState(np)
                 if (nfs.isEmpty || nfs.fluid == Fluids.EMPTY) continue
                 val nf = nfs.fluid
-                if (nf !== target && nf.defaultState.blockState.block !== targetBlock) continue
+                if (nf !== target && nf.defaultBlockState.blockState.block !== targetBlock) continue
                 fluidSet.add(np)
                 bfsQueue.addLast(np)
             }
@@ -266,7 +267,7 @@ class PumpBlockEntity(
             val springBlock = SPRING_BLOCK
             outer1@ for (dx in -10..10) for (dz in -10..10) {
                 val sp = BlockPos(found.x + dx, w.bottomY + 1, found.z + dz)
-                if (w.getBlockState(sp).isOf(springBlock)) { oilSpringPos = sp; break@outer1 }
+                if (w.getBlockState(sp).`is`(springBlock)) { oilSpringPos = sp; break@outer1 }
             }
         }
 
@@ -287,7 +288,7 @@ class PumpBlockEntity(
         if (tank.amount >= tank.capacity) return
         val found = foundPos ?: return
         val target = targetFluid ?: return
-        val targetBlock = target.defaultState.blockState.block
+        val targetBlock = target.defaultBlockState.blockState.block
 
         while (fluidQueue.isNotEmpty()) {
             val dp = fluidQueue.removeFirst()
@@ -308,7 +309,7 @@ class PumpBlockEntity(
             }
             val fluid = fs.fluid
             if (nf_check(fluid, target, targetBlock).not()) continue
-            if (!tank.isResourceBlank && !tank.variant.isOf(fluid)) continue
+            if (!tank.isResourceBlank && !tank.variant.`is`(fluid)) continue
 
             // 优化：远端节点（邻居流体数 ≤ 1）天然是边界/表面，dp 即将与主体断开
             // 这种情况 A* 必然失败（从表面走到 foundPos 至少要穿过整团），直接视为连通放行
@@ -341,7 +342,7 @@ class PumpBlockEntity(
             if (isInfiniteWater && fluid == Fluids.WATER) {
                 // 无限水源不动方块
             } else {
-                w.setBlockState(dp, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+                w.setBlock(dp, Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL)
                 totalPumped++
 
                 if (fluid == ModFluids.CRUDE_OIL_STILL) {
@@ -365,7 +366,7 @@ class PumpBlockEntity(
     }
 
     private fun nf_check(fluid: Fluid, target: Fluid, targetBlock: net.minecraft.world.level.block.Block): Boolean {
-        return fluid === target || fluid.defaultState.blockState.block === targetBlock
+        return fluid === target || fluid.defaultBlockState.blockState.block === targetBlock
     }
 
     /**
@@ -420,7 +421,7 @@ class PumpBlockEntity(
                 val nfs = w.getFluidState(np)
                 if (nfs.isEmpty || nfs.fluid == Fluids.EMPTY) continue
                 val nf = nfs.fluid
-                if (nf !== target && nf.defaultState.blockState.block !== targetBlock) continue
+                if (nf !== target && nf.defaultBlockState.blockState.block !== targetBlock) continue
 
                 val dx = np.x - foundPos!!.x; val dy = np.y - foundPos!!.y; val dz = np.z - foundPos!!.z
                 if (dx * dx + dy * dy + dz * dz > MAX_RADIUS_SQ) continue
@@ -456,17 +457,17 @@ class PumpBlockEntity(
 
         for (y in pos.y - 1 downTo pos.y - MAX_DEPTH) {
             val bp = BlockPos(pos.x, y, pos.z)
-            if (w.getBlockState(bp).isOf(tubeBlock)) {
+            if (w.getBlockState(bp).`is`(tubeBlock)) {
                 if (ClaimProtection.isProtected(w, bp, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK)) continue
-                w.setBlockState(bp, Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+                w.setBlock(bp, Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL)
             } else break
         }
         for (y in pos.y - 1 downTo targetY + 1) {
             val bp = BlockPos(pos.x, y, pos.z)
             val bs = w.getBlockState(bp)
-            if (bs.isAir || bs.isOf(tubeBlock)) {
+            if (bs.isAir || bs.`is`(tubeBlock)) {
                 if (ClaimProtection.isProtected(w, bp, null as java.util.UUID?, ClaimProtection.EDIT_BLOCK)) continue
-                w.setBlockState(bp, tubeBlock.defaultState, Block.NOTIFY_ALL)
+                w.setBlock(bp, tubeBlock.defaultBlockState, Block.NOTIFY_ALL)
             }
         }
     }
@@ -499,14 +500,14 @@ class PumpBlockEntity(
         }
         drainFluid()
         if (tubeDepth != beforeDepth) syncTubeDepthToClient()
-        markDirty()
+        setChanged()
     }
 
     /** 服务端 tubeDepth 变化时主动推送更新包，客户端 readNbt 后会重置 renderTubeDepth */
     private fun syncTubeDepthToClient() {
         val w = world ?: return
         val sw = w as? net.minecraft.server.level.ServerLevel ?: return
-        sw.chunkManager.markForUpdate(pos)
+        sw.chunkSource.markForUpdate(pos)
     }
 
     fun clientTick(deltaTick: Int) {
@@ -531,13 +532,13 @@ class PumpBlockEntity(
 
     // ========== 信息 ==========
     fun getTankInfo(): String {
-        val name = if (tank.variant.isBlank) "空" else tank.variant.fluid.defaultState.blockState.block.name.string
+        val name = if (tank.variant.isBlank) "空" else tank.variant.fluid.defaultBlockState.blockState.block.name.string
         return "${name}: ${tank.amount} / ${tank.capacity} mB"
     }
 
     // ========== NBT ==========
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putLong("tankAmount", tank.amount)
         if (!tank.variant.isBlank) nbt.putString("tankFluid", BuiltInRegistries.FLUID.getId(tank.variant.fluid).toString())
         nbt.putBoolean("powered", isRedstonePowered)
@@ -549,8 +550,8 @@ class PumpBlockEntity(
         nbt.putBoolean("hasOilAchievement", hasOilAchievement)
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         val amt = nbt.getLong("tankAmount")
         if (amt > 0 && nbt.contains("tankFluid")) {
             val fid = ResourceLocation(nbt.getString("tankFluid"))

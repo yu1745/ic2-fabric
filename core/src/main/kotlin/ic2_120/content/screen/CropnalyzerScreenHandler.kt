@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.item.CropSeedBagItem
 import ic2_120.content.item.CropSeedData
 import ic2_120.content.item.CropnalyzerItem
@@ -10,7 +12,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenHandlerMode
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
@@ -44,7 +46,7 @@ class CropnalyzerScreenHandler(
     val energyCapacity: Int get() = propertyDelegate.get(1).coerceAtLeast(1)
 
     init {
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
 
         addSlot(PredicateSlot(itemInventory, SLOT_INPUT, 8, 7, seedInputSpec))
         addSlot(PredicateSlot(itemInventory, SLOT_OUTPUT, 41, 7, seedOutputSpec))
@@ -61,24 +63,24 @@ class CropnalyzerScreenHandler(
         refreshEnergyState()
     }
 
-   override fun onButtonClick(player: Player, id: Int): Boolean {
+   override fun clickMenuButton(player: Player, id: Int): Boolean {
        if (id != BUTTON_ID_SCAN) return false
 
        val scanner = getScannerStack(player) ?: return true
        val seed = itemInventory.getStack(SLOT_INPUT)
        if (seed.item !is CropSeedBagItem) {
-            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.insert_seed_bag").formatted(net.minecraft.ChatFormatting.RED), true)
+            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.insert_seed_bag").withStyle(net.minecraft.ChatFormatting.RED), true)
             return true
         }
 
         val type = CropSeedData.readType(seed)
         if (type == null) {
-            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.no_valid_crop_data").formatted(net.minecraft.ChatFormatting.RED), true)
+            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.no_valid_crop_data").withStyle(net.minecraft.ChatFormatting.RED), true)
             return true
         }
 
         if (!itemInventory.getStack(SLOT_OUTPUT).isEmpty) {
-            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.output_occupied").formatted(net.minecraft.ChatFormatting.RED), true)
+            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.output_occupied").withStyle(net.minecraft.ChatFormatting.RED), true)
             return true
         }
 
@@ -87,11 +89,11 @@ class CropnalyzerScreenHandler(
        val currentLevel = CropSeedData.readScanLevel(seed)
       val scanCost = CropnalyzerItem.energyForScanLevel(currentLevel)
        if (scanCost <= 0L) {
-            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.no_valid_crop_data").formatted(net.minecraft.ChatFormatting.RED), true)
+            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.cropnalyzer.no_valid_crop_data").withStyle(net.minecraft.ChatFormatting.RED), true)
             return true
         }
         if (currentEnergy < scanCost) {
-            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.status_no_energy").formatted(net.minecraft.ChatFormatting.RED), true)
+            player.sendMessage(net.minecraft.network.chat.Component.translatable("gui.ic2_120.status_no_energy").withStyle(net.minecraft.ChatFormatting.RED), true)
             return true
         }
 
@@ -101,7 +103,7 @@ class CropnalyzerScreenHandler(
        CropSeedData.write(seed, type, stats, currentLevel + 1)
        itemInventory.setStack(SLOT_OUTPUT, seed.copy())
        itemInventory.setStack(SLOT_INPUT, ItemStack.EMPTY)
-       itemInventory.markDirty()
+       itemInventory.setChanged()
 
        refreshEnergyState()
         sendContentUpdates()
@@ -109,20 +111,20 @@ class CropnalyzerScreenHandler(
         return true
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var moved = ItemStack.EMPTY
         val slot = slots[index]
-        if (!slot.hasStack()) return ItemStack.EMPTY
+        if (!slot .hasItem()) return ItemStack.EMPTY
 
         val stack = slot.stack
         moved = stack.copy()
         if (index == SLOT_INDEX_INPUT) {
-            if (!insertItem(stack, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+            if (!moveItemStackTo(stack, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
         } else if (index == SLOT_INDEX_OUTPUT) {
-            if (!insertItem(stack, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+            if (!moveItemStackTo(stack, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
         } else if (index in PLAYER_INV_START until HOTBAR_END) {
             if (stack.item is CropSeedBagItem) {
-                if (!insertItem(stack, SLOT_INDEX_INPUT, SLOT_INDEX_INPUT + 1, false)) return ItemStack.EMPTY
+                if (!moveItemStackTo(stack, SLOT_INDEX_INPUT, SLOT_INDEX_INPUT + 1, false)) return ItemStack.EMPTY
             } else {
                 return ItemStack.EMPTY
             }
@@ -130,12 +132,12 @@ class CropnalyzerScreenHandler(
             return ItemStack.EMPTY
         }
 
-        if (stack.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
-        slot.onTakeItem(player, stack)
+        if (stack.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
+        slot.onTake(player, stack)
         return moved
     }
 
-    override fun canUse(player: Player): Boolean {
+    override fun stillValid(player: Player): Boolean {
         val scanner = getScannerStack(player) ?: return false
         return scanner.item is CropnalyzerItem
     }
@@ -156,7 +158,7 @@ class CropnalyzerScreenHandler(
     }
 
     private fun getScannerStack(player: Player): ItemStack? {
-        val stack = player.getStackInHand(hand)
+        val stack = player.getItemInHand(hand)
         return stack.takeIf { it.item is CropnalyzerItem }
     }
 

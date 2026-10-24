@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import net.minecraft.data.recipes.RecipeProvider.has
+
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlock
@@ -12,8 +14,6 @@ import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.content.item.IronPlate
 import ic2_120.content.item.SteelPlate
 import ic2_120.content.item.CarbonPlate
@@ -27,18 +27,18 @@ import ic2_120.registry.annotation.RecipeProvider
  */
 @ModBlock(name = "machine", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "machine_casing")
 class MachineCasingBlock : Block(
-    BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
+    BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
 ) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, MachineCasingBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MachineCasingBlock::class.instance(), 1)
                 .pattern("III")
                 .pattern("I I")
                 .pattern("III")
-                .input('I', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, MachineCasingBlock::class.recipeId("from_plates"))
+                .define('I', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .save(exporter, MachineCasingBlock::class.recipeId("from_plates"))
         }
     }
 }
@@ -48,21 +48,21 @@ class MachineCasingBlock : Block(
  */
 @ModBlock(name = "advanced_machine", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "machine_casing")
 class AdvancedMachineCasingBlock : Block(
-    BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
+    BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
 ) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, AdvancedMachineCasingBlock::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedMachineCasingBlock::class.instance(), 1)
                 .pattern("sgs")
                 .pattern("cxc")
                 .pattern("sgs")
-                .input('s', Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL))
-                .input('g', Alloy::class.instance())
-                .input('c', CarbonPlate::class.instance())
-                .input('x', MachineCasingBlock::class.instance())
-                .criterion(hasItem(SteelPlate::class.instance()), conditionsFromItem(SteelPlate::class.instance()))
-                .offerTo(exporter, AdvancedMachineCasingBlock::class.recipeId("from_components"))
+                .define('s', Ingredient.of(ModTags.Compat.Items.PLATES_STEEL))
+                .define('g', Alloy::class.instance())
+                .define('c', CarbonPlate::class.instance())
+                .define('x', MachineCasingBlock::class.instance())
+                .unlockedBy(has(SteelPlate::class.instance()), has(SteelPlate::class.instance()))
+                .save(exporter, AdvancedMachineCasingBlock::class.recipeId("from_components"))
         }
     }
 }

@@ -1,9 +1,13 @@
 package ic2_120.compat
 
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.BlockState
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.inventory.Slot
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.state.BlockState
 
 /**
  * yarn→mojang 迁移兼容垫片：把 yarn 时代的高频属性名以扩展属性形式提供给 MC 类型。
@@ -27,3 +31,15 @@ val Level.isClient: Boolean
 
 val Level.isServer: Boolean
     get() = !this.isClientSide
+
+val ItemEntity.stack: ItemStack
+    get() = this.item
+
+val BlockPlaceContext.stack: ItemStack
+    get() = this.itemInHand
+
+val Slot.stack: ItemStack
+    get() = this.getItem()
+
+val Level.time: Long
+    get() = this.gameTime

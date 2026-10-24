@@ -24,10 +24,10 @@ class ScannerResultPacket(
     val maxUses: Int,
     val results: List<OreScanEntry>
 ) : CustomPacketPayload {
-    override fun getId(): CustomPacketPayload.Id<*> = ID
+    override fun type(): CustomPacketPayload.Type<*> = ID
 
     companion object {
-        val ID = CustomPacketPayload.Id<ScannerResultPacket>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "scanner_result"))
+        val ID = CustomPacketPayload.Type<ScannerResultPacket>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "scanner_result"))
         val CODEC: StreamCodec<FriendlyByteBuf, ScannerResultPacket> = StreamCodec.of(
             { value, buf -> write(value, buf) },
             { read(it) }

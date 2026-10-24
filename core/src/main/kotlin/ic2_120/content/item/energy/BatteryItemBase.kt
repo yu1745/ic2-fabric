@@ -3,7 +3,6 @@ package ic2_120.content.item.energy
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
-import ic2_120.registry.type
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.TooltipFlag
@@ -30,7 +29,7 @@ abstract class BatteryItemBase(
     override val tier: Int,
     override val maxCapacity: Long,
     override val canChargeWireless: Boolean,
-    settings: Item.Settings = Item.Settings()
+    settings: Item.Properties = Item.Properties()
 ) : Item(settings), IBatteryItem {
 
     companion object {
@@ -112,14 +111,14 @@ abstract class BatteryItemBase(
         // 等级和速度信息
         tooltip.add(
             Component.literal("等级: $tier | 速度: ${nominalEuPerTick()} EU/t")
-                .formatted(net.minecraft.ChatFormatting.GRAY)
+                .withStyle(net.minecraft.ChatFormatting.GRAY)
         )
 
         // 无线充电提示
         if (canChargeWireless) {
             tooltip.add(
                 Component.literal("可无线充电")
-                    .formatted(net.minecraft.ChatFormatting.AQUA)
+                    .withStyle(net.minecraft.ChatFormatting.AQUA)
             )
         }
     }
@@ -127,7 +126,7 @@ abstract class BatteryItemBase(
     /**
      * 物品是否具有特效（用于显示电量条）
      */
-    override fun isItemBarVisible(stack: ItemStack): Boolean {
+    override fun isBarVisible(stack: ItemStack): Boolean {
         return true
     }
 
@@ -135,7 +134,7 @@ abstract class BatteryItemBase(
      * 获取物品栏填充度（用于显示电量条）
      * @return 0.0（空）到 1.0（满）
      */
-    override fun getItemBarStep(stack: ItemStack): Int {
+    override fun getBarWidth(stack: ItemStack): Int {
         val ratio = getChargeRatio(stack)
         return (ratio * 13).toInt().coerceIn(0, 13)
     }
@@ -143,7 +142,7 @@ abstract class BatteryItemBase(
     /**
      * 获取物品栏颜色（根据电量变化）
      */
-    override fun getItemBarColor(stack: ItemStack): Int {
+    override fun getBarColor(stack: ItemStack): Int {
         val ratio = getChargeRatio(stack)
         return when {
             ratio > 0.5 -> 0x4AFF4A // 绿色（电量充足）

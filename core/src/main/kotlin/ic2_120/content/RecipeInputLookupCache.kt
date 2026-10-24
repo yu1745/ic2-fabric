@@ -47,7 +47,7 @@ object RecipeInputLookupCache {
             epoch = cur
         }
         val table = tableFor(type)
-        val cached = table.get(item)
+        val cached = table.getValue(tem)
         if (cached != null) return cached
         val probe = net.minecraft.world.SimpleContainer(net.minecraft.world.item.ItemStack(item, 1))
         @Suppress("UNCHECKED_CAST")

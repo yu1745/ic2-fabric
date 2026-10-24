@@ -1,5 +1,7 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.has
+
 import ic2_120.Ic2_120
 import ic2_120.content.reactor.AbstractDamageableReactorComponent
 import ic2_120.content.reactor.AbstractReactorComponent
@@ -11,8 +13,6 @@ import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Item
@@ -56,7 +56,7 @@ private fun checkHeatAcceptor(reactor: IReactor, x: Int, y: Int, out: MutableLis
     }
 }
 
-abstract class AbstractUraniumFuelRodItem(settings: Item.Settings, maxUse: Int, val numberOfCells: Int) :
+abstract class AbstractUraniumFuelRodItem(settings: Item.Properties, maxUse: Int, val numberOfCells: Int) :
     AbstractDamageableReactorComponent(settings, maxUse) {
     override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {
         if (!reactor.produceEnergy()) return
@@ -137,13 +137,13 @@ abstract class AbstractUraniumFuelRodItem(settings: Item.Settings, maxUse: Int, 
 }
 
 @ModItem(name = "uranium_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class UraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_000, 1) {
+class UraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Properties(), 20_000, 1) {
     override fun getDepletedStack(): ItemStack =
         ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "depleted_uranium_fuel_rod")))
 }
 
 @ModItem(name = "dual_uranium_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class DualUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_000, 2) {
+class DualUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Properties(), 20_000, 2) {
     override fun getDepletedStack(): ItemStack =
         ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "depleted_dual_uranium_fuel_rod")))
 
@@ -151,18 +151,18 @@ class DualUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_00
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 双联 <- 单联 × 2：XFX（X=单联燃料棒, F=铁板）
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, DualUraniumFuelRodItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, DualUraniumFuelRodItem::class.instance(), 1)
                 .pattern("XFX")
-                .input('X', UraniumFuelRodItem::class.instance())
-                .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, DualUraniumFuelRodItem::class.id())
+                .define('X', UraniumFuelRodItem::class.instance())
+                .define('F', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .save(exporter, DualUraniumFuelRodItem::class.id())
         }
     }
 }
 
 @ModItem(name = "quad_uranium_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class QuadUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_000, 4) {
+class QuadUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Properties(), 20_000, 4) {
     override fun getDepletedStack(): ItemStack =
         ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "depleted_quad_uranium_fuel_rod")))
 
@@ -170,22 +170,22 @@ class QuadUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_00
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 四联 <- 双联：OXO / CFC / OXO（X=双联, F=铁板, C=铜板, O=空气）
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, QuadUraniumFuelRodItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuadUraniumFuelRodItem::class.instance(), 1)
                 .pattern(" X ").pattern("CFC").pattern(" X ")
-                .input('X', DualUraniumFuelRodItem::class.instance())
-                .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
-                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, QuadUraniumFuelRodItem::class.id())
+                .define('X', DualUraniumFuelRodItem::class.instance())
+                .define('F', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
+                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .save(exporter, QuadUraniumFuelRodItem::class.id())
 
             // 四联 <- 单联 × 2：XFX / CFC / XFX（X=单联）
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, QuadUraniumFuelRodItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuadUraniumFuelRodItem::class.instance(), 1)
                 .pattern("XFX").pattern("CFC").pattern("XFX")
-                .input('X', UraniumFuelRodItem::class.instance())
-                .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
-                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "quad_uranium_fuel_rod_from_single"))
+                .define('X', UraniumFuelRodItem::class.instance())
+                .define('F', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
+                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .save(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "quad_uranium_fuel_rod_from_single"))
         }
     }
 }
@@ -193,15 +193,15 @@ class QuadUraniumFuelRodItem : AbstractUraniumFuelRodItem(Item.Settings(), 20_00
 // ========== 枯竭燃料棒（占位，不可发电） ==========
 
 @ModItem(name = "depleted_uranium_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class DepletedUraniumFuelRodItem : AbstractReactorComponent(Item.Settings())
+class DepletedUraniumFuelRodItem : AbstractReactorComponent(Item.Properties())
 
 @ModItem(name = "depleted_dual_uranium_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class DepletedDualUraniumFuelRodItem : AbstractReactorComponent(Item.Settings())
+class DepletedDualUraniumFuelRodItem : AbstractReactorComponent(Item.Properties())
 
 @ModItem(name = "depleted_quad_uranium_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class DepletedQuadUraniumFuelRodItem : AbstractReactorComponent(Item.Settings())
+class DepletedQuadUraniumFuelRodItem : AbstractReactorComponent(Item.Properties())
 
-abstract class AbstractMoxFuelRodItem(settings: Item.Settings, maxUse: Int, val numberOfCells: Int) :
+abstract class AbstractMoxFuelRodItem(settings: Item.Properties, maxUse: Int, val numberOfCells: Int) :
     AbstractDamageableReactorComponent(settings, maxUse) {
     override fun processChamber(stack: ItemStack, reactor: IReactor, x: Int, y: Int, heatRun: Boolean) {
         if (!reactor.produceEnergy()) return
@@ -292,7 +292,7 @@ abstract class AbstractMoxFuelRodItem(settings: Item.Settings, maxUse: Int, val 
 }
 
 @ModItem(name = "mox_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class MoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 1) {
+class MoxFuelRodItem : AbstractMoxFuelRodItem(Item.Properties(), 10_000, 1) {
     override fun getDepletedStack(): ItemStack =
         ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "depleted_mox_fuel_rod")))
 
@@ -300,18 +300,18 @@ class MoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 1) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 双联 <- 单联 × 2：XFX（X=单联MOX燃料棒, F=铁板）
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, DualMoxFuelRodItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, DualMoxFuelRodItem::class.instance(), 1)
                 .pattern("XFX")
-                .input('X', MoxFuelRodItem::class.instance())
-                .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, DualMoxFuelRodItem::class.id())
+                .define('X', MoxFuelRodItem::class.instance())
+                .define('F', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .save(exporter, DualMoxFuelRodItem::class.id())
         }
     }
 }
 
 @ModItem(name = "dual_mox_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class DualMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 2) {
+class DualMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Properties(), 10_000, 2) {
     override fun getDepletedStack(): ItemStack =
         ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "depleted_dual_mox_fuel_rod")))
 
@@ -319,28 +319,28 @@ class DualMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 2) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 四联 <- 双联：OXO / CFC / OXO（X=双联MOX燃料棒, F=铁板, C=铜板, O=空气）
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, QuadMoxFuelRodItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuadMoxFuelRodItem::class.instance(), 1)
                 .pattern(" X ").pattern("CFC").pattern(" X ")
-                .input('X', DualMoxFuelRodItem::class.instance())
-                .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
-                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, QuadMoxFuelRodItem::class.id())
+                .define('X', DualMoxFuelRodItem::class.instance())
+                .define('F', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
+                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .save(exporter, QuadMoxFuelRodItem::class.id())
 
             // 四联 <- 单联：XFX / CFC / XFX（X=单联MOX燃料棒）
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, QuadMoxFuelRodItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuadMoxFuelRodItem::class.instance(), 1)
                 .pattern("XFX").pattern("CFC").pattern("XFX")
-                .input('X', MoxFuelRodItem::class.instance())
-                .input('F', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
-                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "quad_mox_fuel_rod_from_single"))
+                .define('X', MoxFuelRodItem::class.instance())
+                .define('F', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
+                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .save(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "quad_mox_fuel_rod_from_single"))
         }
     }
 }
 
 @ModItem(name = "quad_mox_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class QuadMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 4) {
+class QuadMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Properties(), 10_000, 4) {
     override fun getDepletedStack(): ItemStack =
         ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "depleted_quad_mox_fuel_rod")))
 }
@@ -348,10 +348,10 @@ class QuadMoxFuelRodItem : AbstractMoxFuelRodItem(Item.Settings(), 10_000, 4) {
 // ========== 枯竭 MOX 燃料棒 ==========
 
 @ModItem(name = "depleted_mox_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class DepletedMoxFuelRodItem : AbstractReactorComponent(Item.Settings())
+class DepletedMoxFuelRodItem : AbstractReactorComponent(Item.Properties())
 
 @ModItem(name = "depleted_dual_mox_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class DepletedDualMoxFuelRodItem : AbstractReactorComponent(Item.Settings())
+class DepletedDualMoxFuelRodItem : AbstractReactorComponent(Item.Properties())
 
 @ModItem(name = "depleted_quad_mox_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class DepletedQuadMoxFuelRodItem : AbstractReactorComponent(Item.Settings())
+class DepletedQuadMoxFuelRodItem : AbstractReactorComponent(Item.Properties())

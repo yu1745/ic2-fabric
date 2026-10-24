@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.SteamGeneratorBlock
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.heat.IHeatConsumer
@@ -26,7 +32,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.nbt.CompoundTag
@@ -153,7 +159,7 @@ class SteamGeneratorBlockEntity(
 
         override fun onFinalCommit() {
             sync.waterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
 
         /** 是否为蒸馏水 */
@@ -171,7 +177,7 @@ class SteamGeneratorBlockEntity(
                 tx.commit()
             }
             sync.waterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
             return true
         }
 
@@ -211,7 +217,7 @@ class SteamGeneratorBlockEntity(
 
         override fun onFinalCommit() {
             sync.steamAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
 
         /** 机器内部产出蒸汽 */
@@ -232,7 +238,7 @@ class SteamGeneratorBlockEntity(
                 tx.commit()
             }
             sync.steamAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
             return actual
         }
 
@@ -334,23 +340,23 @@ class SteamGeneratorBlockEntity(
 
     // ==== NBT ====
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         syncedData.readNbt(nbt)
         systemHeatMilli = nbt.getLong(NBT_SYSTEM_HEAT_MILLI)
         calcification = nbt.getLong(NBT_CALCIFICATION)
         sync.inputMB = nbt.getInt(NBT_INPUT_MB).coerceIn(0, 1000)
         sync.pressure = nbt.getInt(NBT_PRESSURE).coerceIn(0, SteamGeneratorSync.MAX_PRESSURE)
 
-        if (nbt.contains(NBT_WATER_TANK)) waterTank.readFromNbt(nbt.getCompound(NBT_WATER_TANK))
-        if (nbt.contains(NBT_STEAM_TANK)) steamTank.readFromNbt(nbt.getCompound(NBT_STEAM_TANK))
+        if (nbt.hasProperty(NBT_WATER_TANK)) waterTank.readFromNbt(nbt.getCompound(NBT_WATER_TANK))
+        if (nbt.hasProperty(NBT_STEAM_TANK)) steamTank.readFromNbt(nbt.getCompound(NBT_STEAM_TANK))
         sync.waterAmount = waterTank.amount.toInt().coerceAtLeast(0)
         sync.steamAmount = steamTank.amount.toInt().coerceAtLeast(0)
         sync.calcification = calcification.coerceIn(0L, SteamGeneratorSync.MAX_CALCIFICATION).toInt()
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_SYSTEM_HEAT_MILLI, systemHeatMilli)
         nbt.putLong(NBT_CALCIFICATION, calcification)
@@ -496,7 +502,7 @@ class SteamGeneratorBlockEntity(
                             sync.outputMB = (dropletsToMb(ejected) * SteamGeneratorSync.STEAM_EXPANSION)
                                 .coerceIn(0L, Int.MAX_VALUE.toLong())
                                 .toInt()
-                            markDirty()
+                            setChanged()
                         }
                     }
                 }
@@ -579,7 +585,7 @@ class SteamGeneratorBlockEntity(
 
         // logSteamDebug(world, pos, pressure, inputMB)
 
-        markDirty()
+        setChanged()
     }
 
     // TODO: 调试用日志方法 — 暂注释保留，后续视情况删除

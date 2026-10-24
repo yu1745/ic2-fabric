@@ -49,7 +49,7 @@ object IC2AdvancedSolarAddonClient : ClientModInitializer {
         val mtBlock = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("ic2_120_advanced_solar_addon", "molecular_transformer"))
         val mtItemEntity = MolecularTransformerBlockEntity(
             BlockPos.ORIGIN,
-            mtBlock.defaultState.with(MolecularTransformerBlock.ACTIVE, false)
+            mtBlock.defaultBlockState.setValue(MolecularTransformerBlock.ACTIVE, false)
         )
         BuiltinItemRendererRegistry.INSTANCE.register(mtBlock.asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
             Minecraft.getInstance().blockEntityRenderDispatcher.renderEntity(

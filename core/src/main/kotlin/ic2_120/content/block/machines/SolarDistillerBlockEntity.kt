@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.Ic2_120
 import ic2_120.content.block.SolarDistillerBlock
 import ic2_120.content.fluid.ModFluids
@@ -39,7 +44,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.ContainerHelper
@@ -130,11 +135,11 @@ class SolarDistillerBlockEntity(
         }
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
@@ -142,7 +147,7 @@ class SolarDistillerBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_INPUT_CELL), matcher = { isInputCellStack(it) })
         ),
         extractSlots = intArrayOf(SLOT_INPUT_WATER, SLOT_OUTPUT_EMPTY, SLOT_INPUT_CELL, SLOT_OUTPUT_CELL),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -176,7 +181,7 @@ class SolarDistillerBlockEntity(
         // 提交后同步数据到客户端
         override fun onFinalCommit() {
             sync.waterInput = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
 
         // 直接设置存储的水量（用于 NBT 读取）
@@ -248,7 +253,7 @@ class SolarDistillerBlockEntity(
         // 提交后同步数据到客户端
         override fun onFinalCommit() {
             sync.distilledOutput = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
 
         // 直接设置存储的蒸馏水量（用于 NBT 读取）
@@ -362,15 +367,15 @@ class SolarDistillerBlockEntity(
     // Container 接口实现
     override fun size(): Int = INVENTORY_SIZE
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() {
-        super.markDirty()
+    override fun setChanged() {
+        super.setChanged()
     }
 
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_WATER -> isWaterInputStack(stack)
@@ -383,8 +388,8 @@ class SolarDistillerBlockEntity(
 
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
 
     // ExtendedScreenHandlerFactory 接口实现（用于打开 GUI）
@@ -406,17 +411,17 @@ class SolarDistillerBlockEntity(
         )
 
     // NBT 数据读写
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         inputTankInternal.setStoredWater(nbt.getLong(NBT_INPUT_TANK))
         outputTankInternal.setStoredDistilled(nbt.getLong(NBT_OUTPUT_TANK))
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_INPUT_TANK, inputTankInternal.getStoredAmount())
         nbt.putLong(NBT_OUTPUT_TANK, outputTankInternal.getStoredAmount())
@@ -494,8 +499,8 @@ class SolarDistillerBlockEntity(
 
         // 更新方块激活状态（用于渲染）
         val active = sync.isWorking != 0
-        if (state.get(SolarDistillerBlock.ACTIVE) != active) {
-            world.setBlockState(pos, state.with(SolarDistillerBlock.ACTIVE, active))
+        if (state.getValue(SolarDistillerBlock.ACTIVE) != active) {
+            world.setBlock(pos, state.setValue(SolarDistillerBlock.ACTIVE, active))
         }
     }
 
@@ -525,21 +530,21 @@ class SolarDistillerBlockEntity(
 
         // 检查输出槽是否有空间
         val canAcceptEmpty = emptyOutput.isEmpty ||
-                (ItemStack.areItemsEqual(emptyOutput, emptyContainer) && emptyOutput.count < emptyOutput.maxCount)
+                (ItemStack.areItemsEqual(emptyOutput, emptyContainer) && emptyOutput.count < emptyOutput.maxStackSize)
         if (!canAcceptEmpty) return
 
         // 尝试插入水到输入罐
         if (inputTankInternal.tryInsertWater(FluidConstants.BUCKET) < FluidConstants.BUCKET) return
 
         // 消耗输入，输出空容器
-        input.decrement(1)
+        input.shrink(1)
         if (input.isEmpty) setStack(SLOT_INPUT_WATER, ItemStack.EMPTY)
         if (emptyOutput.isEmpty) {
             setStack(SLOT_OUTPUT_EMPTY, emptyContainer)
         } else {
-            emptyOutput.increment(1)
+            emptyOutput.grow(1)
         }
-        markDirty()
+        setChanged()
     }
 
     /**
@@ -568,18 +573,18 @@ class SolarDistillerBlockEntity(
         // 检查输出槽是否有空间
         val output = getStack(SLOT_OUTPUT_CELL)
         val canAccept = output.isEmpty ||
-                (ItemStack.canCombine(output, outputCell) && output.count < output.maxCount)
+                (ItemStack.canCombine(output, outputCell) && output.count < output.maxStackSize)
         if (!canAccept) return
 
         // 消耗蒸馏水，填充电池
         if (outputTankInternal.consumeInternal(FluidConstants.BUCKET) < FluidConstants.BUCKET) return
 
         // 消耗输入，输出电池
-        input.decrement(1)
+        input.shrink(1)
         if (input.isEmpty) setStack(SLOT_INPUT_CELL, ItemStack.EMPTY)
         if (output.isEmpty) setStack(SLOT_OUTPUT_CELL, outputCell)
-        else output.increment(1)
-        markDirty()
+        else output.grow(1)
+        setChanged()
     }
 
     /**
@@ -589,7 +594,7 @@ class SolarDistillerBlockEntity(
      */
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
         // 正面（水平朝向面）禁用流体口，保留为机器交互面；其余面均开放管道/容器访问。
-        // if (side == (world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH)) return null
+        // if (side == (world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH)) return null
         return ioStorage
     }
 

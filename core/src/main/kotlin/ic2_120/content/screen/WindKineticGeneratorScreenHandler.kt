@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.block.WindKineticGeneratorBlock
 import ic2_120.content.block.machines.WindKineticGeneratorBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
@@ -9,7 +11,7 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
@@ -30,8 +32,8 @@ class WindKineticGeneratorScreenHandler(
     val sync = WindKineticGeneratorSync(SyncedDataView(propertyDelegate))
 
     init {
-        checkSize(blockInventory, 1)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, 1)
+        addDataSlots(propertyDelegate)
 
         addSlot(PredicateSlot(blockInventory, WindKineticGeneratorBlockEntity.ROTOR_SLOT, 79, 25, ROTOR_SLOT_SPEC))
 
@@ -45,40 +47,40 @@ class WindKineticGeneratorScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         if (index !in slots.indices) return ItemStack.EMPTY
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
                 index == WindKineticGeneratorBlockEntity.ROTOR_SLOT -> {
-                    if (!insertItem(stackInSlot, 1, 37, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, 1, 37, true)) return ItemStack.EMPTY
                 }
                 index in 1..36 -> {
                     if (!ROTOR_SLOT_SPEC.canInsert(stackInSlot)) return ItemStack.EMPTY
                     val rotorSlot = slots[WindKineticGeneratorBlockEntity.ROTOR_SLOT]
-                    if (rotorSlot.hasStack()) return ItemStack.EMPTY
+                    if (rotorSlot .hasItem()) return ItemStack.EMPTY
                     val one = stackInSlot.copy()
                     one.count = 1
                     rotorSlot.stack = one
-                    rotorSlot.markDirty()
-                    stackInSlot.decrement(1)
+                    rotorSlot.setChanged()
+                    stackInSlot.shrink(1)
                 }
-                else -> if (!insertItem(stackInSlot, 1, 37, false)) return ItemStack.EMPTY
+                else -> if (!moveItemStackTo(stackInSlot, 1, 37, false)) return ItemStack.EMPTY
             }
 
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
+            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
-            world.getBlockState(pos).block is WindKineticGeneratorBlock && player.squaredDistanceTo(
+            world.getBlockState(pos).block is WindKineticGeneratorBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)

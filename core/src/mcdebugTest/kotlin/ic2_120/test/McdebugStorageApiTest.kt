@@ -20,7 +20,7 @@ class McdebugStorageApiTest {
 
     private fun assertHandle(handles: com.google.gson.JsonArray, handle: String, kind: String) {
         val ok = (0 until handles.size()).any { i ->
-            val h = handles.get(i).asJsonObject
+            val h = handles.getValue().asJsonObject
             h.get("handle").asString == handle && h.get("kind").asString == kind
         }
         assertTrue(ok, "expected $kind storage handle $handle; got $handles")
@@ -74,10 +74,10 @@ class McdebugStorageApiTest {
         val storage = ctx.api.storage.get(target, FABRIC_ITEM).asJsonObject
         val slots = storage.get("slots").asJsonArray
         val inputSlot = (0 until slots.size()).firstOrNull { i ->
-            val s = slots.get(i).asJsonObject.get("stack").asJsonObject
+            val s = slots.getValue().asJsonObject.get("stack").asJsonObject
             s.get("item").takeIf { it != null && !it.isJsonNull }?.asString == "minecraft:cobblestone"
         } ?: throw AssertionError("expected cobblestone in fabric:item slots: $slots")
-        assertEquals(1, slots.get(inputSlot).asJsonObject.get("stack").asJsonObject.get("count").asInt)
+        assertEquals(1, slots.getValue(inputSlot).asJsonObject.get("stack").asJsonObject.get("count").asInt)
 
         val invalid = ctx.api.storage.insert(
             target, FABRIC_ITEM, mapOf("kind" to "item", "item" to "minecraft:dirt"), 1, simulate = true,
@@ -96,7 +96,7 @@ class McdebugStorageApiTest {
         val storage = ctx.api.storage.get(target, FABRIC_FLUID).asJsonObject
         val tanks = storage.get("tanks").asJsonArray
         val hasWater = (0 until tanks.size()).any { i ->
-            val t = tanks.get(i).asJsonObject
+            val t = tanks.getValue().asJsonObject
             t.get("fluid").takeIf { it != null && !it.isJsonNull }?.asString == "minecraft:water" && t.get("amount").asLong == 81_000L
         }
         assertTrue(hasWater, "expected water cell to expose 81000 droplets; got $tanks")

@@ -11,7 +11,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
@@ -77,7 +77,7 @@ class OreWashingPlantScreen(
         if (waterAmountDroplets > 0) run {
             val fluid = Fluids.WATER
             val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return@run
-            val sprite = handler.getFluidSprites(null, null, fluid.defaultState).getOrNull(0) ?: return@run
+            val sprite = handler.getFluidSprites(null, null, fluid.defaultBlockState).getOrNull(0) ?: return@run
             val color = FluidUtils.getFluidColor(fluid)
             if (color == -1) return@run
             val r = ((color shr 16) and 0xFF) / 255f

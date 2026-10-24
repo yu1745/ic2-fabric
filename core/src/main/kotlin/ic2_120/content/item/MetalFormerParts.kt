@@ -1,5 +1,11 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+
 import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
@@ -13,8 +19,6 @@ import ic2_120.content.item.energy.BatteryItemBase
 import ic2_120.content.item.energy.ReBatteryItem
 import ic2_120.content.recipes.ModTags
 import ic2_120.content.recipes.crafting.BatteryEnergyShapedRecipeDatagen
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.entity.LivingEntity
@@ -32,23 +36,23 @@ import ic2_120.registry.annotation.RecipeProvider
 // ========== 金属成型机制品 ==========
 
 @ModItem(name = "tin_can", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class EmptyTinCanItem : Item(Item.Settings()) {
+class EmptyTinCanItem : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val tinIngot = TinIngot::class.instance()
 
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 16)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 16)
                 .pattern("TTT").pattern("T T").pattern("TTT")
-                .input('T', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_TIN))
-                .criterion(hasItem(tinIngot), conditionsFromItem(tinIngot))
-                .offerTo(exporter, EmptyTinCanItem::class.recipeId("from_ingots_8"))
+                .define('T', Ingredient.of(ModTags.Compat.Items.INGOTS_TIN))
+                .unlockedBy(getHasName(tinIngot), has(tinIngot))
+                .save(exporter, EmptyTinCanItem::class.recipeId("from_ingots_8"))
 
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 4)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EmptyTinCanItem::class.instance(), 4)
                 .pattern(" T ").pattern("T T").pattern("TTT")
-                .input('T', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_TIN))
-                .criterion(hasItem(tinIngot), conditionsFromItem(tinIngot))
-                .offerTo(exporter, EmptyTinCanItem::class.recipeId("from_ingots_6"))
+                .define('T', Ingredient.of(ModTags.Compat.Items.INGOTS_TIN))
+                .unlockedBy(getHasName(tinIngot), has(tinIngot))
+                .save(exporter, EmptyTinCanItem::class.recipeId("from_ingots_6"))
         }
     }
 }
@@ -60,7 +64,7 @@ class EmptyTinCanItem : Item(Item.Settings()) {
  */
 @ModItem(name = "filled_tin_can", tab = CreativeTab.IC2_MATERIALS, group = "parts")
 class FilledTinCanItem : Item(
-    Item.Settings()
+    Item.Properties()
         .food(
             FoodProperties.Builder()
                 .nutrition(2)
@@ -83,15 +87,15 @@ class FilledTinCanItem : Item(
             if (player.health < player.maxHealth) {
                 player.heal(2f)
             } else {
-                player.hungerManager.add(2, 0.4f)
+                player.foodData.add(2, 0.4f)
             }
         }
 
         val remainder = ItemStack(emptyTinCanItem)
         if (stack.count > 1) {
-            stack.decrement(1)
-            if (user is Player && !user.inventory.insertStack(remainder)) {
-                user.dropItem(remainder, false)
+            stack.shrink(1)
+            if (user is Player && !user.inventory.safeInsert(remainder)) {
+                user.spawnAtLocation(remainder, false)
             }
             return stack
         }
@@ -170,16 +174,16 @@ class PowerUnitItem : BatteryItemBase(
 }
 
 @ModItem(name = "fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class EmptyFuelRodItem : Item(Item.Settings())
+class EmptyFuelRodItem : Item(Item.Properties())
 
 @ModItem(name = "iron_shaft", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class ToolHandleIronItem : Item(Item.Settings())
+class ToolHandleIronItem : Item(Item.Properties())
 
 @ModItem(name = "steel_shaft", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class ToolHandleSteelItem : Item(Item.Settings())
+class ToolHandleSteelItem : Item(Item.Properties())
 
 @ModItem(name = "bronze_shaft", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class ToolHandleBronzeItem : Item(Item.Settings())
+class ToolHandleBronzeItem : Item(Item.Properties())
 
 @ModItem(name = "coin", tab = CreativeTab.IC2_MATERIALS, group = "parts")
-class IndustrialCurrencyItem : Item(Item.Settings())
+class IndustrialCurrencyItem : Item(Item.Properties())

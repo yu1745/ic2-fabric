@@ -121,7 +121,7 @@ class Ic2JeiGhostPlugin : IModPlugin {
         private fun sendItemFilter(slotIndex: Int, stack: ItemStack) {
             val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeVarInt(slotIndex)
-            buf.writeItemStack(stack)
+            bufItemStack.OPTIONAL_STREAM_CODEC.encode(buf, stack)
             ClientPlayNetworking.send(NetworkManager.SET_ITEM_FILTER_PACKET, buf)
         }
     }

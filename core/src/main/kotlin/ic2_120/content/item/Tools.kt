@@ -1,5 +1,14 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import ic2_120.compat.stack
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+import ic2_120.compat.world
+
 import ic2_120.integration.ftbchunks.ClaimProtection
 
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
@@ -69,10 +78,6 @@ import net.minecraft.data.recipes.ShapelessRecipeBuilder
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
-import ic2_120.registry.instance
-import ic2_120.registry.item
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.annotation.RecipeProvider
 
 // ========== 工具材料 ==========
@@ -85,61 +90,61 @@ object BronzeToolMaterial : Tier {
     override fun getMiningLevel() = 2
     override fun getEnchantability() = 10
     override fun getRepairIngredient(): Ingredient =
-        Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
+        Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
 }
 
 // ========== 工具类 ==========
 
 /** 锻造锤 - 将锭锻造成板，将板锻造成外壳 */
 @ModItem(name = "forge_hammer", tab = CreativeTab.IC2_TOOLS)
-class ForgeHammer : Item(Item.Settings().maxDamage(80)) {
-    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: TooltipContext) {
+class ForgeHammer : Item(Item.Properties().maxDamage(80)) {
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
         val remaining = stack.maxDamage - stack.damage
-        tooltip.add(Component.literal("剩余使用次数: $remaining").formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.literal("剩余使用次数: $remaining").withStyle(ChatFormatting.GRAY))
     }
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            val iron = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON)
+            val iron = Ingredient.of(ModTags.Compat.Items.INGOTS_IRON)
             val stick = Items.STICK
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, ForgeHammer::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, ForgeHammer::class.instance(), 1)
                 .pattern("II").pattern("IS").pattern("II")
-                .input('I', iron).input('S', stick)
-                .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
-                .offerTo(exporter, ForgeHammer::class.id())
+                .define('I', iron).define('S', stick)
+                .unlockedBy(getHasName(Items.IRON_INGOT), has(Items.IRON_INGOT))
+                .save(exporter, ForgeHammer::class.id())
         }
     }
 }
 
 /** 板材切割剪刀 - 将板材切割成导线 */
 @ModItem(name = "cutter", tab = CreativeTab.IC2_TOOLS)
-class Cutter : Item(Item.Settings().maxDamage(60)) {
-    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: TooltipContext) {
+class Cutter : Item(Item.Properties().maxDamage(60)) {
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
         val remaining = stack.maxDamage - stack.damage
-        tooltip.add(Component.literal("剩余使用次数: $remaining").formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.literal("剩余使用次数: $remaining").withStyle(ChatFormatting.GRAY))
     }
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            val ironIngot = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON)
-            val ironPlate = Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON)
-            val steelIngot = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_STEEL)
+            val ironIngot = Ingredient.of(ModTags.Compat.Items.INGOTS_IRON)
+            val ironPlate = Ingredient.of(ModTags.Compat.Items.PLATES_IRON)
+            val steelIngot = Ingredient.of(ModTags.Compat.Items.INGOTS_STEEL)
 
             // 配方 1：铁板制作切割机
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, Cutter::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, Cutter::class.instance(), 1)
                 .pattern("P P").pattern(" P ").pattern("I I")
-                .input('P', ironPlate).input('I', ironIngot)
-                .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
-                .offerTo(exporter, Cutter::class.recipeId("iron_plate"))
+                .define('P', ironPlate).define('I', ironIngot)
+                .unlockedBy(has(IronPlate::class.instance()), has(IronPlate::class.instance()))
+                .save(exporter, Cutter::class.recipeId("iron_plate"))
 
             // 配方 2：钢锭制作切割机
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, Cutter::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, Cutter::class.instance(), 1)
                 .pattern("P P").pattern(" P ").pattern("I I")
-                .input('P', steelIngot).input('I', ironIngot)
-                .criterion(hasItem(SteelIngot::class.instance()), conditionsFromItem(SteelIngot::class.instance()))
-                .offerTo(exporter, Cutter::class.recipeId("steel"))
+                .define('P', steelIngot).define('I', ironIngot)
+                .unlockedBy(has(SteelIngot::class.instance()), has(SteelIngot::class.instance()))
+                .save(exporter, Cutter::class.recipeId("steel"))
         }
     }
 }
@@ -147,89 +152,89 @@ class Cutter : Item(Item.Settings().maxDamage(60)) {
 // ========== 青铜工具 ==========
 
 @ModItem(name = "bronze_axe", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeAxe : AxeItem(BronzeToolMaterial, 5f, -3f, Item.Settings().maxCount(1)) {
+class BronzeAxe : AxeItem(BronzeToolMaterial, 5f, -3f, Item.Properties().maxStackSize(1)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
+            val bronze = Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, BronzeAxe::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, BronzeAxe::class.instance(), 1)
                 .pattern("MM").pattern("MS").pattern(" S")
-                .input('M', bronze).input('S', stick)
-                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
-                .offerTo(exporter, BronzeAxe::class.id())
+                .define('M', bronze).define('S', stick)
+                .unlockedBy(has(BronzeIngot::class.instance()), has(BronzeIngot::class.instance()))
+                .save(exporter, BronzeAxe::class.id())
         }
     }
 }
 
 @ModItem(name = "bronze_hoe", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeHoe : HoeItem(BronzeToolMaterial, -1, 0f, Item.Settings().maxCount(1)) {
+class BronzeHoe : HoeItem(BronzeToolMaterial, -1, 0f, Item.Properties().maxStackSize(1)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
+            val bronze = Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, BronzeHoe::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, BronzeHoe::class.instance(), 1)
                 .pattern("MM").pattern(" S").pattern(" S")
-                .input('M', bronze).input('S', stick)
-                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
-                .offerTo(exporter, BronzeHoe::class.id())
+                .define('M', bronze).define('S', stick)
+                .unlockedBy(has(BronzeIngot::class.instance()), has(BronzeIngot::class.instance()))
+                .save(exporter, BronzeHoe::class.id())
         }
     }
 }
 
 @ModItem(name = "bronze_sword", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeSword : SwordItem(BronzeToolMaterial, 3, -2.4f, Item.Settings().maxCount(1)) {
+class BronzeSword : SwordItem(BronzeToolMaterial, 3, -2.4f, Item.Properties().maxStackSize(1)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
+            val bronze = Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, BronzeSword::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, BronzeSword::class.instance(), 1)
                 .pattern("M").pattern("M").pattern("S")
-                .input('M', bronze).input('S', stick)
-                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
-                .offerTo(exporter, BronzeSword::class.id())
+                .define('M', bronze).define('S', stick)
+                .unlockedBy(has(BronzeIngot::class.instance()), has(BronzeIngot::class.instance()))
+                .save(exporter, BronzeSword::class.id())
         }
     }
 }
 
 @ModItem(name = "bronze_shovel", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeShovel : ShovelItem(BronzeToolMaterial, 1.5f, -3f, Item.Settings().maxCount(1)) {
+class BronzeShovel : ShovelItem(BronzeToolMaterial, 1.5f, -3f, Item.Properties().maxStackSize(1)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
+            val bronze = Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, BronzeShovel::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, BronzeShovel::class.instance(), 1)
                 .pattern("M").pattern("S").pattern("S")
-                .input('M', bronze).input('S', stick)
-                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
-                .offerTo(exporter, BronzeShovel::class.id())
+                .define('M', bronze).define('S', stick)
+                .unlockedBy(has(BronzeIngot::class.instance()), has(BronzeIngot::class.instance()))
+                .save(exporter, BronzeShovel::class.id())
         }
     }
 }
 
 @ModItem(name = "bronze_pickaxe", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzePickaxe : PickaxeItem(BronzeToolMaterial, 1, -2.8f, Item.Settings().maxCount(1)) {
+class BronzePickaxe : PickaxeItem(BronzeToolMaterial, 1, -2.8f, Item.Properties().maxStackSize(1)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
+            val bronze = Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, BronzePickaxe::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, BronzePickaxe::class.instance(), 1)
                 .pattern("MMM").pattern(" S ").pattern(" S ")
-                .input('M', bronze).input('S', stick)
-                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
-                .offerTo(exporter, BronzePickaxe::class.id())
+                .define('M', bronze).define('S', stick)
+                .unlockedBy(has(BronzeIngot::class.instance()), has(BronzeIngot::class.instance()))
+                .save(exporter, BronzePickaxe::class.id())
         }
     }
 }
 
 /** 除草剂：右键作物直接喷洒除草剂，内部储存除草剂容量（mB） */
 @ModItem(name = "weed_ex", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class WeedEx : Item(Item.Settings().maxCount(1)) {
-    override fun useOnBlock(context: UseOnContext): InteractionResult {
+class WeedEx : Item(Item.Properties().maxStackSize(1)) {
+    override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.world
         val pos = context.blockPos
         val state = world.getBlockState(pos)
@@ -251,7 +256,7 @@ class WeedEx : Item(Item.Settings().maxCount(1)) {
             be.applyWeedEx(request, simulate = false)
             val remaining = amount - used
             if (remaining <= 0) {
-                stack.decrement(1)
+                stack.shrink(1)
             } else {
                 setAmount(stack, remaining)
             }
@@ -269,21 +274,21 @@ class WeedEx : Item(Item.Settings().maxCount(1)) {
     ) {
         val amount = getAmount(stack)
         val pct = (amount * 100 / CAPACITY).coerceIn(0, 100)
-        tooltip.add(Component.translatable("tooltip.ic2_120.weed_ex.amount", amount, CAPACITY).formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.weed_ex.amount", amount, CAPACITY).withStyle(ChatFormatting.GRAY))
         if (pct < 25) {
-            tooltip.add(Component.translatable("tooltip.ic2_120.weed_ex.low").formatted(ChatFormatting.RED))
+            tooltip.add(Component.translatable("tooltip.ic2_120.weed_ex.low").withStyle(ChatFormatting.RED))
         }
     }
 
-    override fun isItemBarVisible(stack: ItemStack): Boolean {
+    override fun isBarVisible(stack: ItemStack): Boolean {
         return getAmount(stack) < CAPACITY
     }
 
-    override fun getItemBarStep(stack: ItemStack): Int {
+    override fun getBarWidth(stack: ItemStack): Int {
         return (getAmount(stack) * 13 / CAPACITY).coerceIn(0, 13)
     }
 
-    override fun getItemBarColor(stack: ItemStack): Int {
+    override fun getBarColor(stack: ItemStack): Int {
         val pct = getAmount(stack) * 100 / CAPACITY
         return when {
             pct < 25 -> 0xFF4444
@@ -301,7 +306,7 @@ class WeedEx : Item(Item.Settings().maxCount(1)) {
 
         fun getAmount(stack: ItemStack): Int {
             val nbt = stack.nbt ?: return CAPACITY
-            if (!nbt.contains(NBT_KEY)) return CAPACITY
+            if (!nbt.hasProperty(NBT_KEY)) return CAPACITY
             return nbt.getInt(NBT_KEY).coerceIn(0, CAPACITY)
         }
 
@@ -320,23 +325,23 @@ class WeedEx : Item(Item.Settings().maxCount(1)) {
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val cell = WeedExCell::class.instance()
             if (cell == Items.AIR) return
-            ShapelessRecipeBuilder.create(RecipeCategory.EQUIPMENT, WeedEx::class.instance(), 1)
-                .input(cell, 1)
-                .criterion(hasItem(cell), conditionsFromItem(cell))
-                .offerTo(exporter, WeedEx::class.id())
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.EQUIPMENT, WeedEx::class.instance(), 1)
+                .requires(cell, 1)
+                .unlockedBy(getHasName(cell), has(cell))
+                .save(exporter, WeedEx::class.id())
         }
     }
 }
 
 /** 除草铲：右键作物架上的杂草可清除并恢复空架（杂草无法用手采摘，需用本工具或破坏方块） */
 @ModItem(name = "weeding_spade", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class WeedingSpade : Item(Item.Settings().maxDamage(120)) {
-    override fun useOnBlock(context: UseOnContext): InteractionResult {
+class WeedingSpade : Item(Item.Properties().maxDamage(120)) {
+    override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.world
         val pos = context.blockPos
         val state = world.getBlockState(pos)
         if (state.block !is CropBlock) return InteractionResult.PASS
-        if (state.get(CropBlock.CROP_TYPE) != CropType.WEED) return InteractionResult.PASS
+        if (state.getValue(CropBlock.CROP_TYPE) != CropType.WEED) return InteractionResult.PASS
         if (world.isClient) return InteractionResult.SUCCESS
         val player = context.player ?: return InteractionResult.PASS
         val stack = context.stack
@@ -350,7 +355,7 @@ class WeedingSpade : Item(Item.Settings().maxDamage(120)) {
             pos.z.toDouble(),
             Weed::class.instance().defaultStack
         )
-        world.setBlockState(pos, CropStickBlock.defaultStickState(), Block.NOTIFY_ALL)
+        world.setBlock(pos, CropStickBlock.defaultStickState(), Block.NOTIFY_ALL)
         if (!isCreative) {
             stack.damage(1, player) { it.sendToolBreakStatus(context.hand) }
         }
@@ -360,13 +365,13 @@ class WeedingSpade : Item(Item.Settings().maxDamage(120)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
+            val bronze = Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, WeedingSpade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, WeedingSpade::class.instance(), 1)
                 .pattern("M").pattern("S")
-                .input('M', bronze).input('S', stick)
-                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
-                .offerTo(exporter, WeedingSpade::class.id())
+                .define('M', bronze).define('S', stick)
+                .unlockedBy(has(BronzeIngot::class.instance()), has(BronzeIngot::class.instance()))
+                .save(exporter, WeedingSpade::class.id())
         }
     }
 }
@@ -375,25 +380,25 @@ class WeedingSpade : Item(Item.Settings().maxDamage(120)) {
 
 /** 测试工具 - 开发调试用 */
 @ModItem(name = "debug_item", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class DebugItem : Item(Item.Settings().maxCount(1))
+class DebugItem : Item(Item.Properties().maxStackSize(1))
 
 /** 工具箱：右键收纳快捷栏工具（最多 8 格）；潜行右键向背包释放，能放多少放多少，放不下的留在箱内。无 GUI。 */
 @ModItem(name = "tool_box", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class ToolBox : Item(Item.Settings().maxCount(1)) {
+class ToolBox : Item(Item.Properties().maxStackSize(1)) {
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getStackInHand(hand)
+        val stack = user.getItemInHand(hand)
         if (world.isClient) return InteractionResultHolder.success(stack)
 
         val internal = loadInternal(stack)
-        if (user.isSneaking) {
+        if (user.isCrouching) {
             var transferredAny = false
             for (i in internal.indices) {
                 val s = internal[i]
                 if (s.isEmpty) continue
                 val beforeAmount = s.count
                 val leftover = s.copy()
-                user.inventory.insertStack(leftover)
+                user.inventory.safeInsert(leftover)
                 internal[i] = leftover
                 if (leftover.count < beforeAmount || leftover.isEmpty) {
                     transferredAny = true
@@ -403,7 +408,7 @@ class ToolBox : Item(Item.Settings().maxCount(1)) {
                 user.playSound(SoundEvents.ENTITY_ITEM_PICKUP, SoundSource.PLAYERS, 0.2f, 1.1f)
             }
             if (internal.any { !it.isEmpty }) {
-                user.sendMessage(Component.translatable("message.ic2_120.tool_box.inventory_partial"), true)
+                user.displayClientMessage(Component.translatable("message.ic2_120.tool_box.inventory_partial", false), true)
             }
             saveInternal(stack, internal)
             return InteractionResultHolder.success(stack)
@@ -435,23 +440,23 @@ class ToolBox : Item(Item.Settings().maxCount(1)) {
         tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
-        tooltip.add(Component.translatable("tooltip.ic2_120.tool_box.hint").formatted(ChatFormatting.DARK_GRAY))
-        tooltip.add(Component.translatable("tooltip.ic2_120.tool_box.hint_detail").formatted(ChatFormatting.DARK_GRAY))
+        super.appendTooltip(stack, context, tooltip, type)
+        tooltip.add(Component.translatable("tooltip.ic2_120.tool_box.hint").withStyle(ChatFormatting.DARK_GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.tool_box.hint_detail").withStyle(ChatFormatting.DARK_GRAY))
         val internal = loadInternal(stack)
         val filled = internal.count { !it.isEmpty }
         if (filled == 0) {
-            tooltip.add(Component.translatable("tooltip.ic2_120.tool_box.empty").formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.translatable("tooltip.ic2_120.tool_box.empty").withStyle(ChatFormatting.GRAY))
             return
         }
         tooltip.add(
-            Component.translatable("tooltip.ic2_120.tool_box.summary", filled, CAPACITY).formatted(ChatFormatting.GRAY)
+            Component.translatable("tooltip.ic2_120.tool_box.summary", filled, CAPACITY).withStyle(ChatFormatting.GRAY)
         )
         for (s in internal) {
             if (s.isEmpty) continue
-            val line = Component.literal("· ").formatted(ChatFormatting.DARK_GRAY).append(s.name)
+            val line = Component.literal("· ").withStyle(ChatFormatting.DARK_GRAY).append(s.name)
             if (s.count > 1) {
-                line.append(Component.literal(" ×${s.count}").formatted(ChatFormatting.DARK_GRAY))
+                line.append(Component.literal(" ×${s.count}").withStyle(ChatFormatting.DARK_GRAY))
             }
             tooltip.add(line)
         }
@@ -465,30 +470,30 @@ class ToolBox : Item(Item.Settings().maxCount(1)) {
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val casing = BronzeCasing::class.instance()
             val chest = Items.CHEST
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, ToolBox::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, ToolBox::class.instance(), 1)
                 .pattern("BBB")
                 .pattern("BCB")
                 .pattern("BBB")
-                .input('B', casing)
-                .input('C', chest)
-                .criterion(hasItem(chest), conditionsFromItem(chest))
-                .criterion(hasItem(casing), conditionsFromItem(casing))
-                .offerTo(exporter, ToolBox::class.id())
+                .define('B', casing)
+                .define('C', chest)
+                .unlockedBy(getHasName(chest), has(chest))
+                .unlockedBy(getHasName(casing), has(casing))
+                .save(exporter, ToolBox::class.id())
         }
 
         internal fun loadInternal(stack: ItemStack): NonNullList<ItemStack> {
-            val list = NonNullList.ofSize(CAPACITY, ItemStack.EMPTY)
+            val list = NonNullList.withSize(CAPACITY, ItemStack.EMPTY)
             val root = stack.nbt ?: return list
-            if (!root.contains(NBT_KEY)) return list
+            if (!root.hasProperty(NBT_KEY)) return list
             val tag = root.getCompound(NBT_KEY)
-            ContainerHelper.readNbt(tag, list)
+            ContainerHelper.loadAllItems(tag, list)
             return list
         }
 
         internal fun saveInternal(stack: ItemStack, list: NonNullList<ItemStack>) {
             val nbt = stack.orCreateNbt
             val tag = CompoundTag()
-            ContainerHelper.writeNbt(tag, list)
+            ContainerHelper.saveAllItems(tag, list)
             nbt.put(NBT_KEY, tag)
         }
 
@@ -526,46 +531,46 @@ class ToolBox : Item(Item.Settings().maxCount(1)) {
 //已删除
 /** EU 电表 - 测量导线/机器 EU 流量 */
 // @ModItem(name = "meter", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class Meter : Item(Item.Settings().maxCount(1))
+class Meter : Item(Item.Properties().maxStackSize(1))
 
 /** 木龙头 - 从橡胶树原木湿面提取粘性树脂，寿命 10 次 */
 @ModItem(name = "treetap", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class Treetap : Item(Item.Settings().maxDamage(10)) {
+class Treetap : Item(Item.Properties().maxDamage(10)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, Treetap::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, Treetap::class.instance(), 1)
                 .pattern(" P ")
                 .pattern("PPP")
                 .pattern("P  ")
-                .input('P', ItemTags.PLANKS)
-                .criterion(hasItem(Items.OAK_PLANKS), conditionsFromItem(Items.OAK_PLANKS))
-                .offerTo(exporter, Treetap::class.id())
+                .define('P', ItemTags.PLANKS)
+                .unlockedBy(getHasName(Items.OAK_PLANKS), has(Items.OAK_PLANKS))
+                .save(exporter, Treetap::class.id())
         }
     }
 }
 
 /** 扳手 - 拆卸机器、旋转方块 */
 @ModItem(name = "wrench", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class Wrench : Item(Item.Settings().maxDamage(120)) {
+class Wrench : Item(Item.Properties().maxDamage(120)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, Wrench::class.instance(), 1)
+            val bronze = Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, Wrench::class.instance(), 1)
                 .pattern("B B")
                 .pattern("BBB")
                 .pattern(" B ")
-                .input('B', bronze)
-                .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
-                .offerTo(exporter, Wrench::class.id())
+                .define('B', bronze)
+                .unlockedBy(has(BronzeIngot::class.instance()), has(BronzeIngot::class.instance()))
+                .save(exporter, Wrench::class.id())
         }
     }
 }
 
 /** 遥控器 - 远程控制机器频率 */
 @ModItem(name = "frequency_transmitter", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class FrequencyTransmitter : Item(Item.Settings().maxCount(1)) {
+class FrequencyTransmitter : Item(Item.Properties().maxStackSize(1)) {
     companion object {
         private const val NBT_BIND_X = "BindX"
         private const val NBT_BIND_Y = "BindY"
@@ -578,18 +583,18 @@ class FrequencyTransmitter : Item(Item.Settings().maxCount(1)) {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             if (cable == Items.AIR || circuit == Items.AIR) return
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, FrequencyTransmitter::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, FrequencyTransmitter::class.instance(), 1)
                 .pattern("   ")
                 .pattern(" C ")
                 .pattern(" E ")
-                .input('C', cable)
-                .input('E', circuit)
-                .criterion(hasItem(circuit), conditionsFromItem(circuit))
-                .offerTo(exporter, FrequencyTransmitter::class.id())
+                .define('C', cable)
+                .define('E', circuit)
+                .unlockedBy(getHasName(circuit), has(circuit))
+                .save(exporter, FrequencyTransmitter::class.id())
         }
     }
 
-    override fun useOnBlock(context: UseOnContext): net.minecraft.world.InteractionResult {
+    override fun useOn(context: UseOnContext): InteractionResult.minecraft.world.InteractionResult {
         val world = context.world
         val pos = context.blockPos
         val stack = context.stack
@@ -602,34 +607,34 @@ class FrequencyTransmitter : Item(Item.Settings().maxCount(1)) {
         val nbt = stack.orCreateNbt
         val dim = world.registryKey.value.toString()
 
-        if (player.isSneaking || !nbt.getBoolean(NBT_HAS_BIND)) {
+        if (player.isCrouching || !nbt.getBoolean(NBT_HAS_BIND)) {
             nbt.putBoolean(NBT_HAS_BIND, true)
             nbt.putInt(NBT_BIND_X, pos.x)
             nbt.putInt(NBT_BIND_Y, pos.y)
             nbt.putInt(NBT_BIND_Z, pos.z)
             nbt.putString(NBT_BIND_DIM, dim)
             if (!world.isClient) {
-                player.sendMessage(Component.literal("已记录第一台传送机: ${pos.x}, ${pos.y}, ${pos.z}"), true)
+                player.displayClientMessage(Component.literal("已记录第一台传送机: ${pos.x}, ${pos.y}, ${pos.z}", false), true)
             }
             return net.minecraft.world.InteractionResult.SUCCESS
         }
 
         val bindDim = nbt.getString(NBT_BIND_DIM)
         if (bindDim != dim) {
-            if (!world.isClient) player.sendMessage(Component.literal("维度不一致，无法绑定。"), true)
+            if (!world.isClient) player.displayClientMessage(Component.literal("维度不一致，无法绑定。", false), true)
             return net.minecraft.world.InteractionResult.SUCCESS
         }
 
         val bindPos = BlockPos(nbt.getInt(NBT_BIND_X), nbt.getInt(NBT_BIND_Y), nbt.getInt(NBT_BIND_Z))
         if (bindPos == pos) {
-            if (!world.isClient) player.sendMessage(Component.literal("不能将传送机绑定到自身。"), true)
+            if (!world.isClient) player.displayClientMessage(Component.literal("不能将传送机绑定到自身。", false), true)
             return net.minecraft.world.InteractionResult.SUCCESS
         }
 
         val be = world.getBlockEntity(pos) as? TeleporterBlockEntity
         val targetBe = world.getBlockEntity(bindPos) as? TeleporterBlockEntity
         if (be == null || targetBe == null) {
-            if (!world.isClient) player.sendMessage(Component.literal("目标坐标不是有效的传送机。"), true)
+            if (!world.isClient) player.displayClientMessage(Component.literal("目标坐标不是有效的传送机。", false), true)
             return net.minecraft.world.InteractionResult.SUCCESS
         }
 
@@ -651,14 +656,14 @@ class FrequencyTransmitter : Item(Item.Settings().maxCount(1)) {
         tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val nbt = stack.nbt
         val hasBind = nbt?.getBoolean(NBT_HAS_BIND) == true
         if (!hasBind) {
             tooltip.add(Component.literal("未绑定传送机"))
             tooltip.add(
                 Component.literal("右击传送机记录第一台，再右击另一台完成双向绑定")
-                    .formatted(net.minecraft.ChatFormatting.DARK_GRAY)
+                    .withStyle(net.minecraft.ChatFormatting.DARK_GRAY)
             )
             return
         }
@@ -667,16 +672,16 @@ class FrequencyTransmitter : Item(Item.Settings().maxCount(1)) {
         val y = nbt.getInt(NBT_BIND_Y)
         val z = nbt.getInt(NBT_BIND_Z)
         val dim = nbt.getString(NBT_BIND_DIM).ifBlank { "unknown" }
-        tooltip.add(Component.literal("已记录第一台传送机").formatted(net.minecraft.ChatFormatting.AQUA))
+        tooltip.add(Component.literal("已记录第一台传送机").withStyle(net.minecraft.ChatFormatting.AQUA))
         tooltip.add(Component.literal("坐标: $x, $y, $z"))
-        tooltip.add(Component.literal("维度: $dim").formatted(net.minecraft.ChatFormatting.DARK_GRAY))
+        tooltip.add(Component.literal("维度: $dim").withStyle(net.minecraft.ChatFormatting.DARK_GRAY))
     }
 }
 
 /** 链锯 - 电动伐木工具（等级 1，30k EU） */
 @ModItem(name = "chainsaw", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:axes", "minecraft:swords"])
 class Chainsaw : ElectricMiningDrillItem(
-    Item.Settings(),
+    Item.Properties(),
     miningToolFactories = listOf({ ItemStack(Items.DIAMOND_AXE) }, { ItemStack(Items.DIAMOND_SWORD) }),
     baseEnergyPerBlock = 100L
 ) {
@@ -740,15 +745,15 @@ class Chainsaw : ElectricMiningDrillItem(
     override fun getMiningSpeedMultiplier(stack: ItemStack, state: BlockState): Float {
         if (!hasEnoughEnergyForMining(stack)) return 1.0f
         return when {
-            state.isOf(Blocks.COBWEB) || state.isIn(BlockTags.LEAVES) -> 15.0f
+            state.`is`(Blocks.COBWEB) || state.isIn(BlockTags.LEAVES) -> 15.0f
             state.isIn(BlockTags.WOOL) -> 5.0f
-            state.isOf(Blocks.VINE) || state.isOf(Blocks.GLOW_LICHEN) -> 2.0f
+            state.`is`(Blocks.VINE) || state.`is`(Blocks.GLOW_LICHEN) -> 2.0f
             else -> super.getMiningSpeedMultiplier(stack, state)
         }
     }
 
     override fun isSuitableFor(state: BlockState): Boolean =
-        state.isOf(Blocks.COBWEB) || state.isOf(Blocks.REDSTONE_WIRE) || state.isOf(Blocks.TRIPWIRE) ||
+        state.`is`(Blocks.COBWEB) || state.`is`(Blocks.REDSTONE_WIRE) || state.`is`(Blocks.TRIPWIRE) ||
             super.isSuitableFor(state)
 
     override fun postHit(stack: ItemStack, target: LivingEntity, attacker: LivingEntity): Boolean {
@@ -765,13 +770,13 @@ class Chainsaw : ElectricMiningDrillItem(
         tooltip: MutableList<net.minecraft.network.chat.Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 
-    override fun isItemBarVisible(stack: ItemStack) = true
-    override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
-    override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
+    override fun isBarVisible(stack: ItemStack) = true
+    override fun getBarWidth(stack: ItemStack) = getEnergyBarStep(stack)
+    override fun getBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 }
 
 abstract class ElectricMiningDrillItem(
@@ -779,7 +784,7 @@ abstract class ElectricMiningDrillItem(
     private val miningToolFactories: List<() -> ItemStack>,
     private val baseEnergyPerBlock: Long,
     private val miningEfficiency: Float? = null
-) : Item(settings.maxCount(1)), IElectricTool {
+) : Item(settings.maxStackSize(1)), IElectricTool {
 
     protected open fun getEnergyCostPerBlock(stack: ItemStack): Long = baseEnergyPerBlock
 
@@ -823,7 +828,7 @@ abstract class ElectricMiningDrillItem(
 /** 钻石钻头 - 电动采矿工具（等级 1，10k EU） */
 @ModItem(name = "diamond_drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:pickaxes", "minecraft:shovels"])
 class DiamondDrill : ElectricMiningDrillItem(
-    Item.Settings(),
+    Item.Properties(),
     miningToolFactories = listOf({ ItemStack(Items.DIAMOND_PICKAXE) }, { ItemStack(Items.DIAMOND_SHOVEL) }),
     baseEnergyPerBlock = 80L,
     miningEfficiency = 16.0f
@@ -833,11 +838,11 @@ class DiamondDrill : ElectricMiningDrillItem(
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val diamond = Items.DIAMOND
             val drill = Drill::class.instance()
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, DiamondDrill::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, DiamondDrill::class.instance(), 1)
                 .pattern("   ").pattern(" D ").pattern("DVD")
-                .input('D', diamond).input('V', drill)
-                .criterion(hasItem(drill), conditionsFromItem(drill))
-                .offerTo(exporter, DiamondDrill::class.id())
+                .define('D', diamond).define('V', drill)
+                .unlockedBy(getHasName(drill), has(drill))
+                .save(exporter, DiamondDrill::class.id())
         }
     }
 
@@ -852,19 +857,19 @@ class DiamondDrill : ElectricMiningDrillItem(
         tooltip: MutableList<net.minecraft.network.chat.Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 
-    override fun isItemBarVisible(stack: ItemStack) = true
-    override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
-    override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
+    override fun isBarVisible(stack: ItemStack) = true
+    override fun getBarWidth(stack: ItemStack) = getEnergyBarStep(stack)
+    override fun getBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 }
 
 /** 采矿钻头 - 电动采矿工具（等级 1，10k EU） */
 @ModItem(name = "drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:pickaxes", "minecraft:shovels"])
 class Drill : ElectricMiningDrillItem(
-    Item.Settings(),
+    Item.Properties(),
     miningToolFactories = listOf({ ItemStack(Items.IRON_PICKAXE) }, { ItemStack(Items.IRON_SHOVEL) }),
     baseEnergyPerBlock = 50L,
     miningEfficiency = 8.0f
@@ -899,18 +904,18 @@ class Drill : ElectricMiningDrillItem(
         tooltip: MutableList<net.minecraft.network.chat.Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 
-    override fun isItemBarVisible(stack: ItemStack) = true
-    override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
-    override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
+    override fun isBarVisible(stack: ItemStack) = true
+    override fun getBarWidth(stack: ItemStack) = getEnergyBarStep(stack)
+    override fun getBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 }
 
 /** 电动树脂提取器 - 从橡胶木提取树脂（等级 1，10k EU） */
 @ModItem(name = "electric_treetap", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
-class ElectricTreetap : Item(Item.Settings().maxCount(1)), IElectricTool {
+class ElectricTreetap : Item(Item.Properties().maxStackSize(1)), IElectricTool {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -940,18 +945,18 @@ class ElectricTreetap : Item(Item.Settings().maxCount(1)), IElectricTool {
         tooltip: MutableList<net.minecraft.network.chat.Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 
-    override fun isItemBarVisible(stack: ItemStack) = true
-    override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
-    override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
+    override fun isBarVisible(stack: ItemStack) = true
+    override fun getBarWidth(stack: ItemStack) = getEnergyBarStep(stack)
+    override fun getBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 }
 
 /** 电动扳手 - 拆卸机器、旋转方块（等级 1，10k EU） */
 @ModItem(name = "electric_wrench", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
-class ElectricWrench : Item(Item.Settings().maxCount(1)), IElectricTool {
+class ElectricWrench : Item(Item.Properties().maxStackSize(1)), IElectricTool {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -982,19 +987,19 @@ class ElectricWrench : Item(Item.Settings().maxCount(1)), IElectricTool {
         tooltip: MutableList<net.minecraft.network.chat.Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 
-    override fun isItemBarVisible(stack: ItemStack) = true
-    override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
-    override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
+    override fun isBarVisible(stack: ItemStack) = true
+    override fun getBarWidth(stack: ItemStack) = getEnergyBarStep(stack)
+    override fun getBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 }
 
 /** 铱钻头 - 高级电动采矿工具（等级 3，300k EU），模式键 + 右键切换精准采集 */
 @ModItem(name = "iridium_drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:pickaxes", "minecraft:shovels"])
 class IridiumDrill : ElectricMiningDrillItem(
-    Item.Settings(),
+    Item.Properties(),
     miningToolFactories = listOf({ ItemStack(Items.NETHERITE_PICKAXE) }, { ItemStack(Items.NETHERITE_SHOVEL) }),
     baseEnergyPerBlock = 800L,
     miningEfficiency = 24.0f
@@ -1012,11 +1017,11 @@ class IridiumDrill : ElectricMiningDrillItem(
             val reinforcedIridium = IridiumPlate::class.instance()
             val diamondDrill = DiamondDrill::class.instance()
             val energyCrystal = EnergyCrystalItem::class.instance()
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, IridiumDrill::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, IridiumDrill::class.instance(), 1)
                 .pattern(" R ").pattern("RDR").pattern(" E ")
-                .input('R', reinforcedIridium).input('D', diamondDrill).input('E', energyCrystal)
-                .criterion(hasItem(diamondDrill), conditionsFromItem(diamondDrill))
-                .offerTo(exporter, IridiumDrill::class.id())
+                .define('R', reinforcedIridium).define('D', diamondDrill).define('E', energyCrystal)
+                .unlockedBy(getHasName(diamondDrill), has(diamondDrill))
+                .save(exporter, IridiumDrill::class.id())
         }
 
         private const val SILK_TOUCH_KEY = "SilkTouchEnabled"
@@ -1047,7 +1052,7 @@ class IridiumDrill : ElectricMiningDrillItem(
         }
 
         fun syncVirtualEnchantments(stack: ItemStack, hasEnergyForCurrentMode: Boolean) {
-            val enchants = EnchantmentHelper.get(stack).toMutableMap()
+            val enchants = EnchantmentHelper.getValue(stack).toMutableMap()
             enchants.remove(Enchantments.SILK_TOUCH)
             enchants.remove(Enchantments.FORTUNE)
             enchants.remove(Enchantments.EFFICIENCY)
@@ -1080,13 +1085,13 @@ class IridiumDrill : ElectricMiningDrillItem(
         tooltip: MutableList<net.minecraft.network.chat.Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
     }
 
-    override fun isItemBarVisible(stack: ItemStack) = true
-    override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
-    override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
+    override fun isBarVisible(stack: ItemStack) = true
+    override fun getBarWidth(stack: ItemStack) = getEnergyBarStep(stack)
+    override fun getBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 }
 
 private object NanoSaberMaterial : Tier {
@@ -1107,7 +1112,7 @@ class NanoSaber : SwordItem(
     NanoSaberMaterial,
     0,
     -2.4f,
-    Item.Settings().maxCount(1)
+    Item.Properties().maxStackSize(1)
 ), IElectricTool {
 
     companion object {
@@ -1201,16 +1206,16 @@ class NanoSaber : SwordItem(
             val alloy = Alloy::class.instance()
             val plate = CarbonPlate::class.instance()
             val crystal = EnergyCrystalItem::class.instance()
-            ShapedRecipeBuilder.create(RecipeCategory.COMBAT, NanoSaber::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.COMBAT, NanoSaber::class.instance(), 1)
                 .pattern("GA ")
                 .pattern("GA ")
                 .pattern("CEC")
-                .input('G', glow)
-                .input('A', alloy)
-                .input('C', plate)
-                .input('E', crystal)
-                .criterion(hasItem(crystal), conditionsFromItem(crystal))
-                .offerTo(exporter, NanoSaber::class.id())
+                .define('G', glow)
+                .define('A', alloy)
+                .define('C', plate)
+                .define('E', crystal)
+                .unlockedBy(getHasName(crystal), has(crystal))
+                .save(exporter, NanoSaber::class.id())
         }
     }
 
@@ -1260,7 +1265,7 @@ class NanoSaber : SwordItem(
     }
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getStackInHand(hand)
+        val stack = user.getItemInHand(hand)
         if (!world.isClient) {
             // 关闭前先把待机累计扣了
             if (isActive(stack)) {
@@ -1338,29 +1343,29 @@ class NanoSaber : SwordItem(
         tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
         if (isActive(stack)) {
             val minutes = getEstimatedMinutes(stack)
             tooltip.add(Component.translatable("tooltip.ic2_120.nano_saber.est_time", minutes)
-                .formatted(net.minecraft.ChatFormatting.GRAY))
+                .withStyle(net.minecraft.ChatFormatting.GRAY))
         }
     }
 
-    override fun isItemBarVisible(stack: ItemStack) = true
-    override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
-    override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
+    override fun isBarVisible(stack: ItemStack) = true
+    override fun getBarWidth(stack: ItemStack) = getEnergyBarStep(stack)
+    override fun getBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 }
 
 /** 拟态板 - 伪装方块外观 */
 @ModItem(name = "obscurator", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class Obscurator : Item(Item.Settings().maxCount(1))
+class Obscurator : Item(Item.Properties().maxStackSize(1))
 
 /** 风力计 - 测量风力，客户端本地计算并输出至聊天栏 */
 @ModItem(name = "wind_meter", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class WindMeter : Item(Item.Settings().maxCount(1)) {
+class WindMeter : Item(Item.Properties().maxStackSize(1)) {
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getStackInHand(hand)
+        val stack = user.getItemInHand(hand)
         if (world.isClient) {
             clientOutput?.invoke(world, user)
         }

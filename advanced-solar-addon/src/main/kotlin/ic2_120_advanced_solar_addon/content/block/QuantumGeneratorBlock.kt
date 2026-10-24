@@ -1,5 +1,6 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import net.minecraft.core.HolderLookup
 import ic2_120_advanced_solar_addon.content.sync.QuantumGeneratorSync
 import ic2_120_advanced_solar_addon.content.screen.QuantumGeneratorScreenHandler
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -19,7 +20,7 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.nbt.CompoundTag
@@ -45,7 +46,7 @@ import net.minecraft.world.level.Level
 @ModBlock(name = "quantum_generator", registerItem = true, tab = CreativeTab.IC2_SOLAR, group = "machine")
 class QuantumGeneratorBlock : MachineBlock() {
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         QuantumGeneratorBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
@@ -54,40 +55,28 @@ class QuantumGeneratorBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, QuantumGeneratorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
-
-    override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): MenuProvider? {
-        val be = world.getBlockEntity(pos)
-        return be as? MenuProvider
-    }
+        else BlockEntityType.validateTicker(world, type, QuantumGeneratorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Deprecated("Override without InteractionHand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            createScreenHandlerFactory(state, world, pos)?.let { factory ->
-                player.openHandledScreen(factory)
+            getMenuProvider(state, world, pos)?.let { factory ->
+                player.openMenu(factory)
             }
         }
         return InteractionResult.SUCCESS
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(ACTIVE)
     }
 
     override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
-        super.getPlacementState(ctx)?.with(ACTIVE, false)
+        super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     companion object {
-        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+        val ACTIVE: BooleanProperty = BooleanProperty.create("active")
     }
 }
 
@@ -115,7 +104,7 @@ class QuantumGeneratorBlockEntity(
     val sync = QuantumGeneratorSync(
         schema = syncedData,
         tier = DEFAULT_VARIABLE,
-        getFacing = { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        getFacing = { world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
 
@@ -132,14 +121,14 @@ class QuantumGeneratorBlockEntity(
     fun addEnergyMac(delta: Int) {
         // 允许 energyMac 调到 VARIABLE_MAX 对应上限，实际输出由 tick() 中按当前 tier 钳制
         energyMac = (energyMac + delta).coerceIn(1, EnergyTier.euPerTickFromTier(VARIABLE_MAX).toInt())
-        markDirty()
+        setChanged()
     }
 
     fun applyVariable(value: Int) {
         variable = value.coerceIn(VARIABLE_MIN, VARIABLE_MAX)
         // 切换 tier 时立即重新钳制 energyMac
         energyMac = energyMac.coerceIn(1, EnergyTier.euPerTickFromTier(variable).toInt())
-        markDirty()
+        setChanged()
     }
 
     fun tick(world: Level, pos: BlockPos, state: BlockState) {
@@ -176,7 +165,7 @@ class QuantumGeneratorBlockEntity(
 
         sync.syncCurrentTickFlow()
         setActiveState(world, pos, state, isActive)
-        markDirty()
+        setChanged()
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120_advanced_solar_addon.quantum_generator")
@@ -189,8 +178,8 @@ class QuantumGeneratorBlockEntity(
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         energyMac = if (nbt.contains("energyMac"))
             nbt.getInt("energyMac").coerceIn(1, EnergyTier.euPerTickFromTier(VARIABLE_MAX).toInt()) else DEFAULT_ENERGY_MAC
         variable = if (nbt.contains("variable"))
@@ -200,8 +189,8 @@ class QuantumGeneratorBlockEntity(
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putInt("energyMac", energyMac)
         nbt.putInt("variable", variable)
         nbt.putBoolean("active", isActive)

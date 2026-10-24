@@ -1,5 +1,12 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+import ic2_120.compat.world
+
 import ic2_120.config.Ic2Config
 import ic2_120.content.entity.LaserMode
 import ic2_120.content.entity.LaserProjectileEntity
@@ -11,8 +18,6 @@ import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Items
@@ -45,7 +50,7 @@ import ic2_120.getCustomData
  */
 @ModItem(name = "mining_laser", tab = CreativeTab.IC2_TOOLS)
 class MiningLaserItem : Item(
-    Item.Settings().maxCount(1)
+    Item.Properties().maxStackSize(1)
 ), IElectricTool {
 
     companion object {
@@ -79,16 +84,16 @@ class MiningLaserItem : Item(
             val crystal = EnergyCrystalItem::class.instance()
             val advCircuit = AdvancedCircuit::class.instance()
             if (alloy == Items.AIR || crystal == Items.AIR || advCircuit == Items.AIR) return
-            ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, MiningLaserItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, MiningLaserItem::class.instance(), 1)
                 .pattern("REE")
                 .pattern("AAC")
                 .pattern(" AA")
-                .input('R', Items.REDSTONE)
-                .input('E', crystal)
-                .input('A', alloy)
-                .input('C', advCircuit)
-                .criterion(hasItem(advCircuit), conditionsFromItem(advCircuit))
-                .offerTo(exporter, MiningLaserItem::class.id())
+                .define('R', Items.REDSTONE)
+                .define('E', crystal)
+                .define('A', alloy)
+                .define('C', advCircuit)
+                .unlockedBy(getHasName(advCircuit), has(advCircuit))
+                .save(exporter, MiningLaserItem::class.id())
         }
     }
 
@@ -114,7 +119,7 @@ class MiningLaserItem : Item(
         val hadBefore = hadMiningLaserInMainLastTick.getOrDefault(uuid, false)
         if (!hadBefore) {
             val mode = getMode(stack)
-            player.sendMessage(Component.translatable(mode.translationKey), true)
+            player.displayClientMessage(Component.translatable(mode.translationKey, false), true)
         }
         hadMiningLaserInMainLastTick[uuid] = true
     }
@@ -131,12 +136,12 @@ class MiningLaserItem : Item(
     /**
      * 右键点击方块时不触发方块交互，仍发射激光。
      */
-    override fun useOnBlock(context: UseOnContext): InteractionResult {
+    override fun useOn(context: UseOnContext): InteractionResult {
         return InteractionResult.PASS
     }
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getStackInHand(hand)
+        val stack = user.getItemInHand(hand)
 
         // 客户端在按住模式键切模式时仍可能发来 use；与切模式包同 tick 的这一次不发射（见 [MiningLaserServerSuppress]）
         if (!world.isClient) {
@@ -210,7 +215,7 @@ class MiningLaserItem : Item(
     ) {
         val projectile = LaserProjectileEntity(ModEntities.LASER_PROJECTILE, world)
         projectile.init(owner, pitch, yaw, laserMode, spreadOffset)
-        world.spawnEntity(projectile)
+        world.addFreshEntity(projectile)
     }
 
     // ========== Tooltip ==========
@@ -226,9 +231,9 @@ class MiningLaserItem : Item(
         appendEnergyTooltip(stack, tooltip)
     }
 
-    override fun isItemBarVisible(stack: ItemStack) = true
-    override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
-    override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
+    override fun isBarVisible(stack: ItemStack) = true
+    override fun getBarWidth(stack: ItemStack) = getEnergyBarStep(stack)
+    override fun getBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 
     override fun postMine(
         stack: ItemStack,

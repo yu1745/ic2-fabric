@@ -1,5 +1,7 @@
 package ic2_120.content.item
 
+import ic2_120.compat.isClient
+
 import ic2_120.content.network.ScannerResultPacket
 import ic2_120.content.screen.ScannerScreenHandler
 import ic2_120.content.item.energy.IElectricTool
@@ -12,7 +14,7 @@ import ic2_120.registry.type
 import net.minecraft.data.recipes.RecipeCategory
 import io.netty.buffer.Unpooled
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
@@ -58,7 +60,7 @@ enum class ScannerType(
  * 使用方式：必须先在储能箱/高级储能箱中充电。右键打开 GUI，点击"扫描"。
  */
 @ModItem(name = "scanner", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
+class OdScannerItem : Item(Item.Properties().maxStackSize(1)), IElectricTool {
 
     override val tier: Int get() = 1
     override val maxCapacity: Long get() = ScannerType.OD.energyCapacity
@@ -73,16 +75,16 @@ class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
         tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
         val uses = getUsesRemaining(stack)
-        tooltip.add(Component.literal("剩余使用次数: $uses").formatted(net.minecraft.ChatFormatting.GRAY))
-        tooltip.add(Component.literal("扫描范围: ${ScannerType.OD.scanRadius * 2 + 1}×${ScannerType.OD.scanRadius * 2 + 1}").formatted(net.minecraft.ChatFormatting.GRAY))
+        tooltip.add(Component.literal("剩余使用次数: $uses").withStyle(net.minecraft.ChatFormatting.GRAY))
+        tooltip.add(Component.literal("扫描范围: ${ScannerType.OD.scanRadius * 2 + 1}×${ScannerType.OD.scanRadius * 2 + 1}").withStyle(net.minecraft.ChatFormatting.GRAY))
     }
 
-    override fun isItemBarVisible(stack: ItemStack): Boolean = true
-    override fun getItemBarStep(stack: ItemStack): Int = getEnergyBarStep(stack)
-    override fun getItemBarColor(stack: ItemStack): Int = getEnergyBarColor(stack)
+    override fun isBarVisible(stack: ItemStack): Boolean = true
+    override fun getBarWidth(stack: ItemStack): Int = getEnergyBarStep(stack)
+    override fun getBarColor(stack: ItemStack): Int = getEnergyBarColor(stack)
 
     /**
      * 右键：打开扫描仪 GUI。
@@ -98,18 +100,18 @@ class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
          * 打开扫描仪 GUI（OD 与 OV 共用）。
          */
         fun openScannerScreen(world: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-            val stack = player.getStackInHand(hand)
+            val stack = player.getItemInHand(hand)
             if (world.isClient) return InteractionResultHolder.pass(stack)
 
-            player.openHandledScreen(object : ExtendedScreenHandlerFactory {
+            player.openMenu(object : ExtendedScreenHandlerFactory {
                 override fun getDisplayName(): Component {
                     // OD/OV 共用 GUI：标题必须跟随实际扫描仪类型，不能写死 OD 的 key
-                    val t = getScannerType(player.getStackInHand(hand))
+                    val t = getScannerType(player.getItemInHand(hand))
                     val key = if (t == ScannerType.OV) "item.ic2_120.advanced_scanner" else "item.ic2_120.scanner"
                     return Component.translatable(key)
                 }
                 override fun writeScreenOpeningData(serverPlayer: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
-                    val s = serverPlayer.getStackInHand(hand)
+                    val s = serverPlayer.getItemInHand(hand)
                     val t = getScannerType(s)
                     buf.writeInt(IElectricTool.getEnergy(s).toInt().coerceAtMost(Int.MAX_VALUE))
                     buf.writeInt(t.energyCapacity.toInt().coerceAtMost(Int.MAX_VALUE))
@@ -117,7 +119,7 @@ class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
                     buf.writeVarInt(t.maxUses)
                 }
                 override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player): net.minecraft.world.inventory.AbstractContainerMenu {
-                    val s = player.getStackInHand(hand)
+                    val s = player.getItemInHand(hand)
                     val t = getScannerType(s)
                     val buf = FriendlyByteBuf(Unpooled.buffer())
                     buf.writeInt(IElectricTool.getEnergy(s).toInt().coerceAtMost(Int.MAX_VALUE))
@@ -166,22 +168,22 @@ class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
             val insulatedCopper = ic2_120.content.block.cables.InsulatedCopperCableBlock::class.item()
             val glowstone = net.minecraft.world.item.Items.GLOWSTONE_DUST
 
-            net.minecraft.data.recipes.ShapedRecipeBuilder.create(
+            net.minecraft.data.recipes.ShapedRecipeBuilder.shaped(
                 RecipeCategory.EQUIPMENT,
                 OdScannerItem::class.instance(),
                 1
             )
                 .pattern("gCg").pattern("ibi").pattern("ccc")
-                .input('g', glowstone)
-                .input('C', circuit)
-                .input('i', insulatedCopper)
-                .input('b', battery)
-                .input('c', insulatedCopper)
-                .criterion(
-                    net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem(battery),
-                    net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem(battery)
+                .define('g', glowstone)
+                .define('C', circuit)
+                .define('i', insulatedCopper)
+                .define('b', battery)
+                .define('c', insulatedCopper)
+                .unlockedBy(
+                    net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.has(battery),
+                    net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.has(battery)
                 )
-                .offerTo(exporter, OdScannerItem::class.id())
+                .save(exporter, OdScannerItem::class.id())
         }
     }
 }
@@ -190,7 +192,7 @@ class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
  * OV 扫描仪 - 矿石价值扫描器，能量等级 2，扫描范围更大。
  */
 @ModItem(name = "advanced_scanner", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class AdvancedScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
+class AdvancedScannerItem : Item(Item.Properties().maxStackSize(1)), IElectricTool {
 
     override val tier: Int get() = 3
     override val maxCapacity: Long get() = ScannerType.OV.energyCapacity
@@ -205,17 +207,17 @@ class AdvancedScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
         tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
         val uses = OdScannerItem.getUsesRemaining(stack)
-        tooltip.add(Component.literal("剩余使用次数: $uses").formatted(net.minecraft.ChatFormatting.GRAY))
-        tooltip.add(Component.literal("扫描范围: ${ScannerType.OV.scanRadius * 2 + 1}×${ScannerType.OV.scanRadius * 2 + 1}").formatted(net.minecraft.ChatFormatting.GRAY))
-        tooltip.add(Component.translatable("item.ic2_120.advanced_scanner.tooltip").formatted(net.minecraft.ChatFormatting.YELLOW))
+        tooltip.add(Component.literal("剩余使用次数: $uses").withStyle(net.minecraft.ChatFormatting.GRAY))
+        tooltip.add(Component.literal("扫描范围: ${ScannerType.OV.scanRadius * 2 + 1}×${ScannerType.OV.scanRadius * 2 + 1}").withStyle(net.minecraft.ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("item.ic2_120.advanced_scanner.tooltip").withStyle(net.minecraft.ChatFormatting.YELLOW))
     }
 
-    override fun isItemBarVisible(stack: ItemStack): Boolean = true
-    override fun getItemBarStep(stack: ItemStack): Int = getEnergyBarStep(stack)
-    override fun getItemBarColor(stack: ItemStack): Int = getEnergyBarColor(stack)
+    override fun isBarVisible(stack: ItemStack): Boolean = true
+    override fun getBarWidth(stack: ItemStack): Int = getEnergyBarStep(stack)
+    override fun getBarColor(stack: ItemStack): Int = getEnergyBarColor(stack)
 
     /**
      * 右键：打开扫描仪 GUI。
@@ -242,22 +244,22 @@ class AdvancedScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
             val insulatedGold = ic2_120.content.block.cables.InsulatedGoldCableBlock::class.item()
             val odScanner = OdScannerItem::class.instance()
 
-            net.minecraft.data.recipes.ShapedRecipeBuilder.create(
+            net.minecraft.data.recipes.ShapedRecipeBuilder.shaped(
                 RecipeCategory.EQUIPMENT,
                 AdvancedScannerItem::class.instance(),
                 1
             )
                 .pattern("gCg").pattern("gAg").pattern("iIi")
-                .input('g', glowstone)
-                .input('C', circuitAdvanced)
-                .input('A', energyCrystal)
-                .input('i', insulatedGold)
-                .input('I', odScanner)
-                .criterion(
-                    net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem(odScanner),
-                    net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem(odScanner)
+                .define('g', glowstone)
+                .define('C', circuitAdvanced)
+                .define('A', energyCrystal)
+                .define('i', insulatedGold)
+                .define('I', odScanner)
+                .unlockedBy(
+                    net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.has(odScanner),
+                    net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.has(odScanner)
                 )
-                .offerTo(exporter, AdvancedScannerItem::class.id())
+                .save(exporter, AdvancedScannerItem::class.id())
         }
     }
 }

@@ -31,14 +31,14 @@ private object CondensatorRepairRecipe {
     fun generate(exporter: RecipeOutput, condensator: Item, repairItem: Item, repairAmount: Int) {
         // 使用特殊配方类型，这里暂时用 ShapelessRecipeBuilder
         // 注意：这只是占位，实际修复逻辑需要在 CondensatorItem 中实现
-        ShapelessRecipeBuilder.create(RecipeCategory.MISC, condensator, 1)
-            .input(condensator)
-            .input(repairItem)
-            .criterion(
-                FabricRecipeProvider.hasItem(condensator),
-                FabricRecipeProvider.conditionsFromItem(condensator)
+        ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, condensator, 1)
+            .requires(condensator)
+            .requires(repairItem)
+            .unlockedBy(
+                FabricRecipeProvider.has(condensator),
+                FabricRecipeProvider.has(condensator)
             )
-            .offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "${condensator.toString().replace(':','_')}_repair_with_${repairItem.toString().replace(':','_')}"))
+            .save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "${condensator.toString().replace(':','_')}_repair_with_${repairItem.toString().replace(':','_')}"))
     }
 }
 
@@ -46,7 +46,7 @@ private object CondensatorRepairRecipe {
  * 冷凝器：可存储热量但不主动散热，耐久减少不可逆，只能在工作台修复。
  */
 abstract class CondensatorItem(
-    settings: Item.Settings,
+    settings: Item.Properties,
     maxHeat: Int
 ) : AbstractDamageableReactorComponent(settings, maxHeat) {
 
@@ -113,7 +113,7 @@ abstract class CondensatorItem(
  * 作为被动热缓冲，供燃料棒优先传热。
  */
 abstract class ReactorCoolantCellBase(
-    settings: Item.Settings,
+    settings: Item.Properties,
     maxHeat: Int
 ) : AbstractDamageableReactorComponent(settings, maxHeat) {
 
@@ -162,62 +162,62 @@ abstract class ReactorCoolantCellBase(
 }
 
 @ModItem(name = "reactor_coolant_cell", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ReactorCoolantCellItem : ReactorCoolantCellBase(Item.Settings(), 10_000) {
+class ReactorCoolantCellItem : ReactorCoolantCellBase(Item.Properties(), 10_000) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 十字形配方：中间冷却液单元，上下左右4个锡板
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorCoolantCellItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorCoolantCellItem::class.instance(), 1)
                 .pattern(" T ")
                 .pattern("TCT")
                 .pattern(" T ")
-                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
-                .input('C', CoolantCell::class.instance())
-                .criterion(FabricRecipeProvider.hasItem(TinPlate::class.instance()), FabricRecipeProvider.conditionsFromItem(TinPlate::class.instance()))
-                .offerTo(exporter)
+                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('C', CoolantCell::class.instance())
+                .unlockedBy(FabricRecipeProvider.has(TinPlate::class.instance()), FabricRecipeProvider.has(TinPlate::class.instance()))
+                .save(exporter)
         }
     }
 }
 
 @ModItem(name = "triple_reactor_coolant_cell", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class TripleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Settings(), 30_000) {
+class TripleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Properties(), 30_000) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 中间行3个10k，上下两行6个锡板
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, TripleReactorCoolantCellItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, TripleReactorCoolantCellItem::class.instance(), 1)
                 .pattern("TTT")
                 .pattern("CCC")
                 .pattern("TTT")
-                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
-                .input('C', ReactorCoolantCellItem::class.instance())
-                .criterion(FabricRecipeProvider.hasItem(ReactorCoolantCellItem::class.instance()), FabricRecipeProvider.conditionsFromItem(ReactorCoolantCellItem::class.instance()))
-                .offerTo(exporter)
+                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('C', ReactorCoolantCellItem::class.instance())
+                .unlockedBy(FabricRecipeProvider.has(ReactorCoolantCellItem::class.instance()), FabricRecipeProvider.has(ReactorCoolantCellItem::class.instance()))
+                .save(exporter)
         }
     }
 }
 
 @ModItem(name = "sextuple_reactor_coolant_cell", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class SextupleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Settings(), 60_000) {
+class SextupleReactorCoolantCellItem : ReactorCoolantCellBase(Item.Properties(), 60_000) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 上下两行6个锡板，中间行2个30k + 1个铁板
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, SextupleReactorCoolantCellItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SextupleReactorCoolantCellItem::class.instance(), 1)
                 .pattern("TTT")
                 .pattern("SIS")
                 .pattern("TTT")
-                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
-                .input('S', TripleReactorCoolantCellItem::class.instance())
-                .input('I', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                .criterion(FabricRecipeProvider.hasItem(TripleReactorCoolantCellItem::class.instance()), FabricRecipeProvider.conditionsFromItem(TripleReactorCoolantCellItem::class.instance()))
-                .offerTo(exporter)
+                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('S', TripleReactorCoolantCellItem::class.instance())
+                .define('I', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                .unlockedBy(FabricRecipeProvider.has(TripleReactorCoolantCellItem::class.instance()), FabricRecipeProvider.has(TripleReactorCoolantCellItem::class.instance()))
+                .save(exporter)
         }
     }
 }
 
 @ModItem(name = "reactor_plating", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ReactorPlatingItem : AbstractReactorComponent(Item.Settings()) {
+class ReactorPlatingItem : AbstractReactorComponent(Item.Properties()) {
     companion object {
         const val HEAT_BONUS = 500
         const val EXPLOSION_MODIFIER = 0.9f  // -10% 爆炸范围（累乘）
@@ -225,13 +225,13 @@ class ReactorPlatingItem : AbstractReactorComponent(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 1个铅板 + 1个高基合金（竖放）
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorPlatingItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorPlatingItem::class.instance(), 1)
                 .pattern("L")
                 .pattern("A")
-                .input('L', Ingredient.fromTag(ModTags.Compat.Items.PLATES_LEAD))
-                .input('A', Alloy::class.instance())
-                .criterion(FabricRecipeProvider.hasItem(LeadPlate::class.instance()), FabricRecipeProvider.conditionsFromItem(LeadPlate::class.instance()))
-                .offerTo(exporter)
+                .define('L', Ingredient.of(ModTags.Compat.Items.PLATES_LEAD))
+                .define('A', Alloy::class.instance())
+                .unlockedBy(FabricRecipeProvider.has(LeadPlate::class.instance()), FabricRecipeProvider.has(LeadPlate::class.instance()))
+                .save(exporter)
         }
     }
 
@@ -245,7 +245,7 @@ class ReactorPlatingItem : AbstractReactorComponent(Item.Settings()) {
 }
 
 @ModItem(name = "reactor_heat_plating", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ReactorHeatPlatingItem : AbstractReactorComponent(Item.Settings()) {
+class ReactorHeatPlatingItem : AbstractReactorComponent(Item.Properties()) {
     companion object {
         const val HEAT_BONUS = 1700
         const val EXPLOSION_MODIFIER = 0.99f  // -1% 爆炸范围（累乘）
@@ -253,14 +253,14 @@ class ReactorHeatPlatingItem : AbstractReactorComponent(Item.Settings()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 1个普通隔板（中间） + 8个铜板
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorHeatPlatingItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorHeatPlatingItem::class.instance(), 1)
                 .pattern("CCC")
                 .pattern("CPC")
                 .pattern("CCC")
-                .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
-                .input('P', ReactorPlatingItem::class.instance())
-                .criterion(FabricRecipeProvider.hasItem(ReactorPlatingItem::class.instance()), FabricRecipeProvider.conditionsFromItem(ReactorPlatingItem::class.instance()))
-                .offerTo(exporter)
+                .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
+                .define('P', ReactorPlatingItem::class.instance())
+                .unlockedBy(FabricRecipeProvider.has(ReactorPlatingItem::class.instance()), FabricRecipeProvider.has(ReactorPlatingItem::class.instance()))
+                .save(exporter)
         }
     }
 
@@ -274,103 +274,103 @@ class ReactorHeatPlatingItem : AbstractReactorComponent(Item.Settings()) {
 }
 
 @ModItem(name = "containment_reactor_plating", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ContainmentReactorPlatingItem : Item(Item.Settings()) {
+class ContainmentReactorPlatingItem : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val plating = ReactorPlatingItem::class.instance()
             val alloy = Alloy::class.instance()
             if (plating == Items.AIR || alloy == Items.AIR) return
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, ContainmentReactorPlatingItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ContainmentReactorPlatingItem::class.instance(), 1)
                 .pattern("   ")
                 .pattern("   ")
                 .pattern("PAA")
-                .input('P', plating)
-                .input('A', alloy)
-                .criterion(
-                    FabricRecipeProvider.hasItem(plating),
-                    FabricRecipeProvider.conditionsFromItem(plating)
+                .define('P', plating)
+                .define('A', alloy)
+                .unlockedBy(
+                    FabricRecipeProvider.has(plating),
+                    FabricRecipeProvider.has(plating)
                 )
-                .offerTo(exporter)
+                .save(exporter)
         }
     }
 }
 
 @ModItem(name = "neutron_reflector", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class NeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Settings(), 30_000) {
+class NeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Properties(), 30_000) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // TCT / CPC / TCT — 锡粉、煤粉、铜板
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, NeutronReflectorItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, NeutronReflectorItem::class.instance(), 1)
                 .pattern("TCT")
                 .pattern("CPC")
                 .pattern("TCT")
-                .input('T', Ingredient.fromTag(ModTags.Compat.Items.DUSTS_TIN))
-                .input('C', CoalDust::class.instance())
-                .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
-                .criterion(
-                    FabricRecipeProvider.hasItem(CopperPlate::class.instance()),
-                    FabricRecipeProvider.conditionsFromItem(CopperPlate::class.instance())
+                .define('T', Ingredient.of(ModTags.Compat.Items.DUSTS_TIN))
+                .define('C', CoalDust::class.instance())
+                .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
+                .unlockedBy(
+                    FabricRecipeProvider.has(CopperPlate::class.instance()),
+                    FabricRecipeProvider.has(CopperPlate::class.instance())
                 )
-                .offerTo(exporter)
+                .save(exporter)
         }
     }
 }
 
 @ModItem(name = "thick_neutron_reflector", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ThickNeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Settings(), 120_000) {
+class ThickNeutronReflectorItem : AbstractFiniteNeutronReflectorItem(Item.Properties(), 120_000) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 四角+中心铜板，四边中子反射板
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, ThickNeutronReflectorItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ThickNeutronReflectorItem::class.instance(), 1)
                 .pattern("CRC")
                 .pattern("RCR")
                 .pattern("CRC")
-                .input('C', Ingredient.fromTag(ModTags.Compat.Items.PLATES_COPPER))
-                .input('R', NeutronReflectorItem::class.instance())
-                .criterion(
-                    FabricRecipeProvider.hasItem(NeutronReflectorItem::class.instance()),
-                    FabricRecipeProvider.conditionsFromItem(NeutronReflectorItem::class.instance())
+                .define('C', Ingredient.of(ModTags.Compat.Items.PLATES_COPPER))
+                .define('R', NeutronReflectorItem::class.instance())
+                .unlockedBy(
+                    FabricRecipeProvider.has(NeutronReflectorItem::class.instance()),
+                    FabricRecipeProvider.has(NeutronReflectorItem::class.instance())
                 )
-                .offerTo(exporter)
+                .save(exporter)
         }
     }
 }
 
 @ModItem(name = "iridium_neutron_reflector", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class IridiumNeutronReflectorItem : AbstractReactorComponent(Item.Settings()) {
+class IridiumNeutronReflectorItem : AbstractReactorComponent(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val thick = ThickNeutronReflectorItem::class.instance()
             val denseCu = DenseCopperPlate::class.instance()
             val iridium = IridiumPlate::class.instance()
-            val hasThick = FabricRecipeProvider.hasItem(thick)
-            val unlockThick = FabricRecipeProvider.conditionsFromItem(thick)
+            val hasThick = FabricRecipeProvider.has(thick)
+            val unlockThick = FabricRecipeProvider.has(thick)
 
             // RRR / DID / RRR
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumNeutronReflectorItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumNeutronReflectorItem::class.instance(), 1)
                 .pattern("RRR")
                 .pattern("DID")
                 .pattern("RRR")
-                .input('R', thick)
-                .input('D', denseCu)
-                .input('I', iridium)
-                .criterion(hasThick, unlockThick)
-                .offerTo(exporter, IridiumNeutronReflectorItem::class.recipeId("from_bands_horizontal"))
+                .define('R', thick)
+                .define('D', denseCu)
+                .define('I', iridium)
+                .unlockedBy(hasThick, unlockThick)
+                .save(exporter, IridiumNeutronReflectorItem::class.recipeId("from_bands_horizontal"))
 
             // RDR / RIR / RDR
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumNeutronReflectorItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumNeutronReflectorItem::class.instance(), 1)
                 .pattern("RDR")
                 .pattern("RIR")
                 .pattern("RDR")
-                .input('R', thick)
-                .input('D', denseCu)
-                .input('I', iridium)
-                .criterion(hasThick, unlockThick)
-                .offerTo(exporter, IridiumNeutronReflectorItem::class.recipeId("from_bands_vertical"))
+                .define('R', thick)
+                .define('D', denseCu)
+                .define('I', iridium)
+                .unlockedBy(hasThick, unlockThick)
+                .save(exporter, IridiumNeutronReflectorItem::class.recipeId("from_bands_vertical"))
         }
     }
 
@@ -387,7 +387,7 @@ class IridiumNeutronReflectorItem : AbstractReactorComponent(Item.Settings()) {
 }
 
 @ModItem(name = "rsh_condensator", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class RshCondensatorItem : CondensatorItem(Item.Settings(), 20_000) {
+class RshCondensatorItem : CondensatorItem(Item.Properties(), 20_000) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -395,15 +395,15 @@ class RshCondensatorItem : CondensatorItem(Item.Settings(), 20_000) {
             // [R R R]
             // [R V R]
             // [R H R]
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, RshCondensatorItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RshCondensatorItem::class.instance(), 1)
                 .pattern("RRR")
                 .pattern("RVR")
                 .pattern("RHR")
-                .input('R', Items.REDSTONE)
-                .input('V', HeatVentItem::class.instance())
-                .input('H', HeatExchangerItem::class.instance())
-                .criterion(FabricRecipeProvider.hasItem(Items.REDSTONE), FabricRecipeProvider.conditionsFromItem(Items.REDSTONE))
-                .offerTo(exporter)
+                .define('R', Items.REDSTONE)
+                .define('V', HeatVentItem::class.instance())
+                .define('H', HeatExchangerItem::class.instance())
+                .unlockedBy(FabricRecipeProvider.has(Items.REDSTONE), FabricRecipeProvider.has(Items.REDSTONE))
+                .save(exporter)
 
             // 修复配方：红石冷凝器 + 红石 = 修复的冷凝器
             CondensatorRepairRecipe.generate(exporter, RshCondensatorItem::class.instance(), Items.REDSTONE, 10_000)
@@ -415,7 +415,7 @@ class RshCondensatorItem : CondensatorItem(Item.Settings(), 20_000) {
 }
 
 @ModItem(name = "lzh_condensator", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class LzhCondensatorItem : CondensatorItem(Item.Settings(), 100_000) {
+class LzhCondensatorItem : CondensatorItem(Item.Properties(), 100_000) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -423,17 +423,17 @@ class LzhCondensatorItem : CondensatorItem(Item.Settings(), 100_000) {
             // [R V R]
             // [L C L]
             // [R H R]
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, LzhCondensatorItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LzhCondensatorItem::class.instance(), 1)
                 .pattern("RVR")
                 .pattern("LCL")
                 .pattern("RHR")
-                .input('R', Items.REDSTONE)
-                .input('V', HeatVentItem::class.instance())
-                .input('L', RshCondensatorItem::class.instance())
-                .input('C', Items.LAPIS_BLOCK)
-                .input('H', ReactorHeatExchangerItem::class.instance())
-                .criterion(FabricRecipeProvider.hasItem(RshCondensatorItem::class.instance()), FabricRecipeProvider.conditionsFromItem(RshCondensatorItem::class.instance()))
-                .offerTo(exporter)
+                .define('R', Items.REDSTONE)
+                .define('V', HeatVentItem::class.instance())
+                .define('L', RshCondensatorItem::class.instance())
+                .define('C', Items.LAPIS_BLOCK)
+                .define('H', ReactorHeatExchangerItem::class.instance())
+                .unlockedBy(FabricRecipeProvider.has(RshCondensatorItem::class.instance()), FabricRecipeProvider.has(RshCondensatorItem::class.instance()))
+                .save(exporter)
 
             // 修复配方：青金石冷凝器 + 红石
             CondensatorRepairRecipe.generate(exporter, LzhCondensatorItem::class.instance(), Items.REDSTONE, 10_000)
@@ -453,11 +453,11 @@ class LzhCondensatorItem : CondensatorItem(Item.Settings(), 100_000) {
 }
 
 @ModItem(name = "lithium_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class LithiumFuelRodItem : Item(Item.Settings())
+class LithiumFuelRodItem : Item(Item.Properties())
 
 @ModItem(name = "depleted_isotope_fuel_rod", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class DepletedIsotopeFuelRodItem : Item(Item.Settings())
+class DepletedIsotopeFuelRodItem : Item(Item.Properties())
 
 //已删除
 // @ModItem(name = "heatpack", tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class HeatpackItem : Item(Item.Settings())
+class HeatpackItem : Item(Item.Properties())

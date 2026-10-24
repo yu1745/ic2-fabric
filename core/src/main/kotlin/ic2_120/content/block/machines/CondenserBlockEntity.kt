@@ -1,5 +1,13 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.cachedState
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.CondenserBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
@@ -34,7 +42,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -118,11 +126,11 @@ class CondenserBlockEntity(
         private const val WATER_PER_PROGRESS = 8100L
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_VENT_INDICES, matcher = { isValidVent(it) }, maxPerSlot = 1),
@@ -131,7 +139,7 @@ class CondenserBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_WATER_INPUT), matcher = { isValid(SLOT_WATER_INPUT, it) })
         ),
         extractSlots = (intArrayOf(SLOT_UPGRADE, SLOT_WATER_OUTPUT, SLOT_DISCHARGE) + SLOT_VENT_INDICES),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -166,7 +174,7 @@ class CondenserBlockEntity(
 
         override fun onFinalCommit() {
             sync.steamAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
     }
 
@@ -179,7 +187,7 @@ class CondenserBlockEntity(
 
         override fun onFinalCommit() {
             sync.waterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
 
         fun injectWater(droplets: Long): Boolean {
@@ -194,7 +202,7 @@ class CondenserBlockEntity(
                 tx.commit()
             }
             sync.waterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
             return true
         }
 
@@ -214,7 +222,7 @@ class CondenserBlockEntity(
                             tx.commit()
                         }
                         sync.waterAmount = amount.toInt().coerceAtLeast(0)
-                        markDirty()
+                        setChanged()
                     }
                 } catch (_: Exception) { }
             }
@@ -268,14 +276,14 @@ class CondenserBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot !in listOf(SLOT_WATER_INPUT, SLOT_WATER_OUTPUT) && stack.count > 1) stack.count = 1
         inventory[slot] = stack
-        markDirty()
+        setChanged()
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
@@ -308,21 +316,21 @@ class CondenserBlockEntity(
 
     // ==== NBT ====
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CondenserSync.NBT_ENERGY_STORED).coerceIn(0L, CondenserSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
         progress = nbt.getInt(NBT_PROGRESS)
         machineTier = nbt.getInt(NBT_TIER).coerceAtLeast(3)
-        if (nbt.contains(NBT_STEAM_TANK)) {
+        if (nbt.hasProperty(NBT_STEAM_TANK)) {
             val t = nbt.getCompound(NBT_STEAM_TANK)
             steamTank.variant = FluidVariant.fromNbt(t.getCompound("variant"))
             steamTank.amount = t.getLong("amount")
         }
-        if (nbt.contains(NBT_WATER_TANK)) {
+        if (nbt.hasProperty(NBT_WATER_TANK)) {
             val t = nbt.getCompound(NBT_WATER_TANK)
             distilledWaterTank.variant = FluidVariant.fromNbt(t.getCompound("variant"))
             distilledWaterTank.amount = t.getLong("amount")
@@ -331,9 +339,9 @@ class CondenserBlockEntity(
         sync.waterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(CondenserSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_PROGRESS, progress)
@@ -380,7 +388,7 @@ class CondenserBlockEntity(
         } else 3
         if (newTier != machineTier) {
             machineTier = newTier
-            markDirty()
+            setChanged()
         }
 
         // 水物品处理：空单元/桶 → 装蒸馏水（对齐 ic2_origin waterInputSlot.processFromTank）
@@ -440,7 +448,7 @@ class CondenserBlockEntity(
         setActiveState(world, pos, state, active)
 
         sync.syncCurrentTickFlow()
-        markDirty()
+        setChanged()
     }
 
     /** 将蒸馏水装填到空单元/桶中 — 对齐 ic2_origin waterInputSlot.processFromTank */
@@ -469,7 +477,7 @@ class CondenserBlockEntity(
         val outputStack = getStack(SLOT_WATER_OUTPUT)
         if (!outputStack.isEmpty) {
             if (!ItemStack.areItemsEqual(outputStack, result)) return
-            if (outputStack.count >= outputStack.maxCount) return
+            if (outputStack.count >= outputStack.maxStackSize) return
         }
 
         // 消耗 1 桶 (1000 mB) 蒸馏水 — 走 extract（触发 onFinalCommit，确保同步）
@@ -481,13 +489,13 @@ class CondenserBlockEntity(
         sync.waterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
 
         // 扣输入
-        inputStack.decrement(1)
+        inputStack.shrink(1)
         if (inputStack.isEmpty) inventory[SLOT_WATER_INPUT] = ItemStack.EMPTY
 
         // 放输出
         if (outputStack.isEmpty) inventory[SLOT_WATER_OUTPUT] = result
-        else outputStack.increment(1)
+        else outputStack.grow(1)
 
-        markDirty()
+        setChanged()
     }
 }

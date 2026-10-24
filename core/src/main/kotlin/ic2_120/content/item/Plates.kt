@@ -16,14 +16,12 @@ import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.resources.ResourceLocation
 import java.util.function.Consumer
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.annotation.RecipeProvider
 
 // ========== 板类（金属成型机切割：1 锭 -> 1 板；青金石/黑曜石见配方） ==========
 
 @ModItem(name = "bronze_plate", tab = CreativeTab.IC2_MATERIALS, group = "plates", materialTags = ["plates/bronze"])
-class BronzePlate : Item(Item.Settings()) {
+class BronzePlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -34,7 +32,7 @@ class BronzePlate : Item(Item.Settings()) {
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
+                    Ingredient.of(ModTags.Compat.Items.INGOTS_BRONZE)
                 )
             )
         }
@@ -42,7 +40,7 @@ class BronzePlate : Item(Item.Settings()) {
 }
 
 @ModItem(name = "copper_plate", tab = CreativeTab.IC2_MATERIALS, group = "plates", materialTags = ["plates/copper"])
-class CopperPlate : Item(Item.Settings()) {
+class CopperPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -52,7 +50,7 @@ class CopperPlate : Item(Item.Settings()) {
                 result = CopperPlate::class.instance(),
                 resultCount = 1,
                 ingredients = listOf(
-                    Ingredient.fromTag(ModTags.Compat.Items.INGOTS_COPPER),
+                    Ingredient.of(ModTags.Compat.Items.INGOTS_COPPER),
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance())
                 )
             )
@@ -61,7 +59,7 @@ class CopperPlate : Item(Item.Settings()) {
 }
 
 @ModItem(name = "gold_plate", tab = CreativeTab.IC2_MATERIALS, group = "plates", materialTags = ["plates/gold"])
-class GoldPlate : Item(Item.Settings()) {
+class GoldPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -71,7 +69,7 @@ class GoldPlate : Item(Item.Settings()) {
                 result = GoldPlate::class.instance(),
                 resultCount = 1,
                 ingredients = listOf(
-                    Ingredient.fromTag(ModTags.Compat.Items.INGOTS_GOLD),
+                    Ingredient.of(ModTags.Compat.Items.INGOTS_GOLD),
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance())
                 )
             )
@@ -80,7 +78,7 @@ class GoldPlate : Item(Item.Settings()) {
 }
 
 @ModItem(name = "iron_plate", tab = CreativeTab.IC2_MATERIALS, group = "plates", materialTags = ["plates/iron"])
-class IronPlate : Item(Item.Settings()) {
+class IronPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -91,7 +89,7 @@ class IronPlate : Item(Item.Settings()) {
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON)
+                    Ingredient.of(ModTags.Compat.Items.INGOTS_IRON)
                 )
             )
         }
@@ -99,7 +97,7 @@ class IronPlate : Item(Item.Settings()) {
 }
 
 @ModItem(name = "lapis_plate", tab = CreativeTab.IC2_MATERIALS, group = "plates", materialTags = ["plates/lapis"])
-class LapisPlate : Item(Item.Settings()) {
+class LapisPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -110,7 +108,7 @@ class LapisPlate : Item(Item.Settings()) {
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.GEMS_LAPIS)
+                    Ingredient.of(ModTags.Compat.Items.GEMS_LAPIS)
                 )
             )
         }
@@ -118,7 +116,7 @@ class LapisPlate : Item(Item.Settings()) {
 }
 
 @ModItem(name = "lead_plate", tab = CreativeTab.IC2_MATERIALS, group = "plates", materialTags = ["plates/lead"])
-class LeadPlate : Item(Item.Settings()) {
+class LeadPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -129,7 +127,7 @@ class LeadPlate : Item(Item.Settings()) {
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.INGOTS_LEAD)
+                    Ingredient.of(ModTags.Compat.Items.INGOTS_LEAD)
                 )
             )
         }
@@ -137,13 +135,13 @@ class LeadPlate : Item(Item.Settings()) {
 }
 
 @ModItem(name = "obsidian_plate", tab = CreativeTab.IC2_MATERIALS, group = "plates", materialTags = ["plates/obsidian"])
-class ObsidianPlate : Item(Item.Settings())
+class ObsidianPlate : Item(Item.Properties())
 
 @ModItem(name = "steel_plate", tab = CreativeTab.IC2_MATERIALS, group = "plates", materialTags = ["plates/steel"])
-class SteelPlate : Item(Item.Settings())
+class SteelPlate : Item(Item.Properties())
 
 @ModItem(name = "tin_plate", tab = CreativeTab.IC2_MATERIALS, group = "plates", materialTags = ["plates/tin"])
-class TinPlate : Item(Item.Settings()) {
+class TinPlate : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -154,7 +152,7 @@ class TinPlate : Item(Item.Settings()) {
                 resultCount = 1,
                 ingredients = listOf(
                     DamageToolShapelessRecipeDatagen.toolIngredient(ForgeHammer::class.instance()),
-                    Ingredient.fromTag(ModTags.Compat.Items.INGOTS_TIN)
+                    Ingredient.of(ModTags.Compat.Items.INGOTS_TIN)
                 )
             )
         }
@@ -164,28 +162,28 @@ class TinPlate : Item(Item.Settings()) {
 // ========== 致密板类（压缩机：9 板 -> 1 致密板） ==========
 
 @ModItem(name = "dense_bronze_plate", tab = CreativeTab.IC2_MATERIALS, group = "dense_plates")
-class DenseBronzePlate : Item(Item.Settings())
+class DenseBronzePlate : Item(Item.Properties())
 
 @ModItem(name = "dense_copper_plate", tab = CreativeTab.IC2_MATERIALS, group = "dense_plates")
-class DenseCopperPlate : Item(Item.Settings())
+class DenseCopperPlate : Item(Item.Properties())
 
 @ModItem(name = "dense_gold_plate", tab = CreativeTab.IC2_MATERIALS, group = "dense_plates")
-class DenseGoldPlate : Item(Item.Settings())
+class DenseGoldPlate : Item(Item.Properties())
 
 @ModItem(name = "dense_iron_plate", tab = CreativeTab.IC2_MATERIALS, group = "dense_plates")
-class DenseIronPlate : Item(Item.Settings())
+class DenseIronPlate : Item(Item.Properties())
 
 @ModItem(name = "dense_lapis_plate", tab = CreativeTab.IC2_MATERIALS, group = "dense_plates")
-class DenseLapisPlate : Item(Item.Settings())
+class DenseLapisPlate : Item(Item.Properties())
 
 @ModItem(name = "dense_lead_plate", tab = CreativeTab.IC2_MATERIALS, group = "dense_plates")
-class DenseLeadPlate : Item(Item.Settings())
+class DenseLeadPlate : Item(Item.Properties())
 
 @ModItem(name = "dense_obsidian_plate", tab = CreativeTab.IC2_MATERIALS, group = "dense_plates")
-class DenseObsidianPlate : Item(Item.Settings())
+class DenseObsidianPlate : Item(Item.Properties())
 
 @ModItem(name = "dense_steel_plate", tab = CreativeTab.IC2_MATERIALS, group = "dense_plates")
-class DenseSteelPlate : Item(Item.Settings())
+class DenseSteelPlate : Item(Item.Properties())
 
 @ModItem(name = "dense_tin_plate", tab = CreativeTab.IC2_MATERIALS, group = "dense_plates")
-class DenseTinPlate : Item(Item.Settings())
+class DenseTinPlate : Item(Item.Properties())

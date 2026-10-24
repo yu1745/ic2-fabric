@@ -1,5 +1,7 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.cachedState
+
 import ic2_120.content.heat.IHeatConsumer
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType

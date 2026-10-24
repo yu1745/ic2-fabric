@@ -126,7 +126,7 @@ object ModArmorMaterials {
         repairIngredient = carbonFibre
     )
 
-    // ========== 耐久倍率常量（供 Item.Settings.maxDamage 使用）==========
+    // ========== 耐久倍率常量（供 Item.Properties.maxDamage 使用）==========
     const val NANO_DURABILITY_MULTIPLIER = 15
     const val QUANTUM_DURABILITY_MULTIPLIER = 25
     const val JETPACK_DURABILITY_MULTIPLIER = 15

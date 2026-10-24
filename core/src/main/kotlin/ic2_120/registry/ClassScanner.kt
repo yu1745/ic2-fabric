@@ -1,5 +1,8 @@
 package ic2_120.registry
 
+import ic2_120.compat.world
+
+import net.minecraft.core.registries.Registries
 import ic2_120.content.block.cables.BaseCableBlock
 
 import ic2_120.content.TickLimitedSidedEnergyContainer
@@ -10,20 +13,15 @@ import ic2_120.content.item.ICreativeFullVariant
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModBlockEntity
-import ic2_120.registry.type
 import ic2_120.registry.annotation.ModCreativeTab
-import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
-import ic2_120.registry.type
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenHandlerMode
-import ic2_120.registry.type
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterFluidStorage
 import ic2_120.registry.annotation.RegisterItemStorage
-import ic2_120.registry.type
 import ic2_120.registry.annotation.ModMachineRecipe
 import ic2_120.registry.annotation.ModMachineRecipeBinding
 import ic2_120.registry.MachineRecipeScanEntry
@@ -52,12 +50,11 @@ import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceKey
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.InteractionHand
 import net.minecraft.core.BlockPos
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -601,7 +598,7 @@ object ClassScanner {
                 val id = ResourceLocation.fromNamespaceAndPath(modId, name)
 
                 // 创建 ResourceKey
-                val tabKey = ResourceKey.of(Registries.ITEM_GROUP, id)
+                val tabKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, id)
 
                 // 获取这个物品栏对应的枚举值
                 val tabEnum = CreativeTab.values().find { it.id == name }
@@ -626,13 +623,13 @@ object ClassScanner {
                     annotation.iconItem.isNotEmpty() -> {
                         // 使用已注册的物品作为图标
                         val iconId = ResourceLocation.fromNamespaceAndPath(modId, annotation.iconItem)
-                        iconStackSupplier = { ItemStack(BuiltInRegistries.ITEM.get(iconId)) }
+                        iconStackSupplier = { ItemStack(BuiltInRegistries.ITEM.getValue(iconId)) }
                     }
                     else -> {
                         // 默认使用第一个物品
                         val firstEntry = entries.firstOrNull()
                         iconStackSupplier = if (firstEntry != null) {
-                            { ItemStack(BuiltInRegistries.ITEM.get(firstEntry.itemId)) }
+                            { ItemStack(BuiltInRegistries.ITEM.getValue(firstEntry.itemId)) }
                         } else {
                             { ItemStack(net.minecraft.world.item.Items.BARRIER) }
                         }
@@ -651,7 +648,7 @@ object ClassScanner {
                             .sortedWith(compareBy({ it.group }, { it.itemId.toString() }))
                         // 添加所有属于这个物品栏的物品（已按 group 排序）
                         for (entry in liveEntries) {
-                            val item = BuiltInRegistries.ITEM.get(entry.itemId)
+                            val item = BuiltInRegistries.ITEM.getValue(ntry.itemId)
                             if (item !== net.minecraft.world.item.Items.AIR) {
                                 // 检查物品是否实现了 IBatteryItem 或 IElectricTool 接口
                                 // 如果实现了，添加空电和满电两个版本
@@ -696,7 +693,7 @@ object ClassScanner {
                     .build()
 
                 // 注册到注册表
-                Registry.register(BuiltInRegistries.ITEM_GROUP, tabKey, itemGroup)
+                Registry.register(BuiltInBuiltInRegistries.CREATIVE_MODE_TAB, tabKey, itemGroup)
                 logger.info("已注册创造模式物品栏: {}", id)
             } catch (e: Exception) {
                 logger.error("注册创造模式物品栏 {} 失败: {}", clazz.simpleName, e.message, e)
@@ -956,10 +953,10 @@ object ClassScanner {
                 accessor
             } catch (_: Throwable) {
                 // 访问权限或 JVM 反射限制下回退；该路径只在启动时决定一次。
-                { instance: Any -> (property as KProperty1<Any, Any?>).get(instance) }
+                { instance: Any -> (property as KProperty1<Any, Any?>).getValue(instance) }
             }
         }
-        return { instance: Any -> (property as KProperty1<Any, Any?>).get(instance) }
+        return { instance: Any -> (property as KProperty1<Any, Any?>).getValue(instance) }
     }
 
     private fun registerFluidStorageLookup(clazz: KClass<*>) {
@@ -1007,7 +1004,7 @@ object ClassScanner {
                     return@mapNotNull null
                 }
                 val blockId = ResourceLocation.fromNamespaceAndPath(modId, blockName)
-                val block = BuiltInRegistries.BLOCK.get(blockId)
+                val block = BuiltInRegistries.BLOCK.getValue(blockId)
                 if (block == net.minecraft.world.level.block.Blocks.AIR && blockId.path != "air") {
                     logger.warn("方块实体 {} 对应的方块未找到: {}，请确保方块先于方块实体注册", clazz.simpleName, blockId)
                     return@mapNotNull null
@@ -1090,22 +1087,22 @@ object ClassScanner {
                     val params = constructor.parameters
                     params.size == 2 &&
                         params[0].type.classifier == Block::class &&
-                        params[1].type.classifier == Item.Settings::class
+                        params[1].type.classifier == Item.Properties::class
                 }
                 if (ctor != null) {
                     return try {
                         @Suppress("UNCHECKED_CAST")
-                        ctor.call(block, Item.Settings()) as BlockItem
+                        ctor.call(block, Item.Properties()) as BlockItem
                     } catch (e: Exception) {
                         logger.warn("创建方块 {} 的自定义 BlockItem 失败: {}，回退默认 BlockItem", id, e.message)
-                        BlockItem(block, Item.Settings())
+                        BlockItem(block, Item.Properties())
                     }
                 }
-                logger.debug("方块 {} 的父类 {} 存在自定义 BlockItem 类 {}，但未找到 (Block, Item.Settings) 构造函数，继续向上查找", id, current.simpleName, customItemClass.simpleName)
+                logger.debug("方块 {} 的父类 {} 存在自定义 BlockItem 类 {}，但未找到 (Block, Item.Properties) 构造函数，继续向上查找", id, current.simpleName, customItemClass.simpleName)
             }
             current = current.superclasses.firstOrNull()
         }
-        return BlockItem(block, Item.Settings())
+        return BlockItem(block, Item.Properties())
     }
 
     private fun registerItems(modId: String, itemClasses: List<ItemClassInfo>) {
@@ -1253,7 +1250,7 @@ object ClassScanner {
 
     private fun parseItemGroupKey(modId: String, tab: CreativeTab): ResourceKey<CreativeModeTab> {
         val id = ResourceLocation.parse(tab.getNamespacedId(modId))
-        return ResourceKey.of(Registries.ITEM_GROUP, id)
+        return ResourceKey.create(Registries.CREATIVE_MODE_TAB, id)
     }
 
     /**

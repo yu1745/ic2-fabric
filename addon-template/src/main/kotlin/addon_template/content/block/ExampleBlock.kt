@@ -8,5 +8,5 @@ import net.minecraft.core.BlockPos
 
 @ModBlock(name = "example_block")
 class ExampleBlock(settings: Settings) : MachineBlock(settings) {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? = null
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? = null
 }

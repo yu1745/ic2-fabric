@@ -11,7 +11,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.texture.TextureAtlas
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 
@@ -131,7 +131,7 @@ class AnimalmatronScreen(
 
         // 侧边文本
         val animalCountText = t("gui.ic2_120.animalmatron.monitored_animals", handler.sync.animalCount)
-        val hasShears = handler.getSlot(AnimalmatronScreenHandler.SLOT_SHEARS_INDEX).hasStack()
+        val hasShears = handler.getSlot(AnimalmatronScreenHandler.SLOT_SHEARS_INDEX) .hasItem()
         val needShearsText = if (!hasShears) t("gui.ic2_120.animalmatron.need_shears") else ""
         val inputText = t("gui.ic2_120.input_eu", EnergyFormatUtils.formatRaw(inputRate))
         val consumeText = t("gui.ic2_120.consume_eu", EnergyFormatUtils.formatRaw(consumeRate))

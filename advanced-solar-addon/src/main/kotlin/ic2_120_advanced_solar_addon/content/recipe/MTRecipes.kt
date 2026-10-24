@@ -130,8 +130,8 @@ object MTRecipes {
             LOGGER.warn("MT recipe dropped (invalid id): {} -> {}", inputId, outputId)
             return
         }
-        val inputItem = BuiltInRegistries.ITEM.get(inId)
-        val outputItem = BuiltInRegistries.ITEM.get(outId)
+        val inputItem = BuiltInRegistries.ITEM.get(tinId)
+        val outputItem = BuiltInRegistries.ITEM.getValue(outId)
         if (inputItem == Items.AIR || outputItem == Items.AIR || energy <= 0) {
             // 静默丢弃会表现为「物品无法放入分子重组仪」，必须留痕：
             // 常见诱因是加载时机早于物品注册（如 Connector 服务器上 core 初始化晚于附属）。

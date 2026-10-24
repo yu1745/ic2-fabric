@@ -1,5 +1,11 @@
 package ic2_120.content.block.storage
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+
 import ic2_120.content.item.BronzeCasing
 import ic2_120.content.item.BronzePlate
 import ic2_120.content.item.IridiumPlate
@@ -15,8 +21,6 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.state.BlockBehaviour
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
@@ -54,22 +58,22 @@ import java.util.function.Consumer
  *
  * 类似潜影盒，破坏时保留物品内容。
  */
-abstract class StorageBoxBlock(settings: BlockBehaviour.Settings) : BaseEntityBlock(settings) {
+abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(settings) {
 
     /**
      * 储物箱物品禁止堆叠：内容物保存在 BlockEntityTag NBT 中，堆叠会丢失/复制内容。
      * 所有储物箱子类通过父类链继承该设置。
      */
-    class StorageBoxBlockItem(block: Block, settings: Item.Settings) : BlockItem(block, settings.maxCount(1))
+    class StorageBoxBlockItem(block: Block, settings: Item.Properties) : BlockItem(block, settings.maxStackSize(1))
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return StorageBoxBlockEntity(pos, state)
     }
 
     /**
      * 确保方块使用模型渲染（而不是实体渲染）
      */
-    override fun getRenderType(state: BlockState): RenderShape = RenderShape.MODEL
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
 
     /**
      * 添加物品提示信息
@@ -81,17 +85,17 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Settings) : BaseEntityBl
         tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
 
         val blockEntityTag = stack.getSubNbt("BlockEntityTag")
         if (blockEntityTag == null || !blockEntityTag.contains("Container")) {
-            tooltip.add(Component.literal("物品数量: 0").formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("物品数量: 0").withStyle(ChatFormatting.GRAY))
             return
         }
 
         val inventoryNbt = blockEntityTag.getCompound("Container")
         if (inventoryNbt.isEmpty) {
-            tooltip.add(Component.literal("物品数量: 0").formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("物品数量: 0").withStyle(ChatFormatting.GRAY))
             return
         }
 
@@ -111,9 +115,9 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Settings) : BaseEntityBl
 
         // 添加物品数量提示
         if (filledSlots == 0) {
-            tooltip.add(Component.literal("物品数量: 0").formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("物品数量: 0").withStyle(ChatFormatting.GRAY))
         } else {
-            tooltip.add(Component.literal("物品数量: $totalItems ($filledSlots 格)").formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("物品数量: $totalItems ($filledSlots 格)").withStyle(ChatFormatting.GRAY))
         }
     }
 
@@ -121,18 +125,11 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Settings) : BaseEntityBl
      * 玩家右键点击打开 GUI
      */
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
             val blockEntity = world.getBlockEntity(pos)
             if (blockEntity is StorageBoxBlockEntity) {
-                player.openHandledScreen(blockEntity)
+                player.openMenu(blockEntity)
             }
         }
         return InteractionResult.SUCCESS
@@ -143,12 +140,12 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Settings) : BaseEntityBl
      */
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        if (!world.isClient && !state.isOf(newState.block)) {
+        if (!world.isClient && !state.`is`(newState.block)) {
             val blockEntity = world.getBlockEntity(pos)
             if (blockEntity is StorageBoxBlockEntity && (moved || blockEntity.shouldDropOnBreak)) {
                 // 创建带有 BlockEntity NBT 的物品
                 val itemStack = ItemStack(this.asItem())
-                val nbt = blockEntity.createNbtWithIdentifyingData()
+                val nbt = blockEntity.saveWithFullMetadata()
                 if (!nbt.isEmpty) {
                     itemStack.orCreateNbt.put("BlockEntityTag", nbt)
                 }
@@ -163,7 +160,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Settings) : BaseEntityBl
                         itemStack
                     )
                     itemEntity.setToDefaultPickupDelay()
-                    world.spawnEntity(itemEntity)
+                    world.addFreshEntity(itemEntity)
                 }
             }
         }
@@ -189,7 +186,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Settings) : BaseEntityBl
         val blockEntity = world.getBlockEntity(pos)
 
         if (blockEntity is StorageBoxBlockEntity) {
-            val nbt = blockEntity.createNbtWithIdentifyingData()
+            val nbt = blockEntity.saveWithFullMetadata()
             if (!nbt.isEmpty) {
                 itemStack.orCreateNbt.put("BlockEntityTag", nbt)
             }
@@ -230,20 +227,20 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Settings) : BaseEntityBl
  * 木质储物箱 - 27 格容量
  */
 @ModBlock(name = "wooden_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
-class WoodenStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Settings.copy(Blocks.OAK_PLANKS).strength(2.5f)) {
+class WoodenStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).strength(2.5f)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val log = Items.OAK_LOG
             val plank = Items.OAK_PLANKS
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, WoodenStorageBoxBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WoodenStorageBoxBlock::class.item(), 1)
                 .pattern("LPL")
                 .pattern("P P")
                 .pattern("LPL")
-                .input('L', log)
-                .input('P', plank)
-                .criterion(hasItem(plank), conditionsFromItem(plank))
-                .offerTo(exporter, WoodenStorageBoxBlock::class.id())
+                .define('L', log)
+                .define('P', plank)
+                .unlockedBy(getHasName(plank), has(plank))
+                .save(exporter, WoodenStorageBoxBlock::class.id())
         }
     }
 }
@@ -252,21 +249,21 @@ class WoodenStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Settings.copy(Block
  * 青铜储物箱 - 45 格容量
  */
 @ModBlock(name = "bronze_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
-class BronzeStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+class BronzeStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val plate = BronzePlate::class.instance()
             val casing = BronzeCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, BronzeStorageBoxBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzeStorageBoxBlock::class.item(), 1)
                     .pattern("PCP")
                     .pattern("C C")
                     .pattern("PCP")
-                    .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_BRONZE))
-                    .input('C', casing)
-                    .criterion(hasItem(plate), conditionsFromItem(plate))
-                    .offerTo(exporter, BronzeStorageBoxBlock::class.id())
+                    .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
+                    .define('C', casing)
+                    .unlockedBy(getHasName(plate), has(plate))
+                    .save(exporter, BronzeStorageBoxBlock::class.id())
             }
         }
     }
@@ -276,21 +273,21 @@ class BronzeStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Settings.copy(Block
  * 铁质储物箱 - 45 格容量
  */
 @ModBlock(name = "iron_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
-class IronStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+class IronStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val plate = IronPlate::class.instance()
             val casing = IronCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, IronStorageBoxBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IronStorageBoxBlock::class.item(), 1)
                     .pattern("PCP")
                     .pattern("C C")
                     .pattern("PCP")
-                    .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                    .input('C', casing)
-                    .criterion(hasItem(plate), conditionsFromItem(plate))
-                    .offerTo(exporter, IronStorageBoxBlock::class.id())
+                    .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                    .define('C', casing)
+                    .unlockedBy(getHasName(plate), has(plate))
+                    .save(exporter, IronStorageBoxBlock::class.id())
             }
         }
     }
@@ -300,21 +297,21 @@ class IronStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Settings.copy(Blocks.
  * 钢制储物箱 - 63 格容量
  */
 @ModBlock(name = "steel_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
-class SteelStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+class SteelStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val plate = SteelPlate::class.instance()
             val casing = SteelCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, SteelStorageBoxBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SteelStorageBoxBlock::class.item(), 1)
                     .pattern("PCP")
                     .pattern("C C")
                     .pattern("PCP")
-                    .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL))
-                    .input('C', casing)
-                    .criterion(hasItem(plate), conditionsFromItem(plate))
-                    .offerTo(exporter, SteelStorageBoxBlock::class.id())
+                    .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_STEEL))
+                    .define('C', casing)
+                    .unlockedBy(getHasName(plate), has(plate))
+                    .save(exporter, SteelStorageBoxBlock::class.id())
             }
         }
     }
@@ -324,21 +321,21 @@ class SteelStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Settings.copy(Blocks
  * 铱储物箱 - 126 格容量
  */
 @ModBlock(name = "iridium_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
-class IridiumStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(6.0f, 8.0f)) {
+class IridiumStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(6.0f, 8.0f)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val iridium = IridiumPlate::class.instance()
             val steel = SteelPlate::class.instance()
             if (iridium != Items.AIR && steel != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumStorageBoxBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumStorageBoxBlock::class.item(), 1)
                     .pattern("ISI")
                     .pattern("S S")
                     .pattern("ISI")
-                    .input('I', iridium)
-                    .input('S', steel)
-                    .criterion(hasItem(iridium), conditionsFromItem(iridium))
-                    .offerTo(exporter, IridiumStorageBoxBlock::class.id())
+                    .define('I', iridium)
+                    .define('S', steel)
+                    .unlockedBy(getHasName(iridium), has(iridium))
+                    .save(exporter, IridiumStorageBoxBlock::class.id())
             }
         }
     }

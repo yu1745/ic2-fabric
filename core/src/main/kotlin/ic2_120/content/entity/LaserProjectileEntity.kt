@@ -1,5 +1,10 @@
 package ic2_120.content.entity
 
+import ic2_120.compat.isClient
+
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 import ic2_120.config.Ic2Config
 import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.registry.annotation.ModEntity
@@ -48,7 +53,7 @@ class LaserProjectileEntity(
         /** 最大存活 tick 数 */
         private val MAX_LIFE: Int get() = Ic2Config.current.miningLaser.maxLife
 
-        private val LASER_HIT_SOUND: SoundEvent = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "item.laser.hit"))
+        private val LASER_HIT_SOUND: SoundEvent = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "item.laser.hit"))
 
         private val MODE: EntityDataAccessor<String> = SynchedEntityData.registerData(
             LaserProjectileEntity::class.java, EntityDataSerializers.STRING
@@ -63,7 +68,7 @@ class LaserProjectileEntity(
 
     /** 当前模式 */
     var mode: LaserMode
-        get() = try { LaserMode.valueOf(dataTracker.get(MODE)) } catch (_: Exception) { LaserMode.DEFAULT }
+        get() = try { LaserMode.valueOf(dataTracker.getValue(MODE)) } catch (_: Exception) { LaserMode.DEFAULT }
         set(value) = dataTracker.set(MODE, value.name)
 
     /** 弹体颜色 (ARGB)，从模式获取 */
@@ -179,7 +184,7 @@ class LaserProjectileEntity(
 
         // 爆破模式：与原版 TNT 一致传入「爆炸源实体」与命中点坐标（见 TntEntity.explode）
         if (currentMode.explosionPower > 0) {
-            if (!explosionAllowedAt(BlockPos.ofFloored(x, y, z), currentMode.explosionPower)) {
+            if (!explosionAllowedAt(BlockPos.containing(x, y, z), currentMode.explosionPower)) {
                 discard()
                 return
             }
@@ -247,7 +252,7 @@ class LaserProjectileEntity(
         if (ClaimProtection.isProtected(world, pos, owner, ClaimProtection.EDIT_BLOCK)) return
         if (!BaseFireBlock.canPlaceAt(world, pos, Direction.UP)) return
         if (!world.getBlockState(pos).isReplaceable) return
-        world.setBlockState(pos, Blocks.FIRE.defaultState)
+        world.setBlock(pos, Blocks.FIRE.defaultBlockState)
     }
 
     /** 击穿方块后沿飞行方向略微前移，避免同一 tick 再次命中同一格 */
@@ -276,7 +281,7 @@ class LaserProjectileEntity(
 
         // 爆破模式在命中实体时也会爆炸（中心在弹体命中点，与方块命中一致）
         if (currentMode.explosionPower > 0) {
-            if (!explosionAllowedAt(BlockPos.ofFloored(x, y, z), currentMode.explosionPower)) {
+            if (!explosionAllowedAt(BlockPos.containing(x, y, z), currentMode.explosionPower)) {
                 discard()
                 return
             }
@@ -286,7 +291,7 @@ class LaserProjectileEntity(
                 currentMode.explosionPower,
                 Level.ExplosionSourceType.TNT
             )
-            tryRandomIgniteAfterBreak(BlockPos.ofFloored(x, y, z))
+            tryRandomIgniteAfterBreak(BlockPos.containing(x, y, z))
         }
 
         discard()
@@ -313,7 +318,7 @@ class LaserProjectileEntity(
             val output = recipe.craft(inventory, serverWorld.registryManager)
             if (!output.isEmpty) {
                 world.breakBlock(pos, false)
-                net.minecraft.world.level.block.Block.dropStack(serverWorld, pos, output.copy())
+                net.minecraft.world.level.block.Block.spawnAtLocation(serverWorld, pos, output.copy())
                 tryRandomIgniteAfterBreak(pos)
                 world.playSound(null, pos, LASER_HIT_SOUND, SoundSource.PLAYERS, 0.8f, 1.2f)
                 return

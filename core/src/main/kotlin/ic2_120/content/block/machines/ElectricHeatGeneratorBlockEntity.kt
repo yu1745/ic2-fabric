@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.ElectricHeatGeneratorBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
 import ic2_120.content.item.energy.IBatteryItem
@@ -17,12 +23,11 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
-import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -64,18 +69,18 @@ class ElectricHeatGeneratorBlockEntity(
     override val tier: Int = 4
     override var redstoneInverted: Boolean = false
 
-    private val inventory = NonNullList.ofSize(SLOT_COUNT, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(SLOT_COUNT, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute((0 until SLOT_DISCHARGING).toList().toIntArray(), matcher = { !it.isEmpty && it.item == coilItem }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { !it.isEmpty && (it.item is IBatteryItem || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust) }, maxPerSlot = 1)
         ),
         extractSlots = IntArray(SLOT_COUNT) { it },
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -126,10 +131,10 @@ class ElectricHeatGeneratorBlockEntity(
     override fun size(): Int = SLOT_COUNT
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: net.minecraft.world.entity.player.Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: net.minecraft.world.entity.player.Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         in 0 until SLOT_DISCHARGING -> !stack.isEmpty && stack.item == coilItem
@@ -143,7 +148,7 @@ class ElectricHeatGeneratorBlockEntity(
             val single = stack.copy()
             single.count = 1
             inventory[slot] = single
-            markDirty()
+            setChanged()
             return
         }
         if (!stack.isEmpty && stack.item != coilItem) return
@@ -155,12 +160,12 @@ class ElectricHeatGeneratorBlockEntity(
             stack
         }
         inventory[slot] = stackToSet
-        markDirty()
+        setChanged()
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ElectricHeatGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, ElectricHeatGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -168,9 +173,9 @@ class ElectricHeatGeneratorBlockEntity(
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(ElectricHeatGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
@@ -191,7 +196,7 @@ class ElectricHeatGeneratorBlockEntity(
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
+        setChanged()
     }
 
     /** 当前安装的线圈数量。 */
@@ -221,7 +226,7 @@ class ElectricHeatGeneratorBlockEntity(
         generatedHeat > 0L && hasValidConsumer
 
     override fun getActiveState(state: BlockState): Boolean =
-        state.get(ElectricHeatGeneratorBlock.ACTIVE)
+        state.getValue(ElectricHeatGeneratorBlock.ACTIVE)
 
     fun tick(world: Level, pos: BlockPos, state: BlockState) {
         tickHeatMachine(world, pos, state)

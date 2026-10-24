@@ -1,5 +1,15 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import ic2_120.compat.stack
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 import ic2_120.content.block.TeleporterBlock
 import ic2_120.content.block.machines.TeleporterBlockEntity
 import ic2_120.content.item.energy.IBatteryItem
@@ -10,8 +20,6 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
@@ -35,7 +43,7 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 @ModItem(name = "recall_scroll", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
+class RecallScrollItem : Item(Item.Properties().maxStackSize(1)) {
     companion object {
         private const val NBT_BIND_X = "BindX"
         private const val NBT_BIND_Y = "BindY"
@@ -50,22 +58,22 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
             val advancedCircuit = AdvancedCircuit::class.instance()
 
             if (teleporter != Items.AIR && advancedCircuit != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.EQUIPMENT, RecallScrollItem::class.instance(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.EQUIPMENT, RecallScrollItem::class.instance(), 1)
                     .pattern("PAP")
                     .pattern("ATA")
                     .pattern("PAP")
-                    .input('P', paper)
-                    .input('A', advancedCircuit)
-                    .input('T', teleporter)
-                    .criterion(hasItem(advancedCircuit), conditionsFromItem(advancedCircuit))
-                    .offerTo(exporter, RecallScrollItem::class.id())
+                    .define('P', paper)
+                    .define('A', advancedCircuit)
+                    .define('T', teleporter)
+                    .unlockedBy(getHasName(advancedCircuit), has(advancedCircuit))
+                    .save(exporter, RecallScrollItem::class.id())
             }
         }
     }
 
     // ========== 绑定：右击传送机 ==========
 
-    override fun useOnBlock(context: UseOnContext): InteractionResult {
+    override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.world
         val pos = context.blockPos
         val stack = context.stack
@@ -84,7 +92,7 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         nbt.putInt(NBT_BIND_Z, pos.z)
         nbt.putString(NBT_BIND_DIM, dim)
         if (!world.isClient) {
-            player.sendMessage(Component.literal("已绑定传送机: ${pos.x}, ${pos.y}, ${pos.z}"), true)
+            player.displayClientMessage(Component.literal("已绑定传送机: ${pos.x}, ${pos.y}, ${pos.z}", false), true)
         }
         return InteractionResult.SUCCESS
     }
@@ -92,31 +100,31 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
     // ========== 使用：传送 ==========
 
     override fun use(world: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = player.getStackInHand(hand)
+        val stack = player.getItemInHand(hand)
         if (world.isClient) return InteractionResultHolder.success(stack)
 
         val nbt = stack.orCreateNbt
         if (!nbt.getBoolean(NBT_HAS_BIND)) {
-            player.sendMessage(Component.literal("请先绑定传送机。"), true)
+            player.displayClientMessage(Component.literal("请先绑定传送机。", false), true)
             return InteractionResultHolder.fail(stack)
         }
 
         val dim = world.registryKey.value.toString()
         val bindDim = nbt.getString(NBT_BIND_DIM)
         if (bindDim != dim) {
-            player.sendMessage(Component.literal("维度不一致，无法传送。"), true)
+            player.displayClientMessage(Component.literal("维度不一致，无法传送。", false), true)
             return InteractionResultHolder.fail(stack)
         }
 
         val bindPos = BlockPos(nbt.getInt(NBT_BIND_X), nbt.getInt(NBT_BIND_Y), nbt.getInt(NBT_BIND_Z))
         @Suppress("DEPRECATION")
         if (!world.isChunkLoaded(bindPos)) {
-            player.sendMessage(Component.literal("目标坐标区块未加载。"), true)
+            player.displayClientMessage(Component.literal("目标坐标区块未加载。", false), true)
             return InteractionResultHolder.fail(stack)
         }
 
         // 计算距离
-        val distance = sqrt(player.pos.squaredDistanceTo(bindPos.x + 0.5, bindPos.y + 0.5, bindPos.z + 0.5))
+        val distance = sqrt(player.pos.distanceToSqr(bindPos.x + 0.5, bindPos.y + 0.5, bindPos.z + 0.5))
             .toLong().coerceAtLeast(1L)
         val weight = computeWeight(player)
         val energyNeed = computeEnergyNeed(weight, distance)
@@ -147,11 +155,11 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         player.velocityModified = true
 
         if (teleporterExists) {
-            player.sendMessage(Component.literal("传送成功！消耗 ${formatNumber(energyNeed)} EU"), true)
+            player.displayClientMessage(Component.literal("传送成功！消耗 ${formatNumber(energyNeed, false)} EU"), true)
         } else {
             // 惩罚：传送机已遗失
             applyPenalty(player)
-            player.sendMessage(Component.literal("锚点已遗失！"), true)
+            player.displayClientMessage(Component.literal("锚点已遗失！", false), true)
         }
 
         return InteractionResultHolder.success(stack)
@@ -165,18 +173,18 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
         tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
 
         val nbt = stack.nbt
         if (nbt != null && nbt.getBoolean(NBT_HAS_BIND)) {
             val x = nbt.getInt(NBT_BIND_X)
             val y = nbt.getInt(NBT_BIND_Y)
             val z = nbt.getInt(NBT_BIND_Z)
-            tooltip.add(Component.literal("已绑定: ($x, $y, $z)").formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("已绑定: ($x, $y, $z)").withStyle(ChatFormatting.GRAY))
         } else {
-            tooltip.add(Component.literal("未绑定").formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("未绑定").withStyle(ChatFormatting.GRAY))
         }
-        tooltip.add(Component.literal("不要遗失锚点，否则会发生非常可怕的事").formatted(ChatFormatting.RED))
+        tooltip.add(Component.literal("不要遗失锚点，否则会发生非常可怕的事").withStyle(ChatFormatting.RED))
     }
 
     // ========== 辅助方法 ==========
@@ -187,10 +195,10 @@ class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
 
         var invWeight = 0.0
         for (stack in player.inventory.main) {
-            if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxCount.toDouble().coerceAtLeast(1.0))
+            if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
         }
         for (stack in player.inventory.offHand) {
-            if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxCount.toDouble().coerceAtLeast(1.0))
+            if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
         }
         weight += floor(invWeight).toInt()
         return weight.coerceAtMost(5100)

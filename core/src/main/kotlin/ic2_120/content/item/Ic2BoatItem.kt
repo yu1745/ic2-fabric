@@ -1,5 +1,8 @@
 package ic2_120.content.item
 
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.vehicle.Boat
@@ -18,11 +21,11 @@ import net.minecraft.world.level.gameevent.GameEvent
  */
 open class Ic2BoatItem(
     private val entityType: EntityType<out Boat>,
-    settings: Item.Settings
+    settings: Item.Properties
 ) : Item(settings) {
 
     override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): net.minecraft.world.InteractionResultHolder<ItemStack> {
-        val stack = user.getStackInHand(hand)
+        val stack = user.getItemInHand(hand)
         val hitResult = raycast(world, user, ClipContext.FluidHandling.ANY)
 
         if (hitResult.type != HitResult.Type.BLOCK) {
@@ -49,10 +52,10 @@ open class Ic2BoatItem(
                 return net.minecraft.world.InteractionResultHolder.fail(stack)
             }
             if (!world.isClient) {
-                world.spawnEntity(boat)
+                world.addFreshEntity(boat)
                 world.emitGameEvent(user, GameEvent.ENTITY_PLACE, boat.pos)
                 if (!user.isCreative) {
-                    stack.decrement(1)
+                    stack.shrink(1)
                 }
             }
             return net.minecraft.world.InteractionResultHolder.success(stack, world.isClient)

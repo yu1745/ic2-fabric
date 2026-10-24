@@ -17,7 +17,7 @@ import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
@@ -361,8 +361,8 @@ class ReplicatorScreen(
         private const val NAV_RIGHT_X2 = 118
 
         private val uuMatterSprite by lazy {
-            FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.UU_MATTER_STILL)
-                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultState)?.getOrNull(0)
+            FluidRenderHandlerRegistry.INSTANCE.getValue(ModFluids.UU_MATTER_STILL)
+                ?.getFluidSprites(null, null, ModFluids.UU_MATTER_STILL.defaultBlockState)?.getOrNull(0)
         }
     }
 }

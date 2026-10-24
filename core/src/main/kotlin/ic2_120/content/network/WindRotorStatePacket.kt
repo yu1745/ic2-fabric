@@ -13,10 +13,10 @@ class WindRotorStatePacket(
     val isStuck: Boolean,
     val stuckAngle: Float
 ) : CustomPacketPayload {
-    override fun getId(): CustomPacketPayload.Id<*> = ID
+    override fun type(): CustomPacketPayload.Type<*> = ID
 
     companion object {
-        val ID = CustomPacketPayload.Id<WindRotorStatePacket>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "wind_rotor_state"))
+        val ID = CustomPacketPayload.Type<WindRotorStatePacket>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "wind_rotor_state"))
         val CODEC: StreamCodec<FriendlyByteBuf, WindRotorStatePacket> = StreamCodec.of(
             { value, buf -> write(value, buf) },
             { read(it) }

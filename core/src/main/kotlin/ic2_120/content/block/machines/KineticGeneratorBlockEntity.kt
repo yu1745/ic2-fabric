@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
 import ic2_120.content.block.ITieredMachine
@@ -15,7 +21,7 @@ import ic2_120.registry.type
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.nbt.CompoundTag
 
@@ -55,7 +61,7 @@ class KineticGeneratorBlockEntity(
     @RegisterEnergy
     val sync = KineticGeneratorSync(
         schema = syncedData,
-        getFacing = { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        getFacing = { world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
 
@@ -146,7 +152,7 @@ class KineticGeneratorBlockEntity(
             sync.isGenerating = 0
         }
 
-        val runThreshold = if (state.get(KineticGeneratorBlock.ACTIVE)) STOP_THRESHOLD_KU else START_THRESHOLD_KU
+        val runThreshold = if (state.getValue(KineticGeneratorBlock.ACTIVE)) STOP_THRESHOLD_KU else START_THRESHOLD_KU
         val active = sync.currentKu >= runThreshold
         setActiveState(world, pos, state, active)
         sync.syncCurrentTickFlow()

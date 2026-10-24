@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.RecipeCacheEpoch
 import ic2_120.content.block.ExtractorBlock
 import ic2_120.content.sound.MachineSoundConfig
@@ -32,11 +39,10 @@ import ic2_120.registry.annotation.ModMachineRecipeBinding
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
-import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
@@ -99,11 +105,11 @@ class ExtractorBlockEntity(
         const val INVENTORY_SIZE = 7
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
@@ -111,7 +117,7 @@ class ExtractorBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust }, maxPerSlot = 1)
         ),
         extractSlots = intArrayOf(SLOT_OUTPUT),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -146,15 +152,15 @@ class ExtractorBlockEntity(
             stack.count = 1
         }
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> isRecipeInput(stack)
@@ -174,9 +180,9 @@ class ExtractorBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         ExtractorScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(ExtractorSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -189,9 +195,9 @@ class ExtractorBlockEntity(
         energyDebtF = if (nbt.contains("EnergyDebt")) nbt.getFloat("EnergyDebt").coerceAtLeast(0f) else 0f
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(ExtractorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -233,7 +239,7 @@ class ExtractorBlockEntity(
         }
         val result = recipe.output
         val outputSlot = getStack(SLOT_OUTPUT)
-        val maxStack = result.maxCount
+        val maxStack = result.maxStackSize
         val canAccept = outputSlot.isEmpty() ||
             (ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= maxStack)
 
@@ -245,13 +251,13 @@ class ExtractorBlockEntity(
         }
 
         if (progressF >= ExtractorSync.PROGRESS_MAX) {
-            input.decrement(1)
+            input.shrink(1)
             if (outputSlot.isEmpty()) setStack(SLOT_OUTPUT, result.copy())
-            else outputSlot.increment(result.count)
+            else outputSlot.grow(result.count)
             progressF = 0f
             energyDebtF = 0f
             sync.progress = 0
-            markDirty()
+            setChanged()
             sync.syncCurrentTickFlow()
             return
         }
@@ -265,7 +271,7 @@ class ExtractorBlockEntity(
             // 浮点进度：1.4286^n 直接累加；封顶 PROGRESS_MAX 防极端超频（+Inf）免费完工
             progressF = (progressF + speedMultiplier).coerceAtMost(ExtractorSync.PROGRESS_MAX.toFloat())
             sync.progress = progressF.toInt()
-            markDirty()
+            setChanged()
             setActiveState(world, pos, state, true)
         } else {
             // 停顿期间不累计债务：防恢复供电后 need 超容量 all-or-nothing 卡死
@@ -327,7 +333,7 @@ class ExtractorBlockEntity(
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
+        setChanged()
     }
     /** P1（2026-08-26）：pulling 候选快速否定——(配方类型, Item) 布尔缓存零分配作答。
      *  返回 false = 该 item 必然不被输入槽接受；true = 值得走完整 isValid 裁决。 */

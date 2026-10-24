@@ -17,8 +17,8 @@ class FurnaceOutputSlot(
     private val onTake: (Player) -> Unit
 ) : PredicateSlot(inventory, index, x, y, spec) {
 
-    override fun onTakeItem(player: Player, stack: ItemStack) {
+    override fun onTake(player: Player, stack: ItemStack) {
         onTake(player)
-        super.onTakeItem(player, stack)
+        super.onTake(player, stack)
     }
 }

@@ -1,5 +1,11 @@
+import ic2_120.compat.time
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 ﻿package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.CropBlock
 import ic2_120.content.block.CropBlockEntity
@@ -22,7 +28,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -50,17 +56,17 @@ class UvLampBlockEntity(
     state: BlockState
 ) : BlockEntity(type, pos, state), Container, IRoutedSidedInventory, ExtendedScreenHandlerFactory {
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(SLOT_UPGRADE), matcher = { it.item is IUpgradeItem }, maxPerSlot = MAX_OVERCLOCKERS)
         ),
         extractSlots = intArrayOf(SLOT_UPGRADE),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -79,15 +85,15 @@ class UvLampBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
         if (stack.count > MAX_OVERCLOCKERS) stack.count = MAX_OVERCLOCKERS
-        markDirty()
+        setChanged()
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean {
@@ -116,16 +122,16 @@ class UvLampBlockEntity(
 
     // ========== NBT ==========
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(UvLampSync.NBT_ENERGY_STORED, sync.amount)
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(UvLampSync.NBT_ENERGY_STORED))
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
@@ -165,7 +171,7 @@ class UvLampBlockEntity(
         }
 
         sync.syncCurrentTickFlow()
-        markDirty()
+        setChanged()
     }
 
     /** 统计升级槽中超频升级的数量（最大 MAX_OVERCLOCKERS） */
@@ -190,8 +196,8 @@ class UvLampBlockEntity(
                     if (be is CropBlockEntity) {
                         val cropState = world.getBlockState(cropPos)
                         if (!cropState.contains(CropBlock.CROP_TYPE) || !cropState.contains(CropBlock.AGE)) continue
-                        val age = cropState.get(CropBlock.AGE)
-                        val cropType = cropState.get(CropBlock.CROP_TYPE)
+                        val age = cropState.getValue(CropBlock.AGE)
+                        val cropType = cropState.getValue(CropBlock.CROP_TYPE)
                         val maxAge = ic2_120.content.crop.CropSystem.maxAge(cropType)
                         if (age >= maxAge) continue
                         // 注入额外生长点数：ocCount * ESTIMATED_BASE_GROWTH
@@ -228,8 +234,8 @@ class UvLampBlockEntity(
     }
 
     private fun setActiveState(world: Level, pos: BlockPos, state: BlockState, active: Boolean) {
-        if (state.get(UvLampBlock.ACTIVE) != active) {
-            world.setBlockState(pos, state.with(UvLampBlock.ACTIVE, active))
+        if (state.getValue(UvLampBlock.ACTIVE) != active) {
+            world.setBlock(pos, state.setValue(UvLampBlock.ACTIVE, active))
         }
     }
 

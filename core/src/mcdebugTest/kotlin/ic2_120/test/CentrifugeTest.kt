@@ -49,7 +49,7 @@ class CentrifugeTest {
     fun cobblestoneToStoneDust(ctx: TestContext) {
         // 配方 minHeat=100；PROGRESS_MAX=500 tick（25s），预算 40*20=800 tick（对齐 TS 版）
         setupCentrifugeHot(ctx, 100)
-        insertItem(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
         waitUntil(ctx, invItemEquals(ctx.origin, 1, "ic2_120:stone_dust"), 40 * 20)
         assertSlotHas(ctx, ctx.origin, 1, "ic2_120:stone_dust")
         assertSlotEmpty(ctx, ctx.origin, 0)
@@ -59,7 +59,7 @@ class CentrifugeTest {
     fun crushedCopperTo3Outputs(ctx: TestContext) {
         // 配方 minHeat=500；输出：slot 1 = small_tin_dust, slot 2 = copper_dust
         setupCentrifugeHot(ctx, 500)
-        insertItem(ctx, ctx.origin, "ic2_120:crushed_copper", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:crushed_copper", 1, 0)
         waitUntil(ctx, invItemEquals(ctx.origin, 2, "ic2_120:copper_dust"), 40 * 20)
         assertSlotHas(ctx, ctx.origin, 1, "ic2_120:small_tin_dust")
         assertSlotHas(ctx, ctx.origin, 2, "ic2_120:copper_dust")
@@ -68,7 +68,7 @@ class CentrifugeTest {
     @Test
     fun noPowerIdle(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:centrifuge")
-        insertItem(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:cobblestone")
         assertSlotEmpty(ctx, ctx.origin, 1)
@@ -78,7 +78,7 @@ class CentrifugeTest {
     @Test
     fun heatStarveColdCentrifuge(ctx: TestContext) {
         setupCentrifuge(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:cobblestone")
         assertSlotEmpty(ctx, ctx.origin, 1)
@@ -87,7 +87,7 @@ class CentrifugeTest {
     @Test
     fun invalidInputDirt(ctx: TestContext) {
         setupCentrifugeHot(ctx, 0)
-        insertItem(ctx, ctx.origin, "minecraft:dirt", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:dirt", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:dirt")
         assertSlotEmpty(ctx, ctx.origin, 1)
@@ -97,7 +97,7 @@ class CentrifugeTest {
     fun outputFullBlocksNext(ctx: TestContext) {
         setupCentrifugeHot(ctx, 0)
         setSlot(ctx, ctx.origin, 1, "ic2_120:stone_dust", 64)
-        insertItem(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:cobblestone")
     }

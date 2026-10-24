@@ -6,7 +6,7 @@ import ic2_120.content.screen.WaterKineticGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component as McText
 import net.minecraft.resources.ResourceLocation
 

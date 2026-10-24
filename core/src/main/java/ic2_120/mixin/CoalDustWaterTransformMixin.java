@@ -64,7 +64,7 @@ public abstract class CoalDustWaterTransformMixin {
         this.ic2$coalWaterTransformTicks = 0;
 
         ItemStack output = new ItemStack(BuiltInRegistries.ITEM.get(IC2_COAL_FUEL_DUST));
-        stack.decrement(1);
+        stack.shrink(1);
         if (stack.isEmpty()) {
             this.setStack(output);
         } else {

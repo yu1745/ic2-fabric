@@ -1,5 +1,6 @@
 package buildcraft_addon.content.blockentity
 
+import net.minecraft.core.HolderLookup
 import buildcraft_addon.content.block.StoneEngineBlock
 import buildcraft_addon.content.screen.StoneEngineScreenHandler
 import ic2_120.content.block.transmission.IKineticMachinePort
@@ -10,7 +11,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -86,7 +87,7 @@ class StoneEngineBlockEntity(
     override fun getDisplayName(): Component = Component.translatable("block.buildcraft_addon.stone_engine")
 
     // === 燃料 ===
-    private val inventory = NonNullList.ofSize(1, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(1, ItemStack.EMPTY)
     var burnTime: Int = 0
     var totalBurnTime: Int = 0
 
@@ -134,7 +135,7 @@ class StoneEngineBlockEntity(
         val extracted = minOf(amount, pendingOutputKu.coerceAtLeast(0))
         if (!simulate && extracted > 0) {
             pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
         return extracted
     }
@@ -157,7 +158,7 @@ class StoneEngineBlockEntity(
         val powered = world.isReceivingRedstonePower(pos)
         if (powered != isRedstonePowered) {
             isRedstonePowered = powered
-            markDirty()
+            setChanged()
         }
     }
 
@@ -165,8 +166,8 @@ class StoneEngineBlockEntity(
         val world = world ?: return
         val next = Direction.entries[(current.ordinal + 1) % 6]
         currentDirection = next
-        world.setBlockState(pos, cachedState.with(BlockStateProperties.FACING, next))
-        markDirty()
+        world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, next))
+        setChanged()
     }
 
     // === 活塞速度（BC 原版石引擎） ===
@@ -219,16 +220,16 @@ class StoneEngineBlockEntity(
         if (containerItem != Items.AIR) {
             inventory[SLOT_FUEL] = ItemStack(containerItem)
         } else {
-            fuel.decrement(1)
+            fuel.shrink(1)
         }
-        markDirty()
+        setChanged()
     }
 
     // === 服务端 tick ===
     fun serverTick() {
         val world = world ?: return
         if (world.isClient) return
-        currentDirection = cachedState.get(BlockStateProperties.FACING)
+        currentDirection = cachedState.getValue(BlockStateProperties.FACING)
         pendingOutputKu = 0
 
         // 燃料消耗
@@ -259,14 +260,14 @@ class StoneEngineBlockEntity(
 
         currentStage = computePowerStage()
         tickPiston()
-        markDirty()
+        setChanged()
     }
 
     // === 客户端 tick ===
     fun clientTick() {
         val world = world ?: return
         if (!world.isClient) return
-        currentDirection = cachedState.get(BlockStateProperties.FACING)
+        currentDirection = cachedState.getValue(BlockStateProperties.FACING)
 
         val powered = world.isReceivingRedstonePower(pos)
         isRedstonePowered = powered
@@ -303,19 +304,19 @@ class StoneEngineBlockEntity(
     override fun size(): Int = 1
     override fun getStack(slot: Int): ItemStack = inventory[slot]
     override fun setStack(slot: Int, stack: ItemStack) { inventory[slot] = stack }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = inventory[slot].split(amount)
-    override fun removeStack(slot: Int): ItemStack {
+    override fun removeItem(slot: Int, amount: Int): ItemStack = inventory[slot].split(amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack {
         val stack = inventory[slot]
         inventory[slot] = ItemStack.EMPTY
         return stack
     }
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun clear() { inventory.fill(ItemStack.EMPTY) }
-    override fun canPlayerUse(player: net.minecraft.world.entity.player.Player): Boolean = true
+    override fun stillValid(player: net.minecraft.world.entity.player.Player): Boolean = true
 
     // === NBT ===
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putDouble("heat", heat)
         nbt.putFloat("progress", progress)
         nbt.putInt("progressPart", progressPart)
@@ -333,8 +334,8 @@ class StoneEngineBlockEntity(
         }
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         heat = nbt.getDouble("heat")
         progress = nbt.getFloat("progress")
         progressPart = nbt.getInt("progressPart")

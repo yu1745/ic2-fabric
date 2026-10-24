@@ -99,7 +99,7 @@ class PipeBlockEntityRenderer(
         overlay: Int
     ) {
         val state = entity.cachedState
-        if (!state.get(BasePipeBlock.TRANSPARENT)) return
+        if (!state.getValue(BasePipeBlock.TRANSPARENT)) return
 
         val block = state.block as? BasePipeBlock ?: return
         val world = entity.world ?: return
@@ -133,7 +133,7 @@ class PipeBlockEntityRenderer(
         if (block is PumpAttachmentBlock && state.contains(BlockStateProperties.FACING)) {
             drawPumpAttachmentPlate(
                 entry, shellVc, light, overlay,
-                state.get(BlockStateProperties.FACING),
+                state.getValue(BlockStateProperties.FACING),
                 matR, matG, matB
             )
         }
@@ -142,7 +142,7 @@ class PipeBlockEntityRenderer(
         if (fluid != null) {
             val fluidSprites = FluidRenderHandlerRegistry.INSTANCE
                 .get(fluid)
-                ?.getFluidSprites(world, entity.pos, fluid.defaultState)
+                ?.getFluidSprites(world, entity.pos, fluid.defaultBlockState)
             val fluidSprite = fluidSprites?.firstOrNull()
             val fluidColor = getFluidTintColor(fluid)
             val fluidVc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(InventoryMenu.BLOCK_ATLAS_TEXTURE))
@@ -192,16 +192,16 @@ class PipeBlockEntityRenderer(
         min: Float, max: Float,
         r: Int, g: Int, b: Int
     ) {
-        val activeX = state.get(BasePipeBlock.WEST) || state.get(BasePipeBlock.EAST)
-        val activeY = state.get(BasePipeBlock.DOWN) || state.get(BasePipeBlock.UP)
-        val activeZ = state.get(BasePipeBlock.NORTH) || state.get(BasePipeBlock.SOUTH)
+        val activeX = state.getValue(BasePipeBlock.WEST) || state.getValue(BasePipeBlock.EAST)
+        val activeY = state.getValue(BasePipeBlock.DOWN) || state.getValue(BasePipeBlock.UP)
+        val activeZ = state.getValue(BasePipeBlock.NORTH) || state.getValue(BasePipeBlock.SOUTH)
         val hasAnyAxis = activeX || activeY || activeZ
 
         if (activeX || !hasAnyAxis) {
             drawCornerRibsOnAxis(
                 axis = Direction.Axis.X,
-                from = if (state.get(BasePipeBlock.WEST)) 0.0f else min,
-                to = if (state.get(BasePipeBlock.EAST)) 1.0f else max,
+                from = if (state.getValue(BasePipeBlock.WEST)) 0.0f else min,
+                to = if (state.getValue(BasePipeBlock.EAST)) 1.0f else max,
                 min = min,
                 max = max,
                 entry = entry,
@@ -214,8 +214,8 @@ class PipeBlockEntityRenderer(
         if (activeY || !hasAnyAxis) {
             drawCornerRibsOnAxis(
                 axis = Direction.Axis.Y,
-                from = if (state.get(BasePipeBlock.DOWN)) 0.0f else min,
-                to = if (state.get(BasePipeBlock.UP)) 1.0f else max,
+                from = if (state.getValue(BasePipeBlock.DOWN)) 0.0f else min,
+                to = if (state.getValue(BasePipeBlock.UP)) 1.0f else max,
                 min = min,
                 max = max,
                 entry = entry,
@@ -228,8 +228,8 @@ class PipeBlockEntityRenderer(
         if (activeZ || !hasAnyAxis) {
             drawCornerRibsOnAxis(
                 axis = Direction.Axis.Z,
-                from = if (state.get(BasePipeBlock.NORTH)) 0.0f else min,
-                to = if (state.get(BasePipeBlock.SOUTH)) 1.0f else max,
+                from = if (state.getValue(BasePipeBlock.NORTH)) 0.0f else min,
+                to = if (state.getValue(BasePipeBlock.SOUTH)) 1.0f else max,
                 min = min,
                 max = max,
                 entry = entry,
@@ -277,16 +277,16 @@ class PipeBlockEntityRenderer(
         paneB: Int,
         paneA: Int
     ) {
-        val activeX = state.get(BasePipeBlock.WEST) || state.get(BasePipeBlock.EAST)
-        val activeY = state.get(BasePipeBlock.DOWN) || state.get(BasePipeBlock.UP)
-        val activeZ = state.get(BasePipeBlock.NORTH) || state.get(BasePipeBlock.SOUTH)
+        val activeX = state.getValue(BasePipeBlock.WEST) || state.getValue(BasePipeBlock.EAST)
+        val activeY = state.getValue(BasePipeBlock.DOWN) || state.getValue(BasePipeBlock.UP)
+        val activeZ = state.getValue(BasePipeBlock.NORTH) || state.getValue(BasePipeBlock.SOUTH)
         val hasAnyAxis = activeX || activeY || activeZ
 
         if (activeX || !hasAnyAxis) {
             drawGlassOnAxis(
                 axis = Direction.Axis.X,
-                from = if (state.get(BasePipeBlock.WEST)) 0.0f else min,
-                to = if (state.get(BasePipeBlock.EAST)) 1.0f else max,
+                from = if (state.getValue(BasePipeBlock.WEST)) 0.0f else min,
+                to = if (state.getValue(BasePipeBlock.EAST)) 1.0f else max,
                 min = min,
                 max = max,
                 entry = entry,
@@ -305,8 +305,8 @@ class PipeBlockEntityRenderer(
         if (activeY || !hasAnyAxis) {
             drawGlassOnAxis(
                 axis = Direction.Axis.Y,
-                from = if (state.get(BasePipeBlock.DOWN)) 0.0f else min,
-                to = if (state.get(BasePipeBlock.UP)) 1.0f else max,
+                from = if (state.getValue(BasePipeBlock.DOWN)) 0.0f else min,
+                to = if (state.getValue(BasePipeBlock.UP)) 1.0f else max,
                 min = min,
                 max = max,
                 entry = entry,
@@ -325,8 +325,8 @@ class PipeBlockEntityRenderer(
         if (activeZ || !hasAnyAxis) {
             drawGlassOnAxis(
                 axis = Direction.Axis.Z,
-                from = if (state.get(BasePipeBlock.NORTH)) 0.0f else min,
-                to = if (state.get(BasePipeBlock.SOUTH)) 1.0f else max,
+                from = if (state.getValue(BasePipeBlock.NORTH)) 0.0f else min,
+                to = if (state.getValue(BasePipeBlock.SOUTH)) 1.0f else max,
                 min = min,
                 max = max,
                 entry = entry,
@@ -443,16 +443,16 @@ class PipeBlockEntityRenderer(
         particleB: Int,
         particleA: Int
     ) {
-        val activeX = state.get(BasePipeBlock.WEST) || state.get(BasePipeBlock.EAST)
-        val activeY = state.get(BasePipeBlock.DOWN) || state.get(BasePipeBlock.UP)
-        val activeZ = state.get(BasePipeBlock.NORTH) || state.get(BasePipeBlock.SOUTH)
+        val activeX = state.getValue(BasePipeBlock.WEST) || state.getValue(BasePipeBlock.EAST)
+        val activeY = state.getValue(BasePipeBlock.DOWN) || state.getValue(BasePipeBlock.UP)
+        val activeZ = state.getValue(BasePipeBlock.NORTH) || state.getValue(BasePipeBlock.SOUTH)
         val hasAnyAxis = activeX || activeY || activeZ
 
         if (activeX || !hasAnyAxis) {
             drawParticlesOnAxis(
                 Direction.Axis.X,
-                if (state.get(BasePipeBlock.WEST)) 0.0f else min,
-                if (state.get(BasePipeBlock.EAST)) 1.0f else max,
+                if (state.getValue(BasePipeBlock.WEST)) 0.0f else min,
+                if (state.getValue(BasePipeBlock.EAST)) 1.0f else max,
                 min, max, cutCenter, paneInset, paneThickness,
                 entry, vc, light, overlay, particleR, particleG, particleB, particleA
             )
@@ -460,8 +460,8 @@ class PipeBlockEntityRenderer(
         if (activeY || !hasAnyAxis) {
             drawParticlesOnAxis(
                 Direction.Axis.Y,
-                if (state.get(BasePipeBlock.DOWN)) 0.0f else min,
-                if (state.get(BasePipeBlock.UP)) 1.0f else max,
+                if (state.getValue(BasePipeBlock.DOWN)) 0.0f else min,
+                if (state.getValue(BasePipeBlock.UP)) 1.0f else max,
                 min, max, cutCenter, paneInset, paneThickness,
                 entry, vc, light, overlay, particleR, particleG, particleB, particleA
             )
@@ -469,8 +469,8 @@ class PipeBlockEntityRenderer(
         if (activeZ || !hasAnyAxis) {
             drawParticlesOnAxis(
                 Direction.Axis.Z,
-                if (state.get(BasePipeBlock.NORTH)) 0.0f else min,
-                if (state.get(BasePipeBlock.SOUTH)) 1.0f else max,
+                if (state.getValue(BasePipeBlock.NORTH)) 0.0f else min,
+                if (state.getValue(BasePipeBlock.SOUTH)) 1.0f else max,
                 min, max, cutCenter, paneInset, paneThickness,
                 entry, vc, light, overlay, particleR, particleG, particleB, particleA
             )
@@ -999,7 +999,7 @@ class PipeBlockEntityRenderer(
     private fun getFluidTintColor(fluid: Fluid): Int {
         val world = Minecraft.getInstance().world ?: return 0xFFFFFF
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return 0xFFFFFF
-        return handler.getFluidColor(world, BlockPos.ORIGIN, fluid.defaultState)
+        return handler.getFluidColor(world, BlockPos.ORIGIN, fluid.defaultBlockState)
     }
 
     override fun rendersOutsideBoundingBox(entity: PipeBlockEntity): Boolean = true

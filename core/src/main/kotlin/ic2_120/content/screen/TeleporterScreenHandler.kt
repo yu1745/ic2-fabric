@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.block.TeleporterBlock
 import ic2_120.content.block.machines.TeleporterBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
@@ -16,7 +18,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.network.chat.Component as McText
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ContainerData
@@ -43,8 +45,8 @@ class TeleporterScreenHandler(
     }
 
     init {
-        checkSize(blockInventory, TeleporterBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, TeleporterBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
 
         for (i in 0 until 2) {
             addTrackedSlot(blockInventory, TeleporterBlockEntity.SLOT_UPGRADE_INDICES[i], upgradeSlotSpec)
@@ -67,7 +69,7 @@ class TeleporterScreenHandler(
         addSlot(PredicateSlot(inventory, beSlotIndex, 0, 0, spec))
     }
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (id != BUTTON_ID_RANGE_1 && id != BUTTON_ID_RANGE_3) return false
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? TeleporterBlockEntity ?: return@get
@@ -81,16 +83,16 @@ class TeleporterScreenHandler(
         return true
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
                 beSlot >= 0 -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
@@ -105,19 +107,19 @@ class TeleporterScreenHandler(
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
+            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
-            world.getBlockState(pos).block is TeleporterBlock && player.squaredDistanceTo(
+            world.getBlockState(pos).block is TeleporterBlock && player.distanceToSqr(
                 pos.x + 0.5,
                 pos.y + 0.5,
                 pos.z + 0.5

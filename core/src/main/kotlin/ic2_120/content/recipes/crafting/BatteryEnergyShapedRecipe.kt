@@ -131,7 +131,7 @@ private fun setStorageEnergy(result: ItemStack, energy: Long) {
 
 @ModMachineRecipe(id = "battery_energy_shaped", recipeClass = BatteryEnergyShapedRecipe::class)
 object BatteryEnergyShapedRecipeSerializer : RecipeSerializer<BatteryEnergyShapedRecipe> {
-    override fun read(id: ResourceLocation, json: JsonObject): BatteryEnergyShapedRecipe {
+    override fun fromJson(id: ResourceLocation, json: JsonObject, lookup: HolderLookup.Provider): BatteryEnergyShapedRecipe {
         val shaped = RecipeSerializer.SHAPED.read(id, json)
         return BatteryEnergyShapedRecipe(shaped)
     }

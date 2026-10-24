@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.sync.TransformerSync
 import ic2_120.content.syncs.SyncedData
@@ -12,12 +18,11 @@ import ic2_120.content.block.EvTransformerBlock
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
-import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.nbt.CompoundTag
 
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -71,7 +76,7 @@ open class TransformerBlockEntity(
     @RegisterEnergy
     val sync = TransformerSync(
         syncedData,
-        { world?.getBlockState(pos)?.get(BlockStateProperties.FACING) ?: Direction.NORTH },
+        { world?.getBlockState(pos)?.getValue(BlockStateProperties.FACING) ?: Direction.NORTH },
         { world?.time },
         transformerTier
     )
@@ -91,7 +96,7 @@ open class TransformerBlockEntity(
     override fun getVoltageTierForSide(side: Direction?): Int {
         if (side == null) return tier
 
-        val facing = world?.getBlockState(pos)?.get(BlockStateProperties.FACING) ?: return tier
+        val facing = world?.getBlockState(pos)?.getValue(BlockStateProperties.FACING) ?: return tier
         val isFront = (side == facing)
 
         // 正面是高级，其他面都是低级
@@ -151,12 +156,12 @@ open class TransformerBlockEntity(
      */
     fun toggleMode() {
         sync.toggleMode()
-        markDirty()
+        setChanged()
     }
 
     fun setModeDirect(mode: TransformerSync.Mode) {
         sync.setMode(mode)
-        markDirty()
+        setChanged()
     }
 
     /**
@@ -176,11 +181,11 @@ open class TransformerBlockEntity(
 
         // 更新方块状态
         val currentMode = sync.getMode()
-        val wasActive = state.get(TransformerBlock.ACTIVE)
+        val wasActive = state.getValue(TransformerBlock.ACTIVE)
         val isActive = sync.amount > 0
 
         if (wasActive != isActive) {
-            world.setBlockState(pos, state.with(TransformerBlock.ACTIVE, isActive))
+            world.setBlock(pos, state.setValue(TransformerBlock.ACTIVE, isActive))
         }
 
         // 调试日志：记录能量流动

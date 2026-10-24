@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
@@ -61,9 +61,9 @@ class CokeKilnScreen(
         // 流体槽 (115,41) 16×16，有流体时满平铺
         val fluidAmount = handler.sync.fluidAmount.coerceAtLeast(0)
         if (fluidAmount > 0) run {
-            val fluid = BuiltInRegistries.FLUID.get(handler.sync.fluidRawId)
+            val fluid = BuiltInRegistries.FLUID.getValue(andler.sync.fluidRawId)
             val fluidHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return@run
-            val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultState).getOrNull(0) ?: return@run
+            val sprite = fluidHandler.getFluidSprites(null, null, fluid.defaultBlockState).getOrNull(0) ?: return@run
             val color = FluidUtils.getFluidColor(fluid)
             if (color == -1) return@run
             val r = ((color shr 16) and 0xFF) / 255f
@@ -88,10 +88,10 @@ class CokeKilnScreen(
         val relY = mouseY - top
         if (relX in TANK_X until TANK_X + SLOT_S && relY in TANK_Y until TANK_Y + SLOT_S) {
             val lines = if (fluidAmount > 0) {
-                val fluid = BuiltInRegistries.FLUID.get(handler.sync.fluidRawId)
+                val fluid = BuiltInRegistries.FLUID.getValue(andler.sync.fluidRawId)
                 val mb = fluidAmount / DROPLETS_PER_MB
                 val capMb = 8 * FluidConstants.BUCKET / DROPLETS_PER_MB
-                listOf(Component.literal(fluid.defaultState.blockState.block.name.string),
+                listOf(Component.literal(fluid.defaultBlockState.blockState.block.name.string),
                     Component.literal("${"%,d".format(mb)} / ${"%,d".format(capMb)} mB"))
             } else {
                 listOf(Component.literal("空"))

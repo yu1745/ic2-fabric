@@ -5,7 +5,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceLocation
 
-class TabIconIc2AdvancedWeaponsItem : Item(Item.Settings())
+class TabIconIc2AdvancedWeaponsItem : Item(Item.Properties())
 
 object CreativeTabIconItemsRegistration {
     fun register(modId: String) {

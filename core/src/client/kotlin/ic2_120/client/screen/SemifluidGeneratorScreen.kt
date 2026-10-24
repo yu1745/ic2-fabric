@@ -13,7 +13,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.resources.language.I18n
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.TagKey
@@ -114,7 +114,7 @@ class SemifluidGeneratorScreen(
         // 获取流体 sprite 和颜色
         val fluid = if (fuelFluidRawId > 0) BuiltInRegistries.FLUID.get(fuelFluidRawId) else null
         val fluidHandler = fluid?.let { FluidRenderHandlerRegistry.INSTANCE.get(it) }
-        val sprites = fluidHandler?.getFluidSprites(null, null, fluid.defaultState)
+        val sprites = fluidHandler?.getFluidSprites(null, null, fluid.defaultBlockState)
         val sprite = sprites?.getOrNull(0)
         val color = fluid?.let { FluidUtils.getFluidColor(it) } ?: -1
 
@@ -143,15 +143,15 @@ class SemifluidGeneratorScreen(
     }
 
     private fun addSupportedFluidTooltipLines(lines: MutableList<Component>) {
-        lines.add(Component.translatable("gui.ic2_120.semifluid_generator.supported_fluids").formatted(ChatFormatting.GOLD))
+        lines.add(Component.translatable("gui.ic2_120.semifluid_generator.supported_fluids").withStyle(ChatFormatting.GOLD))
         addSupportedFluidGroup(
             lines,
-            Component.translatable("gui.ic2_120.semifluid_generator.biofuel_equivalent", "32,000", "16").formatted(ChatFormatting.GRAY),
+            Component.translatable("gui.ic2_120.semifluid_generator.biofuel_equivalent", "32,000", "16").withStyle(ChatFormatting.GRAY),
             ModTags.Compat.Fluids.SEMIFLUID_BIOFUEL_EQUIVALENT
         )
         addSupportedFluidGroup(
             lines,
-            Component.translatable("gui.ic2_120.semifluid_generator.creosote_equivalent", "3,200", "8").formatted(ChatFormatting.GRAY),
+            Component.translatable("gui.ic2_120.semifluid_generator.creosote_equivalent", "3,200", "8").withStyle(ChatFormatting.GRAY),
             ModTags.Compat.Fluids.SEMIFLUID_CREOSOTE_EQUIVALENT
         )
     }
@@ -160,11 +160,11 @@ class SemifluidGeneratorScreen(
         lines.add(header)
         val fluids = supportedFluids(tag)
         if (fluids.isEmpty()) {
-            lines.add(Component.translatable("gui.ic2_120.semifluid_generator.no_supported_fluids").formatted(ChatFormatting.DARK_GRAY))
+            lines.add(Component.translatable("gui.ic2_120.semifluid_generator.no_supported_fluids").withStyle(ChatFormatting.DARK_GRAY))
             return
         }
         fluids.forEach { fluid ->
-            lines.add(Component.literal("  - ").formatted(ChatFormatting.DARK_GRAY).append(fluidDisplayText(fluid)))
+            lines.add(Component.literal("  - ").withStyle(ChatFormatting.DARK_GRAY).append(fluidDisplayText(fluid)))
         }
     }
 
@@ -172,7 +172,7 @@ class SemifluidGeneratorScreen(
         val fluids = mutableListOf<Fluid>()
         BuiltInRegistries.FLUID.forEach { fluid ->
             // Fluid.isIn(TagKey) 在 1.20.1 已 @Deprecated，改用未废弃的 FluidState.isIn。
-            if (fluid.defaultState.isIn(tag) && !isFlowingVariant(fluid)) fluids.add(fluid)
+            if (fluid.defaultBlockState.isIn(tag) && !isFlowingVariant(fluid)) fluids.add(fluid)
         }
         return fluids.sortedBy { BuiltInRegistries.FLUID.getId(it).toString() }
     }
@@ -185,9 +185,9 @@ class SemifluidGeneratorScreen(
             I18n.hasTranslation(fluidKey) -> Component.translatable(fluidKey)
             I18n.hasTranslation(blockKey) -> Component.translatable(blockKey)
             else -> Component.literal(humanizeFluidPath(id.path))
-        }.formatted(ChatFormatting.DARK_AQUA)
+        }.withStyle(ChatFormatting.DARK_AQUA)
         if (id.namespace == "ic2_120") return fluidName
-        return Component.literal("[${id.namespace}] ").formatted(ChatFormatting.DARK_GRAY)
+        return Component.literal("[${id.namespace}] ").withStyle(ChatFormatting.DARK_GRAY)
             .append(fluidName)
     }
 

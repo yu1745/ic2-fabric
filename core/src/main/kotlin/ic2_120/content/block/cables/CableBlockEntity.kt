@@ -1,5 +1,11 @@
 package ic2_120.content.block.cables
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.block.energy.EnergyNetwork
 import ic2_120.content.block.energy.EnergyNetworkManager
@@ -84,11 +90,11 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         }
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         localEnergy = nbt.getLong(NBT_ENERGY)
-        configuredLimit = if (nbt.contains(NBT_LIMIT)) nbt.getLong(NBT_LIMIT) else 0
-        splitterThreshold = if (nbt.contains(NBT_SPLITTER_THRESHOLD)) {
+        configuredLimit = if (nbt.hasProperty(NBT_LIMIT)) nbt.getLong(NBT_LIMIT) else 0
+        splitterThreshold = if (nbt.hasProperty(NBT_SPLITTER_THRESHOLD)) {
             nbt.getInt(NBT_SPLITTER_THRESHOLD).coerceIn(MIN_SPLITTER_THRESHOLD, MAX_SPLITTER_THRESHOLD)
         } else {
             DEFAULT_SPLITTER_THRESHOLD
@@ -96,8 +102,8 @@ class CableBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(TYPE, pos
         splitterInverted = nbt.getBoolean(NBT_SPLITTER_INVERTED)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putLong(NBT_ENERGY, network?.getEnergySharePerCable() ?: localEnergy)
         if (configuredLimit > 0) {
             nbt.putLong(NBT_LIMIT, configuredLimit)

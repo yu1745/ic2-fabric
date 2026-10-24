@@ -1,5 +1,9 @@
 package ic2_120.content.block.transmission
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.resources.ResourceKey
 import net.minecraft.core.BlockPos

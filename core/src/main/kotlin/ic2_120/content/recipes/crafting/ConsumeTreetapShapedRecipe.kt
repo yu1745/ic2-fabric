@@ -31,7 +31,7 @@ class ConsumeTreetapShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
     delegate.showNotification()
 ) {
     override fun getRemainder(inventory: CraftingContainer): NonNullList<ItemStack> {
-        val remainder = NonNullList.ofSize(inventory.size(), ItemStack.EMPTY)
+        val remainder = NonNullList.withSize(inventory.size(), ItemStack.EMPTY)
         for (slot in 0 until inventory.size()) {
             val stack = inventory.getStack(slot)
             if (stack.isEmpty) continue
@@ -45,7 +45,7 @@ class ConsumeTreetapShapedRecipe(delegate: ShapedRecipe) : ShapedRecipe(
 
 @ModMachineRecipe(id = "consume_treetap_shaped", recipeClass = ConsumeTreetapShapedRecipe::class)
 object ConsumeTreetapShapedRecipeSerializer : RecipeSerializer<ConsumeTreetapShapedRecipe> {
-    override fun read(id: ResourceLocation, json: JsonObject): ConsumeTreetapShapedRecipe {
+    override fun fromJson(id: ResourceLocation, json: JsonObject, lookup: HolderLookup.Provider): ConsumeTreetapShapedRecipe {
         val shaped = RecipeSerializer.SHAPED.read(id, json)
         return ConsumeTreetapShapedRecipe(shaped)
     }

@@ -1,5 +1,6 @@
 package buildcraft_addon.content.blockentity
 
+import net.minecraft.core.HolderLookup
 import buildcraft_addon.content.block.RedstoneEngineBlock
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.registry.annotation.ModBlockEntity
@@ -72,7 +73,7 @@ class RedstoneEngineBlockEntity(
         val extracted = minOf(amount, pendingOutputKu.coerceAtLeast(0))
         if (!simulate && extracted > 0) {
             pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
         return extracted
     }
@@ -97,7 +98,7 @@ class RedstoneEngineBlockEntity(
         val powered = world.isReceivingRedstonePower(pos)
         if (powered != isRedstonePowered) {
             isRedstonePowered = powered
-            markDirty()
+            setChanged()
         }
     }
 
@@ -107,8 +108,8 @@ class RedstoneEngineBlockEntity(
             val neighbor = world.getBlockState(pos.offset(dir))
             if (!neighbor.isAir) {
                 currentDirection = dir
-                world.setBlockState(pos, cachedState.with(BlockStateProperties.FACING, dir))
-                markDirty()
+                world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, dir))
+                setChanged()
                 return
             }
         }
@@ -118,14 +119,14 @@ class RedstoneEngineBlockEntity(
         val world = world ?: return
         val next = Direction.entries[(current.ordinal + 1) % 6]
         currentDirection = next
-        world.setBlockState(pos, cachedState.with(BlockStateProperties.FACING, next))
-        markDirty()
+        world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, next))
+        setChanged()
     }
 
     fun serverTick() {
         val world = world ?: return
         if (world.isClient) return
-        currentDirection = cachedState.get(BlockStateProperties.FACING)
+        currentDirection = cachedState.getValue(BlockStateProperties.FACING)
 
         pendingOutputKu = 0
 
@@ -145,13 +146,13 @@ class RedstoneEngineBlockEntity(
             pendingOutputKu = MJ_TO_KU
         }
         tickPiston()
-        markDirty()
+        setChanged()
     }
 
     fun clientTick() {
         val world = world ?: return
         if (!world.isClient) return
-        currentDirection = cachedState.get(BlockStateProperties.FACING)
+        currentDirection = cachedState.getValue(BlockStateProperties.FACING)
 
         val powered = world.isReceivingRedstonePower(pos)
         isRedstonePowered = powered
@@ -187,8 +188,8 @@ class RedstoneEngineBlockEntity(
         }
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putDouble("heat", heat)
         nbt.putFloat("progress", progress)
         nbt.putInt("progressPart", progressPart)
@@ -198,8 +199,8 @@ class RedstoneEngineBlockEntity(
         nbt.putInt("pendingOutputKu", pendingOutputKu)
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         heat = nbt.getDouble("heat")
         progress = nbt.getFloat("progress")
         progressPart = nbt.getInt("progressPart")

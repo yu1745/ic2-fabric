@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.block.SemifluidGeneratorBlock
 import ic2_120.content.block.machines.SemifluidGeneratorBlockEntity
 import ic2_120.content.block.machines.isSemifluidFuel
@@ -14,7 +16,7 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ContainerData
@@ -52,8 +54,8 @@ class SemifluidGeneratorScreenHandler(
     }
 
     init {
-        checkSize(blockInventory, SemifluidGeneratorBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, SemifluidGeneratorBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
 
         val fuelSlotSpec = itemStorage?.deriveSlotSpec(SemifluidGeneratorBlockEntity.FUEL_SLOT) ?: FUEL_SLOT_SPEC
         val emptyContainerSlotSpec = itemStorage?.deriveSlotSpec(SemifluidGeneratorBlockEntity.EMPTY_CONTAINER_SLOT) ?: EMPTY_CONTAINER_SLOT_SPEC
@@ -82,10 +84,10 @@ class SemifluidGeneratorScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when (index) {
@@ -93,12 +95,12 @@ class SemifluidGeneratorScreenHandler(
                 SLOT_FUEL_INDEX,
                 SLOT_EMPTY_CONTAINER_INDEX,
                 SLOT_BATTERY_INDEX -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 // 升级槽 -> 玩家物品栏
                 in SLOT_UPGRADE_INDEX_START..SLOT_UPGRADE_INDEX_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 else -> {
@@ -109,22 +111,22 @@ class SemifluidGeneratorScreenHandler(
                         if (!moved) {
                             return ItemStack.EMPTY
                         }
-                    } else if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) {
+                    } else if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) {
                         return ItemStack.EMPTY
                     }
                 }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
-            else slot.markDirty()
+            else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
-            world.getBlockState(pos).block is SemifluidGeneratorBlock && player.squaredDistanceTo(
+            world.getBlockState(pos).block is SemifluidGeneratorBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)

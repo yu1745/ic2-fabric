@@ -29,8 +29,8 @@ class CannerTest {
         // 两个 16 位键——setField("Mode") 写孤儿键会被 readNbt 忽略（Mode 保持默认）。
         // 必须直接写低位（3 < 65536，高位默认 0）。metal_former 是例外：它有显式 NBT_MODE 键。
         setBeField(ctx, ctx.origin, "Mode_Low", 3) // ENRICH_LIQUID
-        insertItem(ctx, ctx.origin, "ic2_120:transformer_upgrade", 1, 4)
-        insertItem(ctx, ctx.origin, "ic2_120:overclocker_upgrade", 2, 5)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:transformer_upgrade", 1, 4)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:overclocker_upgrade", 2, 5)
         val inserted = ctx.api.fluid.insert(ctx.origin, "minecraft:water", BUCKET, index = 0)
             .asJsonObject.get("inserted").asLong
         if (inserted != BUCKET) throw AssertionError("failed to insert water: $inserted/$BUCKET")
@@ -40,8 +40,8 @@ class CannerTest {
     @Test
     fun mixingFillsEmptyCellDirectly(ctx: TestContext) {
         setupMixingCanner(ctx)
-        insertItem(ctx, ctx.origin, "ic2_120:empty_cell", 1, 0)
-        insertItem(ctx, ctx.origin, "ic2_120:lapis_dust", 8, 1)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:empty_cell", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:lapis_dust", 8, 1)
 
         waitUntil(ctx, invItemEquals(ctx.origin, 2, "ic2_120:coolant_cell"), 15 * 20)
         assertSlotHas(ctx, ctx.origin, 2, "ic2_120:coolant_cell")

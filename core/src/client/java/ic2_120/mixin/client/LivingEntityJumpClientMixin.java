@@ -22,7 +22,7 @@ public class LivingEntityJumpClientMixin {
         LivingEntity self = (LivingEntity) (Object) this;
         if (!(self instanceof LocalPlayer player)) return;
 
-        ItemStack boots = player.getEquippedStack(EquipmentSlot.FEET);
+        ItemStack boots = player.getItemBySlot(EquipmentSlot.FEET);
         if (boots.isEmpty() || !(boots.getItem() instanceof QuantumBoots)) return;
         if (!QuantumBoots.isSuperJumpEnabled(boots)) return;
         if (!QuantumBoots.consumeJumpEnergy(boots)) return;

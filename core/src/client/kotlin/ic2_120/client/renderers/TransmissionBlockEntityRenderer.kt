@@ -64,7 +64,7 @@ class TransmissionBlockEntityRenderer(
             else ((world.time + tickDelta) * degreesPerTickFromKu(entity.currentKu)) % 360.0f
         when (val block = state.block) {
             is TransmissionShaftBlock -> {
-                val axis = if (isItem) Direction.Axis.Y else state.get(BlockStateProperties.AXIS)
+                val axis = if (isItem) Direction.Axis.Y else state.getValue(BlockStateProperties.AXIS)
                 val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(WHITE_TEXTURE))
                 val materialColor = baseColorForMaterial(block.material)
                 matrices.push()
@@ -105,7 +105,7 @@ class TransmissionBlockEntityRenderer(
                     val renderDirs = bevelRenderDirections(world, entity.pos)
 
                     if (renderDirs.isEmpty()) {
-                        val plane = state.get(BevelGearBlock.PLANE)
+                        val plane = state.getValue(BevelGearBlock.PLANE)
                         val (firstAxis, secondAxis) = plane.axes()
                         val firstSideSign = gearSideSign(world, entity.pos, firstAxis, preferPositive = true)
                         val secondSideSign = gearSideSign(world, entity.pos, secondAxis, preferPositive = false)
@@ -241,11 +241,11 @@ class TransmissionBlockEntityRenderer(
         val block = state.block
 
         if (block is TransmissionShaftBlock) {
-            return state.get(BlockStateProperties.AXIS) == axis
+            return state.getValue(BlockStateProperties.AXIS) == axis
         }
 
         if (!state.contains(BlockStateProperties.HORIZONTAL_FACING)) return false
-        val facing = state.get(BlockStateProperties.HORIZONTAL_FACING)
+        val facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING)
         return when (block) {
             // 风力动能发生机：吸附渲染放宽为相邻即识别，输出方向由服务端逻辑决定。
             is WindKineticGeneratorBlock -> true

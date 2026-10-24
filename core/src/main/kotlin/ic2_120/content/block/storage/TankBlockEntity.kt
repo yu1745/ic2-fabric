@@ -1,5 +1,12 @@
 package ic2_120.content.block.storage
 
+import ic2_120.compat.time
+
+import ic2_120.compat.cachedState
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.screen.TankScreenHandler
 import ic2_120.content.sync.TankSync
 import ic2_120.content.syncs.SyncedData
@@ -18,7 +25,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -122,7 +129,7 @@ class TankBlockEntity(
         override fun onFinalCommit() {
             recordCommittedChange()
             syncFluidState()
-            markDirty()
+            setChanged()
         }
     }
 
@@ -299,8 +306,8 @@ class TankBlockEntity(
 
     // ========== NBT 持久化 ==========
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putLong(NBT_FLUID_AMOUNT, tankInternal.amount)
         if (!tankInternal.variant.isBlank) {
             nbt.put(NBT_FLUID_VARIANT, tankInternal.variant.toNbt())
@@ -308,8 +315,8 @@ class TankBlockEntity(
         syncedData.writeNbt(nbt)
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         tankInternal.amount = nbt.getLong(NBT_FLUID_AMOUNT).coerceIn(0L, getCapacity())
         val fluidTag = nbt.getCompound(NBT_FLUID_VARIANT)
         tankInternal.variant = if (fluidTag.isEmpty) FluidVariant.blank() else FluidVariant.fromNbt(fluidTag)

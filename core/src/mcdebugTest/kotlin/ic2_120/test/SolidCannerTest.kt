@@ -38,8 +38,8 @@ class SolidCannerTest {
     @Test
     fun fuelRodUraniumToUraniumFuelRod(ctx: TestContext) {
         setupSolidCanner(ctx)
-        insertItem(ctx, ctx.origin, "ic2_120:fuel_rod", 1, 0)
-        insertItem(ctx, ctx.origin, "ic2_120:uranium", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:fuel_rod", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:uranium", 1, 1)
         waitUntil(ctx, invItemEquals(ctx.origin, 2, "ic2_120:uranium_fuel_rod"), 15 * 20)
         assertSlotHas(ctx, ctx.origin, 2, "ic2_120:uranium_fuel_rod")
         assertSlotEmpty(ctx, ctx.origin, 0)
@@ -50,8 +50,8 @@ class SolidCannerTest {
     @Test
     fun fuelRodMoxToMoxFuelRod(ctx: TestContext) {
         setupSolidCanner(ctx)
-        insertItem(ctx, ctx.origin, "ic2_120:fuel_rod", 1, 0)
-        insertItem(ctx, ctx.origin, "ic2_120:mox", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:fuel_rod", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:mox", 1, 1)
         waitUntil(ctx, invItemEquals(ctx.origin, 2, "ic2_120:mox_fuel_rod"), 15 * 20)
         assertSlotHas(ctx, ctx.origin, 2, "ic2_120:mox_fuel_rod")
         assertSlotEmpty(ctx, ctx.origin, 0)
@@ -61,8 +61,8 @@ class SolidCannerTest {
     @Test
     fun noPowerIdle(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:solid_canner")
-        insertItem(ctx, ctx.origin, "ic2_120:fuel_rod", 1, 0)
-        insertItem(ctx, ctx.origin, "ic2_120:uranium", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:fuel_rod", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:uranium", 1, 1)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "ic2_120:fuel_rod")
         assertSlotEmpty(ctx, ctx.origin, 2)
@@ -72,7 +72,7 @@ class SolidCannerTest {
     @Test
     fun missingInputOneSlotEmpty(ctx: TestContext) {
         setupSolidCanner(ctx)
-        insertItem(ctx, ctx.origin, "ic2_120:fuel_rod", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:fuel_rod", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "ic2_120:fuel_rod")
         assertSlotEmpty(ctx, ctx.origin, 2)
@@ -82,8 +82,8 @@ class SolidCannerTest {
     @Test
     fun invalidInputDirtDirt(ctx: TestContext) {
         setupSolidCanner(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:dirt", 1, 0)
-        insertItem(ctx, ctx.origin, "minecraft:dirt", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:dirt", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:dirt", 1, 1)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:dirt")
         assertSlotEmpty(ctx, ctx.origin, 2)
@@ -93,8 +93,8 @@ class SolidCannerTest {
     fun outputFullBlocksNext(ctx: TestContext) {
         setupSolidCanner(ctx)
         setSlot(ctx, ctx.origin, 2, "ic2_120:uranium_fuel_rod", 64)
-        insertItem(ctx, ctx.origin, "ic2_120:fuel_rod", 1, 0)
-        insertItem(ctx, ctx.origin, "ic2_120:uranium", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:fuel_rod", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:uranium", 1, 1)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "ic2_120:fuel_rod")
     }

@@ -40,18 +40,18 @@ object ModItemTooltip {
                 val block = item.block
                 if (block is BaseCableBlock && block is ITiered) {
                     val euPerTick = block.getTransferRate()
-                    lines.add(Component.translatable("tooltip.ic2_120.cable_eu_t", euPerTick).formatted(ChatFormatting.GRAY))
+                    lines.add(Component.translatable("tooltip.ic2_120.cable_eu_t", euPerTick).withStyle(ChatFormatting.GRAY))
                     val lossEu = block.getEnergyLoss() / 1000.0  // getEnergyLoss() 为 milliEU/格
                     val lossStr = if (lossEu == lossEu.toLong().toDouble()) "${lossEu.toLong()}" else "%.3f".format(lossEu).trimEnd('0').trimEnd('.')
-                    lines.add(Component.translatable("tooltip.ic2_120.cable_loss", lossStr).formatted(ChatFormatting.GRAY))
+                    lines.add(Component.translatable("tooltip.ic2_120.cable_loss", lossStr).withStyle(ChatFormatting.GRAY))
                     addVoltageTierTooltip(lines, block.tier)
                     // 绝缘导线显示耐压等级
                     if (block is IInsulatedCable) {
                         val maxSafeEu = TransformerUtils.getEuForTier(block.insulationLevel)
                         if (block.insulationLevel >= 5) {
-                            lines.add(Component.translatable("tooltip.ic2_120.cable_insulation_max").formatted(ChatFormatting.GRAY))
+                            lines.add(Component.translatable("tooltip.ic2_120.cable_insulation_max").withStyle(ChatFormatting.GRAY))
                         } else {
-                            lines.add(Component.translatable("tooltip.ic2_120.cable_insulation", maxSafeEu).formatted(ChatFormatting.GRAY))
+                            lines.add(Component.translatable("tooltip.ic2_120.cable_insulation", maxSafeEu).withStyle(ChatFormatting.GRAY))
                         }
                     }
                     return@register
@@ -63,18 +63,18 @@ object ModItemTooltip {
                     is CarbonTransmissionShaftBlock -> addKineticTransmissionTooltip(lines, 8192, 0)
                     is BevelGearBlock -> addKineticTransmissionTooltip(lines, 2048, 3)
                     is WindKineticGeneratorBlock -> {
-                        lines.add(Component.translatable("tooltip.ic2_120.kinetic_source").formatted(ChatFormatting.GRAY))
+                        lines.add(Component.translatable("tooltip.ic2_120.kinetic_source").withStyle(ChatFormatting.GRAY))
                     }
                     is WaterKineticGeneratorBlock -> {
-                        lines.add(Component.translatable("tooltip.ic2_120.kinetic_source").formatted(ChatFormatting.GRAY))
+                        lines.add(Component.translatable("tooltip.ic2_120.kinetic_source").withStyle(ChatFormatting.GRAY))
                     }
                     is ManualKineticGeneratorBlock -> {
-                        lines.add(Component.translatable("tooltip.ic2_120.kinetic_source").formatted(ChatFormatting.GRAY))
-                        lines.add(Component.translatable("tooltip.ic2_120.manual_kinetic_insert_crank").formatted(ChatFormatting.DARK_GRAY))
+                        lines.add(Component.translatable("tooltip.ic2_120.kinetic_source").withStyle(ChatFormatting.GRAY))
+                        lines.add(Component.translatable("tooltip.ic2_120.manual_kinetic_insert_crank").withStyle(ChatFormatting.DARK_GRAY))
                     }
                     is KineticGeneratorBlock -> {
-                        lines.add(Component.translatable("tooltip.ic2_120.kinetic_convert_rate").formatted(ChatFormatting.GRAY))
-                        lines.add(Component.translatable("tooltip.ic2_120.kinetic_max_input").formatted(ChatFormatting.GRAY))
+                        lines.add(Component.translatable("tooltip.ic2_120.kinetic_convert_rate").withStyle(ChatFormatting.GRAY))
+                        lines.add(Component.translatable("tooltip.ic2_120.kinetic_max_input").withStyle(ChatFormatting.GRAY))
                     }
                 }
 
@@ -91,7 +91,7 @@ object ModItemTooltip {
                 val variant = stack.getFluidCellVariant()
                 if (variant != null && !variant.isBlank) {
                     val fluidId = BuiltInRegistries.FLUID.getId(variant.fluid)
-                    lines.add(Component.translatable("fluid.${fluidId.namespace}.${fluidId.path}").formatted(ChatFormatting.GRAY))
+                    lines.add(Component.translatable("fluid.${fluidId.namespace}.${fluidId.path}").withStyle(ChatFormatting.GRAY))
                 }
             }
 
@@ -103,8 +103,8 @@ object ModItemTooltip {
             if (item is ic2_120.content.reactor.IReactorComponent) {
                 // 这里可以添加默认的产热和散热信息
                 // 实际的产热和散热信息需要从反应堆方块实体中获取
-                // lines.add(Component.literal("产热: 0").formatted(ChatFormatting.GRAY))
-                // lines.add(Component.literal("散热: 0").formatted(ChatFormatting.GRAY))
+                // lines.add(Component.literal("产热: 0").withStyle(ChatFormatting.GRAY))
+                // lines.add(Component.literal("散热: 0").withStyle(ChatFormatting.GRAY))
             }
 
             // 所有实现 ITiered 的物品显示电压等级（导线已在上面处理）
@@ -114,7 +114,7 @@ object ModItemTooltip {
                 item is BlockItem && item.block is ITiered -> (item.block as ITiered).tier
                 item is BlockItem -> {
                     val beType = ClassScanner.getBlockEntityTypeForBlock(item.block)
-                    val be = beType?.instantiate(BlockPos.ORIGIN, item.block.defaultState)
+                    val be = beType?.instantiate(BlockPos.ORIGIN, item.block.defaultBlockState)
                     (be as? ITieredMachine)?.tier
                 }
                 else -> null
@@ -127,7 +127,7 @@ object ModItemTooltip {
 
     private fun addVoltageTierTooltip(lines: MutableList<Component>, tier: Int) {
         val tierName = "${tier}"
-        lines.add(Component.translatable("tooltip.ic2_120.voltage_tier", tierName).formatted(ChatFormatting.GRAY))
+        lines.add(Component.translatable("tooltip.ic2_120.voltage_tier", tierName).withStyle(ChatFormatting.GRAY))
     }
 
     private fun isWrenchItem(item: net.minecraft.world.item.Item): Boolean {
@@ -136,17 +136,17 @@ object ModItemTooltip {
     }
 
     private fun addWrenchTooltip(item: net.minecraft.world.item.Item, lines: MutableList<Component>) {
-        lines.add(Component.translatable("tooltip.ic2_120.wrench.rotate_machine").formatted(ChatFormatting.GRAY))
-        lines.add(Component.translatable("tooltip.ic2_120.wrench.pipe_toggle").formatted(ChatFormatting.GRAY))
-        lines.add(Component.translatable("tooltip.ic2_120.wrench.break_machine").formatted(ChatFormatting.GRAY))
-        lines.add(Component.translatable("tooltip.ic2_120.wrench.tank_retain").formatted(ChatFormatting.DARK_GRAY))
+        lines.add(Component.translatable("tooltip.ic2_120.wrench.rotate_machine").withStyle(ChatFormatting.GRAY))
+        lines.add(Component.translatable("tooltip.ic2_120.wrench.pipe_toggle").withStyle(ChatFormatting.GRAY))
+        lines.add(Component.translatable("tooltip.ic2_120.wrench.break_machine").withStyle(ChatFormatting.GRAY))
+        lines.add(Component.translatable("tooltip.ic2_120.wrench.tank_retain").withStyle(ChatFormatting.DARK_GRAY))
 
         val id = BuiltInRegistries.ITEM.getId(item)
         if (id.path == "electric_wrench") {
-            lines.add(Component.translatable("tooltip.ic2_120.wrench.cost_energy").formatted(ChatFormatting.DARK_GRAY))
-            lines.add(Component.translatable("tooltip.ic2_120.wrench.energy_required").formatted(ChatFormatting.DARK_GRAY))
+            lines.add(Component.translatable("tooltip.ic2_120.wrench.cost_energy").withStyle(ChatFormatting.DARK_GRAY))
+            lines.add(Component.translatable("tooltip.ic2_120.wrench.energy_required").withStyle(ChatFormatting.DARK_GRAY))
         } else {
-            lines.add(Component.translatable("tooltip.ic2_120.wrench.cost_durability").formatted(ChatFormatting.DARK_GRAY))
+            lines.add(Component.translatable("tooltip.ic2_120.wrench.cost_durability").withStyle(ChatFormatting.DARK_GRAY))
         }
     }
 
@@ -157,11 +157,11 @@ object ModItemTooltip {
     private fun addTransformerTooltip(lines: MutableList<Component>, tier: Int, nextTier: Int) {
         val dotEu = ic2_120.content.block.machines.TransformerUtils.getEuForTier(nextTier)
         val sideEu = ic2_120.content.block.machines.TransformerUtils.getEuForTier(tier)
-        lines.add(Component.translatable("tooltip.ic2_120.transformer.format", dotEu, sideEu).formatted(ChatFormatting.GRAY))
+        lines.add(Component.translatable("tooltip.ic2_120.transformer.format", dotEu, sideEu).withStyle(ChatFormatting.GRAY))
     }
 
     private fun addKineticTransmissionTooltip(lines: MutableList<Component>, capacityKu: Int, lossKu: Int) {
-        lines.add(Component.translatable("tooltip.ic2_120.kinetic_capacity", capacityKu).formatted(ChatFormatting.GRAY))
-        lines.add(Component.translatable("tooltip.ic2_120.kinetic_loss", lossKu).formatted(ChatFormatting.GRAY))
+        lines.add(Component.translatable("tooltip.ic2_120.kinetic_capacity", capacityKu).withStyle(ChatFormatting.GRAY))
+        lines.add(Component.translatable("tooltip.ic2_120.kinetic_loss", lossKu).withStyle(ChatFormatting.GRAY))
     }
 }

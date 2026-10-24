@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory
 object JetpackSoundController {
     private val logger = LoggerFactory.getLogger("ic2_120/JetpackSoundController")
     private val JETPACK_SOUND_ID = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "item.jetpack.loop")
-    private val JETPACK_SOUND = SoundEvent.of(JETPACK_SOUND_ID)
+    private val JETPACK_SOUND = SoundEvent.createVariableRangeEvent(JETPACK_SOUND_ID)
 
     private var loopSound: JetpackLoopSoundInstance? = null
     private var lastActive = false
@@ -58,7 +58,7 @@ object JetpackSoundController {
         if (!player.abilities.flying) return false
         if (player.isOnGround || player.isTouchingWater || player.isClimbing) return false
 
-        val chest = player.getEquippedStack(EquipmentSlot.CHEST)
+        val chest = player.getItemBySlot(EquipmentSlot.CHEST)
         return chest.item is JetpackItem || chest.item is ElectricJetpack
     }
 

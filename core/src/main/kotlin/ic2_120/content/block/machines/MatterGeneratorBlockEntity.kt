@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
 import ic2_120.content.block.ITieredMachine
@@ -46,7 +53,7 @@ import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -127,11 +134,11 @@ class MatterGeneratorBlockEntity(
         }
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
@@ -139,7 +146,7 @@ class MatterGeneratorBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_CONTAINER_INPUT), matcher = { isValid(SLOT_CONTAINER_INPUT, it) })
         ),
         extractSlots = intArrayOf(SLOT_SCRAP, SLOT_CONTAINER_INPUT, SLOT_CONTAINER_OUTPUT),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -187,7 +194,7 @@ class MatterGeneratorBlockEntity(
         override fun onFinalCommit() {
             sync.fluidAmount = toMilliBuckets(amount)
             sync.fluidCapacity = getEffectiveCapacity()
-            markDirty()
+            setChanged()
         }
 
         fun getStoredAmount(): Long = amount
@@ -216,7 +223,7 @@ class MatterGeneratorBlockEntity(
                 if (variant.isBlank) variant = FluidVariant.of(ModFluids.UU_MATTER_STILL)
                 tx.commit()
                 sync.fluidAmount = toMilliBuckets(amount)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -231,7 +238,7 @@ class MatterGeneratorBlockEntity(
                 if (amount <= 0L) variant = FluidVariant.blank()
                 tx.commit()
                 sync.fluidAmount = toMilliBuckets(amount)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -275,16 +282,16 @@ class MatterGeneratorBlockEntity(
 
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
 
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     private fun matterGenIsFillableContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
@@ -318,9 +325,9 @@ class MatterGeneratorBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(MatterGeneratorSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
@@ -332,9 +339,9 @@ class MatterGeneratorBlockEntity(
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(MatterGeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.getStoredAmount())
@@ -414,7 +421,7 @@ class MatterGeneratorBlockEntity(
                 tankInternal.insertInternal(outputPerCycle)
                 sync.progress = 0
                 scrapConsumedThisCycle = 0
-                markDirty()
+                setChanged()
             }
 
             setActiveState(world, pos, state, true)
@@ -436,22 +443,22 @@ class MatterGeneratorBlockEntity(
             // 废料盒不可拆分：缺口不足一整盒时不消耗，顺延到后续 tick，避免浪费
             if (units < SCRAP_UNITS_PER_BOX) return 0
             // 只消耗一整盒（=9 等价量），槽内其余盒子保留，绝不能整组清空
-            scrapStack.decrement(1)
+            scrapStack.shrink(1)
             if (scrapStack.isEmpty) {
                 setStack(SLOT_SCRAP, ItemStack.EMPTY)
             } else {
-                markDirty()
+                setChanged()
             }
             return SCRAP_UNITS_PER_BOX
         }
 
         val actualCount = minOf(units, scrapStack.count)
         if (actualCount <= 0) return 0
-        scrapStack.decrement(actualCount)
+        scrapStack.shrink(actualCount)
         if (scrapStack.isEmpty) {
             setStack(SLOT_SCRAP, ItemStack.EMPTY)
         } else {
-            markDirty()
+            setChanged()
         }
         return actualCount
     }
@@ -494,15 +501,15 @@ class MatterGeneratorBlockEntity(
         val drained = tankInternal.extractInternal(FluidConstants.BUCKET)
         if (drained < FluidConstants.BUCKET) return
 
-        input.decrement(1)
+        input.shrink(1)
         if (input.isEmpty) setStack(SLOT_CONTAINER_INPUT, ItemStack.EMPTY)
         if (output.isEmpty) setStack(SLOT_CONTAINER_OUTPUT, result.copy())
-        else output.increment(result.count)
-        markDirty()
+        else output.grow(result.count)
+        setChanged()
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
-        val facing = world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
+        val facing = world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
         if (side == facing) return null
         return outputStorage
     }
@@ -514,7 +521,7 @@ class MatterGeneratorBlockEntity(
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean {
         if (toInsert.isEmpty) return false
-        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
+        return current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxStackSize)
     }
 
     private fun isScrap(stack: ItemStack): Boolean =

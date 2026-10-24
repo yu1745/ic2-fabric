@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.RecipeCacheEpoch
 import ic2_120.content.sync.InductionFurnaceSync
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -35,7 +42,7 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
@@ -95,11 +102,11 @@ class InductionFurnaceBlockEntity(
         const val INVENTORY_SIZE = 7
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is EjectorUpgrade || it.item is PullingUpgrade }),
@@ -109,7 +116,7 @@ class InductionFurnaceBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust }, maxPerSlot = 1)
         ),
         extractSlots = intArrayOf(SLOT_OUTPUT_0, SLOT_OUTPUT_1),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -145,17 +152,17 @@ class InductionFurnaceBlockEntity(
             stack.count = 1
         }
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() {
-        super.markDirty()
+    override fun setChanged() {
+        super.setChanged()
     }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_0, SLOT_INPUT_1 -> isSmeltingInput(stack)
@@ -183,9 +190,9 @@ class InductionFurnaceBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(InductionFurnaceSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -193,9 +200,9 @@ class InductionFurnaceBlockEntity(
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(InductionFurnaceSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
@@ -218,7 +225,7 @@ class InductionFurnaceBlockEntity(
        val isRedstonePowered = RedstoneControlComponent.canRun(world, pos, this)
         var heat = sync.heat
         var progress = sync.progress
-        var newActive = state.get(activeProperty)
+        var newActive = state.getValue(activeProperty)
 
         // Phase 1: completion — vanilla: if (heat == 0) newActive=false; if (progress >= 4000) { operate(); progress = 0; }
         if (heat == 0) newActive = false
@@ -288,13 +295,13 @@ class InductionFurnaceBlockEntity(
         val recipe = findSmeltingRecipe(world, input) ?: return
         val output = getStack(outputSlot)
         if (!canAcceptOutput(output, recipe)) return
-        input.decrement(1)
+        input.shrink(1)
         if (output.isEmpty) {
             setStack(outputSlot, recipe.copy())
         } else {
-            output.increment(recipe.count)
+            output.grow(recipe.count)
         }
-        markDirty()
+        setChanged()
     }
 
     // 配方缓存：SMELTING 配方 matches 只看物品类型（不看数量），按 item 缓存
@@ -318,7 +325,7 @@ class InductionFurnaceBlockEntity(
     private fun canAcceptOutput(currentOutput: ItemStack, recipeOutput: ItemStack): Boolean {
         return currentOutput.isEmpty ||
             (ItemStack.areItemsEqual(currentOutput, recipeOutput) &&
-                currentOutput.count + recipeOutput.count <= currentOutput.maxCount)
+                currentOutput.count + recipeOutput.count <= currentOutput.maxStackSize)
     }
 
     private fun extractFromDischargingSlot() {
@@ -331,7 +338,7 @@ class InductionFurnaceBlockEntity(
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
+        setChanged()
     }
 
     private fun isBatteryItem(stack: ItemStack): Boolean = !stack.isEmpty && stack.item is IBatteryItem

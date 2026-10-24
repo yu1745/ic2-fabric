@@ -8,7 +8,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.client.renderer.Rect2i
@@ -59,7 +59,7 @@ class PumpAttachmentScreen(
         // 过滤器状态文本，7px，居中于文本区域 (52,55)-(129,70)
         val fluid = handler.filterFluid()
         val line = when {
-            fluid != null -> t("gui.ic2_120.pump_attachment.filter_current", fluid.defaultState.blockState.block.name.string)
+            fluid != null -> t("gui.ic2_120.pump_attachment.filter_current", fluid.defaultBlockState.blockState.block.name.string)
             else -> t("gui.ic2_120.pump_attachment.filter_any")
         }
         val textScale = 7f / textRenderer.fontHeight
@@ -84,7 +84,7 @@ class PumpAttachmentScreen(
             TEXTURE_SIZE, TEXTURE_SIZE
         )
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid)
-        val sprite = renderHandler?.getFluidSprites(null, null, fluid.defaultState)?.getOrNull(0) ?: return
+        val sprite = renderHandler?.getFluidSprites(null, null, fluid.defaultBlockState)?.getOrNull(0) ?: return
         val color = FluidUtils.getFluidColor(fluid)
         val (r, g, b) = if (color != -1) {
             Triple(((color shr 16) and 0xFF) / 255f, ((color shr 8) and 0xFF) / 255f, (color and 0xFF) / 255f)

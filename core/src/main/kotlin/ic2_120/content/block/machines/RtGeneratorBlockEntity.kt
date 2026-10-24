@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.Ic2_120
 import ic2_120.content.AdjacentEnergyTransferComponent
 import ic2_120.content.block.IGenerator
@@ -15,11 +22,10 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
-import ic2_120.registry.type
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -70,17 +76,17 @@ class RtGeneratorBlockEntity(
 
     override val tier: Int = GENERATOR_TIER
 
-    private val inventory = NonNullList.ofSize(6, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(6, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> canPlaceInSlot(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute((FUEL_SLOT_START..FUEL_SLOT_END).toList().toIntArray(), matcher = { isRtgPellet(it) }, maxPerSlot = 1)
         ),
         extractSlots = IntArray(6) { it },
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -90,7 +96,7 @@ class RtGeneratorBlockEntity(
     @RegisterEnergy
     val sync = RtGeneratorSync(
         schema = syncedData,
-        getFacing = { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        getFacing = { world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
 
@@ -110,21 +116,21 @@ class RtGeneratorBlockEntity(
 
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
 
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
 
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot in FUEL_SLOT_START..FUEL_SLOT_END && stack.count > 1) stack.count = 1
         inventory[slot] = stack
-        markDirty()
+        setChanged()
     }
 
     override fun clear() {
         inventory.clear()
     }
 
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     fun canPlaceInSlot(slot: Int, stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
@@ -152,18 +158,18 @@ class RtGeneratorBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(RtGeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, RtGeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(RtGeneratorSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -183,7 +189,7 @@ class RtGeneratorBlockEntity(
                 val euToAdd = minOf(euPerTick, space)
                 sync.generateEnergy(euToAdd)
                 sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-                markDirty()
+                setChanged()
             }
         }
 

@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.RecipeCacheEpoch
 import ic2_120.content.block.CentrifugeBlock
 import ic2_120.content.block.ITieredMachine
@@ -38,7 +45,7 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.Container
@@ -106,11 +113,11 @@ class CentrifugeBlockEntity(
         const val INVENTORY_SIZE = 9
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
@@ -118,7 +125,7 @@ class CentrifugeBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isBatteryItem(it) || it.item === Items.REDSTONE || it.item is ic2_120.content.item.EnergiumDust }, maxPerSlot = 1)
         ),
         extractSlots = intArrayOf(SLOT_OUTPUT_1, SLOT_OUTPUT_2, SLOT_OUTPUT_3),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -151,15 +158,15 @@ class CentrifugeBlockEntity(
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> isRecipeInput(stack)
@@ -179,9 +186,9 @@ class CentrifugeBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         CentrifugeScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CentrifugeSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -195,9 +202,9 @@ class CentrifugeBlockEntity(
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(CentrifugeSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -246,13 +253,13 @@ class CentrifugeBlockEntity(
             if (sync.consumeEnergy(CentrifugeSync.ENERGY_PER_TICK_HEATING) > 0L) {
                 sync.heat = (sync.heat + heatSpace).coerceAtMost(CentrifugeSync.HEAT_MAX)
                 sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-                markDirty()
+                setChanged()
             }
         }
         // 无红石时热量衰减至 targetHeat
         if (!redstoneAllowsRun && sync.heat > targetHeat) {
             sync.heat = (sync.heat - CentrifugeSync.HEAT_RATE_PER_TICK).coerceAtLeast(targetHeat)
-            markDirty()
+            setChanged()
         }
 
         if (input.isEmpty) {
@@ -283,18 +290,18 @@ class CentrifugeBlockEntity(
         }
 
         if (progressF >= CentrifugeSync.PROGRESS_MAX) {
-            input.decrement(r.inputCount)
+            input.shrink(r.inputCount)
             for (i in r.outputs.indices) {
                 val out = r.outputs[i].copy()
                 val slotIdx = SLOT_OUTPUT_1 + i
                 val existing = getStack(slotIdx)
                 if (existing.isEmpty) setStack(slotIdx, out)
-                else existing.increment(out.count)
+                else existing.grow(out.count)
             }
             progressF = 0f
             energyDebtF = 0f
             sync.progress = 0
-            markDirty()
+            setChanged()
             // 完工不振荡（2026-08-26 perf）：下 tick 早退分支自然关灯
             sync.syncCurrentTickFlow()
             return
@@ -309,7 +316,7 @@ class CentrifugeBlockEntity(
             // 浮点进度：1.4286^n 直接累加；封顶 PROGRESS_MAX 防极端超频（+Inf）免费完工
             progressF = (progressF + speedMultiplier).coerceAtMost(CentrifugeSync.PROGRESS_MAX.toFloat())
             sync.progress = progressF.toInt()
-            markDirty()
+            setChanged()
             setActiveState(world, pos, state, true)
         } else {
             // 停顿期间不累计债务：防恢复供电后 need 超容量 all-or-nothing 卡死
@@ -326,7 +333,7 @@ class CentrifugeBlockEntity(
             val slotIdx = SLOT_OUTPUT_1 + i
             val existing = getStack(slotIdx)
             val canAccept = existing.isEmpty ||
-                (ItemStack.areItemsEqual(existing, out) && existing.count + out.count <= out.maxCount)
+                (ItemStack.areItemsEqual(existing, out) && existing.count + out.count <= out.maxStackSize)
             if (!canAccept) return false
         }
         return true
@@ -340,7 +347,7 @@ class CentrifugeBlockEntity(
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
+        setChanged()
     }
 
     // 配方缓存——安全处理多对一配方（inputCount > 1）：
@@ -393,7 +400,7 @@ class CentrifugeBlockEntity(
         if (stack.isEmpty || isBatteryItem(stack)) return false
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val w = world ?: return true
-        val inv = SimpleContainer(stack.copyWithCount(stack.maxCount))
+        val inv = SimpleContainer(stack.copyWithCount(stack.maxStackSize))
         val found = w.recipeManager.getFirstMatch(getRecipeType<CentrifugeRecipe>(), inv, w).isPresent
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item

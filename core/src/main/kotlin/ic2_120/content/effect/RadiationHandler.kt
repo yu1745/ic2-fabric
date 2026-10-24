@@ -45,10 +45,10 @@ object RadiationHandler {
     }
 
     private fun hasFullHazmat(entity: LivingEntity): Boolean {
-        val helmet = entity.getEquippedStack(EquipmentSlot.HEAD)
-        val chest = entity.getEquippedStack(EquipmentSlot.CHEST)
-        val legs = entity.getEquippedStack(EquipmentSlot.LEGS)
-        val feet = entity.getEquippedStack(EquipmentSlot.FEET)
+        val helmet = entity.getItemBySlot(EquipmentSlot.HEAD)
+        val chest = entity.getItemBySlot(EquipmentSlot.CHEST)
+        val legs = entity.getItemBySlot(EquipmentSlot.LEGS)
+        val feet = entity.getItemBySlot(EquipmentSlot.FEET)
 
         fun isHazmat(stack: ItemStack): Boolean {
             if (stack.isEmpty || stack.item !is ArmorItem) return false
@@ -69,7 +69,7 @@ object RadiationHandler {
             EquipmentSlot.FEET
         )
         for (slot in slots) {
-            if (isRadioactiveItem(entity.getEquippedStack(slot))) return true
+            if (isRadioactiveItem(entity.getItemBySlot(slot))) return true
         }
 
         if (entity is Player) {

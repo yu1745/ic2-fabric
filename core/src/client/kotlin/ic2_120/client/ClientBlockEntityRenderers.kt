@@ -129,7 +129,7 @@ object ClientBlockEntityRenderers {
             BevelGearBlock::class.instance()
         )
         for (block in shaftBlocks) {
-            val dummyEntity = TransmissionBlockEntity(BlockPos.ORIGIN, block.defaultState)
+            val dummyEntity = TransmissionBlockEntity(BlockPos.ORIGIN, block.defaultBlockState)
             BuiltinItemRendererRegistry.INSTANCE.register(block.asItem()) { _, _, matrices, vertexConsumers, light, overlay ->
                 Minecraft.getInstance().blockEntityRenderDispatcher.renderEntity(
                     dummyEntity,

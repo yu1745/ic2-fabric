@@ -14,7 +14,7 @@ object KineticConnectionRules {
 
     fun canConnectFromDirection(state: BlockState, fromDirection: Direction): Boolean {
         return when (state.block) {
-            is TransmissionShaftBlock -> state.get(BlockStateProperties.AXIS) == fromDirection.axis
+            is TransmissionShaftBlock -> state.getValue(BlockStateProperties.AXIS) == fromDirection.axis
             is BevelGearBlock -> true
             else -> false
         }
@@ -22,7 +22,7 @@ object KineticConnectionRules {
 
     fun nodeDirections(world: BlockGetter, pos: BlockPos, state: BlockState): List<Direction> {
         return when (state.block) {
-            is TransmissionShaftBlock -> when (state.get(BlockStateProperties.AXIS)) {
+            is TransmissionShaftBlock -> when (state.getValue(BlockStateProperties.AXIS)) {
                 Direction.Axis.X -> listOf(Direction.EAST, Direction.WEST)
                 Direction.Axis.Y -> listOf(Direction.UP, Direction.DOWN)
                 Direction.Axis.Z -> listOf(Direction.SOUTH, Direction.NORTH)

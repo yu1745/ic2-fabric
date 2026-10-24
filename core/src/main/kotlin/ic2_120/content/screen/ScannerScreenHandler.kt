@@ -1,9 +1,15 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
+import ic2_120.compat.isClient
+
+import ic2_120.compat.world
+
 import io.netty.buffer.Unpooled
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
@@ -38,10 +44,10 @@ class ScannerScreenHandler(
 
     private val syncedData = SyncedData()
     val sync = ScannerSync(syncedData)
-    private val scannerUseSound: SoundEvent = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "item.scanner.use"))
+    private val scannerUseSound: SoundEvent = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "item.scanner.use"))
 
     init {
-        addProperties(syncedData)
+        addDataSlots(syncedData)
 
         val stack = playerInventory.getStack(playerInventory.selectedSlot)
         val type = OdScannerItem.getScannerType(stack)
@@ -70,7 +76,7 @@ class ScannerScreenHandler(
         return stack.takeIf { it.item is OdScannerItem || it.item is AdvancedScannerItem }
     }
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         val stack = player.mainHandStack
         if (stack.item !is OdScannerItem && stack.item !is AdvancedScannerItem) return false
 
@@ -83,7 +89,7 @@ class ScannerScreenHandler(
         if (!sync.consumeEnergy(energyCost)) {
             player.sendMessage(
                 net.minecraft.network.chat.Component.translatable("message.ic2_120.scanner.no_energy")
-                    .formatted(net.minecraft.ChatFormatting.RED),
+                    .withStyle(net.minecraft.ChatFormatting.RED),
                 false
             )
             return true
@@ -92,7 +98,7 @@ class ScannerScreenHandler(
         if (!sync.consumeUse()) {
             player.sendMessage(
                 net.minecraft.network.chat.Component.translatable("message.ic2_120.scanner.no_uses")
-                    .formatted(net.minecraft.ChatFormatting.RED),
+                    .withStyle(net.minecraft.ChatFormatting.RED),
                 false
             )
             return true
@@ -163,35 +169,35 @@ class ScannerScreenHandler(
             .sortedByDescending { it.count }
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         val slot = slots[index]
-        if (!slot.hasStack()) return ItemStack.EMPTY
+        if (!slot .hasItem()) return ItemStack.EMPTY
         val stack = slot.stack
         val original = stack.copy()
         val invEnd = PLAYER_INV_START + 36
 
         return if (index < PLAYER_INV_START + 27) {
             // 背包 → 快捷栏
-            if (!insertItem(stack, PLAYER_INV_START + 27, invEnd, false)) ItemStack.EMPTY
+            if (!moveItemStackTo(stack, PLAYER_INV_START + 27, invEnd, false)) ItemStack.EMPTY
             else {
                 slot.onQuickTransfer(stack, original)
                 if (stack.isEmpty) slot.stack = ItemStack.EMPTY
-                else slot.markDirty()
+                else slot.setChanged()
                 original
             }
         } else {
             // 快捷栏 → 背包
-            if (!insertItem(stack, PLAYER_INV_START, PLAYER_INV_START + 27, false)) ItemStack.EMPTY
+            if (!moveItemStackTo(stack, PLAYER_INV_START, PLAYER_INV_START + 27, false)) ItemStack.EMPTY
             else {
                 slot.onQuickTransfer(stack, original)
                 if (stack.isEmpty) slot.stack = ItemStack.EMPTY
-                else slot.markDirty()
+                else slot.setChanged()
                 original
             }
         }
     }
 
-    override fun canUse(player: Player): Boolean = true
+    override fun stillValid(player: Player): Boolean = true
 
     companion object {
         const val PLAYER_INV_START = 0

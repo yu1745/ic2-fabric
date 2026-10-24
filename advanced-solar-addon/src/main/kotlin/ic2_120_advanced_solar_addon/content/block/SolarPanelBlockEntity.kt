@@ -1,5 +1,6 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import net.minecraft.core.HolderLookup
 import ic2_120_advanced_solar_addon.content.sync.SolarPanelSync
 import ic2_120_advanced_solar_addon.content.screen.SolarPanelScreenHandler
 import ic2_120.content.AdjacentEnergyTransferComponent
@@ -18,7 +19,7 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -75,7 +76,7 @@ abstract class SolarPanelBlockEntity(
         schema = syncedData,
         capacity = maxStorage,
         maxOutputPerTick = maxOutput,
-        getFacing = { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        getFacing = { world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time }
     )
 
@@ -92,7 +93,7 @@ abstract class SolarPanelBlockEntity(
 
     // ====== Container ======
 
-    private val inventory = NonNullList.ofSize(CHARGE_SLOTS, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(CHARGE_SLOTS, ItemStack.EMPTY)
 
     private val chargeSlotMatcher: (ItemStack) -> Boolean = { stack ->
         val item = stack.item
@@ -118,7 +119,7 @@ abstract class SolarPanelBlockEntity(
             )
         ),
         extractSlots = chargeSlotIndices,
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     private val chargerComponents = (0 until CHARGE_SLOTS).map { slot ->
@@ -189,7 +190,7 @@ abstract class SolarPanelBlockEntity(
         // 注意：末地的 timeOfDay 会流动，不能用时间判定白天/黑夜
         if (world.registryKey == Level.END) {
             generationState = GenerationState.DAY
-            markDirty()
+            setChanged()
             return
         }
 
@@ -210,7 +211,7 @@ abstract class SolarPanelBlockEntity(
             else -> GenerationState.NONE
         }
 
-        markDirty()
+        setChanged()
     }
 
     /**
@@ -235,13 +236,13 @@ abstract class SolarPanelBlockEntity(
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
-        markDirty()
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     // ====== ExtendedScreenHandlerFactory ======
 
@@ -267,19 +268,19 @@ abstract class SolarPanelBlockEntity(
 
     // ====== NBT ======
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         sync.restoreEnergy(nbt.getLong(SolarPanelSync.NBT_ENERGY).coerceIn(0L, sync.capacity))
         generationState = GenerationState.entries[nbt.getInt("state").coerceIn(0, GenerationState.entries.size - 1)]
         syncedData.readNbt(nbt)
-        ContainerHelper.readNbt(nbt.getCompound(INVENTORY_NBT_KEY), inventory)
+        ContainerHelper.loadAllItems(nbt.getCompound(INVENTORY_NBT_KEY), inventory)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putLong(SolarPanelSync.NBT_ENERGY, sync.amount)
         nbt.putInt("state", generationState.ordinal)
         syncedData.writeNbt(nbt)
-        nbt.put(INVENTORY_NBT_KEY, ContainerHelper.writeNbt(CompoundTag(), inventory))
+        nbt.put(INVENTORY_NBT_KEY, ContainerHelper.saveAllItems(CompoundTag(), inventory))
     }
 }

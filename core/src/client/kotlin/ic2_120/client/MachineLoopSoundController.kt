@@ -53,7 +53,7 @@ object MachineLoopSoundController {
                 return@register
             }
 
-            val desired = collectActiveMachines(world, BlockPos.ofFloored(player.x, player.y, player.z))
+            val desired = collectActiveMachines(world, BlockPos.containing(player.x, player.y, player.z))
             syncSounds(client, desired)
             cleanupFinished()
         }
@@ -127,7 +127,7 @@ object MachineLoopSoundController {
 
     private class BlockLoopSoundInstance(pos: BlockPos, def: LoopDef) :
         AbstractTickableSoundInstance(
-            SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", def.eventId)),
+            SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", def.eventId)),
             SoundSource.BLOCKS,
             RandomSource.create()
         ) {

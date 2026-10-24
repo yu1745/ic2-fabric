@@ -49,7 +49,7 @@ sealed class IngredientInput {
         override fun toJson(): JsonObject = JsonObject().apply {
             addProperty("tag", tag.id.toString())
         }
-        override fun toIngredient(): Ingredient = Ingredient.fromTag(tag)
+        override fun toIngredient(): Ingredient = Ingredient.of(tag)
         override fun toItemStack(count: Int): ItemStack = ItemStack(displayItem, count)
     }
 

@@ -1,5 +1,7 @@
 package ic2_120.content.upgrade
 
+import ic2_120.compat.time
+
 import ic2_120.content.item.EjectorUpgrade
 import net.fabricmc.fabric.api.lookup.v1.block.BlockApiCache
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage

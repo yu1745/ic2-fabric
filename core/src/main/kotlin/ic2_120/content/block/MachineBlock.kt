@@ -1,5 +1,7 @@
 package ic2_120.content.block
 
+import ic2_120.compat.isClient
+
 import com.mojang.serialization.MapCodec
 import ic2_120.Ic2_120
 import net.minecraft.world.level.block.state.BlockBehaviour
@@ -31,12 +33,12 @@ import net.minecraft.world.level.Level
  *
  * 默认硬度为铁方块硬度（5.0f, 6.0f），子类可通过传入自定义 settings 覆盖。
  */
-abstract class MachineBlock(settings: BlockBehaviour.Settings = defaultMachineSettings()) : BaseEntityBlock(settings) {
+abstract class MachineBlock(settings: BlockBehaviour.Properties = defaultMachineSettings()) : BaseEntityBlock(settings) {
 
     companion object {
         /** 机器方块的默认设置：铁方块硬度（5.0f, 6.0f） */
-        fun defaultMachineSettings(): BlockBehaviour.Settings =
-            BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
+        fun defaultMachineSettings(): BlockBehaviour.Properties =
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
 
         val MACHINE_CODEC: MapCodec<MachineBlock> = Block.createCodec { error("MachineBlock cannot be deserialized from JSON") }
     }
@@ -51,16 +53,16 @@ abstract class MachineBlock(settings: BlockBehaviour.Settings = defaultMachineSe
         BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine"))
 
     init {
-        defaultState = stateManager.defaultState.with(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)
+        defaultState = stateManager.defaultBlockState.setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(BlockStateProperties.HORIZONTAL_FACING)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
-        defaultState.with(BlockStateProperties.HORIZONTAL_FACING, ctx.horizontalPlayerFacing.opposite)
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
+        defaultState.setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.horizontalPlayerFacing.opposite)
 
     override fun onPlaced(world: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, stack: ItemStack) {
         super.onPlaced(world, pos, state, placer, stack)
@@ -69,7 +71,7 @@ abstract class MachineBlock(settings: BlockBehaviour.Settings = defaultMachineSe
         }
     }
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? = null
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? = null
 
     /**
      * 方块被破坏时，将 BlockEntity 内 Container 的物品散落掉落，而非凭空消失。
@@ -77,7 +79,7 @@ abstract class MachineBlock(settings: BlockBehaviour.Settings = defaultMachineSe
      */
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        if (!world.isClient && !state.isOf(newState.block) && !moved) {
+        if (!world.isClient && !state.`is`(newState.block) && !moved) {
             val be = world.getBlockEntity(pos)
             if (be is Container) {
                 Containers.spawn(world, pos, be)
@@ -90,7 +92,7 @@ abstract class MachineBlock(settings: BlockBehaviour.Settings = defaultMachineSe
      * BaseEntityBlock 默认可能不会使用 JSON 模型渲染，显式指定为 MODEL
      * 以确保像电炉这类机器方块按 blockstate/model 显示材质。
      */
-    override fun getRenderType(state: BlockState): RenderShape = RenderShape.MODEL
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
 }
 
 /**
@@ -103,12 +105,12 @@ abstract class MachineBlock(settings: BlockBehaviour.Settings = defaultMachineSe
  *
  * 其他行为（硬度、物品掉落、Container 散落等）与 [MachineBlock] 完全相同。
  */
-abstract class DirectionalMachineBlock(settings: BlockBehaviour.Settings = defaultMachineSettings()) : BaseEntityBlock(settings) {
+abstract class DirectionalMachineBlock(settings: BlockBehaviour.Properties = defaultMachineSettings()) : BaseEntityBlock(settings) {
 
     companion object {
         /** 机器方块的默认设置：铁方块硬度（5.0f, 6.0f） */
-        fun defaultMachineSettings(): BlockBehaviour.Settings =
-            BlockBehaviour.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
+        fun defaultMachineSettings(): BlockBehaviour.Properties =
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
 
         val DIRECTIONAL_CODEC: MapCodec<DirectionalMachineBlock> = Block.createCodec { error("DirectionalMachineBlock cannot be deserialized from JSON") }
     }
@@ -123,18 +125,18 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Settings = defau
         BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine"))
 
     init {
-        defaultState = stateManager.defaultState.with(BlockStateProperties.FACING, Direction.NORTH)
+        defaultState = stateManager.defaultBlockState.setValue(BlockStateProperties.FACING, Direction.NORTH)
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(BlockStateProperties.FACING)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? {
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? {
         // 与原版发射器、木桶一致：正面朝向玩家，同时允许上下六面放置。
         val facing = ctx.playerLookDirection.opposite
-        return defaultState.with(BlockStateProperties.FACING, facing)
+        return defaultState.setValue(BlockStateProperties.FACING, facing)
     }
 
     override fun onPlaced(world: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, stack: ItemStack) {
@@ -144,7 +146,7 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Settings = defau
         }
     }
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? = null
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? = null
 
     /**
      * 方块被破坏时，将 BlockEntity 内 Container 的物品散落掉落，而非凭空消失。
@@ -152,7 +154,7 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Settings = defau
      */
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        if (!world.isClient && !state.isOf(newState.block) && !moved) {
+        if (!world.isClient && !state.`is`(newState.block) && !moved) {
             val be = world.getBlockEntity(pos)
             if (be is Container) {
                 Containers.spawn(world, pos, be)
@@ -165,5 +167,5 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Settings = defau
      * BaseEntityBlock 默认可能不会使用 JSON 模型渲染，显式指定为 MODEL
      * 以确保像电炉这类机器方块按 blockstate/model 显示材质。
      */
-    override fun getRenderType(state: BlockState): RenderShape = RenderShape.MODEL
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
 }

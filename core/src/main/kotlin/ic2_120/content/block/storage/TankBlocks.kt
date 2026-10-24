@@ -1,5 +1,11 @@
 package ic2_120.content.block.storage
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+
 import ic2_120.content.item.BronzePlate
 import ic2_120.content.item.EmptyCell
 import ic2_120.content.item.IridiumPlate
@@ -14,8 +20,6 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant
@@ -58,23 +62,16 @@ import java.util.function.Consumer
  * - 扳手拆卸保留流体
  * - 不同材质容量不同
  */
-abstract class TankBlock(settings: BlockBehaviour.Settings) : BaseEntityBlock(settings) {
+abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(settings) {
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return TankBlockEntity(pos, state)
     }
 
-    override fun getRenderType(state: BlockState): RenderShape = RenderShape.MODEL
+    override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
 
     @Deprecated("Override without InteractionHand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
 
         val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return InteractionResult.PASS
@@ -83,7 +80,7 @@ abstract class TankBlock(settings: BlockBehaviour.Settings) : BaseEntityBlock(se
             return InteractionResult.SUCCESS
         }
 
-        player.openHandledScreen(be)
+        player.openMenu(be)
         return InteractionResult.SUCCESS
     }
 
@@ -104,7 +101,7 @@ abstract class TankBlock(settings: BlockBehaviour.Settings) : BaseEntityBlock(se
 
     @Deprecated("override deprecated method", level = DeprecationLevel.WARNING)
     override fun onStateReplaced(state: BlockState, world: Level, pos: BlockPos, newState: BlockState, moved: Boolean) {
-        if (!world.isClient && !state.isOf(newState.block)) {
+        if (!world.isClient && !state.`is`(newState.block)) {
             val blockEntity = world.getBlockEntity(pos)
             if (blockEntity is TankBlockEntity && (moved || blockEntity.shouldDropOnBreak)) {
                 val itemStack = ItemStack(this.asItem())
@@ -117,7 +114,7 @@ abstract class TankBlock(settings: BlockBehaviour.Settings) : BaseEntityBlock(se
                     itemStack
                 )
                 itemEntity.setToDefaultPickupDelay()
-                world.spawnEntity(itemEntity)
+                world.addFreshEntity(itemEntity)
             }
         }
         @Suppress("DEPRECATION")
@@ -179,7 +176,7 @@ abstract class TankBlock(settings: BlockBehaviour.Settings) : BaseEntityBlock(se
         tooltip: MutableList<Component>,
         context: TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val blockItem = stack.item as? BlockItem ?: return
         val block = blockItem.block
         if (block !is TankBlock) return
@@ -195,13 +192,13 @@ abstract class TankBlock(settings: BlockBehaviour.Settings) : BaseEntityBlock(se
             amountRaw.toInt().coerceIn(0, capMb)
 
         if (variant.isBlank || amountRaw <= 0L) {
-            tooltip.add(Component.literal("流体: 无").formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("流体: 无").withStyle(ChatFormatting.GRAY))
         } else {
             tooltip.add(
-                Component.literal("流体: ").append(FluidVariantAttributes.getName(variant)).formatted(ChatFormatting.GRAY)
+                Component.literal("流体: ").append(FluidVariantAttributes.getName(variant)).withStyle(ChatFormatting.GRAY)
             )
         }
-        tooltip.add(Component.literal("储量: $amountMb / $capMb mB").formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.literal("储量: $amountMb / $capMb mB").withStyle(ChatFormatting.GRAY))
     }
 
     companion object {
@@ -226,21 +223,21 @@ abstract class TankBlock(settings: BlockBehaviour.Settings) : BaseEntityBlock(se
  * 青铜储罐 - 32 桶容量 (32000 mB)
  */
 @ModBlock(name = "bronze_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
-class BronzeTankBlock : TankBlock(BlockBehaviour.Settings.copy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+class BronzeTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val plate = BronzePlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, BronzeTankBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzeTankBlock::class.item(), 1)
                     .pattern("PFP")
                     .pattern("F F")
                     .pattern("PFP")
-                    .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_BRONZE))
-                    .input('F', cell)
-                    .criterion(hasItem(plate), conditionsFromItem(plate))
-                    .offerTo(exporter, BronzeTankBlock::class.id())
+                    .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
+                    .define('F', cell)
+                    .unlockedBy(getHasName(plate), has(plate))
+                    .save(exporter, BronzeTankBlock::class.id())
             }
         }
     }
@@ -250,21 +247,21 @@ class BronzeTankBlock : TankBlock(BlockBehaviour.Settings.copy(net.minecraft.wor
  * 铁储罐 - 32 桶容量 (32000 mB)
  */
 @ModBlock(name = "iron_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
-class IronTankBlock : TankBlock(BlockBehaviour.Settings.copy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+class IronTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val plate = IronPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, IronTankBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IronTankBlock::class.item(), 1)
                     .pattern("PFP")
                     .pattern("F F")
                     .pattern("PFP")
-                    .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON))
-                    .input('F', cell)
-                    .criterion(hasItem(plate), conditionsFromItem(plate))
-                    .offerTo(exporter, IronTankBlock::class.id())
+                    .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_IRON))
+                    .define('F', cell)
+                    .unlockedBy(getHasName(plate), has(plate))
+                    .save(exporter, IronTankBlock::class.id())
             }
         }
     }
@@ -274,21 +271,21 @@ class IronTankBlock : TankBlock(BlockBehaviour.Settings.copy(net.minecraft.world
  * 钢制储罐 - 128 桶容量 (128000 mB)
  */
 @ModBlock(name = "steel_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
-class SteelTankBlock : TankBlock(BlockBehaviour.Settings.copy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(6.0f, 7.0f)) {
+class SteelTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(6.0f, 7.0f)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val plate = SteelPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, SteelTankBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SteelTankBlock::class.item(), 1)
                     .pattern("PFP")
                     .pattern("F F")
                     .pattern("PFP")
-                    .input('P', Ingredient.fromTag(ModTags.Compat.Items.PLATES_STEEL))
-                    .input('F', cell)
-                    .criterion(hasItem(plate), conditionsFromItem(plate))
-                    .offerTo(exporter, SteelTankBlock::class.id())
+                    .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_STEEL))
+                    .define('F', cell)
+                    .unlockedBy(getHasName(plate), has(plate))
+                    .save(exporter, SteelTankBlock::class.id())
             }
         }
     }
@@ -298,21 +295,21 @@ class SteelTankBlock : TankBlock(BlockBehaviour.Settings.copy(net.minecraft.worl
  * 铱储罐 - 1024 桶容量 (1024000 mB)
  */
 @ModBlock(name = "iridium_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
-class IridiumTankBlock : TankBlock(BlockBehaviour.Settings.copy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(8.0f, 10.0f)) {
+class IridiumTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(8.0f, 10.0f)) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val plate = IridiumPlate::class.instance()
             val cell = EmptyCell::class.instance()
             if (plate != Items.AIR && cell != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, IridiumTankBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IridiumTankBlock::class.item(), 1)
                     .pattern("PFP")
                     .pattern("F F")
                     .pattern("PFP")
-                    .input('P', plate)
-                    .input('F', cell)
-                    .criterion(hasItem(plate), conditionsFromItem(plate))
-                    .offerTo(exporter, IridiumTankBlock::class.id())
+                    .define('P', plate)
+                    .define('F', cell)
+                    .unlockedBy(getHasName(plate), has(plate))
+                    .save(exporter, IridiumTankBlock::class.id())
             }
         }
     }

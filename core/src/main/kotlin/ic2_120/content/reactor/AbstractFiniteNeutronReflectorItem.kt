@@ -14,7 +14,7 @@ import ic2_120.getCustomData
  * 带脉冲耐久的中子反射板。NBT `use` 为已消耗的脉冲数，枯竭后槽位清空且不再提供脉冲加成。
  */
 abstract class AbstractFiniteNeutronReflectorItem(
-    settings: Item.Settings,
+    settings: Item.Properties,
     private val maxPulses: Int
 ) : AbstractReactorComponent(settings) {
 
@@ -60,9 +60,9 @@ abstract class AbstractFiniteNeutronReflectorItem(
         heatRun: Boolean
     ): Boolean = !isDepleted(stack)
 
-    override fun isItemBarVisible(stack: ItemStack): Boolean = !isDepleted(stack)
+    override fun isBarVisible(stack: ItemStack): Boolean = !isDepleted(stack)
 
-    override fun getItemBarColor(stack: ItemStack): Int {
+    override fun getBarColor(stack: ItemStack): Int {
         val frac = remainingPulses(stack).toDouble() / maxPulses
         return when {
             frac > 0.75 -> 0x00FF00
@@ -72,7 +72,7 @@ abstract class AbstractFiniteNeutronReflectorItem(
         }
     }
 
-    override fun getItemBarStep(stack: ItemStack): Int {
+    override fun getBarWidth(stack: ItemStack): Int {
         val frac = remainingPulses(stack).toDouble() / maxPulses
         return (13.0 * frac).toInt().coerceIn(0, 13)
     }
@@ -82,7 +82,7 @@ abstract class AbstractFiniteNeutronReflectorItem(
         if (!isDepleted(stack)) {
             tooltip.add(
                 Component.translatable("tooltip.ic2_120.neutron_reflector_pulses", remainingPulses(stack))
-                    .formatted(ChatFormatting.GRAY)
+                    .withStyle(ChatFormatting.GRAY)
             )
         }
     }

@@ -4,7 +4,7 @@ import buildcraft_addon.content.block.RFEngineBlock
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.network.FriendlyByteBuf
@@ -26,7 +26,7 @@ class RFEngineScreenHandler(
 ) : AbstractContainerMenu(RFEngineScreenHandler::class.type(), syncId) {
 
     init {
-        checkSize(blockInventory, 4)
+        checkContainerSize(blockInventory, 4)
         checkDataCount(propertyDelegate, 2)
 
         // 4 upgrade slots (BC8 pos: 62,44 / 80,44 / 98,44 / 116,44)
@@ -45,36 +45,36 @@ class RFEngineScreenHandler(
             addSlot(Slot(playerInventory, col, 8 + col * 18, 153))
         }
 
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
     }
 
     // ContainerData: [0]=currentRF, [1]=heat
     fun getCurrentRF(): Int = propertyDelegate.get(0)
     fun getHeat(): Int = propertyDelegate.get(1)
 
-    override fun quickMove(player: Player, slotIndex: Int): net.minecraft.world.item.ItemStack {
+    override fun quickMoveStack(player: Player, slotIndex: Int): net.minecraft.world.item.ItemStack {
         val slot = slots.getOrNull(slotIndex) ?: return ItemStack.EMPTY
-        if (!slot.hasStack()) return ItemStack.EMPTY
+        if (!slot .hasItem()) return ItemStack.EMPTY
         val original = slot.stack
         val newStack = original.copy()
 
         if (slotIndex in 0..3) {
-            if (!insertItem(original, 4, 40, true)) return ItemStack.EMPTY
+            if (!moveItemStackTo(original, 4, 40, true)) return ItemStack.EMPTY
         } else if (slotIndex in 4 until 40) {
-            if (!insertItem(original, 0, 4, false)) return ItemStack.EMPTY
+            if (!moveItemStackTo(original, 0, 4, false)) return ItemStack.EMPTY
         }
 
         if (original.isEmpty) {
             slot.stack = ItemStack.EMPTY
         } else {
-            slot.markDirty()
+            slot.setChanged()
         }
         return newStack
     }
 
-    override fun canUse(player: Player): Boolean {
+    override fun stillValid(player: Player): Boolean {
         return context.get({ world, pos ->
-            world.getBlockState(pos).block is RFEngineBlock && player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+            world.getBlockState(pos).block is RFEngineBlock && player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
     }
 

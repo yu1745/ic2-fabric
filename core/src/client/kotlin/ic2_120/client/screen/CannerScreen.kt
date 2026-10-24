@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
@@ -209,7 +209,7 @@ class CannerScreen(
             val amt = handler.sync.leftFluidAmount.coerceAtLeast(0)
             val cap = handler.sync.leftFluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
-                val name = BuiltInRegistries.FLUID.get(handler.sync.leftFluidRawId).defaultState.blockState.block.name.string
+                val name = BuiltInRegistries.FLUID.getValue(andler.sync.leftFluidRawId).defaultBlockState.blockState.block.name.string
                 listOf(Component.literal(name), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Component.literal("空"))
@@ -222,7 +222,7 @@ class CannerScreen(
             val amt = handler.sync.rightFluidAmount.coerceAtLeast(0)
             val cap = handler.sync.rightFluidCapacity.coerceAtLeast(1)
             val lines = if (amt > 0) {
-                val name = BuiltInRegistries.FLUID.get(handler.sync.rightFluidRawId).defaultState.blockState.block.name.string
+                val name = BuiltInRegistries.FLUID.getValue(andler.sync.rightFluidRawId).defaultBlockState.blockState.block.name.string
                 listOf(Component.literal(name), Component.literal("${"%,d".format(amt / DROPLETS_PER_MB)} / ${"%,d".format(cap / DROPLETS_PER_MB)} mB"))
             } else {
                 listOf(Component.literal("空"))
@@ -339,7 +339,7 @@ class CannerScreen(
 
 private fun getFluidStillSprite(fluid: Fluid): net.minecraft.client.renderer.texture.TextureAtlasSprite? {
     val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
-    return handler.getFluidSprites(null, null, fluid.defaultState).getOrNull(0)
+    return handler.getFluidSprites(null, null, fluid.defaultBlockState).getOrNull(0)
 }
 
 private data class Quad(val u: Int, val v: Int, val w: Int, val h: Int)

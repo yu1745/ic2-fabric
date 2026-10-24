@@ -1,5 +1,7 @@
 package ic2_120.content.item
 
+import ic2_120.compat.isClient
+
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -17,10 +19,10 @@ import ic2_120.Ic2_120
  * 废料箱抽奖物品
  * 右键使用可获得随机物品
  */
-open class ScrapBoxItem : Item(Item.Settings()) {
+open class ScrapBoxItem : Item(Item.Properties()) {
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getStackInHand(hand)
+        val stack = user.getItemInHand(hand)
 
         if (world.isClient) {
             return InteractionResultHolder.success(stack)
@@ -30,13 +32,13 @@ open class ScrapBoxItem : Item(Item.Settings()) {
         val reward = getRandomDrop(world.random)
 
         // 给予玩家物品
-        if (!user.inventory.insertStack(reward.copy())) {
+        if (!user.inventory.safeInsert(reward.copy())) {
             // 如果背包满了，就丢在地上
-            user.dropItem(reward, false)
+            user.spawnAtLocation(reward, false)
         }
 
         // 消耗废料箱
-        stack.decrement(1)
+        stack.shrink(1)
 
         // 发送消息
         user.sendMessage(

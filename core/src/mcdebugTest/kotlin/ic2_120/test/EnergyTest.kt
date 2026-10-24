@@ -30,7 +30,7 @@ class EnergyTest {
     @Test
     fun generatorBurnCoalToEu(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:generator")
-        insertItem(ctx, ctx.origin, "minecraft:coal", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:coal", 1, 0)
         waitUntil(ctx, beFieldGreaterThan(ctx.origin, "EnergyStored", 0), 5 * 20)
         val energy = getBeNumber(ctx, ctx.origin, "EnergyStored")
         if (energy <= 0) throw AssertionError("expected generator to produce energy, got $energy")

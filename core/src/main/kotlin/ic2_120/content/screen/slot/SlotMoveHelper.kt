@@ -1,5 +1,7 @@
 package ic2_120.content.screen.slot
 
+import ic2_120.compat.stack
+
 import ic2_120.content.storage.ItemInsertRoute
 import ic2_120.content.storage.RoutedItemStorage
 import net.minecraft.world.item.ItemStack
@@ -65,8 +67,8 @@ object SlotMoveHelper {
             val moved = stack.copy()
             moved.count = moveCount
             slot.stack = moved
-            stack.decrement(moveCount)
-            slot.markDirty()
+            stack.shrink(moveCount)
+            slot.setChanged()
             return true
         }
 
@@ -77,9 +79,9 @@ object SlotMoveHelper {
 
         val moveCount = minOf(space, stack.count)
         if (moveCount <= 0) return false
-        realStack.increment(moveCount)
-        stack.decrement(moveCount)
-        slot.markDirty()
+        realStack.grow(moveCount)
+        stack.shrink(moveCount)
+        slot.setChanged()
         return true
     }
 }

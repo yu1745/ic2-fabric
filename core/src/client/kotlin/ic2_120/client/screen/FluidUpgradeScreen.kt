@@ -9,7 +9,7 @@ import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.gui.components.Button
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
@@ -67,8 +67,8 @@ class FluidUpgradeScreen(
 
         // 流体限制文本 (9,18)-(104,32)
         val filterName = if (handler.fluidRawId > 0) {
-            val fluid = BuiltInRegistries.FLUID.get(handler.fluidRawId)
-            fluid.defaultState.blockState.block.name.string
+            val fluid = BuiltInRegistries.FLUID.getValue(andler.fluidRawId)
+            fluid.defaultBlockState.blockState.block.name.string
         } else {
             t("gui.ic2_120.fluid_upgrade.no_filter")
         }
@@ -85,10 +85,10 @@ class FluidUpgradeScreen(
 
     private fun drawFilterFluid(context: GuiGraphics) {
         if (handler.fluidRawId <= 0) return
-        val fluid = BuiltInRegistries.FLUID.get(handler.fluidRawId)
+        val fluid = BuiltInRegistries.FLUID.getValue(andler.fluidRawId)
         context.drawTexture(TEXTURE, x + 7, y + 34, 179f, 3f, 18, 18, TEX_SIZE, TEX_SIZE)
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid)
-        val sprite = renderHandler?.getFluidSprites(null, null, fluid.defaultState)?.getOrNull(0) ?: return
+        val sprite = renderHandler?.getFluidSprites(null, null, fluid.defaultBlockState)?.getOrNull(0) ?: return
         val color = FluidUtils.getFluidColor(fluid)
         val (r, g, b) = if (color != -1) {
             Triple(((color shr 16) and 0xFF) / 255f, ((color shr 8) and 0xFF) / 255f, (color and 0xFF) / 255f)

@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.ReplicatorBlock
 import ic2_120.content.energy.charge.BatteryDischargerComponent
@@ -47,7 +54,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -127,11 +134,11 @@ class ReplicatorBlockEntity(
         }
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
@@ -139,7 +146,7 @@ class ReplicatorBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_CONTAINER_INPUT), matcher = { isValid(SLOT_CONTAINER_INPUT, it) }, maxPerSlot = 1)
         ),
         extractSlots = intArrayOf(SLOT_OUTPUT, SLOT_CONTAINER_INPUT, SLOT_CONTAINER_OUTPUT, SLOT_DISCHARGING),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -186,7 +193,7 @@ class ReplicatorBlockEntity(
         override fun onFinalCommit() {
             sync.fluidAmount = toMilliBuckets(amount)
             sync.fluidCapacity = getEffectiveCapacity()
-            markDirty()
+            setChanged()
         }
 
         /** 方案 A：读档不截断存量；存量若超标称容量则把实际容量抬升到存量值，保全流体且保证后续不可能再被超出。 */
@@ -212,7 +219,7 @@ class ReplicatorBlockEntity(
                 if (amount <= 0L) variant = FluidVariant.blank()
                 tx.commit()
                 sync.fluidAmount = toMilliBuckets(amount)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -234,15 +241,15 @@ class ReplicatorBlockEntity(
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
 
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     private fun replicatorIsDrainableUuContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
@@ -281,9 +288,9 @@ class ReplicatorBlockEntity(
             itemStorage
         )
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(ReplicatorSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
@@ -294,9 +301,9 @@ class ReplicatorBlockEntity(
         redstoneInverted = if (nbt.contains("RedstoneInverted")) nbt.getBoolean("RedstoneInverted") else false
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(ReplicatorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putLong(NBT_TANK_AMOUNT, tankInternal.getStoredAmount())
@@ -418,13 +425,13 @@ class ReplicatorBlockEntity(
         sync.status = ReplicatorSync.STATUS_RUNNING
         if (sync.progressUb >= template.uuCostUb) {
             if (outputStack.isEmpty) setStack(SLOT_OUTPUT, resultStack.copy())
-            else outputStack.increment(1)
+            else outputStack.grow(1)
             sync.progressUb = 0
             sync.status = ReplicatorSync.STATUS_COMPLETE
             singlePulseConsumed = sync.mode == ReplicatorSync.MODE_SINGLE
-            markDirty()
+            setChanged()
         } else {
-            markDirty()
+            setChanged()
         }
 
         setActiveState(world, pos, state, true)
@@ -435,19 +442,19 @@ class ReplicatorBlockEntity(
         resetProgress()
         singlePulseConsumed = true
         sync.status = ReplicatorSync.STATUS_CANCELLED
-        markDirty()
+        setChanged()
     }
 
     fun setSingleMode() {
         sync.mode = ReplicatorSync.MODE_SINGLE
         singlePulseConsumed = false
-        markDirty()
+        setChanged()
     }
 
     fun setRepeatMode() {
         sync.mode = ReplicatorSync.MODE_CONTINUOUS
         singlePulseConsumed = false
-        markDirty()
+        setChanged()
     }
 
     fun selectTemplate(index: Int): Boolean {
@@ -464,7 +471,7 @@ class ReplicatorBlockEntity(
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
-        val facing = world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
+        val facing = world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
         if (side == facing) return null
         return tankInternal
     }
@@ -477,7 +484,7 @@ class ReplicatorBlockEntity(
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
+        setChanged()
     }
 
     private fun fillTankFromContainers() {
@@ -503,11 +510,11 @@ class ReplicatorBlockEntity(
                 val emptyResult = ctx.itemVariant.toStack(1)
                 if (!canMergeIntoSlot(output, emptyResult)) return@use
 
-                input.decrement(1)
+                input.shrink(1)
                 if (input.isEmpty) setStack(SLOT_CONTAINER_INPUT, ItemStack.EMPTY)
 
                 if (output.isEmpty) setStack(SLOT_CONTAINER_OUTPUT, emptyResult.copy())
-                else output.increment(emptyResult.count)
+                else output.grow(emptyResult.count)
 
                 sync.fluidAmount = toMilliBuckets(tankInternal.amount)
                 tx.commit()
@@ -517,7 +524,7 @@ class ReplicatorBlockEntity(
     }
 
     private fun canMergeIntoSlot(current: ItemStack, toInsert: ItemStack): Boolean =
-        current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxCount)
+        current.isEmpty || (ItemStack.canCombine(current, toInsert) && current.count < current.maxStackSize)
 
     private fun isUuMatter(fluid: net.minecraft.world.level.material.Fluid): Boolean =
         fluid == ModFluids.UU_MATTER_STILL || fluid == ModFluids.UU_MATTER_FLOWING

@@ -1,5 +1,7 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.has
+
 import ic2_120.content.recipes.ModTags
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
@@ -7,8 +9,6 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.recipeId
 import net.minecraft.world.item.Item
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.minecraft.data.recipes.ShapelessRecipeBuilder
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
@@ -21,136 +21,136 @@ import ic2_120.registry.annotation.RecipeProvider
 
 /** 浓缩铀核燃料 */
 @ModItem(name = "uranium", tab = CreativeTab.IC2_MATERIALS, group = "nuclear")
-class Uranium : Item(Item.Settings()) {
+class Uranium : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, Uranium::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, Uranium::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")
                 .pattern("XXX")
-                .input('X', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_URANIUM))
-                .input('O', SmallUranium235::class.instance())
-                .criterion(hasItem(UraniumIngot::class.instance()), conditionsFromItem(UraniumIngot::class.instance()))
-                .offerTo(exporter, Uranium::class.recipeId("1"))
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, Uranium::class.instance(), 1)
+                .define('X', Ingredient.of(ModTags.Compat.Items.INGOTS_URANIUM))
+                .define('O', SmallUranium235::class.instance())
+                .unlockedBy(has(UraniumIngot::class.instance()), has(UraniumIngot::class.instance()))
+                .save(exporter, Uranium::class.recipeId("1"))
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, Uranium::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")
                 .pattern("XXX")
-                .input('X', Uranium238::class.instance())
-                .input('O', SmallUranium235::class.instance())
-                .criterion(hasItem(Uranium238::class.instance()), conditionsFromItem(Uranium238::class.instance()))
-                .offerTo(exporter, Uranium::class.recipeId("2"))
+                .define('X', Uranium238::class.instance())
+                .define('O', SmallUranium235::class.instance())
+                .unlockedBy(has(Uranium238::class.instance()), has(Uranium238::class.instance()))
+                .save(exporter, Uranium::class.recipeId("2"))
         }
     }
 }
 
 /** 铀 -235 */
 @ModItem(name = "uranium_235", tab = CreativeTab.IC2_MATERIALS, group = "nuclear")
-class Uranium235 : Item(Item.Settings())
+class Uranium235 : Item(Item.Properties())
 
 /** 铀 -238 */
 @ModItem(name = "uranium_238", tab = CreativeTab.IC2_MATERIALS, group = "nuclear")
-class Uranium238 : Item(Item.Settings())
+class Uranium238 : Item(Item.Properties())
 
 /** 钚 */
 @ModItem(name = "plutonium", tab = CreativeTab.IC2_MATERIALS, group = "nuclear")
-class Plutonium : Item(Item.Settings())
+class Plutonium : Item(Item.Properties())
 
 /** 钚铀混合氧化物核燃料 (MOX) */
 @ModItem(name = "mox", tab = CreativeTab.IC2_MATERIALS, group = "nuclear")
-class Mox : Item(Item.Settings()) {
+class Mox : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, Mox::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, Mox::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")
                 .pattern("XXX")
-                .input('X', Ingredient.fromTag(ModTags.Compat.Items.INGOTS_URANIUM))
-                .input('O', Plutonium::class.instance())
-                .criterion(hasItem(UraniumIngot::class.instance()), conditionsFromItem(UraniumIngot::class.instance()))
-                .offerTo(exporter, Mox::class.recipeId("1"))
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, Mox::class.instance(), 1)
+                .define('X', Ingredient.of(ModTags.Compat.Items.INGOTS_URANIUM))
+                .define('O', Plutonium::class.instance())
+                .unlockedBy(has(UraniumIngot::class.instance()), has(UraniumIngot::class.instance()))
+                .save(exporter, Mox::class.recipeId("1"))
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, Mox::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")
                 .pattern("XXX")
-                .input('X', Uranium238::class.instance())
-                .input('O', Plutonium::class.instance())
-                .criterion(hasItem(Uranium238::class.instance()), conditionsFromItem(Uranium238::class.instance()))
-                .offerTo(exporter, Mox::class.recipeId("2"))
+                .define('X', Uranium238::class.instance())
+                .define('O', Plutonium::class.instance())
+                .unlockedBy(has(Uranium238::class.instance()), has(Uranium238::class.instance()))
+                .save(exporter, Mox::class.recipeId("2"))
         }
     }
 }
 
 /** 小撮铀 -235 */
 @ModItem(name = "small_uranium_235", tab = CreativeTab.IC2_MATERIALS, group = "nuclear")
-class SmallUranium235 : Item(Item.Settings()) {
+class SmallUranium235 : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 9 小撮 -> 1 铀-235
-            ShapelessRecipeBuilder.create(RecipeCategory.MISC, Uranium235::class.instance(), 1)
-                .input(SmallUranium235::class.instance()).input(SmallUranium235::class.instance())
-                .input(SmallUranium235::class.instance()).input(SmallUranium235::class.instance())
-                .input(SmallUranium235::class.instance()).input(SmallUranium235::class.instance())
-                .input(SmallUranium235::class.instance()).input(SmallUranium235::class.instance())
-                .input(SmallUranium235::class.instance()).criterion(
-                    hasItem(SmallUranium235::class.instance()), conditionsFromItem(SmallUranium235::class.instance())
-                ).offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "small_uranium_235_to_uranium_235"))
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, Uranium235::class.instance(), 1)
+                .requires(SmallUranium235::class.instance()).requires(SmallUranium235::class.instance())
+                .requires(SmallUranium235::class.instance()).requires(SmallUranium235::class.instance())
+                .requires(SmallUranium235::class.instance()).requires(SmallUranium235::class.instance())
+                .requires(SmallUranium235::class.instance()).requires(SmallUranium235::class.instance())
+                .requires(SmallUranium235::class.instance()).unlockedBy(
+                    has(SmallUranium235::class.instance()), has(SmallUranium235::class.instance())
+                ).save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "small_uranium_235_to_uranium_235"))
             // 1 铀-235 -> 9 小撮
-            ShapelessRecipeBuilder.create(RecipeCategory.MISC, SmallUranium235::class.instance(), 9)
-                .input(Uranium235::class.instance())
-                .criterion(hasItem(Uranium235::class.instance()), conditionsFromItem(Uranium235::class.instance()))
-                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "uranium_235_to_small_uranium_235"))
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SmallUranium235::class.instance(), 9)
+                .requires(Uranium235::class.instance())
+                .unlockedBy(has(Uranium235::class.instance()), has(Uranium235::class.instance()))
+                .save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "uranium_235_to_small_uranium_235"))
         }
     }
 }
 
 /** 小撮铀 -238 */
 @ModItem(name = "small_uranium_238", tab = CreativeTab.IC2_MATERIALS, group = "nuclear")
-class SmallUranium238 : Item(Item.Settings()) {
+class SmallUranium238 : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 9 小撮 -> 1 铀-238
-            ShapelessRecipeBuilder.create(RecipeCategory.MISC, Uranium238::class.instance(), 1)
-                .input(SmallUranium238::class.instance()).input(SmallUranium238::class.instance())
-                .input(SmallUranium238::class.instance()).input(SmallUranium238::class.instance())
-                .input(SmallUranium238::class.instance()).input(SmallUranium238::class.instance())
-                .input(SmallUranium238::class.instance()).input(SmallUranium238::class.instance())
-                .input(SmallUranium238::class.instance()).criterion(
-                    hasItem(SmallUranium238::class.instance()), conditionsFromItem(SmallUranium238::class.instance())
-                ).offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "small_uranium_238_to_uranium_238"))
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, Uranium238::class.instance(), 1)
+                .requires(SmallUranium238::class.instance()).requires(SmallUranium238::class.instance())
+                .requires(SmallUranium238::class.instance()).requires(SmallUranium238::class.instance())
+                .requires(SmallUranium238::class.instance()).requires(SmallUranium238::class.instance())
+                .requires(SmallUranium238::class.instance()).requires(SmallUranium238::class.instance())
+                .requires(SmallUranium238::class.instance()).unlockedBy(
+                    has(SmallUranium238::class.instance()), has(SmallUranium238::class.instance())
+                ).save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "small_uranium_238_to_uranium_238"))
             // 1 铀-238 -> 9 小撮
-            ShapelessRecipeBuilder.create(RecipeCategory.MISC, SmallUranium238::class.instance(), 9)
-                .input(Uranium238::class.instance())
-                .criterion(hasItem(Uranium238::class.instance()), conditionsFromItem(Uranium238::class.instance()))
-                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "uranium_238_to_small_uranium_238"))
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SmallUranium238::class.instance(), 9)
+                .requires(Uranium238::class.instance())
+                .unlockedBy(has(Uranium238::class.instance()), has(Uranium238::class.instance()))
+                .save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "uranium_238_to_small_uranium_238"))
         }
     }
 }
 
 /** 小撮钚 */
 @ModItem(name = "small_plutonium", tab = CreativeTab.IC2_MATERIALS, group = "nuclear")
-class SmallPlutonium : Item(Item.Settings()) {
+class SmallPlutonium : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 9 小撮 -> 1 钚
-            ShapelessRecipeBuilder.create(RecipeCategory.MISC, Plutonium::class.instance(), 1)
-                .input(SmallPlutonium::class.instance()).input(SmallPlutonium::class.instance())
-                .input(SmallPlutonium::class.instance()).input(SmallPlutonium::class.instance())
-                .input(SmallPlutonium::class.instance()).input(SmallPlutonium::class.instance())
-                .input(SmallPlutonium::class.instance()).input(SmallPlutonium::class.instance())
-                .input(SmallPlutonium::class.instance()).criterion(
-                    hasItem(SmallPlutonium::class.instance()), conditionsFromItem(SmallPlutonium::class.instance())
-                ).offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "small_plutonium_to_plutonium"))
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, Plutonium::class.instance(), 1)
+                .requires(SmallPlutonium::class.instance()).requires(SmallPlutonium::class.instance())
+                .requires(SmallPlutonium::class.instance()).requires(SmallPlutonium::class.instance())
+                .requires(SmallPlutonium::class.instance()).requires(SmallPlutonium::class.instance())
+                .requires(SmallPlutonium::class.instance()).requires(SmallPlutonium::class.instance())
+                .requires(SmallPlutonium::class.instance()).unlockedBy(
+                    has(SmallPlutonium::class.instance()), has(SmallPlutonium::class.instance())
+                ).save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "small_plutonium_to_plutonium"))
             // 1 钚 -> 9 小撮
-            ShapelessRecipeBuilder.create(RecipeCategory.MISC, SmallPlutonium::class.instance(), 9)
-                .input(Plutonium::class.instance())
-                .criterion(hasItem(Plutonium::class.instance()), conditionsFromItem(Plutonium::class.instance()))
-                .offerTo(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "plutonium_to_small_plutonium"))
+            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, SmallPlutonium::class.instance(), 9)
+                .requires(Plutonium::class.instance())
+                .unlockedBy(has(Plutonium::class.instance()), has(Plutonium::class.instance()))
+                .save(exporter, ResourceLocation.fromNamespaceAndPath("ic2_120", "plutonium_to_small_plutonium"))
         }
     }
 }
@@ -158,27 +158,27 @@ class SmallPlutonium : Item(Item.Settings()) {
 /** 浓缩铀核燃料靶丸 */
 //@Deprecated
 //@ModItem(name = "uranium_pellet", tab = CreativeTab.IC2_MATERIALS, group = "nuclear")
-//class UraniumPellet : Item(Item.Settings())
+//class UraniumPellet : Item(Item.Properties())
 
 ///** 钚铀混合氧化物核燃料靶丸 (MOX) */
 //@Deprecated
 //@ModItem(name = "mox_pellet", tab = CreativeTab.IC2_MATERIALS, group = "nuclear")
-//class MoxPellet : Item(Item.Settings())
+//class MoxPellet : Item(Item.Properties())
 
 /** 放射性同位素燃料靶丸 */
 @ModItem(name = "rtg_pellet", tab = CreativeTab.IC2_MATERIALS, group = "nuclear")
-class RtgPellet : Item(Item.Settings()) {
+class RtgPellet : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, RtgPellet::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RtgPellet::class.instance(), 1)
                 .pattern("XXX")
                 .pattern("OOO")
                 .pattern("XXX")
-                .input('X', DenseIronPlate::class.instance())
-                .input('O', Plutonium::class.instance())
-                .criterion(hasItem(DenseIronPlate::class.instance()), conditionsFromItem(DenseIronPlate::class.instance()))
-                .offerTo(exporter, RtgPellet::class.id())
+                .define('X', DenseIronPlate::class.instance())
+                .define('O', Plutonium::class.instance())
+                .unlockedBy(has(DenseIronPlate::class.instance()), has(DenseIronPlate::class.instance()))
+                .save(exporter, RtgPellet::class.id())
         }
     }
 }

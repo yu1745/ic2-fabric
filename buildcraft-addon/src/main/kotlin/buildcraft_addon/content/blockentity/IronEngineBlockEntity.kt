@@ -1,5 +1,6 @@
 package buildcraft_addon.content.blockentity
 
+import net.minecraft.core.HolderLookup
 import ic2_120.integration.ftbchunks.ClaimProtection
 
 import buildcraft_addon.content.block.IronEngineBlock
@@ -12,7 +13,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.ContainerData
@@ -128,7 +129,7 @@ class IronEngineBlockEntity(
         val extracted = minOf(amount, pendingOutputKu.coerceAtLeast(0))
         if (!simulate && extracted > 0) {
             pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
         return extracted
     }
@@ -154,7 +155,7 @@ class IronEngineBlockEntity(
             if (!powered) {
                 penaltyCooling = PENALTY_COOLING_TICKS
             }
-            markDirty()
+            setChanged()
         }
     }
 
@@ -162,8 +163,8 @@ class IronEngineBlockEntity(
         val world = world ?: return
         val next = Direction.entries[(current.ordinal + 1) % 6]
         currentDirection = next
-        world.setBlockState(pos, cachedState.with(BlockStateProperties.FACING, next))
-        markDirty()
+        world.setBlock(pos, cachedState.setValue(BlockStateProperties.FACING, next))
+        setChanged()
     }
 
     // === 活塞速度（BC 原版铁引擎） ===
@@ -181,7 +182,7 @@ class IronEngineBlockEntity(
         fuelType = fluidName
         currentPowerPerCycle = powerPerCycle
         currentTotalBurnTime = totalBurnTime
-        markDirty()
+        setChanged()
     }
 
     private fun consumeFuel() {
@@ -191,7 +192,7 @@ class IronEngineBlockEntity(
 
         fuelAmount--
         burnTime = currentTotalBurnTime / 1000.0
-        markDirty()
+        setChanged()
     }
 
     // === 冷却系统 ===
@@ -259,7 +260,7 @@ class IronEngineBlockEntity(
     fun serverTick() {
         val world = world ?: return
         if (world.isClient) return
-        currentDirection = cachedState.get(BlockStateProperties.FACING)
+        currentDirection = cachedState.getValue(BlockStateProperties.FACING)
         pendingOutputKu = 0
 
         isBurning = false
@@ -290,14 +291,14 @@ class IronEngineBlockEntity(
         updateHeatLevel()
         currentStage = computePowerStage()
         tickPiston()
-        markDirty()
+        setChanged()
     }
 
     // === 客户端 tick ===
     fun clientTick() {
         val world = world ?: return
         if (!world.isClient) return
-        currentDirection = cachedState.get(BlockStateProperties.FACING)
+        currentDirection = cachedState.getValue(BlockStateProperties.FACING)
 
         val powered = world.isReceivingRedstonePower(pos)
         isRedstonePowered = powered
@@ -332,8 +333,8 @@ class IronEngineBlockEntity(
     }
 
     // === NBT ===
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putDouble("heat", heat)
         nbt.putFloat("progress", progress)
         nbt.putInt("progressPart", progressPart)
@@ -352,8 +353,8 @@ class IronEngineBlockEntity(
         nbt.putInt("penaltyCooling", penaltyCooling)
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         heat = nbt.getDouble("heat")
         progress = nbt.getFloat("progress")
         progressPart = nbt.getInt("progressPart")

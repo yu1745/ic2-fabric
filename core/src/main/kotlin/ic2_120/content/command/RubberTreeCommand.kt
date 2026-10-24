@@ -1,5 +1,7 @@
 package ic2_120.content.command
 
+import ic2_120.compat.world
+
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.arguments.IntegerArgumentType
 import com.mojang.brigadier.context.CommandContext
@@ -140,8 +142,8 @@ object RubberTreeCommand {
         treeXZ: MutableSet<Pair<Int, Int>>,
         treePositions: MutableList<BlockPos>
     ) {
-        val chunk = if (!world.chunkManager.isChunkLoaded(chunkX, chunkZ)) {
-            world.chunkManager.getChunk(chunkX, chunkZ, ChunkStatus.FULL, true)
+        val chunk = if (!world.chunkSource.isChunkLoaded(chunkX, chunkZ)) {
+            world.chunkSource.getChunk(chunkX, chunkZ, ChunkStatus.FULL, true)
         } else {
             world.getChunk(chunkX, chunkZ)
         } ?: return
@@ -160,7 +162,7 @@ object RubberTreeCommand {
                     if (pos.getSquaredDistance(center) > radius * radius) continue
 
                     val state = chunk.getBlockState(pos)
-                    if (!state.isOf(rubberLogBlock)) continue
+                    if (!state.`is`(rubberLogBlock)) continue
                     if (!hasConnectedRubberLeaves(world, pos)) continue
 
                     val xz = Pair(x, z)

@@ -1,5 +1,9 @@
 package ic2_120.content.block.transmission
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
@@ -319,7 +323,7 @@ class KineticNetwork {
     }
 
     private fun lastKnownNodeLoss(nodePosLong: Long): Int =
-        topologyCache?.nodeLossKu?.get(nodePosLong) ?: 0
+        topologyCache?.nodeLossKu?.getValue(nodePosLong) ?: 0
 
     private fun nodeCapacity(state: net.minecraft.world.level.block.state.BlockState): Int = when (state.block) {
         is WoodTransmissionShaftBlock -> 128

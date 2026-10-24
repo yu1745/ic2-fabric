@@ -14,7 +14,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.network.chat.Component as McText
@@ -46,8 +46,8 @@ class SteamKineticGeneratorScreen(
     }
 
     private val waterSprite: TextureAtlasSprite? by lazy {
-        val handler = FluidRenderHandlerRegistry.INSTANCE.get(Fluids.WATER) ?: return@lazy null
-        handler.getFluidSprites(null, null, Fluids.WATER.defaultState)?.getOrNull(0)
+        val handler = FluidRenderHandlerRegistry.INSTANCE.getValue(luids.WATER) ?: return@lazy null
+        handler.getFluidSprites(null, null, Fluids.WATER.defaultBlockState)?.getOrNull(0)
     }
 
     // ==== 背景 — 先填充再纹理 ====

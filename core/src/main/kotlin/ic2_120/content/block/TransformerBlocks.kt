@@ -1,5 +1,13 @@
 package ic2_120.content.block
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.world.level.block.entity.BlockEntityType
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+
 import ic2_120.content.block.MachineCasingBlock
 import ic2_120.content.block.cables.InsulatedTinCableBlock
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
@@ -15,11 +23,9 @@ import ic2_120.registry.type
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.annotation.ModBlock
-import ic2_120.registry.type
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
-import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.world.entity.player.Player
@@ -37,8 +43,6 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import ic2_120.registry.id
 import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
@@ -64,29 +68,29 @@ import ic2_120.registry.annotation.RecipeProvider
  * 方块支持六面朝向（上下南北西东），"正面"是方块朝向的那一面。
  * 继承自 [DirectionalMachineBlock] 以获得六面朝向支持。
  */
-abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMachineSettings().nonOpaque()) { // 3D 模型：关闭相邻面剔除
+abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMachineSettings() .noOcclusion()) { // 3D 模型：关闭相邻面剔除
 
     abstract fun createTransformerBlockEntity(pos: BlockPos, state: BlockState): BlockEntity
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         createTransformerBlockEntity(pos, state)
 
     // 添加 ACTIVE 状态属性（六面朝向由 DirectionalMachineBlock 提供）
-    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
-        super.appendProperties(builder)  // 保留 FACING
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
+        super.createBlockStateDefinition(builder)  // 保留 FACING
         builder.add(ACTIVE)  // 添加激活状态
     }
 
     init {
         // 设置默认激活状态为 false（FACING 由父类处理）
-        defaultState = stateManager.defaultState.with(ACTIVE, false)
+        defaultState = stateManager.defaultBlockState.setValue(ACTIVE, false)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? {
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? {
         // 根据玩家面向的方向决定变压器正面朝向（水平方向）
         // 变压器通常放置在地面，正面应该朝向玩家面对的方向
         val facing = ctx.horizontalPlayerFacing.opposite
-        return super.getPlacementState(ctx)?.with(ACTIVE, false)?.with(BlockStateProperties.FACING, facing)
+        return super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)?.setValue(BlockStateProperties.FACING, facing)
     }
 
     override fun <T : BlockEntity> getTicker(
@@ -103,35 +107,23 @@ abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMa
                 is EvTransformerBlock -> EvTransformerBlockEntity::class.type()
                 else -> return null
             }
-            validateTicker(world, type, beType) { world1, pos, state, be ->
+            BlockEntityType.validateTicker(world, type, beType) { world1, pos, state, be ->
                 be.tick(world1, pos, state)
             }
         }
 
-    override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): net.minecraft.world.MenuProvider? {
-        val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.world.MenuProvider
-    }
-
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            createScreenHandlerFactory(state, world, pos)?.let { factory ->
-                player.openHandledScreen(factory)
+            getMenuProvider(state, world, pos)?.let { factory ->
+                player.openMenu(factory)
             }
         }
         return InteractionResult.SUCCESS
     }
 
     companion object {
-        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+        val ACTIVE: BooleanProperty = BooleanProperty.create("active")
     }
 }
 
@@ -146,11 +138,11 @@ class LvTransformerBlock : TransformerBlock() {
             val insulatedTinCable = InsulatedTinCableBlock::class.item()
             val coil = ic2_120.content.item.Coil::class.instance()
             if (coil != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, LvTransformerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, LvTransformerBlock::class.item(), 1)
                     .pattern("PWP").pattern("PCP").pattern("PWP")
-                    .input('P', ItemTags.PLANKS).input('W', insulatedTinCable).input('C', coil)
-                    .criterion(hasItem(coil), conditionsFromItem(coil))
-                    .offerTo(exporter, LvTransformerBlock::class.id())
+                    .define('P', ItemTags.PLANKS).define('W', insulatedTinCable).define('C', coil)
+                    .unlockedBy(getHasName(coil), has(coil))
+                    .save(exporter, LvTransformerBlock::class.id())
             }
         }
     }
@@ -167,11 +159,11 @@ class MvTransformerBlock : TransformerBlock() {
             val insulatedCopperCable = InsulatedCopperCableBlock::class.item()
             val machine = MachineCasingBlock::class.item()
             if (machine != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, MvTransformerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, MvTransformerBlock::class.item(), 1)
                     .pattern(" W ").pattern(" M ").pattern(" W ")
-                    .input('W', insulatedCopperCable).input('M', machine)
-                    .criterion(hasItem(machine), conditionsFromItem(machine))
-                    .offerTo(exporter, MvTransformerBlock::class.id())
+                    .define('W', insulatedCopperCable).define('M', machine)
+                    .unlockedBy(getHasName(machine), has(machine))
+                    .save(exporter, MvTransformerBlock::class.id())
             }
         }
     }
@@ -189,11 +181,11 @@ class HvTransformerBlock : TransformerBlock() {
             val circuit = ic2_120.content.item.Circuit::class.instance()
             val advancedReBattery = ic2_120.content.item.energy.AdvancedReBatteryItem::class.instance()
             if (MvTransformerBlock::class.item() != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, HvTransformerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, HvTransformerBlock::class.item(), 1)
                     .pattern(" W ").pattern("CTB").pattern(" W ")
-                    .input('W', insulatedGoldCable).input('C', circuit).input('T', MvTransformerBlock::class.item()).input('B', advancedReBattery)
-                    .criterion(hasItem(MvTransformerBlock::class.item()), conditionsFromItem(MvTransformerBlock::class.item()))
-                    .offerTo(exporter, HvTransformerBlock::class.id())
+                    .define('W', insulatedGoldCable).define('C', circuit).define('T', MvTransformerBlock::class.item()).define('B', advancedReBattery)
+                    .unlockedBy(has(MvTransformerBlock::class.item()), has(MvTransformerBlock::class.item()))
+                    .save(exporter, HvTransformerBlock::class.id())
             }
         }
     }
@@ -211,11 +203,11 @@ class EvTransformerBlock : TransformerBlock() {
             val advancedCircuit = ic2_120.content.item.AdvancedCircuit::class.instance()
             val lapotronCrystal = ic2_120.content.item.energy.LapotronCrystalItem::class.instance()
             if (HvTransformerBlock::class.item() != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, EvTransformerBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EvTransformerBlock::class.item(), 1)
                     .pattern(" W ").pattern("CTL").pattern(" W ")
-                    .input('W', insulatedIronCable).input('C', advancedCircuit).input('T', HvTransformerBlock::class.item()).input('L', lapotronCrystal)
-                    .criterion(hasItem(HvTransformerBlock::class.item()), conditionsFromItem(HvTransformerBlock::class.item()))
-                    .offerTo(exporter, EvTransformerBlock::class.id())
+                    .define('W', insulatedIronCable).define('C', advancedCircuit).define('T', HvTransformerBlock::class.item()).define('L', lapotronCrystal)
+                    .unlockedBy(has(HvTransformerBlock::class.item()), has(HvTransformerBlock::class.item()))
+                    .save(exporter, EvTransformerBlock::class.id())
             }
         }
     }

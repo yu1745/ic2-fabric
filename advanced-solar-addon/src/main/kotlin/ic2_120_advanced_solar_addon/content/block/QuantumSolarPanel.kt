@@ -1,5 +1,7 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
 import ic2_120_advanced_solar_addon.content.item.QuantumCore
 import ic2_120.content.block.MachineBlock
 import ic2_120.registry.CreativeTab
@@ -9,8 +11,6 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -36,7 +36,7 @@ import java.util.function.Consumer
 @ModBlock(name = "quantum_solar_panel", registerItem = true, tab = CreativeTab.IC2_SOLAR, group = "solar_panel")
 open class QuantumSolarPanelBlock : MachineBlock() {
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         QuantumSolarPanelBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
@@ -45,40 +45,28 @@ open class QuantumSolarPanelBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, QuantumSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
-
-    override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): MenuProvider? {
-        val be = world.getBlockEntity(pos)
-        return be as? MenuProvider
-    }
+        else BlockEntityType.validateTicker(world, type, QuantumSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Deprecated("Override without InteractionHand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            createScreenHandlerFactory(state, world, pos)?.let { factory ->
-                player.openHandledScreen(factory)
+            getMenuProvider(state, world, pos)?.let { factory ->
+                player.openMenu(factory)
             }
         }
         return InteractionResult.SUCCESS
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
-        super.getPlacementState(ctx)?.with(ACTIVE, false)
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
+        super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     companion object {
-        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+        val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -86,14 +74,14 @@ open class QuantumSolarPanelBlock : MachineBlock() {
             val quantumCore = QuantumCore::class.instance()
 
             // 8个终极混合太阳能 + 1个量子核心
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, QuantumSolarPanelBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, QuantumSolarPanelBlock::class.item(), 1)
                 .pattern("UUU")
                 .pattern("UQU")
                 .pattern("UUU")
-                .input('U', ultimateSolar)
-                .input('Q', quantumCore)
-                .criterion(hasItem(ultimateSolar), conditionsFromItem(ultimateSolar))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("quantum_solar_panel"))
+                .define('U', ultimateSolar)
+                .define('Q', quantumCore)
+                .unlockedBy(getHasName(ultimateSolar), has(ultimateSolar))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("quantum_solar_panel"))
         }
     }
 }

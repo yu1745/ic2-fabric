@@ -8,7 +8,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 
@@ -144,8 +144,8 @@ class NeutronFabricatorScreen(
         private const val TANK_OVERLAY_Y = 27
 
         private val neutronSprite by lazy {
-            FluidRenderHandlerRegistry.INSTANCE.get(NeutronFluid.NEUTRON_STILL)
-                ?.getFluidSprites(null, null, NeutronFluid.NEUTRON_STILL.defaultState)?.getOrNull(0)
+            FluidRenderHandlerRegistry.INSTANCE.getValue(NeutronFluid.NEUTRON_STILL)
+                ?.getFluidSprites(null, null, NeutronFluid.NEUTRON_STILL.defaultBlockState)?.getOrNull(0)
         }
     }
 }

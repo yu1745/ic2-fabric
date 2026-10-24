@@ -1,5 +1,14 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import ic2_120.compat.stack
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+import ic2_120.compat.world
+
 import ic2_120.content.crop.CropStats
 import ic2_120.content.crop.CropSystem
 import ic2_120.content.crop.CropType
@@ -12,15 +21,13 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.item
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -42,7 +49,7 @@ object CropSeedData {
 
     fun readType(stack: ItemStack): CropType? {
         val nbt = stack.nbt ?: return null
-        val id = if (nbt.contains(NBT_ID)) nbt.getString(NBT_ID) else ""
+        val id = if (nbt.hasProperty(NBT_ID)) nbt.getString(NBT_ID) else ""
         if (id.isEmpty()) return null
         return CropType.entries.firstOrNull { it.asString() == id }
     }
@@ -74,19 +81,19 @@ object CropSeedData {
 }
 
 @ModItem(name = "crop_seed_bag", tab = CreativeTab.IC2_CROP_SEEDS, group = "crops")
-class CropSeedBagItem : Item(Item.Settings().maxCount(1)) {
+class CropSeedBagItem : Item(Item.Properties().maxStackSize(1)) {
     override fun appendTooltip(
         stack: ItemStack,
         world: Level?,
         tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val scanLevel = CropSeedData.readScanLevel(stack)
         val type = CropSeedData.readType(stack)
-        tooltip.add(Component.literal("扫描等级: $scanLevel/4").formatted(net.minecraft.ChatFormatting.GRAY))
+        tooltip.add(Component.literal("扫描等级: $scanLevel/4").withStyle(net.minecraft.ChatFormatting.GRAY))
         if (scanLevel <= 0 || type == null) {
-            tooltip.add(Component.literal("作物: 未知").formatted(net.minecraft.ChatFormatting.DARK_GRAY))
+            tooltip.add(Component.literal("作物: 未知").withStyle(net.minecraft.ChatFormatting.DARK_GRAY))
             return
         }
 
@@ -94,26 +101,26 @@ class CropSeedBagItem : Item(Item.Settings().maxCount(1)) {
         tooltip.add(
             Component.literal("作物: ")
                 .append(CropSeedData.displayName(type))
-                .formatted(net.minecraft.ChatFormatting.GRAY)
+                .withStyle(net.minecraft.ChatFormatting.GRAY)
         )
         buildHarvestTooltip(type)?.let { tooltip.add(it) }
         if (scanLevel >= 2) {
             tooltip.add(
                 Component.literal("属性: ${def.attributes.take(3).joinToString("/")}")
-                    .formatted(net.minecraft.ChatFormatting.DARK_AQUA)
+                    .withStyle(net.minecraft.ChatFormatting.DARK_AQUA)
             )
         }
         if (scanLevel >= 3) {
             tooltip.add(
                 Component.literal("等级: ${def.tier}  成熟龄: ${def.maxVisualAge}")
-                    .formatted(net.minecraft.ChatFormatting.BLUE)
+                    .withStyle(net.minecraft.ChatFormatting.BLUE)
             )
         }
         if (scanLevel >= 4) {
             val stats = CropSeedData.readStats(stack)
             tooltip.add(
                 Component.literal("G:${stats.growth} Ga:${stats.gain} R:${stats.resistance}")
-                    .formatted(net.minecraft.ChatFormatting.DARK_GREEN)
+                    .withStyle(net.minecraft.ChatFormatting.DARK_GREEN)
             )
         }
     }
@@ -134,7 +141,7 @@ class CropSeedBagItem : Item(Item.Settings().maxCount(1)) {
 }
 
 @ModItem(name = "cropnalyzer", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
+class CropnalyzerItem : Item(Item.Properties().maxStackSize(1)), IElectricTool {
     override val tier: Int = 2
     override val maxCapacity: Long = 100_000L
     override fun nominalEuPerTick() = 128L
@@ -148,16 +155,16 @@ class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
         tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
-        tooltip.add(Component.literal("右键打开 GUI 扫描种子袋").formatted(net.minecraft.ChatFormatting.GRAY))
+        tooltip.add(Component.literal("右键打开 GUI 扫描种子袋").withStyle(net.minecraft.ChatFormatting.GRAY))
     }
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val scanner = user.getStackInHand(hand)
+        val scanner = user.getItemInHand(hand)
         if (world.isClient) return InteractionResultHolder.success(scanner)
 
-        user.openHandledScreen(object : ExtendedScreenHandlerFactory {
+        user.openMenu(object : ExtendedScreenHandlerFactory {
             override fun getDisplayName(): Component = Component.translatable("item.ic2_120.cropnalyzer")
 
             override fun writeScreenOpeningData(player: net.minecraft.server.level.ServerPlayer, buf: FriendlyByteBuf) {
@@ -180,11 +187,11 @@ class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
         val be = world.getBlockEntity(context.blockPos)
         val cropBe = be as? ic2_120.content.block.CropBlockEntity ?: return InteractionResult.PASS
         val cropState = world.getBlockState(context.blockPos)
-        val type = cropState.get(ic2_120.content.block.CropBlock.CROP_TYPE)
+        val type = cropState.getValue(c2_120.content.block.CropBlock.CROP_TYPE)
 
         val energy = getEnergy(stack)
         if (energy < CROP_INSPECTION_ENERGY) {
-            player.sendMessage(Component.literal("Cropnalyzer 电量不足").formatted(net.minecraft.ChatFormatting.RED), true)
+            player.displayClientMessage(Component.literal("Cropnalyzer 电量不足", false).withStyle(net.minecraft.ChatFormatting.RED), true)
             return InteractionResult.SUCCESS
         }
         setEnergy(stack, energy - CROP_INSPECTION_ENERGY)
@@ -194,7 +201,7 @@ class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
             .append(
                 Component.literal(" | G:${cropBe.stats.growth} Ga:${cropBe.stats.gain} R:${cropBe.stats.resistance}")
             )
-        player.sendMessage(msg, false)
+        player.displayClientMessage(msg, false, false)
         return InteractionResult.SUCCESS
     }
 
@@ -215,16 +222,16 @@ class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             if (cable == Items.AIR || circuit == Items.AIR) return
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, CropnalyzerItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CropnalyzerItem::class.instance(), 1)
                 .pattern("CC ")
                 .pattern("RGR")
                 .pattern("RXR")
-                .input('C', cable)
-                .input('R', Items.REDSTONE)
-                .input('G', Items.GLASS)
-                .input('X', circuit)
-                .criterion(hasItem(circuit), conditionsFromItem(circuit))
-                .offerTo(exporter, CropnalyzerItem::class.id())
+                .define('C', cable)
+                .define('R', Items.REDSTONE)
+                .define('G', Items.GLASS)
+                .define('X', circuit)
+                .unlockedBy(getHasName(circuit), has(circuit))
+                .save(exporter, CropnalyzerItem::class.id())
         }
 
         fun buildResultMessage(type: CropType, stats: CropStats, level: Int): Component {
@@ -262,5 +269,5 @@ private fun buildHarvestTooltip(type: CropType): Component? {
         text.append(Component.literal(" "))
         text.append(Component.translatable("tooltip.ic2_120.harvest.note.$key"))
     }
-    return text.formatted(ChatFormatting.GRAY)
+    return text.withStyle(ChatFormatting.GRAY)
 }

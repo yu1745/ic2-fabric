@@ -1,5 +1,8 @@
 package ic2_120.content.block.storage
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.pos
+
 import ic2_120.content.screen.StorageBoxScreenHandler
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.annotation.RegisterItemStorage
@@ -17,7 +20,7 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -107,7 +110,7 @@ class StorageBoxBlockEntity(
 
     /** 创建物品栏 */
     private fun createInventory(): NonNullList<ItemStack> {
-        return NonNullList.ofSize(getCapacity(), ItemStack.EMPTY)
+        return NonNullList.withSize(getCapacity(), ItemStack.EMPTY)
     }
 
     /** 获取物品栏（只读） - 外部访问用 */
@@ -137,25 +140,25 @@ class StorageBoxBlockEntity(
     }
 
     /** 从物品栏移除物品（玩家取物品） */
-    override fun removeStack(slot: Int, amount: Int): ItemStack {
+    override fun removeItem(slot: Int, amount: Int): ItemStack {
         if (slot >= 0 && slot < inventory.size) {
             val stack = inventory[slot]
             val removed = stack.split(amount)
             if (stack.isEmpty) {
                 inventory[slot] = ItemStack.EMPTY
             }
-            markDirty()
+            setChanged()
             return removed
         }
         return ItemStack.EMPTY
     }
 
     /** 从物品栏移除整个槽位的物品 */
-    override fun removeStack(slot: Int): ItemStack {
+    override fun removeItemNoUpdate(slot: Int): ItemStack {
         if (slot >= 0 && slot < inventory.size) {
             val stack = inventory[slot]
             inventory[slot] = ItemStack.EMPTY
-            markDirty()
+            setChanged()
             return stack
         }
         return ItemStack.EMPTY
@@ -165,22 +168,22 @@ class StorageBoxBlockEntity(
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot >= 0 && slot < inventory.size) {
             inventory[slot] = stack
-            markDirty()
+            setChanged()
         }
     }
 
     /** 标记物品栏已更改 */
-    override fun markDirty() {
-        super.markDirty()
+    override fun setChanged() {
+        super.setChanged()
     }
 
     /** 检查玩家是否可以使用此物品栏 */
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     /** 清空物品栏 */
     override fun clear() {
         inventory.clear()
-        markDirty()
+        setChanged()
     }
 
     // ========== ExtendedScreenHandlerFactory<FriendlyByteBuf> 实现 ==========
@@ -207,7 +210,7 @@ class StorageBoxBlockEntity(
         super.writeNbt(nbt, lookup)
         // 保存物品栏到 NBT
         val inventoryNbt = CompoundTag()
-        ContainerHelper.writeNbt(inventoryNbt, inventory, lookup)
+        ContainerHelper.saveAllItems(inventoryNbt, inventory, lookup)
         nbt.put(INVENTORY_KEY, inventoryNbt)
     }
 
@@ -220,11 +223,11 @@ class StorageBoxBlockEntity(
             val itemsNbt = nbt.getList(ITEMS_KEY, 10)
             if (itemsNbt.size != 0) {
                 inventory = createInventory()
-                ContainerHelper.readNbt(inventoryNbt, inventory, lookup)
+                ContainerHelper.loadAllItems(inventoryNbt, inventory, lookup)
             }
         } else {
             inventory = createInventory()
-            ContainerHelper.readNbt(inventoryNbt, inventory, lookup)
+            ContainerHelper.loadAllItems(inventoryNbt, inventory, lookup)
         }
     }
 }

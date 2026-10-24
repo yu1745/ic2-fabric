@@ -36,7 +36,7 @@ class QuantumSaber : SwordItem(
     QuantumSaberMaterial,
     0,
     -2.4f,
-    Item.Settings().maxCount(1)
+    Item.Properties().maxStackSize(1)
 ), IElectricTool {
 
     companion object {
@@ -106,7 +106,7 @@ class QuantumSaber : SwordItem(
     }
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getStackInHand(hand)
+        val stack = user.getItemInHand(hand)
         if (!world.isClient) {
             val on = toggleActive(stack)
             user.sendMessage(
@@ -143,16 +143,16 @@ class QuantumSaber : SwordItem(
         tooltip: MutableList<Component>,
         context: net.minecraft.client.item.TooltipContext
     ) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
         val key = if (isActive(stack))
             "tooltip.ic2_120_advanced_weapons_addon.quantum_saber.active"
         else
             "tooltip.ic2_120_advanced_weapons_addon.quantum_saber.inactive"
-        tooltip.add(Component.translatable(key).formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable(key).withStyle(ChatFormatting.GRAY))
     }
 
-    override fun isItemBarVisible(stack: ItemStack) = true
-    override fun getItemBarStep(stack: ItemStack) = getEnergyBarStep(stack)
-    override fun getItemBarColor(stack: ItemStack) = getEnergyBarColor(stack)
+    override fun isBarVisible(stack: ItemStack) = true
+    override fun getBarWidth(stack: ItemStack) = getEnergyBarStep(stack)
+    override fun getBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 }

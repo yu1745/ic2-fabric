@@ -6,7 +6,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenHandlerMode
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
@@ -43,7 +43,7 @@ class ItemUpgradeScreenHandler(
 ) : AbstractContainerMenu(ItemUpgradeScreenHandler::class.type(), syncId) {
 
     fun isDirectionActive(dirIdx: Int): Boolean = propertyDelegate.get(PROP_DIR_BASE + dirIdx) != 0
-    val itemRawId: Int get() = propertyDelegate.get(PROP_ITEM)
+    val itemRawId: Int get() = propertyDelegate.getValue(PROP_ITEM)
     val filterSlotIndex: Int get() = FILTER_SLOT
 
     companion object {
@@ -61,7 +61,7 @@ class ItemUpgradeScreenHandler(
     }
 
     init {
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
 
         addSlot(object : Slot(filterInventory, FILTER_SLOT, 8, 35) {
             override fun canInsert(stack: ItemStack): Boolean = false
@@ -80,8 +80,8 @@ class ItemUpgradeScreenHandler(
         refreshProperties()
     }
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
-        val upgradeStack = player.getStackInHand(hand)
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
+        val upgradeStack = player.getItemInHand(hand)
         if (upgradeStack.item !is ItemFilterUpgradeItem) return true
 
         when (id) {
@@ -105,12 +105,12 @@ class ItemUpgradeScreenHandler(
     /** AE2-style fake-slot setter used by both JEI and the local fallback. */
     fun setItemFilter(slotIndex: Int, stack: ItemStack): Boolean {
         if (slotIndex != FILTER_SLOT) return false
-        val upgradeStack = playerInventory.player.getStackInHand(hand)
+        val upgradeStack = playerInventory.player.getItemInHand(hand)
         if (upgradeStack.item !is ItemFilterUpgradeItem) return false
         val ghostStack = if (stack.isEmpty) ItemStack.EMPTY else stack.copy().also { it.count = 1 }
         filterInventory.setStack(FILTER_SLOT, ghostStack)
         EjectorUpgradeComponent.writeFilter(upgradeStack, ghostStack.item.takeUnless { ghostStack.isEmpty })
-        playerInventory.markDirty()
+        playerInventory.setChanged()
         refreshProperties()
         sendContentUpdates()
         return true
@@ -129,25 +129,25 @@ class ItemUpgradeScreenHandler(
         super.onSlotClick(slotIndex, button, actionType, player)
     }
 
-    override fun quickMove(player: Player, slotIndex: Int): ItemStack {
+    override fun quickMoveStack(player: Player, slotIndex: Int): ItemStack {
         return ItemStack.EMPTY
     }
 
-    override fun canUse(player: Player): Boolean {
-        val stack = player.getStackInHand(hand)
+    override fun stillValid(player: Player): Boolean {
+        val stack = player.getItemInHand(hand)
         return stack.item is ItemFilterUpgradeItem
     }
 
     private fun returnCursorToInventory() {
         val returning = cursorStack.copy()
         if (returning.isEmpty) return
-        playerInventory.insertStack(returning)
+        playerInventory.safeInsert(returning)
         cursorStack = if (returning.isEmpty) ItemStack.EMPTY else returning
     }
 
     private fun refreshProperties() {
         val player = playerInventory.player
-        val upgradeStack = player.getStackInHand(hand)
+        val upgradeStack = player.getItemInHand(hand)
         if (upgradeStack.item !is ItemFilterUpgradeItem) {
             for (i in 0..5) propertyDelegate.set(PROP_DIR_BASE + i, 0)
             propertyDelegate.set(PROP_ITEM, 0)

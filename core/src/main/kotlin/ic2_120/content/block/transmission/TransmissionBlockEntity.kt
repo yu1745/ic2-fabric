@@ -1,5 +1,10 @@
 package ic2_120.content.block.transmission
 
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.minecraft.world.level.block.Block
@@ -47,20 +52,20 @@ class TransmissionBlockEntity(
         val clamped = value.coerceAtLeast(0)
         if (currentKu == clamped) return
         currentKu = clamped
-        markDirty()
+        setChanged()
         val world = world as? ServerLevel ?: return
         val state = world.getBlockState(pos)
         world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
-        world.chunkManager.markForUpdate(pos)
+        world.chunkSource.markForUpdate(pos)
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         currentKu = nbt.getInt("CurrentKu").coerceAtLeast(0)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putInt("CurrentKu", currentKu)
     }
 

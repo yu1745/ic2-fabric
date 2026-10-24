@@ -1,5 +1,9 @@
 package ic2_120.integration.jade
 
+import ic2_120.compat.time
+
+import ic2_120.compat.pos
+
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.CropBlock
@@ -131,14 +135,14 @@ object ScaffoldJadeProvider : IBlockComponentProvider {
 
         when {
             remaining < 0 -> tooltip.add(
-                Component.translatable("ic2_120.jade.scaffold_unsupported").formatted(ChatFormatting.RED)
+                Component.translatable("ic2_120.jade.scaffold_unsupported").withStyle(ChatFormatting.RED)
             )
             remaining == 0 -> tooltip.add(
-                Component.translatable("ic2_120.jade.scaffold_support_limit").formatted(ChatFormatting.RED)
+                Component.translatable("ic2_120.jade.scaffold_support_limit").withStyle(ChatFormatting.RED)
             )
             else -> tooltip.add(
                 Component.translatable("ic2_120.jade.scaffold_support_remaining", remaining)
-                    .formatted(if (remaining == 1) ChatFormatting.YELLOW else ChatFormatting.GREEN)
+                    .withStyle(if (remaining == 1) ChatFormatting.YELLOW else ChatFormatting.GREEN)
             )
         }
     }
@@ -221,7 +225,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         if (accessor.serverData.contains("fluidName")) {
             val fluidId = accessor.serverData.getString("fluidName")
             val fluid = BuiltInRegistries.FLUID.get(ResourceLocation.tryParse(fluidId) ?: return)
-            val fluidText = BuiltInRegistries.FLUID.getId(fluid).toTranslationKey().let { Component.translatable("block.$it") }
+            val fluidText = BuiltInRegistries.FLUID.getId(fluid).toLanguageKey().let { Component.translatable("block.$it") }
             tooltip.add(Component.translatable("ic2_120.jade.fluid_name", fluidText))
         }
         if (accessor.serverData.getBoolean("stalled")) {
@@ -232,7 +236,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
                 val fluidId = nbtList.getString(i)
                 val id = ResourceLocation.tryParse(fluidId) ?: continue
                 val fluid = BuiltInRegistries.FLUID.get(id)
-                val fluidText = BuiltInRegistries.FLUID.getId(fluid).toTranslationKey().let { Component.translatable("block.$it") }
+                val fluidText = BuiltInRegistries.FLUID.getId(fluid).toLanguageKey().let { Component.translatable("block.$it") }
                 tooltip.add(Component.translatable("ic2_120.jade.stalled_fluid_entry", fluidText).setStyle(Style.EMPTY.withColor(ChatFormatting.YELLOW)))
             }
         }
@@ -340,7 +344,7 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
             data.putBoolean(
                 "crossingBase",
                 if (accessor.blockState.contains(CropStickBlock.CROSSING_BASE)) {
-                    accessor.blockState.get(CropStickBlock.CROSSING_BASE)
+                    accessor.blockState.getValue(CropStickBlock.CROSSING_BASE)
                 } else {
                     false
                 }
@@ -364,7 +368,7 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
                     if (dx == 0 && dy == 0 && dz == 0) continue
                     val lampPos = cropPos.add(dx, dy, dz)
                     val lampState = world.getBlockState(lampPos)
-                    if (lampState.block is UvLampBlock && lampState.contains(UvLampBlock.ACTIVE) && lampState.get(UvLampBlock.ACTIVE)) {
+                    if (lampState.block is UvLampBlock && lampState.contains(UvLampBlock.ACTIVE) && lampState.getValue(UvLampBlock.ACTIVE)) {
                         val lampBe = world.getBlockEntity(lampPos) as? UvLampBlockEntity ?: continue
                         val oc = lampBe.getOverclockerCount()
                         if (oc > uvGrowthBoost) uvGrowthBoost = oc
@@ -410,28 +414,28 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
             val weedEx = accessor.serverData.getInt("weedEx")
 
             tooltip.add(
-                if (crossingBase) Component.translatable("ic2_120.jade.crop_stick_crossing").formatted(ChatFormatting.YELLOW)
-                else Component.translatable("ic2_120.jade.crop_stick_empty").formatted(ChatFormatting.GRAY)
+                if (crossingBase) Component.translatable("ic2_120.jade.crop_stick_crossing").withStyle(ChatFormatting.YELLOW)
+                else Component.translatable("ic2_120.jade.crop_stick_empty").withStyle(ChatFormatting.GRAY)
             )
             tooltip.add(
                 if (nutrients > 0) {
-                    Component.translatable("ic2_120.jade.crop_fertilized_yes", nutrients).formatted(ChatFormatting.GREEN)
+                    Component.translatable("ic2_120.jade.crop_fertilized_yes", nutrients).withStyle(ChatFormatting.GREEN)
                 } else {
-                    Component.translatable("ic2_120.jade.crop_fertilized_no").formatted(ChatFormatting.GRAY)
+                    Component.translatable("ic2_120.jade.crop_fertilized_no").withStyle(ChatFormatting.GRAY)
                 }
             )
             tooltip.add(
                 if (water > 0) {
-                    Component.translatable("ic2_120.jade.crop_hydrated_yes", water).formatted(ChatFormatting.AQUA)
+                    Component.translatable("ic2_120.jade.crop_hydrated_yes", water).withStyle(ChatFormatting.AQUA)
                 } else {
-                    Component.translatable("ic2_120.jade.crop_hydrated_no").formatted(ChatFormatting.GRAY)
+                    Component.translatable("ic2_120.jade.crop_hydrated_no").withStyle(ChatFormatting.GRAY)
                 }
             )
             tooltip.add(
                 if (weedEx > 0) {
-                    Component.translatable("ic2_120.jade.crop_weedex_yes", weedEx).formatted(ChatFormatting.GREEN)
+                    Component.translatable("ic2_120.jade.crop_weedex_yes", weedEx).withStyle(ChatFormatting.GREEN)
                 } else {
-                    Component.translatable("ic2_120.jade.crop_weedex_no").formatted(ChatFormatting.GRAY)
+                    Component.translatable("ic2_120.jade.crop_weedex_no").withStyle(ChatFormatting.GRAY)
                 }
             )
             return
@@ -451,38 +455,38 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         tooltip.add(Component.translatable("ic2_120.jade.crop_progress", age, maxAge, progress))
         tooltip.add(
             if (nutrients > 0) {
-                Component.translatable("ic2_120.jade.crop_fertilized_yes", nutrients).formatted(ChatFormatting.GREEN)
+                Component.translatable("ic2_120.jade.crop_fertilized_yes", nutrients).withStyle(ChatFormatting.GREEN)
             } else {
-                Component.translatable("ic2_120.jade.crop_fertilized_no").formatted(ChatFormatting.GRAY)
+                Component.translatable("ic2_120.jade.crop_fertilized_no").withStyle(ChatFormatting.GRAY)
             }
         )
         tooltip.add(
             if (water > 0) {
-                Component.translatable("ic2_120.jade.crop_hydrated_yes", water).formatted(ChatFormatting.AQUA)
+                Component.translatable("ic2_120.jade.crop_hydrated_yes", water).withStyle(ChatFormatting.AQUA)
             } else {
-                Component.translatable("ic2_120.jade.crop_hydrated_no").formatted(ChatFormatting.GRAY)
+                Component.translatable("ic2_120.jade.crop_hydrated_no").withStyle(ChatFormatting.GRAY)
             }
         )
         tooltip.add(
             if (weedEx > 0) {
-                Component.translatable("ic2_120.jade.crop_weedex_yes", weedEx).formatted(ChatFormatting.GREEN)
+                Component.translatable("ic2_120.jade.crop_weedex_yes", weedEx).withStyle(ChatFormatting.GREEN)
             } else {
-                Component.translatable("ic2_120.jade.crop_weedex_no").formatted(ChatFormatting.GRAY)
+                Component.translatable("ic2_120.jade.crop_weedex_no").withStyle(ChatFormatting.GRAY)
             }
         )
 
         if (accessor.serverData.contains("uvGrowthBoost")) {
             val boost = accessor.serverData.getInt("uvGrowthBoost")
-            tooltip.add(Component.translatable("ic2_120.jade.uv_lamp_boost", boost + 1).formatted(ChatFormatting.LIGHT_PURPLE))
+            tooltip.add(Component.translatable("ic2_120.jade.uv_lamp_boost", boost + 1).withStyle(ChatFormatting.LIGHT_PURPLE))
         }
 
         if (isMature) {
-            tooltip.add(Component.translatable("ic2_120.jade.crop_mature").formatted(ChatFormatting.GREEN))
+            tooltip.add(Component.translatable("ic2_120.jade.crop_mature").withStyle(ChatFormatting.GREEN))
             return
         }
 
         if (!canGrowNow) {
-            tooltip.add(Component.translatable("ic2_120.jade.crop_cannot_grow").formatted(ChatFormatting.RED))
+            tooltip.add(Component.translatable("ic2_120.jade.crop_cannot_grow").withStyle(ChatFormatting.RED))
             if (accessor.serverData.contains("requirements")) {
                 val serialized = accessor.serverData.getString("requirements")
                 val entries = serialized.split(";")
@@ -494,7 +498,7 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
                     } else {
                         emptyArray()
                     }
-                    tooltip.add(Component.literal("  ⚠ ").append(Component.translatable("ic2_120.jade.crop_req.$key", *args)).formatted(ChatFormatting.GRAY))
+                    tooltip.add(Component.literal("  ⚠ ").append(Component.translatable("ic2_120.jade.crop_req.$key", *args)).withStyle(ChatFormatting.GRAY))
                 }
             }
             return
@@ -505,7 +509,7 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
             val min = sec / 60.0
             tooltip.add(Component.translatable("ic2_120.jade.crop_remaining_time", String.format("%.1f", sec), String.format("%.2f", min)))
         } else {
-            tooltip.add(Component.translatable("ic2_120.jade.crop_remaining_unknown").formatted(ChatFormatting.YELLOW))
+            tooltip.add(Component.translatable("ic2_120.jade.crop_remaining_unknown").withStyle(ChatFormatting.YELLOW))
         }
     }
 
@@ -729,20 +733,20 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
         if (!accessor.serverData.getBoolean("isManaged")) return
 
         // 显示被监管标识
-        tooltip.add(Component.translatable("ic2_120.jade.animal_monitored").formatted(ChatFormatting.GREEN))
+        tooltip.add(Component.translatable("ic2_120.jade.animal_monitored").withStyle(ChatFormatting.GREEN))
 
         val hasWater = accessor.serverData.getBoolean("hasWater")
 
         // 显示水状态 / 干渴
         tooltip.add(
             if (hasWater) {
-                Component.translatable("ic2_120.jade.animal_water_ok").formatted(ChatFormatting.AQUA)
+                Component.translatable("ic2_120.jade.animal_water_ok").withStyle(ChatFormatting.AQUA)
             } else {
-                Component.translatable("ic2_120.jade.animal_water_low").formatted(ChatFormatting.RED)
+                Component.translatable("ic2_120.jade.animal_water_low").withStyle(ChatFormatting.RED)
             }
         )
         if (!hasWater) {
-            tooltip.add(Component.translatable("ic2_120.jade.animal_thirsty").formatted(ChatFormatting.RED))
+            tooltip.add(Component.translatable("ic2_120.jade.animal_thirsty").withStyle(ChatFormatting.RED))
         }
 
         // 注：除草剂已停用（不消耗、无作用），不再展示“杀虫剂/生病”状态，避免误导。
@@ -753,21 +757,21 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
             val canBreed = accessor.serverData.getBoolean("canBreed")
             if (canBreed) {
                 // 可以繁殖
-                tooltip.add(Component.translatable("ic2_120.jade.animal_ready_to_breed").formatted(ChatFormatting.GREEN))
+                tooltip.add(Component.translatable("ic2_120.jade.animal_ready_to_breed").withStyle(ChatFormatting.GREEN))
             } else {
                 val totalFed = accessor.serverData.getInt("totalFed")
                 val requiredToFed = accessor.serverData.getInt("requiredToFed")
                 if (accessor.serverData.getBoolean("breedUnlocked")) {
                     // 已解锁繁殖资格但暂不可配对（如范围内动物数量已达上限）
-                    tooltip.add(Component.translatable("ic2_120.jade.animal_fed_full").formatted(ChatFormatting.YELLOW))
+                    tooltip.add(Component.translatable("ic2_120.jade.animal_fed_full").withStyle(ChatFormatting.YELLOW))
                 } else if (totalFed < requiredToFed) {
                     // 还没喂够，显示进度（含外来成体：从 0/10 喂起解锁繁殖资格）
-                    tooltip.add(Component.translatable("ic2_120.jade.animal_feed_progress", totalFed, requiredToFed).formatted(ChatFormatting.YELLOW))
+                    tooltip.add(Component.translatable("ic2_120.jade.animal_feed_progress", totalFed, requiredToFed).withStyle(ChatFormatting.YELLOW))
                     val remaining = requiredToFed - totalFed
-                    tooltip.add(Component.translatable("ic2_120.jade.animal_remaining_feed", remaining).formatted(ChatFormatting.GRAY))
+                    tooltip.add(Component.translatable("ic2_120.jade.animal_remaining_feed", remaining).withStyle(ChatFormatting.GRAY))
                 } else {
                     // foodConsumed 达标但未解锁（32 上限内首次达标会立即解锁，此分支为上限外成长的幼崽）
-                    tooltip.add(Component.translatable("ic2_120.jade.animal_fed_full").formatted(ChatFormatting.YELLOW))
+                    tooltip.add(Component.translatable("ic2_120.jade.animal_fed_full").withStyle(ChatFormatting.YELLOW))
                 }
             }
         }
@@ -799,19 +803,19 @@ object RubberSaplingJadeProvider : IBlockComponentProvider {
         val clear = RubberSaplingGrowth.hasClearArea(world, pos)
 
         if (enoughLight && clear) {
-            tooltip.add(Component.translatable("ic2_120.jade.sapling_can_grow").formatted(ChatFormatting.GREEN))
+            tooltip.add(Component.translatable("ic2_120.jade.sapling_can_grow").withStyle(ChatFormatting.GREEN))
             return
         }
 
-        tooltip.add(Component.translatable("ic2_120.jade.sapling_cannot_grow").formatted(ChatFormatting.RED))
+        tooltip.add(Component.translatable("ic2_120.jade.sapling_cannot_grow").withStyle(ChatFormatting.RED))
         if (!clear) {
-            tooltip.add(Component.literal("  ⚠ ").append(Component.translatable("ic2_120.jade.sapling_blocked")).formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("  ⚠ ").append(Component.translatable("ic2_120.jade.sapling_blocked")).withStyle(ChatFormatting.GRAY))
         }
         if (!enoughLight) {
             tooltip.add(
                 Component.literal("  ⚠ ")
                     .append(Component.translatable("ic2_120.jade.sapling_low_light", light, MIN_GROW_LIGHT))
-                    .formatted(ChatFormatting.GRAY)
+                    .withStyle(ChatFormatting.GRAY)
             )
         }
     }
@@ -858,7 +862,7 @@ object RubberLogJadeProvider : IBlockComponentProvider, IServerDataProvider<Bloc
                     tooltip.add(
                         Component.literal("$dirLabel: ")
                             .append(Component.translatable("ic2_120.jade.rubber_face_wet"))
-                            .formatted(ChatFormatting.GREEN)
+                            .withStyle(ChatFormatting.GREEN)
                     )
                 }
                 RubberFaceState.DRY -> {
@@ -873,7 +877,7 @@ object RubberLogJadeProvider : IBlockComponentProvider, IServerDataProvider<Bloc
                                 String.format("%.0f", elapsedSec),
                                 String.format("%.1f", expMin)
                             ))
-                            .formatted(ChatFormatting.GRAY)
+                            .withStyle(ChatFormatting.GRAY)
                     )
                 }
                 else -> {}

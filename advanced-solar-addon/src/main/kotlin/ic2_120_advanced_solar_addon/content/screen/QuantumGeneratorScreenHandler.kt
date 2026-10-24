@@ -3,7 +3,7 @@ package ic2_120_advanced_solar_addon.content.screen
 import ic2_120_advanced_solar_addon.content.block.QuantumGeneratorBlockEntity
 import ic2_120_advanced_solar_addon.content.sync.QuantumGeneratorSync
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.ContainerData
@@ -32,7 +32,7 @@ class QuantumGeneratorScreenHandler(
     )
 
     init {
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
 
         for (row in 0 until 3) {
             for (col in 0 until 9) {
@@ -53,29 +53,29 @@ class QuantumGeneratorScreenHandler(
      * 源槽永不落入 insertItem 目标区间，无自合并风险（与 Tank/Scanner 等同构实现一致）。
      * 本 GUI 无机器槽位，不需要 no-op。
      */
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
                 index in PLAYER_INV_START until HOTBAR_START -> {
-                    if (!insertItem(stackInSlot, HOTBAR_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, HOTBAR_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
                 index in HOTBAR_START until HOTBAR_END -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_START, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_START, false)) return ItemStack.EMPTY
                 }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
-            else slot.markDirty()
+            else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (player.world.isClient) return true
         // 使用双参数版本 get(BiFunction, defaultValue)，返回 T? 而不是 Optional<T>
         val be = context.get({ world, pos -> world.getBlockEntity(pos) }, null)
@@ -100,9 +100,9 @@ class QuantumGeneratorScreenHandler(
         return true
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
-            player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+            player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     companion object {

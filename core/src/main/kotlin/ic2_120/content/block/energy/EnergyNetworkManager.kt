@@ -1,5 +1,7 @@
 package ic2_120.content.block.energy
 
+import ic2_120.compat.time
+
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.block.cables.CableBlockEntity
 import net.minecraft.core.BlockPos

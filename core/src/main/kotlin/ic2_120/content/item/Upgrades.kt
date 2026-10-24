@@ -1,5 +1,9 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import ic2_120.compat.isClient
+
 import ic2_120.content.block.MvTransformerBlock
 import ic2_120.content.block.cables.DoubleInsulatedGoldCableBlock
 import ic2_120.content.block.cables.InsulatedCopperCableBlock
@@ -19,8 +23,7 @@ import ic2_120.registry.item
 import ic2_120.registry.recipeId
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
+import net.minecraft.data.recipes.RecipeProvider.has
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Items
@@ -33,7 +36,7 @@ import net.fabricmc.api.EnvType
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.item.Item
@@ -57,38 +60,38 @@ import net.minecraft.world.level.Level
  */
 interface IUpgradeItem
 
-abstract class FluidFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
+abstract class FluidFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+        super.appendTooltip(stack, context, tooltip, type)
         val filter = FluidPipeUpgradeComponent.readFilter(stack)
         if (filter != null) {
-            val fluidName = filter.defaultState.blockState.block.name
-            tooltip.add(Component.literal("过滤: ").append(fluidName).formatted(ChatFormatting.GRAY))
+            val fluidName = filter.defaultBlockState.blockState.block.name
+            tooltip.add(Component.literal("过滤: ").append(fluidName).withStyle(ChatFormatting.GRAY))
         } else {
-            tooltip.add(Component.literal("过滤: 未设置").formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("过滤: 未设置").withStyle(ChatFormatting.GRAY))
         }
         val sides = FluidPipeUpgradeComponent.readDirections(stack)
-        tooltip.add(Component.literal("方向: ${directionLabel(sides)}").formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.literal("方向: ${directionLabel(sides)}").withStyle(ChatFormatting.GRAY))
     }
 
     override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getStackInHand(hand)
+        val stack = user.getItemInHand(hand)
         if (world.isClient) return InteractionResultHolder.success(stack)
 
-        if (user.isSneaking) {
+        if (user.isCrouching) {
             val current = FluidPipeUpgradeComponent.readDirections(stack)
             val next = FluidPipeUpgradeComponent.nextDirections(current)
             FluidPipeUpgradeComponent.writeDirections(stack, next)
             if (user is ServerPlayer) {
-                user.sendMessage(Component.literal("已设置工作方向: ${directionLabel(next)}"), true)
+                user.displayClientMessage(Component.literal("已设置工作方向: ${directionLabel(next, false)}"), true)
             }
             return InteractionResultHolder.success(stack)
         }
 
         // 打开配置 GUI
         if (user is ServerPlayer) {
-            user.openHandledScreen(object : ExtendedScreenHandlerFactory {
+            user.openMenu(object : ExtendedScreenHandlerFactory {
                 override fun getDisplayName(): Component = Component.translatable("gui.ic2_120.fluid_upgrade.title")
                 override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
                     buf.writeEnumConstant(hand)
@@ -115,41 +118,41 @@ abstract class FluidFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
     }
 }
 
-abstract class ItemFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
+abstract class ItemFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
 
     /** 子类可重写此属性以改变方向设置消息，如 "弹出方向" 或 "抽入方向" */
     protected open val directionActionLabel: String = "弹出方向"
 
     @Environment(EnvType.CLIENT)
-    override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+    override fun appendTooltip(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
+        super.appendTooltip(stack, context, tooltip, type)
         val filterItem = EjectorUpgradeComponent.readFilter(stack)
         if (filterItem != null) {
-            tooltip.add(Component.literal("过滤物品: ").append(filterItem.name).formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("过滤物品: ").append(filterItem.name).withStyle(ChatFormatting.GRAY))
         } else {
-            tooltip.add(Component.literal("过滤物品: 全部").formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("过滤物品: 全部").withStyle(ChatFormatting.GRAY))
         }
         val sides = EjectorUpgradeComponent.readDirections(stack)
-        tooltip.add(Component.literal("方向: ${directionLabel(sides)}").formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.literal("方向: ${directionLabel(sides)}").withStyle(ChatFormatting.GRAY))
     }
 
     override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getStackInHand(hand)
+        val stack = user.getItemInHand(hand)
         if (world.isClient) return InteractionResultHolder.success(stack)
 
-        if (user.isSneaking) {
+        if (user.isCrouching) {
             val current = EjectorUpgradeComponent.readDirections(stack)
             val next = nextDirections(current)
             EjectorUpgradeComponent.writeDirections(stack, next)
             if (user is ServerPlayer) {
-                user.sendMessage(Component.literal("已设置$directionActionLabel: ${directionLabel(next)}"), true)
+                user.displayClientMessage(Component.literal("已设置$directionActionLabel: ${directionLabel(next, false)}"), true)
             }
             return InteractionResultHolder.success(stack)
         }
 
         // 打开配置 GUI
         if (user is ServerPlayer) {
-            user.openHandledScreen(object : ExtendedScreenHandlerFactory {
+            user.openMenu(object : ExtendedScreenHandlerFactory {
                 override fun getDisplayName(): Component = Component.translatable("gui.ic2_120.item_upgrade.title")
                 override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
                     buf.writeEnumConstant(hand)
@@ -185,21 +188,21 @@ abstract class ItemFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
 // ========== 工具升级类 ==========
 
 @ModItem(name = "overclocker_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-class OverclockerUpgrade : Item(Item.Settings()), IUpgradeItem {
+class OverclockerUpgrade : Item(Item.Properties()), IUpgradeItem {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             fun offer(coolant: Item, count: Int, suffix: String) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, OverclockerUpgrade::class.instance(), count)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, OverclockerUpgrade::class.instance(), count)
                     .pattern("CCC")
                     .pattern("WRW")
-                    .input('C', coolant)
-                    .input('W', cable)
-                    .input('R', circuit)
-                    .criterion(hasItem(coolant), conditionsFromItem(coolant))
-                    .offerTo(exporter, OverclockerUpgrade::class.recipeId(suffix))
+                    .define('C', coolant)
+                    .define('W', cable)
+                    .define('R', circuit)
+                    .unlockedBy(getHasName(coolant), has(coolant))
+                    .save(exporter, OverclockerUpgrade::class.recipeId(suffix))
             }
             offer(ReactorCoolantCellItem::class.instance(), 2, "from_10k_coolant")
             offer(TripleReactorCoolantCellItem::class.instance(), 6, "from_30k_coolant")
@@ -209,70 +212,70 @@ class OverclockerUpgrade : Item(Item.Settings()), IUpgradeItem {
 }
 
 @ModItem(name = "transformer_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-class TransformerUpgrade : Item(Item.Settings()), IUpgradeItem {
+class TransformerUpgrade : Item(Item.Properties()), IUpgradeItem {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val mv = MvTransformerBlock::class.item()
             val goldCable = DoubleInsulatedGoldCableBlock::class.item()
             val circuit = Circuit::class.instance()
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, TransformerUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, TransformerUpgrade::class.instance(), 1)
                 .pattern("GGG")
                 .pattern("WTW")
                 .pattern("GRG")
-                .input('G', Items.GLASS)
-                .input('W', goldCable)
-                .input('T', mv)
-                .input('R', circuit)
-                .criterion(hasItem(mv), conditionsFromItem(mv))
-                .offerTo(exporter)
+                .define('G', Items.GLASS)
+                .define('W', goldCable)
+                .define('T', mv)
+                .define('R', circuit)
+                .unlockedBy(getHasName(mv), has(mv))
+                .save(exporter)
         }
     }
 }
 
 @ModItem(name = "energy_storage_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-class EnergyStorageUpgrade : Item(Item.Settings()), IUpgradeItem {
+class EnergyStorageUpgrade : Item(Item.Properties()), IUpgradeItem {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val cable = InsulatedCopperCableBlock::class.item()
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, EnergyStorageUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EnergyStorageUpgrade::class.instance(), 1)
                 .pattern("PPP")
                 .pattern("WBW")
                 .pattern("PRP")
-                .input('P', ItemTags.PLANKS)
-                .input('W', cable)
-                .input('B', ReBatteryItem::class.instance())
-                .input('R', Circuit::class.instance())
-                .criterion(hasItem(ReBatteryItem::class.instance()), conditionsFromItem(ReBatteryItem::class.instance()))
-                .offerTo(exporter)
+                .define('P', ItemTags.PLANKS)
+                .define('W', cable)
+                .define('B', ReBatteryItem::class.instance())
+                .define('R', Circuit::class.instance())
+                .unlockedBy(has(ReBatteryItem::class.instance()), has(ReBatteryItem::class.instance()))
+                .save(exporter)
         }
     }
 }
 
 @ModItem(name = "redstone_inverter_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-class RedstoneInverterUpgrade : Item(Item.Settings()), IUpgradeItem {
+class RedstoneInverterUpgrade : Item(Item.Properties()), IUpgradeItem {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 1)
                 .pattern("T T")
                 .pattern(" L ")
                 .pattern("T T")
-                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
-                .input('L', Items.LEVER)
-                .criterion(hasItem(tin), conditionsFromItem(tin))
-                .offerTo(exporter)
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 9)
+                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('L', Items.LEVER)
+                .unlockedBy(getHasName(tin), has(tin))
+                .save(exporter)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 9)
                 .pattern("T T")
                 .pattern(" L ")
                 .pattern("T T")
-                .input('T', dense)
-                .input('L', Items.LEVER)
-                .criterion(hasItem(dense), conditionsFromItem(dense))
-                .offerTo(exporter, RedstoneInverterUpgrade::class.recipeId("from_dense_tin"))
+                .define('T', dense)
+                .define('L', Items.LEVER)
+                .unlockedBy(getHasName(dense), has(dense))
+                .save(exporter, RedstoneInverterUpgrade::class.recipeId("from_dense_tin"))
         }
     }
 }
@@ -284,22 +287,22 @@ class EjectorUpgrade : ItemFilterUpgradeItem() {
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, EjectorUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EjectorUpgrade::class.instance(), 1)
                 .pattern("T T")
                 .pattern(" P ")
                 .pattern("T T")
-                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
-                .input('P', Items.PISTON)
-                .criterion(hasItem(tin), conditionsFromItem(tin))
-                .offerTo(exporter)
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, EjectorUpgrade::class.instance(), 9)
+                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('P', Items.PISTON)
+                .unlockedBy(getHasName(tin), has(tin))
+                .save(exporter)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, EjectorUpgrade::class.instance(), 9)
                 .pattern("T T")
                 .pattern(" P ")
                 .pattern("T T")
-                .input('T', dense)
-                .input('P', Items.PISTON)
-                .criterion(hasItem(dense), conditionsFromItem(dense))
-                .offerTo(exporter, EjectorUpgrade::class.recipeId("from_dense_tin"))
+                .define('T', dense)
+                .define('P', Items.PISTON)
+                .unlockedBy(getHasName(dense), has(dense))
+                .save(exporter, EjectorUpgrade::class.recipeId("from_dense_tin"))
         }
     }
 }
@@ -314,22 +317,22 @@ class PullingUpgrade : ItemFilterUpgradeItem() {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val hopper = Items.HOPPER
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, PullingUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PullingUpgrade::class.instance(), 1)
                 .pattern("T T")
                 .pattern(" H ")
                 .pattern("T T")
-                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
-                .input('H', hopper)
-                .criterion(hasItem(hopper), conditionsFromItem(hopper))
-                .offerTo(exporter)
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, PullingUpgrade::class.instance(), 9)
+                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('H', hopper)
+                .unlockedBy(getHasName(hopper), has(hopper))
+                .save(exporter)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PullingUpgrade::class.instance(), 9)
                 .pattern("T T")
                 .pattern(" H ")
                 .pattern("T T")
-                .input('T', dense)
-                .input('H', hopper)
-                .criterion(hasItem(dense), conditionsFromItem(dense))
-                .offerTo(exporter, PullingUpgrade::class.recipeId("from_dense_tin"))
+                .define('T', dense)
+                .define('H', hopper)
+                .unlockedBy(getHasName(dense), has(dense))
+                .save(exporter, PullingUpgrade::class.recipeId("from_dense_tin"))
         }
     }
 }
@@ -342,22 +345,22 @@ class FluidEjectorUpgrade : FluidFilterUpgradeItem() {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val motor = ElectricMotor::class.instance()
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, FluidEjectorUpgrade::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, FluidEjectorUpgrade::class.instance(), 1)
                 .pattern("T T")
                 .pattern(" M ")
                 .pattern("T T")
-                .input('T', Ingredient.fromTag(ModTags.Compat.Items.PLATES_TIN))
-                .input('M', motor)
-                .criterion(hasItem(motor), conditionsFromItem(motor))
-                .offerTo(exporter)
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, FluidEjectorUpgrade::class.instance(), 9)
+                .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
+                .define('M', motor)
+                .unlockedBy(getHasName(motor), has(motor))
+                .save(exporter)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, FluidEjectorUpgrade::class.instance(), 9)
                 .pattern("T T")
                 .pattern(" M ")
                 .pattern("T T")
-                .input('T', dense)
-                .input('M', motor)
-                .criterion(hasItem(dense), conditionsFromItem(dense))
-                .offerTo(exporter, FluidEjectorUpgrade::class.recipeId("from_dense_tin"))
+                .define('T', dense)
+                .define('M', motor)
+                .unlockedBy(getHasName(dense), has(dense))
+                .save(exporter, FluidEjectorUpgrade::class.recipeId("from_dense_tin"))
         }
     }
 }

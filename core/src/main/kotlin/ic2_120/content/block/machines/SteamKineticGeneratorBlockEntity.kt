@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.SteamKineticGeneratorBlock
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.content.fluid.ModFluids
@@ -32,7 +37,7 @@ import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
@@ -109,18 +114,18 @@ class SteamKineticGeneratorBlockEntity(
         fun dropletsToMb(droplets: Long): Long = droplets * 1000 / FluidConstants.BUCKET
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(SLOT_TURBINE), matcher = { isValid(SLOT_TURBINE, it) }, maxPerSlot = 1),
             ItemInsertRoute(intArrayOf(SLOT_UPGRADE), matcher = { it.item is ic2_120.content.item.IUpgradeItem && ic2_120.content.upgrade.UpgradeItemRegistry.canAccept(this@SteamKineticGeneratorBlockEntity, it.item) })
         ),
         extractSlots = intArrayOf(SLOT_TURBINE, SLOT_UPGRADE),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -159,7 +164,7 @@ class SteamKineticGeneratorBlockEntity(
 
         override fun onFinalCommit() {
             sync.steamAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
 
         fun consumeInternal(droplets: Long): Long {
@@ -172,7 +177,7 @@ class SteamKineticGeneratorBlockEntity(
                 if (amount <= 0L) variant = FluidVariant.blank()
                 tx.commit()
                 sync.steamAmount = amount.toInt().coerceAtLeast(0)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -190,7 +195,7 @@ class SteamKineticGeneratorBlockEntity(
 
         override fun onFinalCommit() {
             sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
 
         fun availableSpace(): Long = (WATER_TANK_CAPACITY - amount).coerceAtLeast(0L)
@@ -206,7 +211,7 @@ class SteamKineticGeneratorBlockEntity(
                 if (variant.isBlank) variant = FluidVariant.of(ModFluids.DISTILLED_WATER_STILL)
                 tx.commit()
                 sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
-                markDirty()
+                setChanged()
                 actual
             }
         }
@@ -227,7 +232,7 @@ class SteamKineticGeneratorBlockEntity(
                             tx.commit()
                         }
                         sync.distilledWaterAmount = amount.toInt().coerceAtLeast(0)
-                        markDirty()
+                        setChanged()
                     }
                 } catch (_: Exception) { }
             }
@@ -286,15 +291,15 @@ class SteamKineticGeneratorBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot == SLOT_TURBINE && stack.count > 1) stack.count = 1
         inventory[slot] = stack
-        markDirty()
+        setChanged()
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
@@ -318,7 +323,7 @@ class SteamKineticGeneratorBlockEntity(
         val extracted = minOf(amount, kuBuffer)
         if (!simulate) {
             kuBuffer -= extracted
-            markDirty()
+            setChanged()
         }
         return extracted
     }
@@ -346,19 +351,19 @@ class SteamKineticGeneratorBlockEntity(
 
     // ==== NBT ====
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         kuBuffer = nbt.getInt(NBT_KU_BUFFER)
         condensationProgress = nbt.getInt(NBT_CONDENSATION)
 
-        if (nbt.contains(NBT_STEAM_TANK)) {
+        if (nbt.hasProperty(NBT_STEAM_TANK)) {
             val tankNbt = nbt.getCompound(NBT_STEAM_TANK)
             steamTank.variant = FluidVariant.fromNbt(tankNbt.getCompound("variant"))
             steamTank.amount = tankNbt.getLong("amount")
         }
-        if (nbt.contains(NBT_WATER_TANK)) {
+        if (nbt.hasProperty(NBT_WATER_TANK)) {
             val tankNbt = nbt.getCompound(NBT_WATER_TANK)
             distilledWaterTank.variant = FluidVariant.fromNbt(tankNbt.getCompound("variant"))
             distilledWaterTank.amount = tankNbt.getLong("amount")
@@ -367,9 +372,9 @@ class SteamKineticGeneratorBlockEntity(
         sync.distilledWaterAmount = distilledWaterTank.amount.toInt().coerceAtLeast(0)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putInt(NBT_KU_BUFFER, kuBuffer)
         nbt.putInt(NBT_CONDENSATION, condensationProgress)
@@ -507,7 +512,7 @@ class SteamKineticGeneratorBlockEntity(
         val active = hasTurbine && lastKuOutput > 0
         setActiveState(world, pos, state, active)
 
-        markDirty()
+        setChanged()
     }
 
     /**

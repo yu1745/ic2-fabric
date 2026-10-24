@@ -1,5 +1,11 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.world
+
+import ic2_120.compat.stack
+
+import ic2_120.compat.isClient
+
 import ic2_120.content.block.machines.BaseMinerBlockEntity
 import ic2_120.content.block.BaseMinerBlock
 import ic2_120.content.screen.slot.PredicateSlot
@@ -11,7 +17,7 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
@@ -45,8 +51,8 @@ class MinerScreenHandler(
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
-        checkSize(blockInventory, BaseMinerBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, BaseMinerBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
 
         if (isAdvanced) {
             // 高级采矿机：无钻头槽
@@ -123,7 +129,7 @@ class MinerScreenHandler(
         addSlot(slot)
     }
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? BaseMinerBlockEntity ?: return@get false
             when (id) {
@@ -138,20 +144,20 @@ class MinerScreenHandler(
         return true
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
                 beSlot == BaseMinerBlockEntity.SLOT_PIPE -> {
                     val miner = getMinerBlockEntity() ?: return ItemStack.EMPTY
-                    val moved = miner.takePipes(stackInSlot.maxCount)
+                    val moved = miner.takePipes(stackInSlot.maxStackSize)
                     if (moved.isEmpty) return ItemStack.EMPTY
                     stack = moved.copy()
-                    if (!insertItem(moved, playerSlotStart, slots.size, true)) {
+                    if (!moveItemStackTo(moved, playerSlotStart, slots.size, true)) {
                         miner.insertPipesFromStack(stack, stack.count)
                         return ItemStack.EMPTY
                     }
@@ -159,7 +165,7 @@ class MinerScreenHandler(
                     slot.onQuickTransfer(moved, stack)
                 }
                 beSlot >= 0 -> {
-                    if (!insertItem(stackInSlot, playerSlotStart, slots.size, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, playerSlotStart, slots.size, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index >= playerSlotStart -> {
@@ -175,12 +181,12 @@ class MinerScreenHandler(
                     }
                 }
                 else -> {
-                    if (!insertItem(stackInSlot, playerSlotStart, slots.size, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, playerSlotStart, slots.size, false)) return ItemStack.EMPTY
                 }
             }
-            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.markDirty()
+            if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
@@ -192,7 +198,7 @@ class MinerScreenHandler(
             if (miner != null) {
                 val cursor = cursorStack
                 if (cursor.isEmpty) {
-                    val takeAmount = if (button == 1) 1 else cursor.maxCount
+                    val takeAmount = if (button == 1) 1 else cursor.maxStackSize
                     val taken = miner.takePipes(takeAmount)
                     if (!taken.isEmpty) {
                         cursorStack = taken
@@ -222,9 +228,9 @@ class MinerScreenHandler(
     private val playerSlotStart: Int
         get() = if (isAdvanced) 21 else 22
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
-            world.getBlockState(pos).block is BaseMinerBlock && player.squaredDistanceTo(
+            world.getBlockState(pos).block is BaseMinerBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)

@@ -1,5 +1,6 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import net.minecraft.core.HolderLookup
 import ic2_120_advanced_solar_addon.content.sync.MolecularTransformerSync
 import ic2_120_advanced_solar_addon.content.screen.MolecularTransformerScreenHandler
 import ic2_120_advanced_solar_addon.content.recipe.MTRecipes
@@ -8,7 +9,7 @@ import ic2_120.content.block.machines.MachineBlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.Item
@@ -56,7 +57,7 @@ class MolecularTransformerBlockEntity(
     val sync = MolecularTransformerSync(
         schema = syncedData,
         tier = tier,
-        getFacing = { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
+        getFacing = { world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH },
         currentTickProvider = { world?.time },
         canAcceptEnergy = { currentRecipe != null },
         getRemainingEnergyNeeded = {
@@ -67,7 +68,7 @@ class MolecularTransformerBlockEntity(
 
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
 
-    val inventory: NonNullList<ItemStack> = NonNullList.ofSize(MolecularTransformerBlock.INVENTORY_SIZE, ItemStack.EMPTY)
+    val inventory: NonNullList<ItemStack> = NonNullList.withSize(MolecularTransformerBlock.INVENTORY_SIZE, ItemStack.EMPTY)
 
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
@@ -81,7 +82,7 @@ class MolecularTransformerBlockEntity(
             )
         ),
         extractSlots = intArrayOf(MolecularTransformerBlock.OUTPUT_SLOT),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     private var energyUsed: Long = 0
@@ -97,13 +98,13 @@ class MolecularTransformerBlockEntity(
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
-        markDirty()
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     private fun isValidForSlot(slot: Int, stack: ItemStack): Boolean = when (slot) {
         MolecularTransformerBlock.INPUT_SLOT -> MTRecipes.findRecipe(stack) != null
@@ -126,7 +127,7 @@ class MolecularTransformerBlockEntity(
                 energyUsed = 0
                 // Consume 1 item from input immediately
                 consumedInputItem = inputStack.copyWithCount(1)
-                inputStack.decrement(1)
+                inputStack.shrink(1)
                 if (inputStack.isEmpty) {
                     inventory[MolecularTransformerBlock.INPUT_SLOT] = ItemStack.EMPTY
                 }
@@ -141,7 +142,7 @@ class MolecularTransformerBlockEntity(
             // Validate: if output blocked, reset
             if (!canOutput(recipe.output, outputStack)) {
                 resetRecipe(world, pos, state)
-                markDirty()
+                setChanged()
                 return
             }
 
@@ -158,7 +159,7 @@ class MolecularTransformerBlockEntity(
                 if (outputStack.isEmpty) {
                     inventory[MolecularTransformerBlock.OUTPUT_SLOT] = recipe.output.copy()
                 } else {
-                    inventory[MolecularTransformerBlock.OUTPUT_SLOT].increment(recipe.output.count)
+                    inventory[MolecularTransformerBlock.OUTPUT_SLOT].grow(recipe.output.count)
                 }
                 resetRecipe(world, pos, state)
             }
@@ -174,11 +175,11 @@ class MolecularTransformerBlockEntity(
             val shouldBeLit = noEnergyTicks < LIGHT_TIMEOUT_TICKS
             if (shouldBeLit != isLit) {
                 isLit = shouldBeLit
-                world.setBlockState(pos, state.with(MolecularTransformerBlock.LIT, isLit))
+                world.setBlock(pos, state.setValue(MolecularTransformerBlock.LIT, isLit))
             }
         } else if (isLit) {
             isLit = false
-            world.setBlockState(pos, state.with(MolecularTransformerBlock.LIT, false))
+            world.setBlock(pos, state.setValue(MolecularTransformerBlock.LIT, false))
         }
 
         // Update sync data
@@ -192,7 +193,7 @@ class MolecularTransformerBlockEntity(
 
         sync.syncCurrentTickFlow()
         setActiveState(world, pos, state, currentRecipe != null)
-        markDirty()
+        setChanged()
     }
 
     private fun resetRecipe(world: Level, pos: BlockPos, state: BlockState) {
@@ -206,14 +207,14 @@ class MolecularTransformerBlockEntity(
         sync.progress = 0
         if (isLit) {
             isLit = false
-            world.setBlockState(pos, state.with(MolecularTransformerBlock.LIT, false))
+            world.setBlock(pos, state.setValue(MolecularTransformerBlock.LIT, false))
         }
     }
 
     private fun canOutput(output: ItemStack, currentOutput: ItemStack): Boolean {
         if (currentOutput.isEmpty) return true
         if (!ItemStack.canCombine(currentOutput, output)) return false
-        return currentOutput.count + output.count <= currentOutput.maxCount
+        return currentOutput.count + output.count <= currentOutput.maxStackSize
     }
 
     // ExtendedScreenHandlerFactory
@@ -232,9 +233,9 @@ class MolecularTransformerBlockEntity(
         buf.writeVarInt(syncedData.size())
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         energyUsed = nbt.getLong("energyUsed")
         consumedInputItem = ItemStack.fromNbt(nbt.getCompound("consumedInput"))
         noEnergyTicks = nbt.getInt("noEnergyTicks")
@@ -247,9 +248,9 @@ class MolecularTransformerBlockEntity(
         }
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         nbt.putLong("energyUsed", energyUsed)
         nbt.put("consumedInput", consumedInputItem.writeNbt(CompoundTag()))
         nbt.putInt("noEnergyTicks", noEnergyTicks)

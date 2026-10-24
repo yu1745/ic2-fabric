@@ -37,18 +37,18 @@ enum class SpringType(val fluid: Fluid) : StringRepresentable {
 
 @ModBlock(name = "spring", registerItem = true, tab = CreativeTab.BUILDCRAFT)
 class SpringBlock : Block(
-    BlockBehaviour.Settings.copy(Blocks.BEDROCK).strength(-1.0f, 6000000.0f)
+    BlockBehaviour.Properties.ofFullCopy(Blocks.BEDROCK).strength(-1.0f, 6000000.0f)
 ), EntityBlock {
 
     companion object {
-        val SPRING_TYPE: EnumProperty<SpringType> = EnumProperty.of("spring_type", SpringType::class.java)
+        val SPRING_TYPE: EnumProperty<SpringType> = EnumProperty.create("spring_type", SpringType::class.java)
     }
 
     init {
-        defaultState = stateManager.defaultState.with(SPRING_TYPE, SpringType.WATER)
+        defaultState = stateManager.defaultBlockState.setValue(SPRING_TYPE, SpringType.WATER)
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
         builder.add(SPRING_TYPE)
     }
 
@@ -66,23 +66,23 @@ class SpringBlock : Block(
     }
 
     private fun generateSpringFluid(world: Level, pos: BlockPos, state: BlockState) {
-        val springType = state.get(SPRING_TYPE)
+        val springType = state.getValue(SPRING_TYPE)
         val upPos = pos.up()
         val upState = world.getBlockState(upPos)
 
         // 上方已有流体或非空气方块 → 停止生成，不再重调度
         if (!upState.isAir) return
 
-        world.setBlockState(upPos, springType.fluid.defaultState.blockState)
+        world.setBlock(upPos, springType.fluid.defaultBlockState.blockState)
         // 成功后重新调度
         world.scheduleBlockTick(pos, this, 20)
     }
 
-    override fun onUse(state: BlockState, world: Level, pos: BlockPos, player: Player, hand: InteractionHand, hit: BlockHitResult): InteractionResult {
-        if (!world.isClient && state.get(SPRING_TYPE) == SpringType.OIL) {
-            val held = player.getStackInHand(hand)
-            if (held.isOf(net.minecraft.world.item.Items.GLASS_BOTTLE)) {
-                held.decrement(1)
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
+        if (!world.isClient && state.getValue(SPRING_TYPE) == SpringType.OIL) {
+            val held = player.getItemInHand(hand)
+            if (held.`is`(net.minecraft.world.item.Items.GLASS_BOTTLE)) {
+                held.shrink(1)
                 player.giveItemStack(ItemStack(net.minecraft.world.item.Items.EMERALD))
                 world.playSound(null, pos, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundSource.BLOCKS, 1.0f, 1.0f)
                 return InteractionResult.SUCCESS
@@ -91,7 +91,7 @@ class SpringBlock : Block(
         return InteractionResult.PASS
     }
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return OilSpringBlockEntity(pos, state)
     }
 

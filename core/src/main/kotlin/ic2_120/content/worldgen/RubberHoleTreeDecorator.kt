@@ -1,5 +1,7 @@
 package ic2_120.content.worldgen
 
+import ic2_120.compat.world
+
 import com.mojang.serialization.MapCodec
 import ic2_120.content.block.RubberFaceState
 import ic2_120.content.block.RubberLogBlock
@@ -18,9 +20,9 @@ class RubberHoleTreeDecorator : TreeDecorator() {
 
     override fun generate(generator: TreeDecorator.Generator) {
         val rubberLog = RubberLogBlock::class.instance()
-        val baseState = rubberLog.defaultState
-            .with(BlockStateProperties.AXIS, net.minecraft.core.Direction.Axis.Y)
-            .with(RubberLogBlock.NATURAL, true)
+        val baseState = rubberLog.defaultBlockState
+            .setValue(BlockStateProperties.AXIS, net.minecraft.core.Direction.Axis.Y)
+            .setValue(RubberLogBlock.NATURAL, true)
 
         val initializedLogs = generator.logPositions
             .sortedBy { it.y }
@@ -67,7 +69,7 @@ class RubberHoleTreeDecorator : TreeDecorator() {
         ): net.minecraft.world.level.block.state.BlockState {
             val faces = listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
             val fallbackFace = faces[random.nextInt(faces.size)]
-            return state.with(RubberLogBlock.propFor(fallbackFace), RubberFaceState.WET)
+            return state.setValue(RubberLogBlock.propFor(fallbackFace), RubberFaceState.WET)
         }
     }
 }

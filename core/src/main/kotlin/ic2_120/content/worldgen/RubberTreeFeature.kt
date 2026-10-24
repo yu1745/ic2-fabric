@@ -1,5 +1,7 @@
 package ic2_120.content.worldgen
 
+import ic2_120.compat.world
+
 import ic2_120.config.Ic2Config
 import ic2_120.config.RubberTreeWorldgenConfig
 import ic2_120.content.block.RubberFaceState
@@ -85,7 +87,7 @@ class RubberTreeFeature : Feature<TreeConfiguration>(TreeConfiguration.CODEC) {
                 if (!state.contains(LeavesBlock.DISTANCE)) continue
 
                 val newDist = dist + 1
-                world.setBlockState(nextPos, state.with(LeavesBlock.DISTANCE, newDist.coerceAtMost(7)), Block.NOTIFY_ALL or Block.FORCE_STATE)
+                world.setBlock(nextPos, state.setValue(LeavesBlock.DISTANCE, newDist.coerceAtMost(7)), Block.NOTIFY_ALL or Block.FORCE_STATE)
                 queue.add(nextPos to newDist)
             }
         }
@@ -129,7 +131,7 @@ class RubberTreeFeature : Feature<TreeConfiguration>(TreeConfiguration.CODEC) {
                     }
                     // 与原版 TreeFeature 的 getTopPosition 保持一致：
                     // 配置里 ignore_vines=true 时，藤蔓不应阻止橡胶树生成。    
-                    if (ignoreVines && state.isOf(Blocks.VINE)) {
+                    if (ignoreVines && state.`is`(Blocks.VINE)) {
                         continue
                     }
                     if (!TreeFeature.canReplace(world, pos)) {
@@ -171,12 +173,12 @@ class RubberTreeFeature : Feature<TreeConfiguration>(TreeConfiguration.CODEC) {
 
        val rubberLog = RubberLogBlock::class.instance()
        val rubberLeaves = RubberLeavesBlock::class.instance()
-       val leavesState = rubberLeaves.defaultState
+       val leavesState = rubberLeaves.defaultBlockState
         val leafPositions = mutableListOf<BlockPos>()
         val logPositions = mutableListOf<BlockPos>()
-       val baseLogState = rubberLog.defaultState
-           .with(BlockStateProperties.AXIS, Direction.Axis.Y)
-           .with(RubberLogBlock.NATURAL, true)
+       val baseLogState = rubberLog.defaultBlockState
+           .setValue(BlockStateProperties.AXIS, Direction.Axis.Y)
+           .setValue(RubberLogBlock.NATURAL, true)
 
         // 树级橡胶孔概率（对齐 Forge 1.12：初始 25%，每出一个 -10%）
         var treeholechance = 25
@@ -188,7 +190,7 @@ class RubberTreeFeature : Feature<TreeConfiguration>(TreeConfiguration.CODEC) {
             if (random.nextInt(100) <= treeholechance) {
                 treeholechance -= 10
                 val face = horizontalFaces[random.nextInt(4)]
-                setBlockState(world, logPos, baseLogState.with(RubberLogBlock.propFor(face), RubberFaceState.WET))
+                setBlockState(world, logPos, baseLogState.setValue(RubberLogBlock.propFor(face), RubberFaceState.WET))
            } else {
                setBlockState(world, logPos, baseLogState)
            }

@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
@@ -115,7 +115,7 @@ class FermenterScreen(
     private fun getFluidSprite(fluid: Fluid?): TextureAtlasSprite? {
         if (fluid == null) return null
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
-        return handler.getFluidSprites(null, null, fluid.defaultState)?.getOrNull(0)
+        return handler.getFluidSprites(null, null, fluid.defaultBlockState)?.getOrNull(0)
     }
 
     /** 平铺流体纹理在槽内，自下而上 scissor 限制不超出区域，调用流体颜色渲染 */

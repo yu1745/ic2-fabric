@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.sync.MetalFormerSync
 import ic2_120.content.block.MetalFormerBlock
 import ic2_120.content.block.machines.MetalFormerBlockEntity
@@ -11,7 +13,7 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ContainerData
@@ -44,7 +46,7 @@ class MetalFormerScreenHandler(
      * 服务端处理：收到客户端发来的按钮点击包后在此执行。
      * 客户端应发送 [net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket] 指定 syncId 与 [BUTTON_ID_MODE_CYCLE]。
      */
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (id != BUTTON_ID_MODE_CYCLE) return false
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos)
@@ -60,8 +62,8 @@ class MetalFormerScreenHandler(
     }
 
     init {
-        checkSize(blockInventory, MetalFormerBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, MetalFormerBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
 
         addTrackedSlot(blockInventory, MetalFormerBlockEntity.SLOT_INPUT, 17, 17)
         addTrackedSlot(blockInventory, MetalFormerBlockEntity.SLOT_OUTPUT, 116, 35)
@@ -81,16 +83,16 @@ class MetalFormerScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
                 beSlot >= 0 -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
@@ -105,20 +107,20 @@ class MetalFormerScreenHandler(
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
-            else slot.markDirty()
+            else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
-            world.getBlockState(pos).block is MetalFormerBlock && player.squaredDistanceTo(
+            world.getBlockState(pos).block is MetalFormerBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)

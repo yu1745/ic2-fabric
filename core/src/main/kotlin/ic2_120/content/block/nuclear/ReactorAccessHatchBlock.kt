@@ -1,12 +1,16 @@
 package ic2_120.content.block.nuclear
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
+import ic2_120.compat.isClient
+
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.id
 import ic2_120.registry.item
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.state.BlockBehaviour
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.Blocks
@@ -30,9 +34,9 @@ import java.util.function.Consumer
  * 反应堆访问接口。在反应堆结构内时，右键可打开反应堆 UI；Container 委托到对应的中心核反应堆。
  */
 @ModBlock(name = "reactor_access_hatch", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor", renderLayer = "translucent")
-class ReactorAccessHatchBlock(settings: BlockBehaviour.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
+class ReactorAccessHatchBlock(settings: BlockBehaviour.Properties = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         ReactorAccessHatchBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
@@ -49,14 +53,7 @@ class ReactorAccessHatchBlock(settings: BlockBehaviour.Settings = ReactorShellBl
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
         // 查找反应堆，仅当访问接口在其 5×5×5 结构内部时才打开 UI（不根据距离，根据结构归属）
         for (dx in -2..2) {
@@ -65,7 +62,7 @@ class ReactorAccessHatchBlock(settings: BlockBehaviour.Settings = ReactorShellBl
                     val reactorPos = pos.add(dx, dy, dz)
                     val be = world.getBlockEntity(reactorPos)
                     if (be is NuclearReactorBlockEntity && be.isPositionInStructure(pos)) {
-                        player.openHandledScreen(be)
+                        player.openMenu(be)
                         return InteractionResult.SUCCESS
                     }
                 }
@@ -79,12 +76,12 @@ class ReactorAccessHatchBlock(settings: BlockBehaviour.Settings = ReactorShellBl
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             val vessel = ReactorVesselBlock::class.item()
             if (vessel != Items.AIR) {
-                ShapedRecipeBuilder.create(RecipeCategory.MISC, ReactorAccessHatchBlock::class.item(), 1)
+                ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ReactorAccessHatchBlock::class.item(), 1)
                     .pattern("AAA").pattern("ABA").pattern("AAA")
-                    .input('A', vessel)
-                    .input('B', ItemTags.WOODEN_TRAPDOORS)
-                    .criterion(hasItem(vessel), conditionsFromItem(vessel))
-                    .offerTo(exporter, ReactorAccessHatchBlock::class.id())
+                    .define('A', vessel)
+                    .define('B', ItemTags.WOODEN_TRAPDOORS)
+                    .unlockedBy(getHasName(vessel), has(vessel))
+                    .save(exporter, ReactorAccessHatchBlock::class.id())
             }
         }
     }

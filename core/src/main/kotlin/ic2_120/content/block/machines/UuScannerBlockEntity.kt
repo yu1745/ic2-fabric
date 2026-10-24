@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
 import ic2_120.content.block.UuScannerBlock
@@ -23,7 +30,7 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -60,11 +67,11 @@ class UuScannerBlockEntity(
         private val crystalMemoryId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "crystal_memory")
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isValid(SLOT_INPUT, it) }),
@@ -72,7 +79,7 @@ class UuScannerBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_CRYSTAL), matcher = { it.isEmpty || isCrystalMemory(it) })
         ),
         extractSlots = intArrayOf(SLOT_INPUT, SLOT_DISCHARGING, SLOT_CRYSTAL),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -107,7 +114,7 @@ class UuScannerBlockEntity(
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         val previousId = if (slot == SLOT_INPUT) BuiltInRegistries.ITEM.getId(inventory[slot].item).toString() else ""
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         if (slot == SLOT_INPUT) {
             val newId = if (stack.isEmpty) "" else BuiltInRegistries.ITEM.getId(stack.item).toString()
             if (newId != previousId) {
@@ -115,14 +122,14 @@ class UuScannerBlockEntity(
                 sync.progress = 0
             }
         }
-        markDirty()
+        setChanged()
     }
 
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> !stack.isEmpty && stack.item !is IBatteryItem
@@ -141,9 +148,9 @@ class UuScannerBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         UuScannerScreenHandler(syncId, playerInventory, this, pos, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.restoreEnergy(nbt.getLong(UuScannerSync.NBT_ENERGY_STORED))
         sync.energyCapacity = sync.getEffectiveCapacity().toInt().coerceIn(0, Int.MAX_VALUE)
@@ -151,9 +158,9 @@ class UuScannerBlockEntity(
         cachedTemplate = if (nbt.contains("CachedTemplate")) UuTemplateEntry.fromNbt(nbt.getCompound("CachedTemplate")) else null
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(UuScannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putString(NBT_LAST_COMPLETED_ITEM, lastCompletedItemId)
@@ -165,7 +172,7 @@ class UuScannerBlockEntity(
         sync.cachedItemRawId = 0
         sync.currentCostUb = 0
         sync.status = UuScannerSync.STATUS_NO_INPUT
-        markDirty()
+        setChanged()
     }
 
     fun saveTemplateToCrystal() {
@@ -186,7 +193,7 @@ class UuScannerBlockEntity(
         sync.cachedItemRawId = 0
         sync.currentCostUb = 0
         sync.status = UuScannerSync.STATUS_NO_INPUT
-        markDirty()
+        setChanged()
     }
 
     fun tick(world: Level, pos: BlockPos, state: BlockState) {
@@ -248,12 +255,12 @@ class UuScannerBlockEntity(
             if (sync.progress >= UuScannerSync.PROGRESS_MAX) {
                 // 扫描完成 → 模板缓存至内置缓存位
                 cachedTemplate = template
-                input.decrement(1)
+                input.shrink(1)
                 if (input.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
                 sync.progress = 0
                 sync.status = UuScannerSync.STATUS_COMPLETE
             }
-            markDirty()
+            setChanged()
             setActiveState(world, pos, state, true)
         } else {
             sync.status = UuScannerSync.STATUS_NO_ENERGY
@@ -271,7 +278,7 @@ class UuScannerBlockEntity(
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
+        setChanged()
     }
 
     private fun isCrystalMemory(stack: ItemStack): Boolean =

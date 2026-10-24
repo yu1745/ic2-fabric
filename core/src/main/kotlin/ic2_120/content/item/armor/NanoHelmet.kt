@@ -1,5 +1,7 @@
 package ic2_120.content.item.armor
 
+import ic2_120.compat.isClient
+
 import ic2_120.Ic2_120
 import ic2_120.config.Ic2Config
 import ic2_120.content.item.CarbonPlate
@@ -50,7 +52,7 @@ import java.util.function.Consumer
  * - 能量从所有纳米装备均匀扣除
  */
 @ModItem(name = "nano_helmet", tab = CreativeTab.IC2_MATERIALS, group = "nano_armor")
-class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HELMET, Item.Settings().maxCount(1)) {
+class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HELMET, Item.Properties().maxStackSize(1)) {
 
     companion object {
         private const val NIGHT_VISION_DURATION = 220
@@ -97,7 +99,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         if (world.isClient) return
 
         val player = entity as? Player ?: return
-        if (player.getEquippedStack(EquipmentSlot.HEAD) !== stack) return
+        if (player.getItemBySlot(EquipmentSlot.HEAD) !== stack) return
 
         val nbt = stack.orCreateNbt
         if (!nbt.getBoolean(NIGHT_VISION_KEY)) return
@@ -143,7 +145,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
     }
 
     override fun appendTooltip(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
-        super.appendTooltip(stack, world, tooltip, context)
+        super.appendTooltip(stack, context, tooltip, type)
         val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
         val energy = getEnergy(stack)
 
@@ -161,8 +163,8 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
                 tooltip.add(Component.translatable("tooltip.ic2_120.nano_helmet.night_vision",
             Component.translatable(if (nvEnabled) "tooltip.ic2_120.status.on" else "tooltip.ic2_120.status.off"),
             timeText
-        ).formatted(ChatFormatting.GRAY))
+        ).withStyle(ChatFormatting.GRAY))
         val pct = "%.2f".format(getDamageReduction() * 100).trimEnd('0').trimEnd('.')
-        tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).formatted(ChatFormatting.GRAY))
+        tooltip.add(Component.translatable("tooltip.ic2_120.armor.damage_reduction", pct).withStyle(ChatFormatting.GRAY))
     }
 }

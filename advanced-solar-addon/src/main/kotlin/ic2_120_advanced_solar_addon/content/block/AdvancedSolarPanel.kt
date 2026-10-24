@@ -1,5 +1,7 @@
 package ic2_120_advanced_solar_addon.content.block
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
 import ic2_120_advanced_solar_addon.content.item.IrradiantReinforcedPlate
 import ic2_120.content.block.MachineBlock
 import ic2_120.content.block.SolarGeneratorBlock
@@ -14,8 +16,6 @@ import ic2_120.registry.annotation.RecipeProvider
 import ic2_120.registry.instance
 import ic2_120.registry.item
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -42,7 +42,7 @@ import java.util.function.Consumer
 @ModBlock(name = "advanced_solar_panel", registerItem = true, tab = CreativeTab.IC2_SOLAR, group = "solar_panel")
 open class AdvancedSolarPanelBlock : MachineBlock() {
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         AdvancedSolarPanelBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(
@@ -51,40 +51,28 @@ open class AdvancedSolarPanelBlock : MachineBlock() {
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, AdvancedSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
-
-    override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): MenuProvider? {
-        val be = world.getBlockEntity(pos)
-        return be as? MenuProvider
-    }
+        else BlockEntityType.validateTicker(world, type, AdvancedSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Deprecated("Override without InteractionHand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            createScreenHandlerFactory(state, world, pos)?.let { factory ->
-                player.openHandledScreen(factory)
+            getMenuProvider(state, world, pos)?.let { factory ->
+                player.openMenu(factory)
             }
         }
         return InteractionResult.SUCCESS
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
-        super.getPlacementState(ctx)?.with(ACTIVE, false)
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
+        super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     companion object {
-        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+        val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -95,42 +83,42 @@ open class AdvancedSolarPanelBlock : MachineBlock() {
             val irradiantPlate = IrradiantReinforcedPlate::class.instance()
 
             // // 配方 1: 简易合成模式 (防爆玻璃 + 太阳能发电机 + 高级合金 + 高级机械外壳 + 高级电路板)
-            // ShapedRecipeBuilder.create(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
+            // ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
             //     .pattern("GGG")
             //     .pattern("ASA")
             //     .pattern("C C")
-            //     .input('G', Items.GLASS)
-            //     .input('A', alloy)
-            //     .input('S', solarPanel)
-            //     .input('C', circuit)
-            //     .criterion(hasItem(solarPanel), conditionsFromItem(solarPanel))
-            //     .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("advanced_solar_panel_simple"))
+            //     .define('G', Items.GLASS)
+            //     .define('A', alloy)
+            //     .define('S', solarPanel)
+            //     .define('C', circuit)
+            //     .unlockedBy(getHasName(solarPanel), has(solarPanel))
+            //     .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("advanced_solar_panel_simple"))
 
             // 配方 2: 使用光辉玻璃板
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
                 .pattern("GGG")
                 .pattern("ASA")
                 .pattern("CIC")
-                .input('G', glass)
-                .input('A', alloy)
-                .input('S', solarPanel)
-                .input('C', circuit)
-                .input('I', irradiantPlate)
-                .criterion(hasItem(solarPanel), conditionsFromItem(solarPanel))
-                .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("advanced_solar_panel_irradiant"))
+                .define('G', glass)
+                .define('A', alloy)
+                .define('S', solarPanel)
+                .define('C', circuit)
+                .define('I', irradiantPlate)
+                .unlockedBy(getHasName(solarPanel), has(solarPanel))
+                .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("advanced_solar_panel_irradiant"))
 
             // // 配方 3: 使用防爆玻璃 + 光辉铱铁合金板
-            // ShapedRecipeBuilder.create(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
+            // ShapedRecipeBuilder.shaped(RecipeCategory.MISC, AdvancedSolarPanelBlock::class.item(), 1)
             //     .pattern("GGG")
             //     .pattern("ASA")
             //     .pattern("CIC")
-            //     .input('G', Items.GLASS)
-            //     .input('A', alloy)
-            //     .input('S', solarPanel)
-            //     .input('C', circuit)
-            //     .input('I', irradiantPlate)
-            //     .criterion(hasItem(solarPanel), conditionsFromItem(solarPanel))
-            //     .offerTo(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("advanced_solar_panel_glass"))
+            //     .define('G', Items.GLASS)
+            //     .define('A', alloy)
+            //     .define('S', solarPanel)
+            //     .define('C', circuit)
+            //     .define('I', irradiantPlate)
+            //     .unlockedBy(getHasName(solarPanel), has(solarPanel))
+            //     .save(exporter, ic2_120_advanced_solar_addon.IC2AdvancedSolarAddon.id("advanced_solar_panel_glass"))
         }
     }
 }

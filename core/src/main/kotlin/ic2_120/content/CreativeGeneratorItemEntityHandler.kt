@@ -1,5 +1,7 @@
 package ic2_120.content
 
+import ic2_120.compat.stack
+
 import ic2_120.Ic2_120
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents
 import net.minecraft.world.entity.item.ItemEntity

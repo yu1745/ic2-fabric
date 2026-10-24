@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.AdjacentEnergyTransferComponent
 import kotlin.math.ceil
 import ic2_120.content.block.AdvancedMinerBlock
@@ -65,7 +72,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.ContainerHelper
@@ -152,7 +159,7 @@ abstract class BaseMinerBlockEntity(
         const val ADVANCED_MINE_COST = 512L
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     private val syncedData = SyncedData()
     private var scanLevel = Int.MIN_VALUE
     private var scanRange = 0
@@ -177,7 +184,7 @@ abstract class BaseMinerBlockEntity(
         override fun getCapacity(variant: FluidVariant) = FluidConstants.BUCKET
         override fun canInsert(variant: FluidVariant) = !variant.isBlank && (variant.fluid == Fluids.WATER || variant.fluid == Fluids.LAVA)
         override fun canExtract(variant: FluidVariant) = true
-        override fun onFinalCommit() = markDirty()
+        override fun onFinalCommit() = setChanged()
     }
     val fluidTank: Storage<FluidVariant> = fluidTankInternal
     fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant> = fluidTank
@@ -194,23 +201,23 @@ abstract class BaseMinerBlockEntity(
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory,
-        { maxCountPerStack },
+        { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         { slot, stack -> isValid(slot, stack) },
         insertRoutes = buildList {
             add(ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = ::isAllowedUpgrade))
             add(ItemInsertRoute(intArrayOf(SLOT_DISCHARGING), matcher = { isDischargeItem(it) }, maxPerSlot = 1))
             add(ItemInsertRoute(intArrayOf(SLOT_SCANNER), matcher = { isValid(SLOT_SCANNER, it) }, maxPerSlot = 1))
             add(ItemInsertRoute(intArrayOf(SLOT_DRILL), matcher = { isValid(SLOT_DRILL, it) }, maxPerSlot = 1))
-            add(ItemInsertRoute(SLOT_ITEM_INDICES, matcher = { advanced || isNormalOutputItem(it) }, maxPerSlot = if (advanced) 1 else maxCountPerStack))
+            add(ItemInsertRoute(SLOT_ITEM_INDICES, matcher = { advanced || isNormalOutputItem(it) }, maxPerSlot = if (advanced) 1 else net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE))
             if (!advanced) {
                 add(ItemInsertRoute(intArrayOf(SLOT_PIPE), matcher = { it.item === MiningPipeBlock::class.item() }, maxPerSlot = PIPE_SLOT_MAX_COUNT))
             }
         },
         extractSlots = (if (advanced) intArrayOf() else SLOT_ITEM_INDICES) + SLOT_UPGRADE_INDICES + intArrayOf(SLOT_SCANNER, SLOT_DRILL, SLOT_DISCHARGING) + (if (advanced) intArrayOf() else intArrayOf(SLOT_PIPE)) + SLOT_OUTPUT_INDICES,
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
     override val routedItemStorage get() = itemStorage
-    val pipeStorage = PipeSlotStorage(inventory, SLOT_PIPE, PIPE_SLOT_MAX_COUNT, { MiningPipeBlock::class.item() }, { markDirty() })
+    val pipeStorage = PipeSlotStorage(inventory, SLOT_PIPE, PIPE_SLOT_MAX_COUNT, { MiningPipeBlock::class.item() }, { setChanged() })
     @RegisterItemStorage
     val combinedItemStorage = CombinedMinerItemStorage(itemStorage, pipeStorage)
 
@@ -244,20 +251,20 @@ abstract class BaseMinerBlockEntity(
     override fun isEmpty() = inventory.all { it.isEmpty }
     override fun getStack(slot: Int) = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun getMaxCountPerStack() = PIPE_SLOT_MAX_COUNT
-    override fun removeStack(slot: Int, amount: Int) = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int) = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int) = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int) = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: Player) = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player) = Container.stillValidBlockEntity(this, player)
     override fun setStack(slot: Int, stack: ItemStack) {
         val max = when {
             slot == SLOT_PIPE -> PIPE_SLOT_MAX_COUNT
             slot == SLOT_SCANNER || slot == SLOT_DRILL || slot == SLOT_DISCHARGING -> 1
             advanced && slot in SLOT_ITEM_INDICES -> 1
-            else -> maxCountPerStack
+            else -> net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
         }
         if (stack.count > max) stack.count = max
         inventory[slot] = stack
-        markDirty()
+        setChanged()
     }
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_SCANNER -> stack.item is OdScannerItem || stack.item is AdvancedScannerItem
@@ -279,8 +286,8 @@ abstract class BaseMinerBlockEntity(
         val move = minOf(requestedAmount, stack.count, PIPE_SLOT_MAX_COUNT - getPipeCount())
         if (move <= 0 || stack.item !== MiningPipeBlock::class.item()) return 0
         val target = getStack(SLOT_PIPE)
-        if (target.isEmpty) inventory[SLOT_PIPE] = ItemStack(MiningPipeBlock::class.item(), move) else target.increment(move)
-        stack.decrement(move); markDirty(); return move
+        if (target.isEmpty) inventory[SLOT_PIPE] = ItemStack(MiningPipeBlock::class.item(), move) else target.grow(move)
+        stack.shrink(move); setChanged(); return move
     }
     fun takePipes(amount: Int): ItemStack {
         val moved = minOf(amount, getPipeCount())
@@ -373,7 +380,7 @@ abstract class BaseMinerBlockEntity(
                 // 遇到不可破坏方块（基岩等）视为到底：不再钻穿，自动转入管道回收 (#26)
                 if (pipeState.getHardness(world, pipe) < 0f) {
                     normalReachedBottom = true
-                    markDirty()
+                    setChanged()
                     return recoverNormalPipes(world)
                 }
                 if (!canUseDrill(pipeState)) return false
@@ -382,7 +389,7 @@ abstract class BaseMinerBlockEntity(
             }
             if (getPipeCount() <= 0 || sync.amount < 3L) return false
             if (ClaimProtection.isProtected(world, pipe, ownerUuid)) return false
-            val placed = world.setBlockState(pipe, MiningPipeBlock::class.instance().defaultState, Block.NOTIFY_ALL)
+            val placed = world.setBlock(pipe, MiningPipeBlock::class.instance().defaultBlockState, Block.NOTIFY_ALL)
             if (!placed || world.getBlockState(pipe).block !is MiningPipeBlock) return false
             sync.consumeEnergy(3L)
             takePipes(1)
@@ -402,7 +409,7 @@ abstract class BaseMinerBlockEntity(
             scanLevel = Int.MIN_VALUE
             if (sync.cursorY < world.bottomY) {
                 normalReachedBottom = true
-                markDirty()
+                setChanged()
                 return recoverNormalPipes(world)
             }
             return true
@@ -429,7 +436,7 @@ abstract class BaseMinerBlockEntity(
             // 管道全部收回：卸下钻头（或 GUI 重启）后复位到底标志，允许下一轮采矿
             if (normalReachedBottom && getStack(SLOT_DRILL).isEmpty) {
                 normalReachedBottom = false
-                markDirty()
+                setChanged()
             }
             return false
         }
@@ -442,7 +449,7 @@ abstract class BaseMinerBlockEntity(
             return true
         }
         normalPipeRecoveryTicks = 0
-        world.setBlockState(pipe, net.minecraft.world.level.block.Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+        world.setBlock(pipe, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL)
         insertPipesFromStack(ItemStack(MiningPipeBlock::class.item()), 1)
         return true
     }
@@ -556,7 +563,7 @@ abstract class BaseMinerBlockEntity(
                 state.isIn(net.minecraft.tags.BlockTags.IRON_ORES) ||
                 state.isIn(net.minecraft.tags.BlockTags.LAPIS_ORES) ||
                 state.isIn(net.minecraft.tags.BlockTags.REDSTONE_ORES) ||
-                state.isOf(net.minecraft.world.level.block.Blocks.ANCIENT_DEBRIS) ||
+                state.`is`(net.minecraft.world.level.block.Blocks.ANCIENT_DEBRIS) ||
                 BuiltInRegistries.BLOCK.getId(state.block).path.contains("ore") ||
                 BuiltInRegistries.BLOCK.getId(state.block).path == "ancient_debris")
     private fun canUseDrill(state: BlockState): Boolean = !state.isToolRequired || getLootTool(false).isSuitableFor(state)
@@ -594,7 +601,7 @@ abstract class BaseMinerBlockEntity(
         val drops = Block.getDroppedStacks(world.getBlockState(target), world, target, world.getBlockEntity(target), null, tool)
         val hasEjector = advanced && SLOT_UPGRADE_INDICES.any { getStack(it).item is EjectorUpgrade }
         world.syncWorldEvent(2001, target, Block.getRawIdFromState(world.getBlockState(target)))
-        world.setBlockState(target, net.minecraft.world.level.block.Blocks.AIR.defaultState, Block.NOTIFY_ALL)
+        world.setBlock(target, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState, Block.NOTIFY_ALL)
         for (drop in drops) {
             if (advanced && !hasEjector) {
                 Containers.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), drop)
@@ -607,7 +614,7 @@ abstract class BaseMinerBlockEntity(
         if (hasEjector || !advanced) {
             EjectorUpgradeComponent.ejectIfUpgraded(world, pos, this, SLOT_UPGRADE_INDICES, ejectSlots)
         }
-        markDirty()
+        setChanged()
     }
     private fun insertDrop(stack: ItemStack) {
         var rest = stack.copy()
@@ -615,7 +622,7 @@ abstract class BaseMinerBlockEntity(
             if (rest.isEmpty) break
             val current = getStack(slot)
             if (current.isEmpty) { setStack(slot, rest); rest = ItemStack.EMPTY }
-            else if (ItemStack.canCombine(current, rest)) { val move = minOf(rest.count, current.maxCount - current.count); if (move > 0) { current.increment(move); rest.decrement(move) } }
+            else if (ItemStack.canCombine(current, rest)) { val move = minOf(rest.count, current.maxStackSize - current.count); if (move > 0) { current.grow(move); rest.shrink(move) } }
         }
         if (!rest.isEmpty) Containers.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), rest)
     }
@@ -630,18 +637,18 @@ abstract class BaseMinerBlockEntity(
         normalReachedBottom = false
         resetWaitingForRedstone = advanced
         redstoneStateAtReset = world?.isReceivingRedstonePower(pos) ?: false
-        markDirty()
+        setChanged()
     }
     fun startPipeRecovery() { /* GUI compatibility; advanced mining does not use pipes. */ }
-    fun toggleMode() { if (sync.running == 0) { sync.mode = if (sync.mode == 0) 1 else 0; markDirty() } }
-    fun toggleSilkTouch() { if (sync.running == 0) { sync.silkTouch = if (sync.silkTouch == 0) 1 else 0; markDirty() } }
+    fun toggleMode() { if (sync.running == 0) { sync.mode = if (sync.mode == 0) 1 else 0; setChanged() } }
+    fun toggleSilkTouch() { if (sync.running == 0) { sync.silkTouch = if (sync.silkTouch == 0) 1 else 0; setChanged() } }
 
     private fun writeMinerNbt(nbt: CompoundTag) {
         nbt.putLong("EnergyStored", sync.amount); nbt.putInt("ScanLevel", scanLevel); nbt.putInt("ProgressMode", progressMode); nbt.putInt("AdvancedTicker", advancedTicker); nbt.putInt("NormalPipeRecoveryTicks", normalPipeRecoveryTicks); nbt.putBoolean("NormalReachedBottom", normalReachedBottom)
         nbt.putLong("RenderTargetTime", renderTargetTime); nbt.putBoolean("ResetWaitingForRedstone", resetWaitingForRedstone); nbt.putBoolean("RedstoneStateAtReset", redstoneStateAtReset); renderTarget?.let { nbt.putInt("RenderTargetX", it.x); nbt.putInt("RenderTargetY", it.y); nbt.putInt("RenderTargetZ", it.z) }
     }
-    override fun readNbt(nbt: CompoundTag) { super.readNbt(nbt); ContainerHelper.readNbt(nbt, inventory); syncedData.readNbt(nbt); sync.amount = nbt.getLong("EnergyStored"); sync.syncCommittedAmount(); scanLevel = nbt.getInt("ScanLevel"); progressMode = nbt.getInt("ProgressMode"); advancedTicker = nbt.getInt("AdvancedTicker"); normalPipeRecoveryTicks = nbt.getInt("NormalPipeRecoveryTicks").coerceIn(0, 19); normalReachedBottom = nbt.getBoolean("NormalReachedBottom"); resetWaitingForRedstone = nbt.getBoolean("ResetWaitingForRedstone"); redstoneStateAtReset = nbt.getBoolean("RedstoneStateAtReset"); renderTargetTime = nbt.getLong("RenderTargetTime"); if (nbt.contains("RenderTargetX")) renderTarget = BlockPos(nbt.getInt("RenderTargetX"), nbt.getInt("RenderTargetY"), nbt.getInt("RenderTargetZ")) }
-    override fun writeNbt(nbt: CompoundTag) { super.writeNbt(nbt); ContainerHelper.writeNbt(nbt, inventory); syncedData.writeNbt(nbt); writeMinerNbt(nbt) }
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) { super.loadAdditional(nbt, lookup); ContainerHelper.loadAllItems(nbt, inventory); syncedData.readNbt(nbt); sync.amount = nbt.getLong("EnergyStored"); sync.syncCommittedAmount(); scanLevel = nbt.getInt("ScanLevel"); progressMode = nbt.getInt("ProgressMode"); advancedTicker = nbt.getInt("AdvancedTicker"); normalPipeRecoveryTicks = nbt.getInt("NormalPipeRecoveryTicks").coerceIn(0, 19); normalReachedBottom = nbt.getBoolean("NormalReachedBottom"); resetWaitingForRedstone = nbt.getBoolean("ResetWaitingForRedstone"); redstoneStateAtReset = nbt.getBoolean("RedstoneStateAtReset"); renderTargetTime = nbt.getLong("RenderTargetTime"); if (nbt.contains("RenderTargetX")) renderTarget = BlockPos(nbt.getInt("RenderTargetX"), nbt.getInt("RenderTargetY"), nbt.getInt("RenderTargetZ")) }
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) { super.saveAdditional(nbt, lookup); ContainerHelper.saveAllItems(nbt, inventory); syncedData.writeNbt(nbt); writeMinerNbt(nbt) }
     override fun toInitialChunkDataNbt() = createNbt()
     override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
     override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) { buf.writeBlockPos(pos); buf.writeVarInt(syncedData.size()); buf.writeBoolean(advanced) }

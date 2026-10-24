@@ -1,5 +1,8 @@
 package ic2_120.content.network
 
+import ic2_120.compat.isClient
+import ic2_120.compat.world
+
 import ic2_120.Ic2_120
 import ic2_120.content.block.machines.PatternStorageBlockEntity
 import ic2_120.content.block.machines.ReplicatorBlockEntity
@@ -75,7 +78,7 @@ object NetworkManager {
 
         ServerPlayNetworking.registerGlobalReceiver(TOGGLE_NIGHT_VISION_GOGGLES_PACKET) { server, player, _, _, _ ->
             server.execute {
-                val stack = player.getEquippedStack(EquipmentSlot.HEAD)
+                val stack = player.getItemBySlot(EquipmentSlot.HEAD)
                 val goggles = stack.item as? NightVisionGoggles ?: return@execute
                 val enabled = NightVisionGoggles.toggleEnabled(stack)
                 val key = if (enabled) "message.ic2_120.night_vision_goggles.enabled" else "message.ic2_120.night_vision_goggles.disabled"
@@ -85,7 +88,7 @@ object NetworkManager {
 
         ServerPlayNetworking.registerGlobalReceiver(TOGGLE_NANO_VISION_PACKET) { server, player, _, _, _ ->
             server.execute {
-                val stack = player.getEquippedStack(EquipmentSlot.HEAD)
+                val stack = player.getItemBySlot(EquipmentSlot.HEAD)
                 when (val item = stack.item) {
                     is NanoHelmet -> {
                         val enabled = NanoHelmet.toggleNightVision(stack)
@@ -105,7 +108,7 @@ object NetworkManager {
 
         ServerPlayNetworking.registerGlobalReceiver(TOGGLE_QUANTUM_LEGGINGS_SPEED_PACKET) { server, player, _, _, _ ->
             server.execute {
-                val stack = player.getEquippedStack(EquipmentSlot.LEGS)
+                val stack = player.getItemBySlot(EquipmentSlot.LEGS)
                 if (stack.item is QuantumLeggings) {
                     val tier = QuantumLeggings.cycleSpeedTier(stack)
                     player.sendMessage(Component.translatable(
@@ -124,7 +127,7 @@ object NetworkManager {
                 if (player.hasVehicle() || player.abilities.flying || player.isSpectator) return@execute
                 if (!player.isOnGround && !player.isTouchingWater) return@execute
 
-                val stack = player.getEquippedStack(EquipmentSlot.LEGS)
+                val stack = player.getItemBySlot(EquipmentSlot.LEGS)
                 if (stack.item is QuantumLeggings) {
                     QuantumLeggings.consumeSpeedEnergyTick(stack)
                 }
@@ -133,7 +136,7 @@ object NetworkManager {
 
         ServerPlayNetworking.registerGlobalReceiver(TOGGLE_QUANTUM_BOOTS_JUMP_PACKET) { server, player, _, _, _ ->
             server.execute {
-                val stack = player.getEquippedStack(EquipmentSlot.FEET)
+                val stack = player.getItemBySlot(EquipmentSlot.FEET)
                 if (stack.item is QuantumBoots) {
                     val enabled = QuantumBoots.toggleSuperJump(stack)
                     player.sendMessage(Component.translatable(
@@ -158,7 +161,7 @@ object NetworkManager {
         ServerPlayNetworking.registerGlobalReceiver(TOGGLE_CHAINSAW_SHEAR_PACKET) { server, player, _, _, _ ->
             server.execute {
                 for (hand in arrayOf(InteractionHand.MAIN_HAND, InteractionHand.OFF_HAND)) {
-                    val stack = player.getStackInHand(hand)
+                    val stack = player.getItemInHand(hand)
                     if (stack.item is Chainsaw) {
                         val enabled = Chainsaw.toggleShear(stack)
                         player.setStackInHand(hand, stack)
@@ -175,7 +178,7 @@ object NetworkManager {
         ServerPlayNetworking.registerGlobalReceiver(TOGGLE_FOAM_SPRAYER_MODE_PACKET) { server, player, _, _, _ ->
             server.execute {
                 for (hand in arrayOf(InteractionHand.MAIN_HAND, InteractionHand.OFF_HAND)) {
-                    val stack = player.getStackInHand(hand)
+                    val stack = player.getItemInHand(hand)
                     if (stack.item is FoamSprayerItem) {
                         val multi = FoamSprayerItem.toggleMultiMode(stack)
                         player.setStackInHand(hand, stack)
@@ -194,7 +197,7 @@ object NetworkManager {
         ServerPlayNetworking.registerGlobalReceiver(TOGGLE_MINING_LASER_MODE_PACKET) { server, player, _, _, _ ->
             server.execute {
                 for (hand in arrayOf(InteractionHand.MAIN_HAND, InteractionHand.OFF_HAND)) {
-                    val stack = player.getStackInHand(hand)
+                    val stack = player.getItemInHand(hand)
                     if (stack.item is MiningLaserItem) {
                         MiningLaserServerSuppress.onMiningLaserModeToggled(player)
                         val newMode = MiningLaserItem.cycleMode(stack)
@@ -226,7 +229,7 @@ object NetworkManager {
             val fluidId = buf.readIdentifier()
             server.execute {
                 if (!BuiltInRegistries.FLUID.containsId(fluidId)) return@execute
-                val fluid = BuiltInRegistries.FLUID.get(fluidId)
+                val fluid = BuiltInRegistries.FLUID.getValue(fluidId)
                 when (val handler = player.currentScreenHandler) {
                     is FluidUpgradeScreenHandler -> handler.setFluidFilter(fluid)
                     is PumpAttachmentScreenHandler -> handler.setFluidFilter(fluid)
@@ -236,7 +239,7 @@ object NetworkManager {
 
         ServerPlayNetworking.registerGlobalReceiver(SET_ITEM_FILTER_PACKET) { server, player, _, buf, _ ->
             val slotIndex = buf.readVarInt()
-            val stack = buf.readItemStack()
+            val stack = bufItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
             server.execute {
                 val handler = player.currentScreenHandler
                 if (handler is ItemUpgradeScreenHandler) handler.setItemFilter(slotIndex, stack)
@@ -264,7 +267,7 @@ object NetworkManager {
         val serverWorld = world as net.minecraft.server.level.ServerLevel
         for (player in serverWorld.players) {
             // 检查玩家是否在能看到这个方块的范围内（64格内）
-            if (player.squaredDistanceTo(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
+            if (player.distanceToSqr(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
                 val buf = FriendlyByteBuf(Unpooled.buffer())
                 WindRotorStatePacket.write(WindRotorStatePacket(pos, isStuck, stuckAngle), buf)
                 ServerPlayNetworking.send(player, WindRotorStatePacket.ID, buf)
@@ -288,7 +291,7 @@ object NetworkManager {
             chargingEntityId = be.getChargingEntityId()
         )
         for (player in serverWorld.players) {
-            if (player.squaredDistanceTo(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
+            if (player.distanceToSqr(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
                 val buf = FriendlyByteBuf(Unpooled.buffer())
                 TeleporterVisualStatePacket.write(packet, buf)
                 ServerPlayNetworking.send(player, TELEPORTER_VISUAL_STATE_PACKET, buf)
@@ -302,7 +305,7 @@ object NetworkManager {
 
         val serverWorld = world as net.minecraft.server.level.ServerLevel
         for (player in serverWorld.players) {
-            if (player.squaredDistanceTo(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
+            if (player.distanceToSqr(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
                 val buf = FriendlyByteBuf(Unpooled.buffer())
                 WaterRotorStatePacket.write(WaterRotorStatePacket(pos, isStuck, stuckAngle), buf)
                 ServerPlayNetworking.send(player, WaterRotorStatePacket.ID, buf)
@@ -313,7 +316,7 @@ object NetworkManager {
     fun sendSemifluidGeneratorFuelState(world: ServerLevel, pos: BlockPos, fuelColorArgb: Int) {
         val packet = SemifluidGeneratorFuelStatePacket(pos, fuelColorArgb)
         for (player in world.players) {
-            if (player.squaredDistanceTo(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
+            if (player.distanceToSqr(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) < 64 * 64) {
                 val buf = FriendlyByteBuf(Unpooled.buffer())
                 SemifluidGeneratorFuelStatePacket.write(packet, buf)
                 ServerPlayNetworking.send(player, SemifluidGeneratorFuelStatePacket.ID, buf)

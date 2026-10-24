@@ -1,12 +1,16 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.world
+
+import ic2_120.compat.stack
+
 import ic2_120.content.block.storage.StorageBoxBlock
 import ic2_120.content.block.storage.StorageBoxBlockEntity
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.level.block.ShulkerBoxBlock
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
@@ -73,31 +77,31 @@ class StorageBoxScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, slotIndex: Int): ItemStack {
+    override fun quickMoveStack(player: Player, slotIndex: Int): ItemStack {
         var movedStack = ItemStack.EMPTY
         val slot = slots[slotIndex]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stack = slot.stack
             movedStack = stack.copy()
 
             // 从储物箱移到玩家背包
             if (slotIndex < inventory.size()) {
-                if (!this.insertItem(stack, inventory.size(), slots.size, true)) {
+                if (!this.moveItemStackTo(stack, inventory.size(), slots.size, true)) {
                     return ItemStack.EMPTY
                 }
             }
             // 从玩家背包移到储物箱：禁止放入可存储物品
             else {
                 if (isStorageItem(stack)) return ItemStack.EMPTY
-                if (!this.insertItem(stack, 0, inventory.size(), false)) {
+                if (!this.moveItemStackTo(stack, 0, inventory.size(), false)) {
                     return ItemStack.EMPTY
                 }
             }
 
             if (stack.isEmpty) {
-                slot.markDirty()
+                slot.setChanged()
             } else {
-                slot.markDirty()
+                slot.setChanged()
             }
         }
 
@@ -111,7 +115,7 @@ class StorageBoxScreenHandler(
         return block is ShulkerBoxBlock || block is StorageBoxBlock
     }
 
-    override fun canUse(player: Player): Boolean {
+    override fun stillValid(player: Player): Boolean {
         return inventory.canPlayerUse(player)
     }
 

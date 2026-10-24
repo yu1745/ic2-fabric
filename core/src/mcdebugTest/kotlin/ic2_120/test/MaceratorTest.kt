@@ -71,7 +71,7 @@ class MaceratorTest {
     @Test
     fun cobblestoneToGravelWithCable(ctx: TestContext) {
         setupMacerator(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
         tickDrive(ctx, 600) { assertSlotHas(it, it.origin, 1, "minecraft:gravel") }
     }
 
@@ -79,7 +79,7 @@ class MaceratorTest {
     @Test
     fun coalBlockTo9CoalDust(ctx: TestContext) {
         setupMacerator(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:coal_block", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:coal_block", 1, 0)
         tickDrive(ctx, 600) { assertSlotCount(it, it.origin, 1, 9) }
     }
 
@@ -87,7 +87,7 @@ class MaceratorTest {
     @Test
     fun melonSlicesToBioChaff(ctx: TestContext) {
         setupMacerator(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:melon_slice", 8, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:melon_slice", 8, 0)
         tickDrive(ctx, 600) { assertSlotCount(it, it.origin, 1, 1) }
     }
 
@@ -95,7 +95,7 @@ class MaceratorTest {
     @Test
     fun ironOreTo2CrushedIron(ctx: TestContext) {
         setupMacerator(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
         tickDrive(ctx, 600) { assertSlotCount(it, it.origin, 1, 2) }
     }
 
@@ -103,7 +103,7 @@ class MaceratorTest {
     @Test
     fun noPowerIdle(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:macerator")
-        insertItem(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
         tickDrive(ctx, 200) {
             assertSlotHas(it, it.origin, 0, "minecraft:cobblestone")
             assertSlotEmpty(it, it.origin, 1)
@@ -114,7 +114,7 @@ class MaceratorTest {
     @Test
     fun invalidInputDirt(ctx: TestContext) {
         setupMacerator(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:dirt", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:dirt", 1, 0)
         tickDrive(ctx, 200) {
             assertSlotHas(it, it.origin, 0, "minecraft:dirt")
             assertSlotEmpty(it, it.origin, 1)
@@ -126,7 +126,7 @@ class MaceratorTest {
     fun outputFullBlocksNext(ctx: TestContext) {
         setupMacerator(ctx)
         setSlot(ctx, ctx.origin, 1, "minecraft:gravel", 64)
-        insertItem(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
         tickDrive(ctx, 200) { assertSlotHas(it, it.origin, 0, "minecraft:cobblestone") }
     }
 
@@ -139,7 +139,7 @@ class MaceratorTest {
         setBlocks(ctx, listOf(cable to "ic2_120:insulated_copper_cable"))
         setBeField(ctx, batbox, "EnergyStored", 1)
         place(ctx, ctx.origin, "ic2_120:macerator")
-        insertItem(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
         tickDrive(ctx, 200) { assertSlotHas(it, it.origin, 0, "minecraft:cobblestone") }
     }
 
@@ -151,7 +151,7 @@ class MaceratorTest {
         setBeField(ctx, batbox, "EnergyStored", 40000)
         place(ctx, ctx.origin, "ic2_120:macerator")
         setBeField(ctx, ctx.origin, "EnergyStored", 400)  // 见 setupMacerator 注释
-        insertItem(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:cobblestone", 1, 0)
         tickDrive(ctx, 600) { assertSlotHas(it, it.origin, 1, "minecraft:gravel") }
     }
 
@@ -178,10 +178,10 @@ class MaceratorTest {
     fun multiInputPartialThenFill(ctx: TestContext) {
         setupMacerator(ctx)
         // 先放 1 片西瓜（配方需 8 片），让机器空转 20 tick（足够触发多次配方判定）。
-        insertItem(ctx, ctx.origin, "minecraft:melon_slice", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:melon_slice", 1, 0)
         tickDrive(ctx, 20) { assertSlotHas(it, it.origin, 0, "minecraft:melon_slice") }
         // 补足到 8 片后应当正常开始加工。
-        insertItem(ctx, ctx.origin, "minecraft:melon_slice", 7, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:melon_slice", 7, 0)
         tickDrive(ctx, 600) { assertSlotCount(it, it.origin, 1, 1) }
     }
 }

@@ -1,5 +1,8 @@
 package ic2_120.content.block
 
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+
 import com.mojang.serialization.MapCodec
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.ModBlockEntity
@@ -35,7 +38,7 @@ import io.netty.buffer.Unpooled
     group = "misc"
 )
 class ComposeDebugBlock : BaseEntityBlock(
-    BlockBehaviour.Settings.copy(Blocks.STONE).strength(-1.0f, 6000000.0f)
+    BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).strength(-1.0f, 6000000.0f)
 ) {
     companion object {
         val DEBUG_CODEC: MapCodec<ComposeDebugBlock> = Block.createCodec { error("ComposeDebugBlock cannot be deserialized from JSON") }
@@ -43,18 +46,18 @@ class ComposeDebugBlock : BaseEntityBlock(
 
     override fun getCodec(): MapCodec<out BaseEntityBlock> = DEBUG_CODEC
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return ComposeDebugBlockEntity(pos, state)
     }
-    override fun getRenderType(state: BlockState): RenderShape {
+    override fun getRenderShape(state: BlockState): RenderShape {
         return RenderShape.MODEL
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onUse(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            createScreenHandlerFactory(state, world, pos)?.let { factory ->
-                player.openHandledScreen(factory)
+            getMenuProvider(state, world, pos)?.let { factory ->
+                player.openMenu(factory)
             }
         }
         return InteractionResult.SUCCESS

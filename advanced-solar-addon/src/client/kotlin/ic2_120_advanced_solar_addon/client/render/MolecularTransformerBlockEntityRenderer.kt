@@ -56,7 +56,7 @@ class MolecularTransformerBlockEntityRenderer(
         val state = entity.world?.getBlockState(entity.pos) ?: entity.cachedState
         if (state.block !is MolecularTransformerBlock) return
 
-        val isActive = try { state.get(MolecularTransformerBlock.ACTIVE) } catch (_: Exception) { false }
+        val isActive = try { state.getValue(MolecularTransformerBlock.ACTIVE) } catch (_: Exception) { false }
         val ov = overlay.takeUnless { it == 0 } ?: OverlayTexture.DEFAULT_UV
 
         val vc = vertexConsumers.getBuffer(RenderType.getEntityCutoutNoCull(TEXTURE))

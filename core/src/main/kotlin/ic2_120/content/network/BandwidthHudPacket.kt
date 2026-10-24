@@ -16,10 +16,10 @@ class BandwidthHudPacket(
     val serverBytesPerSecond: Long,
     val players: List<BandwidthPlayerStat>
 ) : CustomPacketPayload {
-    override fun getId(): CustomPacketPayload.Id<*> = ID
+    override fun type(): CustomPacketPayload.Type<*> = ID
 
     companion object {
-        val ID = CustomPacketPayload.Id<BandwidthHudPacket>(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "bandwidth_hud"))
+        val ID = CustomPacketPayload.Type<BandwidthHudPacket>(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "bandwidth_hud"))
         val CODEC: StreamCodec<FriendlyByteBuf, BandwidthHudPacket> = StreamCodec.of(
             { value, buf -> write(value, buf) },
             { read(it) }

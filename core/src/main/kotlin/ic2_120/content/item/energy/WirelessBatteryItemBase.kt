@@ -1,5 +1,7 @@
 package ic2_120.content.item.energy
 
+import ic2_120.compat.isClient
+
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack

@@ -1,5 +1,7 @@
 package addon_template.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
 import addon_template.AddonTemplate
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
@@ -15,17 +17,17 @@ import net.minecraft.data.recipes.RecipeCategory
 import java.util.function.Consumer
 
 @ModItem(name = "example_item", tab = CreativeTab.IC2_MATERIALS, group = "material")
-class ExampleItem : Item(Item.Settings()) {
+class ExampleItem : Item(Item.Properties()) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, ExampleItem::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ExampleItem::class.instance(), 1)
                 .pattern(" D ")
                 .pattern("DID")
                 .pattern(" D ")
-                .input('D', Items.DIAMOND)
-                .input('I', Items.IRON_INGOT)
-                .criterion(hasItem(Items.DIAMOND), conditionsFromItem(Items.DIAMOND))
+                .define('D', Items.DIAMOND)
+                .define('I', Items.IRON_INGOT)
+                .unlockedBy(getHasName(Items.DIAMOND), has(Items.DIAMOND))
                 .offerTo(exporter, AddonTemplate.id("example_item"))
         }
     }

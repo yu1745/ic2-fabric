@@ -1,5 +1,9 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.world
+
+import ic2_120.compat.stack
+
 import ic2_120.content.block.EnergyOMatBlock
 import ic2_120.content.block.machines.EnergyOMatBlockEntity
 import ic2_120.content.screen.slot.PredicateSlot
@@ -10,7 +14,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
@@ -35,12 +39,12 @@ class EnergyOMatScreenHandler(
 
     val sync = EnergyOMatSync(
         SyncedDataView(propertyDelegate),
-        getFacing = { context.get({ w, p -> w.getBlockState(p).get(BlockStateProperties.HORIZONTAL_FACING) }, Direction.NORTH) }
+        getFacing = { context.get({ w, p -> w.getBlockState(p).getValue(BlockStateProperties.HORIZONTAL_FACING) }, Direction.NORTH) }
     )
 
     init {
-        checkSize(blockInventory, EnergyOMatBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, EnergyOMatBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
 
         addSlot(PredicateSlot(blockInventory, EnergyOMatBlockEntity.SLOT_DEMAND,
             SLOT_DEMAND_X, SLOT_DEMAND_Y, SlotSpec(canInsert = { isOwner }, canTake = { isOwner })))
@@ -61,7 +65,7 @@ class EnergyOMatScreenHandler(
         }
     }
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (!isOwner) return true
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? EnergyOMatBlockEntity ?: return@get
@@ -79,25 +83,25 @@ class EnergyOMatScreenHandler(
         return true
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             if (index in MACHINE_SLOT_START..MACHINE_SLOT_END) {
                 if (!slot.canTakeItems(player)) return ItemStack.EMPTY
-                if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 slot.onQuickTransfer(stackInSlot, stack)
             } else {
-                if (!insertItem(stackInSlot, SLOT_INPUT_INDEX, SLOT_INPUT_INDEX + 1, false)) {
+                if (!moveItemStackTo(stackInSlot, SLOT_INPUT_INDEX, SLOT_INPUT_INDEX + 1, false)) {
                     if (isOwner) {
-                        if (!insertItem(stackInSlot, SLOT_DEMAND_INDEX, SLOT_DEMAND_INDEX + 1, false) &&
-                            !insertItem(stackInSlot, SLOT_UPGRADE_INDEX, SLOT_UPGRADE_INDEX + 1, false)) {
-                            insertItem(stackInSlot, SLOT_CHARGE_INDEX, SLOT_CHARGE_INDEX + 1, false)
+                        if (!moveItemStackTo(stackInSlot, SLOT_DEMAND_INDEX, SLOT_DEMAND_INDEX + 1, false) &&
+                            !moveItemStackTo(stackInSlot, SLOT_UPGRADE_INDEX, SLOT_UPGRADE_INDEX + 1, false)) {
+                            moveItemStackTo(stackInSlot, SLOT_CHARGE_INDEX, SLOT_CHARGE_INDEX + 1, false)
                         }
                     } else {
-                        insertItem(stackInSlot, SLOT_CHARGE_INDEX, SLOT_CHARGE_INDEX + 1, false)
+                        moveItemStackTo(stackInSlot, SLOT_CHARGE_INDEX, SLOT_CHARGE_INDEX + 1, false)
                     }
                     // 原兜底：向玩家背包区间 insertItem 已删除——目标区间含源槽自身，
                     // 会与自身合并导致数量翻倍（物品复制，同 ChunkLoader bug）。
@@ -105,17 +109,17 @@ class EnergyOMatScreenHandler(
                 }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
-            else slot.markDirty()
+            else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is EnergyOMatBlock &&
-                player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+                player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     companion object {

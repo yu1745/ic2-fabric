@@ -23,7 +23,7 @@ class CompressorTest {
     /** 标准搭建：相邻 BatBox 供电 + 两个超频升级。 */
     private fun setupCompressor(ctx: TestContext) {
         setupAdjacentBatbox(ctx, "ic2_120:compressor")
-        insertItem(ctx, ctx.origin, "ic2_120:overclocker_upgrade", 2, 3)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:overclocker_upgrade", 2, 3)
     }
 
     @Test
@@ -36,7 +36,7 @@ class CompressorTest {
     @Test
     fun clayBallsToClay(ctx: TestContext) {
         setupCompressor(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:clay_ball", 4, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:clay_ball", 4, 0)
         waitUntil(ctx, invItemEquals(ctx.origin, 1, "minecraft:clay"), 15 * 20)
         assertSlotHas(ctx, ctx.origin, 1, "minecraft:clay")
     }
@@ -45,7 +45,7 @@ class CompressorTest {
     @Test
     fun ironIngotsToIronBlock(ctx: TestContext) {
         setupCompressor(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:iron_ingot", 9, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ingot", 9, 0)
         waitUntil(ctx, invItemEquals(ctx.origin, 1, "minecraft:iron_block"), 15 * 20)
         assertSlotHas(ctx, ctx.origin, 1, "minecraft:iron_block")
     }
@@ -54,7 +54,7 @@ class CompressorTest {
     @Test
     fun noPowerIdle(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:compressor")
-        insertItem(ctx, ctx.origin, "minecraft:clay_ball", 4, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:clay_ball", 4, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:clay_ball")
         assertSlotEmpty(ctx, ctx.origin, 1)
@@ -64,7 +64,7 @@ class CompressorTest {
     @Test
     fun invalidInputDirt(ctx: TestContext) {
         setupCompressor(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:dirt", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:dirt", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:dirt")
         assertSlotEmpty(ctx, ctx.origin, 1)
@@ -75,7 +75,7 @@ class CompressorTest {
     fun outputFullBlocksNext(ctx: TestContext) {
         setupCompressor(ctx)
         setSlot(ctx, ctx.origin, 1, "minecraft:clay", 64)
-        insertItem(ctx, ctx.origin, "minecraft:clay_ball", 4, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:clay_ball", 4, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:clay_ball")
     }
@@ -84,10 +84,10 @@ class CompressorTest {
     @Test
     fun multiInputPartialThenFill(ctx: TestContext) {
         setupCompressor(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:clay_ball", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:clay_ball", 1, 0)
         waitTicks(ctx, 20)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:clay_ball")
-        insertItem(ctx, ctx.origin, "minecraft:clay_ball", 3, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:clay_ball", 3, 0)
         waitUntil(ctx, invItemEquals(ctx.origin, 1, "minecraft:clay"), 15 * 20)
         assertSlotHas(ctx, ctx.origin, 1, "minecraft:clay")
     }
@@ -109,7 +109,7 @@ class CompressorTest {
     @Test
     fun waterCellEmptyThenFillInPlace(ctx: TestContext) {
         setupCompressor(ctx)
-        insertItem(ctx, ctx.origin, "ic2_120:fluid_cell", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "ic2_120:fluid_cell", 1, 0)
         waitTicks(ctx, 20)
         assertSlotHas(ctx, ctx.origin, 0, "ic2_120:fluid_cell")
         setSlot(ctx, ctx.origin, 0, "ic2_120:fluid_cell", 1, mapOf("FluidVariant" to mapOf("fluid" to "minecraft:water")))

@@ -54,7 +54,7 @@ object FlightManager {
             return
         }
 
-        val chest = player.getEquippedStack(EquipmentSlot.CHEST)
+        val chest = player.getItemBySlot(EquipmentSlot.CHEST)
         val source = flightSource(chest)
         // 燃料/能量是否充足？边界：刚从「有」变「无」时这一 tick 不能「先开再关」，
         // 否则会发两次 abilities 包让客户端闪一下，所以先做预检再决定授权。

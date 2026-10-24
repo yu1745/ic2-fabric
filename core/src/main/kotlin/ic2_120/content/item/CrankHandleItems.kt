@@ -1,5 +1,9 @@
 package ic2_120.content.item
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
+import net.minecraft.data.recipes.RecipeProvider.has
+
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.annotation.RecipeProvider
@@ -7,8 +11,6 @@ import ic2_120.registry.id
 import ic2_120.registry.instance
 import ic2_120.registry.recipeId
 import ic2_120.content.recipes.ModTags
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Item
@@ -37,7 +39,7 @@ enum class CrankMaterial(
  */
 abstract class CrankHandleItem(
     val material: CrankMaterial,
-    settings: Item.Settings = Item.Settings()
+    settings: Item.Properties = Item.Properties()
 ) : Item(settings) {
     fun getKuPerTick(): Int = material.kuPerTick
 }
@@ -48,13 +50,13 @@ class WoodenCrankHandle : CrankHandleItem(CrankMaterial.WOOD) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             val stick = net.minecraft.world.item.Items.STICK
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, WoodenCrankHandle::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, WoodenCrankHandle::class.instance(), 1)
                 .pattern(" S ")
                 .pattern("S S")
                 .pattern(" S ")
-                .input('S', stick)
-                .criterion(hasItem(stick), conditionsFromItem(stick))
-                .offerTo(exporter, WoodenCrankHandle::class.id())
+                .define('S', stick)
+                .unlockedBy(getHasName(stick), has(stick))
+                .save(exporter, WoodenCrankHandle::class.id())
         }
     }
 }
@@ -66,14 +68,14 @@ class IronCrankHandle : CrankHandleItem(CrankMaterial.IRON) {
         fun generateRecipes(exporter: RecipeOutput) {
             val wooden = WoodenCrankHandle::class.instance()
             val plate = IronPlate::class.instance()
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, IronCrankHandle::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, IronCrankHandle::class.instance(), 1)
                 .pattern(" P ")
                 .pattern("PWP")
                 .pattern(" P ")
-                .input('W', wooden)
-                .input('P', plate)
-                .criterion(hasItem(wooden), conditionsFromItem(wooden))
-                .offerTo(exporter, IronCrankHandle::class.id())
+                .define('W', wooden)
+                .define('P', plate)
+                .unlockedBy(getHasName(wooden), has(wooden))
+                .save(exporter, IronCrankHandle::class.id())
         }
     }
 }
@@ -85,14 +87,14 @@ class SteelCrankHandle : CrankHandleItem(CrankMaterial.STEEL) {
         fun generateRecipes(exporter: RecipeOutput) {
             val iron = IronCrankHandle::class.instance()
             val plate = SteelPlate::class.instance()
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, SteelCrankHandle::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SteelCrankHandle::class.instance(), 1)
                 .pattern(" P ")
                 .pattern("PWP")
                 .pattern(" P ")
-                .input('W', iron)
-                .input('P', plate)
-                .criterion(hasItem(iron), conditionsFromItem(iron))
-                .offerTo(exporter, SteelCrankHandle::class.id())
+                .define('W', iron)
+                .define('P', plate)
+                .unlockedBy(getHasName(iron), has(iron))
+                .save(exporter, SteelCrankHandle::class.id())
         }
     }
 }
@@ -104,14 +106,14 @@ class CarbonCrankHandle : CrankHandleItem(CrankMaterial.CARBON) {
         fun generateRecipes(exporter: RecipeOutput) {
             val steel = SteelCrankHandle::class.instance()
             val plate = CarbonPlate::class.instance()
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, CarbonCrankHandle::class.instance(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonCrankHandle::class.instance(), 1)
                 .pattern(" P ")
                 .pattern("PWP")
                 .pattern(" P ")
-                .input('W', steel)
-                .input('P', plate)
-                .criterion(hasItem(steel), conditionsFromItem(steel))
-                .offerTo(exporter, CarbonCrankHandle::class.id())
+                .define('W', steel)
+                .define('P', plate)
+                .unlockedBy(getHasName(steel), has(steel))
+                .save(exporter, CarbonCrankHandle::class.id())
         }
     }
 }

@@ -1,5 +1,9 @@
 package ic2_120.content.entity
 
+import ic2_120.compat.isClient
+
+import ic2_120.compat.world
+
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.vehicle.Boat

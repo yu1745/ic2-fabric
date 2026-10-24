@@ -43,7 +43,7 @@ class WindGeneratorBlockEntityRenderer(
         val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
 
         // 使用方块状态 ACTIVE 判断是否发电（sync 仅在有 GUI 时同步，方块状态始终同步）
-        val generating = state.get(WindGeneratorBlock.ACTIVE)
+        val generating = state.getValue(WindGeneratorBlock.ACTIVE)
         val outputEuPerTick = entity.sync.getSyncedInsertedAmount().coerceAtLeast(0L).toFloat()
         val speed = if (generating) BASE_SPEED_DEG_PER_TICK + outputEuPerTick * SPEED_PER_EU else 0.0f
         val angle = if (speed > 0.0f) ((world.time + tickDelta) * speed) % 360.0f else 0.0f

@@ -37,7 +37,7 @@ import net.minecraft.core.Holder
 abstract class NanoArmorItem(
     material: Holder<ArmorMaterial>,
     type: Type,
-    settings: Item.Settings
+    settings: Item.Properties
 ) : ElectricArmorItem(material, type, settings) {
 
     override val tier: Int = 3

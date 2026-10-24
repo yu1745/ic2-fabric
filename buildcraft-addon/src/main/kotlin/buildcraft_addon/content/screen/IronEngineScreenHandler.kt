@@ -4,7 +4,7 @@ import buildcraft_addon.content.block.IronEngineBlock
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.world.inventory.ContainerData
@@ -36,7 +36,7 @@ class IronEngineScreenHandler(
             addSlot(Slot(playerInventory, col, 8 + col * 18, 153))
         }
 
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
     }
 
     // ContainerData: [0]=fuelAmount, [1]=coolantAmount, [2]=residueAmount, [3]=heat
@@ -45,13 +45,13 @@ class IronEngineScreenHandler(
     fun getResidueAmount(): Int = propertyDelegate.get(2)
     fun getHeat(): Int = propertyDelegate.get(3)
 
-    override fun quickMove(player: Player, slotIndex: Int): net.minecraft.world.item.ItemStack {
+    override fun quickMoveStack(player: Player, slotIndex: Int): net.minecraft.world.item.ItemStack {
         return ItemStack.EMPTY
     }
 
-    override fun canUse(player: Player): Boolean {
+    override fun stillValid(player: Player): Boolean {
         return context.get({ world, pos ->
-            world.getBlockState(pos).block is IronEngineBlock && player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+            world.getBlockState(pos).block is IronEngineBlock && player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
     }
 

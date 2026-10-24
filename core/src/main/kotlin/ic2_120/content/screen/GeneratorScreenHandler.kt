@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.sync.GeneratorSync
 import ic2_120.content.block.GeneratorBlock
 import ic2_120.content.block.machines.MachineBlockEntity
@@ -13,7 +15,7 @@ import ic2_120.content.block.machines.GeneratorBlockEntity
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ContainerData
@@ -45,8 +47,8 @@ class GeneratorScreenHandler(
     }
 
     init {
-        checkSize(blockInventory, 2)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, 2)
+        addDataSlots(propertyDelegate)
 
         // Machine slot positions from guidef/generator.xml
         val fuelSlotSpec = itemStorage?.deriveSlotSpec(MachineBlockEntity.FUEL_SLOT)
@@ -68,17 +70,17 @@ class GeneratorScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             when {
                 // 燃料槽 -> 玩家物品栏
-                index == SLOT_FUEL_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                index == SLOT_FUEL_INDEX -> if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 // 电池槽 -> 玩家物品栏
-                index == SLOT_BATTERY_INDEX -> if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                index == SLOT_BATTERY_INDEX -> if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                 // 玩家物品栏 -> 机器（路由驱动）
                 index in PLAYER_INV_START until HOTBAR_END -> {
                     val storage = itemStorage ?: return ItemStack.EMPTY
@@ -89,20 +91,20 @@ class GeneratorScreenHandler(
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
-            else slot.markDirty()
+            else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
-            world.getBlockState(pos).block is GeneratorBlock && player.squaredDistanceTo(
+            world.getBlockState(pos).block is GeneratorBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)
@@ -116,7 +118,7 @@ class GeneratorScreenHandler(
 
         private val SLOT_SPEC_FALLBACK_FUEL = SlotSpec(
             canInsert = { stack ->
-                !stack.isEmpty && ((net.fabricmc.fabric.api.registry.FuelRegistry.INSTANCE.get(stack.item) ?: 0) > 0)
+                !stack.isEmpty && ((net.fabricmc.fabric.api.registry.FuelRegistry.INSTANCE.getValue(stack.item) ?: 0) > 0)
             }
         )
         private val SLOT_SPEC_FALLBACK_BATTERY = SlotSpec(

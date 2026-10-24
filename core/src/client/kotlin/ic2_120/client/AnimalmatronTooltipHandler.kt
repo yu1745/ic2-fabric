@@ -28,30 +28,30 @@ object AnimalmatronTooltipHandler {
             if (itemId != ANIMALMATRON_ID) return@register
 
             if (Screen.hasShiftDown()) {
-                type.add(Component.translatable("item.ic2_120.animalmatron.tooltip.food_table").formatted(ChatFormatting.GRAY))
+                type.add(Component.translatable("item.ic2_120.animalmatron.tooltip.food_table").withStyle(ChatFormatting.GRAY))
                 AnimalFoodMapping.getFoodMap().forEach { (id, food) ->
                     val animalKey = "entity.${id.namespace}.${id.path}"
                     val animalName = Component.translatable(animalKey).string
                     val foodName = Component.translatable(food.first().translationKey).string
-                    type.add(Component.literal("  ${animalName}: ${foodName}").formatted(ChatFormatting.DARK_GRAY))
+                    type.add(Component.literal("  ${animalName}: ${foodName}").withStyle(ChatFormatting.DARK_GRAY))
                 }
-                type.add(Component.translatable("item.ic2_120.animalmatron.tooltip.breeding_limit").formatted(ChatFormatting.DARK_GRAY))
+                type.add(Component.translatable("item.ic2_120.animalmatron.tooltip.breeding_limit").withStyle(ChatFormatting.DARK_GRAY))
 
-                type.add(Component.translatable("item.ic2_120.animalmatron.tooltip.extra_products").formatted(ChatFormatting.GRAY))
+                type.add(Component.translatable("item.ic2_120.animalmatron.tooltip.extra_products").withStyle(ChatFormatting.GRAY))
                 EXTRA_PRODUCTS.forEach { (entityId, productId, needsShears) ->
                     val animalKey = "entity.${entityId.namespace}.${entityId.path}"
                     val animalName = Component.translatable(animalKey).string
-                    val productItem = BuiltInRegistries.ITEM.get(productId)
+                    val productItem = BuiltInRegistries.ITEM.getValue(productId)
                     val productName = Component.translatable(productItem.translationKey).string
                     val noteKey = if (needsShears)
                         "item.ic2_120.animalmatron.tooltip.extra_product_shears"
                     else
                         "item.ic2_120.animalmatron.tooltip.extra_product_auto"
                     val note = Component.translatable(noteKey).string
-                    type.add(Component.literal("  ${animalName} → ${productName} ${note}").formatted(ChatFormatting.DARK_GRAY))
+                    type.add(Component.literal("  ${animalName} → ${productName} ${note}").withStyle(ChatFormatting.DARK_GRAY))
                 }
             } else {
-                type.add(Component.translatable("item.ic2_120.animalmatron.tooltip").formatted(ChatFormatting.GRAY))
+                type.add(Component.translatable("item.ic2_120.animalmatron.tooltip").withStyle(ChatFormatting.GRAY))
             }
         }
     }

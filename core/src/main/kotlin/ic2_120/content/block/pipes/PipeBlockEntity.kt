@@ -1,5 +1,10 @@
 package ic2_120.content.block.pipes
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
@@ -7,7 +12,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.FriendlyByteBuf
@@ -52,7 +57,7 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
     fun toggleDisabled(direction: Direction): Boolean {
         val bit = 1 shl direction.id
         disabledMask = if ((disabledMask and bit) != 0) disabledMask and bit.inv() else disabledMask or bit
-        markDirty()
+        setChanged()
         return (disabledMask and bit) != 0
     }
 
@@ -71,26 +76,26 @@ class PipeBlockEntity(pos: BlockPos, state: BlockState) : BlockEntity(PipeBlockE
 
     fun setPumpFilterFluid(fluid: Fluid) {
         pumpFilterFluidId = BuiltInRegistries.FLUID.getId(fluid).toString()
-        markDirty()
+        setChanged()
         world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
     }
 
     fun clearPumpFilter() {
         pumpFilterFluidId = null
-        markDirty()
+        setChanged()
         world?.updateListeners(pos, cachedState, cachedState, Block.NOTIFY_LISTENERS)
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         disabledMask = nbt.getInt("DisabledMask")
         pipeLoad = nbt.getLong("PipeLoad")
         currentFluidId = nbt.getString("CurrentFluid").takeIf { it.isNotBlank() }
         pumpFilterFluidId = nbt.getString("PumpFilterFluid").takeIf { it.isNotBlank() }
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putInt("DisabledMask", disabledMask)
         nbt.putLong("PipeLoad", pipeLoad)
         currentFluidId?.let { nbt.putString("CurrentFluid", it) }

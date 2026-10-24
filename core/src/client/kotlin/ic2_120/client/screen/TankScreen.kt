@@ -6,7 +6,7 @@ import ic2_120.registry.annotation.ModScreen
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
@@ -43,9 +43,9 @@ class TankScreen(
 
         // 流体全铺渲染至 (79,27)-(97,45) = 18x18，使用 FluidUtils 着色
         val fluidId = handler.sync.fluidId ?: return
-        val fluid = BuiltInRegistries.FLUID.get(fluidId)
+        val fluid = BuiltInRegistries.FLUID.getValue(fluidId)
         val renderHandler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return
-        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultState)
+        val sprites = renderHandler.getFluidSprites(null, null, fluid.defaultBlockState)
         val sprite = sprites[0]
         val amount = handler.sync.fluidAmount
         if (amount <= 0) return
@@ -104,7 +104,7 @@ class TankScreen(
             val capacity = handler.sync.capacity
 
             val lines = if (fluidId != null && amount > 0) {
-                val fluid = BuiltInRegistries.FLUID.get(fluidId)
+                val fluid = BuiltInRegistries.FLUID.getValue(fluidId)
                 val fluidName = net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes.getName(
                     net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant.of(fluid)
                 ).string

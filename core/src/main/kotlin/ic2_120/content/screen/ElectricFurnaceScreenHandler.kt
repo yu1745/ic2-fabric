@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.sync.ElectricFurnaceSync
 import ic2_120.content.syncs.SyncedDataView
 import ic2_120.content.block.ElectricFurnaceBlock
@@ -12,7 +14,7 @@ import ic2_120.content.storage.RoutedItemStorage
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -35,8 +37,8 @@ class ElectricFurnaceScreenHandler(
     private val beSlotToHandlerIndex = mutableMapOf<Int, Int>()
 
     init {
-        checkSize(blockInventory, ElectricFurnaceBlockEntity.INVENTORY_SIZE)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, ElectricFurnaceBlockEntity.INVENTORY_SIZE)
+        addDataSlots(propertyDelegate)
 
         addTrackedSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_INPUT, 42, 15)
         addSlot(FurnaceOutputSlot(blockInventory, ElectricFurnaceBlockEntity.SLOT_OUTPUT, 116, 35, OUTPUT_SLOT_SPEC) {
@@ -68,7 +70,7 @@ class ElectricFurnaceScreenHandler(
         beSlotToHandlerIndex[beSlot] = handlerIndex
     }
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         if (id == BUTTON_ID_COLLECT_XP) {
             context.get({ world, pos ->
                 val be = world.getBlockEntity(pos)
@@ -79,16 +81,16 @@ class ElectricFurnaceScreenHandler(
         return false
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         var stack = ItemStack.EMPTY
         val slot = slots[index]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stackInSlot = slot.stack
             stack = stackInSlot.copy()
             val beSlot = (slot as? PredicateSlot)?.index ?: -1
             when {
                 beSlot >= 0 -> {
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, true)) return ItemStack.EMPTY
                     slot.onQuickTransfer(stackInSlot, stack)
                 }
                 index in PLAYER_INV_START until HOTBAR_END -> {
@@ -100,20 +102,20 @@ class ElectricFurnaceScreenHandler(
                     // 守卫：仅机器槽可落此（玩家槽已被区间检查全覆盖）。若未来条件收窄使玩家槽落入，
                     // 直接拒绝而非向含源槽的玩家区间 insertItem（同实例自合并会复制物品）。
                     if (index >= PLAYER_INV_START) return ItemStack.EMPTY
-                    if (!insertItem(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
+                    if (!moveItemStackTo(stackInSlot, PLAYER_INV_START, HOTBAR_END, false)) return ItemStack.EMPTY
                 }
             }
             if (stackInSlot.isEmpty) slot.stack = ItemStack.EMPTY
-            else slot.markDirty()
+            else slot.setChanged()
             if (stackInSlot.count == stack.count) return ItemStack.EMPTY
-            slot.onTakeItem(player, stackInSlot)
+            slot.onTake(player, stackInSlot)
         }
         return stack
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
-            world.getBlockState(pos).block is ElectricFurnaceBlock && player.squaredDistanceTo(
+            world.getBlockState(pos).block is ElectricFurnaceBlock && player.distanceToSqr(
                 pos.x + 0.5, pos.y + 0.5, pos.z + 0.5
             ) <= 64.0
         }, true)

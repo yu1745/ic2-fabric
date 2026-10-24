@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 import ic2_120.content.block.WaterKineticGeneratorBlock
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.content.block.transmission.IKineticRotorProvider
@@ -13,7 +19,7 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
@@ -79,7 +85,7 @@ class WaterKineticGeneratorBlockEntity(
     }
 
     override val tier: Int = 1
-    private val inventory = NonNullList.ofSize(1, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(1, ItemStack.EMPTY)
 
     private val syncedData = SyncedData()
     private val kineticSync = WaterKineticGeneratorSync(syncedData)
@@ -117,7 +123,7 @@ class WaterKineticGeneratorBlockEntity(
     fun receiveRotorState(isStuck: Boolean, stuckAngle: Float) {
         kineticSync.isStuck = if (isStuck) 1 else 0
         kineticSync.stuckAngle = stuckAngle.toInt()
-        markDirty()
+        setChanged()
     }
 
     constructor(pos: BlockPos, state: BlockState) : this(
@@ -150,7 +156,7 @@ class WaterKineticGeneratorBlockEntity(
         if (!simulate && extracted > 0) {
             pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
             kineticSync.outputKu = (kineticSync.outputKu + extracted).coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
         return extracted
     }
@@ -171,7 +177,7 @@ class WaterKineticGeneratorBlockEntity(
     }
 
     fun onUse(player: Player, hand: InteractionHand): InteractionResult {
-        val held = player.getStackInHand(hand)
+        val held = player.getItemInHand(hand)
         val rotor = inventory[ROTOR_SLOT]
 
         if (held.isEmpty) {
@@ -180,7 +186,7 @@ class WaterKineticGeneratorBlockEntity(
             inventory[ROTOR_SLOT] = ItemStack.EMPTY
             markDirtyAndSync()
             if (!player.giveItemStack(extracted)) {
-                player.dropItem(extracted, false)
+                player.spawnAtLocation(extracted, false)
             }
             return InteractionResult.SUCCESS
         }
@@ -193,7 +199,7 @@ class WaterKineticGeneratorBlockEntity(
         inserted.count = 1
         inventory[ROTOR_SLOT] = inserted
         if (!player.abilities.creativeMode) {
-            held.decrement(1)
+            held.shrink(1)
         }
         markDirtyAndSync()
         return InteractionResult.SUCCESS
@@ -409,12 +415,12 @@ class WaterKineticGeneratorBlockEntity(
 
     private fun isWaterBlock(world: Level, x: Int, y: Int, z: Int): Boolean {
         val fluidState = world.getFluidState(BlockPos(x, y, z))
-        return fluidState.isOf(Fluids.WATER) || fluidState.isOf(Fluids.FLOWING_WATER)
+        return fluidState.`is`(Fluids.WATER) || fluidState.`is`(Fluids.FLOWING_WATER)
     }
 
     private fun isFlowingWater(world: Level, x: Int, y: Int, z: Int): Boolean {
         val fluidState = world.getFluidState(BlockPos(x, y, z))
-        if (!fluidState.isOf(Fluids.WATER) && !fluidState.isOf(Fluids.FLOWING_WATER)) return false
+        if (!fluidState.`is`(Fluids.WATER) && !fluidState.`is`(Fluids.FLOWING_WATER)) return false
         return !fluidState.isStill
     }
 
@@ -442,7 +448,7 @@ class WaterKineticGeneratorBlockEntity(
                 nbt.remove(ROTOR_WEAR_REMAINDER_KEY)
             }
         }
-        markDirty()
+        setChanged()
         return false
     }
 
@@ -623,12 +629,12 @@ class WaterKineticGeneratorBlockEntity(
         }
 
     private fun markDirtyAndSync() {
-        markDirty()
+        setChanged()
         val world = world ?: return
         if (!world.isClient) {
             val state = world.getBlockState(pos)
             world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
-            (world as? ServerLevel)?.chunkManager?.markForUpdate(pos)
+            (world as? ServerLevel)?.chunkSource?.markForUpdate(pos)
         }
     }
 
@@ -638,16 +644,16 @@ class WaterKineticGeneratorBlockEntity(
 
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
-    override fun removeStack(slot: Int, amount: Int): ItemStack {
-        val result = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeItem(slot: Int, amount: Int): ItemStack {
+        val result = ContainerHelper.removeItem(inventory, slot, amount)
         if (!result.isEmpty) {
             markDirtyAndSync()
         }
         return result
     }
 
-    override fun removeStack(slot: Int): ItemStack {
-        val result = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItemNoUpdate(slot: Int): ItemStack {
+        val result = ContainerHelper.takeItem(inventory, slot)
         if (!result.isEmpty) {
             markDirtyAndSync()
         }
@@ -671,18 +677,18 @@ class WaterKineticGeneratorBlockEntity(
         markDirtyAndSync()
     }
 
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.readNbt(nbt, lookup)
         inventory[ROTOR_SLOT] = ItemStack.EMPTY
-        ContainerHelper.readNbt(nbt, inventory, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
     override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.writeNbt(nbt, lookup)
-        ContainerHelper.writeNbt(nbt, inventory, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 

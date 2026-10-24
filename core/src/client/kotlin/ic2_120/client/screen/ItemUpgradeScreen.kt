@@ -8,7 +8,7 @@ import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.renderer.Rect2i
 import net.minecraft.client.gui.components.Button
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
@@ -66,7 +66,7 @@ class ItemUpgradeScreen(
 
         // 过滤文本 (9,18)-(104,32)
         val filterName = if (handler.itemRawId > 0) {
-            BuiltInRegistries.ITEM.get(handler.itemRawId).name.string
+            BuiltInRegistries.ITEM.getValue(andler.itemRawId).name.string
         } else {
             t("gui.ic2_120.item_upgrade.no_filter")
         }
@@ -101,7 +101,7 @@ class ItemUpgradeScreen(
 
     private fun drawFilterItem(context: GuiGraphics) {
         if (handler.itemRawId <= 0) return
-        val item = BuiltInRegistries.ITEM.get(handler.itemRawId)
+        val item = BuiltInRegistries.ITEM.getValue(andler.itemRawId)
         if (item != net.minecraft.world.item.Items.AIR) context.drawItem(item.defaultStack, x + 8, y + 35)
     }
 

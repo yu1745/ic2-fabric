@@ -22,7 +22,7 @@ object ConfigCommand {
                                     Ic2Config.reloadOrThrow()
                                     val configJson = Ic2Config.prettyCurrentConfig()
                                     val replicationCostsJson = Ic2Config.prettyAllReplicationCosts()
-                                    for (player in source.server.playerManager.playerList) {
+                                    for (player in source.server.playerList.playerList) {
                                         ConfigSyncHelper.sendToPlayer(player, ConfigSyncPacket.ID, configJson)
                                         ConfigSyncHelper.sendToPlayer(
                                             player,

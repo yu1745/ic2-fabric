@@ -11,8 +11,6 @@ import ic2_120.registry.type
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import net.minecraft.network.chat.Component
 import ic2_120_industrial_upgrade.content.item.SingularCore
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -29,24 +27,24 @@ import java.util.function.Consumer
 // en_us: Singular Solar Panel
 @ModBlock(name = "singular_solar_panel", registerItem = true, tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "solar_panel")
 class SingularSolarPanelBlock : IndustrialSolarPanelBlock() {
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = SingularSolarPanelBlockEntity(pos, state)
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = SingularSolarPanelBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, SingularSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else BlockEntityType.validateTicker(world, type, SingularSolarPanelBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
             // 十字：4 个质子太阳能 + 1 个奇点核心
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, SingularSolarPanelBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, SingularSolarPanelBlock::class.item(), 1)
                 .pattern(" B ")
                 .pattern("BAB")
                 .pattern(" B ")
-                .input('B', ProtonSolarPanelBlock::class.item())
-                .input('A', SingularCore::class.instance())
-                .criterion(hasItem(ProtonSolarPanelBlock::class.item()), conditionsFromItem(ProtonSolarPanelBlock::class.item()))
-                .offerTo(exporter, IC2IndustrialUpgrade.id("singular_solar_panel"))
+                .define('B', ProtonSolarPanelBlock::class.item())
+                .define('A', SingularCore::class.instance())
+                .unlockedBy(has(ProtonSolarPanelBlock::class.item()), has(ProtonSolarPanelBlock::class.item()))
+                .save(exporter, IC2IndustrialUpgrade.id("singular_solar_panel"))
         }
     }
 }

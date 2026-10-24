@@ -1,5 +1,9 @@
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 ﻿package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.SolidHeatGeneratorBlock
 import ic2_120.content.screen.SolidHeatGeneratorScreenHandler
 import ic2_120.content.sync.SolidHeatGeneratorSync
@@ -16,7 +20,7 @@ import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -53,17 +57,17 @@ class SolidHeatGeneratorBlockEntity(
     }
 
     override val tier: Int = 1
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(SLOT_FUEL), matcher = { isValid(SLOT_FUEL, it) })
         ),
         extractSlots = intArrayOf(SLOT_FUEL, SLOT_OUTPUT),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -99,13 +103,13 @@ class SolidHeatGeneratorBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: net.minecraft.world.entity.player.Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: net.minecraft.world.entity.player.Player): Boolean = Container.stillValidBlockEntity(this, player)
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
-        markDirty()
+        setChanged()
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
@@ -113,9 +117,9 @@ class SolidHeatGeneratorBlockEntity(
         else -> false
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         burnTime = nbt.getInt("BurnTime").coerceAtLeast(0)
         burnTotal = nbt.getInt("BurnTotal").coerceAtLeast(0)
@@ -123,9 +127,9 @@ class SolidHeatGeneratorBlockEntity(
         sync.burnTotal = burnTotal
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putInt("BurnTime", burnTime)
         nbt.putInt("BurnTotal", burnTotal)
@@ -138,9 +142,9 @@ class SolidHeatGeneratorBlockEntity(
             if (!fuel.isEmpty && fuelTicks > 0) {
                 burnTime = fuelTicks
                 burnTotal = fuelTicks
-                fuel.decrement(1)
+                fuel.shrink(1)
                 if (fuel.isEmpty) setStack(SLOT_FUEL, ItemStack.EMPTY)
-                markDirty()
+                setChanged()
             }
         }
 
@@ -161,7 +165,7 @@ class SolidHeatGeneratorBlockEntity(
         burnTime > 0 && hasValidConsumer
 
     override fun getActiveState(state: BlockState): Boolean =
-        state.get(SolidHeatGeneratorBlock.ACTIVE)
+        state.getValue(SolidHeatGeneratorBlock.ACTIVE)
 
     fun tick(world: Level, pos: BlockPos, state: BlockState) {
         tickHeatMachine(world, pos, state)
@@ -174,7 +178,7 @@ class SolidHeatGeneratorBlockEntity(
             item == Items.CHARCOAL ||
             item == net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "coke"))
         if (!isSupported) return 0
-        val furnaceTicks = FuelRegistry.INSTANCE.get(item) ?: return 0
+        val furnaceTicks = FuelRegistry.INSTANCE.getValue(Item) ?: return 0
         return (furnaceTicks / SOLID_HEAT_BURN_DIVISOR).coerceAtLeast(1)
     }
 }

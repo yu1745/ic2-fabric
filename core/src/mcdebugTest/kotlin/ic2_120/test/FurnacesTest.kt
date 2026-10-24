@@ -32,7 +32,7 @@ class FurnacesTest {
     @Test
     fun electricFurnaceSmeltWithAdjacentBatbox(ctx: TestContext) {
         setupAdjacentBatbox(ctx, "ic2_120:electric_furnace")
-        insertItem(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
         waitUntil(ctx, invItemEquals(ctx.origin, 1, "minecraft:iron_ingot"), 15 * 20)
         assertSlotHas(ctx, ctx.origin, 1, "minecraft:iron_ingot")
     }
@@ -40,7 +40,7 @@ class FurnacesTest {
     @Test
     fun electricFurnaceNoPowerIdle(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:electric_furnace")
-        insertItem(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:iron_ore")
         assertSlotEmpty(ctx, ctx.origin, 1)
@@ -49,7 +49,7 @@ class FurnacesTest {
     @Test
     fun electricFurnaceInvalidInputDirt(ctx: TestContext) {
         setupAdjacentBatbox(ctx, "ic2_120:electric_furnace")
-        insertItem(ctx, ctx.origin, "minecraft:dirt", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:dirt", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:dirt")
         assertSlotEmpty(ctx, ctx.origin, 1)
@@ -59,7 +59,7 @@ class FurnacesTest {
     fun electricFurnaceOutputFullBlocksNext(ctx: TestContext) {
         setupAdjacentBatbox(ctx, "ic2_120:electric_furnace")
         setSlot(ctx, ctx.origin, 1, "minecraft:iron_ingot", 64)
-        insertItem(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:iron_ore")
     }
@@ -75,8 +75,8 @@ class FurnacesTest {
     @Test
     fun ironFurnaceSmeltIronOre(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:iron_furnace")
-        insertItem(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
-        insertItem(ctx, ctx.origin, "minecraft:coal", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:coal", 1, 1)
         waitUntil(ctx, invItemEquals(ctx.origin, 2, "minecraft:iron_ingot"), 15 * 20)
         assertSlotHas(ctx, ctx.origin, 2, "minecraft:iron_ingot")
     }
@@ -84,7 +84,7 @@ class FurnacesTest {
     @Test
     fun ironFurnaceNoFuelIdle(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:iron_furnace")
-        insertItem(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:iron_ore")
         assertSlotEmpty(ctx, ctx.origin, 2)
@@ -93,8 +93,8 @@ class FurnacesTest {
     @Test
     fun ironFurnaceInvalidInputDirt(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:iron_furnace")
-        insertItem(ctx, ctx.origin, "minecraft:dirt", 1, 0)
-        insertItem(ctx, ctx.origin, "minecraft:coal", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:dirt", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:coal", 1, 1)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:dirt")
         assertSlotEmpty(ctx, ctx.origin, 2)
@@ -104,8 +104,8 @@ class FurnacesTest {
     fun ironFurnaceOutputFullBlocksNext(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:iron_furnace")
         setSlot(ctx, ctx.origin, 2, "minecraft:iron_ingot", 64)
-        insertItem(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
-        insertItem(ctx, ctx.origin, "minecraft:coal", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:coal", 1, 1)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:iron_ore")
     }

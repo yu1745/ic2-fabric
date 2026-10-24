@@ -1,5 +1,10 @@
 package ic2_120.content.block.storage
 
+import ic2_120.compat.stack
+
+import ic2_120.compat.isClient
+import ic2_120.compat.world
+
 import ic2_120.content.block.DirectionalMachineBlock
 import ic2_120.content.item.ICreativeFullVariant
 import ic2_120.content.sync.EnergyStorageSync
@@ -31,14 +36,14 @@ import net.minecraft.world.level.Level
  */
 abstract class EnergyStorageBlock(
     val config: EnergyStorageConfig
-) : DirectionalMachineBlock(ic2_120.content.block.MachineBlock.defaultMachineSettings().nonOpaque()) { // 3D 模型不填满整格：关闭相邻面剔除
+) : DirectionalMachineBlock(ic2_120.content.block.MachineBlock.defaultMachineSettings() .noOcclusion()) { // 3D 模型不填满整格：关闭相邻面剔除
 
-    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(ACTIVE)
     }
 
-    abstract override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity?
+    abstract override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity?
 
     /** 红石模式输出（原版 IC2 7 档模式，默认 0 = 不输出；详见 BE.cycleRedstoneMode）。 */
     override fun emitsRedstonePower(state: BlockState): Boolean = config.emitRedstoneWhenNotFull
@@ -55,23 +60,11 @@ abstract class EnergyStorageBlock(
         return if (be.emitsRedstoneNow) 15 else 0
     }
 
-    override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): net.minecraft.world.MenuProvider? {
-        val be = world.getBlockEntity(pos)
-        return be as? net.minecraft.world.MenuProvider
-    }
-
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onUse(
-        state: BlockState,
-        world: Level,
-        pos: BlockPos,
-        player: Player,
-        hand: InteractionHand,
-        hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
-            createScreenHandlerFactory(state, world, pos)?.let { factory ->
-                player.openHandledScreen(factory)
+            getMenuProvider(state, world, pos)?.let { factory ->
+                player.openMenu(factory)
             }
         }
         return InteractionResult.SUCCESS
@@ -80,12 +73,12 @@ abstract class EnergyStorageBlock(
     companion object {
         const val NBT_FULL = "Full"
         const val NBT_BLOCK_ENTITY_TAG = "BlockEntityTag"
-        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+        val ACTIVE: BooleanProperty = BooleanProperty.create("active")
     }
 
    abstract class EnergyStorageBlockItem(
        block: Block,
-       settings: Item.Settings,
+       settings: Item.Properties,
        protected val config: EnergyStorageConfig
     ) : BlockItem(block, settings), ICreativeFullVariant {
         private fun getStoredEnergy(stack: ItemStack): Long {
@@ -103,10 +96,10 @@ abstract class EnergyStorageBlock(
                 if (!blockEntityTag.isEmpty && blockEntityTag.contains(EnergyStorageSync.NBT_ENERGY_STORED)) {
                     val stored = blockEntityTag.getLong(EnergyStorageSync.NBT_ENERGY_STORED).coerceIn(0L, config.capacity)
                     be.sync.restoreEnergy(stored)
-                    be.markDirty()
+                    be.setChanged()
                 } else if (nbt.getBoolean(NBT_FULL)) {
                     be.sync.restoreEnergy(config.capacity)
-                    be.markDirty()
+                    be.setChanged()
                 }
             }
             return result
@@ -125,19 +118,19 @@ abstract class EnergyStorageBlock(
             tooltip: MutableList<Component>,
             context: TooltipContext
         ) {
-            super.appendTooltip(stack, world, tooltip, context)
+            super.appendTooltip(stack, context, tooltip, type)
             val stored = getStoredEnergy(stack)
-            tooltip.add(Component.literal("能量: %,d / %,d EU".format(stored, config.capacity)).formatted(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("能量: %,d / %,d EU".format(stored, config.capacity)).withStyle(ChatFormatting.GRAY))
         }
 
-        override fun isItemBarVisible(stack: ItemStack): Boolean = true
+        override fun isBarVisible(stack: ItemStack): Boolean = true
 
-        override fun getItemBarStep(stack: ItemStack): Int {
+        override fun getBarWidth(stack: ItemStack): Int {
             val ratio = if (config.capacity > 0L) getStoredEnergy(stack).toDouble() / config.capacity.toDouble() else 0.0
             return (ratio * 13.0).toInt().coerceIn(0, 13)
         }
 
-        override fun getItemBarColor(stack: ItemStack): Int {
+        override fun getBarColor(stack: ItemStack): Int {
             val ratio = if (config.capacity > 0L) getStoredEnergy(stack).toDouble() / config.capacity.toDouble() else 0.0
             return when {
                 ratio > 0.5 -> 0x4AFF4A

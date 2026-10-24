@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.FluidCannerBlock
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.energy.charge.BatteryDischargerComponent
@@ -42,7 +49,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -124,11 +131,11 @@ class FluidCannerBlockEntity(
         }
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }),
@@ -137,7 +144,7 @@ class FluidCannerBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_INPUT_EMPTY), matcher = { !it.isEmpty && it.item !is IBatteryItem && isEmptyFluidContainerForBottler(it) })
         ),
         extractSlots = intArrayOf(SLOT_INPUT_FILLED, SLOT_INPUT_EMPTY, SLOT_OUTPUT, SLOT_DISCHARGING),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -165,7 +172,7 @@ class FluidCannerBlockEntity(
 
         override fun onFinalCommit() {
             syncTankState()
-            markDirty()
+            setChanged()
         }
     }
 
@@ -185,15 +192,15 @@ class FluidCannerBlockEntity(
     override fun setStack(slot: Int, stack: ItemStack) {
         if (slot == SLOT_DISCHARGING && stack.count > 1) stack.count = 1
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT_FILLED -> !stack.isEmpty && stack.item !is IBatteryItem && isFilledFluidContainer(stack)
@@ -213,9 +220,9 @@ class FluidCannerBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         FluidCannerScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(FluidCannerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -232,9 +239,9 @@ class FluidCannerBlockEntity(
         syncTankState()
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(FluidCannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -246,7 +253,7 @@ class FluidCannerBlockEntity(
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
-        // val facing = world?.getBlockState(pos)?.get(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
+        // val facing = world?.getBlockState(pos)?.getValue(et.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING) ?: Direction.NORTH
         // if (side == facing) return null
         return fluidTank
     }
@@ -329,7 +336,7 @@ class FluidCannerBlockEntity(
                     energyDebtF = 0f
                     sync.progress = 0
                 }
-                markDirty()
+                setChanged()
                 setActiveState(world, pos, state, true)
             } else {
                 // 停顿期间不累计债务：防恢复供电后 need 超容量 all-or-nothing 卡死
@@ -398,7 +405,7 @@ class FluidCannerBlockEntity(
 
     private fun canAcceptOutput(outputSlot: ItemStack, result: ItemStack): Boolean {
         if (outputSlot.isEmpty) return true
-        return ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= result.maxCount
+        return ItemStack.areItemsEqual(outputSlot, result) && outputSlot.count + result.count <= result.maxStackSize
     }
 
     private fun completePourOut() {
@@ -418,10 +425,10 @@ class FluidCannerBlockEntity(
                 if (!canAcceptOutput(outputSlot, emptyResult)) return@use
                 tx.commit()
 
-                filled.decrement(1)
+                filled.shrink(1)
                 if (filled.isEmpty) setStack(SLOT_INPUT_FILLED, ItemStack.EMPTY)
                 if (outputSlot.isEmpty) setStack(SLOT_OUTPUT, emptyResult)
-                else outputSlot.increment(emptyResult.count)
+                else outputSlot.grow(emptyResult.count)
                 syncTankState()
                 return
             }
@@ -442,12 +449,12 @@ class FluidCannerBlockEntity(
             if (plan.fullAfterFill && !canAcceptOutput(getStack(SLOT_OUTPUT), result)) return@use
             tx.commit()
 
-            container.decrement(1)
+            container.shrink(1)
             if (container.isEmpty) setStack(slot, ItemStack.EMPTY)
             if (plan.fullAfterFill) {
                 val output = getStack(SLOT_OUTPUT)
                 if (output.isEmpty) setStack(SLOT_OUTPUT, result)
-                else output.increment(result.count)
+                else output.grow(result.count)
             } else {
                 setStack(slot, result)
             }
@@ -464,7 +471,7 @@ class FluidCannerBlockEntity(
         val inserted = sync.insertEnergy(extracted)
         if (extracted > inserted) sync.forceInsertEnergy(extracted - inserted)
         sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-        markDirty()
+        setChanged()
     }
 
     private fun isFilledFluidContainer(stack: ItemStack): Boolean {

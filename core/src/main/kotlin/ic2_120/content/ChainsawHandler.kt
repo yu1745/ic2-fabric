@@ -1,5 +1,7 @@
 package ic2_120.content
 
+import ic2_120.compat.isClient
+
 import ic2_120.content.item.Chainsaw
 import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
@@ -22,7 +24,7 @@ import net.minecraft.core.BlockPos
 object ChainsawHandler {
     fun register() {
         UseEntityCallback.EVENT.register { player, world, hand, entity, _ ->
-            val stack = player.getStackInHand(hand)
+            val stack = player.getItemInHand(hand)
             if (stack.item !is Chainsaw || !Chainsaw.isShearEnabled(stack)) {
                 return@register InteractionResult.PASS
             }
@@ -40,7 +42,7 @@ object ChainsawHandler {
         }
 
         AttackBlockCallback.EVENT.register { player, world, hand, pos, _ ->
-            val stack = player.getStackInHand(hand)
+            val stack = player.getItemInHand(hand)
             if (stack.item !is Chainsaw || !Chainsaw.isShearEnabled(stack)) {
                 return@register InteractionResult.PASS
             }
@@ -77,12 +79,12 @@ object ChainsawHandler {
 
     private fun isShearableBlock(state: BlockState): Boolean =
         state.isIn(BlockTags.LEAVES) ||
-            state.isOf(Blocks.COBWEB) ||
-            state.isOf(Blocks.GRASS) ||
-            state.isOf(Blocks.FERN) ||
-            state.isOf(Blocks.DEAD_BUSH) ||
-            state.isOf(Blocks.HANGING_ROOTS) ||
-            state.isOf(Blocks.VINE) ||
-            state.isOf(Blocks.TRIPWIRE) ||
+            state.`is`(Blocks.COBWEB) ||
+            state.`is`(Blocks.GRASS) ||
+            state.`is`(Blocks.FERN) ||
+            state.`is`(Blocks.DEAD_BUSH) ||
+            state.`is`(Blocks.HANGING_ROOTS) ||
+            state.`is`(Blocks.VINE) ||
+            state.`is`(Blocks.TRIPWIRE) ||
             state.isIn(BlockTags.WOOL)
 }

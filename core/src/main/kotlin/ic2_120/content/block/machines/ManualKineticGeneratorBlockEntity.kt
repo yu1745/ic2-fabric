@@ -1,5 +1,11 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 import ic2_120.content.block.ManualKineticGeneratorBlock
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.content.item.CrankHandleItem
@@ -48,7 +54,7 @@ class ManualKineticGeneratorBlockEntity(
     override val tier: Int = 1
     override val activeProperty: net.minecraft.world.level.block.state.properties.BooleanProperty = ManualKineticGeneratorBlock.ACTIVE
 
-    private val inventory = NonNullList.ofSize(1, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(1, ItemStack.EMPTY)
     private val syncedData = SyncedData()
     val sync = ManualKineticGeneratorSync(syncedData)
 
@@ -93,7 +99,7 @@ class ManualKineticGeneratorBlockEntity(
     fun onUse(player: Player, hand: InteractionHand, world: Level, pos: BlockPos, state: BlockState): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
 
-        val heldStack = player.getStackInHand(hand)
+        val heldStack = player.getItemInHand(hand)
         val crankStack = inventory[CRANK_SLOT]
 
         when {
@@ -101,8 +107,8 @@ class ManualKineticGeneratorBlockEntity(
                 val extracted = crankStack.copy()
                 inventory[CRANK_SLOT] = heldStack.split(1)
                 markDirtyAndSync()
-                if (!player.inventory.insertStack(extracted)) {
-                    player.dropItem(extracted, false)
+                if (!player.inventory.safeInsert(extracted)) {
+                    player.spawnAtLocation(extracted, false)
                 }
                 return InteractionResult.SUCCESS
             }
@@ -151,7 +157,7 @@ class ManualKineticGeneratorBlockEntity(
         if (world.isClient || inventory[CRANK_SLOT].isEmpty) return
         net.minecraft.world.Containers.spawn(world, pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), inventory[CRANK_SLOT])
         inventory[CRANK_SLOT] = ItemStack.EMPTY
-        markDirty()
+        setChanged()
     }
 
     fun tick(world: Level, pos: BlockPos, state: BlockState) {
@@ -197,7 +203,7 @@ class ManualKineticGeneratorBlockEntity(
         if (wasTurning != isTurning) {
             markDirtyAndSync()
         } else if (isTurning) {
-            markDirty()
+            setChanged()
         }
     }
 
@@ -218,18 +224,18 @@ class ManualKineticGeneratorBlockEntity(
         if (!simulate && extracted > 0) {
             pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
             sync.extractedKu = (sync.extractedKu + extracted).coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
         return extracted
     }
 
     private fun markDirtyAndSync() {
-        markDirty()
+        setChanged()
         val world = world ?: return
         if (!world.isClient) {
             val state = world.getBlockState(pos)
             world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
-            (world as? ServerLevel)?.chunkManager?.markForUpdate(pos)
+            (world as? ServerLevel)?.chunkSource?.markForUpdate(pos)
         }
     }
 
@@ -239,16 +245,16 @@ class ManualKineticGeneratorBlockEntity(
 
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
-    override fun removeStack(slot: Int, amount: Int): ItemStack {
-        val result = ContainerHelper.splitStack(inventory, slot, amount)
+    override fun removeItem(slot: Int, amount: Int): ItemStack {
+        val result = ContainerHelper.removeItem(inventory, slot, amount)
         if (!result.isEmpty) {
             markDirtyAndSync()
         }
         return result
     }
 
-    override fun removeStack(slot: Int): ItemStack {
-        val result = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItemNoUpdate(slot: Int): ItemStack {
+        val result = ContainerHelper.takeItem(inventory, slot)
         if (!result.isEmpty) {
             markDirtyAndSync()
         }
@@ -272,20 +278,20 @@ class ManualKineticGeneratorBlockEntity(
         markDirtyAndSync()
     }
 
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.readNbt(nbt, lookup)
         pendingOutputKu = nbt.getInt("PendingKu").coerceAtLeast(0)
         inventory[CRANK_SLOT] = ItemStack.EMPTY
-        ContainerHelper.readNbt(nbt, inventory, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
     override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.WrapperLookup) {
         super.writeNbt(nbt, lookup)
         nbt.putInt("PendingKu", pendingOutputKu)
-        ContainerHelper.writeNbt(nbt, inventory, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 

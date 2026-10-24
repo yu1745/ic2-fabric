@@ -1,5 +1,7 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
 import ic2_120.content.item.ContainmentBoxInventory
 import ic2_120.content.item.ContainmentBoxItem
 import ic2_120.content.screen.slot.PredicateSlot
@@ -8,7 +10,7 @@ import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenHandlerMode
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.Slot
@@ -56,25 +58,25 @@ class ContainmentBoxScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, slotIndex: Int): ItemStack {
+    override fun quickMoveStack(player: Player, slotIndex: Int): ItemStack {
         var moved = ItemStack.EMPTY
         val slot = slots[slotIndex]
-        if (slot.hasStack()) {
+        if (slot .hasItem()) {
             val stack = slot.stack
             moved = stack.copy()
             val boxSize = ContainmentBoxInventory.SIZE
             if (slotIndex < boxSize) {
-                if (!insertItem(stack, boxSize, slots.size, true)) return ItemStack.EMPTY
-            } else if (!insertItem(stack, 0, boxSize, false)) {
+                if (!moveItemStackTo(stack, boxSize, slots.size, true)) return ItemStack.EMPTY
+            } else if (!moveItemStackTo(stack, 0, boxSize, false)) {
                 return ItemStack.EMPTY
             }
-            if (stack.isEmpty) slot.markDirty()
-            else slot.markDirty()
+            if (stack.isEmpty) slot.setChanged()
+            else slot.setChanged()
         }
         return moved
     }
 
-    override fun canUse(player: Player): Boolean = boxInventory.canPlayerUse(player)
+    override fun stillValid(player: Player): Boolean = boxInventory.canPlayerUse(player)
 
     override fun onClosed(player: Player) {
         super.onClosed(player)

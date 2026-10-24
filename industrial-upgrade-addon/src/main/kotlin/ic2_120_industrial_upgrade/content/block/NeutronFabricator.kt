@@ -1,5 +1,7 @@
 package ic2_120_industrial_upgrade.content.block
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+
 import ic2_120.content.block.MachineBlock
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
@@ -10,8 +12,6 @@ import ic2_120.registry.item
 import ic2_120.registry.type
 import ic2_120_industrial_upgrade.IC2IndustrialUpgrade
 import ic2_120_industrial_upgrade.content.item.EnderQuantumComponent
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -38,31 +38,31 @@ import java.util.function.Consumer
 @ModBlock(name = "neutron_fabricator", registerItem = true, tab = CreativeTab.INDUSTRIAL_UPGRADE, group = "machine")
 class NeutronFabricatorBlock : MachineBlock() {
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = NeutronFabricatorBlockEntity(pos, state)
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity = NeutronFabricatorBlockEntity(pos, state)
 
     override fun <T : BlockEntity> getTicker(world: Level, state: BlockState, type: BlockEntityType<T>): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else validateTicker(world, type, NeutronFabricatorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else BlockEntityType.validateTicker(world, type, NeutronFabricatorBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     override fun createScreenHandlerFactory(state: BlockState, world: Level, pos: BlockPos): MenuProvider? =
         world.getBlockEntity(pos) as? MenuProvider
 
     @Deprecated("Override without InteractionHand parameter", ReplaceWith("onUse(state, world, pos, player, hit)"))
-    override fun onUse(state: BlockState, world: Level, pos: BlockPos, player: Player, hand: InteractionHand, hit: BlockHitResult): InteractionResult {
-        if (!world.isClient) createScreenHandlerFactory(state, world, pos)?.let { player.openHandledScreen(it) }
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
+        if (!world.isClient) getMenuProvider(state, world, pos)?.let { player.openMenu(it) }
         return InteractionResult.SUCCESS
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
-        super.appendProperties(builder)
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
+        super.createBlockStateDefinition(builder)
         builder.add(ACTIVE)
     }
 
-    override fun getPlacementState(ctx: BlockPlaceContext): BlockState? =
-        super.getPlacementState(ctx)?.with(ACTIVE, false)
+    override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
+        super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     companion object {
-        val ACTIVE: BooleanProperty = BooleanProperty.of("active")
+        val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
         fun generateRecipes(exporter: Consumer<RecipeOutput>) {
@@ -71,15 +71,15 @@ class NeutronFabricatorBlock : MachineBlock() {
             val enderComponent = EnderQuantumComponent::class.instance()
             val advancedMachine = ic2_120.content.block.AdvancedMachineCasingBlock::class.item()
 
-            ShapedRecipeBuilder.create(RecipeCategory.MISC, NeutronFabricatorBlock::class.item(), 1)
+            ShapedRecipeBuilder.shaped(RecipeCategory.MISC, NeutronFabricatorBlock::class.item(), 1)
                 .pattern(" A ")
                 .pattern("BCB")
                 .pattern(" A ")
-                .input('A', enderComponent)
-                .input('B', advancedMachine)
-                .input('C', Items.NETHER_STAR)
-                .criterion(hasItem(enderComponent), conditionsFromItem(enderComponent))
-                .offerTo(exporter, IC2IndustrialUpgrade.id("neutron_fabricator"))
+                .define('A', enderComponent)
+                .define('B', advancedMachine)
+                .define('C', Items.NETHER_STAR)
+                .unlockedBy(getHasName(enderComponent), has(enderComponent))
+                .save(exporter, IC2IndustrialUpgrade.id("neutron_fabricator"))
         }
     }
 }

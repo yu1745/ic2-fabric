@@ -13,10 +13,10 @@ class TeleporterVisualStatePacket(
     val teleportRange: Int,
     val chargingEntityId: Int
 ) : CustomPacketPayload {
-    override fun getId(): CustomPacketPayload.Id<*> = ID
+    override fun type(): CustomPacketPayload.Type<*> = ID
 
     companion object {
-        val ID = CustomPacketPayload.Id<TeleporterVisualStatePacket>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "teleporter_visual_state"))
+        val ID = CustomPacketPayload.Type<TeleporterVisualStatePacket>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("ic2_120", "teleporter_visual_state"))
         val CODEC: StreamCodec<FriendlyByteBuf, TeleporterVisualStatePacket> = StreamCodec.of(
             { value, buf -> write(value, buf) },
             { read(it) }

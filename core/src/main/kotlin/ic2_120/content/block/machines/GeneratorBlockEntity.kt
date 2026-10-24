@@ -1,5 +1,12 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.time
+
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.sync.GeneratorSync
 import ic2_120.content.block.GeneratorBlock
 import ic2_120.content.sound.MachineSoundConfig
@@ -13,11 +20,10 @@ import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
 import ic2_120.registry.annotation.RegisterEnergy
 import ic2_120.registry.annotation.RegisterItemStorage
-import ic2_120.registry.type
 import net.fabricmc.fabric.api.registry.FuelRegistry
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -65,18 +71,18 @@ class GeneratorBlockEntity(
         intervalTicks = 20
     )
 
-    private val inventory = NonNullList.ofSize(2, ItemStack.EMPTY)  // 0: 燃料槽, 1: 电池槽
+    private val inventory = NonNullList.withSize(2, ItemStack.EMPTY)  // 0: 燃料槽, 1: 电池槽
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(intArrayOf(FUEL_SLOT), matcher = { isValid(FUEL_SLOT, it) }),
             ItemInsertRoute(intArrayOf(BATTERY_SLOT), matcher = { isValid(BATTERY_SLOT, it) }, maxPerSlot = 1)
         ),
         extractSlots = intArrayOf(FUEL_SLOT, BATTERY_SLOT),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -85,7 +91,7 @@ class GeneratorBlockEntity(
     @RegisterEnergy
     val sync = GeneratorSync(
         syncedData,
-        { world?.getBlockState(pos)?.get(BlockStateProperties.HORIZONTAL_FACING) ?: net.minecraft.core.Direction.NORTH },
+        { world?.getBlockState(pos)?.getValue(BlockStateProperties.HORIZONTAL_FACING) ?: net.minecraft.core.Direction.NORTH },
         { world?.time }
     )
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
@@ -111,14 +117,14 @@ class GeneratorBlockEntity(
             stack.count = 1
         }
         inventory[slot] = stack
-        markDirty()
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     /**
      * 实现 MachineBlockEntity 的 getInventory 方法
@@ -157,9 +163,9 @@ class GeneratorBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu =
         GeneratorScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(GeneratorSync.NBT_ENERGY_STORED).coerceIn(0L, GeneratorSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -168,9 +174,9 @@ class GeneratorBlockEntity(
         sync.totalBurnTime = nbt.getInt("TotalBurnTime")
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(GeneratorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt("BurnTime", sync.burnTime)
@@ -192,10 +198,10 @@ class GeneratorBlockEntity(
                     sync.totalBurnTime = burnTicks
                     sync.burnTime = burnTicks
                     val remainder = fuelSlot.item.getRecipeRemainder(fuelSlot)
-                    fuelSlot.decrement(1)
+                    fuelSlot.shrink(1)
                     if (fuelSlot.isEmpty && !remainder.isEmpty) setStack(0, remainder.copy())
                     else setStack(0, fuelSlot)
-                    markDirty()
+                    setChanged()
                 }
             }
         }
@@ -211,7 +217,7 @@ class GeneratorBlockEntity(
             }
             sync.burnTime = (sync.burnTime - 1).coerceAtLeast(0)
             sync.energy = sync.amount.toInt().coerceIn(0, Int.MAX_VALUE)
-            markDirty()
+            setChanged()
         }
 
         batteryCharger.tick()
@@ -230,7 +236,7 @@ class GeneratorBlockEntity(
      */
     private fun getFuelTime(stack: ItemStack): Int {
         if (stack.isEmpty) return 0
-        val furnaceTicks = FuelRegistry.INSTANCE.get(stack.item) ?: return 0
+        val furnaceTicks = FuelRegistry.INSTANCE.getValue(stack.item) ?: return 0
         if (furnaceTicks <= 0) return 0
         return (furnaceTicks / GeneratorSync.BURN_TICKS_DIVISOR).coerceAtLeast(1)
     }

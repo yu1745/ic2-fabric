@@ -41,7 +41,7 @@ class BlastFurnaceRecipe(
     override fun getOutput(registry: net.minecraft.core.RegistryAccess): ItemStack = steelOutput.copy()
 
     override fun getRemainder(inventory: Input): net.minecraft.core.NonNullList<ItemStack> {
-        return net.minecraft.core.NonNullList.ofSize(1, ItemStack.EMPTY)
+        return net.minecraft.core.NonNullList.withSize(1, ItemStack.EMPTY)
     }
 
     /**
@@ -58,13 +58,13 @@ class BlastFurnaceRecipe(
 
         override fun setStack(slot: Int, stack: ItemStack) {}
 
-        override fun removeStack(slot: Int): ItemStack = ItemStack.EMPTY
+        override fun removeItemNoUpdate(slot: Int): ItemStack = ItemStack.EMPTY
 
-        override fun removeStack(slot: Int, amount: Int): ItemStack = ItemStack.EMPTY
+        override fun removeItem(slot: Int, amount: Int): ItemStack = ItemStack.EMPTY
 
-        override fun markDirty() {}
+        override fun setChanged() {}
 
-        override fun canPlayerUse(player: net.minecraft.world.entity.player.Player): Boolean = true
+        override fun stillValid(player: net.minecraft.world.entity.player.Player): Boolean = true
     }
 
     companion object {

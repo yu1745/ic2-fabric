@@ -1,5 +1,6 @@
 package buildcraft_addon.content.blockentity
 
+import net.minecraft.core.HolderLookup
 import buildcraft_addon.content.block.SpringBlock
 import ic2_120.registry.annotation.ModBlockEntity
 import ic2_120.registry.type
@@ -32,8 +33,8 @@ class OilSpringBlockEntity(
         }
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putInt("totalSources", totalSources)
         val progressList = CompoundTag()
         pumpProgress.forEach { (uuid, info) ->
@@ -46,8 +47,8 @@ class OilSpringBlockEntity(
         nbt.put("pumpProgress", progressList)
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         totalSources = nbt.getInt("totalSources")
         pumpProgress.clear()
         if (nbt.contains("pumpProgress")) {

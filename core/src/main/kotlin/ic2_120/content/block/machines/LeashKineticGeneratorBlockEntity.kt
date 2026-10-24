@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.LeashKineticGeneratorBlock
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.content.sync.LeashKineticGeneratorSync
@@ -206,23 +211,23 @@ class LeashKineticGeneratorBlockEntity(
         val extracted = minOf(amount, pendingOutputKu.coerceAtLeast(0))
         if (!simulate && extracted > 0) {
             pendingOutputKu = (pendingOutputKu - extracted).coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
         return extracted
     }
 
     private fun markDirtyAndSync() {
-        markDirty()
+        setChanged()
         val world = world ?: return
         if (!world.isClient) {
             val state = world.getBlockState(pos)
             world.updateListeners(pos, state, state, Block.NOTIFY_LISTENERS)
-            (world as? ServerLevel)?.chunkManager?.markForUpdate(pos)
+            (world as? ServerLevel)?.chunkSource?.markForUpdate(pos)
         }
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         pendingOutputKu = nbt.getInt("PendingKu").coerceAtLeast(0)
         if (nbt.containsUuid("LeashedMobUuid")) {
             leashedMobUuid = nbt.getUuid("LeashedMobUuid")
@@ -234,8 +239,8 @@ class LeashKineticGeneratorBlockEntity(
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         nbt.putInt("PendingKu", pendingOutputKu)
         leashedMobUuid?.let { nbt.putUuid("LeashedMobUuid", it) }
         knotUuid?.let { nbt.putUuid("KnotUuid", it) }

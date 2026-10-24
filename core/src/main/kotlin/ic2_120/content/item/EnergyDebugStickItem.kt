@@ -1,11 +1,14 @@
 package ic2_120.content.item
 
+import ic2_120.compat.isClient
+
+import ic2_120.compat.world
+
 import ic2_120.content.block.cables.BaseCableBlock
 import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
-import ic2_120.registry.type
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.context.UseOnContext
@@ -19,9 +22,9 @@ import team.reborn.energy.api.EnergyStorage
  * 右键方块时显示该方块在 Tech Reborn Energy API 下的能量信息（当前储能、容量、是否可输入/输出）。
  */
 @ModItem(name = "energy_debug_stick", tab = CreativeTab.IC2_TOOLS, group = "debug")
-class EnergyDebugStickItem : Item(Item.Settings()) {
+class EnergyDebugStickItem : Item(Item.Properties()) {
 
-    override fun useOnBlock(context: UseOnContext): InteractionResult {
+    override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.world
         val pos = context.blockPos
         val player = context.player ?: return InteractionResult.PASS
@@ -41,7 +44,7 @@ class EnergyDebugStickItem : Item(Item.Settings()) {
         if (storage == null) {
             player.sendMessage(
                 net.minecraft.network.chat.Component.translatable("message.ic2_120.energy_debug_stick.no_energy")
-                    .formatted(ChatFormatting.GRAY),
+                    .withStyle(ChatFormatting.GRAY),
                 true
             )
             return InteractionResult.SUCCESS
@@ -74,7 +77,7 @@ class EnergyDebugStickItem : Item(Item.Settings()) {
             if (extract) "✓" else "—",
             maxInsertOnce,
             maxExtractOnce
-        ).formatted(ChatFormatting.GREEN)
+        ).withStyle(ChatFormatting.GREEN)
         player.sendMessage(msg, true)
 
         // 点击导线时额外显示电网等级与导线数
@@ -84,7 +87,7 @@ class EnergyDebugStickItem : Item(Item.Settings()) {
                 "message.ic2_120.energy_debug_stick.network",
                 network.outputLevel,
                 network.cables.size
-            ).formatted(ChatFormatting.AQUA)
+            ).withStyle(ChatFormatting.AQUA)
             player.sendMessage(networkMsg, true)
         }
         return InteractionResult.SUCCESS

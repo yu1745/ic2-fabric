@@ -1,5 +1,7 @@
 package ic2_120.integration.ftbchunks
 
+import ic2_120.compat.isClient
+
 import dev.ftb.mods.ftbchunks.api.FTBChunksAPI
 import ic2_120.Ic2_120
 import dev.ftb.mods.ftbchunks.api.Protection
@@ -78,7 +80,7 @@ class ClaimProtectionImpl : FTBChunksProtection {
         val manager = api.manager
 
         val server = world.server ?: return false
-        val ownerPlayer: ServerPlayer? = ownerUuid?.let { server.playerManager.getPlayer(it) }
+        val ownerPlayer: ServerPlayer? = ownerUuid?.let { server.playerList.getPlayer(it) }
 
         if (ownerPlayer != null) {
             return manager.shouldPreventInteraction(

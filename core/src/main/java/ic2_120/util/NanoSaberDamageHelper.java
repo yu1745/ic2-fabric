@@ -69,7 +69,7 @@ public final class NanoSaberDamageHelper {
             if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
                 continue;
             }
-            ItemStack stack = player.getEquippedStack(slot);
+            ItemStack stack = player.getItemBySlot(slot);
             if (!stack.isEmpty() && stack.getItem() instanceof QuantumArmorItem) {
                 return true;
             }
@@ -82,7 +82,7 @@ public final class NanoSaberDamageHelper {
             if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
                 continue;
             }
-            ItemStack stack = player.getEquippedStack(slot);
+            ItemStack stack = player.getItemBySlot(slot);
             if (!stack.isEmpty() && stack.getItem() instanceof NanoArmorItem) {
                 return true;
             }

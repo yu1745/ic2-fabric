@@ -31,7 +31,7 @@ import net.minecraft.world.MenuProvider
 
 @ModBlock(name = "rf_engine", registerItem = true, tab = CreativeTab.BUILDCRAFT)
 class RFEngineBlock : BaseEntityBlock(
-    Settings.create().strength(5.0f, 10.0f).nonOpaque()
+    Settings.create().strength(5.0f, 10.0f) .noOcclusion()
 ), EntityBlock {
 
     companion object {
@@ -39,26 +39,23 @@ class RFEngineBlock : BaseEntityBlock(
     }
 
     init {
-        defaultState = stateManager.defaultState.with(BlockStateProperties.FACING, Direction.UP)
+        defaultState = stateManager.defaultBlockState.setValue(BlockStateProperties.FACING, Direction.UP)
     }
 
-    override fun appendProperties(builder: StateDefinition.Builder<Block, BlockState>) {
+    override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
         builder.add(BlockStateProperties.FACING)
     }
 
     override fun rotate(state: BlockState, rotation: Rotation): BlockState {
-        return state.with(BlockStateProperties.FACING, rotation.rotate(state.get(BlockStateProperties.FACING)))
+        return state.setValue(BlockStateProperties.FACING, rotation.rotate(state.getValue(BlockStateProperties.FACING)))
     }
 
-    override fun onUse(
-        state: BlockState, world: Level, pos: BlockPos,
-        player: Player, hand: InteractionHand, hit: BlockHitResult
-    ): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? RFEngineBlockEntity ?: return InteractionResult.PASS
             be.checkRedstonePower()
             if (be is MenuProvider) {
-                player.openHandledScreen(be)
+                player.openMenu(be)
             }
         }
         return InteractionResult.SUCCESS
@@ -67,13 +64,13 @@ class RFEngineBlock : BaseEntityBlock(
     override fun onPlaced(world: Level, pos: BlockPos, state: BlockState, placer: LivingEntity?, itemStack: ItemStack) {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? RFEngineBlockEntity ?: return
-            be.currentDirection = state.get(BlockStateProperties.FACING)
-            be.markDirty()
+            be.currentDirection = state.getValue(BlockStateProperties.FACING)
+            be.setChanged()
         }
     }
 
     override fun getPlacementState(ctx: BlockPlaceContext): BlockState {
-        return defaultState.with(BlockStateProperties.FACING, ctx.side.opposite)
+        return defaultState.setValue(BlockStateProperties.FACING, ctx.side.opposite)
     }
 
     override fun neighborUpdate(state: BlockState, world: Level, pos: BlockPos, sourceBlock: Block, sourcePos: BlockPos, notify: Boolean) {
@@ -82,11 +79,11 @@ class RFEngineBlock : BaseEntityBlock(
         be.checkRedstonePower()
     }
 
-    override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity {
+    override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity {
         return RFEngineBlockEntity(pos, state)
     }
 
-    override fun getRenderType(state: BlockState): RenderShape {
+    override fun getRenderShape(state: BlockState): RenderShape {
         return RenderShape.ENTITYBLOCK_ANIMATED
     }
 

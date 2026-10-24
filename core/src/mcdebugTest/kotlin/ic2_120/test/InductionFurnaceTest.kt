@@ -58,7 +58,7 @@ class InductionFurnaceTest {
     @Test
     fun smeltWithHeatAndRedstone(ctx: TestContext) {
         setupInductionFurnaceHot(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
         tickDrive(ctx, 600) { assertSlotHas(it, it.origin, 2, "minecraft:iron_ingot") }
     }
 
@@ -66,8 +66,8 @@ class InductionFurnaceTest {
     @Test
     fun dualSlot(ctx: TestContext) {
         setupInductionFurnaceHot(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
-        insertItem(ctx, ctx.origin, "minecraft:iron_ore", 1, 1)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ore", 1, 1)
         tickDrive(ctx, 600) {
             assertSlotHas(it, it.origin, 2, "minecraft:iron_ingot")
             assertSlotHas(it, it.origin, 3, "minecraft:iron_ingot")
@@ -100,7 +100,7 @@ class InductionFurnaceTest {
         setBeField(ctx, batbox, "EnergyStored", 40000)
         place(ctx, ctx.origin, "ic2_120:induction_furnace")
         setBeField(ctx, ctx.origin, "EnergyStored", 40000)
-        insertItem(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:iron_ore", 1, 0)
         tickDrive(ctx, 200) {
             assertSlotHas(it, it.origin, 0, "minecraft:iron_ore")
             assertSlotEmpty(it, it.origin, 2)
@@ -121,7 +121,7 @@ class InductionFurnaceTest {
     @Test
     fun invalidInputDirt(ctx: TestContext) {
         setupInductionFurnaceHot(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:dirt", 1, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:dirt", 1, 0)
         tickDrive(ctx, 200) {
             assertSlotHas(it, it.origin, 0, "minecraft:dirt")
             assertSlotEmpty(it, it.origin, 2)

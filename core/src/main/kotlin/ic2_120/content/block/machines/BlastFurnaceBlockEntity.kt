@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.Ic2_120
 import ic2_120.content.block.BlastFurnaceBlock
 import ic2_120.content.fluid.ModFluids
@@ -37,7 +42,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -139,13 +144,13 @@ class BlastFurnaceBlockEntity(
         }
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     private var cachedRecipeItem: net.minecraft.world.item.Item? = null
     private var cachedRecipe: BlastFurnaceRecipe? = null
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is EjectorUpgrade || it.item is PullingUpgrade }),
@@ -153,7 +158,7 @@ class BlastFurnaceBlockEntity(
             ItemInsertRoute(intArrayOf(SLOT_INPUT), matcher = { isBlastRecipeInput(it) })
         ),
         extractSlots = intArrayOf(SLOT_OUTPUT_STEEL, SLOT_OUTPUT_SLAG, SLOT_OUTPUT_EMPTY),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -181,7 +186,7 @@ class BlastFurnaceBlockEntity(
 
         override fun onFinalCommit() {
             sync.airAmount = amount.toInt().coerceAtLeast(0)
-            markDirty()
+            setChanged()
         }
 
         fun tryConsumeAir(droplets: Long): Long {
@@ -238,15 +243,15 @@ class BlastFurnaceBlockEntity(
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_INPUT -> isBlastRecipeInput(stack)
@@ -267,9 +272,9 @@ class BlastFurnaceBlockEntity(
         BlastFurnaceScreenHandler(syncId, playerInventory, this,
             net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         temperature = nbt.getInt(NBT_TEMPERATURE).coerceIn(0, BlastFurnaceSync.TEMP_MAX)
         heatAccum = nbt.getLong(NBT_HEAT_ACCUM)
@@ -277,7 +282,7 @@ class BlastFurnaceBlockEntity(
         sync.temperature = temperature
         airTankInternal.setStoredAir(nbt.getLong(NBT_AIR_AMOUNT).coerceAtLeast(0L))
         // 优先从 NBT 恢复；旧存档没有此 key 时从 progress 反推，避免 reload 后 need 暴涨
-        airConsumedThisSteel = if (nbt.contains(NBT_AIR_CONSUMED)) {
+        airConsumedThisSteel = if (nbt.hasProperty(NBT_AIR_CONSUMED)) {
             nbt.getLong(NBT_AIR_CONSUMED).coerceAtLeast(0L)
         } else {
             val progressMax = getProgressMax(temperature)
@@ -287,9 +292,9 @@ class BlastFurnaceBlockEntity(
         }
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putLong(NBT_HU_RECEIVED, huReceivedThisTick)
         nbt.putLong(NBT_HU_BUFFER, huBuffer)
@@ -311,7 +316,7 @@ class BlastFurnaceBlockEntity(
         huBuffer += accepted
         huReceivedThisTick += accepted
         heatReceivedLastTick = true
-        markDirty()
+        setChanged()
         return accepted
     }
 
@@ -433,11 +438,11 @@ class BlastFurnaceBlockEntity(
                 val recipe = getRecipeForInput(input) ?: return
                 val steelOutput = BlastFurnaceRecipe.getSteelOutput(recipe)
                 val slagOutput = BlastFurnaceRecipe.getSlagOutput(recipe)
-                input.decrement(1)
+                input.shrink(1)
                 if (outputSteel.isEmpty) setStack(SLOT_OUTPUT_STEEL, steelOutput)
-                else outputSteel.increment(steelOutput.count)
+                else outputSteel.grow(steelOutput.count)
                 if (outputSlag.isEmpty) setStack(SLOT_OUTPUT_SLAG, slagOutput)
-                else outputSlag.increment(slagOutput.count)
+                else outputSlag.grow(slagOutput.count)
                 sync.progress = 0
                 airConsumedThisSteel = 0L
                 markDirtyThrottled()
@@ -458,7 +463,7 @@ class BlastFurnaceBlockEntity(
             setActiveState(world, pos, state, false)
         }
 
-        markDirty()
+        setChanged()
         sync.huInput = huBuffer.toInt()
         huReceivedThisTick = 0L
         heatReceivedLastTick = false
@@ -492,13 +497,13 @@ class BlastFurnaceBlockEntity(
             val emptySlot = getStack(SLOT_OUTPUT_EMPTY)
             val emptyCell = ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "empty_cell")))
             val canAcceptEmpty = emptySlot.isEmpty ||
-                (ItemStack.areItemsEqual(emptySlot, emptyCell) && emptySlot.count + 1 <= emptyCell.maxCount)
+                (ItemStack.areItemsEqual(emptySlot, emptyCell) && emptySlot.count + 1 <= emptyCell.maxStackSize)
             if (!canAcceptEmpty) return
 
-            airSlot.decrement(1)
+            airSlot.shrink(1)
             if (airSlot.isEmpty) setStack(SLOT_AIR_INPUT, ItemStack.EMPTY)
             if (emptySlot.isEmpty) setStack(SLOT_OUTPUT_EMPTY, emptyCell)
-            else emptySlot.increment(1)
+            else emptySlot.grow(1)
             airTankInternal.tryFillAir(FluidConstants.BUCKET)
             return
         }
@@ -519,14 +524,14 @@ class BlastFurnaceBlockEntity(
                 val emptyOutput = getStack(SLOT_OUTPUT_EMPTY)
                 val canAcceptEmpty = emptyOutput.isEmpty ||
                     (ItemStack.areItemsEqual(emptyOutput, emptyContainer) &&
-                        emptyOutput.count + emptyContainer.count <= emptyContainer.maxCount)
+                        emptyOutput.count + emptyContainer.count <= emptyContainer.maxStackSize)
                 if (!canAcceptEmpty) return@use
 
                 tx.commit()
-                airSlot.decrement(1)
+                airSlot.shrink(1)
                 if (airSlot.isEmpty) setStack(SLOT_AIR_INPUT, ItemStack.EMPTY)
                 if (emptyOutput.isEmpty) setStack(SLOT_OUTPUT_EMPTY, emptyContainer)
-                else emptyOutput.increment(emptyContainer.count)
+                else emptyOutput.grow(emptyContainer.count)
                 airTankInternal.tryFillAir(FluidConstants.BUCKET)
                 return
             }
@@ -567,8 +572,8 @@ class BlastFurnaceBlockEntity(
         val recipe = getRecipeForInput(getStack(SLOT_INPUT)) ?: return true
         val steelOut = BlastFurnaceRecipe.getSteelOutput(recipe)
         val slagOut = BlastFurnaceRecipe.getSlagOutput(recipe)
-        val steelOk = steel.isEmpty || (ItemStack.areItemsEqual(steel, steelOut) && steel.count + steelOut.count <= steel.maxCount)
-        val slagOk = slag.isEmpty || (ItemStack.areItemsEqual(slag, slagOut) && slag.count + slagOut.count <= slag.maxCount)
+        val steelOk = steel.isEmpty || (ItemStack.areItemsEqual(steel, steelOut) && steel.count + steelOut.count <= steel.maxStackSize)
+        val slagOk = slag.isEmpty || (ItemStack.areItemsEqual(slag, slagOut) && slag.count + slagOut.count <= slag.maxStackSize)
         return steelOk && slagOk
     }
 

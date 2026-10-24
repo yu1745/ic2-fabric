@@ -37,7 +37,7 @@ class RecyclerTest {
     @Test
     fun consumeInputWithBattery(ctx: TestContext) {
         setupRecyclerBattery(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:cobblestone", 10, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:cobblestone", 10, 0)
         waitUntil(ctx, invCountLessThan(ctx.origin, 0, 10), 15 * 20)
         if (getSlotCount(ctx, ctx.origin, 0) >= 10) {
             throw AssertionError("expected recycler to consume input items, still ${getSlotCount(ctx, ctx.origin, 0)}")
@@ -48,7 +48,7 @@ class RecyclerTest {
     @Test
     fun noPowerIdle(ctx: TestContext) {
         place(ctx, ctx.origin, "ic2_120:recycler")
-        insertItem(ctx, ctx.origin, "minecraft:cobblestone", 10, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:cobblestone", 10, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:cobblestone")
         assertSlotEmpty(ctx, ctx.origin, 1)
@@ -58,7 +58,7 @@ class RecyclerTest {
     @Test
     fun invalidInputStick(ctx: TestContext) {
         setupRecyclerBattery(ctx)
-        insertItem(ctx, ctx.origin, "minecraft:stick", 10, 0)
+        moveItemStackTo(ctx, ctx.origin, "minecraft:stick", 10, 0)
         waitTicks(ctx, 200)
         assertSlotHas(ctx, ctx.origin, 0, "minecraft:stick")
     }

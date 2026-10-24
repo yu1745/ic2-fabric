@@ -23,7 +23,7 @@ object QuantumLeggingsSpeedController {
             val player = client.player ?: return@register
             if (player.hasVehicle() || player.abilities.flying || player.isSpectator) return@register
 
-            val stack = player.getEquippedStack(EquipmentSlot.LEGS)
+            val stack = player.getItemBySlot(EquipmentSlot.LEGS)
             val leggings = stack.item as? QuantumLeggings ?: return@register
             val tier = QuantumLeggings.getSpeedTier(stack)
             if (tier <= 0 || leggings.getEnergy(stack) <= 0L) return@register

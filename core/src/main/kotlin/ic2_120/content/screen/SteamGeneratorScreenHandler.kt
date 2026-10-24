@@ -7,7 +7,7 @@ import ic2_120.content.syncs.SyncedDataView
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ContainerData
@@ -30,25 +30,25 @@ class SteamGeneratorScreenHandler(
     val sync = SteamGeneratorSync(SyncedDataView(propertyDelegate))
 
     init {
-        checkSize(blockInventory, 0)
-        addProperties(propertyDelegate)
+        checkContainerSize(blockInventory, 0)
+        addDataSlots(propertyDelegate)
         // 无槽位 — 对齐 ic2_origin ContainerSteamGenerator
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack = ItemStack.EMPTY
+    override fun quickMoveStack(player: Player, index: Int): ItemStack = ItemStack.EMPTY
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is SteamGeneratorBlock &&
-                player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+                player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         context.get({ world, pos ->
             val be = world.getBlockEntity(pos) as? SteamGeneratorBlockEntity ?: return@get
             val event = BUTTON_EVENTS.getOrNull(id) ?: return@get
             be.onNetworkEvent(event)
-            be.markDirty()
+            be.setChanged()
         }, false)
         return true
     }

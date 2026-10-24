@@ -9,7 +9,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 
@@ -21,8 +21,8 @@ class FluidHeatGeneratorScreen(
 ) : AbstractContainerScreen<FluidHeatGeneratorScreenHandler>(handler, playerInventory, title) {
 
     private val fluidSprite by lazy {
-        FluidRenderHandlerRegistry.INSTANCE.get(ModFluids.BIOFUEL_STILL)
-            ?.getFluidSprites(null, null, ModFluids.BIOFUEL_STILL.defaultState)?.getOrNull(0)
+        FluidRenderHandlerRegistry.INSTANCE.getValue(ModFluids.BIOFUEL_STILL)
+            ?.getFluidSprites(null, null, ModFluids.BIOFUEL_STILL.defaultBlockState)?.getOrNull(0)
     }
 
     init {

@@ -22,19 +22,19 @@ object FoamSprayerTooltipHandler {
             val curBuckets = "%.1f".format(amt.toDouble() / FluidConstants.BUCKET.toDouble())
             lines.add(
                 Component.translatable("tooltip.ic2_120.foam_sprayer.fluid", curBuckets, capBuckets)
-                    .formatted(ChatFormatting.GRAY)
+                    .withStyle(ChatFormatting.GRAY)
             )
             val spraysLeft = (amt / FoamSprayerItem.DROPLETS_PER_BLOCK).toInt()
             lines.add(
                 Component.translatable("tooltip.ic2_120.foam_sprayer.blocks_left", spraysLeft)
-                    .formatted(ChatFormatting.GRAY)
+                    .withStyle(ChatFormatting.GRAY)
             )
             val keyLine = Component.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click")
-                .formatted(ChatFormatting.YELLOW)
+                .withStyle(ChatFormatting.YELLOW)
             if (FoamSprayerItem.isMultiMode(stack)) {
-                lines.add(Component.translatable("tooltip.ic2_120.foam_sprayer.mode_multi", keyLine).formatted(ChatFormatting.DARK_AQUA))
+                lines.add(Component.translatable("tooltip.ic2_120.foam_sprayer.mode_multi", keyLine).withStyle(ChatFormatting.DARK_AQUA))
             } else {
-                lines.add(Component.translatable("tooltip.ic2_120.foam_sprayer.mode_single", keyLine).formatted(ChatFormatting.DARK_AQUA))
+                lines.add(Component.translatable("tooltip.ic2_120.foam_sprayer.mode_single", keyLine).withStyle(ChatFormatting.DARK_AQUA))
             }
         }
     }

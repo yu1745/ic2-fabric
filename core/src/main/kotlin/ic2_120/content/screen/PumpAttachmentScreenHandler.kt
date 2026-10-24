@@ -1,12 +1,16 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.world
+
+import ic2_120.compat.pos
+
 import ic2_120.content.block.pipes.PipeBlockEntity
 import ic2_120.content.block.pipes.PumpAttachmentBlock
 import ic2_120.content.upgrade.FluidPipeUpgradeComponent
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
@@ -44,7 +48,7 @@ class PumpAttachmentScreenHandler(
         }
     }
 
-    override fun quickMove(player: Player, index: Int): ItemStack {
+    override fun quickMoveStack(player: Player, index: Int): ItemStack {
         return ItemStack.EMPTY
     }
 
@@ -74,17 +78,17 @@ class PumpAttachmentScreenHandler(
         super.onSlotClick(slotIndex, button, actionType, player)
     }
 
-    override fun canUse(player: Player): Boolean =
+    override fun stillValid(player: Player): Boolean =
         context.get({ world, pos ->
             world.getBlockState(pos).block is PumpAttachmentBlock &&
-                player.squaredDistanceTo(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
+                player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) <= 64.0
         }, true)
 
     /** 真实容器仅作为过滤样本；设置后放回背包，不占用过滤槽。 */
     private fun returnCursorToInventory() {
         val returning = cursorStack.copy()
         if (returning.isEmpty) return
-        playerInventory.insertStack(returning)
+        playerInventory.safeInsert(returning)
         cursorStack = if (returning.isEmpty) ItemStack.EMPTY else returning
     }
 

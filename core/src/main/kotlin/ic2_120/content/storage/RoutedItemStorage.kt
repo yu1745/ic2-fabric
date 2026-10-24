@@ -22,7 +22,7 @@ class RoutedItemStorage(
     private val slotValidator: (Int, ItemStack) -> Boolean,
     val insertRoutes: List<ItemInsertRoute>,
     val extractSlots: IntArray,
-    private val markDirty: () -> Unit
+    private val setChanged: () -> Unit
 ) : SnapshotParticipant<MutableList<ItemStack>>(), SlottedStorage<ItemVariant> {
 
     /**
@@ -113,7 +113,7 @@ class RoutedItemStorage(
     }
 
     override fun onFinalCommit() {
-        markDirty()
+        setChanged()
     }
 
     override fun supportsInsertion(): Boolean = insertRoutes.isNotEmpty()
@@ -144,7 +144,7 @@ class RoutedItemStorage(
                 val moved = minOf(remaining, room.toLong())
                 if (moved <= 0L) continue
                 updateSnapshots(transaction)
-                existing.increment(moved.toInt())
+                existing.grow(moved.toInt())
                 remaining -= moved
                 movedTotal += moved
             }
@@ -190,7 +190,7 @@ class RoutedItemStorage(
             if (extracted >= stack.count.toLong()) {
                 inventory[slot] = ItemStack.EMPTY
             } else {
-                stack.decrement(extracted.toInt())
+                stack.shrink(extracted.toInt())
             }
             remaining -= extracted
             extractedTotal += extracted
@@ -241,7 +241,7 @@ class RoutedItemStorage(
 
     private fun slotLimit(route: ItemInsertRoute, stack: ItemStack): Int {
         route.maxPerSlot?.let { return it }
-        return minOf(maxCountPerStackProvider(), stack.maxCount)
+        return minOf(maxCountPerStackProvider(), stack.maxStackSize)
     }
 
     /**
@@ -261,7 +261,7 @@ class RoutedItemStorage(
 
         /**
          * 本槽已有物品或给定 probe 时的最大堆叠：取覆盖本槽且 matcher 通过的 route 的
-         * [ItemInsertRoute.maxPerSlot] 中最严格者，无显式限制时取 min(maxCountPerStack, maxCount)。
+         * [ItemInsertRoute.maxPerSlot] 中最严格者，无显式限制时取 min(net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE, maxCount)。
          */
         private fun perSlotLimit(stack: ItemStack): Int {
             var strict: Int? = null
@@ -271,11 +271,11 @@ class RoutedItemStorage(
                 val currentStrict = strict
                 if (currentStrict == null || max < currentStrict) strict = max
             }
-            return strict ?: minOf(maxCountPerStackProvider(), stack.maxCount)
+            return strict ?: minOf(maxCountPerStackProvider(), stack.maxStackSize)
         }
 
         /**
-         * 空槽（blank resource）的容量上界：可插入槽取覆盖 route 的最严格 maxPerSlot（无则 maxCountPerStack）；
+         * 空槽（blank resource）的容量上界：可插入槽取覆盖 route 的最严格 maxPerSlot（无则 net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE）；
          * 纯抽取槽（无 route 覆盖）返回 0，表明该槽不接受任何插入。
          */
         private fun emptyCapacity(): Int {
@@ -318,7 +318,7 @@ class RoutedItemStorage(
                 if (currentStrict == null || max < currentStrict) strictLimit = max
             }
             if (!matched) return 0L
-            val limit = strictLimit ?: minOf(maxCountPerStackProvider(), probe.maxCount)
+            val limit = strictLimit ?: minOf(maxCountPerStackProvider(), probe.maxStackSize)
             val existing = inventory[beIndex]
             if (existing.isEmpty) {
                 val moved = minOf(maxAmount, limit.toLong()).coerceAtLeast(0L)
@@ -335,7 +335,7 @@ class RoutedItemStorage(
             val moved = minOf(maxAmount, room.toLong())
             if (moved <= 0L) return 0L
             updateSnapshots(transaction)
-            existing.increment(moved.toInt())
+            existing.grow(moved.toInt())
             return moved
         }
 
@@ -351,7 +351,7 @@ class RoutedItemStorage(
             if (moved >= stack.count.toLong()) {
                 inventory[beIndex] = ItemStack.EMPTY
             } else {
-                stack.decrement(moved.toInt())
+                stack.shrink(moved.toInt())
             }
             return moved
         }

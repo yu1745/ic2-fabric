@@ -1,5 +1,10 @@
 package ic2_120.content.block.machines
 
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.TradeOMatBlock
 import ic2_120.content.block.WirelessTradeOMatBlock
 import ic2_120.content.screen.TradeOMatScreenHandler
@@ -13,7 +18,7 @@ import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -59,7 +64,7 @@ abstract class TradeOMatBlockEntityBase(
         private const val NBT_TOTAL_TRADES = "TotalTrades"
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     val syncedData = SyncedData()
 
     var totalTrades: Int = 0
@@ -68,15 +73,15 @@ abstract class TradeOMatBlockEntityBase(
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
-    override fun markDirty() { super.markDirty() }
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
+    override fun setChanged() { super.setChanged() }
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when (slot) {
         SLOT_DEMAND, SLOT_OFFER -> true
@@ -125,16 +130,16 @@ abstract class TradeOMatBlockEntityBase(
         buf.writeBoolean(isOwner(player))
     }
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
         totalTrades = nbt.getInt(NBT_TOTAL_TRADES)
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
         nbt.putInt(NBT_TOTAL_TRADES, totalTrades)
     }
@@ -162,7 +167,7 @@ abstract class TradeOMatBlockEntityBase(
         val offerStack = offer.copy()
         if (output.isEmpty) {
             // ok
-        } else if (!ItemStack.areItemsEqual(output, offerStack) || output.count + offerStack.count > offerStack.maxCount) {
+        } else if (!ItemStack.areItemsEqual(output, offerStack) || output.count + offerStack.count > offerStack.maxStackSize) {
             setActiveState(world, pos, world.getBlockState(pos), false)
             return
         }
@@ -175,17 +180,17 @@ abstract class TradeOMatBlockEntityBase(
             return
         }
 
-        input.decrement(demand.count)
+        input.shrink(demand.count)
         if (input.isEmpty) setStack(SLOT_INPUT, ItemStack.EMPTY)
 
         val demandVariant = ItemVariant.of(demand)
         distributeToAdjacent(world, pos, demandVariant, demand.count.toLong())
 
         if (output.isEmpty) setStack(SLOT_OUTPUT, offerStack.copy())
-        else output.increment(offerStack.count)
+        else output.grow(offerStack.count)
 
         totalTrades++
-        markDirty()
+        setChanged()
         setActiveState(world, pos, world.getBlockState(pos), true)
     }
 

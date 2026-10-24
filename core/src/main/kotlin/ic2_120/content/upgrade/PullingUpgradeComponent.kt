@@ -1,5 +1,7 @@
 package ic2_120.content.upgrade
 
+import ic2_120.compat.time
+
 import ic2_120.content.item.PullingUpgrade
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant
@@ -113,7 +115,7 @@ object PullingUpgradeComponent {
         // 输入槽全部已满（非空且达到堆叠上限）时，任何物品都无法再抽入，跳过整个方向循环
         if (inputSlotIndices.all { slot ->
                 val stack = inventory.getStack(slot)
-                !stack.isEmpty && stack.count >= stack.maxCount
+                !stack.isEmpty && stack.count >= stack.maxStackSize
             }) return false
 
         // IValidInputItem 快速否定（P1）：配方类机器按 (RecipeType, Item) 布尔缓存
@@ -163,13 +165,13 @@ object PullingUpgradeComponent {
                         val current = inventory.getStack(slotIndex)
                         if (!current.isEmpty) {
                             if (current.item != item) continue
-                            if (current.count >= current.maxCount) continue
+                            if (current.count >= current.maxStackSize) continue
                         }
 
                         // 检查机器是否接受该物品（完整语义裁决，仅对放行候选执行一次）
                         if (!inventory.isValid(slotIndex, variant.toStack(1))) continue
 
-                        val space = if (current.isEmpty) current.maxCount else current.maxCount - current.count
+                        val space = if (current.isEmpty) current.maxStackSize else current.maxStackSize - current.count
                         if (space <= 0) continue
 
                         // 受每候选配额限制，从源容器中抽取物品

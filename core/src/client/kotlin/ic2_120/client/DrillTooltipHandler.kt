@@ -57,9 +57,9 @@ object DrillTooltipHandler {
                             else -> "还能挖 "
                         }
                     )
-                        .formatted(ChatFormatting.GRAY)
-                        .append(Component.literal("$remainingBlocks").formatted(ChatFormatting.YELLOW))
-                        .append(Component.literal(" 次").formatted(ChatFormatting.GRAY))
+                        .withStyle(ChatFormatting.GRAY)
+                        .append(Component.literal("$remainingBlocks").withStyle(ChatFormatting.YELLOW))
+                        .append(Component.literal(" 次").withStyle(ChatFormatting.GRAY))
                 )
             }
 
@@ -69,12 +69,12 @@ object DrillTooltipHandler {
                 lines.add(
                     Component.literal(
                         if (silkEnabled) "当前模式: 精准采集" else "当前模式: 时运III + 效率III"
-                    ).formatted(ChatFormatting.GRAY)
+                    ).withStyle(ChatFormatting.GRAY)
                 )
                 lines.add(
                     Component.literal("精准采集按键: ")
-                        .formatted(ChatFormatting.GRAY)
-                        .append(Component.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").formatted(ChatFormatting.YELLOW))
+                        .withStyle(ChatFormatting.GRAY)
+                        .append(Component.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").withStyle(ChatFormatting.YELLOW))
                 )
             }
 
@@ -83,12 +83,12 @@ object DrillTooltipHandler {
                 lines.add(
                     Component.translatable(
                         if (shearEnabled) "tooltip.ic2_120.chainsaw.mode_shear" else "tooltip.ic2_120.chainsaw.mode_normal"
-                    ).formatted(ChatFormatting.GRAY)
+                    ).withStyle(ChatFormatting.GRAY)
                 )
                 lines.add(
                     Component.translatable("tooltip.ic2_120.chainsaw.toggle_mode")
-                        .formatted(ChatFormatting.GRAY)
-                        .append(Component.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").formatted(ChatFormatting.YELLOW))
+                        .withStyle(ChatFormatting.GRAY)
+                        .append(Component.translatable("tooltip.ic2_120.foam_sprayer.alt_right_click").withStyle(ChatFormatting.YELLOW))
                 )
             }
         }

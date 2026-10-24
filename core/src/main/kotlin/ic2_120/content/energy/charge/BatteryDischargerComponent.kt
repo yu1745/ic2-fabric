@@ -34,12 +34,12 @@ class BatteryDischargerComponent(
         // 红石转化：无视 canDischargeNow / maxDemand
         val stack = inventory.getStack(batterySlot)
         if (!stack.isEmpty && stack.item === Items.REDSTONE) {
-            stack.decrement(1)
+            stack.shrink(1)
             inventory.setStack(batterySlot, stack)
             return REDSTONE_EU_PER_ITEM
         }
         if (!stack.isEmpty && stack.item is EnergiumDust) {
-            stack.decrement(1)
+            stack.shrink(1)
             inventory.setStack(batterySlot, stack)
             return ENERGIUM_DUST_EU_PER_ITEM
         }

@@ -1,5 +1,7 @@
 package ic2_120.content.worldgen
 
+import ic2_120.compat.world
+
 import com.mojang.serialization.Codec
 import ic2_120.config.Ic2Config
 import net.minecraft.core.registries.BuiltInRegistries

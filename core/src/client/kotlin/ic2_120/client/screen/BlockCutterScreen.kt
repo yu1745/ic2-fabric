@@ -8,7 +8,7 @@ import ic2_120.content.sync.BlockCutterSync
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
@@ -87,7 +87,7 @@ class BlockCutterScreen(
 
         // 刀片警告纹理 (180,21)-(210,47) = 30×26
         val bladeTooWeak = handler.sync.bladeTooWeak != 0
-        val bladeMissing = !handler.getSlot(BlockCutterScreenHandler.SLOT_BLADE_INDEX).hasStack()
+        val bladeMissing = !handler.getSlot(BlockCutterScreenHandler.SLOT_BLADE_INDEX) .hasItem()
         if (bladeTooWeak) {
             context.drawTexture(
                 TEXTURE, left + BLADE_WARN_X, top + BLADE_WARN_Y,

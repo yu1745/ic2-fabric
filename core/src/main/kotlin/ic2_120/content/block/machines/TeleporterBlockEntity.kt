@@ -1,5 +1,11 @@
+import ic2_120.compat.time
+import ic2_120.compat.isClient
+import ic2_120.compat.pos
+import ic2_120.compat.world
+
 ﻿package ic2_120.content.block.machines
 
+import net.minecraft.core.HolderLookup
 import ic2_120.content.block.ITieredMachine
 import ic2_120.content.block.TeleporterBlock
 import kotlin.math.ceil
@@ -32,7 +38,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.monster.Enemy
 import net.minecraft.world.entity.animal.Animal
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
@@ -82,8 +88,8 @@ class TeleporterBlockEntity(
 
     companion object {
         const val TELEPORTER_TIER = 4
-        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "machine.teleporter.charge"))
-        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.of(ResourceLocation.fromNamespaceAndPath("ic2", "machine.teleporter.use"))
+        private val TELEPORTER_CHARGE_SOUND: SoundEvent = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "machine.teleporter.charge"))
+        private val TELEPORTER_USE_SOUND: SoundEvent = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath("ic2", "machine.teleporter.use"))
 
         const val SLOT_UPGRADE_0 = 0
         const val SLOT_UPGRADE_1 = 1
@@ -112,17 +118,17 @@ class TeleporterBlockEntity(
         private fun normalizeRange(value: Int): Int = if (value >= 2) TELEPORT_RANGE_MAX else TELEPORT_RANGE_MIN
     }
 
-    private val inventory = NonNullList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)
+    private val inventory = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY)
     @RegisterItemStorage
     val itemStorage = RoutedItemStorage(
         inventory = inventory,
-        maxCountPerStackProvider = { maxCountPerStack },
+        maxCountPerStackProvider = { net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE },
         slotValidator = { slot, stack -> isValid(slot, stack) },
         insertRoutes = listOf(
             ItemInsertRoute(SLOT_UPGRADE_INDICES, matcher = { it.item is IUpgradeItem }, maxPerSlot = 1)
         ),
         extractSlots = intArrayOf(*SLOT_UPGRADE_INDICES),
-        markDirty = { markDirty() }
+        setChanged = { setChanged() }
     )
 
     override val routedItemStorage get() = itemStorage
@@ -170,16 +176,16 @@ class TeleporterBlockEntity(
     override fun size(): Int = INVENTORY_SIZE
     override fun isEmpty(): Boolean = inventory.all { it.isEmpty }
     override fun getStack(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun removeStack(slot: Int, amount: Int): ItemStack = ContainerHelper.splitStack(inventory, slot, amount)
-    override fun removeStack(slot: Int): ItemStack = ContainerHelper.removeStack(inventory, slot)
+    override fun removeItem(slot: Int, amount: Int): ItemStack = ContainerHelper.removeItem(inventory, slot, amount)
+    override fun removeItemNoUpdate(slot: Int): ItemStack = ContainerHelper.takeItem(inventory, slot)
     override fun clear() = inventory.clear()
-    override fun canPlayerUse(player: Player): Boolean = Container.canPlayerUse(this, player)
-    override fun markDirty() = super.markDirty()
+    override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
+    override fun setChanged() = super.setChanged()
 
     override fun setStack(slot: Int, stack: ItemStack) {
         inventory[slot] = stack
-        if (stack.count > maxCountPerStack) stack.count = maxCountPerStack
-        markDirty()
+        if (stack.count > net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE) stack.count = net.minecraft.world.item.Item.ABSOLUTE_MAX_STACK_SIZE
+        setChanged()
     }
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
@@ -195,7 +201,7 @@ class TeleporterBlockEntity(
         sync.targetX = pos.x
         sync.targetY = pos.y
         sync.targetZ = pos.z
-        markDirty()
+        setChanged()
     }
 
     override fun writeScreenOpeningData(player: ServerPlayer, buf: FriendlyByteBuf) {
@@ -208,9 +214,9 @@ class TeleporterBlockEntity(
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): net.minecraft.world.inventory.AbstractContainerMenu =
         TeleporterScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage)
 
-    override fun readNbt(nbt: CompoundTag) {
-        super.readNbt(nbt)
-        ContainerHelper.readNbt(nbt, inventory)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
+        ContainerHelper.loadAllItems(nbt, inventory)
         syncedData.readNbt(nbt)
 
         sync.amount = nbt.getLong(TeleporterSync.NBT_ENERGY_STORED)
@@ -226,8 +232,8 @@ class TeleporterBlockEntity(
         }
 
         teleportCooldown = nbt.getInt(NBT_COOLDOWN).coerceAtLeast(0)
-        chargingEntityUuid = if (nbt.contains(NBT_CHARGING_ENTITY)) nbt.getUuid(NBT_CHARGING_ENTITY) else null
-        chargingTargetPos = if (nbt.contains(NBT_CHARGING_TARGET_X)) {
+        chargingEntityUuid = if (nbt.hasProperty(NBT_CHARGING_ENTITY)) nbt.getUuid(NBT_CHARGING_ENTITY) else null
+        chargingTargetPos = if (nbt.hasProperty(NBT_CHARGING_TARGET_X)) {
             BlockPos(nbt.getInt(NBT_CHARGING_TARGET_X), nbt.getInt(NBT_CHARGING_TARGET_Y), nbt.getInt(NBT_CHARGING_TARGET_Z))
         } else {
             null
@@ -249,9 +255,9 @@ class TeleporterBlockEntity(
         sync.teleportRange = teleportRange
     }
 
-    override fun writeNbt(nbt: CompoundTag) {
-        super.writeNbt(nbt)
-        ContainerHelper.writeNbt(nbt, inventory)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
+        ContainerHelper.saveAllItems(nbt, inventory)
         syncedData.writeNbt(nbt)
 
         nbt.putBoolean("RedstoneInverted", redstoneInverted)
@@ -342,7 +348,7 @@ class TeleporterBlockEntity(
         val entity = world.getOtherEntities(null, getActivationBox(pos)) {
             it.isAlive && !it.hasVehicle() && !it.hasPassengers()
         }
-            .minByOrNull { it.squaredDistanceTo(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5) }
+            .minByOrNull { it.distanceToSqr(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5) }
 
         if (entity == null) {
             clearCharging()
@@ -383,10 +389,10 @@ class TeleporterBlockEntity(
 
             var invWeight = 0.0
             for (stack in entity.inventory.main) {
-                if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxCount.toDouble().coerceAtLeast(1.0))
+                if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
             }
             for (stack in entity.inventory.offHand) {
-                if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxCount.toDouble().coerceAtLeast(1.0))
+                if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
             }
             weight += floor(invWeight).toInt()
             return weight.coerceAtMost(5100)
@@ -417,7 +423,7 @@ class TeleporterBlockEntity(
         sync.chargeProgress = 0
         sync.chargeMax = chargeTicksMax
         world?.playSound(null, pos, TELEPORTER_CHARGE_SOUND, SoundSource.BLOCKS, 0.8f, 1.0f)
-        markDirty()
+        setChanged()
     }
 
     private fun tickCharging(world: ServerLevel?, pos: BlockPos, state: BlockState, targetBe: TeleporterBlockEntity): Boolean {
@@ -461,7 +467,7 @@ class TeleporterBlockEntity(
                     1.0f
                 )
             }
-            markDirty()
+            setChanged()
             return true
         }
 
@@ -493,8 +499,8 @@ class TeleporterBlockEntity(
             sync.cooldown = cooldownTicks
             targetBe.sync.cooldown = cooldownTicks
             clearCharging()
-            markDirty()
-            targetBe.markDirty()
+            setChanged()
+            targetBe.setChanged()
             setActiveState(serverWorld, pos, state, true)
             return true
         }
@@ -539,7 +545,7 @@ class TeleporterBlockEntity(
         if (teleportRange == clamped) return
         teleportRange = clamped
         sync.teleportRange = clamped
-        markDirty()
+        setChanged()
     }
 
     fun getTeleportRange(): Int = teleportRange

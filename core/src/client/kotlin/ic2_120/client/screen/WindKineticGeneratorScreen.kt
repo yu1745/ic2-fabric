@@ -5,7 +5,7 @@ import ic2_120.content.screen.WindKineticGeneratorScreenHandler
 import ic2_120.registry.annotation.ModScreen
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 
@@ -33,7 +33,7 @@ class WindKineticGeneratorScreen(
         val generatedKu = handler.sync.generatedKu.coerceAtLeast(0)
         val blocked = handler.sync.isStuck != 0
         val windInsufficient = generatedKu == 0 && !blocked
-        val hasRotor = handler.slots.isNotEmpty() && handler.slots[0].hasStack()
+        val hasRotor = handler.slots.isNotEmpty() && handler.slots[0] .hasItem()
 
         // 标题居中于 y=6
         context.drawText(textRenderer, title, x + (175 - textRenderer.getWidth(title)) / 2, y + 6, 0x404040, false)

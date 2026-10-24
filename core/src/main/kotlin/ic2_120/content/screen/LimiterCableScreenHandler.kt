@@ -1,12 +1,18 @@
 package ic2_120.content.screen
 
+import ic2_120.compat.stack
+
+import ic2_120.compat.isClient
+
+import ic2_120.compat.world
+
 import ic2_120.content.block.cables.CableBlockEntity
 import ic2_120.content.block.energy.EnergyNetworkManager
 import ic2_120.registry.annotation.ModScreenHandler
 import ic2_120.registry.annotation.ScreenFactory
 import ic2_120.registry.type
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.player.Container
+import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.world.inventory.SimpleContainerData
@@ -55,8 +61,8 @@ class LimiterCableScreenHandler(
     /** 32-bit limit value split across two 16-bit ContainerData entries. */
     var limit: Long
         get() {
-            val low = propertyDelegate.get(PROP_LOW).toLong() and 0xFFFFL
-            val high = propertyDelegate.get(PROP_HIGH).toLong() and 0xFFFFL
+            val low = propertyDelegate.getValue(PROP_LOW).toLong() and 0xFFFFL
+            val high = propertyDelegate.getValue(PROP_HIGH).toLong() and 0xFFFFL
             return (high shl 16) or low
         }
         set(value) {
@@ -65,7 +71,7 @@ class LimiterCableScreenHandler(
         }
 
     init {
-        addProperties(propertyDelegate)
+        addDataSlots(propertyDelegate)
 
         // Player inventory
         for (row in 0 until 3) {
@@ -79,7 +85,7 @@ class LimiterCableScreenHandler(
         }
     }
 
-    override fun onButtonClick(player: Player, id: Int): Boolean {
+    override fun clickMenuButton(player: Player, id: Int): Boolean {
         val world = player.world
         if (world.isClient) return true
         val be = world.getBlockEntity(pos) as? CableBlockEntity ?: return false
@@ -99,32 +105,32 @@ class LimiterCableScreenHandler(
         val newLimit = (current + step).coerceIn(0, 8192)
         if (newLimit != current) {
             be.configuredLimit = newLimit
-            be.markDirty()
+            be.setChanged()
             EnergyNetworkManager.invalidateAt(world, pos)
             this.limit = newLimit
         }
         return true
     }
 
-    override fun canUse(player: Player): Boolean = true
+    override fun stillValid(player: Player): Boolean = true
 
-    override fun quickMove(player: Player, slotIndex: Int): ItemStack {
+    override fun quickMoveStack(player: Player, slotIndex: Int): ItemStack {
         var moved = ItemStack.EMPTY
         val slot = slots[slotIndex]
-        if (!slot.hasStack()) return ItemStack.EMPTY
+        if (!slot .hasItem()) return ItemStack.EMPTY
         val stack = slot.stack
         moved = stack.copy()
 
         if (slotIndex < 27) {
             // Player inventory → hotbar
-            if (!insertItem(stack, 27, 36, false)) return ItemStack.EMPTY
+            if (!moveItemStackTo(stack, 27, 36, false)) return ItemStack.EMPTY
         } else {
             // Hotbar → player inventory
-            if (!insertItem(stack, 0, 27, false)) return ItemStack.EMPTY
+            if (!moveItemStackTo(stack, 0, 27, false)) return ItemStack.EMPTY
         }
 
         if (stack.isEmpty) slot.stack = ItemStack.EMPTY
-        else slot.markDirty()
+        else slot.setChanged()
         return moved
     }
 }

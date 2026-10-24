@@ -84,7 +84,7 @@ object FluidCellItemRenderer : BuiltinItemRendererRegistry.DynamicItemRenderer {
             else -> stack.getFluidCellVariant()?.fluid ?: return null
         }
         if (fluid == Fluids.EMPTY) return null
-        val state = fluid.defaultState
+        val state = fluid.defaultBlockState
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return null
         val sprite = handler.getFluidSprites(null, null, state).firstOrNull() ?: return null
         val color = handler.getFluidColor(null, null, state)
