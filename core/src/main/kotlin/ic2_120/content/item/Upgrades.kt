@@ -21,7 +21,7 @@ import ic2_120.registry.type
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.Ingredient
@@ -30,7 +30,6 @@ import net.minecraft.registry.tag.ItemTags
 import java.util.function.Consumer
 import net.fabricmc.api.Environment
 import net.fabricmc.api.EnvType
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.entity.player.PlayerEntity
@@ -58,7 +57,7 @@ import net.minecraft.world.World
  */
 interface IUpgradeItem
 
-abstract class FluidFilterUpgradeItem : Item(FabricItemSettings()), IUpgradeItem {
+abstract class FluidFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
     @Environment(EnvType.CLIENT)
     override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
         super.appendTooltip(stack, world, tooltip, context)
@@ -116,7 +115,7 @@ abstract class FluidFilterUpgradeItem : Item(FabricItemSettings()), IUpgradeItem
     }
 }
 
-abstract class ItemFilterUpgradeItem : Item(FabricItemSettings()), IUpgradeItem {
+abstract class ItemFilterUpgradeItem : Item(Item.Settings()), IUpgradeItem {
 
     /** 子类可重写此属性以改变方向设置消息，如 "弹出方向" 或 "抽入方向" */
     protected open val directionActionLabel: String = "弹出方向"
@@ -186,10 +185,10 @@ abstract class ItemFilterUpgradeItem : Item(FabricItemSettings()), IUpgradeItem 
 // ========== 工具升级类 ==========
 
 @ModItem(name = "overclocker_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-class OverclockerUpgrade : Item(FabricItemSettings()), IUpgradeItem {
+class OverclockerUpgrade : Item(Item.Settings()), IUpgradeItem {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             fun offer(coolant: Item, count: Int, suffix: String) {
@@ -210,10 +209,10 @@ class OverclockerUpgrade : Item(FabricItemSettings()), IUpgradeItem {
 }
 
 @ModItem(name = "transformer_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-class TransformerUpgrade : Item(FabricItemSettings()), IUpgradeItem {
+class TransformerUpgrade : Item(Item.Settings()), IUpgradeItem {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val mv = MvTransformerBlock::class.item()
             val goldCable = DoubleInsulatedGoldCableBlock::class.item()
             val circuit = Circuit::class.instance()
@@ -232,10 +231,10 @@ class TransformerUpgrade : Item(FabricItemSettings()), IUpgradeItem {
 }
 
 @ModItem(name = "energy_storage_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-class EnergyStorageUpgrade : Item(FabricItemSettings()), IUpgradeItem {
+class EnergyStorageUpgrade : Item(Item.Settings()), IUpgradeItem {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val cable = InsulatedCopperCableBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EnergyStorageUpgrade::class.instance(), 1)
                 .pattern("PPP")
@@ -252,10 +251,10 @@ class EnergyStorageUpgrade : Item(FabricItemSettings()), IUpgradeItem {
 }
 
 @ModItem(name = "redstone_inverter_upgrade", tab = CreativeTab.IC2_MATERIALS, group = "upgrades")
-class RedstoneInverterUpgrade : Item(FabricItemSettings()), IUpgradeItem {
+class RedstoneInverterUpgrade : Item(Item.Settings()), IUpgradeItem {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RedstoneInverterUpgrade::class.instance(), 1)
@@ -282,7 +281,7 @@ class RedstoneInverterUpgrade : Item(FabricItemSettings()), IUpgradeItem {
 class EjectorUpgrade : ItemFilterUpgradeItem() {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EjectorUpgrade::class.instance(), 1)
@@ -311,7 +310,7 @@ class PullingUpgrade : ItemFilterUpgradeItem() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val hopper = Items.HOPPER
@@ -339,7 +338,7 @@ class PullingUpgrade : ItemFilterUpgradeItem() {
 class FluidEjectorUpgrade : FluidFilterUpgradeItem() {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val motor = ElectricMotor::class.instance()
@@ -367,7 +366,7 @@ class FluidEjectorUpgrade : FluidFilterUpgradeItem() {
 class FluidPullingUpgrade : FluidFilterUpgradeItem() {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val tin = TinPlate::class.instance()
             val dense = DenseTinPlate::class.instance()
             val tap = Treetap::class.instance()

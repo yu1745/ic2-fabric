@@ -1633,7 +1633,7 @@ class NuclearReactorBlockEntity(
             ?: registry.getEntry(
                 net.minecraft.registry.RegistryKey.of(
                     net.minecraft.registry.RegistryKeys.DAMAGE_TYPE,
-                    Identifier("minecraft", "lava")
+                    Identifier.of("minecraft", "lava")
                 )
             ).orElseThrow()
         return net.minecraft.entity.damage.DamageSource(entry)

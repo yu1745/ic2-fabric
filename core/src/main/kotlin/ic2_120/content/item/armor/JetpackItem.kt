@@ -5,7 +5,6 @@ import ic2_120.content.fluid.FluidFuelRegistry
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.ICreativeFullVariant
 import ic2_120.content.item.ModArmorMaterials
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
@@ -34,7 +33,7 @@ open class JetpackItem : ArmorItem(
     ModArmorMaterials.JETPACK_ARMOR,
     ArmorItem.Type.CHESTPLATE,
     // ArmorItem 会通过 maxDamageIfAbsent 自动注入材质耐久；-1 让 ItemStack.isDamageable() 返回 false。
-    FabricItemSettings().maxCount(1).maxDamage(-1)
+    Item.Settings().maxCount(1).maxDamage(-1)
 ), ICreativeFullVariant {
 
     companion object {

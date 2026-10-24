@@ -123,7 +123,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
 
 /** IC2 脚手架 Jade 提示：显示从当前方块还能横向延伸多少格。 */
 object ScaffoldJadeProvider : IBlockComponentProvider {
-    private val SCAFFOLD_SUPPORT = Identifier("ic2_120", "scaffold_support")
+    private val SCAFFOLD_SUPPORT = Identifier.of("ic2_120", "scaffold_support")
 
     override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val block = accessor.blockState.block as? Ic2ScaffoldBlock ?: return
@@ -151,7 +151,7 @@ object ScaffoldJadeProvider : IBlockComponentProvider {
  */
 object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val PIPE_FLOW = Identifier("ic2_120", "pipe_flow")
+    private val PIPE_FLOW = Identifier.of("ic2_120", "pipe_flow")
 
     /**
      * Per-block-position sliding window filter to smooth flow rate display.
@@ -266,7 +266,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
  */
 object CableJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val CABLE_LOAD = Identifier("ic2_120", "cable_load")
+    private val CABLE_LOAD = Identifier.of("ic2_120", "cable_load")
 
     private val filterCache = object : LinkedHashMap<Long, FilteredLong>(32, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, FilteredLong>?): Boolean =
@@ -328,7 +328,7 @@ object CableJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcc
 }
 
 object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
-    private val CROP_GROWTH = Identifier("ic2_120", "crop_growth")
+    private val CROP_GROWTH = Identifier.of("ic2_120", "crop_growth")
 
     override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
         val world = accessor.level
@@ -513,7 +513,7 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
 }
 
 object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
-    private val KINETIC_INFO = Identifier("ic2_120", "kinetic_info")
+    private val KINETIC_INFO = Identifier.of("ic2_120", "kinetic_info")
 
     override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
         val world = accessor.level
@@ -664,7 +664,7 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
  */
 object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<EntityAccessor> {
 
-    private val ANIMAL_MONITOR = Identifier("ic2_120", "animal_monitor")
+    private val ANIMAL_MONITOR = Identifier.of("ic2_120", "animal_monitor")
 
     override fun appendServerData(data: NbtCompound, accessor: EntityAccessor) {
         val entity = accessor.entity
@@ -787,7 +787,7 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
 * 2. 空间：上方生长盒子内没有其他原木阻挡。
  */
 object RubberSaplingJadeProvider : IBlockComponentProvider {
-    private val SAPLING_GROWTH = Identifier("ic2_120", "rubber_sapling_growth")
+    private val SAPLING_GROWTH = Identifier.of("ic2_120", "rubber_sapling_growth")
     private const val MIN_GROW_LIGHT = 9
 
     override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
@@ -825,7 +825,7 @@ object RubberSaplingJadeProvider : IBlockComponentProvider {
  * 提取时间戳通过 IServerDataProvider 从 BlockEntity 同步。
  */
 object RubberLogJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
-    private val RUBBER_LOG = Identifier("ic2_120", "rubber_log_info")
+    private val RUBBER_LOG = Identifier.of("ic2_120", "rubber_log_info")
 
     private val FACES = listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
 

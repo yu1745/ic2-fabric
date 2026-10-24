@@ -5,7 +5,7 @@ import ic2_120.content.item.*
 import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
@@ -32,10 +32,10 @@ object BlockCutterRecipeDatagen {
         Entry("iron_block_to_plate", IngredientInput.item(Items.IRON_BLOCK), 1, 5.0f, IronPlate::class.instance(), 9),
         Entry("gold_block_to_plate", IngredientInput.item(Items.GOLD_BLOCK), 1, 5.0f, GoldPlate::class.instance(), 9),
         Entry("copper_block_to_plate", IngredientInput.item(Items.COPPER_BLOCK), 1, 3.0f, CopperPlate::class.instance(), 9),
-        Entry("tin_block_to_plate", IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "tin_block"))), 1, 3.0f, TinPlate::class.instance(), 9),
-        Entry("bronze_block_to_plate", IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "bronze_block"))), 1, 5.0f, BronzePlate::class.instance(), 9),
-        Entry("lead_block_to_plate", IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "lead_block"))), 1, 5.0f, LeadPlate::class.instance(), 9),
-        Entry("steel_block_to_plate", IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "steel_block"))), 1, 6.0f, SteelPlate::class.instance(), 9),
+        Entry("tin_block_to_plate", IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "tin_block"))), 1, 3.0f, TinPlate::class.instance(), 9),
+        Entry("bronze_block_to_plate", IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "bronze_block"))), 1, 5.0f, BronzePlate::class.instance(), 9),
+        Entry("lead_block_to_plate", IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "lead_block"))), 1, 5.0f, LeadPlate::class.instance(), 9),
+        Entry("steel_block_to_plate", IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "steel_block"))), 1, 6.0f, SteelPlate::class.instance(), 9),
         Entry("lapis_block_to_plate", IngredientInput.item(Items.LAPIS_BLOCK), 1, 3.0f, LapisPlate::class.instance(), 9),
         Entry("obsidian_to_plate", IngredientInput.item(Items.OBSIDIAN), 1, 50.0f, ObsidianPlate::class.instance(), 4),
 
@@ -67,10 +67,10 @@ object BlockCutterRecipeDatagen {
         Entry("blackstone_to_slab", IngredientInput.item(Items.BLACKSTONE), 1, 1.5f, Items.BLACKSTONE_SLAB, 9),
         Entry("polished_blackstone_to_slab", IngredientInput.item(Items.POLISHED_BLACKSTONE), 1, 1.5f, Items.POLISHED_BLACKSTONE_SLAB, 9),
         Entry("polished_blackstone_bricks_to_slab", IngredientInput.item(Items.POLISHED_BLACKSTONE_BRICKS), 1, 1.5f, Items.POLISHED_BLACKSTONE_BRICK_SLAB, 9),
-        Entry("deepslate_to_slab", IngredientInput.item(Items.DEEPSLATE), 1, 3.0f, Registries.ITEM.get(Identifier("minecraft", "deepslate_slab")), 9),
-        Entry("polished_deepslate_to_slab", IngredientInput.item(Items.POLISHED_DEEPSLATE), 1, 3.0f, Registries.ITEM.get(Identifier("minecraft", "polished_deepslate_slab")), 9),
-        Entry("deepslate_bricks_to_slab", IngredientInput.item(Items.DEEPSLATE_BRICKS), 1, 3.0f, Registries.ITEM.get(Identifier("minecraft", "deepslate_brick_slab")), 9),
-        Entry("deepslate_tiles_to_slab", IngredientInput.item(Items.DEEPSLATE_TILES), 1, 3.0f, Registries.ITEM.get(Identifier("minecraft", "deepslate_tile_slab")), 9),
+        Entry("deepslate_to_slab", IngredientInput.item(Items.DEEPSLATE), 1, 3.0f, Registries.ITEM.get(Identifier.of("minecraft", "deepslate_slab")), 9),
+        Entry("polished_deepslate_to_slab", IngredientInput.item(Items.POLISHED_DEEPSLATE), 1, 3.0f, Registries.ITEM.get(Identifier.of("minecraft", "polished_deepslate_slab")), 9),
+        Entry("deepslate_bricks_to_slab", IngredientInput.item(Items.DEEPSLATE_BRICKS), 1, 3.0f, Registries.ITEM.get(Identifier.of("minecraft", "deepslate_brick_slab")), 9),
+        Entry("deepslate_tiles_to_slab", IngredientInput.item(Items.DEEPSLATE_TILES), 1, 3.0f, Registries.ITEM.get(Identifier.of("minecraft", "deepslate_tile_slab")), 9),
         Entry("mud_bricks_to_slab", IngredientInput.item(Items.MUD_BRICKS), 1, 1.5f, Items.MUD_BRICK_SLAB, 9),
         Entry("oxidized_copper_to_slab", IngredientInput.item(Items.OXIDIZED_COPPER), 1, 3.0f, Items.OXIDIZED_CUT_COPPER_SLAB, 9),
         Entry("weathered_copper_to_slab", IngredientInput.item(Items.WEATHERED_COPPER), 1, 3.0f, Items.WEATHERED_CUT_COPPER_SLAB, 9),
@@ -93,7 +93,7 @@ object BlockCutterRecipeDatagen {
         Entry("bamboo_planks_to_slab", IngredientInput.item(Items.BAMBOO_PLANKS), 1, 2.0f, Items.BAMBOO_SLAB, 9),
         Entry("crimson_planks_to_slab", IngredientInput.item(Items.CRIMSON_PLANKS), 1, 2.0f, Items.CRIMSON_SLAB, 9),
         Entry("warped_planks_to_slab", IngredientInput.item(Items.WARPED_PLANKS), 1, 2.0f, Items.WARPED_SLAB, 9),
-        Entry("rubber_planks_to_slab", IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "rubber_planks"))), 1, 2.0f, Registries.ITEM.get(Identifier("ic2_120", "rubber_slab")), 9),
+        Entry("rubber_planks_to_slab", IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "rubber_planks"))), 1, 2.0f, Registries.ITEM.get(Identifier.of("ic2_120", "rubber_slab")), 9),
 
         // ===== 木板 → 6 木棍（双配方，inputCount=2） =====
         Entry("oak_planks_to_sticks", IngredientInput.item(Items.OAK_PLANKS), 2, 2.0f, Items.STICK, 6),
@@ -107,7 +107,7 @@ object BlockCutterRecipeDatagen {
         Entry("bamboo_planks_to_sticks", IngredientInput.item(Items.BAMBOO_PLANKS), 2, 2.0f, Items.STICK, 6),
         Entry("crimson_planks_to_sticks", IngredientInput.item(Items.CRIMSON_PLANKS), 2, 2.0f, Items.STICK, 6),
         Entry("warped_planks_to_sticks", IngredientInput.item(Items.WARPED_PLANKS), 2, 2.0f, Items.STICK, 6),
-        Entry("rubber_planks_to_sticks", IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "rubber_planks"))), 2, 2.0f, Items.STICK, 6),
+        Entry("rubber_planks_to_sticks", IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "rubber_planks"))), 2, 2.0f, Items.STICK, 6),
 
         // ===== 原木 → 6 木板（增产 50%） =====
         Entry("oak_log_to_planks", IngredientInput.item(Items.OAK_LOG), 1, 2.0f, Items.OAK_PLANKS, 6),
@@ -120,7 +120,7 @@ object BlockCutterRecipeDatagen {
         Entry("cherry_log_to_planks", IngredientInput.item(Items.CHERRY_LOG), 1, 2.0f, Items.CHERRY_PLANKS, 6),
         Entry("crimson_stem_to_planks", IngredientInput.item(Items.CRIMSON_STEM), 1, 2.0f, Items.CRIMSON_PLANKS, 6),
         Entry("warped_stem_to_planks", IngredientInput.item(Items.WARPED_STEM), 1, 2.0f, Items.WARPED_PLANKS, 6),
-        Entry("rubber_log_to_planks", IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "rubber_log"))), 1, 2.0f, Registries.ITEM.get(Identifier("ic2_120", "rubber_planks")), 6),
+        Entry("rubber_log_to_planks", IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "rubber_log"))), 1, 2.0f, Registries.ITEM.get(Identifier.of("ic2_120", "rubber_planks")), 6),
         Entry("stripped_oak_log_to_planks", IngredientInput.item(Items.STRIPPED_OAK_LOG), 1, 2.0f, Items.OAK_PLANKS, 6),
         Entry("stripped_spruce_log_to_planks", IngredientInput.item(Items.STRIPPED_SPRUCE_LOG), 1, 2.0f, Items.SPRUCE_PLANKS, 6),
         Entry("stripped_birch_log_to_planks", IngredientInput.item(Items.STRIPPED_BIRCH_LOG), 1, 2.0f, Items.BIRCH_PLANKS, 6),
@@ -131,17 +131,17 @@ object BlockCutterRecipeDatagen {
         Entry("stripped_cherry_log_to_planks", IngredientInput.item(Items.STRIPPED_CHERRY_LOG), 1, 2.0f, Items.CHERRY_PLANKS, 6),
         Entry("stripped_crimson_stem_to_planks", IngredientInput.item(Items.STRIPPED_CRIMSON_STEM), 1, 2.0f, Items.CRIMSON_PLANKS, 6),
         Entry("stripped_warped_stem_to_planks", IngredientInput.item(Items.STRIPPED_WARPED_STEM), 1, 2.0f, Items.WARPED_PLANKS, 6),
-        Entry("stripped_rubber_log_to_planks", IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "stripped_rubber_log"))), 1, 2.0f, Registries.ITEM.get(Identifier("ic2_120", "rubber_planks")), 6),
+        Entry("stripped_rubber_log_to_planks", IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "stripped_rubber_log"))), 1, 2.0f, Registries.ITEM.get(Identifier.of("ic2_120", "rubber_planks")), 6),
         Entry("bamboo_block_to_planks", IngredientInput.item(Items.BAMBOO_BLOCK), 1, 2.0f, Items.BAMBOO_PLANKS, 6),
         Entry("stripped_bamboo_block_to_planks", IngredientInput.item(Items.STRIPPED_BAMBOO_BLOCK), 1, 2.0f, Items.BAMBOO_PLANKS, 6)
     )
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
         entries.forEach { entry ->
             BlockCutterRecipeJsonProvider(
-                recipeId = Identifier("ic2_120", "cutting/${entry.name}"),
+                recipeId = Identifier.of("ic2_120", "cutting/${entry.name}"),
                 input = entry.input,
                 inputCount = entry.inputCount,
                 materialHardness = entry.materialHardness,
@@ -158,7 +158,7 @@ object BlockCutterRecipeDatagen {
         private val materialHardness: Float,
         private val outputItem: Item,
         private val outputCount: Int
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(BlockCutterRecipe::class)}")
             json.add("ingredient", input.toJson())

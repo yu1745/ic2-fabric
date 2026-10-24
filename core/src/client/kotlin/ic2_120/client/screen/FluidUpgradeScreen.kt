@@ -138,8 +138,8 @@ class FluidUpgradeScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guiupgrade.png")
-        private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiupgrade.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
         private const val HINT_X = 4
         private const val HINT_Y = 4

@@ -147,7 +147,7 @@ class PatternStorageScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guipatternstorage.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guipatternstorage.png")
         private const val TEX_SIZE = 256
 
         private const val TEMPLATE_ITEM_X = 18

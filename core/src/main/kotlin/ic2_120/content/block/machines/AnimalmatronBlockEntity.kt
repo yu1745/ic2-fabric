@@ -780,7 +780,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             "minecraft:sheep" -> {
                 if (animal is SheepEntity && !animal.isSheared) {
                     val colorName = animal.color.asString()
-                    val woolItem = Registries.ITEM.get(Identifier("minecraft", "${colorName}_wool"))
+                    val woolItem = Registries.ITEM.get(Identifier.of("minecraft", "${colorName}_wool"))
                     ItemStack(woolItem, 1)
                 } else null
             }

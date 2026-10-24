@@ -4,7 +4,6 @@ import ic2_120.Ic2_120
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
@@ -278,7 +277,7 @@ object ModFluids {
             val bucketItem = Ic2BucketItem(
                 still,
                 placeOverride,
-                FabricItemSettings().recipeRemainder(Items.BUCKET).maxCount(1)
+                Item.Settings().recipeRemainder(Items.BUCKET).maxCount(1)
             )
             val b = Registry.register(
                 Registries.ITEM,

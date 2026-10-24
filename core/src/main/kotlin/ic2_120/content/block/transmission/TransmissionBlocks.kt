@@ -21,7 +21,7 @@ import net.minecraft.block.Waterloggable
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.FluidState
@@ -168,7 +168,7 @@ abstract class BaseTransmissionBlock(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, TransmissionBlockEntity.TYPE) { w, _, _, be ->
+        else validateTicker(world, type, TransmissionBlockEntity.TYPE) { w, _, _, be ->
             be.tick(w)
         }
 }
@@ -248,7 +248,7 @@ abstract class TransmissionShaftBlock(
 class WoodTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.WOOD) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
@@ -264,7 +264,7 @@ class WoodTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.WOOD) {
 class IronTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.IRON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, IronTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
@@ -280,7 +280,7 @@ class IronTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.IRON) {
 class SteelTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.STEEL) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SteelTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
@@ -296,7 +296,7 @@ class SteelTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.STEEL) 
 class CarbonTransmissionShaftBlock : TransmissionShaftBlock(ShaftMaterial.CARBON) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CarbonTransmissionShaftBlock::class.instance(), 16)
                 .pattern("xxx")
                 .pattern("   ")
@@ -469,7 +469,7 @@ class BevelGearBlock(
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, BevelGearBlock::class.instance(), 1)
                 .pattern("s s")
                 .pattern("s s")

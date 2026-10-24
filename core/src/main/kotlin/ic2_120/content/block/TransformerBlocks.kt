@@ -21,7 +21,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.Items
@@ -103,7 +103,7 @@ abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMa
                 is EvTransformerBlock -> EvTransformerBlockEntity::class.type()
                 else -> return null
             }
-            checkType(type, beType) { world1, pos, state, be ->
+            validateTicker(world, type, beType) { world1, pos, state, be ->
                 be.tick(world1, pos, state)
             }
         }
@@ -142,7 +142,7 @@ class LvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val insulatedTinCable = InsulatedTinCableBlock::class.item()
             val coil = ic2_120.content.item.Coil::class.instance()
             if (coil != Items.AIR) {
@@ -163,7 +163,7 @@ class MvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val insulatedCopperCable = InsulatedCopperCableBlock::class.item()
             val machine = MachineCasingBlock::class.item()
             if (machine != Items.AIR) {
@@ -184,7 +184,7 @@ class HvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val insulatedGoldCable = InsulatedGoldCableBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             val advancedReBattery = ic2_120.content.item.energy.AdvancedReBatteryItem::class.instance()
@@ -206,7 +206,7 @@ class EvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val insulatedIronCable = TripleInsulatedIronCableBlock::class.item()
             val advancedCircuit = ic2_120.content.item.AdvancedCircuit::class.instance()
             val lapotronCrystal = ic2_120.content.item.energy.LapotronCrystalItem::class.instance()

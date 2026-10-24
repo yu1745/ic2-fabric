@@ -25,7 +25,7 @@ import net.minecraft.state.property.Properties
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
@@ -37,7 +37,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val casing = MachineCasingBlock::class.instance()
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ManualKineticGeneratorBlock::class.item(), 1)
                 .pattern("L")
@@ -70,7 +70,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         state: BlockState,
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
-        checkType(type, ManualKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        validateTicker(world, type, ManualKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 

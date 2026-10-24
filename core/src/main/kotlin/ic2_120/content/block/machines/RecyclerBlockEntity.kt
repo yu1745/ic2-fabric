@@ -116,7 +116,7 @@ class RecyclerBlockEntity(
         val SLOT_OUTPUT_INDICES = intArrayOf(SLOT_OUTPUT)
         val SLOT_INPUT_INDICES = intArrayOf(SLOT_INPUT)
         const val INVENTORY_SIZE = 7
-        private val SCRAP_ID = Identifier("ic2_120", "scrap")
+        private val SCRAP_ID = Identifier.of("ic2_120", "scrap")
     }
 
     private val inventory = DefaultedList.ofSize(INVENTORY_SIZE, ItemStack.EMPTY)

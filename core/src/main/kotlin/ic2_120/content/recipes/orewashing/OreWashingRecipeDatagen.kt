@@ -5,7 +5,7 @@ import com.google.gson.JsonObject
 import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
@@ -33,86 +33,86 @@ object OreWashingRecipeDatagen {
         // 粉碎铜矿石
         Entry(
             "crushed_copper",
-            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_copper"))),
+            IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "crushed_copper"))),
             listOf(
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_copper")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_copper_dust")), 2),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "purified_copper")), 1),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_copper_dust")), 2),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
         // 粉碎锡矿石
         Entry(
             "crushed_tin",
-            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_tin"))),
+            IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "crushed_tin"))),
             listOf(
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_tin")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_tin_dust")), 2),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "purified_tin")), 1),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_tin_dust")), 2),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
         // 粉碎铁矿石
         Entry(
             "crushed_iron",
-            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_iron"))),
+            IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "crushed_iron"))),
             listOf(
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_iron")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_iron_dust")), 2),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "purified_iron")), 1),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_iron_dust")), 2),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
         // 粉碎金矿石
         Entry(
             "crushed_gold",
-            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_gold"))),
+            IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "crushed_gold"))),
             listOf(
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_gold")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_gold_dust")), 2),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "purified_gold")), 1),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_gold_dust")), 2),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
         // 粉碎铀矿石（副产物是小撮铅粉）
         Entry(
             "crushed_uranium",
-            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_uranium"))),
+            IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "crushed_uranium"))),
             listOf(
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_uranium")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_lead_dust")), 2),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "purified_uranium")), 1),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_lead_dust")), 2),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
         // 粉碎铅矿石（副产物是小撮硫粉*3）
         Entry(
             "crushed_lead",
-            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_lead"))),
+            IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "crushed_lead"))),
             listOf(
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_lead")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_sulfur_dust")), 3),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "purified_lead")), 1),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_sulfur_dust")), 3),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
         // 粉碎银矿石
         Entry(
             "crushed_silver",
-            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "crushed_silver"))),
+            IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "crushed_silver"))),
             listOf(
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "purified_silver")), 1),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "small_silver_dust")), 2),
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "purified_silver")), 1),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "small_silver_dust")), 2),
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
             1000L
         ),
         // 沙砾（只有石粉输出）
         Entry(
             "gravel",
-            IngredientInput.item(Registries.ITEM.get(Identifier("minecraft", "gravel"))),
+            IngredientInput.item(Registries.ITEM.get(Identifier.of("minecraft", "gravel"))),
             listOf(
-                OutputItem(Registries.ITEM.get(Identifier("ic2_120", "stone_dust")), 1)
+                OutputItem(Registries.ITEM.get(Identifier.of("ic2_120", "stone_dust")), 1)
             ),
             1000L
         )
@@ -120,10 +120,10 @@ object OreWashingRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
         entries.forEach { entry ->
             OreWashingRecipeJsonProvider(
-                recipeId = Identifier("ic2_120", "ore_washing/${entry.name}"),
+                recipeId = Identifier.of("ic2_120", "ore_washing/${entry.name}"),
                 input = entry.input,
                 outputs = entry.outputs,
                 waterConsumptionDroplets = entry.waterConsumptionDroplets
@@ -136,7 +136,7 @@ object OreWashingRecipeDatagen {
         private val input: IngredientInput,
         private val outputs: List<OutputItem>,
         private val waterConsumptionDroplets: Long
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(OreWashingRecipe::class)}")
             json.add("ingredient", input.toJson())

@@ -25,7 +25,7 @@ import net.minecraft.block.Blocks
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.BlockItem
@@ -233,7 +233,7 @@ abstract class StorageBoxBlock(settings: AbstractBlock.Settings) : BlockWithEnti
 class WoodenStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.OAK_PLANKS).strength(2.5f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val log = Items.OAK_LOG
             val plank = Items.OAK_PLANKS
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WoodenStorageBoxBlock::class.item(), 1)
@@ -255,7 +255,7 @@ class WoodenStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks
 class BronzeStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = BronzePlate::class.instance()
             val casing = BronzeCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
@@ -279,7 +279,7 @@ class BronzeStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks
 class IronStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = IronPlate::class.instance()
             val casing = IronCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
@@ -303,7 +303,7 @@ class IronStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.I
 class SteelStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val plate = SteelPlate::class.instance()
             val casing = SteelCasing::class.instance()
             if (plate != Items.AIR && casing != Items.AIR) {
@@ -327,7 +327,7 @@ class SteelStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.
 class IridiumStorageBoxBlock : StorageBoxBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(6.0f, 8.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val iridium = IridiumPlate::class.instance()
             val steel = SteelPlate::class.instance()
             if (iridium != Items.AIR && steel != Items.AIR) {

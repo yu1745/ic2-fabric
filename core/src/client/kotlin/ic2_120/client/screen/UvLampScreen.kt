@@ -94,7 +94,7 @@ class UvLampScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guiuvlamp.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiuvlamp.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条纹理区域 (180,4)-(194,18) = 14×14

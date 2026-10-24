@@ -21,7 +21,7 @@ import net.minecraft.block.Blocks
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -55,7 +55,7 @@ class RefractoryBricksBlock : Block(AbstractBlock.Settings.copy(Blocks.BRICKS).s
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RefractoryBricksBlock::class.item(), 8)
                 .pattern("BBB")
                 .pattern("BCB")
@@ -94,7 +94,7 @@ class CokeKilnBlock : MachineBlock(AbstractBlock.Settings.copy(Blocks.BRICKS).st
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, CokeKilnBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(world, type, CokeKilnBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -116,7 +116,7 @@ class CokeKilnBlock : MachineBlock(AbstractBlock.Settings.copy(Blocks.BRICKS).st
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val refractory = RefractoryBricksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.DECORATIONS, CokeKilnBlock::class.item(), 1)
                 .pattern("RRR")
@@ -177,7 +177,7 @@ class CokeKilnGrateBlock : net.minecraft.block.BlockWithEntity(AbstractBlock.Set
         val FACING: DirectionProperty = DirectionProperty.of("facing")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val refractory = RefractoryBricksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.DECORATIONS, CokeKilnGrateBlock::class.item(), 1)
                 .pattern("III")
@@ -244,7 +244,7 @@ class CokeKilnHatchBlock : Block(AbstractBlock.Settings.copy(Blocks.BRICKS).stre
         val FACING: DirectionProperty = DirectionProperty.of("facing")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val refractory = RefractoryBricksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.DECORATIONS, CokeKilnHatchBlock::class.item(), 1)
                 .pattern("RRR")

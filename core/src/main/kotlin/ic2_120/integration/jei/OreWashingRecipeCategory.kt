@@ -22,11 +22,11 @@ import net.minecraft.util.Identifier
  */
 class OreWashingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<OreWashingJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier("ic2", "textures/gui/guiorewashingplant.png"),
+        Identifier.of("ic2", "textures/gui/guiorewashingplant.png"),
         4, 6, 144, 75
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "ore_washing_plant")))
+        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "ore_washing_plant")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.ORE_WASHING

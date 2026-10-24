@@ -14,13 +14,12 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
@@ -75,7 +74,7 @@ object CropSeedData {
 }
 
 @ModItem(name = "crop_seed_bag", tab = CreativeTab.IC2_CROP_SEEDS, group = "crops")
-class CropSeedBagItem : Item(FabricItemSettings().maxCount(1)) {
+class CropSeedBagItem : Item(Item.Settings().maxCount(1)) {
     override fun appendTooltip(
         stack: ItemStack,
         world: World?,
@@ -135,7 +134,7 @@ class CropSeedBagItem : Item(FabricItemSettings().maxCount(1)) {
 }
 
 @ModItem(name = "cropnalyzer", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class CropnalyzerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
+class CropnalyzerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
     override val tier: Int = 2
     override val maxCapacity: Long = 100_000L
     override fun nominalEuPerTick() = 128L
@@ -170,7 +169,7 @@ class CropnalyzerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
             }
         })
 
-        return TypedActionResult.success(scanner, true)
+        return TypedActionResult.success(scanner)
     }
 
     override fun useOnBlock(context: net.minecraft.item.ItemUsageContext): ActionResult {
@@ -212,7 +211,7 @@ class CropnalyzerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             if (cable == Items.AIR || circuit == Items.AIR) return

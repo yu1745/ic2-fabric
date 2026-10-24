@@ -372,7 +372,7 @@ class CompressorBlockEntity(
     private fun getWaterContainerRecipe(input: ItemStack): CompressorRecipe? {
         val emptyContainer = extractWaterContainerRemainder(input) ?: return null
         return CompressorRecipe(
-            Identifier("ic2_120", "compressing/water_container_to_snow_block"),
+            Identifier.of("ic2_120", "compressing/water_container_to_snow_block"),
             Ingredient.EMPTY,
             1,
             ItemStack(Items.SNOW_BLOCK),

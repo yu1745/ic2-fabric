@@ -143,9 +143,9 @@ class TeleporterScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guiother.png")
-        private val WRENCH = Identifier("ic2_120", "textures/item/tool/wrench.png")
-        private val UPTIPS = Identifier("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiother.png")
+        private val WRENCH = Identifier.of("ic2_120", "textures/item/tool/wrench.png")
+        private val UPTIPS = Identifier.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
         private const val WRENCH_SIZE = 16
         private const val UPTIPS_SIZE = 16

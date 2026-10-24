@@ -5,7 +5,6 @@ import com.google.common.collect.Multimap
 import ic2_120.content.item.energy.IElectricTool
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModItem
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttribute
@@ -37,7 +36,7 @@ class QuantumSaber : SwordItem(
     QuantumSaberMaterial,
     0,
     -2.4f,
-    FabricItemSettings().maxCount(1)
+    Item.Settings().maxCount(1)
 ), IElectricTool {
 
     companion object {

@@ -263,8 +263,8 @@ class CannerScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guicanner.png")
-        private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicanner.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
 

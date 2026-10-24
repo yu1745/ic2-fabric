@@ -20,7 +20,7 @@ import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -113,7 +113,7 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val advancedMachine = AdvancedMachineCasingBlock::class.item()
             val crystalMemory = CrystalMemory::class.instance()
             val reinforcedStone = ReinforcedStoneBlock::class.item()

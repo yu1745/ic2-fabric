@@ -24,7 +24,7 @@ import net.minecraft.state.property.Properties
 import net.minecraft.world.World
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
@@ -37,7 +37,7 @@ class WindKineticGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaqu
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, WindKineticGeneratorBlock::class.item(), 1)
                 .pattern("   ")
                 .pattern("SCS")
@@ -69,7 +69,7 @@ class WindKineticGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaqu
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, WindKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(world, type, WindKineticGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 

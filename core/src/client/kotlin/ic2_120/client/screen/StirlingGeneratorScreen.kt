@@ -63,6 +63,6 @@ class StirlingGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guithermalenergygenerator.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guithermalenergygenerator.png")
     }
 }

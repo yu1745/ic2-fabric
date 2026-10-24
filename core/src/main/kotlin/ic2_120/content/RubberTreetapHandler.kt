@@ -28,8 +28,8 @@ object RubberTreetapHandler {
     private val TREETAP_ID = Identifier(Ic2_120.MOD_ID, "treetap")
     private val ELECTRIC_TREETAP_ID = Identifier(Ic2_120.MOD_ID, "electric_treetap")
     private val RESIN_ID = Identifier(Ic2_120.MOD_ID, "resin")
-    private val TREETAP_SOUND = SoundEvent.of(Identifier("ic2", "item.treetap.use"))
-    private val ELECTRIC_TREETAP_SOUND = SoundEvent.of(Identifier("ic2", "item.treetap.electric.use"))
+    private val TREETAP_SOUND = SoundEvent.of(Identifier.of("ic2", "item.treetap.use"))
+    private val ELECTRIC_TREETAP_SOUND = SoundEvent.of(Identifier.of("ic2", "item.treetap.electric.use"))
     private const val EU_PER_USE = 50L
 
     fun isTreetap(stack: ItemStack): Boolean {

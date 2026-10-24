@@ -92,6 +92,6 @@ class GeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guipowergenerator.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guipowergenerator.png")
     }
 }

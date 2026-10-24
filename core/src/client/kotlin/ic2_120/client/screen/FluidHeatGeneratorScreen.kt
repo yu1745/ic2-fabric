@@ -110,7 +110,7 @@ class FluidHeatGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guiliquidheatingmachine.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiliquidheatingmachine.png")
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
     }
 }

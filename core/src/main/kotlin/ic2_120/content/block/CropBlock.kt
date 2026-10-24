@@ -118,7 +118,7 @@ class CropBlock : BlockWithEntity(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, CropBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
+        else validateTicker(world, type, CropBlockEntity::class.type()) { w, p, s, be -> be.tick(w, p, s) }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onUse(
@@ -1092,18 +1092,18 @@ class CropBlockEntity(
 
     companion object {
         const val TICK_RATE = 256
-        private val TAG_ORES_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/iron"))
-        private val TAG_STORAGE_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/iron"))
-        private val TAG_ORES_COPPER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/copper"))
-        private val TAG_STORAGE_COPPER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/copper"))
-        private val TAG_ORES_TIN: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/tin"))
-        private val TAG_STORAGE_TIN: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/tin"))
-        private val TAG_ORES_LEAD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/lead"))
-        private val TAG_STORAGE_LEAD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/lead"))
-        private val TAG_ORES_GOLD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/gold"))
-        private val TAG_STORAGE_GOLD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/gold"))
-        private val TAG_ORES_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "ores/silver"))
-        private val TAG_STORAGE_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier("c", "storage_blocks/silver"))
+        private val TAG_ORES_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/iron"))
+        private val TAG_STORAGE_IRON: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/iron"))
+        private val TAG_ORES_COPPER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/copper"))
+        private val TAG_STORAGE_COPPER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/copper"))
+        private val TAG_ORES_TIN: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/tin"))
+        private val TAG_STORAGE_TIN: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/tin"))
+        private val TAG_ORES_LEAD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/lead"))
+        private val TAG_STORAGE_LEAD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/lead"))
+        private val TAG_ORES_GOLD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/gold"))
+        private val TAG_STORAGE_GOLD: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/gold"))
+        private val TAG_ORES_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "ores/silver"))
+        private val TAG_STORAGE_SILVER: TagKey<Block> = TagKey.of(RegistryKeys.BLOCK, Identifier.of("c", "storage_blocks/silver"))
         private val METAL_IRON = MetalRootGroup.IRON
         private val COPPER_BLOCKS = setOf(
             Blocks.COPPER_BLOCK,

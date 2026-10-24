@@ -316,8 +316,8 @@ class ReplicatorScreen(
 
     companion object {
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
-        private val TEXTURE = Identifier("ic2", "textures/gui/guirguireplicator.png")
-        private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guirguireplicator.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
         private const val TEX_SIZE = 256
 
         private const val MODE_TEX_U = 198

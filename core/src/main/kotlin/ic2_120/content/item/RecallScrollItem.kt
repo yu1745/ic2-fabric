@@ -12,9 +12,8 @@ import ic2_120.registry.instance
 import ic2_120.registry.item
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.conditionsFromItem
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.client.item.TooltipContext
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Item
@@ -36,7 +35,7 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 @ModItem(name = "recall_scroll", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class RecallScrollItem : Item(FabricItemSettings().maxCount(1)) {
+class RecallScrollItem : Item(Item.Settings().maxCount(1)) {
     companion object {
         private const val NBT_BIND_X = "BindX"
         private const val NBT_BIND_Y = "BindY"
@@ -45,13 +44,13 @@ class RecallScrollItem : Item(FabricItemSettings().maxCount(1)) {
         private const val NBT_HAS_BIND = "HasBind"
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val teleporter = TeleporterBlock::class.item()
             val paper = Items.PAPER
             val advancedCircuit = AdvancedCircuit::class.instance()
 
             if (teleporter != Items.AIR && advancedCircuit != Items.AIR) {
-                ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, RecallScrollItem::class.instance(), 1)
+                ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, RecallScrollItem::class.instance(), 1)
                     .pattern("PAP")
                     .pattern("ATA")
                     .pattern("PAP")

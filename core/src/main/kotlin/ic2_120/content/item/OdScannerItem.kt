@@ -21,7 +21,6 @@ import net.minecraft.text.Text
 import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import net.minecraft.world.World
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -59,7 +58,7 @@ enum class ScannerType(
  * 使用方式：必须先在储能箱/高级储能箱中充电。右键打开 GUI，点击"扫描"。
  */
 @ModItem(name = "scanner", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class OdScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
+class OdScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
 
     override val tier: Int get() = 1
     override val maxCapacity: Long get() = ScannerType.OD.energyCapacity
@@ -129,7 +128,7 @@ class OdScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
                 }
             })
 
-            return TypedActionResult.success(stack, true)
+            return TypedActionResult.success(stack)
         }
 
         fun getScannerType(stack: ItemStack): ScannerType {
@@ -161,14 +160,14 @@ class OdScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
          * [绝缘铜质导线] [绝缘铜质导线] [绝缘铜质导线]
          */
         @RecipeProvider
-        fun generateRecipes(exporter: java.util.function.Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: java.util.function.Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             val circuit = ic2_120.content.item.AdvancedCircuit::class.instance()
             val battery = ic2_120.content.item.energy.ReBatteryItem::class.instance()
             val insulatedCopper = ic2_120.content.block.cables.InsulatedCopperCableBlock::class.item()
             val glowstone = net.minecraft.item.Items.GLOWSTONE_DUST
 
             net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder.create(
-                RecipeCategory.TOOLS,
+                RecipeCategory.EQUIPMENT,
                 OdScannerItem::class.instance(),
                 1
             )
@@ -191,7 +190,7 @@ class OdScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
  * OV 扫描仪 - 矿石价值扫描器，能量等级 2，扫描范围更大。
  */
 @ModItem(name = "advanced_scanner", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class AdvancedScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricTool {
+class AdvancedScannerItem : Item(Item.Settings().maxCount(1)), IElectricTool {
 
     override val tier: Int get() = 3
     override val maxCapacity: Long get() = ScannerType.OV.energyCapacity
@@ -235,7 +234,7 @@ class AdvancedScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricToo
          * [2x绝缘金质导线] [OD扫描器] [2x绝缘金质导线]
          */
         @RecipeProvider
-        fun generateRecipes(exporter: java.util.function.Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: java.util.function.Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             val goldCasing = ic2_120.content.item.GoldCasing::class.instance()
             val energyCrystal = ic2_120.content.item.energy.EnergyCrystalItem::class.instance()
             val glowstone = net.minecraft.item.Items.GLOWSTONE_DUST
@@ -244,7 +243,7 @@ class AdvancedScannerItem : Item(FabricItemSettings().maxCount(1)), IElectricToo
             val odScanner = OdScannerItem::class.instance()
 
             net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder.create(
-                RecipeCategory.TOOLS,
+                RecipeCategory.EQUIPMENT,
                 AdvancedScannerItem::class.instance(),
                 1
             )

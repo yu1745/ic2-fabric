@@ -6,7 +6,6 @@ import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.world.World
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 
 /**
  * 带耐久/热容的反应堆组件。使用 NBT "use" 存储热量，

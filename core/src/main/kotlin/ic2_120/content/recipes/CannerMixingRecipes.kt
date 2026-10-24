@@ -33,11 +33,11 @@ import net.minecraft.util.Identifier
         val inputFluidBuckets: Int = 1
     )
 
-    private val lapisDust by lazy { Registries.ITEM.get(Identifier("ic2_120", "lapis_dust")) }
-    private val bioChaff by lazy { Registries.ITEM.get(Identifier("ic2_120", "bio_chaff")) }
-    private val cfPowder by lazy { Registries.ITEM.get(Identifier("ic2_120", "cf_powder")) }
-    private val grinPowder by lazy { Registries.ITEM.get(Identifier("ic2_120", "grin_powder")) }
-    private val peatOre by lazy { Registries.ITEM.get(Identifier("ic2_120", "peat_ore")) }
+    private val lapisDust by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "lapis_dust")) }
+    private val bioChaff by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "bio_chaff")) }
+    private val cfPowder by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "cf_powder")) }
+    private val grinPowder by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "grin_powder")) }
+    private val peatOre by lazy { Registries.ITEM.get(Identifier.of("ic2_120", "peat_ore")) }
 
     private val recipes: List<Recipe> by lazy {
         listOf(

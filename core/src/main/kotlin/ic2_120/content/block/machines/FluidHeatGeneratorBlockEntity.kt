@@ -375,7 +375,7 @@ class FluidHeatGeneratorBlockEntity(
         val space = 8 * FluidConstants.BUCKET - fuelTankInternal.amount
         if (space < FluidConstants.BUCKET) return
         when {
-            fuelStack.item == Registries.ITEM.get(Identifier("ic2_120", "biofuel_bucket")) -> {
+            fuelStack.item == Registries.ITEM.get(Identifier.of("ic2_120", "biofuel_bucket")) -> {
                 val emptyBucket = ItemStack(Items.BUCKET)
                 if (canInsertEmptyContainer(emptyBucket)) {
                     val inserted = fuelTankInternal.tryInsertFuel(ModFluids.BIOFUEL_STILL, FluidConstants.BUCKET)
@@ -386,8 +386,8 @@ class FluidHeatGeneratorBlockEntity(
                     }
                 }
             }
-            fuelStack.item == Registries.ITEM.get(Identifier("ic2_120", "biofuel_cell")) -> {
-                val emptyCell = ItemStack(Registries.ITEM.get(Identifier("ic2_120", "empty_cell")))
+            fuelStack.item == Registries.ITEM.get(Identifier.of("ic2_120", "biofuel_cell")) -> {
+                val emptyCell = ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell")))
                 if (canInsertEmptyContainer(emptyCell)) {
                     val inserted = fuelTankInternal.tryInsertFuel(ModFluids.BIOFUEL_STILL, FluidConstants.BUCKET)
                     if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyCell)) {
@@ -397,10 +397,10 @@ class FluidHeatGeneratorBlockEntity(
                     }
                 }
             }
-            fuelStack.item == Registries.ITEM.get(Identifier("ic2_120", "fluid_cell")) -> {
+            fuelStack.item == Registries.ITEM.get(Identifier.of("ic2_120", "fluid_cell")) -> {
                 val fluid = fuelStack.getFluidCellVariant()?.fluid
                 if (fluid != null && isSupportedFuelFluid(fluid)) {
-                    val emptyCell = ItemStack(Registries.ITEM.get(Identifier("ic2_120", "empty_cell")))
+                    val emptyCell = ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell")))
                     if (canInsertEmptyContainer(emptyCell)) {
                         val inserted = fuelTankInternal.tryInsertFuel(fluid, FluidConstants.BUCKET)
                         if (inserted >= FluidConstants.BUCKET && tryInsertEmptyContainer(emptyCell)) {

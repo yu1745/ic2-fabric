@@ -247,7 +247,7 @@ class ReplicatorBlockEntity(
     private fun replicatorIsDrainableUuContainer(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
         val itemId = Registries.ITEM.getId(stack.item)
-        val fluidCellId = Identifier("ic2_120", "fluid_cell")
+        val fluidCellId = Identifier.of("ic2_120", "fluid_cell")
         return itemId.path == "uu_matter_bucket" ||
             itemId.path == "uu_matter_cell" ||
             (itemId == fluidCellId &&

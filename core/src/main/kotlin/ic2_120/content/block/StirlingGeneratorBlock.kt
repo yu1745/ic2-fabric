@@ -15,7 +15,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemPlacementContext
@@ -54,7 +54,7 @@ class StirlingGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, StirlingGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(world, type, StirlingGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -104,7 +104,7 @@ class StirlingGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val generator = GeneratorBlock::class.item()
             val ironCasing = IronCasing::class.instance()
             val heatConductor = HeatConductor::class.instance()

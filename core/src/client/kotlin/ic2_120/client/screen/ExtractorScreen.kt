@@ -134,8 +134,8 @@ class ExtractorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guiextractor.png")
-        private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiextractor.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (179,4)-(193,18) = 14×14

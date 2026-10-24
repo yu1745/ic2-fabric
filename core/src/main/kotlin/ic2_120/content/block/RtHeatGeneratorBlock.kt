@@ -17,7 +17,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.entity.BlockEntity
 import net.minecraft.block.entity.BlockEntityTicker
 import net.minecraft.block.entity.BlockEntityType
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
@@ -47,7 +47,7 @@ class RtHeatGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) 
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, RtHeatGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(world, type, RtHeatGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -87,7 +87,7 @@ class RtHeatGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) 
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val ironCasing = IronCasing::class.instance()
             val reactorChamber = ReactorChamberBlock::class.item()
             val heatConductor = HeatConductor::class.instance()

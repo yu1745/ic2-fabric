@@ -54,7 +54,7 @@ object WrenchHandler {
 
     private val WRENCH_ID = Identifier(Ic2_120.MOD_ID, "wrench")
     private val ELECTRIC_WRENCH_ID = Identifier(Ic2_120.MOD_ID, "electric_wrench")
-    private val WRENCH_USE_SOUND = SoundEvent.of(Identifier("ic2", "item.wrench.use"))
+    private val WRENCH_USE_SOUND = SoundEvent.of(Identifier.of("ic2", "item.wrench.use"))
     private const val ENERGY_RETAIN_RATIO = 0.8
 
     fun isWrench(stack: ItemStack): Boolean {

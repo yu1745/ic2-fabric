@@ -234,7 +234,7 @@ class PumpBlockEntity(
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {
         stack.isEmpty -> false
         slot == SLOT_INPUT -> {
-            val emptyCell = Registries.ITEM.get(Identifier("ic2_120", "empty_cell"))
+            val emptyCell = Registries.ITEM.get(Identifier.of("ic2_120", "empty_cell"))
             stack.item == emptyCell || stack.item is FluidCellItem
         }
         slot == SLOT_OUTPUT -> false

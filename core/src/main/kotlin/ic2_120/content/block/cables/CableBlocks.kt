@@ -17,7 +17,7 @@ import net.minecraft.item.Items
 import net.minecraft.recipe.Ingredient
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.recipe.book.RecipeCategory
 import net.minecraft.state.StateManager
 import net.minecraft.state.property.BooleanProperty
@@ -64,7 +64,7 @@ class TinCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Base
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = TinCableBlock::class.id(),
@@ -91,7 +91,7 @@ class CopperCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : B
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = CopperCableBlock::class.id(),
@@ -121,7 +121,7 @@ class GoldCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Bas
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = GoldCableBlock::class.id(),
@@ -151,7 +151,7 @@ class IronCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : Bas
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = IronCableBlock::class.id(),
@@ -182,7 +182,7 @@ class GlassFibreCableBlock(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, GlassFibreCableBlock::class.item(), 6)
                 .pattern("GGG")
                 .pattern("ESE")
@@ -223,7 +223,7 @@ class InsulatedCopperCableBlock(settings: AbstractBlock.Settings = defaultSettin
 
    companion object {
        @RecipeProvider
-       fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+       fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
            ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedCopperCableBlock::class.item(), 1)
                 .input(CopperCableBlock::class.item())
                 .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
@@ -260,7 +260,7 @@ class InsulatedTinCableBlock(settings: AbstractBlock.Settings = defaultSettings(
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedTinCableBlock::class.item(), 1)
                 .input(TinCableBlock::class.item())
                 .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
@@ -298,7 +298,7 @@ class InsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSettings
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedGoldCableBlock::class.item(), 1)
                 .input(GoldCableBlock::class.item())
                 .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
@@ -336,7 +336,7 @@ class DoubleInsulatedGoldCableBlock(settings: AbstractBlock.Settings = defaultSe
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             // 直接合成：金导线 + 2 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
                 .input(GoldCableBlock::class.item())
@@ -385,7 +385,7 @@ class InsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSettings
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, InsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
                 .input(Ingredient.fromTag(ModTags.Compat.Items.RUBBER))
@@ -423,7 +423,7 @@ class DoubleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             // 直接合成：高压导线 + 2 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
@@ -472,7 +472,7 @@ class TripleInsulatedIronCableBlock(settings: AbstractBlock.Settings = defaultSe
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<net.minecraft.data.server.recipe.RecipeExporter>) {
             // 直接合成：高压导线 + 3 橡胶
             ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
                 .input(IronCableBlock::class.item())
@@ -516,7 +516,7 @@ class SplitterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) :
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, SplitterCableBlock::class.item(), 1)
                 .pattern("RCR")
                 .pattern("LRL")
@@ -636,7 +636,7 @@ class LimiterCableBlock(settings: AbstractBlock.Settings = defaultSettings()) : 
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, LimiterCableBlock::class.item(), 1)
                 .pattern(" C ")
                 .pattern("RGR")

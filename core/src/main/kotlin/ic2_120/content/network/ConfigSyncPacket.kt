@@ -9,8 +9,8 @@ class ConfigSyncPacket(
     val chunkData: ByteArray
 ) {
     companion object {
-        val ID: Identifier = Identifier("ic2_120", "config_sync")
-        val REPLICATION_COSTS_ID: Identifier = Identifier("ic2_120", "replication_costs_sync")
+        val ID: Identifier = Identifier.of("ic2_120", "config_sync")
+        val REPLICATION_COSTS_ID: Identifier = Identifier.of("ic2_120", "replication_costs_sync")
         const val MAX_CHUNK_BYTES = 20000
 
         fun read(buf: PacketByteBuf): ConfigSyncPacket {

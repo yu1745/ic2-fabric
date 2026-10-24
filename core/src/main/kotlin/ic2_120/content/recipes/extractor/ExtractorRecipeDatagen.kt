@@ -7,7 +7,7 @@ import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
 import ic2_120.registry.item
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
@@ -59,10 +59,10 @@ object ExtractorRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
         entries.forEach { entry ->
             ExtractorRecipeJsonProvider(
-                recipeId = Identifier("ic2_120", "extracting/${entry.name}"),
+                recipeId = Identifier.of("ic2_120", "extracting/${entry.name}"),
                 input = entry.input,
                 outputItem = entry.output,
                 outputCount = entry.count
@@ -75,7 +75,7 @@ object ExtractorRecipeDatagen {
         private val input: IngredientInput,
         private val outputItem: Item,
         private val outputCount: Int
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(ExtractorRecipe::class)}")
             json.add("ingredient", input.toJson())

@@ -76,7 +76,7 @@ class WindKineticGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guiwindkineticgenerator.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiwindkineticgenerator.png")
         private val TEXT_COLOR = 0xFF90EE90.toInt()
     }
 }

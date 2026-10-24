@@ -105,7 +105,7 @@ class MagnetizerScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guimagnetizer.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guimagnetizer.png")
         private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD_UPGRADE
 
@@ -126,7 +126,7 @@ class MagnetizerScreen(
         private const val BOOTS_Y = 32
 
         // uptips (4,4)
-        private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
         private const val UPTIPS_X = 4
         private const val UPTIPS_Y = 4
         private const val UPTIPS_SIZE = 16

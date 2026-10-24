@@ -22,7 +22,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.item.Items
 import net.minecraft.recipe.book.RecipeCategory
@@ -44,7 +44,7 @@ class ReactorFluidPortBlock(settings: AbstractBlock.Settings = ReactorShellBlock
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, ReactorFluidPortBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(world, type, ReactorFluidPortBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -77,7 +77,7 @@ class ReactorFluidPortBlock(settings: AbstractBlock.Settings = ReactorShellBlock
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val vessel = ReactorVesselBlock::class.item()
             val emptyCell = EmptyCell::class.instance()
             if (vessel != Items.AIR && emptyCell != Items.AIR) {

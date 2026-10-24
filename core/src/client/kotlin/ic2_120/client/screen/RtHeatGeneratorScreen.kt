@@ -51,6 +51,6 @@ class RtHeatGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guinuclearheat.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guinuclearheat.png")
     }
 }

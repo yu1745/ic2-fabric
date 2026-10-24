@@ -18,7 +18,7 @@ import net.minecraft.util.Identifier
 object BatteryModelPredicates {
 
     private const val NBT_HAS_BIND = "HasBind"
-    private val CHARGE_ID = Identifier("ic2", "charge")
+    private val CHARGE_ID = Identifier.of("ic2", "charge")
     private val NANO_SABER_ACTIVE_ID = Identifier(Ic2_120.MOD_ID, "nano_saber_active")
     private val SCROLL_BOUND_ID = Identifier(Ic2_120.MOD_ID, "bound")
 

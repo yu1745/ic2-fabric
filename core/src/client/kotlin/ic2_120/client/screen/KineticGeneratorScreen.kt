@@ -82,6 +82,6 @@ class KineticGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guielectrickineticgenerator.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guielectrickineticgenerator.png")
     }
 }

@@ -19,11 +19,11 @@ import net.minecraft.util.Identifier
  */
 class MaceratorRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MaceratorJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier("ic2", "textures/gui/scrapboxrecipes.png"),
+        Identifier.of("ic2", "textures/gui/scrapboxrecipes.png"),
         26, 5, 124, 78
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "macerator")))
+        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "macerator")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.MACERATOR

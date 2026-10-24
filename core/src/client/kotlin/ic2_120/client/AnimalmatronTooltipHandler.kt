@@ -13,13 +13,13 @@ import net.minecraft.util.Identifier
 @Environment(EnvType.CLIENT)
 object AnimalmatronTooltipHandler {
 
-    private val ANIMALMATRON_ID = Identifier("ic2_120", "animalmatron")
+    private val ANIMALMATRON_ID = Identifier.of("ic2_120", "animalmatron")
 
     private data class ExtraProductInfo(val entityId: Identifier, val productId: Identifier, val needsShears: Boolean)
 
     private val EXTRA_PRODUCTS = listOf(
-        ExtraProductInfo(Identifier("minecraft", "chicken"), Identifier("minecraft", "egg"), false),
-        ExtraProductInfo(Identifier("minecraft", "sheep"), Identifier("minecraft", "white_wool"), true),
+        ExtraProductInfo(Identifier.of("minecraft", "chicken"), Identifier.of("minecraft", "egg"), false),
+        ExtraProductInfo(Identifier.of("minecraft", "sheep"), Identifier.of("minecraft", "white_wool"), true),
     )
 
     fun register() {

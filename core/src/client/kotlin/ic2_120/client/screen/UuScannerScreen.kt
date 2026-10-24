@@ -172,7 +172,7 @@ class UuScannerScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guiuuscanner.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiuuscanner.png")
         private const val TEX_SIZE = 256
 
         private const val ENERGY_U = 179

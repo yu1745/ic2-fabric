@@ -9,7 +9,6 @@ import ic2_120.registry.type
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.type
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil
@@ -51,7 +50,7 @@ import net.fabricmc.api.Environment
 import net.minecraft.client.item.TooltipContext
 import net.minecraft.util.Formatting
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.hasItem
@@ -214,7 +213,7 @@ internal fun bucketToFilledFluidCell(bucketStack: ItemStack): ItemStack? {
  * 使用 Fabric Fluid API 获取流体颜色并渲染到物品中心（客户端 FluidCellItemRenderer，3D 液柱）。
  */
 @ModItem(name = "fluid_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class FluidCellItem : Item(FabricItemSettings()), FluidModificationItem {
+class FluidCellItem : Item(Item.Settings()), FluidModificationItem {
 
     override fun useOnBlock(context: ItemUsageContext): ActionResult {
         val world = context.world
@@ -545,10 +544,10 @@ abstract class ModFluidCell(settings: FabricItemSettings) : Item(settings), Flui
 // ========== 空单元 ==========
 
 @ModItem(name = "empty_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class EmptyCell : EmptyCellItem(FabricItemSettings()) {
+class EmptyCell : EmptyCellItem(Item.Settings()) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val tin = TinCasing::class.instance()
             if (tin != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, EmptyCell::class.instance(), 1)
@@ -600,14 +599,14 @@ class EmptyCell : EmptyCellItem(FabricItemSettings()) {
 
 /** 水单元 */
 @ModItem(name = "water_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class WaterCell : ModFluidCell(FabricItemSettings()) {
+class WaterCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = Fluids.WATER
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
 /** 蒸馏水单元（放出世界会污染成普通水） */
 @ModItem(name = "distilled_water_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class DistilledWaterCell : ModFluidCell(FabricItemSettings()) {
+class DistilledWaterCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = ModFluids.DISTILLED_WATER_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 
@@ -620,77 +619,77 @@ class DistilledWaterCell : ModFluidCell(FabricItemSettings()) {
 
 /** 岩浆单元 */
 @ModItem(name = "lava_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class LavaCell : ModFluidCell(FabricItemSettings()) {
+class LavaCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = Fluids.LAVA
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
 /** 冷却液单元 */
 @ModItem(name = "coolant_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class CoolantCell : ModFluidCell(FabricItemSettings()) {
+class CoolantCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = ModFluids.COOLANT_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
 /** 热冷却液单元 */
 @ModItem(name = "hot_coolant_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class HotCoolantCell : ModFluidCell(FabricItemSettings()) {
+class HotCoolantCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = ModFluids.HOT_COOLANT_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
 /** UU物质单元 */
 @ModItem(name = "uu_matter_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class UuMatterCell : ModFluidCell(FabricItemSettings()) {
+class UuMatterCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = ModFluids.UU_MATTER_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
 /** 除草剂单元 */
 @ModItem(name = "weed_ex_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class WeedExCell : ModFluidCell(FabricItemSettings()) {
+class WeedExCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = ModFluids.WEED_EX_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
 /** 熔岩岩浆单元 */
 @ModItem(name = "pahoehoe_lava_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class PahoehoeLavaCell : ModFluidCell(FabricItemSettings()) {
+class PahoehoeLavaCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = ModFluids.PAHOEHOE_LAVA_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
 /** 生物燃料单元 */
 @ModItem(name = "biofuel_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class BiofuelCell : ModFluidCell(FabricItemSettings()) {
+class BiofuelCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = ModFluids.BIOFUEL_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
 /** 生物质单元 */
 @ModItem(name = "biomass_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class BiomassCell : ModFluidCell(FabricItemSettings()) {
+class BiomassCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = ModFluids.BIOMASS_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
 /** 建筑泡沫单元 */
 @ModItem(name = "construction_foam_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class ConstructionFoamCell : ModFluidCell(FabricItemSettings()) {
+class ConstructionFoamCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = ModFluids.CONSTRUCTION_FOAM_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
 /** 蒸汽单元 */
 @ModItem(name = "steam_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class SteamCell : ModFluidCell(FabricItemSettings()) {
+class SteamCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = ModFluids.STEAM_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
 
 /** 过热蒸汽单元 */
 @ModItem(name = "superheated_steam_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class SuperheatedSteamCell : ModFluidCell(FabricItemSettings()) {
+class SuperheatedSteamCell : ModFluidCell(Item.Settings()) {
     override fun getFluid(): Fluid = ModFluids.SUPERHEATED_STEAM_STILL
     override fun getEmptyCell(): Item = cellItem("empty_cell")
 }
@@ -698,16 +697,16 @@ class SuperheatedSteamCell : ModFluidCell(FabricItemSettings()) {
 // ========== 特殊单元（非流体） ==========
 
 @ModItem(name = "air_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class AirCell : Item(FabricItemSettings())
+class AirCell : Item(Item.Settings())
 
 @ModItem(name = "bio_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
-class BioCell : Item(FabricItemSettings())
+class BioCell : Item(Item.Settings())
 
 // ========== 容器类 - 桶 ==========
 // construction_foam_bucket 由 ModFluids.registerFluid("construction_foam") 注册为 Ic2BucketItem
 
 // @ModItem(name = "construct_foam_bucket", tab = CreativeTab.IC2_MATERIALS, group = "buckets")
-// class ConstructFoamBucket : Item(FabricItemSettings())
+// class ConstructFoamBucket : Item(Item.Settings())
 
 // coolant_bucket, hot_coolant_bucket, uu_matter_bucket, weed_ex_bucket, pahoehoe_lava_bucket,
 // biofuel_bucket, biomass_bucket 由 ModFluids 注册为 BucketItem，此处不再重复注册
@@ -715,10 +714,10 @@ class BioCell : Item(FabricItemSettings())
 // ========== 建筑泡沫类 ==========
 /** 建筑泡沫粉 */
 @ModItem(name = "cf_powder", tab = CreativeTab.IC2_MATERIALS, group = "construction_foam")
-class CfPowder : Item(FabricItemSettings()){
+class CfPowder : Item(Item.Settings()){
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             // 合成配方：6×石粉 + 2×沙子 + 1×黏土球 → 1×建筑泡沫粉（cf_powder），与 IC2 经典摆法一致
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, CfPowder::class.instance(), 1)
                 .pattern("dsd")
@@ -737,7 +736,7 @@ class CfPowder : Item(FabricItemSettings()){
 
 //todo 暂时不注册
 // @ModItem(name = "pellet", tab = CreativeTab.IC2_MATERIALS, group = "construction_foam")
-class Pellet : Item(FabricItemSettings())
+class Pellet : Item(Item.Settings())
 
 /**
  * ModFluidCell 的 FluidStorage：满单元可倒出 1 桶对应流体，倒出后变为空单元。

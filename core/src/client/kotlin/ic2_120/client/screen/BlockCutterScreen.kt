@@ -141,7 +141,7 @@ class BlockCutterScreen(
             val upgradeTooltip = mutableListOf<Text>()
             upgradeTooltip.add(Text.translatable("gui.ic2_120.upgrade_slots"))
             for (id in SUPPORTED_UPGRADES) {
-                val item = Registries.ITEM.get(Identifier("ic2_120", id))
+                val item = Registries.ITEM.get(Identifier.of("ic2_120", id))
                 upgradeTooltip.add(item.name)
             }
             context.drawTooltip(textRenderer, upgradeTooltip, mouseX, mouseY)
@@ -149,8 +149,8 @@ class BlockCutterScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guiblockcuttingmachine.png")
-        private val UPTIPS = Identifier("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiblockcuttingmachine.png")
+        private val UPTIPS = Identifier.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 升级提示图标

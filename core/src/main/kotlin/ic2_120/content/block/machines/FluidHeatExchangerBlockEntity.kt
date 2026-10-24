@@ -437,8 +437,8 @@ class FluidHeatExchangerBlockEntity(
     private fun fheMatchesInputFilledContainer(stack: ItemStack): Boolean = when {
         stack.item == Items.LAVA_BUCKET -> true
         stack.item == ModFluids.HOT_COOLANT_BUCKET -> true
-        Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "lava_cell") -> true
-        Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "hot_coolant_cell") -> true
+        Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "lava_cell") -> true
+        Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "hot_coolant_cell") -> true
         stack.item is FluidCellItem -> {
             val fluid = stack.getFluidCellVariant()?.fluid
             fluid == Fluids.LAVA || fluid == Fluids.FLOWING_LAVA ||
@@ -449,7 +449,7 @@ class FluidHeatExchangerBlockEntity(
 
     private fun fheMatchesOutputEmptyContainer(stack: ItemStack): Boolean =
         stack.item == Items.BUCKET ||
-            Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "empty_cell") ||
+            Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "empty_cell") ||
             (stack.item is FluidCellItem && stack.isFluidCellEmpty())
 
     override fun isValid(slot: Int, stack: ItemStack): Boolean = when {

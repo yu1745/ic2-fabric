@@ -18,11 +18,11 @@ import net.minecraft.util.Identifier
  */
 class MetalFormerRollingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MetalFormerRollingJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier("ic2", "textures/gui/guimetalformer.png"),
+        Identifier.of("ic2", "textures/gui/guimetalformer.png"),
         4, 5, 146, 78
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "metal_former")))
+        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "metal_former")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.METAL_FORMER_ROLLING
@@ -50,11 +50,11 @@ class MetalFormerRollingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<
  */
 class MetalFormerCuttingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MetalFormerCuttingJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier("ic2", "textures/gui/guimetalformer.png"),
+        Identifier.of("ic2", "textures/gui/guimetalformer.png"),
         4, 5, 146, 78
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "metal_former")))
+        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "metal_former")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.METAL_FORMER_CUTTING
@@ -82,11 +82,11 @@ class MetalFormerCuttingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<
  */
 class MetalFormerExtrudingRecipeCategory(guiHelper: IGuiHelper) : IRecipeCategory<MetalFormerExtrudingJeiRecipe> {
     private val background: IDrawable = guiHelper.createDrawable(
-        Identifier("ic2", "textures/gui/guimetalformer.png"),
+        Identifier.of("ic2", "textures/gui/guimetalformer.png"),
         4, 5, 146, 78
     )
     private val icon: IDrawable = guiHelper.createDrawableItemStack(
-        ItemStack(Registries.ITEM.get(Identifier("ic2_120", "metal_former")))
+        ItemStack(Registries.ITEM.get(Identifier.of("ic2_120", "metal_former")))
     )
 
     override fun getRecipeType() = Ic2JeiRecipeTypes.METAL_FORMER_EXTRUDING

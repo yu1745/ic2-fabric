@@ -48,7 +48,7 @@ import ic2_120.content.item.ClayDust
 import ic2_120.content.item.DiamondDust
 import ic2_120.content.item.GrinPowder
 import ic2_120.registry.instance
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
@@ -149,22 +149,22 @@ object MaceratorRecipeDatagen {
         // Applied Energistics 2：两种水晶分别打成对应的 AE2 粉尘。
         ExternalEntry(
             "ae2_certus_quartz_crystal_to_dust",
-            Identifier("ae2", "certus_quartz_crystal"),
-            Identifier("ae2", "certus_quartz_dust")
+            Identifier.of("ae2", "certus_quartz_crystal"),
+            Identifier.of("ae2", "certus_quartz_dust")
         ),
         ExternalEntry(
             "ae2_fluix_crystal_to_dust",
-            Identifier("ae2", "fluix_crystal"),
-            Identifier("ae2", "fluix_dust")
+            Identifier.of("ae2", "fluix_crystal"),
+            Identifier.of("ae2", "fluix_dust")
         )
     )
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
         entries.forEach { entry ->
             MaceratorRecipeJsonProvider(
-                recipeId = Identifier("ic2_120", "macerating/${entry.name}"),
+                recipeId = Identifier.of("ic2_120", "macerating/${entry.name}"),
                 input = entry.input,
                 outputItem = entry.output,
                 outputCount = entry.count,
@@ -173,7 +173,7 @@ object MaceratorRecipeDatagen {
         }
         externalEntries.forEach { entry ->
             ExternalMaceratorRecipeJsonProvider(
-                recipeId = Identifier("ic2_120", "macerating/${entry.name}"),
+                recipeId = Identifier.of("ic2_120", "macerating/${entry.name}"),
                 input = entry.input,
                 output = entry.output,
                 outputCount = entry.count,
@@ -188,7 +188,7 @@ object MaceratorRecipeDatagen {
         private val outputItem: Item,
         private val outputCount: Int,
         private val inputCount: Int = 1
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(MaceratorRecipe::class)}")
             val ingredient = input.toJson()
@@ -218,7 +218,7 @@ object MaceratorRecipeDatagen {
         private val output: Identifier,
         private val outputCount: Int,
         private val inputCount: Int = 1
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(MaceratorRecipe::class)}")
 

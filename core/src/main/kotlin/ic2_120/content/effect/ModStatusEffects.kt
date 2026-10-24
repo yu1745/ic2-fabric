@@ -6,8 +6,8 @@ import net.minecraft.util.Identifier
 
 object ModStatusEffects {
     val SOLAR_GENERATING: StatusEffect
-        get() = Registries.STATUS_EFFECT.get(Identifier("ic2", "solar_generating"))!!
+        get() = Registries.STATUS_EFFECT.get(Identifier.of("ic2", "solar_generating"))!!
 
     val RADIATION: StatusEffect
-        get() = Registries.STATUS_EFFECT.get(Identifier("ic2", "radiation"))!!
+        get() = Registries.STATUS_EFFECT.get(Identifier.of("ic2", "radiation"))!!
 }

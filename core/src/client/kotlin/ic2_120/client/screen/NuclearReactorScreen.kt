@@ -345,7 +345,7 @@ class NuclearReactorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guinuclearpowergenerationequipment.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guinuclearpowergenerationequipment.png")
         private val DROPLETS_PER_MB = (FluidConstants.BUCKET / 1000).toInt()
         private val COOLANT_TANK_DROPLETS = (FluidConstants.BUCKET * NuclearReactorSync.COOLANT_TANK_CAPACITY_BUCKETS).toInt()
         private val COOLANT_TANK_CAPACITY_MB = (COOLANT_TANK_DROPLETS / DROPLETS_PER_MB)

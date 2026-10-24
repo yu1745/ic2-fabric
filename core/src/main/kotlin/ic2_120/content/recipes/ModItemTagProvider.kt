@@ -131,11 +131,11 @@ class ModItemTagProvider(
     }
 
     private fun cItem(path: String): TagKey<Item> =
-        TagKey.of(RegistryKeys.ITEM, Identifier("c", path))
+        TagKey.of(RegistryKeys.ITEM, Identifier.of("c", path))
 
     private fun forgeItem(path: String): TagKey<Item> =
-        TagKey.of(RegistryKeys.ITEM, Identifier("forge", path))
+        TagKey.of(RegistryKeys.ITEM, Identifier.of("forge", path))
 
     private fun compatItem(path: String): TagKey<Item> =
-        TagKey.of(RegistryKeys.ITEM, Identifier("ic2_120", "compat/$path"))
+        TagKey.of(RegistryKeys.ITEM, Identifier.of("ic2_120", "compat/$path"))
 }

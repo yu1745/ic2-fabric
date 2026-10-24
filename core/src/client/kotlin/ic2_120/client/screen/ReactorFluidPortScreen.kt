@@ -44,7 +44,7 @@ class ReactorFluidPortScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guiother.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiother.png")
         private const val TEXTURE_SIZE = 256
 
         private const val SLOT_BG_U = 179

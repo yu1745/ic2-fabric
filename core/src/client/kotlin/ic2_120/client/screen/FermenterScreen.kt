@@ -103,7 +103,7 @@ class FermenterScreen(
             val upgradeTooltip = mutableListOf<Text>()
             upgradeTooltip.add(Text.translatable("gui.ic2_120.upgrade_slots"))
             for (id in SUPPORTED_UPGRADES) {
-                val item = Registries.ITEM.get(Identifier("ic2_120", id))
+                val item = Registries.ITEM.get(Identifier.of("ic2_120", id))
                 upgradeTooltip.add(item.name)
             }
             context.drawTooltip(textRenderer, upgradeTooltip, mouseX, mouseY)
@@ -163,8 +163,8 @@ class FermenterScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guifermenter.png")
-        private val UPTIPS = Identifier("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guifermenter.png")
+        private val UPTIPS = Identifier.of("ic2", "textures/gui/uptips.png")
         private val SUPPORTED_UPGRADES = listOf(
             "fluid_ejector_upgrade",
             "fluid_pulling_upgrade"

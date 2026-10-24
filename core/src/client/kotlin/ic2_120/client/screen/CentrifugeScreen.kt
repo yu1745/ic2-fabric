@@ -176,8 +176,8 @@ class CentrifugeScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guicentrifuge.png")
-        private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guicentrifuge.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (179,3)-(193,17) = 14x14

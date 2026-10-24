@@ -4,7 +4,6 @@ import ic2_120.content.block.machines.CreativeGeneratorBlockEntity
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.block.AbstractBlock
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
@@ -44,7 +43,7 @@ class CreativeGeneratorBlock : MachineBlock(
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? =
         if (world.isClient) null
-        else checkType(type, CreativeGeneratorBlockEntity::class.type()) { w, p, s, be ->
+        else validateTicker(world, type, CreativeGeneratorBlockEntity::class.type()) { w, p, s, be ->
             be.tick(w, p, s)
         }
 
@@ -62,7 +61,7 @@ class CreativeGeneratorBlock : MachineBlock(
     class CreativeGeneratorBlockItem(
         block: net.minecraft.block.Block,
         @Suppress("UNUSED_PARAMETER") settings: Item.Settings
-    ) : BlockItem(block, FabricItemSettings().fireproof())
+    ) : BlockItem(block, Item.Settings().fireproof())
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.of("active")

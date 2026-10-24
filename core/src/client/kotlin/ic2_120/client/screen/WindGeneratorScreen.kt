@@ -66,7 +66,7 @@ class WindGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guiwindgenerator.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guiwindgenerator.png")
         private const val TEX_SIZE = 256
         private val GUI_SIZE = GuiSize.STANDARD
 

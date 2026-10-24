@@ -38,7 +38,6 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.SpawnGroup
 import net.minecraft.world.World
 import team.reborn.energy.api.EnergyStorage
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
 import net.fabricmc.fabric.api.`object`.builder.v1.block.entity.FabricBlockEntityTypeBuilder
 import net.minecraft.block.Block
@@ -90,7 +89,7 @@ import java.lang.invoke.MethodHandles
 import java.util.function.Consumer
 import java.nio.file.Files
 import java.nio.file.Paths
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 
 /**
  * 基于类注解的注册扫描器。
@@ -137,7 +136,7 @@ object ClassScanner {
     private val screenHandlerTypes = mutableMapOf<kotlin.reflect.KClass<*>, ScreenHandlerType<*>>()
 
     /** 配方生成器列表（带 modId 标记，支持附属 mod 按需过滤） */
-    private data class RecipeGeneratorEntry(val modId: String, val generator: (Consumer<RecipeJsonProvider>) -> Unit)
+    private data class RecipeGeneratorEntry(val modId: String, val generator: (Consumer<RecipeExporter>) -> Unit)
     private val recipeGenerators = mutableListOf<RecipeGeneratorEntry>()
 
     /**
@@ -1096,17 +1095,17 @@ object ClassScanner {
                 if (ctor != null) {
                     return try {
                         @Suppress("UNCHECKED_CAST")
-                        ctor.call(block, FabricItemSettings()) as BlockItem
+                        ctor.call(block, Item.Settings()) as BlockItem
                     } catch (e: Exception) {
                         logger.warn("创建方块 {} 的自定义 BlockItem 失败: {}，回退默认 BlockItem", id, e.message)
-                        BlockItem(block, FabricItemSettings())
+                        BlockItem(block, Item.Settings())
                     }
                 }
                 logger.debug("方块 {} 的父类 {} 存在自定义 BlockItem 类 {}，但未找到 (Block, Item.Settings) 构造函数，继续向上查找", id, current.simpleName, customItemClass.simpleName)
             }
             current = current.superclasses.firstOrNull()
         }
-        return BlockItem(block, FabricItemSettings())
+        return BlockItem(block, Item.Settings())
     }
 
     private fun registerItems(modId: String, itemClasses: List<ItemClassInfo>) {
@@ -1308,7 +1307,7 @@ object ClassScanner {
                 if (parameters.size != 2 ||
                     parameters[1].type.classifier != Consumer::class) {
                     logger.warn(
-                        "类 {} 的 {} 方法签名不正确，应为 (Consumer<RecipeJsonProvider>) -> Unit",
+                        "类 {} 的 {} 方法签名不正确，应为 (Consumer<RecipeExporter>) -> Unit",
                         clazz.simpleName,
                         generateRecipesMethod.name
                     )
@@ -1316,7 +1315,7 @@ object ClassScanner {
                 }
 
                 // 创建生成器闭包
-                val generator: (Consumer<RecipeJsonProvider>) -> Unit = { exporter ->
+                val generator: (Consumer<RecipeExporter>) -> Unit = { exporter ->
                     @Suppress("UNCHECKED_CAST")
                     generateRecipesMethod.call(companion, exporter as Any?)
                 }
@@ -1335,7 +1334,7 @@ object ClassScanner {
      * 执行所有配方生成
      * 供 ModRecipeProvider 调用
      */
-    fun generateAllRecipes(recipeExporter: Consumer<RecipeJsonProvider>) {
+    fun generateAllRecipes(recipeExporter: Consumer<RecipeExporter>) {
         logger.info("开始生成配方...")
         var successCount = 0
         var failCount = 0
@@ -1355,7 +1354,7 @@ object ClassScanner {
     /**
      * 执行指定 modId 的配方生成（供附属 mod 使用）。
      */
-    fun generateRecipesForMod(modId: String, recipeExporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipesForMod(modId: String, recipeExporter: Consumer<RecipeExporter>) {
         logger.info("开始生成 {} 配方...", modId)
         var successCount = 0
         var failCount = 0

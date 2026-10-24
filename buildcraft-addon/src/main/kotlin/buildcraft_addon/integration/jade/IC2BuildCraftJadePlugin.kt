@@ -52,7 +52,7 @@ class IC2BuildCraftJadePlugin : IWailaPlugin {
 
 object BcJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAccessor> {
 
-    private val BC_INFO = Identifier("buildcraft_addon", "bc_info")
+    private val BC_INFO = Identifier.of("buildcraft_addon", "bc_info")
 
     override fun appendServerData(data: NbtCompound, accessor: BlockAccessor) {
         when (val be = accessor.blockEntity) {

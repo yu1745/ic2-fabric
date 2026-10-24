@@ -545,7 +545,7 @@ class FermenterBlockEntity(
         if (stack.isEmpty) return false
         return when {
             stack.item == ModFluids.BIOMASS_BUCKET -> true
-            Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "biomass_cell") -> true
+            Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "biomass_cell") -> true
             stack.item is FluidCellItem -> {
                 val fluid = stack.getFluidCellVariant()?.fluid
                 fluid != null && isBiomass(fluid)
@@ -557,7 +557,7 @@ class FermenterBlockEntity(
     private fun isEmptyContainerForFermenter(stack: ItemStack): Boolean =
         !stack.isEmpty && (
             stack.item == Items.BUCKET ||
-                Registries.ITEM.getId(stack.item) == Identifier("ic2_120", "empty_cell") ||
+                Registries.ITEM.getId(stack.item) == Identifier.of("ic2_120", "empty_cell") ||
                 (stack.item is FluidCellItem && stack.isFluidCellEmpty())
             )
 }

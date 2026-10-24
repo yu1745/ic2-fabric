@@ -9,7 +9,7 @@ import ic2_120.content.item.UraniumFuelRodItem
 import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
@@ -48,10 +48,10 @@ object SolidCannerRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
         entries.forEach { entry ->
             SolidCannerRecipeJsonProvider(
-                recipeId = Identifier("ic2_120", "solid_canning/${entry.name}"),
+                recipeId = Identifier.of("ic2_120", "solid_canning/${entry.name}"),
                 slot0Ingredient = entry.slot0Ingredient,
                 slot0Count = entry.slot0Count,
                 slot1Ingredient = entry.slot1Ingredient,
@@ -70,7 +70,7 @@ object SolidCannerRecipeDatagen {
         private val slot1Count: Int,
         private val outputItem: Item,
         private val outputCount: Int
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(SolidCannerRecipe::class)}")
             json.add("slot0_ingredient", slot0Ingredient.toJson())

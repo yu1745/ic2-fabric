@@ -52,6 +52,6 @@ class SolarGeneratorScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/guisolargenerator.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/guisolargenerator.png")
     }
 }

@@ -4,7 +4,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import ic2_120.content.item.isFluidCellEmpty
 import ic2_120.registry.annotation.ModMachineRecipe
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.inventory.RecipeInputInventory
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -71,7 +71,7 @@ object EmptyFluidCellToEmptyCellRecipeSerializer : RecipeSerializer<EmptyFluidCe
 
 object EmptyFluidCellToEmptyCellRecipeDatagen {
     fun offer(
-        exporter: Consumer<RecipeJsonProvider>,
+        exporter: Consumer<RecipeExporter>,
         recipeId: Identifier,
         input: Item,
         result: Item,
@@ -95,7 +95,7 @@ object EmptyFluidCellToEmptyCellRecipeDatagen {
         private val result: Item,
         private val count: Int,
         private val category: String
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "ic2_120:empty_fluid_cell_to_empty_cell")
             json.addProperty("category", category)

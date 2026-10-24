@@ -17,7 +17,7 @@ import net.fabricmc.fabric.api.registry.FlammableBlockRegistry
 import net.fabricmc.fabric.api.registry.StrippableBlockRegistry
 import net.minecraft.block.*
 import net.minecraft.block.entity.BlockEntity
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
 import net.minecraft.item.ItemStack
@@ -55,7 +55,7 @@ class RubberWood : PillarBlock(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val log = RubberLogBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RubberWood::class.item(), 3)
                 .pattern("LL").pattern("LL")
@@ -240,7 +240,7 @@ class StrippedRubberLogBlock(settings: AbstractBlock.Settings = AbstractBlock.Se
 class StrippedRubberWoodBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.STRIPPED_OAK_WOOD).strength(2.0f)) : PillarBlock(settings) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val log = StrippedRubberLogBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, StrippedRubberWoodBlock::class.item(), 3)
                 .pattern("LL").pattern("LL")
@@ -255,7 +255,7 @@ class StrippedRubberWoodBlock(settings: AbstractBlock.Settings = AbstractBlock.S
 class RubberPlanksBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_PLANKS).strength(2.0f)) : Block(settings) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val log = RubberLogBlock::class.item()
             ShapelessRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RubberPlanksBlock::class.item(), 4)
                 .input(Ingredient.fromTag(ModTags.RUBBER_LOGS))
@@ -271,7 +271,7 @@ class RubberPlanksBlock(settings: AbstractBlock.Settings = AbstractBlock.Setting
 class RubberSlabBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_SLAB).strength(2.0f)) : SlabBlock(settings) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val planks = RubberPlanksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RubberSlabBlock::class.item(), 6)
                 .pattern("PPP").input('P', planks)
@@ -285,7 +285,7 @@ class RubberSlabBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.
 class RubberStairsBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_STAIRS).strength(2.0f)) : StairsBlock(Blocks.OAK_PLANKS.defaultState, settings) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val planks = RubberPlanksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, RubberStairsBlock::class.item(), 4)
                 .pattern("P  ").pattern("PP ").pattern("PPP").input('P', planks)
@@ -301,7 +301,7 @@ class RubberStairsBlock(settings: AbstractBlock.Settings = AbstractBlock.Setting
 class RubberFenceBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_FENCE).strength(2.0f)) : FenceBlock(settings) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val planks = RubberPlanksBlock::class.item()
             val sticks = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, RubberFenceBlock::class.item(), 3)
@@ -316,7 +316,7 @@ class RubberFenceBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings
 class RubberFenceGateBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_FENCE_GATE).strength(2.0f)) : FenceGateBlock(settings, WoodType.OAK) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val planks = RubberPlanksBlock::class.item()
             val sticks = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.REDSTONE, RubberFenceGateBlock::class.item(), 1)
@@ -333,7 +333,7 @@ class RubberFenceGateBlock(settings: AbstractBlock.Settings = AbstractBlock.Sett
 class RubberDoorBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_DOOR).strength(2.0f)) : DoorBlock(settings, BlockSetType.OAK) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val planks = RubberPlanksBlock::class.item()
             val sticks = Items.STICK
             ShapedRecipeJsonBuilder.create(RecipeCategory.REDSTONE, RubberDoorBlock::class.item(), 3)
@@ -348,7 +348,7 @@ class RubberDoorBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.
 class RubberTrapdoorBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_TRAPDOOR).strength(2.0f)) : TrapdoorBlock(settings, BlockSetType.OAK) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val planks = RubberPlanksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.REDSTONE, RubberTrapdoorBlock::class.item(), 2)
                 .pattern("PPP").pattern("PPP").input('P', planks)
@@ -364,7 +364,7 @@ class RubberTrapdoorBlock(settings: AbstractBlock.Settings = AbstractBlock.Setti
 class RubberButtonBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_BUTTON).strength(2.0f)) : ButtonBlock(settings, BlockSetType.OAK, 30, true) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val planks = RubberPlanksBlock::class.item()
             ShapelessRecipeJsonBuilder.create(RecipeCategory.REDSTONE, RubberButtonBlock::class.item(), 1)
                 .input(planks)
@@ -378,7 +378,7 @@ class RubberButtonBlock(settings: AbstractBlock.Settings = AbstractBlock.Setting
 class RubberPressurePlateBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.OAK_PRESSURE_PLATE).strength(2.0f)) : PressurePlateBlock(PressurePlateBlock.ActivationRule.EVERYTHING, settings, BlockSetType.OAK) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val planks = RubberPlanksBlock::class.item()
             ShapedRecipeJsonBuilder.create(RecipeCategory.REDSTONE, RubberPressurePlateBlock::class.item(), 1)
                 .pattern("PP").input('P', planks)

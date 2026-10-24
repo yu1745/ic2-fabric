@@ -7,7 +7,7 @@ import ic2_120.content.item.ForgeHammer
 import ic2_120.content.item.Treetap
 import ic2_120.content.item.Wrench
 import ic2_120.registry.annotation.ModMachineRecipe
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.inventory.RecipeInputInventory
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -101,7 +101,7 @@ object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapeles
  */
 object DamageToolShapelessRecipeDatagen {
     fun offer(
-        exporter: Consumer<RecipeJsonProvider>,
+        exporter: Consumer<RecipeExporter>,
         recipeId: Identifier,
         result: Item,
         resultCount: Int = 1,
@@ -128,7 +128,7 @@ object DamageToolShapelessRecipeDatagen {
         private val resultCount: Int,
         private val ingredients: List<Ingredient>,
         private val category: String
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "ic2_120:damage_tool_shapeless")
             json.addProperty("category", category)

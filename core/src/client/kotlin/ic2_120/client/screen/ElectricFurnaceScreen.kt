@@ -180,8 +180,8 @@ class ElectricFurnaceScreen(
     }
 
     companion object {
-        private val TEXTURE = Identifier("ic2", "textures/gui/scrapboxrecipes.png")
-        private val UPTIPS_TEXTURE = Identifier("ic2", "textures/gui/uptips.png")
+        private val TEXTURE = Identifier.of("ic2", "textures/gui/scrapboxrecipes.png")
+        private val UPTIPS_TEXTURE = Identifier.of("ic2", "textures/gui/uptips.png")
         private const val TEXTURE_SIZE = 256
 
         // 电量条 (178,2)-(191,15) = 13×13

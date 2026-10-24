@@ -6,7 +6,7 @@ import ic2_120.content.item.*
 import ic2_120.content.recipes.IngredientInput
 import ic2_120.content.recipes.ModMachineRecipes
 import ic2_120.registry.instance
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
@@ -277,7 +277,7 @@ object CentrifugeRecipeDatagen {
         // 泥炭矿 200 -> 煤炭 + 糠
         Entry(
             "peat_ore",
-            IngredientInput.item(Registries.ITEM.get(Identifier("ic2_120", "peat_ore"))), 1, 200,
+            IngredientInput.item(Registries.ITEM.get(Identifier.of("ic2_120", "peat_ore"))), 1, 200,
             listOf(
                 OutputEntry(Items.COAL, 1),
                 OutputEntry(BioChaff::class.instance(), 1)
@@ -287,10 +287,10 @@ object CentrifugeRecipeDatagen {
 
     fun allEntries(): List<Entry> = entries
 
-    fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+    fun generateRecipes(exporter: Consumer<RecipeExporter>) {
         entries.forEach { entry ->
             CentrifugeRecipeJsonProvider(
-                recipeId = Identifier("ic2_120", "centrifuging/${entry.name}"),
+                recipeId = Identifier.of("ic2_120", "centrifuging/${entry.name}"),
                 input = entry.input,
                 inputCount = entry.inputCount,
                 minHeat = entry.minHeat,
@@ -305,7 +305,7 @@ object CentrifugeRecipeDatagen {
         private val inputCount: Int,
         private val minHeat: Int,
         private val outputs: List<OutputEntry>
-    ) : RecipeJsonProvider {
+    ) : RecipeExporter {
         override fun serialize(json: JsonObject) {
             json.addProperty("type", "${ModMachineRecipes.recipeType(CentrifugeRecipe::class)}")
             json.add("ingredient", input.toJson())

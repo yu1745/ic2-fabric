@@ -43,7 +43,6 @@ import net.minecraft.util.ItemScatterer
 import net.minecraft.util.math.BlockPos
 import ic2_120.registry.recipeId
 import ic2_120.registry.type
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings
 import net.minecraft.item.AxeItem
 import net.minecraft.item.HoeItem
 import net.minecraft.item.Item
@@ -67,7 +66,7 @@ import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder
-import net.minecraft.data.server.recipe.RecipeJsonProvider
+import net.minecraft.data.server.recipe.RecipeExporter
 import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
 import ic2_120.registry.instance
@@ -93,7 +92,7 @@ object BronzeToolMaterial : ToolMaterial {
 
 /** 锻造锤 - 将锭锻造成板，将板锻造成外壳 */
 @ModItem(name = "forge_hammer", tab = CreativeTab.IC2_TOOLS)
-class ForgeHammer : Item(FabricItemSettings().maxDamage(80)) {
+class ForgeHammer : Item(Item.Settings().maxDamage(80)) {
     override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
         val remaining = stack.maxDamage - stack.damage
         tooltip.add(Text.literal("剩余使用次数: $remaining").formatted(Formatting.GRAY))
@@ -101,10 +100,10 @@ class ForgeHammer : Item(FabricItemSettings().maxDamage(80)) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val iron = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON)
             val stick = Items.STICK
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ForgeHammer::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, ForgeHammer::class.instance(), 1)
                 .pattern("II").pattern("IS").pattern("II")
                 .input('I', iron).input('S', stick)
                 .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
@@ -115,7 +114,7 @@ class ForgeHammer : Item(FabricItemSettings().maxDamage(80)) {
 
 /** 板材切割剪刀 - 将板材切割成导线 */
 @ModItem(name = "cutter", tab = CreativeTab.IC2_TOOLS)
-class Cutter : Item(FabricItemSettings().maxDamage(60)) {
+class Cutter : Item(Item.Settings().maxDamage(60)) {
     override fun appendTooltip(stack: ItemStack, world: World?, tooltip: MutableList<Text>, context: TooltipContext) {
         val remaining = stack.maxDamage - stack.damage
         tooltip.add(Text.literal("剩余使用次数: $remaining").formatted(Formatting.GRAY))
@@ -123,20 +122,20 @@ class Cutter : Item(FabricItemSettings().maxDamage(60)) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val ironIngot = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_IRON)
             val ironPlate = Ingredient.fromTag(ModTags.Compat.Items.PLATES_IRON)
             val steelIngot = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_STEEL)
 
             // 配方 1：铁板制作切割机
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, Cutter::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, Cutter::class.instance(), 1)
                 .pattern("P P").pattern(" P ").pattern("I I")
                 .input('P', ironPlate).input('I', ironIngot)
                 .criterion(hasItem(IronPlate::class.instance()), conditionsFromItem(IronPlate::class.instance()))
                 .offerTo(exporter, Cutter::class.recipeId("iron_plate"))
 
             // 配方 2：钢锭制作切割机
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, Cutter::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, Cutter::class.instance(), 1)
                 .pattern("P P").pattern(" P ").pattern("I I")
                 .input('P', steelIngot).input('I', ironIngot)
                 .criterion(hasItem(SteelIngot::class.instance()), conditionsFromItem(SteelIngot::class.instance()))
@@ -148,13 +147,13 @@ class Cutter : Item(FabricItemSettings().maxDamage(60)) {
 // ========== 青铜工具 ==========
 
 @ModItem(name = "bronze_axe", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeAxe : AxeItem(BronzeToolMaterial, 5f, -3f, FabricItemSettings().maxCount(1)) {
+class BronzeAxe : AxeItem(BronzeToolMaterial, 5f, -3f, Item.Settings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzeAxe::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, BronzeAxe::class.instance(), 1)
                 .pattern("MM").pattern("MS").pattern(" S")
                 .input('M', bronze).input('S', stick)
                 .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
@@ -164,13 +163,13 @@ class BronzeAxe : AxeItem(BronzeToolMaterial, 5f, -3f, FabricItemSettings().maxC
 }
 
 @ModItem(name = "bronze_hoe", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeHoe : HoeItem(BronzeToolMaterial, -1, 0f, FabricItemSettings().maxCount(1)) {
+class BronzeHoe : HoeItem(BronzeToolMaterial, -1, 0f, Item.Settings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzeHoe::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, BronzeHoe::class.instance(), 1)
                 .pattern("MM").pattern(" S").pattern(" S")
                 .input('M', bronze).input('S', stick)
                 .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
@@ -180,13 +179,13 @@ class BronzeHoe : HoeItem(BronzeToolMaterial, -1, 0f, FabricItemSettings().maxCo
 }
 
 @ModItem(name = "bronze_sword", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeSword : SwordItem(BronzeToolMaterial, 3, -2.4f, FabricItemSettings().maxCount(1)) {
+class BronzeSword : SwordItem(BronzeToolMaterial, 3, -2.4f, Item.Settings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzeSword::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, BronzeSword::class.instance(), 1)
                 .pattern("M").pattern("M").pattern("S")
                 .input('M', bronze).input('S', stick)
                 .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
@@ -196,13 +195,13 @@ class BronzeSword : SwordItem(BronzeToolMaterial, 3, -2.4f, FabricItemSettings()
 }
 
 @ModItem(name = "bronze_shovel", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeShovel : ShovelItem(BronzeToolMaterial, 1.5f, -3f, FabricItemSettings().maxCount(1)) {
+class BronzeShovel : ShovelItem(BronzeToolMaterial, 1.5f, -3f, Item.Settings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzeShovel::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, BronzeShovel::class.instance(), 1)
                 .pattern("M").pattern("S").pattern("S")
                 .input('M', bronze).input('S', stick)
                 .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
@@ -212,13 +211,13 @@ class BronzeShovel : ShovelItem(BronzeToolMaterial, 1.5f, -3f, FabricItemSetting
 }
 
 @ModItem(name = "bronze_pickaxe", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzePickaxe : PickaxeItem(BronzeToolMaterial, 1, -2.8f, FabricItemSettings().maxCount(1)) {
+class BronzePickaxe : PickaxeItem(BronzeToolMaterial, 1, -2.8f, Item.Settings().maxCount(1)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, BronzePickaxe::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, BronzePickaxe::class.instance(), 1)
                 .pattern("MMM").pattern(" S ").pattern(" S ")
                 .input('M', bronze).input('S', stick)
                 .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
@@ -229,7 +228,7 @@ class BronzePickaxe : PickaxeItem(BronzeToolMaterial, 1, -2.8f, FabricItemSettin
 
 /** 除草剂：右键作物直接喷洒除草剂，内部储存除草剂容量（mB） */
 @ModItem(name = "weed_ex", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class WeedEx : Item(FabricItemSettings().maxCount(1)) {
+class WeedEx : Item(Item.Settings().maxCount(1)) {
     override fun useOnBlock(context: ItemUsageContext): ActionResult {
         val world = context.world
         val pos = context.blockPos
@@ -318,10 +317,10 @@ class WeedEx : Item(FabricItemSettings().maxCount(1)) {
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val cell = WeedExCell::class.instance()
             if (cell == Items.AIR) return
-            ShapelessRecipeJsonBuilder.create(RecipeCategory.TOOLS, WeedEx::class.instance(), 1)
+            ShapelessRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, WeedEx::class.instance(), 1)
                 .input(cell, 1)
                 .criterion(hasItem(cell), conditionsFromItem(cell))
                 .offerTo(exporter, WeedEx::class.id())
@@ -331,7 +330,7 @@ class WeedEx : Item(FabricItemSettings().maxCount(1)) {
 
 /** 除草铲：右键作物架上的杂草可清除并恢复空架（杂草无法用手采摘，需用本工具或破坏方块） */
 @ModItem(name = "weeding_spade", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class WeedingSpade : Item(FabricItemSettings().maxDamage(120)) {
+class WeedingSpade : Item(Item.Settings().maxDamage(120)) {
     override fun useOnBlock(context: ItemUsageContext): ActionResult {
         val world = context.world
         val pos = context.blockPos
@@ -360,10 +359,10 @@ class WeedingSpade : Item(FabricItemSettings().maxDamage(120)) {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
             val stick = Items.STICK
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, WeedingSpade::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, WeedingSpade::class.instance(), 1)
                 .pattern("M").pattern("S")
                 .input('M', bronze).input('S', stick)
                 .criterion(hasItem(BronzeIngot::class.instance()), conditionsFromItem(BronzeIngot::class.instance()))
@@ -376,11 +375,11 @@ class WeedingSpade : Item(FabricItemSettings().maxDamage(120)) {
 
 /** 测试工具 - 开发调试用 */
 @ModItem(name = "debug_item", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class DebugItem : Item(FabricItemSettings().maxCount(1))
+class DebugItem : Item(Item.Settings().maxCount(1))
 
 /** 工具箱：右键收纳快捷栏工具（最多 8 格）；潜行右键向背包释放，能放多少放多少，放不下的留在箱内。无 GUI。 */
 @ModItem(name = "tool_box", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class ToolBox : Item(FabricItemSettings().maxCount(1)) {
+class ToolBox : Item(Item.Settings().maxCount(1)) {
 
     override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
         val stack = user.getStackInHand(hand)
@@ -407,7 +406,7 @@ class ToolBox : Item(FabricItemSettings().maxCount(1)) {
                 user.sendMessage(Text.translatable("message.ic2_120.tool_box.inventory_partial"), true)
             }
             saveInternal(stack, internal)
-            return TypedActionResult.success(stack, true)
+            return TypedActionResult.success(stack)
         }
 
         val inv = user.inventory
@@ -427,7 +426,7 @@ class ToolBox : Item(FabricItemSettings().maxCount(1)) {
             user.playSound(SoundEvents.BLOCK_WOOD_PLACE, SoundCategory.PLAYERS, 0.35f, 1.25f)
         }
         saveInternal(stack, internal)
-        return TypedActionResult.success(stack, true)
+        return TypedActionResult.success(stack)
     }
 
     override fun appendTooltip(
@@ -463,10 +462,10 @@ class ToolBox : Item(FabricItemSettings().maxCount(1)) {
         const val NBT_KEY = "ToolBoxItems"
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val casing = BronzeCasing::class.instance()
             val chest = Items.CHEST
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ToolBox::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, ToolBox::class.instance(), 1)
                 .pattern("BBB")
                 .pattern("BCB")
                 .pattern("BBB")
@@ -527,15 +526,15 @@ class ToolBox : Item(FabricItemSettings().maxCount(1)) {
 //已删除
 /** EU 电表 - 测量导线/机器 EU 流量 */
 // @ModItem(name = "meter", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class Meter : Item(FabricItemSettings().maxCount(1))
+class Meter : Item(Item.Settings().maxCount(1))
 
 /** 木龙头 - 从橡胶树原木湿面提取粘性树脂，寿命 10 次 */
 @ModItem(name = "treetap", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class Treetap : Item(FabricItemSettings().maxDamage(10)) {
+class Treetap : Item(Item.Settings().maxDamage(10)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, Treetap::class.instance(), 1)
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, Treetap::class.instance(), 1)
                 .pattern(" P ")
                 .pattern("PPP")
                 .pattern("P  ")
@@ -548,12 +547,12 @@ class Treetap : Item(FabricItemSettings().maxDamage(10)) {
 
 /** 扳手 - 拆卸机器、旋转方块 */
 @ModItem(name = "wrench", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class Wrench : Item(FabricItemSettings().maxDamage(120)) {
+class Wrench : Item(Item.Settings().maxDamage(120)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val bronze = Ingredient.fromTag(ModTags.Compat.Items.INGOTS_BRONZE)
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, Wrench::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, Wrench::class.instance(), 1)
                 .pattern("B B")
                 .pattern("BBB")
                 .pattern(" B ")
@@ -566,7 +565,7 @@ class Wrench : Item(FabricItemSettings().maxDamage(120)) {
 
 /** 遥控器 - 远程控制机器频率 */
 @ModItem(name = "frequency_transmitter", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class FrequencyTransmitter : Item(FabricItemSettings().maxCount(1)) {
+class FrequencyTransmitter : Item(Item.Settings().maxCount(1)) {
     companion object {
         private const val NBT_BIND_X = "BindX"
         private const val NBT_BIND_Y = "BindY"
@@ -575,11 +574,11 @@ class FrequencyTransmitter : Item(FabricItemSettings().maxCount(1)) {
         private const val NBT_HAS_BIND = "HasBind"
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val cable = InsulatedCopperCableBlock::class.item()
             val circuit = Circuit::class.instance()
             if (cable == Items.AIR || circuit == Items.AIR) return
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, FrequencyTransmitter::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, FrequencyTransmitter::class.instance(), 1)
                 .pattern("   ")
                 .pattern(" C ")
                 .pattern(" E ")
@@ -677,7 +676,7 @@ class FrequencyTransmitter : Item(FabricItemSettings().maxCount(1)) {
 /** 链锯 - 电动伐木工具（等级 1，30k EU） */
 @ModItem(name = "chainsaw", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:axes", "minecraft:swords"])
 class Chainsaw : ElectricMiningDrillItem(
-    FabricItemSettings(),
+    Item.Settings(),
     miningToolFactories = listOf({ ItemStack(Items.DIAMOND_AXE) }, { ItemStack(Items.DIAMOND_SWORD) }),
     baseEnergyPerBlock = 100L
 ) {
@@ -698,7 +697,7 @@ class Chainsaw : ElectricMiningDrillItem(
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val ironPlate = IronPlate::class.instance()
             val powerUnit = PowerUnitItem::class.instance()
             BatteryEnergyShapedRecipeDatagen.offer(
@@ -824,17 +823,17 @@ abstract class ElectricMiningDrillItem(
 /** 钻石钻头 - 电动采矿工具（等级 1，10k EU） */
 @ModItem(name = "diamond_drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:pickaxes", "minecraft:shovels"])
 class DiamondDrill : ElectricMiningDrillItem(
-    FabricItemSettings(),
+    Item.Settings(),
     miningToolFactories = listOf({ ItemStack(Items.DIAMOND_PICKAXE) }, { ItemStack(Items.DIAMOND_SHOVEL) }),
     baseEnergyPerBlock = 80L,
     miningEfficiency = 16.0f
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val diamond = Items.DIAMOND
             val drill = Drill::class.instance()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, DiamondDrill::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, DiamondDrill::class.instance(), 1)
                 .pattern("   ").pattern(" D ").pattern("DVD")
                 .input('D', diamond).input('V', drill)
                 .criterion(hasItem(drill), conditionsFromItem(drill))
@@ -865,14 +864,14 @@ class DiamondDrill : ElectricMiningDrillItem(
 /** 采矿钻头 - 电动采矿工具（等级 1，10k EU） */
 @ModItem(name = "drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:pickaxes", "minecraft:shovels"])
 class Drill : ElectricMiningDrillItem(
-    FabricItemSettings(),
+    Item.Settings(),
     miningToolFactories = listOf({ ItemStack(Items.IRON_PICKAXE) }, { ItemStack(Items.IRON_SHOVEL) }),
     baseEnergyPerBlock = 50L,
     miningEfficiency = 8.0f
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val ironPlate = IronPlate::class.instance()
             val powerUnit = PowerUnitItem::class.instance()
             BatteryEnergyShapedRecipeDatagen.offer(
@@ -911,10 +910,10 @@ class Drill : ElectricMiningDrillItem(
 
 /** 电动树脂提取器 - 从橡胶木提取树脂（等级 1，10k EU） */
 @ModItem(name = "electric_treetap", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
-class ElectricTreetap : Item(FabricItemSettings().maxCount(1)), IElectricTool {
+class ElectricTreetap : Item(Item.Settings().maxCount(1)), IElectricTool {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val treetap = Treetap::class.instance()
             val smallPower = SmallPowerUnitItem::class.instance()
             ConsumeTreetapShapedRecipeDatagen.offer(
@@ -952,10 +951,10 @@ class ElectricTreetap : Item(FabricItemSettings().maxCount(1)), IElectricTool {
 
 /** 电动扳手 - 拆卸机器、旋转方块（等级 1，10k EU） */
 @ModItem(name = "electric_wrench", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
-class ElectricWrench : Item(FabricItemSettings().maxCount(1)), IElectricTool {
+class ElectricWrench : Item(Item.Settings().maxCount(1)), IElectricTool {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val wrench = Wrench::class.instance()
             val smallPower = SmallPowerUnitItem::class.instance()
             ConsumeWrenchShapedRecipeDatagen.offer(
@@ -995,7 +994,7 @@ class ElectricWrench : Item(FabricItemSettings().maxCount(1)), IElectricTool {
 /** 铱钻头 - 高级电动采矿工具（等级 3，300k EU），模式键 + 右键切换精准采集 */
 @ModItem(name = "iridium_drill", tab = CreativeTab.IC2_TOOLS, group = "electric_tools", tags = ["minecraft:pickaxes", "minecraft:shovels"])
 class IridiumDrill : ElectricMiningDrillItem(
-    FabricItemSettings(),
+    Item.Settings(),
     miningToolFactories = listOf({ ItemStack(Items.NETHERITE_PICKAXE) }, { ItemStack(Items.NETHERITE_SHOVEL) }),
     baseEnergyPerBlock = 800L,
     miningEfficiency = 24.0f
@@ -1009,11 +1008,11 @@ class IridiumDrill : ElectricMiningDrillItem(
         private const val SILK_TOUCH_MULTIPLIER = 10L
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val reinforcedIridium = IridiumPlate::class.instance()
             val diamondDrill = DiamondDrill::class.instance()
             val energyCrystal = EnergyCrystalItem::class.instance()
-            ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, IridiumDrill::class.instance(), 1)
+            ShapedRecipeJsonBuilder.create(RecipeCategory.EQUIPMENT, IridiumDrill::class.instance(), 1)
                 .pattern(" R ").pattern("RDR").pattern(" E ")
                 .input('R', reinforcedIridium).input('D', diamondDrill).input('E', energyCrystal)
                 .criterion(hasItem(diamondDrill), conditionsFromItem(diamondDrill))
@@ -1108,7 +1107,7 @@ class NanoSaber : SwordItem(
     NanoSaberMaterial,
     0,
     -2.4f,
-    FabricItemSettings().maxCount(1)
+    Item.Settings().maxCount(1)
 ), IElectricTool {
 
     companion object {
@@ -1197,7 +1196,7 @@ class NanoSaber : SwordItem(
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val glow = Items.GLOWSTONE_DUST
             val alloy = Alloy::class.instance()
             val plate = CarbonPlate::class.instance()
@@ -1355,11 +1354,11 @@ class NanoSaber : SwordItem(
 
 /** 拟态板 - 伪装方块外观 */
 @ModItem(name = "obscurator", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class Obscurator : Item(FabricItemSettings().maxCount(1))
+class Obscurator : Item(Item.Settings().maxCount(1))
 
 /** 风力计 - 测量风力，客户端本地计算并输出至聊天栏 */
 @ModItem(name = "wind_meter", tab = CreativeTab.IC2_TOOLS, group = "tools")
-class WindMeter : Item(FabricItemSettings().maxCount(1)) {
+class WindMeter : Item(Item.Settings().maxCount(1)) {
     override fun use(world: World, user: PlayerEntity, hand: Hand): TypedActionResult<ItemStack> {
         val stack = user.getStackInHand(hand)
         if (world.isClient) {
@@ -1373,7 +1372,7 @@ class WindMeter : Item(FabricItemSettings().maxCount(1)) {
         var clientOutput: ((World, PlayerEntity) -> Unit)? = null
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeJsonProvider>) {
+        fun generateRecipes(exporter: Consumer<RecipeExporter>) {
             val tinCasing = TinCasing::class.instance()
             val bronzeCasing = BronzeCasing::class.instance()
             val smallPowerUnit = SmallPowerUnitItem::class.instance()
