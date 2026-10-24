@@ -1,6 +1,13 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/bronze_rotor.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/rotor/bronze_rotor"
+    "particle": "ic2_120:item/item3d/metal_c89042",
+    "metal_c89042": "ic2_120:item/item3d/metal_c89042",
+    "flat_99591c": "ic2_120:item/item3d/flat_99591c",
+    "flat_ffa34e": "ic2_120:item/item3d/flat_ffa34e",
+    "flat_772500": "ic2_120:item/item3d/flat_772500",
+    "flat_b26a29": "ic2_120:item/item3d/flat_b26a29"
   }
 }

@@ -1,6 +1,12 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/rtg_pellet.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/nuclear/rtg_pellet"
+    "particle": "ic2_120:item/item3d/flat_9a2721",
+    "flat_9a2721": "ic2_120:item/item3d/flat_9a2721",
+    "flat_c73d33": "ic2_120:item/item3d/flat_c73d33",
+    "flat_dc5144": "ic2_120:item/item3d/flat_dc5144",
+    "flat_e06a5c": "ic2_120:item/item3d/flat_e06a5c"
   }
 }

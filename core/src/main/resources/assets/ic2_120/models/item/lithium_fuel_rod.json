@@ -1,1 +1,13 @@
-{"parent":"ic2:item/default","textures":{"layer0":"ic2:item/reactor/fuel_rod/lithium"}}
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/lithium_fuel_rod.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_4c4c4c",
+    "flat_4c4c4c": "ic2_120:item/item3d/flat_4c4c4c",
+    "metal_7c7c7c": "ic2_120:item/item3d/metal_7c7c7c",
+    "glass_edf2f3": "ic2_120:item/item3d/glass_edf2f3",
+    "glass_d3e2e3": "ic2_120:item/item3d/glass_d3e2e3",
+    "glass_b6d0d3": "ic2_120:item/item3d/glass_b6d0d3"
+  }
+}

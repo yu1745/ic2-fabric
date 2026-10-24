@@ -1,8 +1,8 @@
 {
     "credit": "IC2-1.20",
     "textures": {
-        "0": "ic2:item/rotor/wood_rotor_model",
-        "particle": "ic2:item/rotor/wood_rotor_model"
+        "0": "ic2_120:item/rotor/wood_rotor_model",
+        "particle": "ic2_120:item/rotor/wood_rotor_model"
     },
     "elements": [
         {

@@ -2,12 +2,12 @@
   "multipart": [
     {
       "apply": {
-        "model": "ic2:block/fence/iron_post"
+        "model": "ic2_120:block/fence/iron_post"
       }
     },
     {
       "apply": {
-        "model": "ic2:block/fence/iron_side",
+        "model": "ic2_120:block/fence/iron_side",
         "uvlock": true
       },
       "when": {
@@ -16,7 +16,7 @@
     },
     {
       "apply": {
-        "model": "ic2:block/fence/iron_side",
+        "model": "ic2_120:block/fence/iron_side",
         "uvlock": true,
         "y": 90
       },
@@ -26,7 +26,7 @@
     },
     {
       "apply": {
-        "model": "ic2:block/fence/iron_side",
+        "model": "ic2_120:block/fence/iron_side",
         "uvlock": true,
         "y": 180
       },
@@ -36,7 +36,7 @@
     },
     {
       "apply": {
-        "model": "ic2:block/fence/iron_side",
+        "model": "ic2_120:block/fence/iron_side",
         "uvlock": true,
         "y": 270
       },

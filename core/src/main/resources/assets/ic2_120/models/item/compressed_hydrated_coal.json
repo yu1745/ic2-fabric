@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/compressed_hydrated_coal"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/compressed_hydrated_coal.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_595959",
+    "flat_595959": "ic2_120:item/item3d/flat_595959",
+    "flat_7d7d7d": "ic2_120:item/item3d/flat_7d7d7d",
+    "flat_2a3040": "ic2_120:item/item3d/flat_2a3040",
+    "flat_1f2848": "ic2_120:item/item3d/flat_1f2848",
+    "glass_22305a": "ic2_120:item/item3d/glass_22305a"
+  }
 }

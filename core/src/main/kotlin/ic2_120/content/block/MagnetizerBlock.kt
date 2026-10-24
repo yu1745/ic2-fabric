@@ -32,7 +32,8 @@ import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 @ModBlock(name = "magnetizer", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
-class MagnetizerBlock : MachineBlock() {
+// 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
+class MagnetizerBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         MagnetizerBlockEntity(pos, state)

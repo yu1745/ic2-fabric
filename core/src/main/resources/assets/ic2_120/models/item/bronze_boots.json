@@ -1,6 +1,11 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/bronze_boots.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/armor/bronze_boots"
+    "particle": "ic2_120:item/item3d/metal_e65423",
+    "metal_e65423": "ic2_120:item/item3d/metal_e65423",
+    "metal_ee7a39": "ic2_120:item/item3d/metal_ee7a39",
+    "flat_792d10": "ic2_120:item/item3d/flat_792d10"
   }
 }

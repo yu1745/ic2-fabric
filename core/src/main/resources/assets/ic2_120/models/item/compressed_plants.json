@@ -1,6 +1,15 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/compressed_plants"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/compressed_plants.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_5b8423",
+    "flat_5b8423": "ic2_120:item/item3d/flat_5b8423",
+    "flat_487717": "ic2_120:item/item3d/flat_487717",
+    "flat_3b6c26": "ic2_120:item/item3d/flat_3b6c26",
+    "flat_7bc22e": "ic2_120:item/item3d/flat_7bc22e",
+    "flat_3da016": "ic2_120:item/item3d/flat_3da016",
+    "flat_5a4a22": "ic2_120:item/item3d/flat_5a4a22",
+    "flat_4b4020": "ic2_120:item/item3d/flat_4b4020"
+  }
 }

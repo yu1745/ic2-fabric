@@ -1,6 +1,13 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/lead_plate.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/plate/lead"
+    "particle": "ic2_120:item/item3d/flat_47503f",
+    "flat_47503f": "ic2_120:item/item3d/flat_47503f",
+    "flat_6a7560": "ic2_120:item/item3d/flat_6a7560",
+    "metal_c8d6ba": "ic2_120:item/item3d/metal_c8d6ba",
+    "flat_f5ffec": "ic2_120:item/item3d/flat_f5ffec",
+    "flat_a1ae93": "ic2_120:item/item3d/flat_a1ae93"
   }
 }

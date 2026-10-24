@@ -1,6 +1,6 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/cell/hot_coolant_cell"
-	}
+  "parent": "ic2_120:item/cell3d/display",
+  "textures": {
+    "particle": "ic2_120:block/machine3d/steel"
+  }
 }

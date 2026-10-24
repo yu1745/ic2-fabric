@@ -1,0 +1,6 @@
+{
+	"parent": "block/crop",
+	"textures": {
+		"crop": "ic2_120:block/crop/brown_mushroom_2"
+	}
+}

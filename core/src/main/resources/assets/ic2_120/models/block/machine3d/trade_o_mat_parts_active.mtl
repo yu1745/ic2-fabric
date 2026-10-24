@@ -1,0 +1,24 @@
+newmtl dark_steel
+Kd 1 1 1
+map_Kd #dark_steel
+
+newmtl screen_on
+Kd 1 1 1
+map_Kd #screen_on
+Ke 1 1 1
+
+newmtl cavity
+Kd 1 1 1
+map_Kd #cavity
+
+newmtl lamp_red
+Kd 1 1 1
+map_Kd #lamp_red
+
+newmtl brass
+Kd 1 1 1
+map_Kd #brass
+
+newmtl glass
+Kd 1 1 1
+map_Kd #glass

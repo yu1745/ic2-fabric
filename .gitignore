@@ -60,3 +60,7 @@ r
 
 # 构建产物（build.sh 输出）
 dist/
+
+# local vector index cache
+.zvec-grep/
+__pycache__/

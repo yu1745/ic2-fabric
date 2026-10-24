@@ -1,0 +1,16 @@
+newmtl metal_e5e5e5
+Kd 1 1 1
+map_Kd #metal_e5e5e5
+
+newmtl flat_f2f2f2
+Kd 1 1 1
+map_Kd #flat_f2f2f2
+
+newmtl flat_3c3c3c
+Kd 1 1 1
+map_Kd #flat_3c3c3c
+
+newmtl glow_00ff00
+Kd 1 1 1
+map_Kd #glow_00ff00
+Ke 1 1 1

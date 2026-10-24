@@ -1,6 +1,15 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crop/fertilizer"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/fertilizer.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_554516",
+    "flat_554516": "ic2_120:item/item3d/flat_554516",
+    "flat_6e6038": "ic2_120:item/item3d/flat_6e6038",
+    "flat_7c6045": "ic2_120:item/item3d/flat_7c6045",
+    "flat_2b6318": "ic2_120:item/item3d/flat_2b6318",
+    "flat_0d8b06": "ic2_120:item/item3d/flat_0d8b06",
+    "flat_583613": "ic2_120:item/item3d/flat_583613",
+    "flat_715336": "ic2_120:item/item3d/flat_715336"
+  }
 }

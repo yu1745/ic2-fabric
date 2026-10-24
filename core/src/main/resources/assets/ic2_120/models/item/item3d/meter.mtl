@@ -1,0 +1,36 @@
+newmtl flat_bdbdbd
+Kd 1 1 1
+map_Kd #flat_bdbdbd
+
+newmtl flat_909090
+Kd 1 1 1
+map_Kd #flat_909090
+
+newmtl flat_727272
+Kd 1 1 1
+map_Kd #flat_727272
+
+newmtl glass_819d7a
+Kd 1 1 1
+map_Kd #glass_819d7a
+
+newmtl flat_bebebe
+Kd 1 1 1
+map_Kd #flat_bebebe
+
+newmtl glow_ee2222
+Kd 1 1 1
+map_Kd #glow_ee2222
+Ke 1 1 1
+
+newmtl flat_525050
+Kd 1 1 1
+map_Kd #flat_525050
+
+newmtl flat_d02020
+Kd 1 1 1
+map_Kd #flat_d02020
+
+newmtl flat_3a3ad0
+Kd 1 1 1
+map_Kd #flat_3a3ad0

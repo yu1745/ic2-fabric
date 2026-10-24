@@ -1,0 +1,15 @@
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/purple_painter.obj",
+  "parent": "ic2_120:item/item3d/display_handheld",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_353535",
+    "flat_353535": "ic2_120:item/item3d/flat_353535",
+    "flat_525252": "ic2_120:item/item3d/flat_525252",
+    "flat_777777": "ic2_120:item/item3d/flat_777777",
+    "metal_c9c9c9": "ic2_120:item/item3d/metal_c9c9c9",
+    "flat_8230b2": "ic2_120:item/item3d/flat_8230b2",
+    "flat_a453ce": "ic2_120:item/item3d/flat_a453ce",
+    "flat_511a71": "ic2_120:item/item3d/flat_511a71"
+  }
+}

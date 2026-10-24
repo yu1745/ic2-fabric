@@ -1,6 +1,13 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/bronze_helmet.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/armor/bronze_helmet"
+    "particle": "ic2_120:item/item3d/metal_ee7a39",
+    "metal_ee7a39": "ic2_120:item/item3d/metal_ee7a39",
+    "metal_e65423": "ic2_120:item/item3d/metal_e65423",
+    "flat_792d10": "ic2_120:item/item3d/flat_792d10",
+    "flat_a33c17": "ic2_120:item/item3d/flat_a33c17",
+    "metal_ffa34f": "ic2_120:item/item3d/metal_ffa34f"
   }
 }

@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/alloy"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/alloy.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_676455",
+    "flat_676455": "ic2_120:item/item3d/flat_676455",
+    "flat_797460": "ic2_120:item/item3d/flat_797460",
+    "metal_938d78": "ic2_120:item/item3d/metal_938d78",
+    "flat_a8a391": "ic2_120:item/item3d/flat_a8a391",
+    "flat_585446": "ic2_120:item/item3d/flat_585446"
+  }
 }

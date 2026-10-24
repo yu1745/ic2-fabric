@@ -1,6 +1,16 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/compressed_air_bucket.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "minecraft:item/water_bucket"
+    "particle": "ic2_120:item/item3d/flat_727272",
+    "flat_727272": "ic2_120:item/item3d/flat_727272",
+    "metal_a8a8a8": "ic2_120:item/item3d/metal_a8a8a8",
+    "metal_c0c0c0": "ic2_120:item/item3d/metal_c0c0c0",
+    "flat_d8d8d8": "ic2_120:item/item3d/flat_d8d8d8",
+    "glass_dfefff": "ic2_120:item/item3d/glass_dfefff",
+    "glass_ffffff": "ic2_120:item/item3d/glass_ffffff",
+    "flat_969696": "ic2_120:item/item3d/flat_969696",
+    "flat_353535": "ic2_120:item/item3d/flat_353535"
   }
 }

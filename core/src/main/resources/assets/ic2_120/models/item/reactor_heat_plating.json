@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/reactor/heat_plating"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/reactor_heat_plating.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_c18548",
+    "flat_c18548": "ic2_120:item/item3d/flat_c18548",
+    "flat_cd9751": "ic2_120:item/item3d/flat_cd9751",
+    "flat_9f5c28": "ic2_120:item/item3d/flat_9f5c28",
+    "flat_aa6336": "ic2_120:item/item3d/flat_aa6336",
+    "flat_b4713d": "ic2_120:item/item3d/flat_b4713d"
+  }
 }

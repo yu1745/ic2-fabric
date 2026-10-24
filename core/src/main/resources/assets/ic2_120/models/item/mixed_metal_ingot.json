@@ -1,1 +1,13 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/ingot/mixed_metal" } }
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/mixed_metal_ingot.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_7b7b7b",
+    "flat_7b7b7b": "ic2_120:item/item3d/flat_7b7b7b",
+    "metal_9d9d9d": "ic2_120:item/item3d/metal_9d9d9d",
+    "metal_c89042": "ic2_120:item/item3d/metal_c89042",
+    "metal_91a3aa": "ic2_120:item/item3d/metal_91a3aa",
+    "metal_b9d6d9": "ic2_120:item/item3d/metal_b9d6d9"
+  }
+}

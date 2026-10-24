@@ -1,6 +1,14 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/silver_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/dust/silver"
+    "particle": "ic2_120:item/item3d/flat_c8c8c8",
+    "flat_c8c8c8": "ic2_120:item/item3d/flat_c8c8c8",
+    "flat_e5e5e5": "ic2_120:item/item3d/flat_e5e5e5",
+    "flat_f2f2f2": "ic2_120:item/item3d/flat_f2f2f2",
+    "flat_d4d4d4": "ic2_120:item/item3d/flat_d4d4d4",
+    "flat_ffffff": "ic2_120:item/item3d/flat_ffffff",
+    "flat_dadada": "ic2_120:item/item3d/flat_dadada"
   }
 }

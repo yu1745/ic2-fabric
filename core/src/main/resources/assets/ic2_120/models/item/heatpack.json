@@ -1,1 +1,13 @@
-{"parent":"ic2:item/default","textures":{"layer0":"ic2:item/reactor/heatpack"}}
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/heatpack.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_505050",
+    "flat_505050": "ic2_120:item/item3d/flat_505050",
+    "flat_d9d9d9": "ic2_120:item/item3d/flat_d9d9d9",
+    "flat_979797": "ic2_120:item/item3d/flat_979797",
+    "flat_323232": "ic2_120:item/item3d/flat_323232",
+    "glow_d91919": "ic2_120:item/item3d/glow_d91919"
+  }
+}

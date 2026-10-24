@@ -1,6 +1,14 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/scrap_box"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/scrap_box.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_e5e562",
+    "flat_e5e562": "ic2_120:item/item3d/flat_e5e562",
+    "flat_f2f278": "ic2_120:item/item3d/flat_f2f278",
+    "flat_a5a513": "ic2_120:item/item3d/flat_a5a513",
+    "flat_c2c22b": "ic2_120:item/item3d/flat_c2c22b",
+    "flat_99b947": "ic2_120:item/item3d/flat_99b947",
+    "flat_5b5b00": "ic2_120:item/item3d/flat_5b5b00"
+  }
 }

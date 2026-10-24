@@ -42,7 +42,29 @@ data class Ic2MainConfig(
     @field:ConfigComment("护甲功能配置（飞行时长、夜视时长等）。")
     val armor: ArmorConfig = ArmorConfig(),
     @field:ConfigComment("世界生成配置。")
-    val worldgen: WorldgenConfig = WorldgenConfig()
+    val worldgen: WorldgenConfig = WorldgenConfig(),
+    @field:ConfigComment("客户端渲染配置（只在本地生效，不随服务器配置同步）。")
+    val rendering: RenderingConfig = RenderingConfig()
+)
+
+data class RenderingConfig(
+    @field:ConfigComment("流体单元 3D 渲染。")
+    val fluidCell: FluidCellRenderConfig = FluidCellRenderConfig()
+)
+
+data class FluidCellRenderConfig(
+    @field:ConfigComment("第一人称手持时液面是否随手部运动晃动。", "true")
+    val slosh: Boolean = true,
+    @field:ConfigComment("晃动灵敏度：手部加速度转为液面倾斜的倍数，越大越容易晃。", "9.0")
+    val gain: Double = 9.0,
+    @field:ConfigComment("回正力度（0~1）：越大液面回到水平越快、来回摆动越急。", "0.22")
+    val stiffness: Double = 0.22,
+    @field:ConfigComment("阻尼（0~1）：每 tick 损失的晃动速度比例，越大停得越快。", "0.3")
+    val damping: Double = 0.3,
+    @field:ConfigComment("最大倾斜（液面法线水平分量与竖直分量之比）。", "1.1")
+    val maxTilt: Double = 1.1,
+    @field:ConfigComment("晃动时液面波纹幅度（方块单位）。", "0.04")
+    val ripple: Double = 0.04
 )
 
 data class DifficultyConfig(
@@ -530,7 +552,8 @@ object Ic2Config {
     }
 
     fun applyServerConfig(json: String) {
-        current = mapper.readValue(json)
+        // 渲染配置属于客户端本地偏好，不被服务器覆盖
+        current = mapper.readValue<Ic2MainConfig>(json).copy(rendering = current.rendering)
         logLoaded("applied from server")
     }
 

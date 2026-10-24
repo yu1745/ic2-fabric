@@ -1,0 +1,15 @@
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/cyan_painter.obj",
+  "parent": "ic2_120:item/item3d/display_handheld",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_353535",
+    "flat_353535": "ic2_120:item/item3d/flat_353535",
+    "flat_525252": "ic2_120:item/item3d/flat_525252",
+    "flat_777777": "ic2_120:item/item3d/flat_777777",
+    "metal_c9c9c9": "ic2_120:item/item3d/metal_c9c9c9",
+    "flat_236f8f": "ic2_120:item/item3d/flat_236f8f",
+    "flat_3c8eb0": "ic2_120:item/item3d/flat_3c8eb0",
+    "flat_175369": "ic2_120:item/item3d/flat_175369"
+  }
+}

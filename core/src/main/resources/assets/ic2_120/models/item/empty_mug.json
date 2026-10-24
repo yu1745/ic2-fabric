@@ -1,6 +1,12 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/brewing/mug_empty"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/empty_mug.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_696969",
+    "flat_696969": "ic2_120:item/item3d/flat_696969",
+    "flat_888788": "ic2_120:item/item3d/flat_888788",
+    "flat_a6a6a6": "ic2_120:item/item3d/flat_a6a6a6",
+    "flat_3e3e3e": "ic2_120:item/item3d/flat_3e3e3e"
+  }
 }

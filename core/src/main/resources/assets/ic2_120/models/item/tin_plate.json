@@ -1,6 +1,13 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/tin_plate.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/plate/tin"
+    "particle": "ic2_120:item/item3d/flat_7c7c7c",
+    "flat_7c7c7c": "ic2_120:item/item3d/flat_7c7c7c",
+    "flat_8e8e8e": "ic2_120:item/item3d/flat_8e8e8e",
+    "metal_cccccc": "ic2_120:item/item3d/metal_cccccc",
+    "flat_ffffff": "ic2_120:item/item3d/flat_ffffff",
+    "flat_aaaaaa": "ic2_120:item/item3d/flat_aaaaaa"
   }
 }

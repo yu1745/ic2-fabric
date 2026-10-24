@@ -1,0 +1,15 @@
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/light_blue_painter.obj",
+  "parent": "ic2_120:item/item3d/display_handheld",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_353535",
+    "flat_353535": "ic2_120:item/item3d/flat_353535",
+    "flat_525252": "ic2_120:item/item3d/flat_525252",
+    "flat_777777": "ic2_120:item/item3d/flat_777777",
+    "metal_c9c9c9": "ic2_120:item/item3d/metal_c9c9c9",
+    "flat_5082ce": "ic2_120:item/item3d/flat_5082ce",
+    "flat_6f9bdb": "ic2_120:item/item3d/flat_6f9bdb",
+    "flat_3d669a": "ic2_120:item/item3d/flat_3d669a"
+  }
+}

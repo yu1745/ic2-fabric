@@ -1,1 +1,12 @@
-{"parent":"ic2:item/default","textures":{"layer0":"ic2:item/reactor/thick_neutron_reflector"}}
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/thick_neutron_reflector.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_c1c1c1",
+    "flat_c1c1c1": "ic2_120:item/item3d/flat_c1c1c1",
+    "flat_898989": "ic2_120:item/item3d/flat_898989",
+    "flat_efefef": "ic2_120:item/item3d/flat_efefef",
+    "flat_777777": "ic2_120:item/item3d/flat_777777"
+  }
+}

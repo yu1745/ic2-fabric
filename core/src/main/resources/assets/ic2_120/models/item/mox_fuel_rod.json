@@ -1,1 +1,13 @@
-{"parent":"ic2:item/default","textures":{"layer0":"ic2:item/reactor/fuel_rod/mox"}}
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/mox_fuel_rod.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_4c4c4c",
+    "flat_4c4c4c": "ic2_120:item/item3d/flat_4c4c4c",
+    "metal_7c7c7c": "ic2_120:item/item3d/metal_7c7c7c",
+    "flat_82ac58": "ic2_120:item/item3d/flat_82ac58",
+    "flat_9eae8e": "ic2_120:item/item3d/flat_9eae8e",
+    "flat_759a50": "ic2_120:item/item3d/flat_759a50"
+  }
+}

@@ -1,6 +1,18 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/battery/charging_energy_crystal_2"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/battery/energy_crystal_wireless_2.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_393939",
+    "flat_393939": "ic2_120:item/item3d/flat_393939",
+    "flat_d9d9d9": "ic2_120:item/item3d/flat_d9d9d9",
+    "flat_8a8a8a": "ic2_120:item/item3d/flat_8a8a8a",
+    "flat_686868": "ic2_120:item/item3d/flat_686868",
+    "flat_262626": "ic2_120:item/item3d/flat_262626",
+    "glass_c00000": "ic2_120:item/item3d/glass_c00000",
+    "flat_880000": "ic2_120:item/item3d/flat_880000",
+    "flat_787878": "ic2_120:item/item3d/flat_787878",
+    "flat_ffffff": "ic2_120:item/item3d/flat_ffffff",
+    "glow_c00000": "ic2_120:item/item3d/glow_c00000"
+  }
 }

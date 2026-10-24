@@ -33,7 +33,8 @@ import net.minecraft.recipe.book.RecipeCategory
 import java.util.function.Consumer
 
 @ModBlock(name = "solar_distiller", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "heat")
-class SolarDistillerBlock : MachineBlock() {
+// 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
+class SolarDistillerBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         SolarDistillerBlockEntity(pos, state)

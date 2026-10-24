@@ -1,6 +1,12 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/rubber_boots.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/armor/rubber_boots"
+    "particle": "ic2_120:item/item3d/flat_383838",
+    "flat_383838": "ic2_120:item/item3d/flat_383838",
+    "flat_454545": "ic2_120:item/item3d/flat_454545",
+    "flat_2c2c2c": "ic2_120:item/item3d/flat_2c2c2c",
+    "flat_696969": "ic2_120:item/item3d/flat_696969"
   }
 }

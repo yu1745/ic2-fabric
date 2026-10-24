@@ -1,6 +1,15 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/hydrated_tin_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/dust/tin_hydrated"
+    "particle": "ic2_120:item/item3d/flat_726ea9",
+    "flat_726ea9": "ic2_120:item/item3d/flat_726ea9",
+    "flat_a492a4": "ic2_120:item/item3d/flat_a492a4",
+    "flat_b3a1b2": "ic2_120:item/item3d/flat_b3a1b2",
+    "flat_7e82a9": "ic2_120:item/item3d/flat_7e82a9",
+    "flat_8b515a": "ic2_120:item/item3d/flat_8b515a",
+    "flat_9d6968": "ic2_120:item/item3d/flat_9d6968",
+    "flat_979ab2": "ic2_120:item/item3d/flat_979ab2"
   }
 }

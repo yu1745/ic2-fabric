@@ -1,6 +1,13 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/small_sulfur_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/dust/small_sulfur"
+    "particle": "ic2_120:item/item3d/flat_676800",
+    "flat_676800": "ic2_120:item/item3d/flat_676800",
+    "flat_a6a61c": "ic2_120:item/item3d/flat_a6a61c",
+    "flat_d3d92b": "ic2_120:item/item3d/flat_d3d92b",
+    "flat_bec21c": "ic2_120:item/item3d/flat_bec21c",
+    "flat_7f7f0a": "ic2_120:item/item3d/flat_7f7f0a"
   }
 }

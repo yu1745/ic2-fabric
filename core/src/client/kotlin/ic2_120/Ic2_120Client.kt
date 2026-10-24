@@ -13,7 +13,6 @@ import ic2_120.client.ModFluidClient
 import ic2_120.client.ClientBlockRenderLayers
 import ic2_120.client.ClientEntityRenderers
 import ic2_120.client.ClientScreenRegistrar
-import ic2_120.client.colorprovider.FluidCellColorProvider
 import ic2_120.client.RubberLogModelPlugin
 import ic2_120.client.colorprovider.StorageBoxColorProvider
 import ic2_120.client.colorprovider.PipeColorProvider
@@ -96,9 +95,11 @@ object Ic2_120Client : ClientModInitializer {
 		// 注册储物箱着色器
 		StorageBoxColorProvider.register()
 		// 注册通用流体单元着色器（流体颜色渲染到中心）
-		FluidCellColorProvider.register()
+		ic2_120.client.renderers.FluidCellItemRenderer.register()
+		ic2_120.client.DevResourceReloadTrigger.register()
 		// 橡胶树原木动态模型（替代 243 个 blockstate 变体）
 		RubberLogModelPlugin.register()
+		ic2_120.client.model.obj.ObjModelLoadingPlugin.register()
 		// 注册管道着色器（青铜和碳纤维材质）
 		PipeColorProvider.register()
 		PainterModelPredicates.register()

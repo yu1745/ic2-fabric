@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/crystal_memory"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/crystal_memory.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_382c34",
+    "flat_382c34": "ic2_120:item/item3d/flat_382c34",
+    "glass_f1e3d6": "ic2_120:item/item3d/glass_f1e3d6",
+    "flat_d4c4b7": "ic2_120:item/item3d/flat_d4c4b7",
+    "flat_857877": "ic2_120:item/item3d/flat_857877",
+    "flat_f4e6d9": "ic2_120:item/item3d/flat_f4e6d9"
+  }
 }

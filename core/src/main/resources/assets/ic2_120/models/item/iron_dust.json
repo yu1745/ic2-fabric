@@ -1,6 +1,13 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/iron_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/dust/iron"
+    "particle": "ic2_120:item/item3d/flat_878787",
+    "flat_878787": "ic2_120:item/item3d/flat_878787",
+    "flat_a4a4a4": "ic2_120:item/item3d/flat_a4a4a4",
+    "flat_c8c8c8": "ic2_120:item/item3d/flat_c8c8c8",
+    "flat_e3e3e3": "ic2_120:item/item3d/flat_e3e3e3",
+    "flat_b8b8b8": "ic2_120:item/item3d/flat_b8b8b8"
   }
 }

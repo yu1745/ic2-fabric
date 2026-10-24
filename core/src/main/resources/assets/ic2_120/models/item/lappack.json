@@ -1,6 +1,13 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/lappack.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/armor/lappack"
+    "particle": "ic2_120:item/item3d/metal_979797",
+    "metal_979797": "ic2_120:item/item3d/metal_979797",
+    "flat_505050": "ic2_120:item/item3d/flat_505050",
+    "glow_0669b2": "ic2_120:item/item3d/glow_0669b2",
+    "glow_2a50ff": "ic2_120:item/item3d/glow_2a50ff",
+    "flat_d9d9d9": "ic2_120:item/item3d/flat_d9d9d9"
   }
 }

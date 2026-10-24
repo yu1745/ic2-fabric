@@ -104,7 +104,7 @@ class TransformerScreen(
 
     companion object {
         private val TEXTURE = Identifier("ic2", "textures/gui/guitransfomer.png")
-        private val WRENCH = Identifier("ic2", "textures/item/tool/wrench.png")
+        private val WRENCH = Identifier("ic2_120", "textures/item/tool/wrench.png")
         private const val INPUT_OUTPUT_COLOR = 0xFF90EE90.toInt()
     }
 }

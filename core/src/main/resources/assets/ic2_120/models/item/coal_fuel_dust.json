@@ -1,6 +1,14 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/coal_fuel_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/dust/coal_fuel"
+    "particle": "ic2_120:item/item3d/flat_283246",
+    "flat_283246": "ic2_120:item/item3d/flat_283246",
+    "flat_343c52": "ic2_120:item/item3d/flat_343c52",
+    "flat_525a6a": "ic2_120:item/item3d/flat_525a6a",
+    "flat_0c1833": "ic2_120:item/item3d/flat_0c1833",
+    "flat_1c2537": "ic2_120:item/item3d/flat_1c2537",
+    "flat_4c5468": "ic2_120:item/item3d/flat_4c5468"
   }
 }

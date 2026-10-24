@@ -1,6 +1,13 @@
 {
-  "parent": "minecraft:item/handheld",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/weeding_spade.obj",
+  "parent": "ic2_120:item/item3d/display_handheld",
   "textures": {
-    "layer0": "ic2:item/crop/weeding_trowel"
+    "particle": "ic2_120:item/item3d/flat_83531a",
+    "flat_83531a": "ic2_120:item/item3d/flat_83531a",
+    "flat_5a3a12": "ic2_120:item/item3d/flat_5a3a12",
+    "flat_4e4e4e": "ic2_120:item/item3d/flat_4e4e4e",
+    "metal_b2b2b2": "ic2_120:item/item3d/metal_b2b2b2",
+    "metal_9d9d9d": "ic2_120:item/item3d/metal_9d9d9d"
   }
 }

@@ -1,6 +1,15 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/coke.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/coke"
+    "particle": "ic2_120:item/item3d/flat_5f5e69",
+    "flat_5f5e69": "ic2_120:item/item3d/flat_5f5e69",
+    "flat_484751": "ic2_120:item/item3d/flat_484751",
+    "flat_373743": "ic2_120:item/item3d/flat_373743",
+    "flat_51505b": "ic2_120:item/item3d/flat_51505b",
+    "flat_403f49": "ic2_120:item/item3d/flat_403f49",
+    "flat_32323d": "ic2_120:item/item3d/flat_32323d",
+    "flat_23232e": "ic2_120:item/item3d/flat_23232e"
   }
 }

@@ -1,0 +1,19 @@
+newmtl flat_752802
+Kd 1 1 1
+map_Kd #flat_752802
+
+newmtl flat_b26411
+Kd 1 1 1
+map_Kd #flat_b26411
+
+newmtl metal_fad64a
+Kd 1 1 1
+map_Kd #metal_fad64a
+
+newmtl flat_fffde0
+Kd 1 1 1
+map_Kd #flat_fffde0
+
+newmtl flat_dc9613
+Kd 1 1 1
+map_Kd #flat_dc9613

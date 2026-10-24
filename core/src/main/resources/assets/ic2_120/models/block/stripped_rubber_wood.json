@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "ic2:block/resource/stripped_rubber_wood"
+    "all": "ic2_120:block/resource/stripped_rubber_wood"
   }
 }

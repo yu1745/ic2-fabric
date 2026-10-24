@@ -1,44 +1,55 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/upgrade/ejector"
-	},
-	"overrides": [
-		{
-			"predicate": {
-				"ic2:down": 1
-			},
-			"model": "ic2:item/upgrade/ejector_down"
-		},
-		{
-			"predicate": {
-				"ic2:up": 1
-			},
-			"model": "ic2:item/upgrade/ejector_up"
-		},
-		{
-			"predicate": {
-				"ic2:north": 1
-			},
-			"model": "ic2:item/upgrade/ejector_north"
-		},
-		{
-			"predicate": {
-				"ic2:south": 1
-			},
-			"model": "ic2:item/upgrade/ejector_south"
-		},
-		{
-			"predicate": {
-				"ic2:west": 1
-			},
-			"model": "ic2:item/upgrade/ejector_west"
-		},
-		{
-			"predicate": {
-				"ic2:east": 1
-			},
-			"model": "ic2:item/upgrade/ejector_east"
-		}
-	]
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/ejector_upgrade.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_27263d",
+    "flat_27263d": "ic2_120:item/item3d/flat_27263d",
+    "flat_100d14": "ic2_120:item/item3d/flat_100d14",
+    "flat_383751": "ic2_120:item/item3d/flat_383751",
+    "flat_ffde75": "ic2_120:item/item3d/flat_ffde75",
+    "flat_9b7826": "ic2_120:item/item3d/flat_9b7826",
+    "flat_c29b38": "ic2_120:item/item3d/flat_c29b38",
+    "flat_ffff00": "ic2_120:item/item3d/flat_ffff00",
+    "flat_ffce00": "ic2_120:item/item3d/flat_ffce00",
+    "glow_ffff00": "ic2_120:item/item3d/glow_ffff00"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "ic2:down": 1
+      },
+      "model": "ic2_120:item/upgrade/ejector_down"
+    },
+    {
+      "predicate": {
+        "ic2:up": 1
+      },
+      "model": "ic2_120:item/upgrade/ejector_up"
+    },
+    {
+      "predicate": {
+        "ic2:north": 1
+      },
+      "model": "ic2_120:item/upgrade/ejector_north"
+    },
+    {
+      "predicate": {
+        "ic2:south": 1
+      },
+      "model": "ic2_120:item/upgrade/ejector_south"
+    },
+    {
+      "predicate": {
+        "ic2:west": 1
+      },
+      "model": "ic2_120:item/upgrade/ejector_west"
+    },
+    {
+      "predicate": {
+        "ic2:east": 1
+      },
+      "model": "ic2_120:item/upgrade/ejector_east"
+    }
+  ]
 }

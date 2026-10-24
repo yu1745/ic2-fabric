@@ -1,0 +1,11 @@
+newmtl steel
+Kd 1 1 1
+map_Kd #steel
+
+newmtl lamp_red
+Kd 1 1 1
+map_Kd #lamp_red
+
+newmtl dark_steel
+Kd 1 1 1
+map_Kd #dark_steel

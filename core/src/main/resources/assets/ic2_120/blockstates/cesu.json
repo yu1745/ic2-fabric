@@ -1,16 +1,175 @@
 {
-  "variants": {
-      "facing=north,active=true": { "model": "ic2:block/wiring/storage/cesu" }
-    , "facing=north,active=false": { "model": "ic2:block/wiring/storage/cesu" }
-    , "facing=south,active=true": { "model": "ic2:block/wiring/storage/cesu", "y": 180 }
-    , "facing=south,active=false": { "model": "ic2:block/wiring/storage/cesu", "y": 180 }
-    , "facing=east,active=true": { "model": "ic2:block/wiring/storage/cesu", "y": 90 }
-    , "facing=east,active=false": { "model": "ic2:block/wiring/storage/cesu", "y": 90 }
-    , "facing=west,active=true": { "model": "ic2:block/wiring/storage/cesu", "y": 270 }
-    , "facing=west,active=false": { "model": "ic2:block/wiring/storage/cesu", "y": 270 }
-    , "facing=up,active=true": { "model": "ic2:block/wiring/storage/cesu", "x": 270 }
-    , "facing=up,active=false": { "model": "ic2:block/wiring/storage/cesu", "x": 270 }
-    , "facing=down,active=true": { "model": "ic2:block/wiring/storage/cesu", "x": 90 }
-    , "facing=down,active=false": { "model": "ic2:block/wiring/storage/cesu", "x": 90 }
-  }
+  "multipart": [
+    {
+      "when": {
+        "facing": "north"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/storage_body"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/cesu_parts"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/cesu_parts_active"
+      }
+    },
+    {
+      "when": {
+        "facing": "east"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/storage_body",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/cesu_parts",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/cesu_parts_active",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "south"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/storage_body",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/cesu_parts",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/cesu_parts_active",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "west"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/storage_body",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/cesu_parts",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/cesu_parts_active",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/storage_body",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/cesu_parts",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/cesu_parts_active",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "down"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/storage_body",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/cesu_parts",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/cesu_parts_active",
+        "x": 90
+      }
+    }
+  ]
 }

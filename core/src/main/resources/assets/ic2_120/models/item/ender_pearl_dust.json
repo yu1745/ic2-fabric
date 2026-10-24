@@ -1,6 +1,14 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/resource/dust/lapis"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/ender_pearl_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_0f3d35",
+    "flat_0f3d35": "ic2_120:item/item3d/flat_0f3d35",
+    "flat_1f6f5f": "ic2_120:item/item3d/flat_1f6f5f",
+    "flat_4fb39a": "ic2_120:item/item3d/flat_4fb39a",
+    "flat_2c8f7a": "ic2_120:item/item3d/flat_2c8f7a",
+    "flat_7fd8c0": "ic2_120:item/item3d/flat_7fd8c0",
+    "flat_135447": "ic2_120:item/item3d/flat_135447"
+  }
 }

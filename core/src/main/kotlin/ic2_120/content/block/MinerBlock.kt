@@ -41,7 +41,8 @@ import net.minecraft.block.Blocks
 import net.minecraft.item.ItemStack
 import net.minecraft.util.ItemScatterer
 
-abstract class BaseMinerBlock : MachineBlock() {
+// 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
+abstract class BaseMinerBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
     override fun appendProperties(builder: StateManager.Builder<net.minecraft.block.Block, BlockState>) {
         super.appendProperties(builder)
         builder.add(ACTIVE)

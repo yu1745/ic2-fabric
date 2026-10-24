@@ -1,6 +1,17 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/industrial_diamond"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/industrial_diamond.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/glass_142f2b",
+    "glass_142f2b": "ic2_120:item/item3d/glass_142f2b",
+    "glass_2e685e": "ic2_120:item/item3d/glass_2e685e",
+    "glass_377e72": "ic2_120:item/item3d/glass_377e72",
+    "glass_4cad9b": "ic2_120:item/item3d/glass_4cad9b",
+    "glass_68cab8": "ic2_120:item/item3d/glass_68cab8",
+    "glass_97d6cc": "ic2_120:item/item3d/glass_97d6cc",
+    "glass_a8dbd1": "ic2_120:item/item3d/glass_a8dbd1",
+    "glass_ebebeb": "ic2_120:item/item3d/glass_ebebeb",
+    "glow_ebebeb": "ic2_120:item/item3d/glow_ebebeb"
+  }
 }

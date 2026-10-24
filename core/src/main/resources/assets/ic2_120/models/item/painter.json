@@ -1,24 +1,113 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/painter.obj",
+  "parent": "ic2_120:item/item3d/display_handheld",
   "textures": {
-    "layer0": "ic2:item/tool/painter/painter"
+    "particle": "ic2_120:item/item3d/flat_353535",
+    "flat_353535": "ic2_120:item/item3d/flat_353535",
+    "flat_525252": "ic2_120:item/item3d/flat_525252",
+    "flat_777777": "ic2_120:item/item3d/flat_777777",
+    "metal_c9c9c9": "ic2_120:item/item3d/metal_c9c9c9",
+    "flat_f0e6d2": "ic2_120:item/item3d/flat_f0e6d2",
+    "flat_fffaee": "ic2_120:item/item3d/flat_fffaee",
+    "flat_a59f92": "ic2_120:item/item3d/flat_a59f92"
   },
   "overrides": [
-    { "predicate": { "ic2_120:painter_color": 0.0625 }, "model": "ic2:item/white_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.125 }, "model": "ic2:item/orange_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.1875 }, "model": "ic2:item/magenta_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.25 }, "model": "ic2:item/light_blue_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.3125 }, "model": "ic2:item/yellow_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.375 }, "model": "ic2:item/lime_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.4375 }, "model": "ic2:item/pink_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.5 }, "model": "ic2:item/gray_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.5625 }, "model": "ic2:item/light_gray_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.625 }, "model": "ic2:item/cyan_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.6875 }, "model": "ic2:item/purple_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.75 }, "model": "ic2:item/blue_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.8125 }, "model": "ic2:item/brown_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.875 }, "model": "ic2:item/green_painter" },
-    { "predicate": { "ic2_120:painter_color": 0.9375 }, "model": "ic2:item/red_painter" },
-    { "predicate": { "ic2_120:painter_color": 1.0 }, "model": "ic2:item/black_painter" }
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.0625
+      },
+      "model": "ic2_120:item/white_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.125
+      },
+      "model": "ic2_120:item/orange_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.1875
+      },
+      "model": "ic2_120:item/magenta_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.25
+      },
+      "model": "ic2_120:item/light_blue_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.3125
+      },
+      "model": "ic2_120:item/yellow_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.375
+      },
+      "model": "ic2_120:item/lime_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.4375
+      },
+      "model": "ic2_120:item/pink_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.5
+      },
+      "model": "ic2_120:item/gray_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.5625
+      },
+      "model": "ic2_120:item/light_gray_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.625
+      },
+      "model": "ic2_120:item/cyan_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.6875
+      },
+      "model": "ic2_120:item/purple_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.75
+      },
+      "model": "ic2_120:item/blue_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.8125
+      },
+      "model": "ic2_120:item/brown_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.875
+      },
+      "model": "ic2_120:item/green_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 0.9375
+      },
+      "model": "ic2_120:item/red_painter"
+    },
+    {
+      "predicate": {
+        "ic2_120:painter_color": 1.0
+      },
+      "model": "ic2_120:item/black_painter"
+    }
   ]
 }

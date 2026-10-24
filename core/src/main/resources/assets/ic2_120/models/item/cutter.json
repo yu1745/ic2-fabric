@@ -1,6 +1,14 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/cutter.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/tool/cutter"
+    "particle": "ic2_120:item/item3d/metal_b9d6d9",
+    "metal_b9d6d9": "ic2_120:item/item3d/metal_b9d6d9",
+    "metal_dbeff1": "ic2_120:item/item3d/metal_dbeff1",
+    "metal_91a3aa": "ic2_120:item/item3d/metal_91a3aa",
+    "flat_373737": "ic2_120:item/item3d/flat_373737",
+    "flat_505050": "ic2_120:item/item3d/flat_505050",
+    "flat_696969": "ic2_120:item/item3d/flat_696969"
   }
 }

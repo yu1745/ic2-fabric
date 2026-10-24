@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crop/coffee_powder"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/coffee_powder.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_592900",
+    "flat_592900": "ic2_120:item/item3d/flat_592900",
+    "flat_7d3a01": "ic2_120:item/item3d/flat_7d3a01",
+    "flat_823f03": "ic2_120:item/item3d/flat_823f03",
+    "flat_442000": "ic2_120:item/item3d/flat_442000",
+    "flat_703400": "ic2_120:item/item3d/flat_703400"
+  }
 }

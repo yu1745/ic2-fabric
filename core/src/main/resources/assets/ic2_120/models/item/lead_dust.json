@@ -1,6 +1,15 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/lead_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/dust/lead"
+    "particle": "ic2_120:item/item3d/flat_2b332c",
+    "flat_2b332c": "ic2_120:item/item3d/flat_2b332c",
+    "flat_76806e": "ic2_120:item/item3d/flat_76806e",
+    "flat_d5d9b9": "ic2_120:item/item3d/flat_d5d9b9",
+    "flat_bcc2a5": "ic2_120:item/item3d/flat_bcc2a5",
+    "flat_fafafa": "ic2_120:item/item3d/flat_fafafa",
+    "flat_535f51": "ic2_120:item/item3d/flat_535f51",
+    "flat_909981": "ic2_120:item/item3d/flat_909981"
   }
 }

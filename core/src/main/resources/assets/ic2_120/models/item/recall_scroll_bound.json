@@ -1,3 +1,15 @@
 {
-  "parent": "minecraft:item/filled_map"
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/recall_scroll_bound.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_896727",
+    "flat_896727": "ic2_120:item/item3d/flat_896727",
+    "flat_493615": "ic2_120:item/item3d/flat_493615",
+    "flat_eaeac7": "ic2_120:item/item3d/flat_eaeac7",
+    "flat_a7a848": "ic2_120:item/item3d/flat_a7a848",
+    "flat_878839": "ic2_120:item/item3d/flat_878839",
+    "flat_bbc177": "ic2_120:item/item3d/flat_bbc177",
+    "glow_c03030": "ic2_120:item/item3d/glow_c03030"
+  }
 }

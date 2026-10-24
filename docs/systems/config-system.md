@@ -131,3 +131,9 @@
 - 旧配置里若含历史 `creative` 字段，读取后会自动写回为新结构。
 - `uuReplication.replicationWhitelist` 的值应为正整数；非正值会被逻辑视为无效。
 - `worldgen.rubberTree.enabled` 与 `worldgen.rubberTree.biomes` 只在启动注册世界生成时生效；仅执行 `/ic2config reload` 不会重新注册 biome modification。
+
+## 客户端渲染配置（rendering）
+
+`rendering.fluidCell`：流体单元 3D 液面晃动参数（`slosh`、`gain`、`stiffness`、`damping`、`maxTilt`、`ripple`）。
+只在本地生效：`applyServerConfig` 会保留客户端自己的 `rendering`，不被服务器同步覆盖。
+游戏内通过 ModMenu → IC2 配置 →「渲染」分类调整，保存后下一 tick 生效，无需重启。

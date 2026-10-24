@@ -1,5 +1,5 @@
 {
   "variants": {
-    "": { "model": "ic2:block/machine/steam/refractory_bricks" }
+    "": { "model": "ic2_120:block/machine/steam/refractory_bricks" }
   }
 }

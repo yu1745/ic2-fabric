@@ -1,6 +1,13 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/copper_plate.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/plate/copper"
+    "particle": "ic2_120:item/item3d/flat_6d3421",
+    "flat_6d3421": "ic2_120:item/item3d/flat_6d3421",
+    "flat_9c4529": "ic2_120:item/item3d/flat_9c4529",
+    "metal_e77c56": "ic2_120:item/item3d/metal_e77c56",
+    "flat_fc9982": "ic2_120:item/item3d/flat_fc9982",
+    "flat_a75a40": "ic2_120:item/item3d/flat_a75a40"
   }
 }

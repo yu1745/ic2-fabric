@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/steam_turbine_blade"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/steam_turbine_blade.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/metal_91a3aa",
+    "metal_91a3aa": "ic2_120:item/item3d/metal_91a3aa",
+    "metal_6f7983": "ic2_120:item/item3d/metal_6f7983",
+    "metal_b9d6d9": "ic2_120:item/item3d/metal_b9d6d9",
+    "flat_595c68": "ic2_120:item/item3d/flat_595c68",
+    "flat_fafafa": "ic2_120:item/item3d/flat_fafafa"
+  }
 }

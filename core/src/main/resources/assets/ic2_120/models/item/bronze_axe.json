@@ -1,6 +1,16 @@
 {
-  "parent": "minecraft:item/handheld",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/bronze_axe.obj",
+  "parent": "ic2_120:item/item3d/display_handheld",
   "textures": {
-    "layer0": "ic2:item/tool/bronze_axe"
+    "particle": "ic2_120:item/item3d/flat_684e1e",
+    "flat_684e1e": "ic2_120:item/item3d/flat_684e1e",
+    "flat_4a3615": "ic2_120:item/item3d/flat_4a3615",
+    "flat_896727": "ic2_120:item/item3d/flat_896727",
+    "flat_a33c17": "ic2_120:item/item3d/flat_a33c17",
+    "flat_792d10": "ic2_120:item/item3d/flat_792d10",
+    "metal_e65423": "ic2_120:item/item3d/metal_e65423",
+    "metal_ee7a39": "ic2_120:item/item3d/metal_ee7a39",
+    "metal_ffa34f": "ic2_120:item/item3d/metal_ffa34f"
   }
 }

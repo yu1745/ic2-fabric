@@ -1,6 +1,12 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/small_plutonium.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/nuclear/small_plutonium"
+    "particle": "ic2_120:item/item3d/flat_bcbcbc",
+    "flat_bcbcbc": "ic2_120:item/item3d/flat_bcbcbc",
+    "flat_acacac": "ic2_120:item/item3d/flat_acacac",
+    "flat_575757": "ic2_120:item/item3d/flat_575757",
+    "flat_c9c9c9": "ic2_120:item/item3d/flat_c9c9c9"
   }
 }

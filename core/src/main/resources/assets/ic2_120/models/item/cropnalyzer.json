@@ -1,6 +1,14 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/cropnalyzer.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/crop/cropnalyzer"
+    "particle": "ic2_120:item/item3d/flat_696969",
+    "flat_696969": "ic2_120:item/item3d/flat_696969",
+    "flat_505050": "ic2_120:item/item3d/flat_505050",
+    "flat_3a3a3a": "ic2_120:item/item3d/flat_3a3a3a",
+    "glass_303030": "ic2_120:item/item3d/glass_303030",
+    "glow_3fbf3f": "ic2_120:item/item3d/glow_3fbf3f",
+    "metal_9a9a9a": "ic2_120:item/item3d/metal_9a9a9a"
   }
 }

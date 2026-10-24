@@ -1,1 +1,14 @@
-{"parent":"ic2:item/default","textures":{"layer0":"ic2:item/reactor/lzh_condensator"}}
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/lzh_condensator.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_969696",
+    "flat_969696": "ic2_120:item/item3d/flat_969696",
+    "metal_aaaaaa": "ic2_120:item/item3d/metal_aaaaaa",
+    "flat_0000d0": "ic2_120:item/item3d/flat_0000d0",
+    "flat_2d2dff": "ic2_120:item/item3d/flat_2d2dff",
+    "flat_707070": "ic2_120:item/item3d/flat_707070",
+    "flat_686868": "ic2_120:item/item3d/flat_686868"
+  }
+}

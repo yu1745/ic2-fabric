@@ -1,6 +1,12 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/dense_steel_plate.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/plate/dense_steel"
+    "particle": "ic2_120:item/item3d/flat_383842",
+    "flat_383842": "ic2_120:item/item3d/flat_383842",
+    "metal_808f97": "ic2_120:item/item3d/metal_808f97",
+    "metal_b9d6d9": "ic2_120:item/item3d/metal_b9d6d9",
+    "flat_fafafa": "ic2_120:item/item3d/flat_fafafa"
   }
 }

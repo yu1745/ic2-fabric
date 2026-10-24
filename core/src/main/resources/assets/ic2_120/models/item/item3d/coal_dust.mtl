@@ -1,0 +1,23 @@
+newmtl flat_303030
+Kd 1 1 1
+map_Kd #flat_303030
+
+newmtl flat_3a3a3e
+Kd 1 1 1
+map_Kd #flat_3a3a3e
+
+newmtl flat_525252
+Kd 1 1 1
+map_Kd #flat_525252
+
+newmtl flat_261e24
+Kd 1 1 1
+map_Kd #flat_261e24
+
+newmtl flat_1f1721
+Kd 1 1 1
+map_Kd #flat_1f1721
+
+newmtl flat_4a4a4a
+Kd 1 1 1
+map_Kd #flat_4a4a4a

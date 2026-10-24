@@ -1,6 +1,14 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/obsidian_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/dust/obsidian"
+    "particle": "ic2_120:item/item3d/flat_201b2b",
+    "flat_201b2b": "ic2_120:item/item3d/flat_201b2b",
+    "flat_342c48": "ic2_120:item/item3d/flat_342c48",
+    "flat_483d60": "ic2_120:item/item3d/flat_483d60",
+    "flat_0e0f16": "ic2_120:item/item3d/flat_0e0f16",
+    "flat_392f4c": "ic2_120:item/item3d/flat_392f4c",
+    "flat_171522": "ic2_120:item/item3d/flat_171522"
   }
 }

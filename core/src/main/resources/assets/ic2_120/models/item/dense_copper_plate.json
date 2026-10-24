@@ -1,6 +1,12 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/dense_copper_plate.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/plate/dense_copper"
+    "particle": "ic2_120:item/item3d/flat_894b1b",
+    "flat_894b1b": "ic2_120:item/item3d/flat_894b1b",
+    "metal_a66430": "ic2_120:item/item3d/metal_a66430",
+    "metal_b4713d": "ic2_120:item/item3d/metal_b4713d",
+    "flat_bc7945": "ic2_120:item/item3d/flat_bc7945"
   }
 }

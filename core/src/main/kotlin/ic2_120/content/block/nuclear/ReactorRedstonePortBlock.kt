@@ -1,6 +1,5 @@
 package ic2_120.content.block.nuclear
 
-import ic2_120.content.block.MachineBlock
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.RecipeProvider
@@ -27,8 +26,8 @@ import java.util.function.Consumer
  * 反应堆红石接口。
  * 提供红石控制功能
  */
-@ModBlock(name = "reactor_redstone_port", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor")
-class ReactorRedstonePortBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
+@ModBlock(name = "reactor_redstone_port", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor", renderLayer = "translucent")
+class ReactorRedstonePortBlock(settings: AbstractBlock.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         ReactorRedstonePortBlockEntity(pos, state)

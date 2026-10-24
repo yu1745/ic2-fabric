@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/jetpack_attachment_plate"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/jetpack_attachment_plate.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_303030",
+    "flat_303030": "ic2_120:item/item3d/flat_303030",
+    "flat_383838": "ic2_120:item/item3d/flat_383838",
+    "flat_343434": "ic2_120:item/item3d/flat_343434",
+    "flat_505050": "ic2_120:item/item3d/flat_505050",
+    "flat_5a5a5a": "ic2_120:item/item3d/flat_5a5a5a"
+  }
 }

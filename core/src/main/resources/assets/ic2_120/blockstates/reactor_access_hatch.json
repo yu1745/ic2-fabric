@@ -1,5 +1,117 @@
 {
-  "variants": {
-    "": { "model": "ic2:block/generator/reactor/reactor_access_hatch" }
+ "multipart": [
+  {
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/reactor_access_hatch"
+   }
+  },
+  {
+   "when": {
+    "down": "false",
+    "north": "false"
+   },
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/shell_edge_x_lo_lo"
+   }
+  },
+  {
+   "when": {
+    "west": "false",
+    "north": "false"
+   },
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/shell_edge_y_lo_lo"
+   }
+  },
+  {
+   "when": {
+    "west": "false",
+    "down": "false"
+   },
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/shell_edge_z_lo_lo"
+   }
+  },
+  {
+   "when": {
+    "down": "false",
+    "south": "false"
+   },
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/shell_edge_x_lo_hi"
+   }
+  },
+  {
+   "when": {
+    "west": "false",
+    "south": "false"
+   },
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/shell_edge_y_lo_hi"
+   }
+  },
+  {
+   "when": {
+    "west": "false",
+    "up": "false"
+   },
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/shell_edge_z_lo_hi"
+   }
+  },
+  {
+   "when": {
+    "up": "false",
+    "north": "false"
+   },
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/shell_edge_x_hi_lo"
+   }
+  },
+  {
+   "when": {
+    "east": "false",
+    "north": "false"
+   },
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/shell_edge_y_hi_lo"
+   }
+  },
+  {
+   "when": {
+    "east": "false",
+    "down": "false"
+   },
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/shell_edge_z_hi_lo"
+   }
+  },
+  {
+   "when": {
+    "up": "false",
+    "south": "false"
+   },
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/shell_edge_x_hi_hi"
+   }
+  },
+  {
+   "when": {
+    "east": "false",
+    "south": "false"
+   },
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/shell_edge_y_hi_hi"
+   }
+  },
+  {
+   "when": {
+    "east": "false",
+    "up": "false"
+   },
+   "apply": {
+    "model": "ic2_120:block/generator/reactor/shell_edge_z_hi_hi"
+   }
   }
+ ]
 }

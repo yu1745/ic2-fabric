@@ -1,6 +1,17 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/upgrade/overclocker"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/overclocker_upgrade.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_bfbfbf",
+    "flat_bfbfbf": "ic2_120:item/item3d/flat_bfbfbf",
+    "flat_727272": "ic2_120:item/item3d/flat_727272",
+    "flat_e8e8e8": "ic2_120:item/item3d/flat_e8e8e8",
+    "flat_ffde75": "ic2_120:item/item3d/flat_ffde75",
+    "flat_9b7826": "ic2_120:item/item3d/flat_9b7826",
+    "flat_c29b38": "ic2_120:item/item3d/flat_c29b38",
+    "flat_0452c7": "ic2_120:item/item3d/flat_0452c7",
+    "flat_0039a9": "ic2_120:item/item3d/flat_0039a9",
+    "flat_072592": "ic2_120:item/item3d/flat_072592"
+  }
 }

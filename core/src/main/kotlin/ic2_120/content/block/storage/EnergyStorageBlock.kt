@@ -31,7 +31,7 @@ import net.minecraft.world.World
  */
 abstract class EnergyStorageBlock(
     val config: EnergyStorageConfig
-) : DirectionalMachineBlock() {
+) : DirectionalMachineBlock(ic2_120.content.block.MachineBlock.defaultMachineSettings().nonOpaque()) { // 3D 模型不填满整格：关闭相邻面剔除
 
     override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
         super.appendProperties(builder)

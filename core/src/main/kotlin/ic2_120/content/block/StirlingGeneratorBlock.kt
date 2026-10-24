@@ -42,7 +42,8 @@ import net.minecraft.util.Formatting
 import net.minecraft.world.BlockView
 
 @ModBlock(name = "stirling_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
-class StirlingGeneratorBlock : MachineBlock() {
+// 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
+class StirlingGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         StirlingGeneratorBlockEntity(pos, state)

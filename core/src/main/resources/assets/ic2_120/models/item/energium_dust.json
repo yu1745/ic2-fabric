@@ -1,6 +1,15 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/energium_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/dust/energium"
+    "particle": "ic2_120:item/item3d/flat_6c1717",
+    "flat_6c1717": "ic2_120:item/item3d/flat_6c1717",
+    "glass_c11f1f": "ic2_120:item/item3d/glass_c11f1f",
+    "glass_e7aeae": "ic2_120:item/item3d/glass_e7aeae",
+    "glow_ecd2d2": "ic2_120:item/item3d/glow_ecd2d2",
+    "glow_d46666": "ic2_120:item/item3d/glow_d46666",
+    "glow_f7f0f0": "ic2_120:item/item3d/glow_f7f0f0",
+    "glow_db8888": "ic2_120:item/item3d/glow_db8888"
   }
 }

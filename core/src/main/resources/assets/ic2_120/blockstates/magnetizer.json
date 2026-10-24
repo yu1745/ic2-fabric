@@ -1,23 +1,117 @@
 {
-  "variants": {
-    "facing=north,active=false,powered=false": { "model": "ic2:block/machine/misc/magnetizer" },
-    "facing=north,active=false,powered=true": { "model": "ic2:block/machine/misc/magnetizer" },
-    "facing=north,active=true,powered=false": { "model": "ic2:block/machine/misc/magnetizer" },
-    "facing=north,active=true,powered=true": { "model": "ic2:block/machine/misc/magnetizer" },
-
-    "facing=east,active=false,powered=false": { "model": "ic2:block/machine/misc/magnetizer", "y": 90 },
-    "facing=east,active=false,powered=true": { "model": "ic2:block/machine/misc/magnetizer", "y": 90 },
-    "facing=east,active=true,powered=false": { "model": "ic2:block/machine/misc/magnetizer", "y": 90 },
-    "facing=east,active=true,powered=true": { "model": "ic2:block/machine/misc/magnetizer", "y": 90 },
-
-    "facing=south,active=false,powered=false": { "model": "ic2:block/machine/misc/magnetizer", "y": 180 },
-    "facing=south,active=false,powered=true": { "model": "ic2:block/machine/misc/magnetizer", "y": 180 },
-    "facing=south,active=true,powered=false": { "model": "ic2:block/machine/misc/magnetizer", "y": 180 },
-    "facing=south,active=true,powered=true": { "model": "ic2:block/machine/misc/magnetizer", "y": 180 },
-
-    "facing=west,active=false,powered=false": { "model": "ic2:block/machine/misc/magnetizer", "y": 270 },
-    "facing=west,active=false,powered=true": { "model": "ic2:block/machine/misc/magnetizer", "y": 270 },
-    "facing=west,active=true,powered=false": { "model": "ic2:block/machine/misc/magnetizer", "y": 270 },
-    "facing=west,active=true,powered=true": { "model": "ic2:block/machine/misc/magnetizer", "y": 270 }
-  }
+  "multipart": [
+    {
+      "when": {
+        "facing": "north"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/basic_body"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/magnetizer_parts"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/magnetizer_parts_active"
+      }
+    },
+    {
+      "when": {
+        "facing": "east"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/basic_body",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/magnetizer_parts",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/magnetizer_parts_active",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "south"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/basic_body",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/magnetizer_parts",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/magnetizer_parts_active",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "west"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/basic_body",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/magnetizer_parts",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/magnetizer_parts_active",
+        "y": 270
+      }
+    }
+  ]
 }

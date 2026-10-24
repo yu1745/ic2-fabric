@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "ic2:block/cf/foam"
+    "all": "ic2_120:block/cf/foam"
   }
 }

@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/rotor/iron_rotor"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/iron_rotor.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/metal_d8d8d8",
+    "metal_d8d8d8": "ic2_120:item/item3d/metal_d8d8d8",
+    "flat_a8a8a8": "ic2_120:item/item3d/flat_a8a8a8",
+    "flat_ffffff": "ic2_120:item/item3d/flat_ffffff",
+    "flat_5e5e5e": "ic2_120:item/item3d/flat_5e5e5e",
+    "flat_828282": "ic2_120:item/item3d/flat_828282"
+  }
 }

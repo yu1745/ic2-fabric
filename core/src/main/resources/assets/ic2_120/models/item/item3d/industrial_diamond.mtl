@@ -1,0 +1,36 @@
+newmtl glass_142f2b
+Kd 1 1 1
+map_Kd #glass_142f2b
+
+newmtl glass_2e685e
+Kd 1 1 1
+map_Kd #glass_2e685e
+
+newmtl glass_377e72
+Kd 1 1 1
+map_Kd #glass_377e72
+
+newmtl glass_4cad9b
+Kd 1 1 1
+map_Kd #glass_4cad9b
+
+newmtl glass_68cab8
+Kd 1 1 1
+map_Kd #glass_68cab8
+
+newmtl glass_97d6cc
+Kd 1 1 1
+map_Kd #glass_97d6cc
+
+newmtl glass_a8dbd1
+Kd 1 1 1
+map_Kd #glass_a8dbd1
+
+newmtl glass_ebebeb
+Kd 1 1 1
+map_Kd #glass_ebebeb
+
+newmtl glow_ebebeb
+Kd 1 1 1
+map_Kd #glow_ebebeb
+Ke 1 1 1

@@ -1,0 +1,23 @@
+newmtl metal_808080
+Kd 1 1 1
+map_Kd #metal_808080
+
+newmtl metal_9f9f9f
+Kd 1 1 1
+map_Kd #metal_9f9f9f
+
+newmtl metal_b4b4b4
+Kd 1 1 1
+map_Kd #metal_b4b4b4
+
+newmtl metal_cecece
+Kd 1 1 1
+map_Kd #metal_cecece
+
+newmtl metal_dddddd
+Kd 1 1 1
+map_Kd #metal_dddddd
+
+newmtl metal_ffffff
+Kd 1 1 1
+map_Kd #metal_ffffff

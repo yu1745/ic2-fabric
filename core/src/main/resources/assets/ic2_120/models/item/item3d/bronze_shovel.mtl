@@ -1,0 +1,27 @@
+newmtl flat_684e1e
+Kd 1 1 1
+map_Kd #flat_684e1e
+
+newmtl flat_4a3615
+Kd 1 1 1
+map_Kd #flat_4a3615
+
+newmtl flat_896727
+Kd 1 1 1
+map_Kd #flat_896727
+
+newmtl flat_a33c17
+Kd 1 1 1
+map_Kd #flat_a33c17
+
+newmtl metal_e65423
+Kd 1 1 1
+map_Kd #metal_e65423
+
+newmtl metal_ee7a39
+Kd 1 1 1
+map_Kd #metal_ee7a39
+
+newmtl metal_ffa34f
+Kd 1 1 1
+map_Kd #metal_ffa34f

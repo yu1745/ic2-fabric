@@ -10,6 +10,7 @@
     "ic2_120:chunk_loader",
     "ic2_120:coke_kiln",
     "ic2_120:compressor",
+    "ic2_120:condenser",
     "ic2_120:crop_harvester",
     "ic2_120:cropmatron",
     "ic2_120:electric_furnace",
@@ -75,8 +76,8 @@
     "ic2_120:wind_generator",
     "ic2_120:wind_kinetic_generator",
     "ic2_120:nuclear_reactor",
-    "ic2_120:reactor_access_hatch",
     "ic2_120:reactor_chamber",
+    "ic2_120:reactor_access_hatch",
     "ic2_120:reactor_fluid_port",
     "ic2_120:reactor_redstone_port",
     "ic2_120:reactor_vessel",
@@ -87,7 +88,6 @@
     "ic2_120:bronze_tank",
     "ic2_120:iron_tank",
     "ic2_120:steel_tank",
-    "ic2_120:iridium_tank",
-    "ic2_120:condenser"
+    "ic2_120:iridium_tank"
   ]
 }

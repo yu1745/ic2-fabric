@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/bio_chaff"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/bio_chaff.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_303012",
+    "flat_303012": "ic2_120:item/item3d/flat_303012",
+    "flat_3a480e": "ic2_120:item/item3d/flat_3a480e",
+    "flat_3d581d": "ic2_120:item/item3d/flat_3d581d",
+    "flat_51441e": "ic2_120:item/item3d/flat_51441e",
+    "flat_393b08": "ic2_120:item/item3d/flat_393b08"
+  }
 }

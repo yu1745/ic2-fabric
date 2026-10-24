@@ -1,6 +1,13 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/reinforced_door.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/reinforced_door"
+    "particle": "ic2_120:item/item3d/flat_515148",
+    "flat_515148": "ic2_120:item/item3d/flat_515148",
+    "flat_6b695e": "ic2_120:item/item3d/flat_6b695e",
+    "flat_4c4b43": "ic2_120:item/item3d/flat_4c4b43",
+    "flat_303030": "ic2_120:item/item3d/flat_303030",
+    "flat_8a887c": "ic2_120:item/item3d/flat_8a887c"
   }
 }

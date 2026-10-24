@@ -1,0 +1,19 @@
+newmtl flat_4c4c4c
+Kd 1 1 1
+map_Kd #flat_4c4c4c
+
+newmtl metal_7c7c7c
+Kd 1 1 1
+map_Kd #metal_7c7c7c
+
+newmtl glass_edf2f3
+Kd 1 1 1
+map_Kd #glass_edf2f3
+
+newmtl glass_d3e2e3
+Kd 1 1 1
+map_Kd #glass_d3e2e3
+
+newmtl glass_b6d0d3
+Kd 1 1 1
+map_Kd #glass_b6d0d3

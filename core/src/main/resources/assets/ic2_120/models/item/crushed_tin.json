@@ -1,1 +1,15 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/crushed/tin" } }
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/crushed_tin.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_616161",
+    "flat_616161": "ic2_120:item/item3d/flat_616161",
+    "flat_9a9a9a": "ic2_120:item/item3d/flat_9a9a9a",
+    "flat_dadada": "ic2_120:item/item3d/flat_dadada",
+    "flat_464646": "ic2_120:item/item3d/flat_464646",
+    "flat_c3c3c3": "ic2_120:item/item3d/flat_c3c3c3",
+    "flat_f0f0f0": "ic2_120:item/item3d/flat_f0f0f0",
+    "flat_727272": "ic2_120:item/item3d/flat_727272"
+  }
+}

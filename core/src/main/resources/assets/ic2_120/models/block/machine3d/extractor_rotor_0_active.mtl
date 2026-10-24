@@ -1,0 +1,7 @@
+newmtl copper
+Kd 1 1 1
+map_Kd #copper
+
+newmtl brass
+Kd 1 1 1
+map_Kd #brass

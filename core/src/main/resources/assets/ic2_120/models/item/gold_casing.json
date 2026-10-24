@@ -1,6 +1,11 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/gold_casing.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/casing/gold"
+    "particle": "ic2_120:item/item3d/metal_e9b115",
+    "metal_e9b115": "ic2_120:item/item3d/metal_e9b115",
+    "metal_fffde0": "ic2_120:item/item3d/metal_fffde0",
+    "flat_b26411": "ic2_120:item/item3d/flat_b26411"
   }
 }

@@ -1,6 +1,15 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/electric_treetap.obj",
+  "parent": "ic2_120:item/item3d/display_handheld",
   "textures": {
-    "layer0": "ic2:item/tool/electric/electric_treetap"
+    "particle": "ic2_120:item/item3d/flat_f88c00",
+    "flat_f88c00": "ic2_120:item/item3d/flat_f88c00",
+    "flat_e66c03": "ic2_120:item/item3d/flat_e66c03",
+    "flat_4e4e4e": "ic2_120:item/item3d/flat_4e4e4e",
+    "flat_fb9a20": "ic2_120:item/item3d/flat_fb9a20",
+    "flat_616161": "ic2_120:item/item3d/flat_616161",
+    "flat_6a3600": "ic2_120:item/item3d/flat_6a3600",
+    "flat_5c2e00": "ic2_120:item/item3d/flat_5c2e00"
   }
 }

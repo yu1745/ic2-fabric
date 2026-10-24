@@ -1,6 +1,18 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/battery/charging_lapotron_crystal_4"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/battery/lapotron_crystal_wireless_4.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_393939",
+    "flat_393939": "ic2_120:item/item3d/flat_393939",
+    "flat_d9d9d9": "ic2_120:item/item3d/flat_d9d9d9",
+    "flat_8a8a8a": "ic2_120:item/item3d/flat_8a8a8a",
+    "flat_686868": "ic2_120:item/item3d/flat_686868",
+    "flat_262626": "ic2_120:item/item3d/flat_262626",
+    "glass_1020d0": "ic2_120:item/item3d/glass_1020d0",
+    "flat_00009a": "ic2_120:item/item3d/flat_00009a",
+    "flat_787878": "ic2_120:item/item3d/flat_787878",
+    "flat_ffffff": "ic2_120:item/item3d/flat_ffffff",
+    "glow_1020d0": "ic2_120:item/item3d/glow_1020d0"
+  }
 }

@@ -1,6 +1,13 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/small_bronze_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/dust/small_bronze"
+    "particle": "ic2_120:item/item3d/flat_6e4f2c",
+    "flat_6e4f2c": "ic2_120:item/item3d/flat_6e4f2c",
+    "flat_cd752d": "ic2_120:item/item3d/flat_cd752d",
+    "flat_d87e34": "ic2_120:item/item3d/flat_d87e34",
+    "flat_b76825": "ic2_120:item/item3d/flat_b76825",
+    "flat_89592a": "ic2_120:item/item3d/flat_89592a"
   }
 }

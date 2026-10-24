@@ -1,6 +1,12 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/dense_obsidian_plate.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/plate/dense_obsidian"
+    "particle": "ic2_120:item/item3d/flat_18141f",
+    "flat_18141f": "ic2_120:item/item3d/flat_18141f",
+    "flat_201a2c": "ic2_120:item/item3d/flat_201a2c",
+    "flat_362b4f": "ic2_120:item/item3d/flat_362b4f",
+    "flat_4a3c6a": "ic2_120:item/item3d/flat_4a3c6a"
   }
 }

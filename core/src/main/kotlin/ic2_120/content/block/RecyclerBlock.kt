@@ -34,7 +34,8 @@ import java.util.function.Consumer
  * 能量等级：1
  */
 @ModBlock(name = "recycler", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
-class RecyclerBlock : MachineBlock() {
+// 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
+class RecyclerBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         RecyclerBlockEntity(pos, state)

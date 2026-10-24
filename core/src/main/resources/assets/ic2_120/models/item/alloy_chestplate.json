@@ -1,6 +1,13 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/alloy_chestplate.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/armor/alloy_chestplate"
+    "particle": "ic2_120:item/item3d/metal_515044",
+    "metal_515044": "ic2_120:item/item3d/metal_515044",
+    "flat_3e3e35": "ic2_120:item/item3d/flat_3e3e35",
+    "flat_5f5e50": "ic2_120:item/item3d/flat_5f5e50",
+    "flat_c65c35": "ic2_120:item/item3d/flat_c65c35",
+    "flat_9b9988": "ic2_120:item/item3d/flat_9b9988"
   }
 }

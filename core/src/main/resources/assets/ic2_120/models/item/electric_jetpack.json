@@ -1,6 +1,14 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/electric_jetpack.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/armor/jetpack_electric"
+    "particle": "ic2_120:item/item3d/metal_c0c0c0",
+    "metal_c0c0c0": "ic2_120:item/item3d/metal_c0c0c0",
+    "flat_c4c4c4": "ic2_120:item/item3d/flat_c4c4c4",
+    "glow_ff1200": "ic2_120:item/item3d/glow_ff1200",
+    "flat_808080": "ic2_120:item/item3d/flat_808080",
+    "flat_606060": "ic2_120:item/item3d/flat_606060",
+    "flat_b72015": "ic2_120:item/item3d/flat_b72015"
   }
 }

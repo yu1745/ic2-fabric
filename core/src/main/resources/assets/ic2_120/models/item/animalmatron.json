@@ -1,3 +1,18 @@
 {
-  "parent": "ic2:block/machine/resource/cropmatron"
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/block/machine3d/animalmatron_item.obj",
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "ic2_120:block/machine3d/steel",
+    "dark_steel": "ic2_120:block/machine3d/dark_steel",
+    "rubber": "ic2_120:block/machine3d/rubber",
+    "steel": "ic2_120:block/machine3d/steel",
+    "cavity": "ic2_120:block/machine3d/cavity",
+    "brass": "ic2_120:block/machine3d/brass",
+    "copper": "ic2_120:block/machine3d/copper",
+    "biomass": "ic2_120:block/machine3d/biomass",
+    "glass": "ic2_120:block/machine3d/glass",
+    "hazard": "ic2_120:block/machine3d/hazard",
+    "lamp_off": "ic2_120:block/machine3d/lamp_off"
+  }
 }

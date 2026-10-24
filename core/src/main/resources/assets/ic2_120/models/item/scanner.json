@@ -1,6 +1,14 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/scanner.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/tool/electric/scanner"
+    "particle": "ic2_120:item/item3d/flat_819faa",
+    "flat_819faa": "ic2_120:item/item3d/flat_819faa",
+    "glass_aac7d3": "ic2_120:item/item3d/glass_aac7d3",
+    "flat_86a07f": "ic2_120:item/item3d/flat_86a07f",
+    "glow_9bd08c": "ic2_120:item/item3d/glow_9bd08c",
+    "glow_d06060": "ic2_120:item/item3d/glow_d06060",
+    "glow_98bcd2": "ic2_120:item/item3d/glow_98bcd2"
   }
 }

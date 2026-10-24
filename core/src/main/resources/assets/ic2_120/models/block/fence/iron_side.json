@@ -1,0 +1,6 @@
+{
+	"parent": "block/fence_side",
+	"textures": {
+		"texture": "ic2_120:block/fence_iron"
+	}
+}

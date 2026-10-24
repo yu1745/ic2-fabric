@@ -1,0 +1,35 @@
+newmtl dark_steel
+Kd 1 1 1
+map_Kd #dark_steel
+
+newmtl cavity
+Kd 1 1 1
+map_Kd #cavity
+
+newmtl uu_off
+Kd 1 1 1
+map_Kd #uu_off
+
+newmtl brass
+Kd 1 1 1
+map_Kd #brass
+
+newmtl lamp_off
+Kd 1 1 1
+map_Kd #lamp_off
+
+newmtl lamp_red
+Kd 1 1 1
+map_Kd #lamp_red
+
+newmtl hazard
+Kd 1 1 1
+map_Kd #hazard
+
+newmtl steel
+Kd 1 1 1
+map_Kd #steel
+
+newmtl glass
+Kd 1 1 1
+map_Kd #glass

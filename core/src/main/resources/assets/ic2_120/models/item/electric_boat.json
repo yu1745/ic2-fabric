@@ -1,6 +1,16 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/electric_boat.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/boat/electric_boat"
+    "particle": "ic2_120:item/item3d/metal_5b5c62",
+    "metal_5b5c62": "ic2_120:item/item3d/metal_5b5c62",
+    "flat_3b3a3f": "ic2_120:item/item3d/flat_3b3a3f",
+    "metal_737276": "ic2_120:item/item3d/metal_737276",
+    "flat_bbbbbd": "ic2_120:item/item3d/flat_bbbbbd",
+    "flat_a4a4a7": "ic2_120:item/item3d/flat_a4a4a7",
+    "glow_ffcc33": "ic2_120:item/item3d/glow_ffcc33",
+    "flat_787878": "ic2_120:item/item3d/flat_787878",
+    "metal_a5a5a7": "ic2_120:item/item3d/metal_a5a5a7"
   }
 }

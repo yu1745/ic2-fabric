@@ -1,1 +1,15 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/crushed/iron" } }
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/crushed_iron.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_574d39",
+    "flat_574d39": "ic2_120:item/item3d/flat_574d39",
+    "flat_af8e77": "ic2_120:item/item3d/flat_af8e77",
+    "flat_d8af93": "ic2_120:item/item3d/flat_d8af93",
+    "flat_464646": "ic2_120:item/item3d/flat_464646",
+    "flat_887455": "ic2_120:item/item3d/flat_887455",
+    "flat_e9c8b1": "ic2_120:item/item3d/flat_e9c8b1",
+    "flat_fef4ed": "ic2_120:item/item3d/flat_fef4ed"
+  }
+}

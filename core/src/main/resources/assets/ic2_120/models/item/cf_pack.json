@@ -1,6 +1,11 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/cf_pack.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/armor/cf_pack"
+    "particle": "ic2_120:item/item3d/metal_979797",
+    "metal_979797": "ic2_120:item/item3d/metal_979797",
+    "flat_505050": "ic2_120:item/item3d/flat_505050",
+    "glass_ececec": "ic2_120:item/item3d/glass_ececec"
   }
 }

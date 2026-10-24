@@ -1,6 +1,12 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/batpack.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/armor/batpack"
+    "particle": "ic2_120:item/item3d/flat_6c502e",
+    "flat_6c502e": "ic2_120:item/item3d/flat_6c502e",
+    "flat_543d1f": "ic2_120:item/item3d/flat_543d1f",
+    "flat_3a3a3a": "ic2_120:item/item3d/flat_3a3a3a",
+    "flat_9a9a9a": "ic2_120:item/item3d/flat_9a9a9a"
   }
 }

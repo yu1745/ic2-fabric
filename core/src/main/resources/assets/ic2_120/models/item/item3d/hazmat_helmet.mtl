@@ -1,0 +1,27 @@
+newmtl flat_fb5a1b
+Kd 1 1 1
+map_Kd #flat_fb5a1b
+
+newmtl flat_cc4714
+Kd 1 1 1
+map_Kd #flat_cc4714
+
+newmtl flat_a13810
+Kd 1 1 1
+map_Kd #flat_a13810
+
+newmtl glass_3c4a5a
+Kd 1 1 1
+map_Kd #glass_3c4a5a
+
+newmtl glass_a8c0d8
+Kd 1 1 1
+map_Kd #glass_a8c0d8
+
+newmtl flat_3a3a3a
+Kd 1 1 1
+map_Kd #flat_3a3a3a
+
+newmtl flat_4d4d4d
+Kd 1 1 1
+map_Kd #flat_4d4d4d

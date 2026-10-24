@@ -1,6 +1,12 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/heat_conductor"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/heat_conductor.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_303030",
+    "flat_303030": "ic2_120:item/item3d/flat_303030",
+    "metal_a66430": "ic2_120:item/item3d/metal_a66430",
+    "flat_b4713d": "ic2_120:item/item3d/flat_b4713d",
+    "flat_894b1b": "ic2_120:item/item3d/flat_894b1b"
+  }
 }

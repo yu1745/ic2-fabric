@@ -1,6 +1,12 @@
 {
-    "parent": "minecraft:item/generated",
-    "textures": {
-      "layer0": "ic2:item/rubber_door"
-    }
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/rubber_door.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_976c1c",
+    "flat_976c1c": "ic2_120:item/item3d/flat_976c1c",
+    "flat_c99c3b": "ic2_120:item/item3d/flat_c99c3b",
+    "flat_886117": "ic2_120:item/item3d/flat_886117",
+    "flat_808b95": "ic2_120:item/item3d/flat_808b95"
   }
+}

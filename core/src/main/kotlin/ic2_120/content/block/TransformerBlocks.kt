@@ -64,7 +64,7 @@ import ic2_120.registry.annotation.RecipeProvider
  * 方块支持六面朝向（上下南北西东），"正面"是方块朝向的那一面。
  * 继承自 [DirectionalMachineBlock] 以获得六面朝向支持。
  */
-abstract class TransformerBlock : DirectionalMachineBlock() {
+abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMachineSettings().nonOpaque()) { // 3D 模型：关闭相邻面剔除
 
     abstract fun createTransformerBlockEntity(pos: BlockPos, state: BlockState): BlockEntity
 

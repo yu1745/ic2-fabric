@@ -1,0 +1,27 @@
+newmtl dark_steel
+Kd 1 1 1
+map_Kd #dark_steel
+
+newmtl glass
+Kd 1 1 1
+map_Kd #glass
+
+newmtl biomass
+Kd 1 1 1
+map_Kd #biomass
+
+newmtl copper
+Kd 1 1 1
+map_Kd #copper
+
+newmtl brass
+Kd 1 1 1
+map_Kd #brass
+
+newmtl lamp_off
+Kd 1 1 1
+map_Kd #lamp_off
+
+newmtl steel
+Kd 1 1 1
+map_Kd #steel

@@ -1,6 +1,14 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/solar_helmet.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/armor/solar_helmet"
+    "particle": "ic2_120:item/item3d/flat_969696",
+    "flat_969696": "ic2_120:item/item3d/flat_969696",
+    "metal_c6c6c6": "ic2_120:item/item3d/metal_c6c6c6",
+    "flat_4a4a4a": "ic2_120:item/item3d/flat_4a4a4a",
+    "flat_6b6b6b": "ic2_120:item/item3d/flat_6b6b6b",
+    "glass_412340": "ic2_120:item/item3d/glass_412340",
+    "flat_3a3a3a": "ic2_120:item/item3d/flat_3a3a3a"
   }
 }

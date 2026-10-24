@@ -38,6 +38,7 @@ object Ic2ConfigScreen {
         val laserReader = miningLaserCategory(builder, eb, config.miningLaser)
         val armorReader = armorCategory(builder, eb, config.armor)
         val worldgenReader = worldgenCategory(builder, eb, config.worldgen)
+        val renderingReader = renderingCategory(builder, eb, config.rendering)
 
         // UU 复制：Map 结构不适合 GUI，引导至命令
         builder.getOrCreateCategory(Text.literal("UU 复制"))
@@ -60,11 +61,45 @@ object Ic2ConfigScreen {
                 miner = minerReader(),
                 miningLaser = laserReader(),
                 armor = armorReader(),
-                worldgen = worldgenReader()
+                worldgen = worldgenReader(),
+                rendering = renderingReader()
             ))
         }
 
         return builder.build()
+    }
+
+    // ==================== 渲染 ====================
+
+    private fun renderingCategory(
+        builder: ConfigBuilder, eb: ConfigEntryBuilder, cfg: RenderingConfig
+    ): () -> RenderingConfig {
+        val d = FluidCellRenderConfig()
+        var c = cfg.fluidCell
+        val cat = builder.getOrCreateCategory(Text.literal("渲染"))
+        cat.addEntry(eb.startBooleanToggle(Text.literal("流体单元液面晃动"), c.slosh)
+            .setDefaultValue(d.slosh)
+            .setTooltip(Text.literal("第一人称手持流体单元时，液面随手部运动晃动"))
+            .setSaveConsumer { c = c.copy(slosh = it) }.build())
+        cat.addEntry(eb.startDoubleField(Text.literal("晃动灵敏度"), c.gain)
+            .setDefaultValue(d.gain).setMin(0.0).setMax(50.0)
+            .setTooltip(Text.literal("手部加速度转为液面倾斜的倍数，越大越容易晃"))
+            .setSaveConsumer { c = c.copy(gain = it) }.build())
+        cat.addEntry(eb.startDoubleField(Text.literal("回正力度"), c.stiffness)
+            .setDefaultValue(d.stiffness).setMin(0.0).setMax(1.0)
+            .setTooltip(Text.literal("0~1，越大液面回到水平越快、来回摆动越急"))
+            .setSaveConsumer { c = c.copy(stiffness = it) }.build())
+        cat.addEntry(eb.startDoubleField(Text.literal("阻尼"), c.damping)
+            .setDefaultValue(d.damping).setMin(0.0).setMax(1.0)
+            .setTooltip(Text.literal("0~1，每 tick 损失的晃动速度比例，越大停得越快"))
+            .setSaveConsumer { c = c.copy(damping = it) }.build())
+        cat.addEntry(eb.startDoubleField(Text.literal("最大倾斜"), c.maxTilt)
+            .setDefaultValue(d.maxTilt).setMin(0.0).setMax(3.0)
+            .setSaveConsumer { c = c.copy(maxTilt = it) }.build())
+        cat.addEntry(eb.startDoubleField(Text.literal("波纹幅度"), c.ripple)
+            .setDefaultValue(d.ripple).setMin(0.0).setMax(0.2)
+            .setSaveConsumer { c = c.copy(ripple = it) }.build())
+        return { RenderingConfig(fluidCell = c) }
     }
 
     // ==================== 难度 ====================

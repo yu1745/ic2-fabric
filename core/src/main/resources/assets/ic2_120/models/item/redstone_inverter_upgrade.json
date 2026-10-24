@@ -1,6 +1,18 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/upgrade/redstone_inverter"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/redstone_inverter_upgrade.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_bfbfbf",
+    "flat_bfbfbf": "ic2_120:item/item3d/flat_bfbfbf",
+    "flat_727272": "ic2_120:item/item3d/flat_727272",
+    "flat_e8e8e8": "ic2_120:item/item3d/flat_e8e8e8",
+    "flat_ffde75": "ic2_120:item/item3d/flat_ffde75",
+    "flat_9b7826": "ic2_120:item/item3d/flat_9b7826",
+    "flat_c29b38": "ic2_120:item/item3d/flat_c29b38",
+    "flat_2d0000": "ic2_120:item/item3d/flat_2d0000",
+    "flat_720000": "ic2_120:item/item3d/flat_720000",
+    "glow_ff0000": "ic2_120:item/item3d/glow_ff0000",
+    "flat_aa0f01": "ic2_120:item/item3d/flat_aa0f01"
+  }
 }

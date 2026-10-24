@@ -41,7 +41,8 @@ import ic2_120.registry.annotation.RecipeProvider
  * 操作时间：10 秒，2 EU/t，单次 400 EU
  */
 @ModBlock(name = "solid_canner", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "processing")
-class SolidCannerBlock : MachineBlock() {
+// 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
+class SolidCannerBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         SolidCannerBlockEntity(pos, state)

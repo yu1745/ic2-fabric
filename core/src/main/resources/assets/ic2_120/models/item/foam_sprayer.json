@@ -1,6 +1,13 @@
 {
-  "parent": "minecraft:item/handheld",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/foam_sprayer.obj",
+  "parent": "ic2_120:item/item3d/display_handheld",
   "textures": {
-    "layer0": "ic2:item/tool/foam_sprayer"
+    "particle": "ic2_120:item/item3d/metal_acacac",
+    "metal_acacac": "ic2_120:item/item3d/metal_acacac",
+    "flat_646464": "ic2_120:item/item3d/flat_646464",
+    "flat_8f8f8f": "ic2_120:item/item3d/flat_8f8f8f",
+    "flat_7d7f7f": "ic2_120:item/item3d/flat_7d7f7f",
+    "flat_9d9e9e": "ic2_120:item/item3d/flat_9d9e9e"
   }
 }

@@ -1,6 +1,14 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/reactor/overclocked_heat_vent"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/overclocked_heat_vent.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_969696",
+    "flat_969696": "ic2_120:item/item3d/flat_969696",
+    "metal_aaaaaa": "ic2_120:item/item3d/metal_aaaaaa",
+    "flat_686868": "ic2_120:item/item3d/flat_686868",
+    "flat_b3b13b": "ic2_120:item/item3d/flat_b3b13b",
+    "flat_e8e45a": "ic2_120:item/item3d/flat_e8e45a",
+    "flat_707070": "ic2_120:item/item3d/flat_707070"
+  }
 }

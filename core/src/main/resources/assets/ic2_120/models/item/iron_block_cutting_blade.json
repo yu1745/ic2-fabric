@@ -1,6 +1,13 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/iron_block_cutting_blade.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/crafting/iron_block_cutting_blade"
+    "particle": "ic2_120:item/item3d/metal_a8a8a8",
+    "metal_a8a8a8": "ic2_120:item/item3d/metal_a8a8a8",
+    "flat_d8d8d8": "ic2_120:item/item3d/flat_d8d8d8",
+    "metal_ececec": "ic2_120:item/item3d/metal_ececec",
+    "flat_565656": "ic2_120:item/item3d/flat_565656",
+    "flat_303030": "ic2_120:item/item3d/flat_303030"
   }
 }

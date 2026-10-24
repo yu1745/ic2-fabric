@@ -1,6 +1,16 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/drill.obj",
+  "parent": "ic2_120:item/item3d/display_handheld",
   "textures": {
-    "layer0": "ic2:item/tool/electric/drill"
+    "particle": "ic2_120:item/item3d/flat_f88c00",
+    "flat_f88c00": "ic2_120:item/item3d/flat_f88c00",
+    "flat_e66c03": "ic2_120:item/item3d/flat_e66c03",
+    "flat_3a3a3a": "ic2_120:item/item3d/flat_3a3a3a",
+    "flat_4e4e4e": "ic2_120:item/item3d/flat_4e4e4e",
+    "flat_565656": "ic2_120:item/item3d/flat_565656",
+    "metal_aaaaaa": "ic2_120:item/item3d/metal_aaaaaa",
+    "metal_a5a5a5": "ic2_120:item/item3d/metal_a5a5a5",
+    "flat_8e8e8e": "ic2_120:item/item3d/flat_8e8e8e"
   }
 }

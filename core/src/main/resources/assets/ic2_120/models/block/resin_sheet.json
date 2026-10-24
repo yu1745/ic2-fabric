@@ -1,6 +1,6 @@
 {
 	"parent": "ic2_120:block/sheet_base",
 	"textures": {
-		"texture": "ic2:block/resin_sheet"
+		"texture": "ic2_120:block/resin_sheet"
 	}
 }

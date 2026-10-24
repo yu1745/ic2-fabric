@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/tin_can"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/tin_can.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/metal_7c7c7c",
+    "metal_7c7c7c": "ic2_120:item/item3d/metal_7c7c7c",
+    "flat_505050": "ic2_120:item/item3d/flat_505050",
+    "flat_d9d9d9": "ic2_120:item/item3d/flat_d9d9d9",
+    "flat_989898": "ic2_120:item/item3d/flat_989898",
+    "flat_a9a9a9": "ic2_120:item/item3d/flat_a9a9a9"
+  }
 }

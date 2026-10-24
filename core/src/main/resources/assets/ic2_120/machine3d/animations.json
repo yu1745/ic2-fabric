@@ -1,0 +1,339 @@
+{
+  "macerator": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "pivot": [
+        8,
+        6.5,
+        2.2
+      ],
+      "speed": 7
+    },
+    {
+      "part": 1,
+      "kind": "rotate",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "pivot": [
+        8,
+        9.0,
+        2.2
+      ],
+      "speed": -7
+    }
+  ],
+  "compressor": [
+    {
+      "part": 0,
+      "kind": "slide",
+      "axis": [
+        0,
+        -1,
+        0
+      ],
+      "amplitude": 1.5,
+      "period": 20
+    }
+  ],
+  "extractor": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "pivot": [
+        8,
+        7.5,
+        1.5
+      ],
+      "speed": 11
+    }
+  ],
+  "recycler": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "pivot": [
+        8,
+        7.75,
+        2.6
+      ],
+      "speed": -9
+    }
+  ],
+  "canner": [
+    {
+      "part": 0,
+      "kind": "slide",
+      "axis": [
+        0,
+        -1,
+        0
+      ],
+      "amplitude": 0.75,
+      "period": 30
+    }
+  ],
+  "solid_canner": [
+    {
+      "part": 0,
+      "kind": "slide",
+      "axis": [
+        0,
+        -1,
+        0
+      ],
+      "amplitude": 0.75,
+      "period": 16
+    }
+  ],
+  "block_cutter": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "pivot": [
+        9.5,
+        7.5,
+        1
+      ],
+      "speed": -23
+    }
+  ],
+  "centrifuge": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "pivot": [
+        8,
+        15,
+        8
+      ],
+      "speed": 29
+    }
+  ],
+  "metal_former": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "pivot": [
+        8,
+        6.25,
+        1.6
+      ],
+      "speed": 8
+    },
+    {
+      "part": 1,
+      "kind": "rotate",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "pivot": [
+        8,
+        9.25,
+        1.6
+      ],
+      "speed": -8
+    }
+  ],
+  "ore_washing_plant": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "pivot": [
+        8,
+        6.5,
+        1.8
+      ],
+      "speed": -5
+    }
+  ],
+  "pump": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "pivot": [
+        8,
+        7.5,
+        1
+      ],
+      "speed": 17
+    }
+  ],
+  "fluid_canner": [
+    {
+      "part": 0,
+      "kind": "slide",
+      "axis": [
+        0,
+        -1,
+        0
+      ],
+      "amplitude": 0.75,
+      "period": 24
+    }
+  ],
+  "condenser": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "pivot": [
+        8,
+        7.5,
+        1
+      ],
+      "speed": -21
+    }
+  ],
+  "crop_harvester": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "pivot": [
+        8,
+        15,
+        8
+      ],
+      "speed": 13
+    }
+  ],
+  "cropmatron": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "pivot": [
+        8,
+        15.5,
+        8
+      ],
+      "speed": 9
+    }
+  ],
+  "animal_slaughterer": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "pivot": [
+        8,
+        7.5,
+        1
+      ],
+      "speed": -31
+    }
+  ],
+  "chunk_loader": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "pivot": [
+        8,
+        15,
+        8
+      ],
+      "speed": 4
+    }
+  ],
+  "stirling_generator": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "pivot": [
+        10.4,
+        13.4,
+        8
+      ],
+      "speed": 11
+    }
+  ],
+  "water_generator": [
+    {
+      "part": 0,
+      "kind": "rotate",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "pivot": [
+        8,
+        7,
+        1.2
+      ],
+      "speed": -6
+    }
+  ]
+}

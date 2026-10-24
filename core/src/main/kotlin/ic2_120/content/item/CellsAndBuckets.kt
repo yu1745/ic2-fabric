@@ -211,7 +211,7 @@ internal fun bucketToFilledFluidCell(bucketStack: ItemStack): ItemStack? {
  * 通用流体单元：在 NBT 中存储 FluidVariant，支持任意流体。
  * **仅用于其他 mod 的流体**，本模组的流体请使用 ModFluidCell 子类。
  *
- * 使用 Fabric Fluid API 获取流体颜色并渲染到物品中心（客户端 FluidCellColorProvider）。
+ * 使用 Fabric Fluid API 获取流体颜色并渲染到物品中心（客户端 FluidCellItemRenderer，3D 液柱）。
  */
 @ModItem(name = "fluid_cell", tab = CreativeTab.IC2_MATERIALS, group = "cells")
 class FluidCellItem : Item(FabricItemSettings()), FluidModificationItem {

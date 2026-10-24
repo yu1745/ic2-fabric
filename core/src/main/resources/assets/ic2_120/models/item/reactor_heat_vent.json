@@ -1,6 +1,14 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/reactor/reactor_heat_vent"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/reactor_heat_vent.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_969696",
+    "flat_969696": "ic2_120:item/item3d/flat_969696",
+    "metal_aaaaaa": "ic2_120:item/item3d/metal_aaaaaa",
+    "flat_686868": "ic2_120:item/item3d/flat_686868",
+    "flat_cdcdcd": "ic2_120:item/item3d/flat_cdcdcd",
+    "flat_7c654d": "ic2_120:item/item3d/flat_7c654d",
+    "flat_707070": "ic2_120:item/item3d/flat_707070"
+  }
 }

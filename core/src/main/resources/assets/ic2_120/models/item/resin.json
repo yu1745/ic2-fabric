@@ -1,6 +1,14 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/resource/resin"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/resin.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/glass_7b5828",
+    "glass_7b5828": "ic2_120:item/item3d/glass_7b5828",
+    "glass_a06a24": "ic2_120:item/item3d/glass_a06a24",
+    "glass_b57520": "ic2_120:item/item3d/glass_b57520",
+    "glass_c48a3c": "ic2_120:item/item3d/glass_c48a3c",
+    "glass_d98b24": "ic2_120:item/item3d/glass_d98b24",
+    "glow_e19632": "ic2_120:item/item3d/glow_e19632"
+  }
 }

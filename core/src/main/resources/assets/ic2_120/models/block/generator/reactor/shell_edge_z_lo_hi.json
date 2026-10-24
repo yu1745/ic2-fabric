@@ -1,0 +1,79 @@
+{
+ "parent": "minecraft:block/block",
+ "ambientocclusion": false,
+ "textures": {
+  "particle": "ic2_120:block/generator/reactor/shell_frame",
+  "frame": "ic2_120:block/generator/reactor/shell_frame",
+  "glass": "ic2_120:block/generator/reactor/shell_glass"
+ },
+ "elements": [
+  {
+   "from": [
+    0,
+    14.5,
+    0
+   ],
+   "to": [
+    1.5,
+    16,
+    16
+   ],
+   "faces": {
+    "north": {
+     "uv": [
+      14.5,
+      0,
+      16,
+      1.5
+     ],
+     "texture": "#frame"
+    },
+    "south": {
+     "uv": [
+      0,
+      0,
+      1.5,
+      1.5
+     ],
+     "texture": "#frame"
+    },
+    "east": {
+     "uv": [
+      0,
+      0,
+      16,
+      1.5
+     ],
+     "texture": "#frame"
+    },
+    "west": {
+     "uv": [
+      0,
+      0,
+      16,
+      1.5
+     ],
+     "texture": "#frame"
+    },
+    "up": {
+     "uv": [
+      0,
+      0,
+      1.5,
+      16
+     ],
+     "texture": "#frame"
+    },
+    "down": {
+     "uv": [
+      0,
+      0,
+      1.5,
+      16
+     ],
+     "texture": "#frame"
+    }
+   }
+  }
+ ]
+}

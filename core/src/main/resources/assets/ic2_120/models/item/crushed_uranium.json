@@ -1,1 +1,15 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/crushed/uranium" } }
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/crushed_uranium.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_616161",
+    "flat_616161": "ic2_120:item/item3d/flat_616161",
+    "flat_2a7a00": "ic2_120:item/item3d/flat_2a7a00",
+    "flat_81c54f": "ic2_120:item/item3d/flat_81c54f",
+    "flat_464646": "ic2_120:item/item3d/flat_464646",
+    "flat_5db123": "ic2_120:item/item3d/flat_5db123",
+    "flat_acea7c": "ic2_120:item/item3d/flat_acea7c",
+    "flat_146800": "ic2_120:item/item3d/flat_146800"
+  }
+}

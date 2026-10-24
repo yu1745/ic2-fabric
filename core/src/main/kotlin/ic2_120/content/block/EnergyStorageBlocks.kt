@@ -187,7 +187,7 @@ class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
 /**
  * 充电座方块。与储电箱共用 EnergyStorageBlockEntity（含红石模式系统）与 GUI。
  */
-abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock() {
+abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(defaultMachineSettings().nonOpaque()) { // 3D 模型：关闭相邻面剔除
     init {
         defaultState = stateManager.defaultState
             .with(Properties.HORIZONTAL_FACING, net.minecraft.util.math.Direction.NORTH)

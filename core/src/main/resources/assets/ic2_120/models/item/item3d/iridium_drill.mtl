@@ -1,0 +1,51 @@
+newmtl flat_f88c00
+Kd 1 1 1
+map_Kd #flat_f88c00
+
+newmtl flat_e66c03
+Kd 1 1 1
+map_Kd #flat_e66c03
+
+newmtl flat_3a3a3a
+Kd 1 1 1
+map_Kd #flat_3a3a3a
+
+newmtl flat_4e4e4e
+Kd 1 1 1
+map_Kd #flat_4e4e4e
+
+newmtl flat_565656
+Kd 1 1 1
+map_Kd #flat_565656
+
+newmtl metal_dedede
+Kd 1 1 1
+map_Kd #metal_dedede
+
+newmtl glass_33e0e0
+Kd 1 1 1
+map_Kd #glass_33e0e0
+
+newmtl glass_00b4b4
+Kd 1 1 1
+map_Kd #glass_00b4b4
+
+newmtl flat_9a9a9a
+Kd 1 1 1
+map_Kd #flat_9a9a9a
+
+newmtl flat_009898
+Kd 1 1 1
+map_Kd #flat_009898
+
+newmtl flat_fa1818
+Kd 1 1 1
+map_Kd #flat_fa1818
+
+newmtl glass_ff6060
+Kd 1 1 1
+map_Kd #glass_ff6060
+
+newmtl flat_8a1414
+Kd 1 1 1
+map_Kd #flat_8a1414

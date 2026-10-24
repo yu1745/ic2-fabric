@@ -1,6 +1,14 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/electric_motor"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/electric_motor.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_424040",
+    "flat_424040": "ic2_120:item/item3d/flat_424040",
+    "metal_bcbcbc": "ic2_120:item/item3d/metal_bcbcbc",
+    "flat_838480": "ic2_120:item/item3d/flat_838480",
+    "flat_6f7269": "ic2_120:item/item3d/flat_6f7269",
+    "flat_797677": "ic2_120:item/item3d/flat_797677",
+    "flat_2b2b2b": "ic2_120:item/item3d/flat_2b2b2b"
+  }
 }

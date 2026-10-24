@@ -1,6 +1,12 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crop/weed"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/weed.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_37541e",
+    "flat_37541e": "ic2_120:item/item3d/flat_37541e",
+    "flat_466a26": "ic2_120:item/item3d/flat_466a26",
+    "flat_50792b": "ic2_120:item/item3d/flat_50792b",
+    "flat_5f9033": "ic2_120:item/item3d/flat_5f9033"
+  }
 }

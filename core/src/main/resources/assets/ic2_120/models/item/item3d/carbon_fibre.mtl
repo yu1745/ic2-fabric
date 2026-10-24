@@ -1,0 +1,11 @@
+newmtl flat_3c3c3c
+Kd 1 1 1
+map_Kd #flat_3c3c3c
+
+newmtl flat_4e4e4e
+Kd 1 1 1
+map_Kd #flat_4e4e4e
+
+newmtl flat_303030
+Kd 1 1 1
+map_Kd #flat_303030

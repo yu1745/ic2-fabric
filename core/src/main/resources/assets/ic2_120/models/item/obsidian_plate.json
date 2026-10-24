@@ -1,6 +1,14 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/obsidian_plate.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/plate/obsidian"
+    "particle": "ic2_120:item/item3d/flat_1a1428",
+    "flat_1a1428": "ic2_120:item/item3d/flat_1a1428",
+    "flat_1e1730": "ic2_120:item/item3d/flat_1e1730",
+    "flat_342648": "ic2_120:item/item3d/flat_342648",
+    "flat_4a3568": "ic2_120:item/item3d/flat_4a3568",
+    "flat_271e3d": "ic2_120:item/item3d/flat_271e3d",
+    "flat_3b2754": "ic2_120:item/item3d/flat_3b2754"
   }
 }

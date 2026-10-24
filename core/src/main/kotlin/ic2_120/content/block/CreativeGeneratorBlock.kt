@@ -32,6 +32,7 @@ class CreativeGeneratorBlock : MachineBlock(
     AbstractBlock.Settings.copy(Blocks.OAK_PLANKS)
         .strength(2.0f, 3600000.0f)
         .sounds(BlockSoundGroup.METAL)
+        .nonOpaque() // 3D 模型不填满整格：关闭对相邻方块的面剔除
 ) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =

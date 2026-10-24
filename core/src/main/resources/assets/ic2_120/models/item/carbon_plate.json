@@ -1,6 +1,12 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/carbon_plate"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/carbon_plate.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_303030",
+    "flat_303030": "ic2_120:item/item3d/flat_303030",
+    "flat_3a3a3a": "ic2_120:item/item3d/flat_3a3a3a",
+    "flat_424242": "ic2_120:item/item3d/flat_424242",
+    "flat_4a4a4a": "ic2_120:item/item3d/flat_4a4a4a"
+  }
 }

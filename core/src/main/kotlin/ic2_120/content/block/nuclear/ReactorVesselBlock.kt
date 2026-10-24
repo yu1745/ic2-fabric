@@ -1,6 +1,6 @@
 package ic2_120.content.block.nuclear
 
-import ic2_120.content.block.MachineBlock
+import ic2_120.content.block.ReinforcedGlassBlock
 import ic2_120.content.item.LeadPlate
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
@@ -23,8 +23,8 @@ import ic2_120.content.recipes.ModTags
 /**
  * 核反应堆压力容器。
  */
-@ModBlock(name = "reactor_vessel", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "reactor")
-class ReactorVesselBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
+@ModBlock(name = "reactor_vessel", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "reactor", renderLayer = "translucent")
+class ReactorVesselBlock(settings: AbstractBlock.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
 
     companion object {
         @RecipeProvider
@@ -32,9 +32,9 @@ class ReactorVesselBlock(settings: AbstractBlock.Settings = AbstractBlock.Settin
             val leadPlate = LeadPlate::class.instance()
             if (leadPlate != Items.AIR) {
                 ShapedRecipeJsonBuilder.create(RecipeCategory.MISC, ReactorVesselBlock::class.item(), 4)
-                    .pattern("LSL").pattern("SLS").pattern("LSL")
+                    .pattern("LGL").pattern("GLG").pattern("LGL")
                     .input('L', Ingredient.fromTag(ModTags.Compat.Items.PLATES_LEAD))
-                    .input('S', Items.STONE)
+                    .input('G', ReinforcedGlassBlock::class.item())  // 透明外壳：铅框 + 强化玻璃
                     .criterion(hasItem(leadPlate), conditionsFromItem(leadPlate))
                     .offerTo(exporter, ReactorVesselBlock::class.id())
             }

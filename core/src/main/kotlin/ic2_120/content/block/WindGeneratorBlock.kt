@@ -39,7 +39,8 @@ import ic2_120.registry.annotation.RecipeProvider
  * 极限约 11.46 EU/t，平均每 6.4 秒刷新一次。
  */
 @ModBlock(name = "wind_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
-class WindGeneratorBlock : MachineBlock() {
+// 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
+class WindGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         WindGeneratorBlockEntity(pos, state)

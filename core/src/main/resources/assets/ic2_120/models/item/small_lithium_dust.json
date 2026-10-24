@@ -1,6 +1,13 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/small_lithium_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/dust/small_lithium"
+    "particle": "ic2_120:item/item3d/flat_69767b",
+    "flat_69767b": "ic2_120:item/item3d/flat_69767b",
+    "flat_91a3aa": "ic2_120:item/item3d/flat_91a3aa",
+    "flat_bddbdd": "ic2_120:item/item3d/flat_bddbdd",
+    "flat_222027": "ic2_120:item/item3d/flat_222027",
+    "flat_acc7ca": "ic2_120:item/item3d/flat_acc7ca"
   }
 }

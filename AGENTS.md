@@ -9,6 +9,8 @@
 - 辅助资料（assets 清单 / Fabric API 报告 / 归档）：`docs/README.md`
 - **main → 1.21.1 迁移 cherry-pick：`docs/guides/branch-cherry-pick-guide.md`（每次 cherry-pick 前必读，否则必踩坑）**
 - 新机器实现：`docs/guides/machine-implementation-guide.md`
+- 3D 机器模型（OBJ 加载器、共享机身、动画、游戏内截图闭环）：`docs/guides/model3d-pipeline.md`
+- 3D 物品建模（逐个手工建模、离线对照预览、分工）：`docs/guides/item3d-modeling.md`
 - 机器组合复用：`docs/guides/machine-composition-reuse.md`（减少 container/slot/sync 重复代码）
 - mcdebug 测试编写：`core/src/mcdebugTest/kotlin/`（Kotlin + JUnit 5，mcdebug-cli 0.5.0）+ `docs/guides/mcdebug-test-guide.md`（test 矩阵、be.tick 驱动、slot 速查、踩过的坑）
 - 新物品实现：`docs/guides/item-implemented.md`

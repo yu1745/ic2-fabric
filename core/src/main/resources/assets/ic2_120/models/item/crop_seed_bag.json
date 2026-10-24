@@ -1,6 +1,15 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/crop_seed_bag.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/crop/crop_seed_bag"
+    "particle": "ic2_120:item/item3d/flat_654b17",
+    "flat_654b17": "ic2_120:item/item3d/flat_654b17",
+    "flat_51390b": "ic2_120:item/item3d/flat_51390b",
+    "flat_72551a": "ic2_120:item/item3d/flat_72551a",
+    "flat_473107": "ic2_120:item/item3d/flat_473107",
+    "flat_339514": "ic2_120:item/item3d/flat_339514",
+    "flat_677d27": "ic2_120:item/item3d/flat_677d27",
+    "flat_887d27": "ic2_120:item/item3d/flat_887d27"
   }
 }

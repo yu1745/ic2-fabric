@@ -1,6 +1,11 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/pellet"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/pellet.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_868686",
+    "flat_868686": "ic2_120:item/item3d/flat_868686",
+    "flat_686868": "ic2_120:item/item3d/flat_686868",
+    "flat_9b9b9b": "ic2_120:item/item3d/flat_9b9b9b"
+  }
 }

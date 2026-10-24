@@ -39,7 +39,8 @@ import ic2_120.registry.annotation.RecipeProvider
  * 发电量由靶丸数量决定：1→1, 2→2, 3→4, 4→8, 5→16, 6→32 EU/t
  */
 @ModBlock(name = "rt_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
-class RtGeneratorBlock : MachineBlock() {
+// 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
+class RtGeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
 
     init {
         defaultState = stateManager.defaultState.with(ACTIVE, false)

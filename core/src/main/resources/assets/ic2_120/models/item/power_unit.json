@@ -1,6 +1,14 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/power_unit"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/power_unit.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_323131",
+    "flat_323131": "ic2_120:item/item3d/flat_323131",
+    "flat_505050": "ic2_120:item/item3d/flat_505050",
+    "metal_f18000": "ic2_120:item/item3d/metal_f18000",
+    "flat_434343": "ic2_120:item/item3d/flat_434343",
+    "flat_2e2d2d": "ic2_120:item/item3d/flat_2e2d2d",
+    "glow_fb9000": "ic2_120:item/item3d/glow_fb9000"
+  }
 }

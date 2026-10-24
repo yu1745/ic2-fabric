@@ -1,6 +1,15 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/advanced_circuit"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/advanced_circuit.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_597086",
+    "flat_597086": "ic2_120:item/item3d/flat_597086",
+    "metal_b2c9de": "ic2_120:item/item3d/metal_b2c9de",
+    "flat_7a91a6": "ic2_120:item/item3d/flat_7a91a6",
+    "flat_d7ecff": "ic2_120:item/item3d/flat_d7ecff",
+    "flat_cde4f9": "ic2_120:item/item3d/flat_cde4f9",
+    "flat_ff2020": "ic2_120:item/item3d/flat_ff2020",
+    "glow_96adc5": "ic2_120:item/item3d/glow_96adc5"
+  }
 }

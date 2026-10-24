@@ -1,6 +1,5 @@
 package ic2_120.content.block.nuclear
 
-import ic2_120.content.block.MachineBlock
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
 import ic2_120.registry.annotation.RecipeProvider
@@ -30,8 +29,8 @@ import java.util.function.Consumer
 /**
  * 反应堆访问接口。在反应堆结构内时，右键可打开反应堆 UI；Inventory 委托到对应的中心核反应堆。
  */
-@ModBlock(name = "reactor_access_hatch", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor")
-class ReactorAccessHatchBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
+@ModBlock(name = "reactor_access_hatch", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor", renderLayer = "translucent")
+class ReactorAccessHatchBlock(settings: AbstractBlock.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         ReactorAccessHatchBlockEntity(pos, state)

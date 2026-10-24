@@ -1,32 +1,37 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/battery/energy_crystal_0"
-	},
-	"overrides": [
-		{
-			"predicate": {
-				"ic2:charge": 0.2
-			},
-			"model": "ic2:item/battery/energy_crystal_1"
-		},
-		{
-			"predicate": {
-				"ic2:charge": 0.4
-			},
-			"model": "ic2:item/battery/energy_crystal_2"
-		},
-		{
-			"predicate": {
-				"ic2:charge": 0.6
-			},
-			"model": "ic2:item/battery/energy_crystal_3"
-		},
-		{
-			"predicate": {
-				"ic2:charge": 0.8
-			},
-			"model": "ic2:item/battery/energy_crystal_4"
-		}
-	]
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/energy_crystal.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_ff4050",
+    "flat_ff4050": "ic2_120:item/item3d/flat_ff4050",
+    "glass_dd001a": "ic2_120:item/item3d/glass_dd001a",
+    "flat_a20025": "ic2_120:item/item3d/flat_a20025"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "ic2:charge": 0.2
+      },
+      "model": "ic2_120:item/battery/energy_crystal_1"
+    },
+    {
+      "predicate": {
+        "ic2:charge": 0.4
+      },
+      "model": "ic2_120:item/battery/energy_crystal_2"
+    },
+    {
+      "predicate": {
+        "ic2:charge": 0.6
+      },
+      "model": "ic2_120:item/battery/energy_crystal_3"
+    },
+    {
+      "predicate": {
+        "ic2:charge": 0.8
+      },
+      "model": "ic2_120:item/battery/energy_crystal_4"
+    }
+  ]
 }

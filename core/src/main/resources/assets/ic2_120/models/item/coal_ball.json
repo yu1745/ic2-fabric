@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/coal_ball"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/coal_ball.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_444444",
+    "flat_444444": "ic2_120:item/item3d/flat_444444",
+    "flat_343434": "ic2_120:item/item3d/flat_343434",
+    "flat_303030": "ic2_120:item/item3d/flat_303030",
+    "flat_d4d4d4": "ic2_120:item/item3d/flat_d4d4d4",
+    "flat_808080": "ic2_120:item/item3d/flat_808080"
+  }
 }

@@ -1,6 +1,11 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/copper_boiler"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/copper_boiler.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/metal_a66430",
+    "metal_a66430": "ic2_120:item/item3d/metal_a66430",
+    "flat_9d5a26": "ic2_120:item/item3d/flat_9d5a26",
+    "flat_bc7945": "ic2_120:item/item3d/flat_bc7945"
+  }
 }

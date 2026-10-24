@@ -1,6 +1,17 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/meter.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/tool/meter"
+    "particle": "ic2_120:item/item3d/flat_bdbdbd",
+    "flat_bdbdbd": "ic2_120:item/item3d/flat_bdbdbd",
+    "flat_909090": "ic2_120:item/item3d/flat_909090",
+    "flat_727272": "ic2_120:item/item3d/flat_727272",
+    "glass_819d7a": "ic2_120:item/item3d/glass_819d7a",
+    "flat_bebebe": "ic2_120:item/item3d/flat_bebebe",
+    "glow_ee2222": "ic2_120:item/item3d/glow_ee2222",
+    "flat_525050": "ic2_120:item/item3d/flat_525050",
+    "flat_d02020": "ic2_120:item/item3d/flat_d02020",
+    "flat_3a3ad0": "ic2_120:item/item3d/flat_3a3ad0"
   }
 }

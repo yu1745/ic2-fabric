@@ -1,6 +1,12 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/cf_powder"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/cf_powder.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_4e4e4e",
+    "flat_4e4e4e": "ic2_120:item/item3d/flat_4e4e4e",
+    "flat_868686": "ic2_120:item/item3d/flat_868686",
+    "flat_9b9b9b": "ic2_120:item/item3d/flat_9b9b9b",
+    "flat_686868": "ic2_120:item/item3d/flat_686868"
+  }
 }

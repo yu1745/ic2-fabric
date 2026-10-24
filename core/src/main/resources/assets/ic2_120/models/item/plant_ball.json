@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/plant_ball"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/plant_ball.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_57af16",
+    "flat_57af16": "ic2_120:item/item3d/flat_57af16",
+    "flat_4b9713": "ic2_120:item/item3d/flat_4b9713",
+    "flat_224e08": "ic2_120:item/item3d/flat_224e08",
+    "flat_377612": "ic2_120:item/item3d/flat_377612",
+    "flat_534210": "ic2_120:item/item3d/flat_534210"
+  }
 }

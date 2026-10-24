@@ -1,6 +1,14 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/broken_rubber_boat.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/boat/broken_rubber_boat"
+    "particle": "ic2_120:item/item3d/flat_3e3b34",
+    "flat_3e3b34": "ic2_120:item/item3d/flat_3e3b34",
+    "flat_494132": "ic2_120:item/item3d/flat_494132",
+    "flat_544a36": "ic2_120:item/item3d/flat_544a36",
+    "flat_403a2e": "ic2_120:item/item3d/flat_403a2e",
+    "flat_7a6a48": "ic2_120:item/item3d/flat_7a6a48",
+    "flat_2a2a2a": "ic2_120:item/item3d/flat_2a2a2a"
   }
 }

@@ -1,1 +1,15 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/purified/copper" } }
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/purified_copper.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_c95e35",
+    "flat_c95e35": "ic2_120:item/item3d/flat_c95e35",
+    "flat_e97a52": "ic2_120:item/item3d/flat_e97a52",
+    "flat_a54926": "ic2_120:item/item3d/flat_a54926",
+    "flat_fc9982": "ic2_120:item/item3d/flat_fc9982",
+    "flat_4d8d79": "ic2_120:item/item3d/flat_4d8d79",
+    "flat_84e2c5": "ic2_120:item/item3d/flat_84e2c5",
+    "flat_635b40": "ic2_120:item/item3d/flat_635b40"
+  }
+}

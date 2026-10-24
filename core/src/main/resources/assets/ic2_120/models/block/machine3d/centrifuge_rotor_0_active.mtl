@@ -1,0 +1,19 @@
+newmtl steel
+Kd 1 1 1
+map_Kd #steel
+
+newmtl glass
+Kd 1 1 1
+map_Kd #glass
+
+newmtl liquid
+Kd 1 1 1
+map_Kd #liquid
+
+newmtl copper
+Kd 1 1 1
+map_Kd #copper
+
+newmtl brass
+Kd 1 1 1
+map_Kd #brass

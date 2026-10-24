@@ -1,0 +1,8 @@
+newmtl flat_6b3f7f
+Kd 1 1 1
+map_Kd #flat_6b3f7f
+
+newmtl glow_d67fff
+Kd 1 1 1
+map_Kd #glow_d67fff
+Ke 1 1 1

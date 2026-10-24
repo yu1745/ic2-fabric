@@ -1,0 +1,11 @@
+newmtl flat_ffffff
+Kd 1 1 1
+map_Kd #flat_ffffff
+
+newmtl glass_ff89a6
+Kd 1 1 1
+map_Kd #glass_ff89a6
+
+newmtl flat_d75d7a
+Kd 1 1 1
+map_Kd #flat_d75d7a

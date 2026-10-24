@@ -1,7 +1,6 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "ic2_120:item/cell3d/display",
   "textures": {
-    "layer0": "ic2:item/cell/fluid_cell",
-    "layer1": "ic2:item/cell/fluid_cell_window"
+    "particle": "ic2_120:block/machine3d/steel"
   }
 }

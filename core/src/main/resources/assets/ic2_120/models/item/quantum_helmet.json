@@ -1,6 +1,13 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/quantum_helmet.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/armor/quantum_helmet"
+    "particle": "ic2_120:item/item3d/flat_f2f2f2",
+    "flat_f2f2f2": "ic2_120:item/item3d/flat_f2f2f2",
+    "metal_e5e5e5": "ic2_120:item/item3d/metal_e5e5e5",
+    "flat_3c3c3c": "ic2_120:item/item3d/flat_3c3c3c",
+    "glass_3366ff": "ic2_120:item/item3d/glass_3366ff",
+    "glow_00ff00": "ic2_120:item/item3d/glow_00ff00"
   }
 }

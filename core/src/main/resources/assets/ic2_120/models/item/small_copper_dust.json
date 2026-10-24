@@ -1,6 +1,13 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/small_copper_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/dust/small_copper"
+    "particle": "ic2_120:item/item3d/flat_774115",
+    "flat_774115": "ic2_120:item/item3d/flat_774115",
+    "flat_9b561d": "ic2_120:item/item3d/flat_9b561d",
+    "flat_a76229": "ic2_120:item/item3d/flat_a76229",
+    "flat_a35d25": "ic2_120:item/item3d/flat_a35d25",
+    "flat_784115": "ic2_120:item/item3d/flat_784115"
   }
 }

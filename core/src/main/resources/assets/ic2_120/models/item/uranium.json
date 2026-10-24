@@ -1,6 +1,13 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/uranium.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/nuclear/uranium"
+    "particle": "ic2_120:item/item3d/flat_70cc13",
+    "flat_70cc13": "ic2_120:item/item3d/flat_70cc13",
+    "flat_52950f": "ic2_120:item/item3d/flat_52950f",
+    "flat_294c07": "ic2_120:item/item3d/flat_294c07",
+    "flat_335e09": "ic2_120:item/item3d/flat_335e09",
+    "flat_60ae11": "ic2_120:item/item3d/flat_60ae11"
   }
 }

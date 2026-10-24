@@ -1,6 +1,15 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/bucket/weed_ex"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/weed_ex_bucket.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_727272",
+    "flat_727272": "ic2_120:item/item3d/flat_727272",
+    "flat_969696": "ic2_120:item/item3d/flat_969696",
+    "metal_a8a8a8": "ic2_120:item/item3d/metal_a8a8a8",
+    "metal_d8d8d8": "ic2_120:item/item3d/metal_d8d8d8",
+    "flat_1b3c21": "ic2_120:item/item3d/flat_1b3c21",
+    "flat_1c4924": "ic2_120:item/item3d/flat_1c4924",
+    "flat_353535": "ic2_120:item/item3d/flat_353535"
+  }
 }

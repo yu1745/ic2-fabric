@@ -1,0 +1,11 @@
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/battery/energy_crystal_4.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_ffffff",
+    "flat_ffffff": "ic2_120:item/item3d/flat_ffffff",
+    "glass_ff89a6": "ic2_120:item/item3d/glass_ff89a6",
+    "flat_d75d7a": "ic2_120:item/item3d/flat_d75d7a"
+  }
+}

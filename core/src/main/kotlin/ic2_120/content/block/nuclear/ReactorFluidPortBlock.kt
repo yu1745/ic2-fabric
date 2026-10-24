@@ -1,6 +1,5 @@
 package ic2_120.content.block.nuclear
 
-import ic2_120.content.block.MachineBlock
 import ic2_120.content.item.EmptyCell
 import ic2_120.registry.CreativeTab
 import ic2_120.registry.annotation.ModBlock
@@ -33,8 +32,8 @@ import java.util.function.Consumer
  * 反应堆流体接口。
  * 提供流体交互功能，通过管道输入冷却液/输出热冷却液。
  */
-@ModBlock(name = "reactor_fluid_port", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor")
-class ReactorFluidPortBlock(settings: AbstractBlock.Settings = AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) : MachineBlock(settings) {
+@ModBlock(name = "reactor_fluid_port", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "reactor", renderLayer = "translucent")
+class ReactorFluidPortBlock(settings: AbstractBlock.Settings = ReactorShellBlock.shellSettings()) : ReactorShellBlock(settings) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         ReactorFluidPortBlockEntity(pos, state)

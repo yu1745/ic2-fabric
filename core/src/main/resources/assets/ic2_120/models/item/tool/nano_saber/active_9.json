@@ -1,0 +1,16 @@
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/tool/nano_saber/active_9.obj",
+  "parent": "ic2_120:item/item3d/display_handheld",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_383838",
+    "flat_383838": "ic2_120:item/item3d/flat_383838",
+    "metal_444444": "ic2_120:item/item3d/metal_444444",
+    "glow_1c8a22": "ic2_120:item/item3d/glow_1c8a22",
+    "flat_ef7c01": "ic2_120:item/item3d/flat_ef7c01",
+    "flat_525151": "ic2_120:item/item3d/flat_525151",
+    "glow_0e7a68": "ic2_120:item/item3d/glow_0e7a68",
+    "glow_12e0c0": "ic2_120:item/item3d/glow_12e0c0",
+    "glow_ffee2d": "ic2_120:item/item3d/glow_ffee2d"
+  }
+}

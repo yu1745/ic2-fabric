@@ -1,1 +1,16 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/crushed/copper" } }
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/crushed_copper.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_616161",
+    "flat_616161": "ic2_120:item/item3d/flat_616161",
+    "flat_c95e35": "ic2_120:item/item3d/flat_c95e35",
+    "flat_e97a52": "ic2_120:item/item3d/flat_e97a52",
+    "flat_464646": "ic2_120:item/item3d/flat_464646",
+    "flat_2a5447": "ic2_120:item/item3d/flat_2a5447",
+    "flat_84e2c5": "ic2_120:item/item3d/flat_84e2c5",
+    "flat_883f26": "ic2_120:item/item3d/flat_883f26",
+    "flat_e9fff8": "ic2_120:item/item3d/flat_e9fff8"
+  }
+}

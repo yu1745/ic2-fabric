@@ -1,1 +1,12 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/ingot/refined_iron" } }
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/refined_iron_ingot.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_595c68",
+    "flat_595c68": "ic2_120:item/item3d/flat_595c68",
+    "metal_91a3aa": "ic2_120:item/item3d/metal_91a3aa",
+    "metal_b9d6d9": "ic2_120:item/item3d/metal_b9d6d9",
+    "flat_fafafa": "ic2_120:item/item3d/flat_fafafa"
+  }
+}

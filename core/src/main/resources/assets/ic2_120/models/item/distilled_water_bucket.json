@@ -1,7 +1,16 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/distilled_water_bucket.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "minecraft:item/water_bucket"
+    "particle": "ic2_120:item/item3d/flat_727272",
+    "flat_727272": "ic2_120:item/item3d/flat_727272",
+    "metal_a8a8a8": "ic2_120:item/item3d/metal_a8a8a8",
+    "metal_c0c0c0": "ic2_120:item/item3d/metal_c0c0c0",
+    "flat_d8d8d8": "ic2_120:item/item3d/flat_d8d8d8",
+    "glass_6fb4ff": "ic2_120:item/item3d/glass_6fb4ff",
+    "glass_c8e6ff": "ic2_120:item/item3d/glass_c8e6ff",
+    "flat_969696": "ic2_120:item/item3d/flat_969696",
+    "flat_353535": "ic2_120:item/item3d/flat_353535"
   }
 }
-

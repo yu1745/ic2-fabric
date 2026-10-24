@@ -1,6 +1,13 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/carbon_boat.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/boat/carbon_boat"
+    "particle": "ic2_120:item/item3d/metal_2c2d3a",
+    "metal_2c2d3a": "ic2_120:item/item3d/metal_2c2d3a",
+    "flat_262529": "ic2_120:item/item3d/flat_262529",
+    "metal_33343f": "ic2_120:item/item3d/metal_33343f",
+    "flat_3e3d48": "ic2_120:item/item3d/flat_3e3d48",
+    "flat_4a4a5a": "ic2_120:item/item3d/flat_4a4a5a"
   }
 }

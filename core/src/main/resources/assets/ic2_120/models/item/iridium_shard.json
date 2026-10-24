@@ -1,6 +1,14 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/resource/iridium_shard"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/iridium_shard.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/metal_808080",
+    "metal_808080": "ic2_120:item/item3d/metal_808080",
+    "metal_9f9f9f": "ic2_120:item/item3d/metal_9f9f9f",
+    "metal_b4b4b4": "ic2_120:item/item3d/metal_b4b4b4",
+    "metal_cecece": "ic2_120:item/item3d/metal_cecece",
+    "metal_dddddd": "ic2_120:item/item3d/metal_dddddd",
+    "metal_ffffff": "ic2_120:item/item3d/metal_ffffff"
+  }
 }

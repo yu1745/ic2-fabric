@@ -1,5 +1,5 @@
 {
 	"variants": {
-		"": { "model": "ic2:block/iron_tank" }
+		"": { "model": "ic2_120:block/iron_tank" }
 	}
 }

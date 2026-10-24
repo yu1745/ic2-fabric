@@ -36,7 +36,8 @@ import java.util.function.Consumer
  * 火力发电机方块。燃烧燃料产生 EU，支持 facing 与 active 状态。
  */
 @ModBlock(name = "generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
-class GeneratorBlock : MachineBlock() {
+// 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
+class GeneratorBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         GeneratorBlockEntity(pos, state)
 

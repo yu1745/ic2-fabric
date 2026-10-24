@@ -1,6 +1,14 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/resource/iridium_ore"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/iridium_ore_item.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/metal_b4b4b4",
+    "metal_b4b4b4": "ic2_120:item/item3d/metal_b4b4b4",
+    "flat_dddddd": "ic2_120:item/item3d/flat_dddddd",
+    "metal_9f9f9f": "ic2_120:item/item3d/metal_9f9f9f",
+    "flat_cecece": "ic2_120:item/item3d/flat_cecece",
+    "flat_808080": "ic2_120:item/item3d/flat_808080",
+    "flat_ffffff": "ic2_120:item/item3d/flat_ffffff"
+  }
 }

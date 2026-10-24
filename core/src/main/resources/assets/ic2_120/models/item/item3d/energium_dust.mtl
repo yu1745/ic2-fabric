@@ -1,0 +1,31 @@
+newmtl flat_6c1717
+Kd 1 1 1
+map_Kd #flat_6c1717
+
+newmtl glass_c11f1f
+Kd 1 1 1
+map_Kd #glass_c11f1f
+
+newmtl glass_e7aeae
+Kd 1 1 1
+map_Kd #glass_e7aeae
+
+newmtl glow_ecd2d2
+Kd 1 1 1
+map_Kd #glow_ecd2d2
+Ke 1 1 1
+
+newmtl glow_d46666
+Kd 1 1 1
+map_Kd #glow_d46666
+Ke 1 1 1
+
+newmtl glow_f7f0f0
+Kd 1 1 1
+map_Kd #glow_f7f0f0
+Ke 1 1 1
+
+newmtl glow_db8888
+Kd 1 1 1
+map_Kd #glow_db8888
+Ke 1 1 1

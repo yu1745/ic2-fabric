@@ -1,0 +1,15 @@
+newmtl metal_828282
+Kd 1 1 1
+map_Kd #metal_828282
+
+newmtl flat_353535
+Kd 1 1 1
+map_Kd #flat_353535
+
+newmtl metal_a8a8a8
+Kd 1 1 1
+map_Kd #metal_a8a8a8
+
+newmtl flat_ffffff
+Kd 1 1 1
+map_Kd #flat_ffffff

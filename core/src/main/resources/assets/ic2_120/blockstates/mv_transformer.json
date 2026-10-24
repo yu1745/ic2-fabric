@@ -1,50 +1,175 @@
 {
-  "variants": {
-    "facing=east,active=false": {
-      "model": "ic2:block/wiring/transformer/mv_transformer",
-      "y": 90
+  "multipart": [
+    {
+      "when": {
+        "facing": "north"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/transformer_body"
+      }
     },
-    "facing=east,active=true": {
-      "model": "ic2:block/wiring/transformer/mv_transformer_active",
-      "y": 90
+    {
+      "when": {
+        "facing": "north",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/mv_transformer_parts"
+      }
     },
-    "facing=north,active=false": {
-      "model": "ic2:block/wiring/transformer/mv_transformer"
+    {
+      "when": {
+        "facing": "north",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/mv_transformer_parts_active"
+      }
     },
-    "facing=north,active=true": {
-      "model": "ic2:block/wiring/transformer/mv_transformer_active"
+    {
+      "when": {
+        "facing": "east"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/transformer_body",
+        "y": 90
+      }
     },
-    "facing=south,active=false": {
-      "model": "ic2:block/wiring/transformer/mv_transformer",
-      "y": 180
+    {
+      "when": {
+        "facing": "east",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/mv_transformer_parts",
+        "y": 90
+      }
     },
-    "facing=south,active=true": {
-      "model": "ic2:block/wiring/transformer/mv_transformer_active",
-      "y": 180
+    {
+      "when": {
+        "facing": "east",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/mv_transformer_parts_active",
+        "y": 90
+      }
     },
-    "facing=west,active=false": {
-      "model": "ic2:block/wiring/transformer/mv_transformer",
-      "y": 270
+    {
+      "when": {
+        "facing": "south"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/transformer_body",
+        "y": 180
+      }
     },
-    "facing=west,active=true": {
-      "model": "ic2:block/wiring/transformer/mv_transformer_active",
-      "y": 270
+    {
+      "when": {
+        "facing": "south",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/mv_transformer_parts",
+        "y": 180
+      }
     },
-    "facing=up,active=false": {
-      "model": "ic2:block/wiring/transformer/mv_transformer",
-      "x": -90
+    {
+      "when": {
+        "facing": "south",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/mv_transformer_parts_active",
+        "y": 180
+      }
     },
-    "facing=up,active=true": {
-      "model": "ic2:block/wiring/transformer/mv_transformer_active",
-      "x": -90
+    {
+      "when": {
+        "facing": "west"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/transformer_body",
+        "y": 270
+      }
     },
-    "facing=down,active=false": {
-      "model": "ic2:block/wiring/transformer/mv_transformer",
-      "x": 90
+    {
+      "when": {
+        "facing": "west",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/mv_transformer_parts",
+        "y": 270
+      }
     },
-    "facing=down,active=true": {
-      "model": "ic2:block/wiring/transformer/mv_transformer_active",
-      "x": 90
+    {
+      "when": {
+        "facing": "west",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/mv_transformer_parts_active",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/transformer_body",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/mv_transformer_parts",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/mv_transformer_parts_active",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "down"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/transformer_body",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "active": "false"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/mv_transformer_parts",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "active": "true"
+      },
+      "apply": {
+        "model": "ic2_120:block/machine3d/mv_transformer_parts_active",
+        "x": 90
+      }
     }
-  }
+  ]
 }

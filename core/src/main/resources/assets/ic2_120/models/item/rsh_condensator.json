@@ -1,1 +1,14 @@
-{"parent":"ic2:item/default","textures":{"layer0":"ic2:item/reactor/rsh_condensator"}}
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/rsh_condensator.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_969696",
+    "flat_969696": "ic2_120:item/item3d/flat_969696",
+    "metal_aaaaaa": "ic2_120:item/item3d/metal_aaaaaa",
+    "flat_d00000": "ic2_120:item/item3d/flat_d00000",
+    "flat_ff2d2d": "ic2_120:item/item3d/flat_ff2d2d",
+    "flat_707070": "ic2_120:item/item3d/flat_707070",
+    "flat_686868": "ic2_120:item/item3d/flat_686868"
+  }
+}

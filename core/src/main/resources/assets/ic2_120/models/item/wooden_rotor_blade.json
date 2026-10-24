@@ -1,6 +1,14 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/wood_rotor_blade"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/wooden_rotor_blade.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_59482d",
+    "flat_59482d": "ic2_120:item/item3d/flat_59482d",
+    "flat_6f5a38": "ic2_120:item/item3d/flat_6f5a38",
+    "metal_9f844d": "ic2_120:item/item3d/metal_9f844d",
+    "flat_c5a678": "ic2_120:item/item3d/flat_c5a678",
+    "flat_bc9862": "ic2_120:item/item3d/flat_bc9862",
+    "flat_836c3d": "ic2_120:item/item3d/flat_836c3d"
+  }
 }

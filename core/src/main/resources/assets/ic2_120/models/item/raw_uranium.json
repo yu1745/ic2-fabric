@@ -1,1 +1,13 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/raw/uranium" } }
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/raw_uranium.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_3c8811",
+    "flat_3c8811": "ic2_120:item/item3d/flat_3c8811",
+    "flat_74c700": "ic2_120:item/item3d/flat_74c700",
+    "flat_2f6e40": "ic2_120:item/item3d/flat_2f6e40",
+    "flat_b4f900": "ic2_120:item/item3d/flat_b4f900",
+    "glow_93f91f": "ic2_120:item/item3d/glow_93f91f"
+  }
+}

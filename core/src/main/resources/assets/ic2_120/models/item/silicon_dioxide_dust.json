@@ -1,6 +1,15 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/silicon_dioxide_dust.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/dust/silicon_dioxide"
+    "particle": "ic2_120:item/item3d/flat_5c544b",
+    "flat_5c544b": "ic2_120:item/item3d/flat_5c544b",
+    "flat_b97346": "ic2_120:item/item3d/flat_b97346",
+    "flat_b9a198": "ic2_120:item/item3d/flat_b9a198",
+    "flat_bd7e5c": "ic2_120:item/item3d/flat_bd7e5c",
+    "flat_bd93a5": "ic2_120:item/item3d/flat_bd93a5",
+    "flat_7b594d": "ic2_120:item/item3d/flat_7b594d",
+    "flat_bfa9a1": "ic2_120:item/item3d/flat_bfa9a1"
   }
 }

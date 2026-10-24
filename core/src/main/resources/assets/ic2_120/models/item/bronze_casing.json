@@ -1,6 +1,11 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/bronze_casing.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/casing/bronze"
+    "particle": "ic2_120:item/item3d/metal_de7b1e",
+    "metal_de7b1e": "ic2_120:item/item3d/metal_de7b1e",
+    "metal_ffcd98": "ic2_120:item/item3d/metal_ffcd98",
+    "flat_9f3d00": "ic2_120:item/item3d/flat_9f3d00"
   }
 }

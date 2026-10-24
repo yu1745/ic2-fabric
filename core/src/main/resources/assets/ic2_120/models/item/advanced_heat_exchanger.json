@@ -1,6 +1,15 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/reactor/advanced_heat_exchanger"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/advanced_heat_exchanger.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_969696",
+    "flat_969696": "ic2_120:item/item3d/flat_969696",
+    "flat_d9d9d9": "ic2_120:item/item3d/flat_d9d9d9",
+    "metal_aaaaaa": "ic2_120:item/item3d/metal_aaaaaa",
+    "flat_707070": "ic2_120:item/item3d/flat_707070",
+    "flat_9bffff": "ic2_120:item/item3d/flat_9bffff",
+    "flat_6edcdc": "ic2_120:item/item3d/flat_6edcdc",
+    "flat_89d3d3": "ic2_120:item/item3d/flat_89d3d3"
+  }
 }

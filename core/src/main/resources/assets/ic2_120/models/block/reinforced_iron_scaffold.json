@@ -1,8 +1,8 @@
 {
   "parent": "minecraft:block/cube_column",
   "textures": {
-    "side": "ic2:block/reinforced_iron_scaffold_sides",
-    "end": "ic2:block/iron_scaffold_bottomtop"
+    "side": "ic2_120:block/reinforced_iron_scaffold_sides",
+    "end": "ic2_120:block/iron_scaffold_bottomtop"
   },
   "elements": [
     {

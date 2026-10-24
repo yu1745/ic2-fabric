@@ -1,6 +1,13 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/gold_plate.obj",
+  "parent": "ic2_120:item/item3d/display",
   "textures": {
-    "layer0": "ic2:item/resource/plate/gold"
+    "particle": "ic2_120:item/item3d/flat_752802",
+    "flat_752802": "ic2_120:item/item3d/flat_752802",
+    "flat_b26411": "ic2_120:item/item3d/flat_b26411",
+    "metal_fad64a": "ic2_120:item/item3d/metal_fad64a",
+    "flat_fffde0": "ic2_120:item/item3d/flat_fffde0",
+    "flat_dc9613": "ic2_120:item/item3d/flat_dc9613"
   }
 }

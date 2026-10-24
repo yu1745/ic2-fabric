@@ -1,44 +1,55 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/upgrade/advanced_pulling"
-	},
-	"overrides": [
-		{
-			"predicate": {
-				"ic2:down": 1
-			},
-			"model": "ic2:item/upgrade/advanced_pulling_down"
-		},
-		{
-			"predicate": {
-				"ic2:up": 1
-			},
-			"model": "ic2:item/upgrade/advanced_pulling_up"
-		},
-		{
-			"predicate": {
-				"ic2:north": 1
-			},
-			"model": "ic2:item/upgrade/advanced_pulling_north"
-		},
-		{
-			"predicate": {
-				"ic2:south": 1
-			},
-			"model": "ic2:item/upgrade/advanced_pulling_south"
-		},
-		{
-			"predicate": {
-				"ic2:west": 1
-			},
-			"model": "ic2:item/upgrade/advanced_pulling_west"
-		},
-		{
-			"predicate": {
-				"ic2:east": 1
-			},
-			"model": "ic2:item/upgrade/advanced_pulling_east"
-		}
-	]
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/advanced_pulling_upgrade.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_27263d",
+    "flat_27263d": "ic2_120:item/item3d/flat_27263d",
+    "flat_100d14": "ic2_120:item/item3d/flat_100d14",
+    "flat_383751": "ic2_120:item/item3d/flat_383751",
+    "flat_ffde75": "ic2_120:item/item3d/flat_ffde75",
+    "flat_9b7826": "ic2_120:item/item3d/flat_9b7826",
+    "flat_c29b38": "ic2_120:item/item3d/flat_c29b38",
+    "flat_ff0000": "ic2_120:item/item3d/flat_ff0000",
+    "flat_aa0f01": "ic2_120:item/item3d/flat_aa0f01",
+    "flat_ffe400": "ic2_120:item/item3d/flat_ffe400"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "ic2:down": 1
+      },
+      "model": "ic2_120:item/upgrade/advanced_pulling_down"
+    },
+    {
+      "predicate": {
+        "ic2:up": 1
+      },
+      "model": "ic2_120:item/upgrade/advanced_pulling_up"
+    },
+    {
+      "predicate": {
+        "ic2:north": 1
+      },
+      "model": "ic2_120:item/upgrade/advanced_pulling_north"
+    },
+    {
+      "predicate": {
+        "ic2:south": 1
+      },
+      "model": "ic2_120:item/upgrade/advanced_pulling_south"
+    },
+    {
+      "predicate": {
+        "ic2:west": 1
+      },
+      "model": "ic2_120:item/upgrade/advanced_pulling_west"
+    },
+    {
+      "predicate": {
+        "ic2:east": 1
+      },
+      "model": "ic2_120:item/upgrade/advanced_pulling_east"
+    }
+  ]
 }

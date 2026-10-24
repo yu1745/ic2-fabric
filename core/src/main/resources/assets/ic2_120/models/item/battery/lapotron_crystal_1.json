@@ -1,0 +1,14 @@
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/battery/lapotron_crystal_1.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_3a9eff",
+    "flat_3a9eff": "ic2_120:item/item3d/flat_3a9eff",
+    "glass_0055de": "ic2_120:item/item3d/glass_0055de",
+    "flat_001cad": "ic2_120:item/item3d/flat_001cad",
+    "flat_0022ca": "ic2_120:item/item3d/flat_0022ca",
+    "flat_777777": "ic2_120:item/item3d/flat_777777",
+    "glow_ff8a1a": "ic2_120:item/item3d/glow_ff8a1a"
+  }
+}

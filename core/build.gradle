@@ -23,6 +23,8 @@ loom {
 	runs {
 		client {
 			vmArgs '-Dfile.encoding=UTF-8', '-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8'
+			// 开发环境 LWJGL 为 3.3.2-snapshot，Sodium 0.5 启动自检要求 3.3.1；仅开发客户端跳过该检查
+			vmArg '-Dsodium.checks.issue2561=false'
 			programArgs '--width', '2560', '--height', '1440'
 		}
 		server {

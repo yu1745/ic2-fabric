@@ -1,1 +1,15 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/crushed/gold" } }
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/crushed_gold.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_616161",
+    "flat_616161": "ic2_120:item/item3d/flat_616161",
+    "flat_e29104": "ic2_120:item/item3d/flat_e29104",
+    "flat_faea2e": "ic2_120:item/item3d/flat_faea2e",
+    "flat_464646": "ic2_120:item/item3d/flat_464646",
+    "flat_b26411": "ic2_120:item/item3d/flat_b26411",
+    "flat_fff79d": "ic2_120:item/item3d/flat_fff79d",
+    "flat_fffffd": "ic2_120:item/item3d/flat_fffffd"
+  }
+}

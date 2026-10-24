@@ -1,6 +1,13 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/scrap"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/scrap.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_342301",
+    "flat_342301": "ic2_120:item/item3d/flat_342301",
+    "flat_473603": "ic2_120:item/item3d/flat_473603",
+    "flat_5e431f": "ic2_120:item/item3d/flat_5e431f",
+    "flat_685a30": "ic2_120:item/item3d/flat_685a30",
+    "flat_6b6b6b": "ic2_120:item/item3d/flat_6b6b6b"
+  }
 }

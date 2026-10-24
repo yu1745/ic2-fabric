@@ -1,6 +1,16 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crop/hops"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/hops.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_437e3f",
+    "flat_437e3f": "ic2_120:item/item3d/flat_437e3f",
+    "flat_4f904b": "ic2_120:item/item3d/flat_4f904b",
+    "flat_2d6529": "ic2_120:item/item3d/flat_2d6529",
+    "flat_bccf11": "ic2_120:item/item3d/flat_bccf11",
+    "flat_e6ef48": "ic2_120:item/item3d/flat_e6ef48",
+    "flat_99ab07": "ic2_120:item/item3d/flat_99ab07",
+    "flat_f9ff8d": "ic2_120:item/item3d/flat_f9ff8d",
+    "flat_a9b427": "ic2_120:item/item3d/flat_a9b427"
+  }
 }

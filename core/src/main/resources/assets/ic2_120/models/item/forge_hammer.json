@@ -1,6 +1,16 @@
 {
-  "parent": "ic2:item/default",
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/forge_hammer.obj",
+  "parent": "ic2_120:item/item3d/display_handheld",
   "textures": {
-    "layer0": "ic2:item/tool/forge_hammer"
+    "particle": "ic2_120:item/item3d/flat_3d3d3d",
+    "flat_3d3d3d": "ic2_120:item/item3d/flat_3d3d3d",
+    "flat_595c68": "ic2_120:item/item3d/flat_595c68",
+    "flat_896727": "ic2_120:item/item3d/flat_896727",
+    "metal_b9d6d9": "ic2_120:item/item3d/metal_b9d6d9",
+    "metal_dbeff1": "ic2_120:item/item3d/metal_dbeff1",
+    "metal_fafafa": "ic2_120:item/item3d/metal_fafafa",
+    "metal_91a3aa": "ic2_120:item/item3d/metal_91a3aa",
+    "flat_616772": "ic2_120:item/item3d/flat_616772"
   }
 }

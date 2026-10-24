@@ -1,1 +1,12 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "ic2:item/resource/ingot/silver" } }
+{
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/silver_ingot.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_b8c0c0",
+    "flat_b8c0c0": "ic2_120:item/item3d/flat_b8c0c0",
+    "metal_dde3e3": "ic2_120:item/item3d/metal_dde3e3",
+    "metal_f4f6f6": "ic2_120:item/item3d/metal_f4f6f6",
+    "flat_fafafa": "ic2_120:item/item3d/flat_fafafa"
+  }
+}

@@ -1,6 +1,14 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/iodine_tablet"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/iodine_tablet.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_808080",
+    "flat_808080": "ic2_120:item/item3d/flat_808080",
+    "flat_999999": "ic2_120:item/item3d/flat_999999",
+    "flat_644f45": "ic2_120:item/item3d/flat_644f45",
+    "flat_4a456e": "ic2_120:item/item3d/flat_4a456e",
+    "glass_5c4a9c": "ic2_120:item/item3d/glass_5c4a9c",
+    "flat_b0b0b0": "ic2_120:item/item3d/flat_b0b0b0"
+  }
 }

@@ -1,6 +1,11 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/crafting/coil"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/coil.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_40424c",
+    "flat_40424c": "ic2_120:item/item3d/flat_40424c",
+    "metal_bc7945": "ic2_120:item/item3d/metal_bc7945",
+    "metal_a66430": "ic2_120:item/item3d/metal_a66430"
+  }
 }

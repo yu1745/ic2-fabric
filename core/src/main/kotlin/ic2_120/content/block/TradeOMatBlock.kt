@@ -35,7 +35,8 @@ import java.util.function.Consumer
  * 自动交易方块：拥有者设置需求和供给模板，玩家放入需求物品即可获得供给物品。
  */
 @ModBlock(name = "trade_o_mat", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "personal")
-class TradeOMatBlock : MachineBlock() {
+// 3D 模型不填满整格：nonOpaque 关闭对相邻方块的面剔除，避免紧贴方块被剔面而透视；碰撞箱仍为整格
+class TradeOMatBlock : MachineBlock(defaultMachineSettings().nonOpaque()) {
 
     override fun createBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
         TradeOMatBlockEntity(pos, state)

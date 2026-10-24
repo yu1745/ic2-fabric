@@ -1,6 +1,14 @@
 {
-	"parent": "ic2:item/default",
-	"textures": {
-		"layer0": "ic2:item/resource/iodine"
-	}
+  "loader": "ic2_120:obj",
+  "model": "ic2_120:models/item/item3d/iodine.obj",
+  "parent": "ic2_120:item/item3d/display",
+  "textures": {
+    "particle": "ic2_120:item/item3d/flat_6e3c27",
+    "flat_6e3c27": "ic2_120:item/item3d/flat_6e3c27",
+    "glass_8c4e33": "ic2_120:item/item3d/glass_8c4e33",
+    "flat_453484": "ic2_120:item/item3d/flat_453484",
+    "flat_3a2c74": "ic2_120:item/item3d/flat_3a2c74",
+    "flat_32265e": "ic2_120:item/item3d/flat_32265e",
+    "glass_5a48a0": "ic2_120:item/item3d/glass_5a48a0"
+  }
 }
