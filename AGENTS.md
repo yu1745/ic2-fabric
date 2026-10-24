@@ -11,7 +11,7 @@
   - 1.20.1 归档参考：`../mc_source_1.20.1/`（yarn 名）
 - Fabric API 源码：`../fabric-api_{version}/`
   - `../fabric-api_1.21.1/`、`../fabric-api_1.20.1/`（注意：fabric-api 仓库源码是 yarn 名，经 loom remap 编译，类名行为一致但方法名要换算）
-- 需要重新生成 MC 源码时：`sh gradlew :core:genSources`，产物在 `.gradle/loom-cache/minecraftMaven/` 下提取。
+- 需要重新生成 MC 源码时：`sh gradlew :core:genSources`，产物在**项目根目录**下的 `.gradle/loom-cache/minecraftMaven/net/minecraft/`（不是用户目录），解压其中 `*-sources.jar` 即得。
 
 ## 2. 项目状态
 
@@ -22,7 +22,6 @@
 
 ## 3. 硬性约束
 
-- 资源文件只能动 `assets/ic2_120/**`；`assets/ic2/**` 是上游引用，不可修改。
 - 机器类（Block/BlockEntity/ScreenHandler/Screen/Sync）改动必须服务端+客户端都编译过。
 - Screen/ScreenHandler/SyncedData 改动必须检查属性顺序与同步链路一致。
 - `mc_source_1.21.1` 里查不到的东西（fabric 专属 API）才去 `fabric-api_1.21.1` 查。
@@ -58,4 +57,4 @@ sh gradlew :core:validateGuidebook  # guidebook 文档校验
 
 ## 7. 详细文档
 
-实现细节文档在 `docs/`（系统、UI、registry、pitfalls 子目录），`docs/PROGRESS.md` 记录迁移进度，`PLAN.md` 是宏观路线。文档主索引以本文件为唯一入口。
+迁移完成后由用户重建 `docs/`；在此之前不要投入精力维护文档。
