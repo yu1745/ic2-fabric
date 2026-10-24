@@ -24,6 +24,8 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext
 import net.minecraft.world.item.ArmorItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.network.chat.Component
@@ -83,7 +85,7 @@ open class JetpackItem : ArmorItem(
 
         @JvmStatic
         fun getFuel(stack: ItemStack): Long =
-            stack.orCreateNbt = stack.orCreateNbt.apply { getLong(FUEL_KEY) }.coerceIn(0L, maxFuel)
+            stack.orCreateNbt.getLong(FUEL_KEY).coerceIn(0L, maxFuel)
 
         @JvmStatic
         fun setFuel(stack: ItemStack, fuel: Long) {
@@ -102,7 +104,7 @@ open class JetpackItem : ArmorItem(
 
         fun setFuelFluid(stack: ItemStack, fluid: net.minecraft.world.level.material.Fluid?) {
             if (fluid == null) stack.orCreateNbt = stack.orCreateNbt.apply { remove(FUEL_FLUID_KEY) }
-            else stack.orCreateNbt = stack.orCreateNbt.apply { putString(FUEL_FLUID_KEY, net.minecraft.core.registries.(BuiltInRegistries.FLUID.getKey(fluid)?.toString() ?: "?")) }
+            else stack.orCreateNbt = stack.orCreateNbt.apply { putString(FUEL_FLUID_KEY, BuiltInRegistries.FLUID.getKey(fluid).toString()) }
         }
 
         /**
@@ -131,9 +133,9 @@ open class JetpackItem : ArmorItem(
 
     override fun appendHoverText(
         stack: ItemStack,
-        world: net.minecraft.world.level.Level?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipFlag
     ) {
         super.appendHoverText(stack, context, tooltip, type)
 
@@ -156,7 +158,7 @@ open class JetpackItem : ArmorItem(
             "${remainingSeconds.toInt()}秒"
         }
 
-        val fuelName = getFuelFluid(stack)?.let { net.minecraft.core.registries.(BuiltInRegistries.FLUID.getKey(it)?.toString() ?: "?") } ?: "无"
+        val fuelName = getFuelFluid(stack)?.let { BuiltInRegistries.FLUID.getKey(it).toString() } ?: "无"
         tooltip.add(Component.literal("燃料: $fuelName %,d / %,d mB (%.1f%%)".format(fuelMb, maxFuelMb, ratio * 100)))
         tooltip.add(Component.literal("剩余飞行: $timeText").withStyle(ChatFormatting.GRAY))
     }
@@ -165,13 +167,13 @@ open class JetpackItem : ArmorItem(
      * 喷气背包使用燃料系统，不走原版耐久系统。
      * 若不禁用，受伤时会累积 Damage NBT 导致耐久条混乱。
      */
-    override fun isDamageable(): Boolean = false
+    override fun isDamageable(stack: ItemStack): Boolean = false
 
     override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.level
         val player = context.player ?: return InteractionResult.PASS
         if (world.isClient) return InteractionResult.SUCCESS
-        val hit = BlockHitResult(context.location, context.direction, context.pos, context.hitsInsideBlock())
+        val hit = BlockHitResult(context.clickLocation, context.clickedFace, context.clickedPos, context.isInside())
         val storage = FluidStorage.SIDED.find(world, hit.blockPos, hit.direction)
         return if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, context.hand)) {
             InteractionResult.SUCCESS

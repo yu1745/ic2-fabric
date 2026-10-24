@@ -70,10 +70,12 @@ class CropStickBlock : BaseEntityBlock(
         .noCollission()
          .noOcclusion()
 ) {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = Block.simpleCodec { CropStickBlock() }
+
     override fun getRenderShape(state: BlockState): RenderShape = RenderShape.MODEL
 
     init {
-        registerDefaultState(stateDefinition.any()().setValue(CROSSING_BASE, false))
+        registerDefaultState(stateDefinition.any().setValue(CROSSING_BASE, false))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -110,7 +112,7 @@ class CropStickBlock : BaseEntityBlock(
         pos: BlockPos,
         neighborPos: BlockPos
     ): BlockState {
-        if (!canPlaceAt(state, world, pos)) {
+        if (!canSurvive(state, world, pos)) {
             return Blocks.AIR.defaultBlockState()
         }
         return super.updateShape(state, direction, neighborState, world, pos, neighborPos)
@@ -195,8 +197,8 @@ class CropStickBlock : BaseEntityBlock(
         if (random.nextInt(3) != 0) return false
         val sources = mutableListOf<CropBlockEntity>()
         for (dir in HORIZONTAL_DIRS) {
-            val be = world.getBlockEntity(pos.offset(dir)) as? CropBlockEntity ?: continue
-            val sourcePos = pos.offset(dir)
+            val be = world.getBlockEntity(pos.relative(dir)) as? CropBlockEntity ?: continue
+            val sourcePos = pos.relative(dir)
             if (!be.canParticipateCrossing(world, sourcePos)) continue
             val sourceState = world.getBlockState(sourcePos)
             val sourceType = sourceState.getValue(CropBlock.CROP_TYPE)
@@ -247,7 +249,7 @@ class CropStickBlock : BaseEntityBlock(
     private fun attemptSpreading(world: net.minecraft.server.level.ServerLevel, pos: BlockPos, random: net.minecraft.util.RandomSource): Boolean {
         val neighbors = mutableListOf<CropBlockEntity>()
         for (dir in HORIZONTAL_DIRS) {
-            val be = world.getBlockEntity(pos.offset(dir)) as? CropBlockEntity ?: continue
+            val be = world.getBlockEntity(pos.relative(dir)) as? CropBlockEntity ?: continue
             neighbors += be
         }
         if (neighbors.size != 1) return false

@@ -37,8 +37,8 @@ abstract class ReactorShellBlock(settings: BlockBehaviour.Properties = shellSett
 
         fun shellSettings(): BlockBehaviour.Properties =
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)
-                .sound(SoundType.GLASS) .noOcclusion()
-                .solidBlock { _, _, _ -> false }.isSuffocating { _, _, _ -> false }.isViewBlocking { _, _, _ -> false }
+                .sound(SoundType.GLASS).noOcclusion()
+                .isSuffocating { _, _, _ -> false }.isViewBlocking { _, _, _ -> false }
     }
 
     init {
@@ -53,7 +53,7 @@ abstract class ReactorShellBlock(settings: BlockBehaviour.Properties = shellSett
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? {
         var state = super.getStateForPlacement(ctx) ?: return null
         for ((dir, prop) in CONNECT) {
-            state = state.setValue(prop, connects(ctx.level.getBlockState(ctx.pos.offset(dir))))
+            state = state.setValue(prop, connects(ctx.level.getBlockState(ctx.clickedPos.relative(dir))))
         }
         return state
     }
@@ -69,11 +69,11 @@ abstract class ReactorShellBlock(settings: BlockBehaviour.Properties = shellSett
         neighbor.block is ReactorShellBlock || neighbor.block is NuclearReactorBlock
 
     @Deprecated("Deprecated in Java")
-    override fun isSideInvisible(state: BlockState, stateFrom: BlockState, direction: Direction): Boolean =
-        stateFrom.block is ReactorShellBlock || super.isSideInvisible(state, stateFrom, direction)
+    override fun skipRendering(state: BlockState, stateFrom: BlockState, direction: Direction): Boolean =
+        stateFrom.block is ReactorShellBlock || super.skipRendering(state, stateFrom, direction)
 
     @Deprecated("Deprecated in Java")
-    override fun getAmbientOcclusionLightLevel(state: BlockState, world: BlockGetter, pos: BlockPos): Float = 1.0f
+    override fun getShadeBrightness(state: BlockState, world: BlockGetter, pos: BlockPos): Float = 1.0f
 
-    override fun isTransparent(state: BlockState, world: BlockGetter, pos: BlockPos): Boolean = true
+    override fun propagatesSkylightDown(state: BlockState, world: BlockGetter, pos: BlockPos): Boolean = true
 }

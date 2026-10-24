@@ -4,6 +4,7 @@ import ic2_120.compat.validateTicker
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
 import net.minecraft.data.recipes.RecipeProvider.has
 
 import ic2_120.compat.isClient
@@ -33,7 +34,6 @@ import net.minecraft.world.level.Level
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.data.recipes.RecipeCategory
-import java.util.function.Consumer
 
 @ModBlock(name = "manual_kinetic_generator", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "generator")
 class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
@@ -42,7 +42,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val casing = MachineCasingBlock::class.instance()
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ManualKineticGeneratorBlock::class.item(), 1)
                 .pattern("L")
@@ -64,7 +64,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
 
     override fun getStateForPlacement(ctx: net.minecraft.world.item.context.BlockPlaceContext): BlockState? {
         // 允许点击任意面放置，但方块朝向始终为水平方向（玩家面朝的方向）
-        return defaultBlockState.setValue(BlockStateProperties.FACING, ctx.horizontalDirection).setValue(ACTIVE, false)
+        return defaultBlockState().setValue(BlockStateProperties.FACING, ctx.horizontalDirection).setValue(ACTIVE, false)
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =
@@ -80,7 +80,7 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
         }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult, hand: InteractionHand): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         val be = world.getBlockEntity(pos) as? ManualKineticGeneratorBlockEntity ?: return InteractionResult.PASS
 
         // 只有顶部（UP 面）可以插入/转动曲柄
@@ -88,14 +88,14 @@ class ManualKineticGeneratorBlock : DirectionalMachineBlock() {
             return InteractionResult.PASS
         }
 
-        return be.onUse(player, hand, world, pos, state)
+        return be.onUse(player, InteractionHand.MAIN_HAND, world, pos, state)
     }
 
-    override fun playerWillDestroy(world: Level, pos: BlockPos, state: BlockState, player: Player) {
+    override fun playerWillDestroy(world: Level, pos: BlockPos, state: BlockState, player: Player): BlockState {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? ManualKineticGeneratorBlockEntity
             be?.dropCrank()
         }
-        super.playerWillDestroy(world, pos, state, player)
+        return super.playerWillDestroy(world, pos, state, player)
     }
 }

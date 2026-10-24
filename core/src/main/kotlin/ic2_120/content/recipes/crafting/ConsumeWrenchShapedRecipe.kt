@@ -1,7 +1,5 @@
 package ic2_120.content.recipes.crafting
 
-import net.minecraft.core.registries.BuiltInRegistries
-
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.serialization.MapCodec
@@ -19,7 +17,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.resources.ResourceLocation
-import net.minecraft.world.inventory.CraftingBookCategory
+import net.minecraft.world.item.crafting.CraftingBookCategory
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.CraftingInput
@@ -32,8 +30,8 @@ import net.minecraft.world.item.crafting.ShapedRecipePattern
  * 工作台有序配方：消耗参与合成的扳手/电动工具，完全不返回余物，并继承电量累加功能。
  */
 class ConsumeWrenchShapedRecipe(
-    private val patternRows: List<String>,
-    private val patternKeys: Map<Char, Ingredient>,
+    internal val patternRows: List<String>,
+    internal val patternKeys: Map<Char, Ingredient>,
     result: ItemStack,
     group: String = "",
 ) : ShapedRecipe(group, CraftingBookCategory.MISC, ShapedRecipePattern.of(patternKeys, patternRows), result, true) {
@@ -62,7 +60,7 @@ class ConsumeWrenchShapedRecipe(
 
     override fun getRemainingItems(input: CraftingInput): NonNullList<ItemStack> {
         // 完全消耗所有材料，不返回任何东西
-        return NonNullList.withSize(input.getContainerSize(), ItemStack.EMPTY)
+        return NonNullList.withSize(input.size, ItemStack.EMPTY)
     }
 
     override fun getSerializer(): RecipeSerializer<*> = ConsumeWrenchShapedRecipeSerializer
@@ -70,7 +68,7 @@ class ConsumeWrenchShapedRecipe(
 
 private fun sumEnergyFromIngredients(inventory: CraftingInput): Long {
     var total = 0L
-    for (slot in 0 until inventory.getContainerSize()) {
+    for (slot in 0 until inventory.size) {
         val stack = inventory.getItem(slot)
         if (stack.isEmpty) continue
         total = total.saturatingAdd(getEnergyFromStack(stack))
@@ -188,7 +186,7 @@ object ConsumeWrenchShapedRecipeSerializer : RecipeSerializer<ConsumeWrenchShape
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, ConsumeWrenchShapedRecipe> {
         val delegate = RecipeSerializer.SHAPED_RECIPE.streamCodec()
         return StreamCodec.ofMember(
-            { buf: RegistryFriendlyByteBuf, recipe: ConsumeWrenchShapedRecipe -> delegate.encode(buf, recipe) },
+            { recipe: ConsumeWrenchShapedRecipe, buf: RegistryFriendlyByteBuf -> delegate.encode(buf, recipe) },
             { _ ->
                 ConsumeWrenchShapedRecipe(listOf("X"), linkedMapOf('X' to Ingredient.EMPTY), ItemStack.EMPTY)
             }

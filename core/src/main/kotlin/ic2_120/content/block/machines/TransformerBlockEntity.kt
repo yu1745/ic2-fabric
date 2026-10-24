@@ -112,7 +112,7 @@ open class TransformerBlockEntity(
     override fun getScreenOpeningData(player: net.minecraft.server.level.ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size)
+        buf.writeVarInt(syncedData.getCount())
         buf.writeVarInt(transformerTier)  // 传递变压器等级到客户端
         return buf
     }

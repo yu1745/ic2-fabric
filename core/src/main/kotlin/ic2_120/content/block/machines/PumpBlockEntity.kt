@@ -71,7 +71,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
@@ -209,7 +208,7 @@ class PumpBlockEntity(
             amount = stored.coerceIn(0L, tankCapacity)
             variant = if (amount > 0L) {
                 val id = ResourceLocation.tryParse(fluidId)
-                if (id != null && BuiltInRegistries.FLUID.containsId(id)) FluidVariant.of(BuiltInRegistries.FLUID.get(id)) else FluidVariant.blank()
+                if (id != null && BuiltInRegistries.FLUID.containsKey(id)) FluidVariant.of(BuiltInRegistries.FLUID.get(id)) else FluidVariant.blank()
             } else {
                 FluidVariant.blank()
             }
@@ -257,7 +256,7 @@ class PumpBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 
@@ -268,7 +267,7 @@ class PumpBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(PumpSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -284,7 +283,7 @@ class PumpBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(PumpSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
@@ -368,7 +367,7 @@ class PumpBlockEntity(
         if (!hasPumpableFluid(world, pos, state)) return false
 
         val front = state.getValue(BlockStateProperties.FACING)
-        val positions = (1..3).map { pos.offset(front, it) }
+        val positions = (1..3).map { pos.relative(front, it) }
         for (target in positions) {
             val drained = tryDrainFromStorage(world, target, front.opposite)
             if (drained > 0L) {
@@ -412,7 +411,7 @@ class PumpBlockEntity(
 
     private fun tryDrainFromWorldSource(world: Level, targetPos: BlockPos): Long {
         val fluidState = world.getFluidState(targetPos)
-        if (fluidState.isEmpty || !fluidState.isStill) return 0L
+        if (fluidState.isEmpty || !fluidState.isSource) return 0L
         val fluid = fluidState.getType()
         if (!canAccept(fluid)) return 0L
         if (ClaimProtection.isProtected(world, targetPos, ownerUuid, ClaimProtection.EDIT_FLUID)) return 0L
@@ -474,7 +473,7 @@ class PumpBlockEntity(
         val ejectSides = fluidPipeProviderSides
         for (dir in Direction.values()) {
             if (ejectSides.isNotEmpty() && dir !in ejectSides) continue
-            val neighbor = FluidStorage.SIDED.find(world, pos.offset(dir), dir.opposite) ?: continue
+            val neighbor = FluidStorage.SIDED.find(world, pos.relative(dir), dir.opposite) ?: continue
             val resource = tankInternal.variant
             val maxPerTick = minOf(FluidConstants.BUCKET / 4, tankInternal.amount)
             Transaction.openOuter().use { tx ->
@@ -516,10 +515,10 @@ class PumpBlockEntity(
 
     private fun hasPumpableFluid(world: Level, pos: BlockPos, state: BlockState): Boolean {
         val front = state.getValue(BlockStateProperties.FACING)
-        val positions = (1..3).map { pos.offset(front, it) }
+        val positions = (1..3).map { pos.relative(front, it) }
         for (target in positions) {
             val fluidState = world.getFluidState(target)
-            if (!fluidState.isEmpty && fluidState.isStill) {
+            if (!fluidState.isEmpty && fluidState.isSource) {
                 val fluid = fluidState.getType()
                 if (canAccept(fluid) && !ClaimProtection.isProtected(world, target, ownerUuid, ClaimProtection.EDIT_FLUID)) {
                     return true
@@ -541,10 +540,10 @@ class PumpBlockEntity(
         val front = state.getValue(BlockStateProperties.FACING)
         val result = mutableListOf<BlockPos>()
         for (offset in 1..3) {
-            val target = pos.offset(front, offset)
+            val target = pos.relative(front, offset)
             if (!ClaimProtection.isProtected(world, target, ownerUuid, ClaimProtection.EDIT_FLUID)) continue
             val fluidState = world.getFluidState(target)
-            val hasWorldFluid = !fluidState.isEmpty && fluidState.isStill && canAccept(fluidState.getType())
+            val hasWorldFluid = !fluidState.isEmpty && fluidState.isSource && canAccept(fluidState.getType())
             val hasStorageFluid = FluidStorage.SIDED.find(world, target, front.opposite)?.let { storage ->
                 storage.any { !it.isResourceBlank && it.amount > 0L && canAccept(it.resource.fluid) }
             } ?: false

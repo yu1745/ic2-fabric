@@ -50,7 +50,6 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.entity.AgeableMob
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Direction
 import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.Component
@@ -131,7 +130,7 @@ class Ic2JadePlugin : snownee.jade.api.IWailaPlugin {
 object ScaffoldJadeProvider : IBlockComponentProvider {
     private val SCAFFOLD_SUPPORT = ResourceLocation.fromNamespaceAndPath("ic2_120", "scaffold_support")
 
-    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val block = accessor.blockState.block as? Ic2ScaffoldBlock ?: return
         val remaining = block.remainingHorizontalSupport(accessor.level, accessor.position)
 
@@ -198,7 +197,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
                 data.putInt("conflictCount", conflicts.size)
                 val nbtList = net.minecraft.nbt.ListTag()
                 for (id in conflicts) {
-                    nbtList.add(net.minecraft.nbt.NbtString.of(id))
+                    nbtList.add(net.minecraft.nbt.StringTag.valueOf(id))
                 }
                 data.put("conflictFluids", nbtList)
             }
@@ -206,7 +205,7 @@ object PipeJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
     }
 
     // IBlockComponentProvider — client side
-    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val be = accessor.blockEntity as? PipeBlockEntity ?: return
         if (!accessor.serverData.contains("pipeLoad", 4)) return
 
@@ -295,7 +294,7 @@ object CableJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcc
     }
 
     // IBlockComponentProvider — client side
-    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         if (!accessor.serverData.contains("cableLoad", 4)) return
 
         val rawLoad = accessor.serverData.getLong("cableLoad")
@@ -345,7 +344,7 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
             data.putBoolean("isStick", true)
             data.putBoolean(
                 "crossingBase",
-                if (accessor.blockState.contains(CropStickBlock.CROSSING_BASE)) {
+                if (accessor.blockState.hasProperty(CropStickBlock.CROSSING_BASE)) {
                     accessor.blockState.getValue(CropStickBlock.CROSSING_BASE)
                 } else {
                     false
@@ -359,7 +358,7 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
 
         val be = blockEntity as? CropBlockEntity ?: return
         val state = world.getBlockState(accessor.position)
-        if (!state.contains(CropBlock.CROP_TYPE) || !state.contains(CropBlock.AGE)) return
+        if (!state.hasProperty(CropBlock.CROP_TYPE) || !state.hasProperty(CropBlock.AGE)) return
 
         // 先扫描紫外线灯加速，以便传入 estimateGrowth
         var uvGrowthBoost = 0
@@ -368,9 +367,9 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
             for (dy in -3..3) {
                 for (dz in -3..3) {
                     if (dx == 0 && dy == 0 && dz == 0) continue
-                    val lampPos = cropPos.add(dx, dy, dz)
+                    val lampPos = BlockPos(cropPos.x + dx, cropPos.y + dy, cropPos.z + dz)
                     val lampState = world.getBlockState(lampPos)
-                    if (lampState.block is UvLampBlock && lampState.contains(UvLampBlock.ACTIVE) && lampState.getValue(UvLampBlock.ACTIVE)) {
+                    if (lampState.block is UvLampBlock && lampState.hasProperty(UvLampBlock.ACTIVE) && lampState.getValue(UvLampBlock.ACTIVE)) {
                         val lampBe = world.getBlockEntity(lampPos) as? UvLampBlockEntity ?: continue
                         val oc = lampBe.getOverclockerCount()
                         if (oc > uvGrowthBoost) uvGrowthBoost = oc
@@ -408,7 +407,7 @@ object CropJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockAcce
         }
     }
 
-    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         if (accessor.serverData.getBoolean("isStick")) {
             val crossingBase = accessor.serverData.getBoolean("crossingBase")
             val nutrients = accessor.serverData.getInt("nutrients")
@@ -578,7 +577,7 @@ object KineticJadeProvider : IBlockComponentProvider, IServerDataProvider<BlockA
         }
     }
 
-    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val kind = accessor.serverData.getString("kind")
         when (kind) {
             "transmission" -> {
@@ -693,7 +692,7 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
         var todayFed = 0
 
         if (AnimalmatronBlock.isManaged(entity)) {
-            val searchBox = entity.boundingBox.expand(AnimalmatronBlock.RANGE_RADIUS)
+            val searchBox = entity.boundingBox.inflate(AnimalmatronBlock.RANGE_RADIUS)
             val minPos = net.minecraft.core.BlockPos(
                 Math.floor(searchBox.minX).toInt(),
                 Math.floor(searchBox.minY).toInt(),
@@ -704,7 +703,7 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
                 Math.ceil(searchBox.maxY).toInt(),
                 Math.ceil(searchBox.maxZ).toInt()
             )
-            outer@ for (bp in net.minecraft.core.BlockPos.iterate(minPos, maxPos)) {
+            outer@ for (bp in net.minecraft.core.BlockPos.betweenClosed(minPos, maxPos)) {
                 val be = world.getBlockEntity(bp)
                 if (be is AnimalmatronBlockEntity && be.sync.amount > 0L) {
                     foundMachine = be
@@ -730,7 +729,7 @@ object AnimalJadeProvider : IEntityComponentProvider, IServerDataProvider<Entity
         data.putInt("requiredToFed", AnimalmatronBlockEntity.FOOD_TO_GROW) // 10
     }
 
-    override fun appendHoverText(tooltip: ITooltip, accessor: EntityAccessor, config: IPluginConfig) {
+    override fun appendTooltip(tooltip: ITooltip, accessor: EntityAccessor, config: IPluginConfig) {
         if (!accessor.serverData.contains("isManaged")) return
         if (!accessor.serverData.getBoolean("isManaged")) return
 
@@ -796,7 +795,7 @@ object RubberSaplingJadeProvider : IBlockComponentProvider {
     private val SAPLING_GROWTH = ResourceLocation.fromNamespaceAndPath("ic2_120", "rubber_sapling_growth")
     private const val MIN_GROW_LIGHT = 9
 
-    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val world = accessor.level
         val pos = accessor.position
 
@@ -847,14 +846,14 @@ object RubberLogJadeProvider : IBlockComponentProvider, IServerDataProvider<Bloc
         }
     }
 
-    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         val state = accessor.blockState
         if (state.block !is RubberLogBlock) return
 
         val worldTime = accessor.serverData.getLong("worldTime")
 
         for (face in FACES) {
-            val faceState = state.get(RubberLogBlock.propFor(face))
+            val faceState = state.getValue(RubberLogBlock.propFor(face))
             if (faceState == RubberFaceState.NONE) continue
 
             val dirLabel = face.name.first().toString()

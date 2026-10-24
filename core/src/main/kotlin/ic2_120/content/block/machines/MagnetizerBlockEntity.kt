@@ -158,11 +158,11 @@ class MagnetizerBlockEntity(
         val oldStack = getItem(SLOT_BOOTS)
         if (newStack.isEmpty && !oldStack.isEmpty) {
             player.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY)
-        } else if (!newStack.isEmpty && isMetalBootsByStack(newStack) && (oldStack.isEmpty || !ItemStack.areEqual(newStack, oldStack))) {
+        } else if (!newStack.isEmpty && isMetalBootsByStack(newStack) && (oldStack.isEmpty || !ItemStack.isSameItemSameComponents(newStack, oldStack))) {
             val oldBoots = player.getItemBySlot(EquipmentSlot.FEET).copy()
             player.setItemSlot(EquipmentSlot.FEET, newStack.copyWithCount(1))
             if (!oldBoots.isEmpty) {
-                player.inventory.offerOrDrop(oldBoots)
+                player.getInventory().placeItemBackInInventory(oldBoots)
             }
         }
     }
@@ -195,7 +195,7 @@ class MagnetizerBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 
@@ -222,7 +222,7 @@ class MagnetizerBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(MagnetizerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -235,7 +235,7 @@ class MagnetizerBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(MagnetizerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("EnergyDebt", energyDebtF)
@@ -318,7 +318,7 @@ class MagnetizerBlockEntity(
             val current = queue.removeFirst()
             result.add(current)
             for (dir in CONNECT_DIRECTIONS) {
-                val next = current.offset(dir)
+                val next = current.relative(dir)
                 if (next.y < minY || next.y > maxY) continue
                 if (!visited.add(next)) continue
                 if (isModIronFence(next)) {
@@ -359,7 +359,7 @@ class MagnetizerBlockEntity(
         val players = world.getEntitiesOfClass(Player::class.java, searchBox) { it.isAlive && !it.isSpectator }
 
         for (player in players) {
-            val playerPos = player.pos
+            val playerPos = player.position()
             val nearest = fenceCenters.minByOrNull { it.distanceToSqr(playerPos) } ?: continue
             val dx = nearest.x - playerPos.x
             val dz = nearest.z - playerPos.z
@@ -371,10 +371,10 @@ class MagnetizerBlockEntity(
             val vx = dx.coerceIn(-horizontalPull, horizontalPull)
             val vz = dz.coerceIn(-horizontalPull, horizontalPull)
             val shouldLift = player.y < topY
-            val vy = if (shouldLift) player.velocity.y.coerceAtLeast(0.0) + verticalBoost else player.velocity.y
+            val vy = if (shouldLift) player.deltaMovement.y.coerceAtLeast(0.0) + verticalBoost else player.deltaMovement.y
 
-            player.velocity = Vec3(vx, vy, vz)
-            player.velocityModified = true
+            player.deltaMovement = Vec3(vx, vy, vz)
+            player.hasImpulse = true
             player.fallDistance = 0f
         }
     }

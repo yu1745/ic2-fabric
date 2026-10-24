@@ -2,8 +2,6 @@ package ic2_120.content.recipes
 
 import net.minecraft.core.HolderLookup
 
-import net.minecraft.core.HolderLookup
-
 import net.minecraft.server.level.ServerPlayer
 
 
@@ -59,7 +57,7 @@ import java.util.concurrent.CompletableFuture
  */
 class ModBlockLootTableProvider(
     output: FabricDataOutput,
-    registryLookup: CompletableFuture<HolderLookup.HolderLookup.Provider>
+    registryLookup: CompletableFuture<HolderLookup.Provider>
 ) : FabricBlockLootTableProvider(output, registryLookup) {
 
     private val wrenchPredicateBuilder = ItemPredicate.Builder.item()
@@ -72,22 +70,22 @@ class ModBlockLootTableProvider(
         val reinforcedDoorId = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "reinforced_door")
 
         for (block in BuiltInRegistries.BLOCK) {
-            val id = BuiltInRegistries.BLOCK.getId(block)
+            val id = BuiltInRegistries.BLOCK.getKey(block)
             if (id.namespace != Ic2_120.MOD_ID) continue
             if (ClassScanner.shouldSkipGeneratedBlockLootTable(id.path)) continue
 
             when {
-                block is CreativeGeneratorBlock -> addDrop(block)
-                block is MachineBlock -> addDrop(block, createMachineLootTable(block))
+                block is CreativeGeneratorBlock -> dropSelf(block)
+                block is MachineBlock -> add(block, createMachineLootTable(block))
                 block is LeadOreBlock -> addCustomOreDrop(block, RawLead::class.instance())
                 block is TinOreBlock -> addCustomOreDrop(block, RawTin::class.instance())
                 block is UraniumOreBlock -> addCustomOreDrop(block, RawUranium::class.instance())
                 block is DeepslateLeadOreBlock -> addCustomOreDrop(block, RawLead::class.instance())
                 block is DeepslateTinOreBlock -> addCustomOreDrop(block, RawTin::class.instance())
                 block is DeepslateUraniumOreBlock -> addCustomOreDrop(block, RawUranium::class.instance())
-                block is RubberLeavesBlock -> addDrop(block, rubberLeavesLootTable(block))
+                block is RubberLeavesBlock -> add(block, rubberLeavesLootTable(block))
                 id == reinforcedDoorId -> add(block, createDoorTable(block))
-                else -> addDrop(block)
+                else -> dropSelf(block)
             }
         }
     }
@@ -97,7 +95,7 @@ class ModBlockLootTableProvider(
         val casingItem = block.getCasingDrop()
 
         val wrenchConditionBuilder = MatchTool.toolMatches(wrenchPredicateBuilder)
-        val notWrenchConditionBuilder = InvertedLootItemCondition.inverts(wrenchConditionBuilder)
+        val notWrenchConditionBuilder = InvertedLootItemCondition.invert(wrenchConditionBuilder)
 
         return LootTable.lootTable()
             .pool(
@@ -124,7 +122,7 @@ class ModBlockLootTableProvider(
         val fortuneEntry = enchantmentLookup.getOrThrow(Enchantments.FORTUNE)
         add(block, createSilkTouchDispatchTable(block,
             applyExplosionDecay(dropItem, LootItem.lootTableItem(dropItem)
-                .apply(ApplyBonusCount.addUniformBinomial(fortuneEntry, 0.2f, 0))
+                .apply(ApplyBonusCount.addBonusBinomialDistributionCount(fortuneEntry, 0.2f, 0))
             )
         ))
     }
@@ -153,15 +151,15 @@ class ModBlockLootTableProvider(
                     .withSubPredicate(net.minecraft.advancements.critereon.ItemSubPredicates.ENCHANTMENTS,
                         net.minecraft.advancements.critereon.ItemEnchantmentsPredicate.enchantments(
                             listOf(
-                                EnchantmentPredicate(enchantmentLookup.getOrThrow(Enchantments.SILK_TOUCH), MinMaxBounds.IntRange.atLeast(1))
+                                EnchantmentPredicate(enchantmentLookup.getOrThrow(Enchantments.SILK_TOUCH), MinMaxBounds.Ints.atLeast(1))
                             )
                         )
                     )
             )
         )
         val boundLeaf = LootItemBlockStatePropertyCondition.hasBlockStateProperties(block)
-            .setProperties(StatePropertiesPredicate.Builder.properties().exactMatch(RubberLeavesBlock.RUBBER_SAPLING_DROP, true))
-        val notSilkTouchOrShears = InvertedLootItemCondition.inverts(silkTouchOrShears)
+            .setProperties(StatePropertiesPredicate.Builder.properties().hasProperty(RubberLeavesBlock.RUBBER_SAPLING_DROP, true))
+        val notSilkTouchOrShears = InvertedLootItemCondition.invert(silkTouchOrShears)
 
         return LootTable.lootTable()
             // 剪刀/精准采集 → 掉树叶本身

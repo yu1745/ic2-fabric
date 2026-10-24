@@ -108,7 +108,7 @@ class UvLampBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.getContainerSize())
         return buf
     }
 
@@ -239,7 +239,7 @@ class UvLampBlockEntity(
 
     private fun setActiveState(world: Level, pos: BlockPos, state: BlockState, active: Boolean) {
         if (state.getValue(UvLampBlock.ACTIVE) != active) {
-            world.setBlock(pos, state.setValue(UvLampBlock.ACTIVE, active))
+            world.setBlock(pos, state.setValue(UvLampBlock.ACTIVE, active), net.minecraft.world.level.block.Block.UPDATE_ALL)
         }
     }
 

@@ -69,7 +69,7 @@ abstract class FluidFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
         super.appendHoverText(stack, context, tooltip, type)
         val filter = FluidPipeUpgradeComponent.readFilter(stack)
         if (filter != null) {
-            val fluidName = filter.defaultBlockState().blockState.block.name
+            val fluidName: Component = Component.translatable(filter.defaultFluidState().createLegacyBlock().block.descriptionId)
             tooltip.add(Component.literal("过滤: ").append(fluidName).withStyle(ChatFormatting.GRAY))
         } else {
             tooltip.add(Component.literal("过滤: 未设置").withStyle(ChatFormatting.GRAY))
@@ -79,7 +79,7 @@ abstract class FluidFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
     }
 
     override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getItemInHand(player.usedItemHand)
+        val stack = user.getItemInHand(hand)
         if (world.isClient) return InteractionResultHolder.success(stack)
 
         if (user.isCrouching) {
@@ -87,7 +87,7 @@ abstract class FluidFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
             val next = FluidPipeUpgradeComponent.nextDirections(current)
             FluidPipeUpgradeComponent.writeDirections(stack, next)
             if (user is ServerPlayer) {
-                user.displayClientMessage(Component.literal("已设置工作方向: ${directionLabel(next, false)}"), true)
+                user.displayClientMessage(Component.literal("已设置工作方向: ${directionLabel(next)}"), true)
             }
             return InteractionResultHolder.success(stack)
         }
@@ -133,7 +133,7 @@ abstract class ItemFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
         super.appendHoverText(stack, context, tooltip, type)
         val filterItem = EjectorUpgradeComponent.readFilter(stack)
         if (filterItem != null) {
-            tooltip.add(Component.literal("过滤物品: ").append(filterItem.name).withStyle(ChatFormatting.GRAY))
+            tooltip.add(Component.literal("过滤物品: ").append(Component.translatable(filterItem.descriptionId)).withStyle(ChatFormatting.GRAY))
         } else {
             tooltip.add(Component.literal("过滤物品: 全部").withStyle(ChatFormatting.GRAY))
         }
@@ -142,7 +142,7 @@ abstract class ItemFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
     }
 
     override fun use(world: Level, user: net.minecraft.world.entity.player.Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getItemInHand(player.usedItemHand)
+        val stack = user.getItemInHand(hand)
         if (world.isClient) return InteractionResultHolder.success(stack)
 
         if (user.isCrouching) {
@@ -150,7 +150,7 @@ abstract class ItemFilterUpgradeItem : Item(Item.Properties()), IUpgradeItem {
             val next = nextDirections(current)
             EjectorUpgradeComponent.writeDirections(stack, next)
             if (user is ServerPlayer) {
-                user.displayClientMessage(Component.literal("已设置$directionActionLabel: ${directionLabel(next, false)}"), true)
+                user.displayClientMessage(Component.literal("已设置$directionActionLabel: ${directionLabel(next)}"), true)
             }
             return InteractionResultHolder.success(stack)
         }
@@ -254,7 +254,7 @@ class EnergyStorageUpgrade : Item(Item.Properties()), IUpgradeItem {
                 .define('W', cable)
                 .define('B', ReBatteryItem::class.instance())
                 .define('R', Circuit::class.instance())
-                .unlockedBy(has(ReBatteryItem::class.instance()), has(ReBatteryItem::class.instance()))
+                .unlockedBy(getHasName(ReBatteryItem::class.instance()), has(ReBatteryItem::class.instance()))
                 .save(exporter)
         }
     }

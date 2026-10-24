@@ -83,15 +83,15 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
     @Environment(EnvType.CLIENT)
     override fun appendHoverText(
         stack: ItemStack,
-        world: BlockGetter?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: TooltipContext
+        type: TooltipFlag
     ) {
         super.appendHoverText(stack, context, tooltip, type)
 
         // TODO(1.21.1): 原 yarn getSubNbt("BlockEntityTag")，组件时代暂以 CUSTOM_DATA NBT 桥接
         val blockEntityTag = stack.orCreateNbt.getCompound("BlockEntityTag")
-        if (blockEntityTag == null || !blockEntityTag.contains("Container")) {
+        if (!blockEntityTag.contains("Container")) {
             tooltip.add(Component.literal("物品数量: 0").withStyle(ChatFormatting.GRAY))
             return
         }
@@ -148,7 +148,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
             if (blockEntity is StorageBoxBlockEntity && (moved || blockEntity.shouldDropOnBreak)) {
                 // 创建带有 BlockEntity NBT 的物品
                 val itemStack = ItemStack(this.asItem())
-                val nbt = blockEntity.saveWithFullMetadata()
+                val nbt = blockEntity.saveWithFullMetadata(world.registryAccess())
                 if (!nbt.isEmpty) {
                     itemStack.orCreateNbt = itemStack.orCreateNbt.apply { put("BlockEntityTag", nbt) }
                 }
@@ -170,26 +170,26 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
         super.onRemove(state, world, pos, newState, moved)
     }
 
-    override fun playerWillDestroy(world: Level, pos: BlockPos, state: BlockState, player: Player) {
+    override fun playerWillDestroy(world: Level, pos: BlockPos, state: BlockState, player: Player): BlockState {
         if (!world.isClient && player.abilities.instabuild) {
             (world.getBlockEntity(pos) as? StorageBoxBlockEntity)?.shouldDropOnBreak = false
         }
-        super.playerWillDestroy(world, pos, state, player)
+        return super.playerWillDestroy(world, pos, state, player)
     }
 
-    override fun onStacksDropped(state: BlockState, world: ServerLevel, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
+    override fun spawnAfterBreak(state: BlockState, world: ServerLevel, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
         // 不调用 super，防止默认掉落行为
     }
 
     /**
      * 获取掉落的物品（包含 BlockEntity NBT 数据）- 用于创造模式拾取
      */
-    override fun getPickStack(world: net.minecraft.world.level.BlockGetter, pos: BlockPos, state: BlockState): ItemStack {
+    override fun getCloneItemStack(world: net.minecraft.world.level.LevelReader, pos: BlockPos, state: BlockState): ItemStack {
         val itemStack = super.getCloneItemStack(world, pos, state)
-        val blockEntity = world.getBlockEntity(pos)
+        val blockEntity = (world as? Level)?.getBlockEntity(pos)
 
         if (blockEntity is StorageBoxBlockEntity) {
-            val nbt = blockEntity.saveWithFullMetadata()
+            val nbt = blockEntity.saveWithFullMetadata(world.registryAccess())
             if (!nbt.isEmpty) {
                 itemStack.orCreateNbt = itemStack.orCreateNbt.apply { put("BlockEntityTag", nbt) }
             }
@@ -198,7 +198,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
         return itemStack
     }
 
-    override fun getComparatorOutput(state: BlockState, world: net.minecraft.world.level.Level, pos: BlockPos): Int {
+    override fun getAnalogOutputSignal(state: BlockState, world: net.minecraft.world.level.Level, pos: BlockPos): Int {
         // 类似箱子，根据物品栏填充度输出红石信号
         val blockEntity = world.getBlockEntity(pos)
         if (blockEntity is StorageBoxBlockEntity) {
@@ -221,7 +221,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
         return 0
     }
 
-    override fun hasComparatorOutput(state: BlockState): Boolean = true
+    override fun hasAnalogOutputSignal(state: BlockState): Boolean = true
 }
 
 // ========== 储物箱方块 ==========
@@ -231,6 +231,7 @@ abstract class StorageBoxBlock(settings: BlockBehaviour.Properties) : BaseEntity
  */
 @ModBlock(name = "wooden_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
 class WoodenStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS).strength(2.5f)) {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { WoodenStorageBoxBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -253,6 +254,7 @@ class WoodenStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCo
  */
 @ModBlock(name = "bronze_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
 class BronzeStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { BronzeStorageBoxBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -277,6 +279,7 @@ class BronzeStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCo
  */
 @ModBlock(name = "iron_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
 class IronStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { IronStorageBoxBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -301,6 +304,7 @@ class IronStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy
  */
 @ModBlock(name = "steel_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
 class SteelStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { SteelStorageBoxBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -325,6 +329,7 @@ class SteelStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCop
  */
 @ModBlock(name = "iridium_storage_box", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "storage", generateBlockLootTable = false)
 class IridiumStorageBoxBlock : StorageBoxBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(6.0f, 8.0f)) {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { IridiumStorageBoxBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {

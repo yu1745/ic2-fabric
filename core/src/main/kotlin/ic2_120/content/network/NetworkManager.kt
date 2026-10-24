@@ -20,8 +20,8 @@ import ic2_120.content.item.armor.QuantumBoots
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.core.BlockPos
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.FriendlyByteBuf
+import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.chat.Component
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload
@@ -57,7 +57,7 @@ class SetItemFilterPayload(val slotIndex: Int, val stack: ItemStack) : CustomPac
 
     companion object {
         val ID = CustomPacketPayload.Type<SetItemFilterPayload>(Ic2_120.id("set_item_filter"))
-        val CODEC: StreamCodec<FriendlyByteBuf, SetItemFilterPayload> = StreamCodec.of(
+        val CODEC: StreamCodec<RegistryFriendlyByteBuf, SetItemFilterPayload> = StreamCodec.of(
             { buf, value ->
                 buf.writeVarInt(value.slotIndex)
                 ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, value.stack)
@@ -275,7 +275,7 @@ object NetworkManager {
                         val newMode = MiningLaserItem.cycleMode(stack)
                         player.setItemInHand(hand, stack)
                         player.displayClientMessage(
-                            Component.translatable(newMode.descriptionId),
+                            Component.translatable(newMode.translationKey),
                             true
                         )
                         return@execute

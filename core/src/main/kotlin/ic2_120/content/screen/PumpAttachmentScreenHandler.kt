@@ -34,7 +34,7 @@ class PumpAttachmentScreenHandler(
 
     init {
         addSlot(object : Slot(SimpleContainer(1), FILTER_SLOT, 80, 31) {
-            override fun canInsert(stack: ItemStack): Boolean = false
+            override fun mayPlace(stack: ItemStack): Boolean = false
             override fun mayPickup(playerEntity: Player): Boolean = false
         })
 
@@ -58,7 +58,7 @@ class PumpAttachmentScreenHandler(
     fun setFluidFilter(fluid: Fluid): Boolean {
         val be = blockEntity ?: return false
         be.setPumpFilterFluid(fluid)
-        sendContentUpdates()
+        broadcastChanges()
         return true
     }
 
@@ -88,7 +88,7 @@ class PumpAttachmentScreenHandler(
     private fun returnCursorToInventory() {
         val returning = carried.copy()
         if (returning.isEmpty) return
-        playerInventory.safeInsert(returning)
+        playerInventory.placeItemBackInInventory(returning)
         carried = if (returning.isEmpty) ItemStack.EMPTY else returning
     }
 
@@ -99,7 +99,7 @@ class PumpAttachmentScreenHandler(
         @ScreenFactory
         fun fromBuffer(syncId: Int, playerInventory: Inventory, buf: FriendlyByteBuf): PumpAttachmentScreenHandler {
             val pos = buf.readBlockPos()
-            val world = playerInventory.player.world
+            val world = playerInventory.player.level()
             val be = world.getBlockEntity(pos) as? PipeBlockEntity
             return PumpAttachmentScreenHandler(syncId, playerInventory, be, ContainerLevelAccess.create(world, pos))
         }

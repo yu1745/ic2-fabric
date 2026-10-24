@@ -174,7 +174,7 @@ class BlockCutterBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.getCount())
         return buf
     }
 

@@ -41,7 +41,7 @@ object MachineClaimJadeProvider : IBlockComponentProvider, IServerDataProvider<B
         }
     }
 
-    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         if (!accessor.serverData.getBoolean("claimBlocked")) return
         val count = accessor.serverData.getInt("claimBlockedCount")
         val dx = accessor.serverData.getInt("bx")

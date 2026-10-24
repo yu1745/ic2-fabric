@@ -129,7 +129,7 @@ class IronFurnaceBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 
@@ -141,7 +141,7 @@ class IronFurnaceBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.burnTime = nbt.getInt(IronFurnaceSync.NBT_BURN_TIME)
         sync.totalBurnTime = nbt.getInt(IronFurnaceSync.NBT_TOTAL_BURN_TIME)
@@ -151,7 +151,7 @@ class IronFurnaceBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putInt(IronFurnaceSync.NBT_BURN_TIME, sync.burnTime)
         nbt.putInt(IronFurnaceSync.NBT_TOTAL_BURN_TIME, sync.totalBurnTime)
@@ -251,7 +251,7 @@ class IronFurnaceBlockEntity(
         }
 
         // 获取原版熔炉燃烧时间
-        val furnaceTicks = FuelRegistry.INSTANCE.getValue(stack.item) ?: return 0
+        val furnaceTicks = net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity.getFuel().getOrDefault(stack.item, 0) ?: return 0
         if (furnaceTicks <= 0) return 0
 
         // 应用铁炉燃料倍数（1.25倍），使煤炭可烧制 10 个物品
@@ -291,8 +291,7 @@ class IronFurnaceBlockEntity(
 
     private fun smeltingRecipeFor(input: ItemStack, world: Level): net.minecraft.world.item.crafting.SmeltingRecipe? {
         if (RecipeCacheEpoch.current() == cachedRecipeEpoch && cachedRecipeItem === input.item) return cachedSmeltingRecipe
-        val inputInv = SimpleContainer(1).apply { setItem(0, input) }
-        val recipe = world.recipeManager.getRecipeFor(RecipeType.SMELTING, inputInv, world).orElse(null)
+        val recipe = world.recipeManager.getRecipeFor(RecipeType.SMELTING, net.minecraft.world.item.crafting.SingleRecipeInput(input), world).orElse(null)?.value
         cachedRecipeEpoch = RecipeCacheEpoch.current()
         cachedRecipeItem = input.item
         cachedSmeltingRecipe = recipe
@@ -309,7 +308,7 @@ class IronFurnaceBlockEntity(
         if (stack.isEmpty) return false
         if (RecipeCacheEpoch.current() == cachedInputEpoch && cachedInputItem === stack.item) return cachedIsInput
         val w = world ?: return true
-        val inv = SimpleContainer(stack.copyWithCount(1))
+        val inv = net.minecraft.world.item.crafting.SingleRecipeInput(stack)
         val found = w.recipeManager.getRecipeFor(RecipeType.SMELTING, inv, w).isPresent
         cachedInputEpoch = RecipeCacheEpoch.current()
         cachedInputItem = stack.item
@@ -319,7 +318,7 @@ class IronFurnaceBlockEntity(
 
     fun collectXp(player: Player) {
         val xp = net.minecraft.util.Mth.floor(storedExperience)
-        val frac = net.minecraft.util.Mth.fractionalPart(storedExperience)
+        val frac = net.minecraft.util.Mth.frac(storedExperience)
         var amount = xp
         if (frac != 0.0f && Math.random() < frac) amount++
         if (amount > 0) {
@@ -339,7 +338,7 @@ class IronFurnaceBlockEntity(
     private fun setActiveState(world: Level, pos: BlockPos, state: BlockState, active: Boolean) {
         val wasActive = state.getValue(activeProperty)
         if (wasActive != active) {
-            world.setBlock(pos, state.setValue(activeProperty, active))
+            world.setBlock(pos, state.setValue(activeProperty, active), 3)
         }
         if (world.isClient) return
         if (soundConfig.soundType == ic2_120.content.sound.SoundType.NONE) return

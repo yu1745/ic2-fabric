@@ -60,7 +60,7 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings() .noOcclusion()
         type: BlockEntityType<T>
     ): BlockEntityTicker<T>? = null
 
-    override fun createScreenHandlerFactory(
+    override fun getMenuProvider(
         state: BlockState,
         world: Level,
         pos: BlockPos
@@ -78,21 +78,22 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings() .noOcclusion()
     @Environment(EnvType.CLIENT)
     override fun appendHoverText(
         stack: ItemStack,
-        world: BlockGetter?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: TooltipContext
+        type: TooltipFlag
     ) {
         super.appendHoverText(stack, context, tooltip, type)
         // TODO(1.21.1): 原 yarn getSubNbt("BlockEntityTag")，组件时代暂以 CUSTOM_DATA NBT 桥接
         val blockEntityTag = stack.orCreateNbt.getCompound("BlockEntityTag")
-        val templateCount = blockEntityTag?.getList("UuTemplates", 10)?.size ?: 0
+        val templateCount = blockEntityTag.getList("UuTemplates", 10).size
         tooltip.add(Component.literal("模板数量: $templateCount").withStyle(ChatFormatting.GRAY))
     }
 
-    override fun getPickStack(world: BlockGetter, pos: BlockPos, state: BlockState): ItemStack {
+    override fun getCloneItemStack(world: net.minecraft.world.level.LevelReader, pos: BlockPos, state: BlockState): ItemStack {
         val itemStack = super.getCloneItemStack(world, pos, state)
-        val blockEntity = world.getBlockEntity(pos) as? PatternStorageBlockEntity ?: return itemStack
-        val nbt = blockEntity.saveWithoutMetadata()
+        val blockEntity = (world as? Level)?.getBlockEntity(pos) as? PatternStorageBlockEntity ?: return itemStack
+        val provider = blockEntity.level?.registryAccess() ?: return itemStack
+        val nbt = blockEntity.saveWithoutMetadata(provider)
         if (!nbt.isEmpty) {
             itemStack.orCreateNbt = itemStack.orCreateNbt.apply { put("BlockEntityTag", nbt) }
         }
@@ -100,8 +101,8 @@ class PatternStorageBlock : MachineBlock(defaultMachineSettings() .noOcclusion()
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun onStacksDropped(state: BlockState, world: ServerLevel, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
-        super.onStacksDropped(state, world, pos, tool, dropExperience)
+    override fun spawnAfterBreak(state: BlockState, world: ServerLevel, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
+        super.spawnAfterBreak(state, world, pos, tool, dropExperience)
         val be = world.getBlockEntity(pos) as? Container ?: return
         Containers.dropContents(world, pos, be)
     }

@@ -147,9 +147,9 @@ abstract class Ic2FoamBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun randomTick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
         var light = world.getMaxLocalRawBrightness(pos)
-        if (!state.canOcclude && state.getLightBlock(world, pos) == 0) {
+        if (!state.canOcclude() && state.getLightBlock(world, pos) == 0) {
             for (direction in Direction.values()) {
-                light = maxOf(light, world.getMaxLocalRawBrightness(pos.offset(direction)))
+                light = maxOf(light, world.getMaxLocalRawBrightness(pos.relative(direction)))
             }
         }
 
@@ -192,7 +192,7 @@ class FoamBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClientSide) return InteractionResult.SUCCESS
-        val stack = player.getItemInHand(player.usedItemHand)
+        val stack = player.getItemInHand(hand)
         if (!stack.`is`(Items.SAND)) return InteractionResult.PASS
         val wall = LightGrayWallBlock::class.instance().defaultBlockState()
         world.setBlock(pos, wall, Block.UPDATE_ALL)
@@ -228,7 +228,7 @@ class ReinforcedFoamBlock(
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClientSide) return InteractionResult.SUCCESS
-        val stack = player.getItemInHand(player.usedItemHand)
+        val stack = player.getItemInHand(hand)
         if (!stack.`is`(Items.SAND)) return InteractionResult.PASS
         val stone = ReinforcedStoneBlock::class.instance().defaultBlockState()
         world.setBlock(pos, stone, Block.UPDATE_ALL)
@@ -335,7 +335,7 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
         val world = ctx.level
-        val pos = ctx.pos
+        val pos = ctx.clickedPos
         val fluidState = world.getFluidState(pos)
         return defaultBlockState()
             .setValue(NORTH, canConnect(world, pos, Direction.NORTH))
@@ -358,7 +358,7 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
     ): BlockState {
         // 与原版含水方块一致：含水时调度水 tick，不在这里反推 WATERLOGGED。
         if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
         }
         return state.setValue(propertyFor(direction), canConnect(world, pos, direction))
     }
@@ -382,7 +382,7 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
         if (!canPlaceLiquid(null, world, pos, state, fluidState.getType())) return false
         if (!state.getValue(WATERLOGGED)) {
             world.setBlock(pos, state.setValue(WATERLOGGED, true), Block.UPDATE_ALL)
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
         }
         return true
     }
@@ -390,7 +390,7 @@ class MiningPipeBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Prope
     override fun pickupBlock(player: Player?, world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack = ItemStack.EMPTY
 
     private fun canConnect(world: LevelAccessor, pos: BlockPos, direction: Direction): Boolean {
-        val neighborPos = pos.offset(direction)
+        val neighborPos = pos.relative(direction)
         val neighborBlock = world.getBlockState(neighborPos).block
         return neighborBlock is MiningPipeBlock || neighborBlock is BaseMinerBlock
     }
@@ -575,7 +575,7 @@ abstract class Ic2ScaffoldBlock(
         pos: BlockPos,
         neighborPos: BlockPos,
     ): BlockState {
-        if (!world.isClient) world.scheduleTick(pos, this, 1)
+        if (!world.isClientSide) world.scheduleTick(pos, this, 1)
         return super.updateShape(state, direction, neighborState, world, pos, neighborPos)
     }
 
@@ -593,7 +593,7 @@ abstract class Ic2ScaffoldBlock(
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun scheduledTick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
+    override fun tick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
         checkSupport(world, pos)
     }
 
@@ -610,7 +610,7 @@ abstract class Ic2ScaffoldBlock(
         if (world.isClientSide) return InteractionResult.SUCCESS
         if (player.isCrouching || !isVerticalPillar(world, pos)) return InteractionResult.PASS
 
-        val stack = player.getItemInHand(player.usedItemHand)
+        val stack = player.getItemInHand(hand)
         val target: BlockState
         val required: Int
         val sound: net.minecraft.sounds.SoundEvent
@@ -663,7 +663,7 @@ abstract class Ic2ScaffoldBlock(
         }
 
         return listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
-            .map { pos.offset(it) }
+            .map { pos.relative(it) }
             .any { neighbor ->
                 isScaffold(world.getBlockState(neighbor).block) &&
                     calculateSupport(world, connectedComponent(world, neighbor))[neighbor]!! >= 0
@@ -708,7 +708,7 @@ abstract class Ic2ScaffoldBlock(
         while (queue.isNotEmpty()) {
             val pos = queue.removeFirst()
             for (direction in Direction.values()) {
-                val next = pos.offset(direction)
+                val next = pos.relative(direction)
                 if (!result.contains(next) && isScaffold(world.getBlockState(next).block)) {
                     result.add(next)
                     queue.add(next)
@@ -738,7 +738,7 @@ abstract class Ic2ScaffoldBlock(
                     best = maxOf(best, support[below] ?: -1)
                 }
                 for (direction in listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)) {
-                    val neighborStrength = support[pos.offset(direction)] ?: -1
+                    val neighborStrength = support[pos.relative(direction)] ?: -1
                     best = maxOf(best, neighborStrength - 1)
                 }
                 if (best > (support[pos] ?: -1)) {
@@ -753,14 +753,14 @@ abstract class Ic2ScaffoldBlock(
     /** 脚手架只能传递已有支撑，不能因为自身顶面形状而被当成新的落地支点。 */
     private fun isSolidFoundation(world: BlockGetter, pos: BlockPos): Boolean {
         val state = world.getBlockState(pos)
-        return !isScaffold(state.block) && state.isSideSolidFullSquare(world, pos, Direction.UP)
+        return !isScaffold(state.block) && state.isFaceSturdy(world, pos, Direction.UP)
     }
 
     private fun isScaffold(block: Block): Boolean = block is Ic2ScaffoldBlock
 
     companion object {
         private val COLLISION_SHAPE: VoxelShape = Shapes.box(0.0, 0.0, 0.0, 16.0, 2.0, 16.0)
-        private val OUTLINE_SHAPE: VoxelShape = Shapes.block().offset(0.0, -1.0, 0.0)
+        private val OUTLINE_SHAPE: VoxelShape = Shapes.block().move(0.0, -1.0, 0.0)
         private val NORMAL_OUTLINE_SHAPE: VoxelShape
         private val BOTTOM_OUTLINE_SHAPE: VoxelShape
 

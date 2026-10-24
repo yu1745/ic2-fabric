@@ -255,7 +255,11 @@ object EjectorUpgradeComponent {
         val nbt = stack.get(DataComponents.CUSTOM_DATA)?.copyTag() ?: return emptySet()
         val list = nbt.getList(NBT_DIRECTIONS, net.minecraft.nbt.Tag.TAG_STRING.toInt())
         if (!list.isEmpty()) {
-            return list.mapNotNull { Direction.byName(it.asString()) }.toSet()
+            val result = mutableSetOf<Direction>()
+        for (i in 0 until list.size) {
+            Direction.byName(list.getString(i))?.let { result.add(it) }
+        }
+        return result
         }
 
         val raw = nbt.getString(NBT_DIRECTION)
@@ -273,7 +277,7 @@ object EjectorUpgradeComponent {
         }
         val list = net.minecraft.nbt.ListTag()
         for (side in sides) {
-            list.add(net.minecraft.nbt.StringTag.of(side.name.lowercase()))
+            list.add(net.minecraft.nbt.StringTag.valueOf(side.name.lowercase()))
         }
         nbt.put(NBT_DIRECTIONS, list)
     }

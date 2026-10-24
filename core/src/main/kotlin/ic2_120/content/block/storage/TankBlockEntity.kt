@@ -33,7 +33,7 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import com.mojang.serialization.NbtOps
+import net.minecraft.nbt.NbtOps
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.SimpleContainerData
@@ -291,7 +291,7 @@ class TankBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 

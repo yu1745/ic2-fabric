@@ -31,7 +31,6 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.item.ItemStack
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.item.Items
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.nbt.CompoundTag
@@ -65,7 +64,7 @@ object WrenchHandler {
 
     fun isWrench(stack: ItemStack): Boolean {
         if (stack.isEmpty) return false
-        val id = BuiltInRegistries.ITEM.getId(stack.item)
+        val id = BuiltInRegistries.ITEM.getKey(stack.item)
         return id == WRENCH_ID || id == ELECTRIC_WRENCH_ID
     }
 
@@ -78,7 +77,7 @@ object WrenchHandler {
         // 右键：扳手设置机器朝向，不耗耐久
             // 右键正面朝向玩家，Shift+右键背面朝向玩家
         UseBlockCallback.EVENT.register { player, world, hand, hitResult ->
-            val stack = player.getItemInHand(player.usedItemHand)
+            val stack = player.getItemInHand(hand)
             if (!isWrench(stack)) return@register InteractionResult.PASS
 
             val pos = hitResult.blockPos
@@ -100,7 +99,7 @@ object WrenchHandler {
                         val recomputed = block.recomputeState(world, pos, state, be)
                         world.setBlock(pos, recomputed, Block.UPDATE_ALL)
                         PipeNetworkManager.invalidateConnectionCachesAt(world, pos)
-                        PipeNetworkManager.invalidateConnectionCachesAt(world, pos.offset(hitResult.direction))
+                        PipeNetworkManager.invalidateConnectionCachesAt(world, pos.relative(hitResult.direction))
                     }
                 }
                 return@register InteractionResult.SUCCESS
@@ -121,16 +120,16 @@ object WrenchHandler {
                     is DirectionalMachineBlock -> {
                         // 变压器等六面朝向机器：根据玩家视角计算朝向
                         val fullFacing = when {
-                            player.pitch < -45f -> Direction.UP
-                            player.pitch > 45f -> Direction.DOWN
-                            else -> player.horizontalFacing
+                            player.xRot < -45f -> Direction.UP
+                            player.xRot > 45f -> Direction.DOWN
+                            else -> player.direction
                         }
                         val target = if (player.isCrouching) fullFacing else fullFacing.opposite
-                        world.setBlock(pos, state.setValue(BlockStateProperties.FACING, target))
+                        world.setBlock(pos, state.setValue(BlockStateProperties.FACING, target), 3)
                     }
                     is MachineBlock -> {
-                        val target = if (player.isCrouching) player.horizontalFacing else player.horizontalFacing.opposite
-                        world.setBlock(pos, state.setValue(BlockStateProperties.HORIZONTAL_FACING, target))
+                        val target = if (player.isCrouching) player.direction else player.direction.opposite
+                        world.setBlock(pos, state.setValue(BlockStateProperties.HORIZONTAL_FACING, target), 3)
                     }
                 }
                 world.playSound(null, pos, WRENCH_USE_SOUND, SoundSource.BLOCKS, 1.0f, 1.0f)
@@ -142,7 +141,7 @@ object WrenchHandler {
         // - 普通扳手：耗 10 耐久
         // - 电动扳手：耗 1000 EU（电量不足则无法拆卸）
         AttackBlockCallback.EVENT.register { player, world, hand, pos, direction ->
-            val stack = player.getItemInHand(player.usedItemHand)
+            val stack = player.getItemInHand(hand)
             if (!isWrench(stack)) return@register InteractionResult.PASS
 
             val state = world.getBlockState(pos)
@@ -205,8 +204,8 @@ object WrenchHandler {
                 } else if (block is PatternStorageBlock) {
                     val patternBe = world.getBlockEntity(pos) as? PatternStorageBlockEntity
                     // 水晶要爆出来，不保存在 NBT 里
-                    val crystalStack = patternBe?.remove(PatternStorageBlockEntity.SLOT_CRYSTAL, 64)
-                    val nbt = patternBe?.saveWithoutMetadata()
+                    val crystalStack = patternBe?.removeItem(PatternStorageBlockEntity.SLOT_CRYSTAL, 64)
+                    val nbt = patternBe?.saveWithoutMetadata(world.registryAccess())
                     world.removeBlockEntity(pos)
                     val didBreak = world.destroyBlock(pos, false, player)
                     if (didBreak && nbt != null) {
@@ -261,8 +260,12 @@ object WrenchHandler {
                             val current = tool.getEnergy(stack)
                             tool.setEnergy(stack, current - 1000)
                         }
-                        stack.isDamageable -> {
-                            stack.hurt(10, player) { it }
+                        stack.isDamageableItem -> {
+                            stack.hurtAndBreak(
+                                10,
+                                player,
+                                if (hand == InteractionHand.MAIN_HAND) net.minecraft.world.entity.EquipmentSlot.MAINHAND else net.minecraft.world.entity.EquipmentSlot.OFFHAND
+                            )
                         }
                     }
                     world.playSound(null, pos, WRENCH_USE_SOUND, SoundSource.BLOCKS, 1.0f, 1.0f)

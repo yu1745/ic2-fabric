@@ -151,7 +151,7 @@ abstract class MachineBlockEntity(
     protected open fun setActiveState(world: Level, pos: BlockPos, state: BlockState, active: Boolean) {
         val wasActive = state.getValue(activeProperty)
         if (wasActive == active) return
-        world.setBlock(pos, state.setValue(activeProperty, active))
+        world.setBlock(pos, state.setValue(activeProperty, active), 3)
 
         if (world.isClient) return
 

@@ -72,7 +72,6 @@ import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.network.chat.Component
@@ -341,7 +340,7 @@ class CannerBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 
@@ -352,7 +351,7 @@ class CannerBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CannerSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -379,15 +378,15 @@ class CannerBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CannerSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("ProgressF", progressF)
         nbt.putFloat("EnergyDebt", energyDebtF)
         nbt.putLong(NBT_LEFT_FLUID_AMOUNT, leftTankInternal.amount)
-        if (!leftTankInternal.variant.isBlank) nbt.put(NBT_LEFT_FLUID_VARIANT, leftTankInternal.encodeFluidVariant(variant))
+        if (!leftTankInternal.variant.isBlank) nbt.put(NBT_LEFT_FLUID_VARIANT, encodeFluidVariant(leftTankInternal.variant))
         nbt.putLong(NBT_RIGHT_FLUID_AMOUNT, rightTankInternal.amount)
-        if (!rightTankInternal.variant.isBlank) nbt.put(NBT_RIGHT_FLUID_VARIANT, rightTankInternal.encodeFluidVariant(variant))
+        if (!rightTankInternal.variant.isBlank) nbt.put(NBT_RIGHT_FLUID_VARIANT, encodeFluidVariant(rightTankInternal.variant))
     }
 
     private fun getFluidStorageForSide(side: Direction?): Storage<FluidVariant>? {
@@ -525,9 +524,9 @@ class CannerBlockEntity(
         }
         val recipeType = ModMachineRecipes.recipeType(SolidCannerRecipe::class)
         // 配方匹配包含 slot0/slot1 的数量要求，不能将输入堆叠压成 1 个。
-        val recipeInventory = SimpleContainer(container, material)
-        val match = world.recipeManager.getRecipeFor(recipeType, recipeInventory, world) ?: return null
-        val recipe = if (match.isEmpty) null else match.get()
+        val recipeInventory = SolidCannerRecipe.Input(container, material)
+        val holder = world.recipeManager.getRecipeFor(recipeType, recipeInventory, world).orElse(null) ?: return null
+        val recipe: SolidCannerRecipe = holder.value
         cachedRecipeEpoch = RecipeCacheEpoch.current()
         cachedContainerItem = container.item
         cachedMaterialItem = material.item

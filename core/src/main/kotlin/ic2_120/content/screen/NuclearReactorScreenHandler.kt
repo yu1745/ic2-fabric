@@ -26,7 +26,6 @@ import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -81,7 +80,7 @@ class NuclearReactorScreenHandler(
             val handlerIndex = slots.size
             beSlotToHandlerIndex[index] = handlerIndex
             addSlot(object : PredicateSlot(blockInventory, index, 0, 0, spec) {
-                override fun canInsert(stack: ItemStack): Boolean {
+                override fun mayPlace(stack: ItemStack): Boolean {
                     // 布局锁定：空槽不允许插入，只允许与锁定类型匹配的物品
                     if (reactor?.layoutLocked == true) {
                         val lockedItem = reactor.getLockedItemForSlot(index)
@@ -89,7 +88,7 @@ class NuclearReactorScreenHandler(
                         if (stack.item !== lockedItem) return false
                     }
                     // 基础校验：IBaseReactorComponent
-                    if (!super.canInsert(stack)) return false
+                    if (!super.mayPlace(stack)) return false
                     return true
                 }
             })
@@ -228,7 +227,7 @@ class NuclearReactorScreenHandler(
             }
             val context = ContainerLevelAccess.create(playerInventory.player.level(), pos)
             val blockInv = SimpleContainer(NuclearReactorBlockEntity.INVENTORY_SIZE)
-            val reactor = playerInventory.player.world.getBlockEntity(pos) as? NuclearReactorBlockEntity
+            val reactor = playerInventory.player.level().getBlockEntity(pos) as? NuclearReactorBlockEntity
             // 将锁数据写入 client BE，供槽位 canInsert 和 Screen 虚影渲染使用
             reactor?.let {
                 it.layoutLocked = layoutLocked

@@ -66,7 +66,7 @@ class CreativeGeneratorBlock : MachineBlock(
     class CreativeGeneratorBlockItem(
         block: net.minecraft.world.level.block.Block,
         @Suppress("UNUSED_PARAMETER") settings: Item.Properties
-    ) : BlockItem(block, Item.Properties().ignitedByLava())
+    ) : BlockItem(block, Item.Properties().fireResistant())
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")

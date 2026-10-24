@@ -35,9 +35,9 @@ import kotlin.math.abs
 class RubberTreeFeature : Feature<TreeConfiguration>(TreeConfiguration.CODEC) {
 
     override fun place(context: FeaturePlaceContext<TreeConfiguration>): Boolean {
-        val world = context.level
+        val world = context.level()
         val origin = context.origin()
-        val random = context.random
+        val random = context.random()
 
         // 树苗生长保持原版行为，避免为了世界生成避让逻辑把玩家种下的树"挪位"或删掉周围树木。
         if (isSaplingGrowth(context)) {
@@ -79,12 +79,12 @@ class RubberTreeFeature : Feature<TreeConfiguration>(TreeConfiguration.CODEC) {
             if (dist >= 7) continue
 
             for (dir in Direction.values()) {
-                val nextPos = pos.offset(dir).immutable()
+                val nextPos = pos.relative(dir).immutable()
                 if (!visited.add(nextPos)) continue
 
                 val state = world.getBlockState(nextPos)
                 if (state.`is`(BlockTags.LOGS)) continue
-                if (!state.contains(LeavesBlock.DISTANCE)) continue
+                if (!state.hasProperty(LeavesBlock.DISTANCE)) continue
 
                 val newDist = dist + 1
                 world.setBlock(nextPos, state.setValue(LeavesBlock.DISTANCE, newDist.coerceAtMost(7)), Block.UPDATE_ALL or Block.UPDATE_KNOWN_SHAPE)
@@ -108,11 +108,11 @@ class RubberTreeFeature : Feature<TreeConfiguration>(TreeConfiguration.CODEC) {
      */
     private fun isSaplingGrowth(context: FeaturePlaceContext<TreeConfiguration>): Boolean {
         if (RubberSaplingGenerator.SAPLING_GROWTH_FLAG.get() == true) return true
-        return context.level.getBlockState(context.origin()).block is RubberSaplingBlock
+        return context.level().getBlockState(context.origin()).block is RubberSaplingBlock
     }
 
     private fun hasClearSaplingGrowthArea(context: FeaturePlaceContext<TreeConfiguration>, origin: BlockPos): Boolean =
-        RubberSaplingGrowth.hasClearArea(context.level, origin)
+        RubberSaplingGrowth.hasClearArea(context.level(), origin)
 
     private fun hasClearNaturalGenerationArea(context: FeaturePlaceContext<TreeConfiguration>, origin: BlockPos): Boolean {
         val world = context.level
@@ -124,7 +124,7 @@ class RubberTreeFeature : Feature<TreeConfiguration>(TreeConfiguration.CODEC) {
                 // 不检查 origin 同层的周边地表，避免把草方块/泥土误判成“阻挡树生成”的硬障碍。
                 // 这里真正需要保证的是树干和树冠将要占用的上方空间可用。
                 for (y in 1..CLEARANCE_HEIGHT) {
-                    val pos = origin.add(x, y, z)
+                    val pos = origin.offset(x, y, z)
                     val state = world.getBlockState(pos)
                     if (state.`is`(BlockTags.LOGS) || state.`is`(BlockTags.LEAVES)) {
                         return false
@@ -207,7 +207,7 @@ class RubberTreeFeature : Feature<TreeConfiguration>(TreeConfiguration.CODEC) {
                            (adx <= 1 && random.nextInt(chance) == 0) ||
                            (adz <= 1 && random.nextInt(chance) == 0)
                        ) {
-                           val leafPos = origin.add(dx, cHeight, dz)
+                           val leafPos = origin.offset(dx, cHeight, dz)
                            if (world.getBlockState(leafPos).isAir) {
                                setBlock(world, leafPos, leavesState)
                                leafPositions.add(leafPos.immutable())
@@ -282,7 +282,7 @@ object RubberSaplingGrowth {
         for (x in -radius..radius) {
             for (z in -radius..radius) {
                 for (y in 1..height) {
-                    val state = world.getBlockState(origin.add(x, y, z))
+                    val state = world.getBlockState(origin.offset(x, y, z))
                     if (!state.isAir && !state.`is`(BlockTags.REPLACEABLE_BY_TREES)) {
                         return false
                     }

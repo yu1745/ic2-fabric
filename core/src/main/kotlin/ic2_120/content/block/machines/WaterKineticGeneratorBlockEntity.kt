@@ -4,7 +4,6 @@ import net.minecraft.core.registries.BuiltInRegistries
 
 import net.minecraft.core.HolderLookup
 
-import net.minecraft.core.HolderLookup
 
 import net.minecraft.server.level.ServerPlayer
 
@@ -38,7 +37,6 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.ContainerLevelAccess
@@ -144,7 +142,7 @@ class WaterKineticGeneratorBlockEntity(
     override fun canOutputKuTo(side: Direction): Boolean {
         val world = world ?: return false
         val state = world.getBlockState(pos)
-        val facing = state.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
         return side == facing.opposite
     }
 
@@ -176,9 +174,9 @@ class WaterKineticGeneratorBlockEntity(
 
     fun getRotorRemainingClearHours(): Double {
         val rotor = inventory[ROTOR_SLOT]
-        if (rotor.isEmpty || !rotor.isDamageable) return 0.0
+        if (rotor.isEmpty || !rotor.isDamageableItem) return 0.0
         val remainder = rotor.getCustomData()?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0
-        val remainingTicks = ((rotor.maxDamage - rotor.damage).toDouble() - remainder).coerceAtLeast(0.0)
+        val remainingTicks = ((rotor.maxDamage - rotor.damageValue).toDouble() - remainder).coerceAtLeast(0.0)
         // 显示静水条件下的寿命（与风力显示晴天寿命一致，都是理想条件）
         return remainingTicks / TICKS_PER_HOUR / BASE_WEAR_PER_TICK
     }
@@ -193,7 +191,7 @@ class WaterKineticGeneratorBlockEntity(
             inventory[ROTOR_SLOT] = ItemStack.EMPTY
             markDirtyAndSync()
             if (!player.getInventory().add(extracted)) {
-                player.spawnAtLocation(extracted, false)
+                player.spawnAtLocation(extracted)
             }
             return InteractionResult.SUCCESS
         }
@@ -213,7 +211,7 @@ class WaterKineticGeneratorBlockEntity(
     }
 
     private fun isAllowedRotor(stack: ItemStack): Boolean {
-        val id = BuiltInRegistries.ITEM.getId(stack.item)
+        val id = BuiltInRegistries.ITEM.getKey(stack.item)
         return ALLOWED_ROTORS.contains(id.path)
     }
 
@@ -265,7 +263,7 @@ class WaterKineticGeneratorBlockEntity(
 
         if (world.isClient) return
 
-        val facing = state.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val facing = state.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
 
         val currentAngle: Float = if (isStuck) {
             stuckAngle
@@ -428,11 +426,11 @@ class WaterKineticGeneratorBlockEntity(
     private fun isFlowingWater(world: Level, x: Int, y: Int, z: Int): Boolean {
         val fluidState = world.getFluidState(BlockPos(x, y, z))
         if (!fluidState.`is`(Fluids.WATER) && !fluidState.`is`(Fluids.FLOWING_WATER)) return false
-        return !fluidState.isStill
+        return !fluidState.isSource
     }
 
     private fun applyRotorWear(rotor: ItemStack, wearMultiplier: Double): Boolean {
-        if (!rotor.isDamageable || wearMultiplier <= 0.0) return false
+        if (!rotor.isDamageableItem || wearMultiplier <= 0.0) return false
         val accumulated = ((rotor.getCustomData()?.getDouble(ROTOR_WEAR_REMAINDER_KEY) ?: 0.0) + wearMultiplier).coerceAtLeast(0.0)
         val wear = floor(accumulated).toInt()
         val remainder = accumulated - wear
@@ -442,7 +440,7 @@ class WaterKineticGeneratorBlockEntity(
             return false
         }
 
-        if (rotor.damage + wear >= rotor.maxDamage) {
+        if (rotor.damageValue + wear >= rotor.maxDamage) {
             rotor.editCustomData { it.remove(ROTOR_WEAR_REMAINDER_KEY) }
             return true
         }
@@ -471,7 +469,7 @@ class WaterKineticGeneratorBlockEntity(
         val cz = pos.z + 0.5f
         val bladeInnerOffset = PIXEL
         val stepSize = (rotorRadius - bladeInnerOffset) / SAMPLE_COUNT
-        val mutablePos = BlockPos.Mutable()
+        val mutablePos = BlockPos.MutableBlockPos()
 
         for (bladeAngle in BLADE_ANGLES) {
             val bladeRad = Math.toRadians((bladeAngle + currentAngle).toDouble()).toFloat()
@@ -520,7 +518,7 @@ class WaterKineticGeneratorBlockEntity(
                 mutablePos.set(checkX, checkY, checkZ)
                 val blockState = world.getBlockState(mutablePos)
 
-                if (blockState.isOpaqueFullCube(world, mutablePos)) {
+                if (blockState.isSolidRender(world, mutablePos)) {
                     return true
                 }
             }
@@ -565,7 +563,7 @@ class WaterKineticGeneratorBlockEntity(
             else -> return false
         }
 
-        val mutablePos = BlockPos.Mutable()
+        val mutablePos = BlockPos.MutableBlockPos()
         for (normal in normalMin..normalMax) {
             for (first in firstMin..firstMax) {
                 for (second in secondMin..secondMax) {
@@ -585,7 +583,7 @@ class WaterKineticGeneratorBlockEntity(
                     if (otherRadius <= 0f) continue
 
                     val otherState = world.getBlockState(mutablePos)
-                    val otherFacing = otherState.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+                    val otherFacing = otherState.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
                     if (otherFacing.axis != axis) continue
 
                     val otherCenter = rotorCenter(mutablePos, otherFacing)
@@ -604,9 +602,9 @@ class WaterKineticGeneratorBlockEntity(
 
     private fun rotorCenter(pos: BlockPos, facing: Direction): Vec3 =
         Vec3(
-            pos.x + 0.5 + facing.offsetX.toDouble(),
+            pos.x + 0.5 + facing.stepX.toDouble(),
             pos.y + 0.5,
-            pos.z + 0.5 + facing.offsetZ.toDouble()
+            pos.z + 0.5 + facing.stepZ.toDouble()
         )
 
     private fun planeGap(a: Vec3, b: Vec3, axis: Direction.Axis): Double =
@@ -641,7 +639,6 @@ class WaterKineticGeneratorBlockEntity(
         if (!world.isClient) {
             val state = world.getBlockState(pos)
             world.sendBlockUpdated(pos, state, state, Block.UPDATE_CLIENTS)
-            (world as? ServerLevel)?.chunkSource?.markForUpdate(pos)
         }
     }
 
@@ -686,27 +683,27 @@ class WaterKineticGeneratorBlockEntity(
 
     override fun stillValid(player: Player): Boolean = Container.stillValidBlockEntity(this, player)
 
-    override fun readNbt(nbt: CompoundTag, lookup: HolderLookup.HolderLookup.Provider) {
-        super.readNbt(nbt, lookup)
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.loadAdditional(nbt, lookup)
         inventory[ROTOR_SLOT] = ItemStack.EMPTY
         ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
     }
 
-    override fun writeNbt(nbt: CompoundTag, lookup: HolderLookup.HolderLookup.Provider) {
-        super.writeNbt(nbt, lookup)
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
+        super.saveAdditional(nbt, lookup)
         ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
     }
 
-    override fun toInitialChunkDataNbt(lookup: HolderLookup.HolderLookup.Provider): CompoundTag = createNbt(lookup)
+    override fun getUpdateTag(lookup: HolderLookup.Provider): CompoundTag = saveWithFullMetadata(lookup)
 
-    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
+    override fun getUpdatePacket(): ClientboundBlockEntityDataPacket = ClientboundBlockEntityDataPacket.create(this)
 
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
         buf.writeBlockPos(pos)
-        buf.writeVarInt(syncedData.size)
+        buf.writeVarInt(syncedData.count)
         return buf
     }
 

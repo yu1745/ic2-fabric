@@ -77,6 +77,8 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.tags.ItemTags
 import net.minecraft.tags.BlockTags
+import net.minecraft.tags.TagKey
+import net.minecraft.resources.ResourceKey
 import net.minecraft.world.item.TooltipFlag
 import net.minecraft.sounds.SoundSource
 import net.minecraft.sounds.SoundEvents
@@ -195,7 +197,7 @@ class BronzeHoe : HoeItem(BronzeToolMaterial, Item.Properties().stacksTo(1).attr
 }
 
 @ModItem(name = "bronze_sword", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzeSword : SwordItem(BronzeToolMaterial, Item.Properties().stacksTo(1).attributes(SwordItem.createAttributes(BronzeToolMaterial, 3, -2.4f))) {
+class BronzeSword : SwordItem(BronzeToolMaterial, Item.Properties().stacksTo(1).attributes(SwordItem.createAttributes(BronzeToolMaterial, 3f, -2.4f))) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -227,7 +229,7 @@ class BronzeShovel : ShovelItem(BronzeToolMaterial, Item.Properties().stacksTo(1
 }
 
 @ModItem(name = "bronze_pickaxe", tab = CreativeTab.IC2_TOOLS, group = "bronze_tools")
-class BronzePickaxe : PickaxeItem(BronzeToolMaterial, Item.Properties().stacksTo(1).attributes(PickaxeItem.createAttributes(BronzeToolMaterial, 1, -2.8f))) {
+class BronzePickaxe : PickaxeItem(BronzeToolMaterial, Item.Properties().stacksTo(1).attributes(PickaxeItem.createAttributes(BronzeToolMaterial, 1f, -2.8f))) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -247,7 +249,7 @@ class BronzePickaxe : PickaxeItem(BronzeToolMaterial, Item.Properties().stacksTo
 class WeedEx : Item(Item.Properties().stacksTo(1)) {
     override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.level
-        val pos = context.pos
+        val pos = context.clickedPos
         val state = world.getBlockState(pos)
         if (state.block !is CropBlock) return InteractionResult.PASS
         if (world.isClient) return InteractionResult.SUCCESS
@@ -347,7 +349,7 @@ class WeedEx : Item(Item.Properties().stacksTo(1)) {
 class WeedingSpade : Item(Item.Properties().durability(120)) {
     override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.level
-        val pos = context.pos
+        val pos = context.clickedPos
         val state = world.getBlockState(pos)
         if (state.block !is CropBlock) return InteractionResult.PASS
         if (state.getValue(CropBlock.CROP_TYPE) != CropType.WEED) return InteractionResult.PASS
@@ -357,7 +359,7 @@ class WeedingSpade : Item(Item.Properties().durability(120)) {
         val be = world.getBlockEntity(pos) as? CropBlockEntity ?: return InteractionResult.PASS
         val isCreative = player.abilities.instabuild
 
-        Containers.spawn(
+        Containers.dropItemStack(
             world,
             pos.x.toDouble(),
             pos.y.toDouble(),
@@ -396,10 +398,10 @@ class DebugItem : Item(Item.Properties().stacksTo(1))
 class ToolBox : Item(Item.Properties().stacksTo(1)) {
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getItemInHand(player.usedItemHand)
+        val stack = user.getItemInHand(hand)
         if (world.isClient) return InteractionResultHolder.success(stack)
 
-        val internal = loadInternal(stack)
+        val internal = loadInternal(stack, world.registryAccess())
         if (user.isCrouching) {
             var transferredAny = false
             for (i in internal.indices) {
@@ -414,12 +416,12 @@ class ToolBox : Item(Item.Properties().stacksTo(1)) {
                 }
             }
             if (transferredAny) {
-                user.playSound(SoundEvents.ENTITY_ITEM_PICKUP, 0.2f, 1.1f)
+                user.playSound(SoundEvents.ITEM_PICKUP, 0.2f, 1.1f)
             }
             if (internal.any { !it.isEmpty }) {
                 user.displayClientMessage(Component.translatable("message.ic2_120.tool_box.inventory_partial"), true)
             }
-            saveInternal(stack, internal)
+            saveInternal(stack, internal, world.registryAccess())
             return InteractionResultHolder.success(stack)
         }
 
@@ -439,7 +441,7 @@ class ToolBox : Item(Item.Properties().stacksTo(1)) {
         if (deposited) {
             user.playSound(SoundEvents.WOOD_PLACE, 0.35f, 1.25f)
         }
-        saveInternal(stack, internal)
+        saveInternal(stack, internal, world.registryAccess())
         return InteractionResultHolder.success(stack)
     }
 
@@ -452,7 +454,7 @@ class ToolBox : Item(Item.Properties().stacksTo(1)) {
         super.appendHoverText(stack, context, tooltip, type)
         tooltip.add(Component.translatable("tooltip.ic2_120.tool_box.hint").withStyle(ChatFormatting.DARK_GRAY))
         tooltip.add(Component.translatable("tooltip.ic2_120.tool_box.hint_detail").withStyle(ChatFormatting.DARK_GRAY))
-        val internal = loadInternal(stack)
+        val internal = loadInternal(stack, context.registryAccess())
         val filled = internal.count { !it.isEmpty }
         if (filled == 0) {
             tooltip.add(Component.translatable("tooltip.ic2_120.tool_box.empty").withStyle(ChatFormatting.GRAY))
@@ -463,7 +465,7 @@ class ToolBox : Item(Item.Properties().stacksTo(1)) {
         )
         for (s in internal) {
             if (s.isEmpty) continue
-            val line = Component.literal("· ").withStyle(ChatFormatting.DARK_GRAY).append(s.name)
+            val line = Component.literal("· ").withStyle(ChatFormatting.DARK_GRAY).append(s.hoverName)
             if (s.count > 1) {
                 line.append(Component.literal(" ×${s.count}").withStyle(ChatFormatting.DARK_GRAY))
             }
@@ -490,19 +492,19 @@ class ToolBox : Item(Item.Properties().stacksTo(1)) {
                 .save(exporter, ToolBox::class.id())
         }
 
-        internal fun loadInternal(stack: ItemStack): NonNullList<ItemStack> {
+        internal fun loadInternal(stack: ItemStack, provider: net.minecraft.core.HolderLookup.Provider): NonNullList<ItemStack> {
             val list = NonNullList.withSize(CAPACITY, ItemStack.EMPTY)
             val root = stack.orCreateNbt
             if (!root.contains(NBT_KEY)) return list
             val tag = root.getCompound(NBT_KEY)
-            ContainerHelper.loadAllItems(tag, list)
+            ContainerHelper.loadAllItems(tag, list, provider)
             return list
         }
 
-        internal fun saveInternal(stack: ItemStack, list: NonNullList<ItemStack>) {
+        internal fun saveInternal(stack: ItemStack, list: NonNullList<ItemStack>, provider: net.minecraft.core.HolderLookup.Provider) {
             val nbt = stack.orCreateNbt
             val tag = CompoundTag()
-            ContainerHelper.saveAllItems(tag, list)
+            ContainerHelper.saveAllItems(tag, list, provider)
             nbt.put(NBT_KEY, tag)
             stack.orCreateNbt = nbt
         }
@@ -514,8 +516,8 @@ class ToolBox : Item(Item.Properties().stacksTo(1)) {
             if (i is ToolBox) return false
             if (i is DebugItem || i is EnergyDebugStickItem) return false
             if (i is IElectricTool) return true
-            if (isIn(ItemTags.PICKAXES) || isIn(ItemTags.AXES) || isIn(ItemTags.SHOVELS) ||
-                isIn(ItemTags.HOES) || isIn(ItemTags.SWORDS)
+            if (`is`(ItemTags.PICKAXES) || `is`(ItemTags.AXES) || `is`(ItemTags.SHOVELS) ||
+                `is`(ItemTags.HOES) || `is`(ItemTags.SWORDS)
             ) {
                 return true
             }
@@ -606,7 +608,7 @@ class FrequencyTransmitter : Item(Item.Properties().stacksTo(1)) {
 
     override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.level
-        val pos = context.pos
+        val pos = context.clickedPos
         val stack = context.itemInHand
         val player = context.player
         val state = world.getBlockState(pos)
@@ -1065,17 +1067,21 @@ class IridiumDrill : ElectricMiningDrillItem(
             Enchantments.EFFICIENCY
         )
 
+        // 1.21.1：Enchantments.X 为 ResourceKey，注册到 Holder 需查表
+        private fun enchantHolder(key: net.minecraft.resources.ResourceKey<net.minecraft.world.item.enchantment.Enchantment>): Holder<net.minecraft.world.item.enchantment.Enchantment> =
+            BuiltInRegistries.ENCHANTMENT.getHolderOrThrow(key)
+
         private fun getExpectedEnchantments(
             stack: ItemStack,
             hasEnergyForCurrentMode: Boolean
-        ): Map<ResourceKey<net.minecraft.world.item.enchantment.Enchantment>, Int> {
+        ): Map<Holder<net.minecraft.world.item.enchantment.Enchantment>, Int> {
             if (!hasEnergyForCurrentMode) return emptyMap()
             return if (isSilkTouchEnabled(stack)) {
-                mapOf(Enchantments.SILK_TOUCH to 1)
+                mapOf(enchantHolder(Enchantments.SILK_TOUCH) to 1)
             } else {
                 mapOf(
-                    Enchantments.FORTUNE to 3,
-                    Enchantments.EFFICIENCY to 3
+                    enchantHolder(Enchantments.FORTUNE) to 3,
+                    enchantHolder(Enchantments.EFFICIENCY) to 3
                 )
             }
         }
@@ -1083,13 +1089,12 @@ class IridiumDrill : ElectricMiningDrillItem(
         fun syncVirtualEnchantments(stack: ItemStack, hasEnergyForCurrentMode: Boolean) {
             val mutable = ItemEnchantments.Mutable(EnchantmentHelper.getEnchantmentsForCrafting(stack))
             mutable.removeIf { holder ->
-                val key = BuiltInRegistries.ENCHANTMENT.getKey(holder.value())
-                key != null && key in VIRTUAL_ENCHANT_KEYS
+                VIRTUAL_ENCHANT_KEYS.any { key -> holder.`is`(key) }
             }
             for ((key, level) in getExpectedEnchantments(stack, hasEnergyForCurrentMode)) {
-                mutable.set(BuiltInRegistries.ENCHANTMENT.wrapAsHolder(key), level)
+                mutable.set(key, level)
             }
-            EnchantmentHelper.setEnchantments(stack, mutable.immutable())
+            EnchantmentHelper.setEnchantments(stack, mutable.toImmutable())
         }
     }
 
@@ -1142,7 +1147,7 @@ private object NanoSaberMaterial : Tier {
 @ModItem(name = "nano_saber", tab = CreativeTab.IC2_TOOLS, group = "electric_tools")
 class NanoSaber : SwordItem(
     NanoSaberMaterial,
-    Item.Properties().stacksTo(1).attributes(SwordItem.createAttributes(NanoSaberMaterial, 0, -2.4f))
+    Item.Properties().stacksTo(1).attributes(SwordItem.createAttributes(NanoSaberMaterial, 0f, -2.4f))
 ), IElectricTool {
 
     companion object {
@@ -1253,7 +1258,7 @@ class NanoSaber : SwordItem(
     override fun getEnergy(stack: ItemStack) = IElectricTool.getEnergy(stack)
     override fun setEnergy(stack: ItemStack, energy: Long) = IElectricTool.setEnergy(stack, energy, maxCapacity)
 
-    override fun isDamageable() = false
+    override fun isDamageable(stack: ItemStack) = false
 
     private fun weaponAttackModifier(stack: ItemStack): Double {
         val active = isActive(stack)
@@ -1288,7 +1293,7 @@ class NanoSaber : SwordItem(
     }
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getItemInHand(player.usedItemHand)
+        val stack = user.getItemInHand(hand)
         if (!world.isClient) {
             // 关闭前先把待机累计扣了
             if (isActive(stack)) {
@@ -1303,7 +1308,7 @@ class NanoSaber : SwordItem(
                 true
             )
         }
-        return InteractionResultHolder.success(stack, world.isClient)
+        return InteractionResultHolder.success(stack)
     }
 
     override fun inventoryTick(stack: ItemStack, world: Level, entity: Entity, slot: Int, selected: Boolean) {
@@ -1388,7 +1393,7 @@ class Obscurator : Item(Item.Properties().stacksTo(1))
 @ModItem(name = "wind_meter", tab = CreativeTab.IC2_TOOLS, group = "tools")
 class WindMeter : Item(Item.Properties().stacksTo(1)) {
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getItemInHand(player.usedItemHand)
+        val stack = user.getItemInHand(hand)
         if (world.isClient) {
             clientOutput?.invoke(world, user)
         }

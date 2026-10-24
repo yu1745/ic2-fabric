@@ -88,7 +88,6 @@ import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.network.chat.Component
@@ -254,7 +253,7 @@ abstract class BaseMinerBlockEntity(
     override fun getContainerSize() = INVENTORY_SIZE
     override fun isEmpty() = inventory.all { it.isEmpty }
     override fun getItem(slot: Int) = inventory.getOrElse(slot) { ItemStack.EMPTY }
-    override fun getMaxCountPerStack() = PIPE_SLOT_MAX_COUNT
+    override fun getMaxStackSize() = PIPE_SLOT_MAX_COUNT
     override fun removeItem(slot: Int, amount: Int) = ContainerHelper.removeItem(inventory, slot, amount)
     override fun removeItemNoUpdate(slot: Int) = ContainerHelper.takeItem(inventory, slot)
     override fun clearContent() = inventory.clear()
@@ -596,8 +595,8 @@ abstract class BaseMinerBlockEntity(
             is IridiumDrill -> ItemStack(Items.NETHERITE_PICKAXE)
             else -> ItemStack(Items.DIAMOND_PICKAXE)
         }
-        if (silk) tool.addEnchantment(Enchantments.SILK_TOUCH, 1)
-        else if (!advanced && drill is IridiumDrill) tool.addEnchantment(Enchantments.FORTUNE, 3)
+        if (silk) tool.enchant(BuiltInRegistries.ENCHANTMENT.getHolderOrThrow(Enchantments.SILK_TOUCH), 1)
+        else if (!advanced && drill is IridiumDrill) tool.enchant(BuiltInRegistries.ENCHANTMENT.getHolderOrThrow(Enchantments.FORTUNE), 3)
         return tool
     }
     private fun harvest(world: ServerLevel, target: BlockPos, tool: ItemStack) {
@@ -651,11 +650,11 @@ abstract class BaseMinerBlockEntity(
         nbt.putLong("EnergyStored", sync.amount); nbt.putInt("ScanLevel", scanLevel); nbt.putInt("ProgressMode", progressMode); nbt.putInt("AdvancedTicker", advancedTicker); nbt.putInt("NormalPipeRecoveryTicks", normalPipeRecoveryTicks); nbt.putBoolean("NormalReachedBottom", normalReachedBottom)
         nbt.putLong("RenderTargetTime", renderTargetTime); nbt.putBoolean("ResetWaitingForRedstone", resetWaitingForRedstone); nbt.putBoolean("RedstoneStateAtReset", redstoneStateAtReset); renderTarget?.let { nbt.putInt("RenderTargetX", it.x); nbt.putInt("RenderTargetY", it.y); nbt.putInt("RenderTargetZ", it.z) }
     }
-    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) { super.loadAdditional(nbt, lookup); ContainerHelper.loadAllItems(nbt, inventory); syncedData.readNbt(nbt); sync.amount = nbt.getLong("EnergyStored"); sync.syncCommittedAmount(); scanLevel = nbt.getInt("ScanLevel"); progressMode = nbt.getInt("ProgressMode"); advancedTicker = nbt.getInt("AdvancedTicker"); normalPipeRecoveryTicks = nbt.getInt("NormalPipeRecoveryTicks").coerceIn(0, 19); normalReachedBottom = nbt.getBoolean("NormalReachedBottom"); resetWaitingForRedstone = nbt.getBoolean("ResetWaitingForRedstone"); redstoneStateAtReset = nbt.getBoolean("RedstoneStateAtReset"); renderTargetTime = nbt.getLong("RenderTargetTime"); if (nbt.contains("RenderTargetX")) renderTarget = BlockPos(nbt.getInt("RenderTargetX"), nbt.getInt("RenderTargetY"), nbt.getInt("RenderTargetZ")) }
-    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) { super.saveAdditional(nbt, lookup); ContainerHelper.saveAllItems(nbt, inventory); syncedData.writeNbt(nbt); writeMinerNbt(nbt) }
-    override fun toInitialChunkDataNbt() = createNbt()
-    override fun toUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
-    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf { val buf = FriendlyByteBuf(Unpooled.buffer()); buf.writeBlockPos(pos); buf.writeVarInt(syncedData.size); buf.writeBoolean(advanced); return buf }
+    override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) { super.loadAdditional(nbt, lookup); ContainerHelper.loadAllItems(nbt, inventory, lookup); syncedData.readNbt(nbt); sync.amount = nbt.getLong("EnergyStored"); sync.syncCommittedAmount(); scanLevel = nbt.getInt("ScanLevel"); progressMode = nbt.getInt("ProgressMode"); advancedTicker = nbt.getInt("AdvancedTicker"); normalPipeRecoveryTicks = nbt.getInt("NormalPipeRecoveryTicks").coerceIn(0, 19); normalReachedBottom = nbt.getBoolean("NormalReachedBottom"); resetWaitingForRedstone = nbt.getBoolean("ResetWaitingForRedstone"); redstoneStateAtReset = nbt.getBoolean("RedstoneStateAtReset"); renderTargetTime = nbt.getLong("RenderTargetTime"); if (nbt.contains("RenderTargetX")) renderTarget = BlockPos(nbt.getInt("RenderTargetX"), nbt.getInt("RenderTargetY"), nbt.getInt("RenderTargetZ")) }
+    override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) { super.saveAdditional(nbt, lookup); ContainerHelper.saveAllItems(nbt, inventory, lookup); syncedData.writeNbt(nbt); writeMinerNbt(nbt) }
+    override fun getUpdateTag(lookup: HolderLookup.Provider): CompoundTag = saveWithoutMetadata(lookup)
+    override fun getUpdatePacket(): Packet<ClientGamePacketListener> = ClientboundBlockEntityDataPacket.create(this)
+    override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf { val buf = FriendlyByteBuf(Unpooled.buffer()); buf.writeBlockPos(pos); buf.writeVarInt(syncedData.count); buf.writeBoolean(advanced); return buf }
     override fun getDisplayName() = Component.translatable("block.ic2_120.$blockKey")
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?) = MinerScreenHandler(syncId, playerInventory, this, net.minecraft.world.inventory.ContainerLevelAccess.create(world!!, pos), syncedData, itemStorage, advanced)
 }

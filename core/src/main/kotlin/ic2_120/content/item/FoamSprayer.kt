@@ -70,10 +70,10 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
         if (world.isClient) return InteractionResult.SUCCESS
 
         val hit = BlockHitResult(
-            context.location,
-            context.direction,
-            context.pos,
-            context.hitsInsideBlock()
+            context.clickLocation,
+            context.clickedFace,
+            context.clickedPos,
+            context.isInside()
         )
         val sided = FluidStorage.SIDED.find(world, hit.blockPos, hit.direction)
         if (sided != null && FluidStorageUtil.interactWithFluidStorage(sided, player, hand)) {
@@ -127,7 +127,7 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
 
         fun isMultiMode(stack: ItemStack): Boolean {
             if (stack.isEmpty || stack.item !is FoamSprayerItem) return false
-            return stack.orCreateNbt = stack.orCreateNbt.apply { getBoolean(NBT_MULTI_MODE) }
+            return stack.orCreateNbt.getBoolean(NBT_MULTI_MODE)
         }
 
         /** @return 切换后的模式：true = 多格 */
@@ -140,7 +140,7 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
 
         private fun canPlaceFoamAt(world: Level, pos: BlockPos): Boolean {
             @Suppress("DEPRECATION")
-            if (!world.isChunkLoaded(pos)) return false
+            if (!world.isLoaded(pos)) return false
             if (!world.worldBorder.contains(pos)) return false
             val state = world.getBlockState(pos)
             return state.isAir
@@ -151,7 +151,7 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
          */
         private fun foamSprayAnchorPos(world: Level, hit: BlockHitResult): BlockPos =
             if (isAnyScaffold(world.getBlockState(hit.blockPos).block)) hit.blockPos
-            else hit.blockPos.offset(hit.direction)
+            else hit.blockPos.relative(hit.direction)
 
         private fun isScaffold(block: Block): Boolean =
             block is WoodenScaffoldBlock ||
@@ -213,7 +213,7 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
                     }
                     isReinforcedIronScaffold(stateAt.block) -> {
                         // 强化铁脚手架只额外掉落铁栅栏，随后变为强化泡沫。
-                        Block.spawnAtLocation(world, pos, ItemStack(IronFenceBlock::class.item()))
+                        Block.popResource(world, pos, ItemStack(IronFenceBlock::class.item()))
                         world.setBlock(pos, reinforcedFoamState, Block.UPDATE_ALL)
                     }
                     stateAt.block is IronScaffoldBlock ->
@@ -237,7 +237,7 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
                         setFluidAmount(stack, budget)
                     }
                 }
-                val soundPos = hit.blockPos.offset(hit.direction)
+                val soundPos = hit.blockPos.relative(hit.direction)
                 world.playSound(null, soundPos, SoundEvents.WOOL_PLACE, SoundSource.BLOCKS, 0.55f, 0.95f + world.random.nextFloat() * 0.1f)
                 world.gameEvent(player, GameEvent.BLOCK_PLACE, soundPos)
             }
@@ -267,7 +267,7 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
 
                 result.add(pos)
                 for (direction in net.minecraft.core.Direction.values()) {
-                    val next = pos.offset(direction)
+                    val next = pos.relative(direction)
                     if (!visited.contains(next) && isAnyScaffold(world.getBlockState(next).block)) {
                         queue.addLast(next)
                     }
@@ -281,7 +281,7 @@ class FoamSprayerItem : Item(Item.Properties().stacksTo(1)), ICreativeFullVarian
          */
         private fun buildMultiSprayPositions(world: Level, hit: BlockHitResult): List<BlockPos> {
             val side = hit.direction
-            val normal = side.location
+            val normal = side.normal
             val center = foamSprayAnchorPos(world, hit)
             val r = world.random.nextInt(3) + 1
             val rSq = r * r

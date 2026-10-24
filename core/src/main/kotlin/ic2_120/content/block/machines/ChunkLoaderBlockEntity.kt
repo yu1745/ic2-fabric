@@ -68,7 +68,7 @@ class ChunkLoaderBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 
@@ -180,7 +180,8 @@ class ChunkLoaderBlockEntity(
             val center = ChunkPos(pos)
             val needed = sync.getChunkPositions(center).toSet()
 
-            val cm = sw?.chunkSource?.chunkMap?.distanceManager
+            val sw = world as? ServerLevel ?: return
+            val cm = sw.chunkSource.chunkMap.distanceManager
             if (cm != null) {
                 for (cp in needed - activeChunkPositions) {
                     // FORCED_TICKET_LEVEL -> ENTITY_TICKING；更高等级只有 FULL，不会 tick 方块实体。

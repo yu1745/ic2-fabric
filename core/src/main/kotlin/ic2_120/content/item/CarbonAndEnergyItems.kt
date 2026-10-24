@@ -17,6 +17,7 @@ import ic2_120.registry.item
 import ic2_120.content.recipes.ModTags
 import ic2_120.registry.annotation.ModItem
 import ic2_120.registry.recipeId
+import net.minecraft.core.registries.Registries
 import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.data.recipes.ShapelessRecipeBuilder
@@ -26,7 +27,6 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.ItemTags
 import net.minecraft.tags.TagKey
 import net.minecraft.network.chat.Component
@@ -47,7 +47,7 @@ class CarbonFibre : Item(Item.Properties()) {
                 .pattern("CC")
                 .pattern("CC")
                 .define('C', CoalDust::class.instance())
-                .unlockedBy(has(CoalDust::class.instance()), has(CoalDust::class.instance()))
+                .unlockedBy(getHasName(CoalDust::class.instance()), has(CoalDust::class.instance()))
                 .save(exporter, CarbonFibre::class.id())
         }
     }
@@ -61,7 +61,7 @@ class CarbonMesh : Item(Item.Properties()) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonMesh::class.instance(), 1)
                 .pattern("CC")
                 .define('C', CarbonFibre::class.instance())
-                .unlockedBy(has(CarbonFibre::class.instance()), has(CarbonFibre::class.instance()))
+                .unlockedBy(getHasName(CarbonFibre::class.instance()), has(CarbonFibre::class.instance()))
                 .save(exporter, CarbonMesh::class.id())
         }
     }
@@ -75,7 +75,7 @@ class CarbonPlate : Item(Item.Properties()) {
     //         ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPlate::class.instance(), 1)
     //             .pattern("   ").pattern("   ").pattern(" MM")
     //             .define('M', CarbonMesh::class.instance())
-    //             .unlockedBy(has(CarbonMesh::class.instance()), has(CarbonMesh::class.instance()))
+    //             .unlockedBy(getHasName(CarbonMesh::class.instance()), has(CarbonMesh::class.instance()))
     //             .save(exporter, CarbonPlate::class.id())
     //     }
     // }
@@ -171,10 +171,10 @@ abstract class RotorItem(private val lifetimeHours: Int) : Item(
         private const val TICKS_PER_HOUR = 72_000.0
     }
 
-    override fun appendHoverText(stack: net.minecraft.world.item.ItemStack, world: Level?, tooltip: MutableList<Component>, context: TooltipContext) {
+    override fun appendHoverText(stack: net.minecraft.world.item.ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
         super.appendHoverText(stack, context, tooltip, type)
         val remainder = stack.orCreateNbt.getDouble(ROTOR_WEAR_REMAINDER_KEY)
-        val remainingHours = ((stack.maxDamage - stack.damage).toDouble() - remainder).coerceAtLeast(0.0) / TICKS_PER_HOUR
+        val remainingHours = ((stack.maxDamage - stack.damageValue).toDouble() - remainder).coerceAtLeast(0.0) / TICKS_PER_HOUR
         tooltip.add(
             Component.translatable(
                 "tooltip.ic2_120.rotor_lifetime",
@@ -299,7 +299,7 @@ class AdvancedCircuit : Item(Item.Properties()) {
                 .define('l', Items.GLOWSTONE_DUST)
                 .define('b', Items.LAPIS_LAZULI)
                 .define('x', Circuit::class.instance())
-                .unlockedBy(has(Circuit::class.instance()), has(Circuit::class.instance()))
+                .unlockedBy(getHasName(Circuit::class.instance()), has(Circuit::class.instance()))
                 .save(exporter, AdvancedCircuit::class.id())
         }
     }
@@ -315,7 +315,7 @@ class IridiumShard : Item(Item.Properties()){
         fun generateRecipes(exporter: RecipeOutput) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, IridiumShard::class.instance(), 9)
                 .requires(IridiumOreItem::class.instance())
-                .unlockedBy(has(IridiumOreItem::class.instance()), has(IridiumOreItem::class.instance()))
+                .unlockedBy(getHasName(IridiumOreItem::class.instance()), has(IridiumOreItem::class.instance()))
                 .save(exporter, IridiumShard::class.recipeId("from_ore_item"))
         }
     }
@@ -339,13 +339,13 @@ class IridiumPlate : Item(Item.Properties()) {
                 .define('I', IridiumOreItem::class.instance())
                 .define('A', Alloy::class.instance())
                 .define('D', Ingredient.of(ModTags.Compat.Items.GEMS_DIAMOND))
-                .unlockedBy(has(IridiumOreItem::class.instance()), has(IridiumOreItem::class.instance()))
+                .unlockedBy(getHasName(IridiumOreItem::class.instance()), has(IridiumOreItem::class.instance()))
                 .save(exporter, IridiumPlate::class.id())
 
             // 9个铱碎片合成1个铱矿石
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, IridiumOreItem::class.instance(), 1)
                 .requires(IridiumShard::class.instance(), 9)
-                .unlockedBy(has(IridiumShard::class.instance()), has(IridiumShard::class.instance()))
+                .unlockedBy(getHasName(IridiumShard::class.instance()), has(IridiumShard::class.instance()))
                 .save(exporter, IridiumOreItem::class.recipeId("from_shards"))
         }
     }
@@ -381,7 +381,7 @@ class ElectricMotor : Item(Item.Properties()) {
                 .define('T', TinCasing::class.instance())
                 .define('C', Coil::class.instance())
                 .define('F', Ingredient.of(ModTags.Compat.Items.INGOTS_IRON))
-                .unlockedBy(has(Coil::class.instance()), has(Coil::class.instance()))
+                .unlockedBy(getHasName(Coil::class.instance()), has(Coil::class.instance()))
                 .save(exporter, ElectricMotor::class.id())
         }
     }
@@ -401,7 +401,7 @@ class HeatConductor : Item(Item.Properties()) {
                     .pattern("RPR")
                     .define('R', rubber)
                     .define('P', plate)
-                    .unlockedBy(has(CopperPlate::class.instance()), has(CopperPlate::class.instance()))
+                    .unlockedBy(getHasName(CopperPlate::class.instance()), has(CopperPlate::class.instance()))
                     .save(exporter, HeatConductor::class.id())
             }
         }
@@ -420,7 +420,7 @@ class CopperBoiler : Item(Item.Properties()) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CopperBoiler::class.instance(), 1)
                 .pattern("CCC").pattern("C C").pattern("CCC")
                 .define('C', CopperCasing::class.instance())
-                .unlockedBy(has(CopperCasing::class.instance()), has(CopperCasing::class.instance()))
+                .unlockedBy(getHasName(CopperCasing::class.instance()), has(CopperCasing::class.instance()))
                 .save(exporter, CopperBoiler::class.id())
         }
     }
@@ -438,7 +438,7 @@ class CoalBall : Item(Item.Properties()) {
                 .define('D', CoalDust::class.instance())
                 .define('C', CoalDust::class.instance())
                 .define('F', Items.FLINT)
-                .unlockedBy(has(CoalDust::class.instance()), has(CoalDust::class.instance()))
+                .unlockedBy(getHasName(CoalDust::class.instance()), has(CoalDust::class.instance()))
                 .save(exporter, CoalBall::class.id())
         }
     }
@@ -455,7 +455,7 @@ class CoalChunk : Item(Item.Properties()) {
                 .pattern("CCC")
                 .define('C', CompressedCoalBall::class.instance())
                 .define('O', Items.OBSIDIAN)
-                .unlockedBy(has(CompressedCoalBall::class.instance()), has(Items.OBSIDIAN))
+                .unlockedBy(getHasName(CompressedCoalBall::class.instance()), has(Items.OBSIDIAN))
                 .save(exporter, CoalChunk::class.recipeId())
         }
     }
@@ -505,7 +505,7 @@ class PlantBall : Item(Item.Properties()) {
                 .save(exporter, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "plant_ball_from_fern"))
 
             // 草配方（使用 Tag，因为 1.20.1 中草可能有多个变体）
-            val grassIngredient = Ingredient.of(TagKey.create(BuiltInRegistries.ITEM.key, ResourceLocation.fromNamespaceAndPath("minecraft", "tall_grass")))
+            val grassIngredient = Ingredient.of(TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath("minecraft", "tall_grass")))
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, PlantBall::class.instance(), 1)
                 .pattern("GGG").pattern("G G").pattern("GGG")
                 .define('G', grassIngredient)
@@ -552,7 +552,7 @@ class ScrapBox : ScrapBoxItem() {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, ScrapBox::class.instance(), 1)
                 .pattern("SSS").pattern("SSS").pattern("SSS")
                 .define('S', Scrap::class.instance())
-                .unlockedBy(has(Scrap::class.instance()), has(Scrap::class.instance()))
+                .unlockedBy(getHasName(Scrap::class.instance()), has(Scrap::class.instance()))
                 .save(exporter, ScrapBox::class.id())
         }
     }
@@ -614,13 +614,13 @@ class Resin : Item(Item.Properties()) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 熔炉烧炼：粘性树脂 -> 橡胶
-            SimpleCookingRecipeBuilder.createSmelting(
+            SimpleCookingRecipeBuilder.smelting(
                 Ingredient.of(Resin::class.instance()),
                 RecipeCategory.MISC,
                 RubberItem::class.instance(),
                 0.1f,
                 200
-            ).unlockedBy(has(Resin::class.instance()), has(Resin::class.instance()))
+            ).unlockedBy(getHasName(Resin::class.instance()), has(Resin::class.instance()))
                 .save(exporter, Resin::class.recipeId("to_rubber_smelting"))
             // 粘性树脂 + 活塞 -> 粘性活塞
             ShapelessRecipeBuilder.shapeless(RecipeCategory.REDSTONE, Items.STICKY_PISTON, 1)
@@ -647,7 +647,7 @@ class IodineTablet : Item(Item.Properties()) {
                 .pattern("IT")
                 .define('I', Iodine::class.instance())
                 .define('T', Ingredient.of(ModTags.Compat.Items.PLATES_TIN))
-                .unlockedBy(has(Iodine::class.instance()), has(Iodine::class.instance()))
+                .unlockedBy(getHasName(Iodine::class.instance()), has(Iodine::class.instance()))
                 .save(exporter, IodineTablet::class.id())
         }
     }
@@ -669,7 +669,7 @@ class RawCrystalMemory : Item(Item.Properties()) {
                 .pattern("OSO").pattern("SOS").pattern("OSO")
                 .define('O', Ingredient.of(ModTags.Compat.Items.DUSTS_OBSIDIAN))
                 .define('S', Ingredient.of(ModTags.Compat.Items.DUSTS_SILICON_DIOXIDE))
-                .unlockedBy(has(SiliconDioxideDust::class.instance()), has(SiliconDioxideDust::class.instance()))
+                .unlockedBy(getHasName(SiliconDioxideDust::class.instance()), has(SiliconDioxideDust::class.instance()))
                 .save(exporter, RawCrystalMemory::class.id())
         }
     }
@@ -677,7 +677,7 @@ class RawCrystalMemory : Item(Item.Properties()) {
 
 @ModItem(name = "crystal_memory", tab = CreativeTab.IC2_MATERIALS, group = "pattern_storage")
 class CrystalMemory : Item(Item.Properties().stacksTo(1)) {
-    override fun appendHoverText(stack: net.minecraft.world.item.ItemStack, world: Level?, tooltip: MutableList<Component>, context: TooltipContext) {
+    override fun appendHoverText(stack: net.minecraft.world.item.ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
         super.appendHoverText(stack, context, tooltip, type)
         stack.appendUuTemplateTooltip(tooltip)
     }
@@ -686,13 +686,13 @@ class CrystalMemory : Item(Item.Properties().stacksTo(1)) {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             // 熔炉烧制：粗制模式存储水晶 -> 模式存储水晶 (200 tick = 10秒, 0.1f 经验)
-            SimpleCookingRecipeBuilder.createSmelting(
+            SimpleCookingRecipeBuilder.smelting(
                 Ingredient.of(RawCrystalMemory::class.instance()),
                 RecipeCategory.MISC,
                 CrystalMemory::class.instance(),
                 0.1f,
                 200
-            ).unlockedBy(has(RawCrystalMemory::class.instance()), has(RawCrystalMemory::class.instance()))
+            ).unlockedBy(getHasName(RawCrystalMemory::class.instance()), has(RawCrystalMemory::class.instance()))
                 .save(exporter, CrystalMemory::class.recipeId("from_smelting"))
         }
     }

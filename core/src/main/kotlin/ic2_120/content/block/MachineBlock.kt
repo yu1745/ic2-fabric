@@ -18,7 +18,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.item.ItemStack
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
@@ -55,7 +54,7 @@ abstract class MachineBlock(settings: BlockBehaviour.Properties = defaultMachine
         BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine"))
 
     init {
-        registerDefaultState(stateDefinition.any()().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH))
+        registerDefaultState(stateDefinition.any().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {
@@ -117,7 +116,7 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Properties = def
         val DIRECTIONAL_CODEC: MapCodec<DirectionalMachineBlock> = Block.simpleCodec { error("DirectionalMachineBlock cannot be deserialized from JSON") as DirectionalMachineBlock }
     }
 
-    override fun getCodec(): MapCodec<out BaseEntityBlock> = DIRECTIONAL_CODEC
+    override fun codec(): MapCodec<out BaseEntityBlock> = DIRECTIONAL_CODEC
 
     /**
      * 非扳手拆卸时掉落的物品（默认基础机器外壳）。
@@ -127,7 +126,7 @@ abstract class DirectionalMachineBlock(settings: BlockBehaviour.Properties = def
         BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "machine"))
 
     init {
-        registerDefaultState(stateDefinition.any()().setValue(BlockStateProperties.FACING, Direction.NORTH))
+        registerDefaultState(stateDefinition.any().setValue(BlockStateProperties.FACING, Direction.NORTH))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<net.minecraft.world.level.block.Block, BlockState>) {

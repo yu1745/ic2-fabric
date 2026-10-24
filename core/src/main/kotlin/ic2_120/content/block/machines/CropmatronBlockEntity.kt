@@ -67,7 +67,6 @@ import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
@@ -362,7 +361,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 
@@ -380,7 +379,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CropmatronSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -394,7 +393,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CropmatronSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("EnergyDebt", energyDebtF)
@@ -453,7 +452,7 @@ SLOT_FERTILIZER_INDICES.contains(slot) -> stack.item is Fertilizer
                 if (chargeEnergy(ENERGY_PER_SCAN * energyMultiplier) <= 0L) return report
 
                 // 监管机作用在"作物层"（与机器同 Y）；耕地在作物层下方一格。
-                val cropPos = basePos.add(dx, 0, dz)
+                val cropPos = basePos.offset(dx, 0, dz)
                 val be = world.getBlockEntity(cropPos)
                 if (be is CropCareTarget) {
                     report.touched++

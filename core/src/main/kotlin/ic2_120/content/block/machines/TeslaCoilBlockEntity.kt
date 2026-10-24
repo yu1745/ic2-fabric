@@ -2,7 +2,6 @@ package ic2_120.content.block.machines
 
 import net.minecraft.core.registries.Registries
 
-import net.minecraft.core.registries.Registries
 
 import ic2_120.compat.time
 
@@ -97,7 +96,7 @@ class TeslaCoilBlockEntity(
             shotCooldown = 0
             lastHitTargetUuid = null
             if (state.getValue(TeslaCoilBlock.ACTIVE)) {
-                world.setBlock(pos, state.setValue(TeslaCoilBlock.ACTIVE, false))
+                world.setBlock(pos, state.setValue(TeslaCoilBlock.ACTIVE, false), 3)
             }
             sync.syncCurrentTickFlow()
             return
@@ -106,7 +105,7 @@ class TeslaCoilBlockEntity(
         if (shotCooldown > 0) {
             shotCooldown--
             if (state.getValue(TeslaCoilBlock.ACTIVE)) {
-                world.setBlock(pos, state.setValue(TeslaCoilBlock.ACTIVE, false))
+                world.setBlock(pos, state.setValue(TeslaCoilBlock.ACTIVE, false), 3)
             }
             setChanged()
             sync.syncCurrentTickFlow()
@@ -115,7 +114,7 @@ class TeslaCoilBlockEntity(
 
         if (sync.amount < TeslaCoilSync.MIN_ENERGY_TO_OPERATE) {
             if (state.getValue(TeslaCoilBlock.ACTIVE)) {
-                world.setBlock(pos, state.setValue(TeslaCoilBlock.ACTIVE, false))
+                world.setBlock(pos, state.setValue(TeslaCoilBlock.ACTIVE, false), 3)
             }
             sync.syncCurrentTickFlow()
             return
@@ -153,16 +152,16 @@ class TeslaCoilBlockEntity(
 
             val lightning = EntityType.LIGHTNING_BOLT.create(serverWorld)
             if (lightning != null) {
-                lightning.refreshPositionAndAngles(target.x, target.y, target.z, 0f, 0f)
+                lightning.moveTo(target.x, target.y, target.z, 0f, 0f)
                 serverWorld.addFreshEntity(lightning)
             }
 
             shotCooldown = TeslaCoilSync.SHOT_INTERVAL
-            world.setBlock(pos, state.setValue(TeslaCoilBlock.ACTIVE, true))
+            world.setBlock(pos, state.setValue(TeslaCoilBlock.ACTIVE, true), 3)
         } else {
             lastHitTargetUuid = null
             if (state.getValue(TeslaCoilBlock.ACTIVE)) {
-                world.setBlock(pos, state.setValue(TeslaCoilBlock.ACTIVE, false))
+                world.setBlock(pos, state.setValue(TeslaCoilBlock.ACTIVE, false), 3)
             }
         }
         setChanged()
@@ -171,8 +170,8 @@ class TeslaCoilBlockEntity(
 
     private fun createTeslaDamageSource(world: ServerLevel): DamageSource {
         val registry = world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)
-        val key = ResourceKey.create(RRegistries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("ic2_120", "tesla_coil"))
-        val entry = registry.getEntry(key).orElseThrow { IllegalStateException("Tesla coil damage type not registered") }
+        val key = ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("ic2_120", "tesla_coil"))
+        val entry = registry.getHolder(key).orElseThrow { IllegalStateException("Tesla coil damage type not registered") }
         return DamageSource(entry)
     }
 
@@ -182,7 +181,7 @@ class TeslaCoilBlockEntity(
             if (slot.type != EquipmentSlot.Type.ARMOR) continue
             val stack = entity.getItemBySlot(slot)
             if (!stack.isEmpty && stack.item is ArmorItem) {
-                stack.hurt(amount, entity) { it.sendEquipmentBreakStatus(slot) }
+                stack.hurtAndBreak(amount, entity, slot)
             }
         }
     }

@@ -32,33 +32,33 @@ object RecipeCodecBridge {
         override fun <O : Any?> decode(ops: DynamicOps<O>, input: MapLike<O>): DataResult<T> =
             runCatching {
                 val json = JsonObject()
-                input.entries().forEach { (k, v) ->
-                    val key: JsonElement = ops.convertTo(JsonOps.INSTANCE, k).getOrThrow()
-                    val value: JsonElement = ops.convertTo(JsonOps.INSTANCE, v).getOrThrow()
+                input.entries().forEach { pair ->
+                    val key: JsonElement = ops.convertTo(JsonOps.INSTANCE, pair.first).result().orElseThrow()
+                    val value: JsonElement = ops.convertTo(JsonOps.INSTANCE, pair.second).result().orElseThrow()
                     json.add(key.asString, value)
                 }
                 decode(DUMMY_ID, json)
             }.fold(
                 { DataResult.success(it) },
-                { DataResult.error(it.message ?: "decode failed") }
+                { DataResult.error { it.message ?: "decode failed" } }
             )
 
         override fun <O : Any?> encode(input: T, ops: DynamicOps<O>, prefix: RecordBuilder<O>): RecordBuilder<O> =
-            runCatching {
+            try {
                 val json = JsonObject()
                 encode(json, input)
                 if (!json.has("type")) json.addProperty("type", jsonType)
                 val el: JsonElement = JsonParser.parseString(json.toString())
-                val converted: O = JsonOps.INSTANCE.convertTo(ops, el).getOrThrow()
+                val converted: O = JsonOps.INSTANCE.convertTo(ops, el).result().orElseThrow()
                 ops.getMapValues(converted).ifSuccess { pairs ->
-                    pairs.forEach { (k, v) -> prefix.add(k, v) }
+                    pairs.forEach { pair -> prefix.add(pair.first, pair.second) }
                 }
-            }.fold(
-                { prefix },
-                { prefix.withErrorsFrom(DataResult.error<Any>(it.message ?: "encode failed")) }
-            )
+            } catch (t: Throwable) {
+                prefix
+            }
 
-        override fun <O : Any?> keys(ops: DynamicOps<O>): Stream<O> = Stream.empty()
+        override fun <O : Any?> keys(ops: DynamicOps<O>): DataResult<Stream<com.mojang.datafixers.util.Pair<O, O>>> =
+            DataResult.success(Stream.empty())
     }
 }
 
@@ -66,4 +66,4 @@ object RecipeCodecBridge {
 fun INGREDIENT_CODEC(json: com.google.gson.JsonObject): net.minecraft.world.item.crafting.Ingredient =
     net.minecraft.world.item.crafting.Ingredient.CODEC
         .parse(JsonOps.INSTANCE, json)
-        .getOrThrow()
+        .result().orElseThrow()

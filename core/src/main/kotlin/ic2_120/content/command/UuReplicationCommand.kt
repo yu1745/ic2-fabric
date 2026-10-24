@@ -69,12 +69,12 @@ object UuReplicationCommand {
                     .then(
                         literal("set")
                             .then(
-                                argument("item", net.minecraft.commands.arguments.item.ItemStackArgumentType.itemStack(registryAccess))
+                                argument("item", net.minecraft.commands.arguments.item.ItemArgument.item(registryAccess))
                                     .then(
                                         argument("uu_cost", IntegerArgumentType.integer(1))
                                             .executes { context ->
                                                 val source = context.source
-                                                val itemArg = net.minecraft.commands.arguments.item.ItemStackArgumentType.getItemStackArgument(context, "item")
+                                                val itemArg = net.minecraft.commands.arguments.item.ItemArgument.getItem(context, "item")
                                                 val itemId = (BuiltInRegistries.ITEM.getKey(itemArg.item)?.toString() ?: "?")
                                                 val uuCost = IntegerArgumentType.getInteger(context, "uu_cost")
 

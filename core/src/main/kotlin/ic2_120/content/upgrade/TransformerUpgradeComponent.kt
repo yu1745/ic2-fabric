@@ -59,7 +59,7 @@ object TransformerUpgradeComponent {
     fun countUpgradesInNbt(nbt: CompoundTag): Int {
         // TODO(1.21.1): ItemStack.fromNbt 已移除（parse 需要 HolderLookup.Provider），
         // 这里直接按原版 ContainerHelper 的存档格式读 id/Count，避免引入 lookup 参数改动调用方。
-        val items = nbt.getList("Items", Tag.TAG_COMPOUND)
+        val items = nbt.getList("Items", Tag.TAG_COMPOUND.toInt())
         var count = 0
         for (i in 0 until items.size) {
             val entry = items.getCompound(i)

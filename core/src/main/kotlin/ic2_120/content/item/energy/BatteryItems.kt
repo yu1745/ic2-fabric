@@ -118,7 +118,7 @@ class EnergyCrystalItem : BatteryItemBase(
     name = "energy_crystal", tier = 3, maxCapacity = 1_000_000, canChargeWireless = false
 ) {
     override fun use(world: net.minecraft.world.level.Level, user: net.minecraft.world.entity.player.Player, hand: net.minecraft.world.InteractionHand): net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> {
-        val crystal = user.getItemInHand(player.usedItemHand)
+        val crystal = user.getItemInHand(hand)
         if (world.isClient) return net.minecraft.world.InteractionResultHolder.success(crystal)
 
         // 获取水晶当前电量
@@ -260,7 +260,7 @@ class LapotronCrystalItem : BatteryItemBase(
     }
 
     override fun use(world: net.minecraft.world.level.Level, user: net.minecraft.world.entity.player.Player, hand: net.minecraft.world.InteractionHand): net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> {
-        val crystal = user.getItemInHand(player.usedItemHand)
+        val crystal = user.getItemInHand(hand)
         if (world.isClient) return net.minecraft.world.InteractionResultHolder.success(crystal)
 
         // 获取水晶当前电量
@@ -521,7 +521,8 @@ class SingleUseBatteryItem : BatteryItemBase(
     * 无 NBT 时返回满电量，有 NBT 时返回实际剩余电量。
     */
    override fun getCurrentCharge(stack: net.minecraft.world.item.ItemStack): Long {
-       if (!!stack.orCreateNbt.isEmpty || !stack.nbt!!.contains(BatteryItemBase.ENERGY_KEY)) return maxCapacity
+       val nbt = stack.tag
+       if (nbt == null || !nbt.contains(BatteryItemBase.ENERGY_KEY)) return maxCapacity
        return super.getCurrentCharge(stack)
    }
 

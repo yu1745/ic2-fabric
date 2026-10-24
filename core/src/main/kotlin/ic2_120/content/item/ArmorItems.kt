@@ -48,7 +48,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.crafting.Ingredient
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.effect.MobEffectInstance
@@ -119,15 +118,25 @@ private fun createArmorMaterial(
         ArmorItem.Type.BOOTS to 13 * durabilityMultiplier
     )
     val material = ArmorMaterial(
-        defense = protection,
-        enchantmentValue = enchantability,
-        equipSound = equipSound,
-        repairIngredient = java.util.function.Supplier { repairIngredient },
-        layers = listOf(ArmorMaterial.Layer(ResourceLocation.fromNamespaceAndPath("ic2", name))),
-        toughness = toughness,
-        knockbackResistance = knockbackResistance
+        protection,
+        enchantability,
+        equipSound,
+        java.util.function.Supplier { repairIngredient },
+        listOf(ArmorMaterial.Layer(ResourceLocation.fromNamespaceAndPath("ic2", name))),
+        toughness,
+        knockbackResistance
     )
     return Ic2ArmorMaterial(material, baseDurability, durabilityOverrides)
+}
+
+/** 1.21.1 自定义护甲材料包装：携带部位耐久度映射（原版 ArmorMaterial 为 record，不再含 durability） */
+private class Ic2ArmorMaterial(
+    val material: ArmorMaterial,
+    private val baseDurability: Map<ArmorItem.Type, Int>,
+    private val durabilityOverrides: Map<ArmorItem.Type, Int> = emptyMap()
+) {
+    fun durability(type: ArmorItem.Type): Int =
+        durabilityOverrides[type] ?: baseDurability[type] ?: 0
 }
 
 // ========== 修复原料 ==========
@@ -653,7 +662,7 @@ class HazmatHelmet : ArmorItem(Holder.direct(HAZMAT_ARMOR.material), ArmorItem.T
 
                 // 尝试放入背包，如果满了就掉在地上
                 if (!player.inventory.add(emptyCell) && !emptyCell.isEmpty) {
-                    player.spawnAtLocation(emptyCell, false)
+                    player.spawnAtLocation(emptyCell)
                 }
 
                 // 回满气泡值
@@ -738,20 +747,20 @@ class SolarHelmet : ArmorItem(Holder.direct(SOLAR_ARMOR.material), ArmorItem.Typ
 
         val player = entity as? Player ?: return
         if (player.getItemBySlot(EquipmentSlot.HEAD) !== stack) {
-            player.removeEffect(ModStatusEffects.SOLAR_GENERATING)
+            player.removeEffect(Holder.direct(ModStatusEffects.SOLAR_GENERATING))
             return
         }
 
         val generating = canGenerate(world, player)
         if (!generating) {
-            player.removeEffect(ModStatusEffects.SOLAR_GENERATING)
+            player.removeEffect(Holder.direct(ModStatusEffects.SOLAR_GENERATING))
             return
         }
 
         chargePlayerInventory(player, EU_PER_TICK)
         player.addEffect(
             MobEffectInstance(
-                ModStatusEffects.SOLAR_GENERATING,
+                Holder.direct(ModStatusEffects.SOLAR_GENERATING),
                 40,
                 0,
                 true,
@@ -765,11 +774,11 @@ class SolarHelmet : ArmorItem(Holder.direct(SOLAR_ARMOR.material), ArmorItem.Typ
         if (!world.isDay) return false
         val startY = player.blockY + 1
         val topY = world.maxBuildHeight
-        val mutablePos = BlockPos.Mutable(player.blockX, startY, player.blockZ)
-        for (y in startY..maxBuildHeight) {
+        val mutablePos = BlockPos.MutableBlockPos(player.blockX, startY, player.blockZ)
+        for (y in startY..topY) {
             mutablePos.set(player.blockX, y, player.blockZ)
             val state = world.getBlockState(mutablePos)
-            if (!state.isAir && !state.isTransparent(world, mutablePos)) {
+            if (!state.isAir && !state.propagatesSkylightDown(world, mutablePos)) {
                 return false
             }
         }
@@ -813,17 +822,17 @@ class AlloyChestplate : ArmorItem(Holder.direct(ALLOY_ARMOR.material), ArmorItem
  */
 @ModItem(name = "cf_pack", tab = CreativeTab.IC2_MATERIALS, group = "armor")
 class CfPack : ArmorItem(
-    CF_PACK_ARMOR,
+    Holder.direct(CF_PACK_ARMOR.material),
     ArmorItem.Type.CHESTPLATE,
     Item.Properties().stacksTo(1).durability(-1)
 ), ICreativeFullVariant {
-    override fun isDamageable(): Boolean = false
+    override fun isDamageable(stack: ItemStack): Boolean = false
 
-    override fun useOn(context: UseOnContext): InteractionResult.minecraft.world.InteractionResult {
+    override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.level
         val player = context.player ?: return net.minecraft.world.InteractionResult.PASS
         if (world.isClientSide) return net.minecraft.world.InteractionResult.SUCCESS
-        val storage = net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage.SIDED.find(world, context.pos, context.direction)
+        val storage = net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage.SIDED.find(world, context.clickedPos, context.clickedFace)
         return if (storage != null && net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorageUtil.interactWithFluidStorage(storage, player, context.hand)) {
             net.minecraft.world.InteractionResult.SUCCESS
         } else net.minecraft.world.InteractionResult.PASS
@@ -1057,7 +1066,7 @@ class ElectricJetpack : ElectricArmorItem(
  */
 @ModItem(name = "night_vision_goggles", tab = CreativeTab.IC2_MATERIALS, group = "armor")
 class NightVisionGoggles : ArmorItem(
-    NIGHT_VISION_ARMOR,
+    Holder.direct(NIGHT_VISION_ARMOR.material),
     ArmorItem.Type.HELMET,
     Item.Properties().stacksTo(1).durability(-1)
 ), IBatteryItem {
@@ -1117,19 +1126,19 @@ class NightVisionGoggles : ArmorItem(
         }
     }
 
-    override fun getCurrentCharge(stack: ItemStack): Long = stack.orCreateNbt = stack.orCreateNbt.apply { getLong(ENERGY_KEY) }
+    override fun getCurrentCharge(stack: ItemStack): Long = stack.orCreateNbt.getLong(ENERGY_KEY)
 
     override fun setCurrentCharge(stack: ItemStack, charge: Long) {
         stack.orCreateNbt = stack.orCreateNbt.apply { putLong(ENERGY_KEY, charge.coerceIn(0L, maxCapacity)) }
     }
 
-    private fun isEnabled(stack: ItemStack): Boolean = stack.orCreateNbt = stack.orCreateNbt.apply { getBoolean(ENABLED_KEY) }
+    private fun isEnabled(stack: ItemStack): Boolean = stack.orCreateNbt.getBoolean(ENABLED_KEY)
 
     /**
      * 夜视镜使用电量系统，不走原版耐久系统。
      * 若不禁用，受伤时会累积 Damage NBT 导致耐久条混乱。
      */
-    override fun isDamageable(): Boolean = false
+    override fun isDamageable(stack: ItemStack): Boolean = false
 
     override fun inventoryTick(stack: ItemStack, world: Level, entity: net.minecraft.world.entity.Entity, slot: Int, selected: Boolean) {
         super.inventoryTick(stack, world, entity, slot, selected)
@@ -1162,7 +1171,7 @@ class NightVisionGoggles : ArmorItem(
         val brightness = world.getMaxLocalRawBrightness(player.blockPosition())
         if (brightness >= 8) {
             player.removeEffect(MobEffects.NIGHT_VISION)
-            val blind = player.getStatusEffect(MobEffects.BLINDNESS)
+            val blind = player.getEffect(MobEffects.BLINDNESS)
             if (blind == null || blind.duration <= 0) {
                 player.addEffect(
                     MobEffectInstance(MobEffects.BLINDNESS, BLINDNESS_DURATION_TICKS, 0, true, false, true)
@@ -1222,7 +1231,7 @@ abstract class BatteryPackArmorItem(
     override val tier: Int,
     override val maxCapacity: Long,
 ) : ArmorItem(
-    armorMaterial,
+    Holder.direct(armorMaterial),
     ArmorItem.Type.CHESTPLATE,
     Item.Properties().stacksTo(1).durability(-1)
 ), IBatteryItem {
@@ -1244,7 +1253,7 @@ abstract class BatteryPackArmorItem(
      * 若不禁用，原版 [net.minecraft.world.entity.LivingEntity.damageArmor]
      * 会在每次受击时消耗原版耐久度，导致背包耐久条下降。
      */
-    override fun isDamageable(): Boolean = false
+    override fun isDamageable(stack: ItemStack): Boolean = false
 
     override fun getCurrentCharge(stack: ItemStack): Long =
         BatteryItemBase.getEnergy(stack).coerceIn(0L, maxCapacity)
@@ -1348,7 +1357,7 @@ abstract class BatteryPackArmorItem(
  * 作为胸甲装备。
  */
 @ModItem(name = "batpack", tab = CreativeTab.IC2_MATERIALS, group = "battery_pack")
-class BatPack : BatteryPackArmorItem(BACKPACK_ARMOR, tier = 1, maxCapacity = 60_000L) {
+class BatPack : BatteryPackArmorItem(BACKPACK_ARMOR.material, tier = 1, maxCapacity = 60_000L) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -1377,7 +1386,7 @@ class BatPack : BatteryPackArmorItem(BACKPACK_ARMOR, tier = 1, maxCapacity = 60_
  * 作为胸甲装备。
  */
 @ModItem(name = "advanced_batpack", tab = CreativeTab.IC2_MATERIALS, group = "battery_pack")
-class AdvancedBatPack : BatteryPackArmorItem(ADVANCED_BATPACK_ARMOR, tier = 2, maxCapacity = 600_000L) {
+class AdvancedBatPack : BatteryPackArmorItem(ADVANCED_BATPACK_ARMOR.material, tier = 2, maxCapacity = 600_000L) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -1407,7 +1416,7 @@ class AdvancedBatPack : BatteryPackArmorItem(ADVANCED_BATPACK_ARMOR, tier = 2, m
  * 作为胸甲装备。
  */
 @ModItem(name = "energy_pack", tab = CreativeTab.IC2_MATERIALS, group = "battery_pack")
-class EnergyPack : BatteryPackArmorItem(ENERGY_PACK_ARMOR, tier = 3, maxCapacity = 2_000_000L) {
+class EnergyPack : BatteryPackArmorItem(ENERGY_PACK_ARMOR.material, tier = 3, maxCapacity = 2_000_000L) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -1437,7 +1446,7 @@ class EnergyPack : BatteryPackArmorItem(ENERGY_PACK_ARMOR, tier = 3, maxCapacity
  * 作为胸甲装备。
  */
 @ModItem(name = "lappack", tab = CreativeTab.IC2_MATERIALS, group = "battery_pack")
-class LapPack : BatteryPackArmorItem(LAPPACK_ARMOR, tier = 4, maxCapacity = 20_000_000L) {
+class LapPack : BatteryPackArmorItem(LAPPACK_ARMOR.material, tier = 4, maxCapacity = 20_000_000L) {
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {

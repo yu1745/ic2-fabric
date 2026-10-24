@@ -43,9 +43,9 @@ object SolidCannerRecipeSerializer : RecipeSerializer<SolidCannerRecipe> {
     }
 
     private fun write(buf: RegistryFriendlyByteBuf, recipe: SolidCannerRecipe) {
-        recipe.slot0Ingredient.write(buf)
+        Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.slot0Ingredient)
         buf.writeInt(recipe.slot0Count)
-        recipe.slot1Ingredient.write(buf)
+        Ingredient.CONTENTS_STREAM_CODEC.encode(buf, recipe.slot1Ingredient)
         buf.writeInt(recipe.slot1Count)
         ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, recipe.output.copy())
     }

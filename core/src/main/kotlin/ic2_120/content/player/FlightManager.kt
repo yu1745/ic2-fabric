@@ -42,7 +42,7 @@ object FlightManager {
 
     fun tick(server: MinecraftServer) {
         for (world in server.allLevels) {
-            for (player in world.players) {
+            for (player in world.players()) {
                 tickPlayer(player)
             }
         }

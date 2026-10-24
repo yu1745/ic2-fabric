@@ -2,8 +2,6 @@ package ic2_120.content.recipes
 
 import net.minecraft.core.HolderLookup
 
-import net.minecraft.core.HolderLookup
-
 import net.minecraft.server.level.ServerPlayer
 
 
@@ -35,7 +33,7 @@ import kotlin.reflect.KClass
  */
 class ModBlockTagProvider(
     output: FabricDataOutput,
-    registriesFuture: CompletableFuture<HolderLookup.HolderLookup.Provider>,
+    registriesFuture: CompletableFuture<HolderLookup.Provider>,
 ) : FabricTagProvider.BlockTagProvider(output, registriesFuture) {
     private val compatPathsBuilt = mutableSetOf<String>()
 
@@ -81,25 +79,24 @@ class ModBlockTagProvider(
         "iridium_tank",
     )
 
-    override fun configure(registries: HolderLookup.HolderLookup.Provider) {
-        val pickaxeBuilder = getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE).setReplace(false)
+    override fun configure(registries: HolderLookup.Provider) {
+        val pickaxeBuilder = getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_PICKAXE).setReplace(false)
         val ironToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL).setReplace(false)
         val stoneToolBuilder = getOrCreateTagBuilder(BlockTags.NEEDS_STONE_TOOL).setReplace(false)
-        val axeBuilder = getOrCreateTagBuilder(BlockTags.AXE_MINEABLE).setReplace(false)
-        val hoeBuilder = getOrCreateTagBuilder(BlockTags.HOE_MINEABLE).setReplace(false)
+        val axeBuilder = getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_AXE).setReplace(false)
+        val hoeBuilder = getOrCreateTagBuilder(BlockTags.MINEABLE_WITH_HOE).setReplace(false)
         val logsBuilder = getOrCreateTagBuilder(BlockTags.LOGS).setReplace(false)
         val logsThatBurnBuilder = getOrCreateTagBuilder(BlockTags.LOGS_THAT_BURN).setReplace(false)
         val saplingBuilder = getOrCreateTagBuilder(BlockTags.SAPLINGS).setReplace(false)
         val climbableBuilder = getOrCreateTagBuilder(BlockTags.CLIMBABLE).setReplace(false)
 
         // 将橡胶原木添加到原版 logs 标签，使橡胶树叶能正确识别原木
-        val logsBuilder = getOrCreateTagBuilder(BlockTags.LOGS)
-        logsBuilder.add(BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_log"))!!)
-        logsBuilder.add(BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "stripped_rubber_log"))!!)
-        logsBuilder.add(BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_wood"))!!)
+        logsBuilder.add(BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_log")))
+        logsBuilder.add(BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "stripped_rubber_log")))
+        logsBuilder.add(BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_wood")))
 
         for (block in BuiltInRegistries.BLOCK) {
-            val id = BuiltInRegistries.BLOCK.getId(block)
+            val id = BuiltInRegistries.BLOCK.getKey(block)
             if (id.namespace != Ic2_120.MOD_ID) continue
 
             if (block is Ic2ScaffoldBlock) climbableBuilder.add(block)

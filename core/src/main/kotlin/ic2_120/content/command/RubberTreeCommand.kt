@@ -191,7 +191,7 @@ object RubberTreeCommand {
             if (depth >= LEAF_SEARCH_DISTANCE) continue
 
             for (direction in Direction.values()) {
-                val neighborPos = current.offset(direction).immutable()
+                val neighborPos = current.relative(direction).immutable()
                 if (!visited.add(neighborPos)) continue
 
                 val neighborBlock = world.getBlockState(neighborPos).block
@@ -228,7 +228,7 @@ object RubberTreeCommand {
         val directions = listOf(Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST)
         for (dir in directions) {
             for (offset in 1..3) {
-                val checkPos = logPos.offset(dir, offset)
+                val checkPos = logPos.relative(dir, offset)
                 val groundPos = findGroundAt(world, checkPos)
                 if (groundPos != null) {
                     return groundPos

@@ -15,7 +15,6 @@ import ic2_120.integration.ftbchunks.ClaimProtection
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.item.ItemStack
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.sounds.SoundSource
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.world.InteractionResult
@@ -52,7 +51,7 @@ object RubberTreetapHandler {
 
     fun register() {
         UseBlockCallback.EVENT.register { player, world, hand, hitResult ->
-            val stack = player.getItemInHand(player.usedItemHand)
+            val stack = player.getItemInHand(hand)
             if (!isExtractor(stack)) return@register InteractionResult.PASS
 
             val pos = hitResult.blockPos
@@ -83,7 +82,7 @@ object RubberTreetapHandler {
             if (faceState == RubberFaceState.DRY) {
                 var changed = false
                 if (world.random.nextInt(5) == 0) {
-                    world.setBlock(pos, state.setValue(RubberLogBlock.propFor(face), RubberFaceState.NONE))
+                    world.setBlock(pos, state.setValue(RubberLogBlock.propFor(face), RubberFaceState.NONE), 3)
                     changed = true
                 }
                 resinCount = if (world.random.nextInt(5) == 0) 1 else null
@@ -97,22 +96,22 @@ object RubberTreetapHandler {
             if (resinCount != null) {
                 val resin = BuiltInRegistries.ITEM.get(RESIN_ID)
                 val resinStack = ItemStack(resin, resinCount)
-                val spawnX = pos.x + 0.5 + face.offsetX * 0.6
-                val spawnY = pos.y + 0.5 + face.offsetY * 0.35
-                val spawnZ = pos.z + 0.5 + face.offsetZ * 0.6
+                val spawnX = pos.x + 0.5 + face.stepX * 0.6
+                val spawnY = pos.y + 0.5 + face.stepY * 0.35
+                val spawnZ = pos.z + 0.5 + face.stepZ * 0.6
                 // 粘性树脂从被采集的那一面掉出，并带一点向外的速度
                 val itemEntity = ItemEntity(world, spawnX, spawnY, spawnZ, resinStack)
-                itemEntity.velocity = itemEntity.velocity.add(
-                    face.offsetX * 0.08,
-                    face.offsetY * 0.04,
-                    face.offsetZ * 0.08
+                itemEntity.deltaMovement = itemEntity.deltaMovement.add(
+                    face.stepX * 0.08,
+                    face.stepY * 0.04,
+                    face.stepZ * 0.08
                 )
                 itemEntity.setDefaultPickUpDelay()
                 world.addFreshEntity(itemEntity)
             }
 
             if (faceState == RubberFaceState.WET) {
-                world.setBlock(pos, block.setFaceDry(state, face))
+                world.setBlock(pos, block.setFaceDry(state, face), 3)
             }
 
             // 记录提取时间，供 Jade 显示已过时间
@@ -124,7 +123,11 @@ object RubberTreetapHandler {
                     tool.setEnergy(stack, tool.getEnergy(stack) - EU_PER_USE)
                 }
                 isTreetap(stack) -> {
-                    stack.hurt(1, player) { it }
+                    stack.hurtAndBreak(
+                        1,
+                        player,
+                        if (hand == InteractionHand.MAIN_HAND) net.minecraft.world.entity.EquipmentSlot.MAINHAND else net.minecraft.world.entity.EquipmentSlot.OFFHAND
+                    )
                 }
             }
 

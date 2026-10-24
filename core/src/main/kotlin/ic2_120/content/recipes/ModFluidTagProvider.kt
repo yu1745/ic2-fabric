@@ -21,7 +21,7 @@ class ModFluidTagProvider(
     registriesFuture: CompletableFuture<HolderLookup.Provider>,
 ) : FabricTagProvider.FluidTagProvider(output, registriesFuture) {
 
-    override fun configure(registries: HolderLookup.Provider) {
+    override fun addTags(registries: HolderLookup.Provider) {
         registerCommonFluidTags()
         registerBiofuelEquivalent("semifluid_generator/biofuel_equivalent")
         registerCreosoteEquivalent("semifluid_generator/creosote_equivalent")

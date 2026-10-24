@@ -29,7 +29,7 @@ object SemifluidFuelDump {
 
     private fun dump() {
         // 收集所有非空、非纯客户端占位的流体
-        val all = BuiltInRegistries.FLUID.keySet
+        val all = BuiltInRegistries.FLUID.keySet()
             .mapNotNull { id ->
                 val fluid = BuiltInRegistries.FLUID.get(id)
                 // 跳过 EMPTY / 占位

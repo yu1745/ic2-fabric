@@ -85,7 +85,7 @@ class WindKineticGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclu
         if (world.isClient) return InteractionResult.SUCCESS
 
         // TODO(1.21.1): useWithoutItem 不再携带 hand，保守取主手
-        val interaction = be.onUse(player, InteractionHand.MAIN_HAND)
+        val interaction = be.useWithoutItem(player, InteractionHand.MAIN_HAND)
         if (interaction != InteractionResult.PASS) return interaction
 
         player.openMenu(be)

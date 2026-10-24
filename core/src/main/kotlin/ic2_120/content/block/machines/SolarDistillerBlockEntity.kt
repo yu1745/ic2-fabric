@@ -399,7 +399,7 @@ class SolarDistillerBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.getContainerSize())
         return buf
     }
 
@@ -505,7 +505,7 @@ class SolarDistillerBlockEntity(
         // 更新方块激活状态（用于渲染）
         val active = sync.isWorking != 0
         if (state.getValue(SolarDistillerBlock.ACTIVE) != active) {
-            world.setBlock(pos, state.setValue(SolarDistillerBlock.ACTIVE, active))
+            world.setBlock(pos, state.setValue(SolarDistillerBlock.ACTIVE, active), net.minecraft.world.level.block.Block.UPDATE_ALL)
         }
     }
 

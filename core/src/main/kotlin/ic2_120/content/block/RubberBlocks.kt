@@ -28,7 +28,7 @@ import ic2_120.registry.annotation.ModBlock
 import net.fabricmc.fabric.api.registry.FlammableBlockRegistry
 import net.fabricmc.fabric.api.registry.StrippableBlockRegistry
 import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.BlockBehaviour
+import net.minecraft.world.level.block.state.BlockBehaviour
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.ButtonBlock
 import net.minecraft.world.level.block.DoorBlock
@@ -55,7 +55,6 @@ import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.world.level.storage.loot.LootParams
 import net.minecraft.resources.ResourceKey
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Holder
 import net.minecraft.tags.BlockTags
 import net.minecraft.world.level.block.state.StateDefinition
@@ -130,7 +129,7 @@ class RubberLogBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Proper
     }
 
     fun getRubberState(state: BlockState, face: Direction): RubberFaceState =
-        state.get(propFor(face))
+        state.getValue(propFor(face))
 
     fun setFaceDry(state: BlockState, face: Direction): BlockState =
         state.setValue(propFor(face), RubberFaceState.DRY)
@@ -160,7 +159,7 @@ class RubberLogBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Proper
             }
         }
         if (newState != state) {
-            world.setBlock(pos, newState)
+            world.setBlock(pos, newState, 3)
         }
     }
 
@@ -202,7 +201,7 @@ class RubberLogBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Proper
                 val current = queue.removeFirst()
 
                 for (direction in Direction.values()) {
-                    val neighborPos = current.offset(direction)
+                    val neighborPos = current.relative(direction)
                     val neighborState = world.getBlockState(neighborPos)
                     val neighborBlock = neighborState.block
 
@@ -425,7 +424,7 @@ internal object RubberSaplingGenerator {
         "rubber_tree",
         java.util.Optional.empty(),
         java.util.Optional.of(
-            ResourceKey.create(RRegistries.CONFIGURED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_tree"))
+            ResourceKey.create(Registries.CONFIGURED_FEATURE, ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "rubber_tree"))
         ),
         java.util.Optional.empty()
     )
@@ -459,7 +458,7 @@ class RubberSaplingBlock(
 class RubberLeavesBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES).strength(0.2f)) : LeavesBlock(settings) {
     init {
         // 明确指定默认值，避免新增布尔状态在不同注册阶段被误认为已绑定树苗。
-        registerDefaultState(defaultBlockState.setValue(RUBBER_SAPLING_DROP, false))
+        registerDefaultState(defaultBlockState().setValue(RUBBER_SAPLING_DROP, false))
     }
 
     companion object {
@@ -486,13 +485,13 @@ class RubberLeavesBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Pro
         neighborPos: BlockPos
     ): BlockState {
         if (state.getValue(WATERLOGGED)) {
-            world.scheduleTick(pos, net.minecraft.world.level.material.Fluids.WATER, net.minecraft.world.level.material.Fluids.WATER.getTickRate(world))
+            world.scheduleTick(pos, net.minecraft.world.level.material.Fluids.WATER, net.minecraft.world.level.material.Fluids.WATER.tickDelay(world))
         }
         world.scheduleTick(pos, this, 1)
         return state
     }
 
-    override fun scheduledTick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
+    override fun tick(state: BlockState, world: ServerLevel, pos: BlockPos, random: RandomSource) {
         val distance = updateDistanceFromRubberLogs(state, world, pos)
         if (distance != state.getValue(DISTANCE)) {
             world.setBlock(pos, state.setValue(DISTANCE, distance), Block.UPDATE_ALL)
@@ -503,7 +502,7 @@ class RubberLeavesBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Pro
         // 重新计算一次，修正旧版本曾沿着其他树叶链传播过来的错误距离值。
         val distance = updateDistanceFromRubberLogs(state, world, pos)
         val updatedState = state.setValue(DISTANCE, distance)
-        if (!updatedState.getValue(PERSISTENT) && distance == MAX_DISTANCE) {
+        if (!updatedState.getValue(PERSISTENT) && distance == LeavesBlock.DECAY_DISTANCE) {
             Block.dropResources(updatedState, world, pos)
             world.removeBlock(pos, false)
         } else if (updatedState != state) {
@@ -512,10 +511,10 @@ class RubberLeavesBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Pro
     }
 
     private fun updateDistanceFromRubberLogs(state: BlockState, world: LevelAccessor, pos: BlockPos): Int {
-        var distance = MAX_DISTANCE
-        val mutable = BlockPos.Mutable()
+        var distance = LeavesBlock.DECAY_DISTANCE
+        val mutable = BlockPos.MutableBlockPos()
         for (direction in Direction.values()) {
-            mutable.set(pos, direction)
+            mutable.setWithOffset(pos, direction)
             distance = minOf(distance, getRubberDistance(world.getBlockState(mutable)) + 1)
             if (distance == 1) break
         }
@@ -524,8 +523,8 @@ class RubberLeavesBlock(settings: BlockBehaviour.Properties = BlockBehaviour.Pro
 
     private fun getRubberDistance(state: BlockState): Int = when {
         state.block is RubberLogBlock -> 0
-        state.block is RubberLeavesBlock && state.contains(DISTANCE) -> state.getValue(DISTANCE)
-        else -> MAX_DISTANCE
+        state.block is RubberLeavesBlock && state.hasProperty(DISTANCE) -> state.getValue(DISTANCE)
+        else -> LeavesBlock.DECAY_DISTANCE
     }
 }
 

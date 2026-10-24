@@ -5,6 +5,9 @@ import net.minecraft.network.FriendlyByteBuf
 import io.netty.buffer.Unpooled
 
 import net.minecraft.data.recipes.RecipeProvider.has
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+import com.mojang.serialization.MapCodec
+import net.minecraft.world.level.block.BaseEntityBlock
 
 import ic2_120.compat.isClient
 import ic2_120.compat.world
@@ -63,6 +66,7 @@ import ic2_120.registry.annotation.RecipeProvider
  */
 @ModBlock(name = "tin_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class TinCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings), ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { TinCableBlock() }
 
     override val tier: Int = 1
     override fun getTransferRate(): Long = nominalEuPerTick()
@@ -90,6 +94,7 @@ class TinCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : B
  */
 @ModBlock(name = "copper_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class CopperCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings), ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { CopperCableBlock() }
 
     override val tier: Int = 2
     override fun getTransferRate(): Long = nominalEuPerTick()
@@ -97,7 +102,7 @@ class CopperCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) 
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = CopperCableBlock::class.id(),
@@ -117,6 +122,7 @@ class CopperCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) 
  */
 @ModBlock(name = "gold_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class GoldCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings), ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { GoldCableBlock() }
 
     override val tier: Int = 3
     override fun getTransferRate(): Long = nominalEuPerTick()
@@ -127,7 +133,7 @@ class GoldCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : 
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = GoldCableBlock::class.id(),
@@ -147,6 +153,7 @@ class GoldCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : 
  */
 @ModBlock(name = "iron_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class IronCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings), ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { IronCableBlock() }
 
     override val tier: Int = 4
     override fun getTransferRate(): Long = nominalEuPerTick()
@@ -157,7 +164,7 @@ class IronCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : 
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             DamageToolShapelessRecipeDatagen.offer(
                 exporter = exporter,
                 recipeId = IronCableBlock::class.id(),
@@ -185,10 +192,11 @@ class IronCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : 
 class GlassFibreCableBlock(
     settings: BlockBehaviour.Properties = BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS).strength(0.5f).noCollission()
 ) : BaseCableBlock(settings), IInsulatedCable, ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { GlassFibreCableBlock() }
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, GlassFibreCableBlock::class.item(), 6)
                 .pattern("GGG")
                 .pattern("ESE")
@@ -197,7 +205,7 @@ class GlassFibreCableBlock(
                 .define('E', EnergiumDust::class.instance())
                 .define('S', Ingredient.of(ModTags.Compat.Items.DUSTS_SILVER))
                 .unlockedBy(
-                    has(EnergiumDust::class.instance()),
+                    getHasName(EnergiumDust::class.instance()),
                     has(EnergiumDust::class.instance())
                 )
                 .save(exporter, GlassFibreCableBlock::class.id())
@@ -218,6 +226,7 @@ class GlassFibreCableBlock(
 @ModBlock(name = "insulated_copper_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class InsulatedCopperCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings),
     IInsulatedCable, ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { InsulatedCopperCableBlock() }
 
     override val tier: Int = 2
    override fun getTransferRate(): Long = nominalEuPerTick()
@@ -229,11 +238,11 @@ class InsulatedCopperCableBlock(settings: BlockBehaviour.Properties = defaultSet
 
    companion object {
        @RecipeProvider
-       fun generateRecipes(exporter: Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+       fun generateRecipes(exporter: RecipeOutput) {
            ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, InsulatedCopperCableBlock::class.item(), 1)
                 .requires(CopperCableBlock::class.item())
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
-                .unlockedBy(has(CopperCableBlock::class.item()), has(CopperCableBlock::class.item()))
+                .unlockedBy(getHasName(CopperCableBlock::class.item()), has(CopperCableBlock::class.item()))
                 .save(exporter, InsulatedCopperCableBlock::class.id())
             // 剪刀剥离绝缘层
             DamageToolShapelessRecipeDatagen.offer(
@@ -256,6 +265,7 @@ class InsulatedCopperCableBlock(settings: BlockBehaviour.Properties = defaultSet
 @ModBlock(name = "insulated_tin_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class InsulatedTinCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings),
     IInsulatedCable, ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { InsulatedTinCableBlock() }
 
     override val tier: Int = 1
     override fun getTransferRate(): Long = nominalEuPerTick()
@@ -266,11 +276,11 @@ class InsulatedTinCableBlock(settings: BlockBehaviour.Properties = defaultSettin
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, InsulatedTinCableBlock::class.item(), 1)
                 .requires(TinCableBlock::class.item())
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
-                .unlockedBy(has(TinCableBlock::class.item()), has(TinCableBlock::class.item()))
+                .unlockedBy(getHasName(TinCableBlock::class.item()), has(TinCableBlock::class.item()))
                 .save(exporter, InsulatedTinCableBlock::class.id())
             // 剪刀剥离绝缘层
             DamageToolShapelessRecipeDatagen.offer(
@@ -293,6 +303,7 @@ class InsulatedTinCableBlock(settings: BlockBehaviour.Properties = defaultSettin
 @ModBlock(name = "insulated_gold_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class InsulatedGoldCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings),
     IInsulatedCable, ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { InsulatedGoldCableBlock() }
 
     override val tier: Int = 3
     override fun getTransferRate(): Long = nominalEuPerTick()
@@ -304,11 +315,11 @@ class InsulatedGoldCableBlock(settings: BlockBehaviour.Properties = defaultSetti
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, InsulatedGoldCableBlock::class.item(), 1)
                 .requires(GoldCableBlock::class.item())
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
-                .unlockedBy(has(GoldCableBlock::class.item()), has(GoldCableBlock::class.item()))
+                .unlockedBy(getHasName(GoldCableBlock::class.item()), has(GoldCableBlock::class.item()))
                 .save(exporter, InsulatedGoldCableBlock::class.id())
             // 剪刀剥离绝缘层
             DamageToolShapelessRecipeDatagen.offer(
@@ -331,6 +342,7 @@ class InsulatedGoldCableBlock(settings: BlockBehaviour.Properties = defaultSetti
 @ModBlock(name = "double_insulated_gold_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class DoubleInsulatedGoldCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings),
     IInsulatedCable, ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { DoubleInsulatedGoldCableBlock() }
 
     override val tier: Int = 3
     override fun getTransferRate(): Long = nominalEuPerTick()
@@ -342,20 +354,20 @@ class DoubleInsulatedGoldCableBlock(settings: BlockBehaviour.Properties = defaul
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 直接合成：金导线 + 2 橡胶
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
                 .requires(GoldCableBlock::class.item())
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
-                .unlockedBy(has(GoldCableBlock::class.item()), has(GoldCableBlock::class.item()))
+                .unlockedBy(getHasName(GoldCableBlock::class.item()), has(GoldCableBlock::class.item()))
                 .save(exporter, DoubleInsulatedGoldCableBlock::class.id())
             // 递进合成：1x 绝缘金导线 + 1 橡胶
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, DoubleInsulatedGoldCableBlock::class.item(), 1)
                 .requires(InsulatedGoldCableBlock::class.item())
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(
-                    has(InsulatedGoldCableBlock::class.item()),
+                    getHasName(InsulatedGoldCableBlock::class.item()),
                     has(InsulatedGoldCableBlock::class.item())
                 )
                 .save(exporter, DoubleInsulatedGoldCableBlock::class.recipeId("from_insulated"))
@@ -380,6 +392,7 @@ class DoubleInsulatedGoldCableBlock(settings: BlockBehaviour.Properties = defaul
 @ModBlock(name = "insulated_iron_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class InsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings),
     IInsulatedCable, ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { InsulatedIronCableBlock() }
 
     override val tier: Int = 4
     override fun getTransferRate(): Long = nominalEuPerTick()
@@ -391,11 +404,11 @@ class InsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaultSetti
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, InsulatedIronCableBlock::class.item(), 1)
                 .requires(IronCableBlock::class.item())
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
-                .unlockedBy(has(IronCableBlock::class.item()), has(IronCableBlock::class.item()))
+                .unlockedBy(getHasName(IronCableBlock::class.item()), has(IronCableBlock::class.item()))
                 .save(exporter, InsulatedIronCableBlock::class.id())
             // 剪刀剥离绝缘层
             DamageToolShapelessRecipeDatagen.offer(
@@ -418,6 +431,7 @@ class InsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaultSetti
 @ModBlock(name = "double_insulated_iron_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class DoubleInsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings),
     IInsulatedCable, ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { DoubleInsulatedIronCableBlock() }
 
     override val tier: Int = 4
     override fun getTransferRate(): Long = nominalEuPerTick()
@@ -429,20 +443,20 @@ class DoubleInsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaul
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 直接合成：高压导线 + 2 橡胶
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
                 .requires(IronCableBlock::class.item())
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
-                .unlockedBy(has(IronCableBlock::class.item()), has(IronCableBlock::class.item()))
+                .unlockedBy(getHasName(IronCableBlock::class.item()), has(IronCableBlock::class.item()))
                 .save(exporter, DoubleInsulatedIronCableBlock::class.id())
             // 递进合成：1x 绝缘高压导线 + 1 橡胶
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, DoubleInsulatedIronCableBlock::class.item(), 1)
                 .requires(InsulatedIronCableBlock::class.item())
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(
-                    has(InsulatedIronCableBlock::class.item()),
+                    getHasName(InsulatedIronCableBlock::class.item()),
                     has(InsulatedIronCableBlock::class.item())
                 )
                 .save(exporter, DoubleInsulatedIronCableBlock::class.recipeId("from_insulated"))
@@ -467,6 +481,7 @@ class DoubleInsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaul
 @ModBlock(name = "triple_insulated_iron_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class TripleInsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings),
     IInsulatedCable, ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { TripleInsulatedIronCableBlock() }
 
     override val tier: Int = 4
     override fun getTransferRate(): Long = nominalEuPerTick()
@@ -478,21 +493,21 @@ class TripleInsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaul
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<net.minecraft.data.recipes.RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             // 直接合成：高压导线 + 3 橡胶
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
                 .requires(IronCableBlock::class.item())
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
-                .unlockedBy(has(IronCableBlock::class.item()), has(IronCableBlock::class.item()))
+                .unlockedBy(getHasName(IronCableBlock::class.item()), has(IronCableBlock::class.item()))
                 .save(exporter, TripleInsulatedIronCableBlock::class.id())
             // 递进合成：2x 绝缘高压导线 + 1 橡胶
             ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, TripleInsulatedIronCableBlock::class.item(), 1)
                 .requires(DoubleInsulatedIronCableBlock::class.item())
                 .requires(Ingredient.of(ModTags.Compat.Items.RUBBER))
                 .unlockedBy(
-                    has(DoubleInsulatedIronCableBlock::class.item()),
+                    getHasName(DoubleInsulatedIronCableBlock::class.item()),
                     has(DoubleInsulatedIronCableBlock::class.item())
                 )
                 .save(exporter, TripleInsulatedIronCableBlock::class.recipeId("from_double_insulated"))
@@ -517,6 +532,7 @@ class TripleInsulatedIronCableBlock(settings: BlockBehaviour.Properties = defaul
  */
 @ModBlock(name = "splitter_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings), ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { SplitterCableBlock() }
 
     companion object {
         val ACTIVE: BooleanProperty = BooleanProperty.create("active")
@@ -530,7 +546,7 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
                 .define('R', Items.REDSTONE)
                 .define('C', Circuit::class.instance())
                 .define('L', Items.LEVER)
-                .unlockedBy(has(Circuit::class.instance()), has(Circuit::class.instance()))
+                .unlockedBy(getHasName(Circuit::class.instance()), has(Circuit::class.instance()))
                 .save(exporter)
         }
     }
@@ -548,7 +564,7 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
-        val active = ctx.level.getSignal(ctx.pos) >= CableBlockEntity.DEFAULT_SPLITTER_THRESHOLD
+        val active = ctx.level.getBestNeighborSignal(ctx.clickedPos) >= CableBlockEntity.DEFAULT_SPLITTER_THRESHOLD
         val superState = super.getStateForPlacement(ctx)
         return if (active) {
             var state = superState.setValue(ACTIVE, true)
@@ -580,7 +596,7 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
         val be = world.getBlockEntity(pos) as? CableBlockEntity
         val threshold = be?.splitterThreshold ?: CableBlockEntity.DEFAULT_SPLITTER_THRESHOLD
         val inverted = be?.splitterInverted ?: false
-        val thresholdReached = world.getSignal(pos) >= threshold
+        val thresholdReached = world.getBestNeighborSignal(pos) >= threshold
         val shouldDisconnect = if (inverted) !thresholdReached else thresholdReached
         if (shouldDisconnect == state.getValue(ACTIVE)) return
 
@@ -624,7 +640,7 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
     ): BlockState {
         if (state.getValue(ACTIVE)) {
             if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-                world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+                world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
             }
             return state.setValue(propertyFor(direction), false)
         }
@@ -638,6 +654,7 @@ class SplitterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()
  */
 @ModBlock(name = "limiter_cable", registerItem = true, tab = CreativeTab.IC2_MATERIALS, group = "cables")
 class LimiterCableBlock(settings: BlockBehaviour.Properties = defaultSettings()) : BaseCableBlock(settings), ITiered {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { LimiterCableBlock() }
 
     companion object {
         @RecipeProvider
@@ -649,7 +666,7 @@ class LimiterCableBlock(settings: BlockBehaviour.Properties = defaultSettings())
                 .define('C', Circuit::class.instance())
                 .define('R', Items.REDSTONE)
                 .define('G', GoldCableBlock::class.item())
-                .unlockedBy(has(GoldCableBlock::class.item()), has(GoldCableBlock::class.item()))
+                .unlockedBy(getHasName(GoldCableBlock::class.item()), has(GoldCableBlock::class.item()))
                 .save(exporter)
         }
     }

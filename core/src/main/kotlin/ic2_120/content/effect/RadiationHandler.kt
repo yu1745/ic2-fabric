@@ -27,7 +27,7 @@ object RadiationHandler {
         if (tickCounter % 20 != 0) return
 
         for (world in server.allLevels) {
-            for (player in world.players) {
+            for (player in world.players()) {
                 if (player.isDeadOrDying) continue
                 if (isImmune(player)) continue
                 if (hasRadioactiveItem(player)) {

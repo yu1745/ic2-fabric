@@ -43,7 +43,7 @@ object ElectricHeatGeneratorJadeProvider : IBlockComponentProvider, IServerDataP
         data.putBoolean("redstoneAllowsRun", RedstoneControlComponent.canRun(world, pos, be))
     }
 
-    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         if (!accessor.serverData.contains("eu")) return
         val data = accessor.serverData
 

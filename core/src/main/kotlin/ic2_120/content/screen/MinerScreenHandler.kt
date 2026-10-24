@@ -202,13 +202,13 @@ class MinerScreenHandler(
                     val taken = miner.takePipes(takeAmount)
                     if (!taken.isEmpty) {
                         carried = taken
-                        sendContentUpdates()
+                        broadcastChanges()
                         return
                     }
                 } else {
                     val insertAmount = if (button == 1) 1 else cursor.count
                     if (miner.insertPipesFromStack(cursor, insertAmount) > 0) {
-                        sendContentUpdates()
+                        broadcastChanges()
                         return
                     }
                 }

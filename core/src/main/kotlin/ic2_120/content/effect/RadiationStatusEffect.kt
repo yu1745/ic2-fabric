@@ -18,12 +18,12 @@ import net.minecraft.resources.ResourceLocation
 @ModStatusEffect(name = "radiation", namespace = "ic2")
 class RadiationStatusEffect : MobEffect(MobEffectCategory.HARMFUL, 0x55FF55) {
 
-    override fun canApplyUpdateEffect(duration: Int, amplifier: Int): Boolean {
+    override fun shouldApplyEffectTickThisTick(duration: Int, amplifier: Int): Boolean {
         return duration % 20 == 0
     }
 
-    override fun applyUpdateEffect(entity: LivingEntity, amplifier: Int): Boolean {
-        val world = entity.world
+    override fun applyEffectTick(entity: LivingEntity, amplifier: Int): Boolean {
+        val world = entity.level()
         if (world !is ServerLevel) return false
 
         val registry = world.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE)

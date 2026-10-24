@@ -46,7 +46,6 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
 import ic2_120.registry.id
-import java.util.function.Consumer
 import ic2_120.registry.annotation.RecipeProvider
 
 /**
@@ -115,7 +114,7 @@ abstract class TransformerBlock : DirectionalMachineBlock(MachineBlock.defaultMa
         }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult, hand: InteractionHand): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
             getMenuProvider(state, world, pos)?.let { factory ->
                 player.openMenu(factory)
@@ -136,7 +135,7 @@ class LvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val insulatedTinCable = InsulatedTinCableBlock::class.item()
             val coil = ic2_120.content.item.Coil::class.instance()
             if (coil != Items.AIR) {
@@ -157,7 +156,7 @@ class MvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val insulatedCopperCable = InsulatedCopperCableBlock::class.item()
             val machine = MachineCasingBlock::class.item()
             if (machine != Items.AIR) {
@@ -178,7 +177,7 @@ class HvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val insulatedGoldCable = InsulatedGoldCableBlock::class.item()
             val circuit = ic2_120.content.item.Circuit::class.instance()
             val advancedReBattery = ic2_120.content.item.energy.AdvancedReBatteryItem::class.instance()
@@ -200,7 +199,7 @@ class EvTransformerBlock : TransformerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val insulatedIronCable = TripleInsulatedIronCableBlock::class.item()
             val advancedCircuit = ic2_120.content.item.AdvancedCircuit::class.instance()
             val lapotronCrystal = ic2_120.content.item.energy.LapotronCrystalItem::class.instance()

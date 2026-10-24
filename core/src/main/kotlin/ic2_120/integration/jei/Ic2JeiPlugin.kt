@@ -1,5 +1,8 @@
 package ic2_120.integration.jei
 
+import ic2_120.compat.orCreateNbt
+import net.minecraft.world.item.crafting.RecipeType
+import net.minecraft.world.item.crafting.Recipe
 import net.minecraft.core.registries.BuiltInRegistries
 
 import ic2_120.config.Ic2Config
@@ -72,7 +75,6 @@ import net.minecraft.world.item.crafting.Recipe
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
 
 /**

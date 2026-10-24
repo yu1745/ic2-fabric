@@ -55,7 +55,7 @@ class NuclearExplosion private constructor(
     private var currentH = 0
     private var currentV = 0
     private val affectedSet = mutableSetOf<BlockPos>()
-    private val mutablePos = BlockPos.Mutable()
+    private val mutablePos = BlockPos.MutableBlockPos()
 
     // ---- 摧毁阶段（DESTROYING）状态 ----
     private val blocksToDestroy = mutableListOf<BlockPos>()
@@ -92,7 +92,7 @@ class NuclearExplosion private constructor(
 
     /** FTB Chunks 保护检查（按 chunk 缓存，受保护的方块截断射线） */
     private fun isProtected(pos: BlockPos): Boolean {
-        val chunkKey = net.minecraft.world.level.ChunkPos.toLong(pos.x shr 4, pos.z shr 4)
+        val chunkKey = net.minecraft.world.level.ChunkPos.asLong(pos.x shr 4, pos.z shr 4)
         return chunkProtectionCache.getOrPut(chunkKey) {
             ic2_120.integration.ftbchunks.ClaimProtection.isExplosionProtected(world, pos, ownerUuid)
         }
@@ -211,7 +211,7 @@ class NuclearExplosion private constructor(
             val isAir = state.isAir() || block === Blocks.VOID_AIR || block === Blocks.CAVE_AIR
 
             val absorption = if (isAir) 0.5 else {
-                val res = block.getBlastResistance().toDouble().coerceAtLeast(0.0)
+                val res = block.explosionResistance.toDouble().coerceAtLeast(0.0)
                 0.5 + maxOf(0.0, (res + 4.0) * 0.3)
             }
 
@@ -265,7 +265,7 @@ class NuclearExplosion private constructor(
             val block = state.block
             val isAir = state.isAir() || block === Blocks.VOID_AIR || block === Blocks.CAVE_AIR
             val absorption = if (isAir) 0.5 else {
-                val res = block.getBlastResistance().toDouble().coerceAtLeast(0.0)
+                val res = block.explosionResistance.toDouble().coerceAtLeast(0.0)
                 0.5 + maxOf(0.0, (res + 4.0) * 0.3)
             }
             // FTB Chunks 保护：受保护的方块充当屏障，截断射线
@@ -278,7 +278,7 @@ class NuclearExplosion private constructor(
 
     private fun finishCalculating() {
         blocksToDestroy.addAll(affectedSet)
-        blocksToDestroy.sortBy { it.getSquaredDistance(centerX, centerY, centerZ) }
+        blocksToDestroy.sortBy { it.distToCenterSqr(centerX, centerY, centerZ) }
         affectedSet.clear()
 
         LOG.info("[核爆炸] 计算完成 segments={} rays={} blocks={}",
@@ -287,7 +287,7 @@ class NuclearExplosion private constructor(
         // 播放爆炸音效 & 粒子
         val soundPos = Vec3(centerX, centerY, centerZ)
         world.playSound(null, soundPos.x, soundPos.y, soundPos.z,
-            SoundEvents.ENTITY_GENERIC_EXPLODE, SoundSource.BLOCKS,
+            SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS,
             4.0f, (1.0f + (world.random.nextFloat() - 0.5f) * 0.4f) * 0.7f)
         world.sendParticles(ParticleTypes.EXPLOSION_EMITTER,
             centerX, centerY, centerZ, 1, 0.0, 0.0, 0.0, 0.0)
@@ -309,8 +309,8 @@ class NuclearExplosion private constructor(
             val pos = blocksToDestroy[destroyIndex]
             val state = world.getBlockState(pos)
             if (!state.isAir()) {
-                world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL or Block.UPDATE_KNOWN_SHAPE)
-                state.block.onDestroyedByExplosion(world, pos, null)
+                // TODO(1.21.1): onDestroyedByExplosion 已移除；爆炸破坏不掉落，直接置空气
+                world.destroyBlock(pos, false)
             }
             destroyIndex++
         }
@@ -336,7 +336,7 @@ class NuclearExplosion private constructor(
         )
 
         for (entity in world.getEntitiesOfClass(LivingEntity::class.java, box) { true }) {
-            val dist = entity.pos.distanceTo(Vec3(centerX, centerY, centerZ))
+            val dist = entity.position().distanceTo(Vec3(centerX, centerY, centerZ))
             val w = dist / q
             if (w > 1.0) continue
 
@@ -347,9 +347,9 @@ class NuclearExplosion private constructor(
 
             if (damage > 0f) entity.hurt(damageSource, damage)
 
-            val dir = Vec3(centerX, centerY, centerZ).relativize(entity.pos).normalize()
-            entity.addVelocity(dir.x * exposure, dir.y * exposure, dir.z * exposure)
-            entity.velocityModified = true
+            val dir = entity.position().subtract(Vec3(centerX, centerY, centerZ)).normalize()
+            entity.push(dir.x * exposure, dir.y * exposure, dir.z * exposure)
+            entity.hasImpulse = true
         }
     }
 
@@ -364,11 +364,11 @@ class NuclearExplosion private constructor(
             val py = box.minY + (box.maxY - box.minY) * yi / steps
             val pz = box.minZ + (box.maxZ - box.minZ) * zi / steps
 
-            val result = world.raycast(ClipContext(
+            val result = world.clip(ClipContext(
                 Vec3(centerX, centerY, centerZ),
                 Vec3(px, py, pz),
-                ClipContext.ShapeType.COLLIDER,
-                ClipContext.FluidHandling.NONE,
+                ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE,
                 entity
             ))
             if (result.type == net.minecraft.world.phys.HitResult.Type.MISS) visible++

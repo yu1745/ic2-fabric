@@ -41,9 +41,10 @@ import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.crafting.Ingredient
 import net.minecraft.data.recipes.RecipeCategory
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.tags.ItemTags
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.InteractionResult
@@ -80,7 +81,7 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
 
         val be = world.getBlockEntity(pos) as? TankBlockEntity ?: return InteractionResult.PASS
         val storage = FluidStorage.SIDED.find(world, pos, hit.direction)
-        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
+        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, player.usedItemHand)) {
             return InteractionResult.SUCCESS
         }
 
@@ -126,11 +127,11 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
     }
 
     @Deprecated("override deprecated member", level = DeprecationLevel.WARNING)
-    override fun onStacksDropped(state: BlockState, world: ServerLevel, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
+    override fun spawnAfterBreak(state: BlockState, world: ServerLevel, pos: BlockPos, tool: ItemStack, dropExperience: Boolean) {
         // 不调用 super，防止默认掉落行为
     }
 
-    override fun playerWillDestroy(world: Level, pos: BlockPos, state: BlockState, player: Player) {
+    override fun playerWillDestroy(world: Level, pos: BlockPos, state: BlockState, player: Player): BlockState {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos)
             if (be is TankBlockEntity) {
@@ -138,7 +139,7 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
                 if (player.abilities.instabuild) {
                     be.retainFluidPercent(0.0)
                     be.shouldDropOnBreak = false // 创造模式：不掉落
-                } else if (holdingWrench || player.canHarvest(state)) {
+                } else if (holdingWrench || player.hasCorrectToolForDrops(state)) {
                     be.retainFluidPercent(1.0)  // 扳手/正确工具：保留流体并掉落
                 } else {
                     be.retainFluidPercent(0.0)
@@ -146,12 +147,12 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
                 }
             }
         }
-        super.playerWillDestroy(world, pos, state, player)
+        return super.playerWillDestroy(world, pos, state, player)
     }
 
-    override fun getPickStack(world: net.minecraft.world.level.BlockGetter, pos: BlockPos, state: BlockState): ItemStack {
+    override fun getCloneItemStack(world: net.minecraft.world.level.LevelReader, pos: BlockPos, state: BlockState): ItemStack {
         val itemStack = super.getCloneItemStack(world, pos, state)
-        val blockEntity = world.getBlockEntity(pos)
+        val blockEntity = (world as? Level)?.getBlockEntity(pos)
         if (blockEntity is TankBlockEntity) {
             applyTankBlockEntityNbt(itemStack, blockEntity)
         }
@@ -159,10 +160,10 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
     }
 
     @Deprecated("Override without BlockState param", level = DeprecationLevel.WARNING)
-    override fun hasComparatorOutput(state: BlockState): Boolean = true
+    override fun hasAnalogOutputSignal(state: BlockState): Boolean = true
 
     @Deprecated("Override without BlockState param", level = DeprecationLevel.WARNING)
-    override fun getComparatorOutput(state: BlockState, world: net.minecraft.world.level.Level, pos: BlockPos): Int {
+    override fun getAnalogOutputSignal(state: BlockState, world: net.minecraft.world.level.Level, pos: BlockPos): Int {
         val blockEntity = world.getBlockEntity(pos)
         if (blockEntity is TankBlockEntity) {
             return blockEntity.comparatorOutput
@@ -176,9 +177,9 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
     @Environment(EnvType.CLIENT)
     override fun appendHoverText(
         stack: ItemStack,
-        world: BlockGetter?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: TooltipContext
+        type: TooltipFlag
     ) {
         super.appendHoverText(stack, context, tooltip, type)
         val blockItem = stack.item as? BlockItem ?: return
@@ -244,6 +245,7 @@ abstract class TankBlock(settings: BlockBehaviour.Properties) : BaseEntityBlock(
  */
 @ModBlock(name = "bronze_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
 class BronzeTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { BronzeTankBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -268,6 +270,7 @@ class BronzeTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minec
  */
 @ModBlock(name = "iron_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
 class IronTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { IronTankBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -292,6 +295,7 @@ class IronTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecra
  */
 @ModBlock(name = "steel_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
 class SteelTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(6.0f, 7.0f)) {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { SteelTankBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -316,6 +320,7 @@ class SteelTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecr
  */
 @ModBlock(name = "iridium_tank", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "tank", generateBlockLootTable = false)
 class IridiumTankBlock : TankBlock(BlockBehaviour.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.IRON_BLOCK).strength(8.0f, 10.0f)) {
+    override fun codec(): com.mojang.serialization.MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { IridiumTankBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {

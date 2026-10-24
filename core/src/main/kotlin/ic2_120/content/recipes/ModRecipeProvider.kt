@@ -21,9 +21,9 @@ import java.util.concurrent.CompletableFuture
  */
 class ModRecipeProvider(output: FabricDataOutput, registriesFuture: CompletableFuture<HolderLookup.Provider>) : FabricRecipeProvider(output, registriesFuture) {
 
-    override fun generate(recipeExporter: RecipeOutput) {
+    override fun buildRecipes(recipeExporter: RecipeOutput) {
         // 机器配方类型/序列化器须先于各 *RecipeDatagen 中的 recipeType/recipeSerializer 查询完成注册
         ModMachineRecipes.register()
-        ClassScanner.generateAllRecipes(recipeExporter::accept)
+        ClassScanner.generateAllRecipes(recipeExporter)
     }
 }

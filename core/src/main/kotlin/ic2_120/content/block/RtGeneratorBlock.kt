@@ -49,7 +49,7 @@ import ic2_120.registry.annotation.RecipeProvider
 class RtGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusion()) {
 
     init {
-        registerDefaultState(stateDefinition.defaultBlockState().setValue(ACTIVE, false))
+        registerDefaultState(stateDefinition.any().setValue(ACTIVE, false))
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =

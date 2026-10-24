@@ -48,7 +48,6 @@ import net.minecraft.world.ContainerHelper
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.sounds.SoundSource
@@ -57,6 +56,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.core.NonNullList
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
@@ -211,7 +211,7 @@ class TeleporterBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 
@@ -222,7 +222,7 @@ class TeleporterBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
 
         sync.amount = nbt.getLong(TeleporterSync.NBT_ENERGY_STORED)
@@ -321,8 +321,8 @@ class TeleporterBlockEntity(
             return
         }
 
-        val thisDim = world.dimension().value.toString()
-        if (thisDim != targetDimension || !world.isChunkLoaded(target.x shr 4, target.z shr 4)) {
+        val thisDim = world.dimension().location().toString()
+        if (thisDim != targetDimension || !world.chunkSource.hasChunk(target.x shr 4, target.z shr 4)) {
             clearCharging()
             setActiveState(world, pos, state, false)
             endTick(world, pos)
@@ -352,7 +352,7 @@ class TeleporterBlockEntity(
         }
 
         val entity = world.getEntities(null, getActivationBox(pos)) {
-            it.isAlive && !it.isPassenger() && !it.hasPassengers()
+            it.isAlive && !it.isPassenger() && !it.isVehicle
         }
             .minByOrNull { it.distanceToSqr(pos.x + 0.5, pos.y + 1.0, pos.z + 0.5) }
 
@@ -363,7 +363,7 @@ class TeleporterBlockEntity(
             return
         }
 
-        val distance = sqrt(pos.getSquaredDistance(target)).toLong().coerceAtLeast(1L)
+        val distance = sqrt(pos.distSqr(target)).toLong().coerceAtLeast(1L)
         val weight = computeWeight(entity).coerceAtMost(5100)
         // 传送耗能按超频 1.6^n 计（向上取整，整数 EU）
         val energyNeed = ceil(computeEnergyNeed(weight, distance) * energyMultiplier).toLong().coerceAtLeast(1L)
@@ -382,7 +382,7 @@ class TeleporterBlockEntity(
 
     fun hasAdjacentMfeOrMfsu(world: Level, pos: BlockPos): Boolean {
         for (dir in Direction.entries) {
-            val id = BuiltInRegistries.BLOCK.getKey(world.getBlockState(pos.offset(dir)).block) ?: continue
+            val id = BuiltInRegistries.BLOCK.getKey(world.getBlockState(pos.relative(dir)).block) ?: continue
             if (id.namespace == "ic2_120" && (id.path == "mfe" || id.path == "mfsu" || id.path == "mfe_chargepad" || id.path == "mfsu_chargepad")) return true
         }
         return false
@@ -397,7 +397,7 @@ class TeleporterBlockEntity(
             for (stack in entity.inventory.items) {
                 if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
             }
-            for (stack in entity.inventory.offHand) {
+            for (stack in entity.inventory.offhand) {
                 if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
             }
             weight += floor(invWeight).toInt()
@@ -571,7 +571,7 @@ class TeleporterBlockEntity(
     }
 
     private fun canTeleportTo(world: Level, entity: Entity, x: Double, y: Double, z: Double): Boolean {
-        val offset = entity.boundingBox.offset(x - entity.x, y - entity.y, z - entity.z)
+        val offset = entity.boundingBox.move(x - entity.x, y - entity.y, z - entity.z)
         return world.noCollision(entity, offset)
     }
 
@@ -579,7 +579,7 @@ class TeleporterBlockEntity(
         var remaining = amount
         for (dir in Direction.entries) {
             if (remaining <= 0) break
-            val neighborPos = pos.offset(dir)
+            val neighborPos = pos.relative(dir)
             val id = BuiltInRegistries.BLOCK.getKey(world.getBlockState(neighborPos).block) ?: continue
             if (id.namespace != "ic2_120" ||
                 (id.path != "mfe" && id.path != "mfsu" && id.path != "mfe_chargepad" && id.path != "mfsu_chargepad")) continue
@@ -602,7 +602,7 @@ class TeleporterBlockEntity(
     fun simulateAdjacentMfeEnergy(world: Level, pos: BlockPos): Long {
         var total = 0L
         for (dir in Direction.entries) {
-            val neighborPos = pos.offset(dir)
+            val neighborPos = pos.relative(dir)
             val id = BuiltInRegistries.BLOCK.getKey(world.getBlockState(neighborPos).block) ?: continue
             if (id.namespace != "ic2_120" ||
                 (id.path != "mfe" && id.path != "mfsu" && id.path != "mfe_chargepad" && id.path != "mfsu_chargepad")) continue
@@ -616,8 +616,8 @@ class TeleporterBlockEntity(
 
     private fun teleportEntity(entity: Entity, x: Double, y: Double, z: Double) {
         entity.teleportTo(x, y, z)
-        entity.velocity = Vec3.ZERO
-        entity.velocityModified = true
+        entity.deltaMovement = Vec3.ZERO
+        entity.hasImpulse = true
     }
 
 }

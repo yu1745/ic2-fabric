@@ -54,14 +54,9 @@ abstract class ElectricArmorItem(
 
     // ========== 防止原版耐久消耗 ==========
 
-    /**
-     * 电力护甲不走原版耐久系统，完全由 EU 能量驱动。
-     *
-     * 若不禁用，原版 [net.minecraft.world.entity.LivingEntity.damageArmor]
-     * 会在每次受击时同时消耗原版耐久度，导致护甲在耐久耗尽时消失，
-     * 即使 EU 能量充足。详见 [ic2_120.mixin.PlayerEntityMixin]。
-     */
-    override fun isDamageable(stack: ItemStack): Boolean = false
+    // TODO(1.21.1): mojmap 1.21.1 的 Item 已移除 isDamageable(ItemStack) 覆写点（耐久改为
+    // DataComponents.MAX_DAMAGE/DAMAGE 组件驱动）。原版耐久禁用依赖构造参数 durability(-1)
+    // 与 PlayerEntityMixin 的减伤拦截；如运行时仍出现耐久消耗，需改用组件（UNBREAKABLE）方案。
 
     // ========== 抽象方法 ==========
 

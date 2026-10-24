@@ -33,7 +33,7 @@ import net.minecraft.world.item.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemStack
-import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
 import net.minecraft.resources.ResourceLocation
@@ -128,11 +128,11 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         var energy = getEnergy(stack)
 
         // 功能 1: 水下呼吸（复用 HazmatHelmet 逻辑）
-        if (player.isInWater && player.air <= AIR_THRESHOLD) {
+        if (player.isInWater && player.airSupply <= AIR_THRESHOLD) {
             val cooldown = nbt.getInt(AIR_CHECK_COOLDOWN_KEY)
             if (cooldown <= 0) {
                 if (consumeAirCellIfAvailable(player)) {
-                    player.air = player.maxAir
+                    player.airSupply = player.maxAirSupply
                     nbt.putInt(AIR_CHECK_COOLDOWN_KEY, 20)  // 1 秒冷却
                 }
             } else {
@@ -173,8 +173,8 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
             if (cooldown <= 0) {
                 if (consumeFilledTinCanIfAvailable(player)) {
                     energy -= FOOD_FILL_COST
-                    player.foodData.foodLevel = 20
-                    player.foodData.saturationLevel = 5f
+                    player.foodData.setFoodLevel(20)
+                    player.foodData.setSaturation(5f)
                     nbt.putInt(FOOD_CHECK_COOLDOWN_KEY, 20)  // 1 秒冷却
                 }
             } else {
@@ -185,10 +185,10 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         // 功能 4: 消除负面效果（需全套量子护甲）
         if (QuantumArmorItem.hasFullQuantumArmor(player) && energy >= CURE_EFFECT_COST) {
             // 按效果类别动态覆盖所有负面效果（包括坚守者的 DARKNESS 以及模组效果）。
-            val harmfulEffects = player.statusEffects
+            val harmfulEffects = player.activeEffects
                 .filter {
-                    it.effect.category == MobEffectCategory.HARMFUL ||
-                        it.effect === ModStatusEffects.RADIATION
+                    it.effect.value.category == MobEffectCategory.HARMFUL ||
+                        it.effect.value === ModStatusEffects.RADIATION
                 }
             for (effect in harmfulEffects) {
                 if (energy < CURE_EFFECT_COST) break
@@ -207,8 +207,8 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         if (slot != null) {
             slot.shrink(1)
             val emptyCell = ItemStack(emptyCellItem)
-            if (!player.inventory.safeInsert(emptyCell)) {
-                player.spawnAtLocation(emptyCell, false)
+            if (!player.inventory.add(emptyCell)) {
+                player.spawnAtLocation(emptyCell)
             }
             return true
         }
@@ -222,8 +222,8 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         if (slot != null) {
             slot.shrink(1)
             val emptyCan = ItemStack(emptyCanItem)
-            if (!player.inventory.safeInsert(emptyCan)) {
-                player.spawnAtLocation(emptyCan, false)
+            if (!player.inventory.add(emptyCan)) {
+                player.spawnAtLocation(emptyCan)
             }
             return true
         }
@@ -241,9 +241,9 @@ class QuantumHelmet : QuantumArmorItem(ModArmorMaterials.QUANTUM_ARMOR, ArmorIte
         }
     }
 
-    override fun appendHoverText(stack: ItemStack, world: Level?, tooltip: MutableList<Component>, context: net.minecraft.client.item.TooltipContext) {
+    override fun appendHoverText(stack: ItemStack, context: Item.TooltipContext, tooltip: MutableList<Component>, type: TooltipFlag) {
         super.appendHoverText(stack, context, tooltip, type)
-        val nvEnabled = stack.orCreateNbt = stack.orCreateNbt.apply { getBoolean(NIGHT_VISION_KEY) }
+        val nvEnabled = stack.orCreateNbt.getBoolean(NIGHT_VISION_KEY)
         val energy = getEnergy(stack)
 
         val remainingSeconds = if (energy > 0 && maxCapacity > 0) {

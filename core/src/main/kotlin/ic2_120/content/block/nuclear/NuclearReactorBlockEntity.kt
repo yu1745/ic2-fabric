@@ -25,6 +25,8 @@ import ic2_120.content.block.ITieredMachine
 import ic2_120.integration.ftbchunks.ClaimProtection
 import ic2_120.content.fluid.ModFluids
 import ic2_120.content.item.ReactorHeatVentBase
+import ic2_120.content.item.decodeFluidVariant
+import ic2_120.content.item.encodeFluidVariant
 import ic2_120.content.reactor.IBaseReactorComponent
 import ic2_120.content.reactor.IReactor
 import ic2_120.content.reactor.IReactorComponent
@@ -70,7 +72,6 @@ import net.minecraft.world.item.ArmorItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
@@ -305,7 +306,7 @@ class NuclearReactorBlockEntity(
     override fun getContainerSize(): Int = INVENTORY_SIZE
     override fun getItem(slot: Int): ItemStack = inventory.getOrElse(slot) { ItemStack.EMPTY }
 
-    override fun getMaxCountPerStack(): Int = 1
+    override fun getMaxStackSize(): Int = 1
 
     override fun setItem(slot: Int, stack: ItemStack) {
         val oldStack = getItem(slot).copy()
@@ -393,19 +394,19 @@ class NuclearReactorBlockEntity(
     }
 
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
-            val buf = FriendlyByteBuf(Unpooled.buffer())
-            buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
-            buf.writeVarInt(currentCapacity())
-            buf.writeBoolean(isThermalMode())
-            // 布局锁定数据
-            buf.writeBoolean(layoutLocked)
-            buf.writeVarInt(lockedSlots.size)
-            for ((slot, item) in lockedSlots) {
-                buf.writeVarInt(slot)
-                buf.writeResourceLocation(BuiltInRegistries.ITEM.getKey(item))
-            return buf
+        val buf = FriendlyByteBuf(Unpooled.buffer())
+        buf.writeBlockPos(pos)
+        buf.writeVarInt(syncedData.count)
+        buf.writeVarInt(currentCapacity())
+        buf.writeBoolean(isThermalMode())
+        // 布局锁定数据
+        buf.writeBoolean(layoutLocked)
+        buf.writeVarInt(lockedSlots.size)
+        for ((slot, item) in lockedSlots) {
+            buf.writeVarInt(slot)
+            buf.writeResourceLocation(BuiltInRegistries.ITEM.getKey(item))
         }
+        return buf
     }
 
     override fun getDisplayName(): Component = Component.translatable("block.ic2_120.nuclear_reactor")
@@ -425,7 +426,7 @@ class NuclearReactorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         // 从 NBT 加载后强制封顶：防止旧数据遗留下来的堆叠 > 1
         for (i in 0 until minOf(inventory.size, MAX_SLOTS)) {
             val st = inventory[i]
@@ -455,16 +456,16 @@ class NuclearReactorBlockEntity(
             outputTank.variant = decodeFluidVariant(nbt.getCompound("OutputHotCoolant"))
         }
         outputTank.amount = nbt.getLong("OutputHotCoolantAmount")
-        ownerUuid = if (nbt.containsUuid("OwnerUUID")) nbt.getUUID("OwnerUUID") else null
+        ownerUuid = if (nbt.hasUUID("OwnerUUID")) nbt.getUUID("OwnerUUID") else null
 
         // 读取布局锁定数据
         layoutLocked = nbt.getBoolean("LayoutLocked")
         lockedSlots.clear()
         if (nbt.contains("LockedSlots")) {
             val tag = nbt.getCompound("LockedSlots")
-            for (key in tag.keys) {
+            for (key in tag.allKeys) {
                 val slot = key.toInt()
-                val item = BuiltInRegistries.ITEM.get(ResourceLocation(tag.getString(key)))
+                val item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(tag.getString(key)))
                 lockedSlots[slot] = item
             }
         }
@@ -472,7 +473,7 @@ class NuclearReactorBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(NuclearReactorSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NuclearReactorSync.NBT_HEAT_STORED, sync.temperature)
@@ -484,9 +485,9 @@ class NuclearReactorBlockEntity(
         nbt.putLong("LastModeCheckTick", lastModeCheckTick)
 
         // 写入流体储罐
-        nbt.put("InputCoolant", inputTank.encodeFluidVariant(variant))
+        nbt.put("InputCoolant", encodeFluidVariant(inputTank.variant))
         nbt.putLong("InputCoolantAmount", inputTank.amount)
-        nbt.put("OutputHotCoolant", outputTank.encodeFluidVariant(variant))
+        nbt.put("OutputHotCoolant", encodeFluidVariant(outputTank.variant))
         nbt.putLong("OutputHotCoolantAmount", outputTank.amount)
         ownerUuid?.let { nbt.putUUID("OwnerUUID", it) }
 
@@ -505,7 +506,7 @@ class NuclearReactorBlockEntity(
         val w = world ?: return NuclearReactorSync.BASE_SLOTS
         var chamberCount = 0
         for (dir in Direction.values()) {
-            if (w.getBlockState(pos.offset(dir)).block is ReactorChamberBlock) chamberCount++
+            if (w.getBlockState(pos.relative(dir)).block is ReactorChamberBlock) chamberCount++
         }
         return NuclearReactorSync.BASE_SLOTS + chamberCount * NuclearReactorSync.SLOTS_PER_CHAMBER
     }
@@ -656,7 +657,7 @@ class NuclearReactorBlockEntity(
                     // 跳过内部 3×3×3 核心区域
                     if (dx in -1..1 && dy in -1..1 && dz in -1..1) continue
 
-                    val checkPos = pos.add(dx, dy, dz)
+                    val checkPos = BlockPos(pos.x + dx, pos.y + dy, pos.z + dz)
                     val block = w.getBlockState(checkPos).block
 
                     // 必须是四种容器方块之一：压力容器、红石接口、流体接口、访问接口
@@ -991,7 +992,7 @@ class NuclearReactorBlockEntity(
         for (i in cap until MAX_SLOTS) {
             val stack = getItem(i)
             if (!stack.isEmpty) {
-                net.minecraft.world.Containers.spawn(
+                net.minecraft.world.Containers.dropItemStack(
                     world,
                     pos.x.toDouble(),
                     pos.y.toDouble(),
@@ -1233,7 +1234,7 @@ class NuclearReactorBlockEntity(
                 SlotHeatEnergyInfo(info.heatProduced, info.heatDissipated, info.energyOutput * 5)
             }
             val packet = ReactorHeatInfoPacket(pos, displaySlotHeatInfo)
-            for (player in world.players) {
+            for (player in world.players()) {
                 NetworkManager.sendToClient(player as net.minecraft.server.level.ServerPlayer, packet)
             }
 
@@ -1274,7 +1275,7 @@ class NuclearReactorBlockEntity(
         val hasFuel = (0 until newCapacity).any { !getItem(it).isEmpty }
         val active = hasFuel && redstoneAllowsRun
         if (state.getValue(NuclearReactorBlock.ACTIVE) != active) {
-            world.setBlock(pos, state.setValue(NuclearReactorBlock.ACTIVE, active))
+            world.setBlock(pos, state.setValue(NuclearReactorBlock.ACTIVE, active), 3)
         }
 
         sync.syncCurrentTickFlow()
@@ -1290,7 +1291,7 @@ class NuclearReactorBlockEntity(
                 )))
             ) {
                 setItem(i, ItemStack.EMPTY)
-                net.minecraft.world.Containers.spawn(
+                net.minecraft.world.Containers.dropItemStack(
                     world,
                     pos.x.toDouble(),
                     pos.y.toDouble(),
@@ -1303,7 +1304,7 @@ class NuclearReactorBlockEntity(
             val stack = getItem(i)
             if (!stack.isEmpty) {
                 setItem(i, ItemStack.EMPTY)
-                net.minecraft.world.Containers.spawn(
+                net.minecraft.world.Containers.dropItemStack(
                     world,
                     pos.x.toDouble(),
                     pos.y.toDouble(),
@@ -1329,7 +1330,7 @@ class NuclearReactorBlockEntity(
                 debugHeatRun = (pass == 1)
                 debugSlotX = x
                 debugSlotY = y
-                debugComponentId = BuiltInRegistries.ITEM.getId(stack.item)
+                debugComponentId = BuiltInRegistries.ITEM.getKey(stack.item)
                 comp.processChamber(stack, this, x, y, pass == 1)
             }
 
@@ -1415,7 +1416,7 @@ class NuclearReactorBlockEntity(
         val structureTargets = buildList {
             add(pos)
             for (dir in Direction.values()) {
-                val neighborPos = pos.offset(dir)
+                val neighborPos = pos.relative(dir)
                 if (w.getBlockState(neighborPos).block is ReactorChamberBlock) add(neighborPos)
             }
         }
@@ -1449,7 +1450,7 @@ class NuclearReactorBlockEntity(
         boomPower = boomPower.coerceAtMost(100f)
 
         for (dir in Direction.values()) {
-            val neighborPos = pos.offset(dir)
+            val neighborPos = pos.relative(dir)
             if (w.getBlockState(neighborPos).block is ReactorChamberBlock) {
                 w.destroyBlock(neighborPos, false)
             }
@@ -1473,7 +1474,7 @@ class NuclearReactorBlockEntity(
 
             val posStr = "${pos.x} ${pos.y} ${pos.z}"
 
-            val explosionDamageSource = sw.damageSources.explosion(null, null)
+            val explosionDamageSource = sw.damageSources().explosion(null, null)
            NuclearExplosionManager.startExplosion(
                sw, cx, cy, cz, boomPower, explosionDamageSource,
                ownerUuid = ownerUuid,
@@ -1504,7 +1505,7 @@ class NuclearReactorBlockEntity(
                         val safetyRaw = Component.translatable("chat.ic2_120.nuclear_explosion.safety").string
                         val safetyLines = safetyRaw.split("\n")
 
-                        for (player in sw.server.playerList.playerList) {
+                        for (player in sw.server.playerList.players) {
                             player.displayClientMessage(title, false)
                             player.displayClientMessage(detail, false)
                             player.displayClientMessage(blocksMsg, false)
@@ -1531,7 +1532,7 @@ class NuclearReactorBlockEntity(
         val structureTargets = buildList {
             add(pos)
             for (dir in Direction.values()) {
-                val neighborPos = pos.offset(dir)
+                val neighborPos = pos.relative(dir)
                 if (w.getBlockState(neighborPos).block is ReactorChamberBlock) add(neighborPos)
             }
         }
@@ -1551,7 +1552,7 @@ class NuclearReactorBlockEntity(
         emitHeatBuffer = 0
 
         for (dir in Direction.values()) {
-            val neighborPos = pos.offset(dir)
+            val neighborPos = pos.relative(dir)
             if (w.getBlockState(neighborPos).block is ReactorChamberBlock) {
                 w.destroyBlock(neighborPos, false)
             }
@@ -1567,9 +1568,9 @@ class NuclearReactorBlockEntity(
             val fireTargets = mutableListOf<BlockPos>()
             for (dx in -2..2) for (dy in -2..2) for (dz in -2..2) {
                 if (rng.nextFloat() > 0.02f) continue
-                val p = pos.add(dx, dy, dz)
-                if (!world.isInBuildLimit(p)) continue
-                if (BaseFireBlock.canSurvive(world, p, Direction.UP)) {
+                val p = BlockPos(pos.x + dx, pos.y + dy, pos.z + dz)
+                if (!world.isInWorldBounds(p)) continue
+                if (BaseFireBlock.canBePlacedAt(world, p, Direction.UP)) {
                     fireTargets.add(p)
                 }
             }
@@ -1582,8 +1583,8 @@ class NuclearReactorBlockEntity(
             val waterTargets = mutableListOf<BlockPos>()
             for (dx in -2..2) for (dy in -2..2) for (dz in -2..2) {
                 if (rng.nextFloat() > 0.02f) continue
-                val p = pos.add(dx, dy, dz)
-                if (!world.isInBuildLimit(p)) continue
+                val p = BlockPos(pos.x + dx, pos.y + dy, pos.z + dz)
+                if (!world.isInWorldBounds(p)) continue
                 if (world.getBlockState(p).`is`(Blocks.WATER)) {
                     waterTargets.add(p)
                 }
@@ -1609,8 +1610,8 @@ class NuclearReactorBlockEntity(
             val lavaTargets = mutableListOf<BlockPos>()
             for (dx in -2..2) for (dy in -2..2) for (dz in -2..2) {
                 if (rng.nextFloat() > 0.01f) continue
-                val p = pos.add(dx, dy, dz)
-                if (!world.isInBuildLimit(p)) continue
+                val p = BlockPos(pos.x + dx, pos.y + dy, pos.z + dz)
+                if (!world.isInWorldBounds(p)) continue
                 val state = world.getBlockState(p)
                 val block = state.block
                 // 只允许替换原版方块（namespace == minecraft）：
@@ -1618,7 +1619,7 @@ class NuclearReactorBlockEntity(
                 // 基岩与原版红石系列方块同样禁止替换。
                 if (BuiltInRegistries.BLOCK.getKey(block)!!.namespace != "minecraft") continue
                 if (block === Blocks.BEDROCK || block in VANILLA_REDSTONE_BLOCKS) continue
-                if (state.isSolidBlock(world, p) && state.getDestroySpeed(world, p) >= 0f) {
+                if (state.isSolid() && state.getDestroySpeed(world, p) >= 0f) {
                     lavaTargets.add(p)
                 }
             }
@@ -1634,22 +1635,22 @@ class NuclearReactorBlockEntity(
         val legs = entity.getItemBySlot(EquipmentSlot.LEGS)
         fun isHazmat(stack: ItemStack): Boolean {
             if (stack.isEmpty || stack.item !is ArmorItem) return false
-            val id = BuiltInRegistries.ITEM.getId(stack.item)
+            val id = BuiltInRegistries.ITEM.getKey(stack.item)
             return "hazmat" in id.path
         }
         return isHazmat(helmet) && isHazmat(chest) && isHazmat(legs)
     }
 
     private fun createNuclearHeatDamageSource(world: net.minecraft.server.level.ServerLevel): net.minecraft.world.damagesource.DamageSource {
-        val registry = world.registryAccess().registryOrThrow(net.minecraft.core.registries.BuiltInRegistries.DAMAGE_TYPE)
+        val registry = world.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE)
         val key = net.minecraft.resources.ResourceKey.create(
-            net.minecraft.core.registries.BuiltInRegistries.DAMAGE_TYPE,
+            net.minecraft.core.registries.Registries.DAMAGE_TYPE,
             ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "nuclear_heat")
         )
-        val entry = registry.getEntry(key).orElse(null)
-            ?: registry.getEntry(
+        val entry = registry.getHolder(key).orElse(null)
+            ?: registry.getHolder(
                 net.minecraft.resources.ResourceKey.create(
-                    net.minecraft.core.registries.BuiltInRegistries.DAMAGE_TYPE,
+                    net.minecraft.core.registries.Registries.DAMAGE_TYPE,
                     ResourceLocation.fromNamespaceAndPath("minecraft", "lava")
                 )
             ).orElseThrow()

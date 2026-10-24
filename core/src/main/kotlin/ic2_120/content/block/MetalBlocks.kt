@@ -38,7 +38,7 @@ class TinBlock : Block(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val ingot = TinIngot::class.instance()
             if (ingot != Items.AIR) {
                 ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, TinBlock::class.item(), 1)
@@ -60,7 +60,7 @@ class BronzeBlock : Block(
 ) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val ingot = BronzeIngot::class.instance()
             if (ingot != Items.AIR) {
                 ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, BronzeBlock::class.item(), 1)
@@ -79,7 +79,7 @@ class BronzeBlock : Block(
 class RawLeadBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.RAW_IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val raw = RawLead::class.instance()
             val block = RawLeadBlock::class.instance()
             if (raw != Items.AIR) {
@@ -102,7 +102,7 @@ class RawLeadBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.RAW_IRON_
 class RawTinBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.RAW_IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val raw = RawTin::class.instance()
             val block = RawTinBlock::class.instance()
             if (raw != Items.AIR) {
@@ -125,7 +125,7 @@ class RawTinBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.RAW_IRON_B
 class RawUraniumBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.RAW_IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val raw = RawUranium::class.instance()
             val block = RawUraniumBlock::class.instance()
             if (raw != Items.AIR) {
@@ -150,7 +150,7 @@ class RawUraniumBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.RAW_IR
 class LeadBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val ingot = LeadIngot::class.instance()
             if (ingot != Items.AIR) {
                 ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, LeadBlock::class.item(), 1)
@@ -167,7 +167,7 @@ class LeadBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).
 class SteelBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val ingot = SteelIngot::class.instance()
             if (ingot != Items.AIR) {
                 ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, SteelBlock::class.item(), 1)
@@ -184,7 +184,7 @@ class SteelBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
 class UraniumBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val ingot = UraniumIngot::class.instance()
             if (ingot != Items.AIR) {
                 ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, UraniumBlock::class.item(), 1)
@@ -201,7 +201,7 @@ class UraniumBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOC
 class SilverBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5.0f, 6.0f)) {
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val ingot = SilverIngot::class.instance()
             if (ingot != Items.AIR) {
                 ShapedRecipeBuilder.shaped(RecipeCategory.BUILDING_BLOCKS, SilverBlock::class.item(), 1)

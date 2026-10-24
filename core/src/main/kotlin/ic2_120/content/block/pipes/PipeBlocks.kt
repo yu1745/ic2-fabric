@@ -5,6 +5,10 @@ import ic2_120.compat.validateTicker
 import net.minecraft.world.level.block.entity.BlockEntityType
 
 import net.minecraft.data.recipes.RecipeProvider.has
+import net.minecraft.data.recipes.RecipeProvider.getHasName
+import com.mojang.serialization.MapCodec
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Item
 
 import ic2_120.compat.isClient
 import ic2_120.compat.world
@@ -80,7 +84,7 @@ abstract class BasePipeBlock(
         get() = size.baseBucketsPerSecond * material.multiplier
 
     init {
-        setDefaultState(stateDefinition.any()()
+        registerDefaultState(stateDefinition.any()
             .setValue(BlockStateProperties.WATERLOGGED, false)
             .setValue(NORTH, false)
             .setValue(SOUTH, false)
@@ -104,7 +108,7 @@ abstract class BasePipeBlock(
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
         val world = ctx.level
-        val pos = ctx.pos
+        val pos = ctx.clickedPos
         val fluidState = world.getFluidState(pos)
         return defaultBlockState()
             .setValue(BlockStateProperties.WATERLOGGED, fluidState.getType() == Fluids.WATER)
@@ -126,7 +130,7 @@ abstract class BasePipeBlock(
         neighborPos: BlockPos
     ): BlockState {
         if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
         }
         val be = world.getBlockEntity(pos) as? PipeBlockEntity
         val property = propertyFor(direction)
@@ -140,26 +144,26 @@ abstract class BasePipeBlock(
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getFluidState(state: BlockState): FluidState =
-        if (state.getValue(BlockStateProperties.WATERLOGGED)) Fluids.WATER.getSource(false) else Fluids.EMPTY.defaultBlockState()
+        if (state.getValue(BlockStateProperties.WATERLOGGED)) Fluids.WATER.getSource(false) else Fluids.EMPTY.defaultFluidState()
 
-    override fun canFillWithFluid(world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
+    override fun canPlaceLiquid(player: Player?, world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
         !state.getValue(BlockStateProperties.WATERLOGGED) && fluid == Fluids.WATER
 
-    override fun tryFillWithFluid(
+    override fun placeLiquid(
         world: LevelAccessor,
         pos: BlockPos,
         state: BlockState,
         fluidState: FluidState
     ): Boolean {
-        if (!canFillWithFluid(world, pos, state, fluidState.getType())) return false
+        if (!canPlaceLiquid(null, world, pos, state, fluidState.getType())) return false
         if (!state.getValue(BlockStateProperties.WATERLOGGED)) {
             world.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, true), Block.UPDATE_ALL)
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.tickDelay(world))
         }
         return true
     }
 
-    override fun tryDrainFluid(world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack = ItemStack.EMPTY
+    override fun pickupBlock(player: Player?, world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack = ItemStack.EMPTY
 
     internal fun recomputeState(world: Level, pos: BlockPos, state: BlockState, be: PipeBlockEntity): BlockState {
         var next = state
@@ -171,7 +175,7 @@ abstract class BasePipeBlock(
 
     protected open fun canConnect(world: LevelAccessor, pos: BlockPos, direction: Direction, be: PipeBlockEntity?): Boolean {
         if (be?.isDisabled(direction) == true) return false
-        val neighborPos = pos.offset(direction)
+        val neighborPos = pos.relative(direction)
         val neighborState = world.getBlockState(neighborPos)
         val neighbor = neighborState.block
         if (neighbor is BasePipeBlock) {
@@ -201,9 +205,9 @@ abstract class BasePipeBlock(
     @Environment(EnvType.CLIENT)
     override fun appendHoverText(
         stack: ItemStack,
-        world: BlockGetter?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: TooltipContext
+        type: TooltipFlag
     ) {
         super.appendHoverText(stack, context, tooltip, type)
         val flowPerSec = flowRateBucketsPerSecond * 1000 // 转换为 mB/s
@@ -225,7 +229,7 @@ abstract class BasePipeBlock(
     /** Call after setDefaultState to populate the shape cache. */
     protected fun buildShapeCache() {
         val map = java.util.IdentityHashMap<BlockState, VoxelShape>()
-        for (state in stateDefinition.states) map[state] = pipeShape(state)
+        for (state in stateDefinition.possibleStates) map[state] = pipeShape(state)
         shapeCache = map
     }
 
@@ -234,10 +238,6 @@ abstract class BasePipeBlock(
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun getShape(state: BlockState, world: BlockGetter, pos: BlockPos, context: CollisionContext): VoxelShape = shapeCache[state] ?: pipeShape(state)
-
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun getCullingShape(state: BlockState, world: BlockGetter, pos: BlockPos): VoxelShape =
-        Shapes.empty()
 
     protected open fun pipeShape(state: BlockState): VoxelShape {
         val r = size.radius
@@ -302,9 +302,9 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
         val world = ctx.level
-        val pos = ctx.pos
+        val pos = ctx.clickedPos
         val fluidState = world.getFluidState(pos)
-        val facing = ctx.direction.opposite
+        val facing = ctx.clickedFace.opposite
         val back = facing.opposite
         val be = world.getBlockEntity(pos) as? PipeBlockEntity
         return defaultBlockState()
@@ -326,8 +326,8 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
     private fun canConnect(world: LevelAccessor, pos: BlockPos, direction: Direction, be: PipeBlockEntity?, overrideFacing: Direction?): Boolean {
         if (be?.isDisabled(direction) == true) return false
         val state = world.getBlockState(pos)
-        val facing = overrideFacing ?: (if (state.contains(BlockStateProperties.FACING)) state.getValue(BlockStateProperties.FACING) else Direction.NORTH)
-        val neighborPos = pos.offset(direction)
+        val facing = overrideFacing ?: (if (state.hasProperty(BlockStateProperties.FACING)) state.getValue(BlockStateProperties.FACING) else Direction.NORTH)
+        val neighborPos = pos.relative(direction)
         val neighborState = world.getBlockState(neighborPos)
         val neighbor = neighborState.block
 
@@ -360,7 +360,7 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
 
         for (dir in Direction.entries) {
             if (dir == facing) continue
-            if (state.get(propertyFor(dir))) {
+            if (state.getValue(propertyFor(dir))) {
                 shape = when (dir) {
                     Direction.NORTH -> Shapes.or(shape, Shapes.box(min, min, 0.0, max, max, min))
                     Direction.SOUTH -> Shapes.or(shape, Shapes.box(min, min, max, max, max, 1.0))
@@ -398,13 +398,14 @@ abstract class PumpAttachmentBlock(material: PipeMaterial) : BasePipeBlock(PipeS
 
 @ModBlock(name = "bronze_pipe_tiny", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
 class BronzePipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.BRONZE) {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { BronzePipeTinyBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePipeTinyBlock::class.item(), 6)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .define('X', BronzeCasing::class.instance())
-                .unlockedBy(has(BronzeCasing::class.instance()), has(BronzeCasing::class.instance()))
+                .unlockedBy(getHasName(BronzeCasing::class.instance()), has(BronzeCasing::class.instance()))
                 .save(exporter, BronzePipeTinyBlock::class.id())
         }
     }
@@ -412,13 +413,14 @@ class BronzePipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.BRONZE) {
 
 @ModBlock(name = "bronze_pipe_small", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
 class BronzePipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.BRONZE) {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { BronzePipeSmallBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePipeSmallBlock::class.item(), 3)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .define('X', BronzeCasing::class.instance())
-                .unlockedBy(has(BronzeCasing::class.instance()), has(BronzeCasing::class.instance()))
+                .unlockedBy(getHasName(BronzeCasing::class.instance()), has(BronzeCasing::class.instance()))
                 .save(exporter, BronzePipeSmallBlock::class.id())
         }
     }
@@ -426,13 +428,14 @@ class BronzePipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.BRONZE) 
 
 @ModBlock(name = "bronze_pipe_medium", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
 class BronzePipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.BRONZE) {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { BronzePipeMediumBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePipeMediumBlock::class.item(), 2)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .define('X', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
-                .unlockedBy(has(BronzePlate::class.instance()), has(BronzePlate::class.instance()))
+                .unlockedBy(getHasName(BronzePlate::class.instance()), has(BronzePlate::class.instance()))
                 .save(exporter, BronzePipeMediumBlock::class.id())
         }
     }
@@ -440,13 +443,14 @@ class BronzePipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.BRONZE
 
 @ModBlock(name = "bronze_pipe_large", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
 class BronzePipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.BRONZE) {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { BronzePipeLargeBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, BronzePipeLargeBlock::class.item(), 1)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .define('X', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
-                .unlockedBy(has(BronzePlate::class.instance()), has(BronzePlate::class.instance()))
+                .unlockedBy(getHasName(BronzePlate::class.instance()), has(BronzePlate::class.instance()))
                 .save(exporter, BronzePipeLargeBlock::class.id())
         }
     }
@@ -454,13 +458,14 @@ class BronzePipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.BRONZE) 
 
 @ModBlock(name = "carbon_pipe_tiny", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
 class CarbonPipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.CARBON) {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { CarbonPipeTinyBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPipeTinyBlock::class.item(), 6)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .define('X', CarbonFibre::class.instance())
-                .unlockedBy(has(CarbonFibre::class.instance()), has(CarbonFibre::class.instance()))
+                .unlockedBy(getHasName(CarbonFibre::class.instance()), has(CarbonFibre::class.instance()))
                 .save(exporter, CarbonPipeTinyBlock::class.id())
         }
     }
@@ -468,13 +473,14 @@ class CarbonPipeTinyBlock : BasePipeBlock(PipeSize.TINY, PipeMaterial.CARBON) {
 
 @ModBlock(name = "carbon_pipe_small", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
 class CarbonPipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.CARBON) {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { CarbonPipeSmallBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPipeSmallBlock::class.item(), 3)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .define('X', CarbonFibre::class.instance())
-                .unlockedBy(has(CarbonFibre::class.instance()), has(CarbonFibre::class.instance()))
+                .unlockedBy(getHasName(CarbonFibre::class.instance()), has(CarbonFibre::class.instance()))
                 .save(exporter, CarbonPipeSmallBlock::class.id())
         }
     }
@@ -482,13 +488,14 @@ class CarbonPipeSmallBlock : BasePipeBlock(PipeSize.SMALL, PipeMaterial.CARBON) 
 
 @ModBlock(name = "carbon_pipe_medium", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
 class CarbonPipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.CARBON) {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { CarbonPipeMediumBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPipeMediumBlock::class.item(), 2)
                 .pattern("XXX").pattern("   ").pattern("XXX")
                 .define('X', CarbonMesh::class.instance())
-                .unlockedBy(has(CarbonMesh::class.instance()), has(CarbonMesh::class.instance()))
+                .unlockedBy(getHasName(CarbonMesh::class.instance()), has(CarbonMesh::class.instance()))
                 .save(exporter, CarbonPipeMediumBlock::class.id())
         }
     }
@@ -496,13 +503,14 @@ class CarbonPipeMediumBlock : BasePipeBlock(PipeSize.MEDIUM, PipeMaterial.CARBON
 
 @ModBlock(name = "carbon_pipe_large", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
 class CarbonPipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.CARBON) {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { CarbonPipeLargeBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
             ShapedRecipeBuilder.shaped(RecipeCategory.MISC, CarbonPipeLargeBlock::class.item(), 1)
                 .pattern("X X").pattern("X X").pattern("X X")
                 .define('X', CarbonMesh::class.instance())
-                .unlockedBy(has(CarbonMesh::class.instance()), has(CarbonMesh::class.instance()))
+                .unlockedBy(getHasName(CarbonMesh::class.instance()), has(CarbonMesh::class.instance()))
                 .save(exporter, CarbonPipeLargeBlock::class.id())
         }
     }
@@ -510,6 +518,7 @@ class CarbonPipeLargeBlock : BasePipeBlock(PipeSize.LARGE, PipeMaterial.CARBON) 
 
 @ModBlock(name = "bronze_pump_attachment", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
 class BronzePumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.BRONZE) {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { BronzePumpAttachmentBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -517,7 +526,7 @@ class BronzePumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.BRONZE) {
                 .pattern(" P ").pattern(" T ").pattern(" P ")
                 .define('P', Ingredient.of(ModTags.Compat.Items.PLATES_BRONZE))
                 .define('T', BronzePipeTinyBlock::class.item())
-                .unlockedBy(has(BronzePipeTinyBlock::class.item()), has(BronzePipeTinyBlock::class.item()))
+                .unlockedBy(getHasName(BronzePipeTinyBlock::class.item()), has(BronzePipeTinyBlock::class.item()))
                 .save(exporter, BronzePumpAttachmentBlock::class.id())
         }
     }
@@ -525,6 +534,7 @@ class BronzePumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.BRONZE) {
 
 @ModBlock(name = "carbon_pump_attachment", registerItem = true, tab = CreativeTab.IC2_MACHINES, group = "pipe")
 class CarbonPumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.CARBON) {
+    override fun codec(): MapCodec<out BaseEntityBlock> = BlockBehaviour.simpleCodec { CarbonPumpAttachmentBlock() }
     companion object {
         @RecipeProvider
         fun generateRecipes(exporter: RecipeOutput) {
@@ -532,7 +542,7 @@ class CarbonPumpAttachmentBlock : PumpAttachmentBlock(PipeMaterial.CARBON) {
                 .pattern(" P ").pattern(" T ").pattern(" P ")
                 .define('P', CarbonPlate::class.instance())
                 .define('T', CarbonPipeTinyBlock::class.item())
-                .unlockedBy(has(CarbonPipeTinyBlock::class.item()), has(CarbonPipeTinyBlock::class.item()))
+                .unlockedBy(getHasName(CarbonPipeTinyBlock::class.item()), has(CarbonPipeTinyBlock::class.item()))
                 .save(exporter, CarbonPumpAttachmentBlock::class.id())
         }
     }

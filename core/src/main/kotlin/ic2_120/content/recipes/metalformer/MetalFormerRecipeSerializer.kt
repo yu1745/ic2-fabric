@@ -1,7 +1,5 @@
 package ic2_120.content.recipes.metalformer
 
-import net.minecraft.core.registries.BuiltInRegistries
-
 import ic2_120.content.recipes.INGREDIENT_CODEC
 import ic2_120.content.recipes.RecipeCodecBridge
 
@@ -47,12 +45,12 @@ object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
     private fun read(buf: RegistryFriendlyByteBuf): MetalFormerRecipe {
         val ingredient = Ingredient.CONTENTS_STREAM_CODEC.decode(buf)
         val output = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf)
-        val mode = buf.readString()
+        val mode = buf.readUtf()
 
         return when (mode) {
-            "cutting" -> CuttingRecipe(id, ingredient, output)
-            "extruding" -> ExtrudingRecipe(id, ingredient, output)
-            else -> RollingRecipe(id, ingredient, output)
+            "cutting" -> CuttingRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, output)
+            "extruding" -> ExtrudingRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, output)
+            else -> RollingRecipe(RecipeCodecBridge.DUMMY_ID, ingredient, output)
         }
     }
 
@@ -65,7 +63,7 @@ object MetalFormerRecipeSerializer : RecipeSerializer<MetalFormerRecipe> {
             is ExtrudingRecipe -> "extruding"
             else -> "rolling"
         }
-        buf.writeString(mode)
+        buf.writeUtf(mode)
     }
 
     override fun codec(): MapCodec<MetalFormerRecipe> = RecipeCodecBridge.jsonMapCodec(

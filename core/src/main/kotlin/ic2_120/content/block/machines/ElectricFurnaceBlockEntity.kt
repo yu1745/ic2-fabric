@@ -193,7 +193,7 @@ class ElectricFurnaceBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.getContainerSize())
         return buf
     }
 
@@ -325,7 +325,7 @@ class ElectricFurnaceBlockEntity(
 
     fun collectXp(player: Player) {
         val xp = net.minecraft.util.Mth.floor(storedExperience)
-        val frac = net.minecraft.util.Mth.fraction(storedExperience)
+        val frac = net.minecraft.util.Mth.frac(storedExperience)
         var amount = xp
         if (frac != 0.0f && Math.random() < frac) amount++
         if (amount > 0) {

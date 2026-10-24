@@ -23,7 +23,6 @@ import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.ArmorItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -61,8 +60,8 @@ class EnergyStorageScreenHandler(
         getFacing = {
             context.evaluate({ world, pos ->
                 val state = world.getBlockState(pos)
-                state.getOptional(BlockStateProperties.FACING)
-                    .orElse(state.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH))
+                state.getOptionalValue(BlockStateProperties.FACING)
+                    .orElse(state.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH))
             }, Direction.NORTH)
         },
         tier = config.tier,
@@ -76,7 +75,7 @@ class EnergyStorageScreenHandler(
     private fun resolveConfig(): EnergyStorageConfig {
         return context.evaluate({ world, pos ->
             val block = world.getBlockState(pos).block
-            val id = BuiltInRegistries.BLOCK.getId(block)
+            val id = BuiltInRegistries.BLOCK.getKey(block)
             EnergyStorageConfig.fromBlockPath(id.path) ?: EnergyStorageConfig.BATBOX
         }, EnergyStorageConfig.BATBOX)
     }
@@ -127,9 +126,9 @@ class EnergyStorageScreenHandler(
         y: Int,
         equipmentSlot: EquipmentSlot
     ): Slot = object : Slot(inventory, index, x, y) {
-        override fun canInsert(stack: ItemStack): Boolean {
+        override fun mayPlace(stack: ItemStack): Boolean {
             val item = stack.item
-            return item is ArmorItem && item.type.getSlot() == equipmentSlot
+            return item is ArmorItem && item.type.slot == equipmentSlot
         }
     }
 

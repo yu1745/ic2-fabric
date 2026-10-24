@@ -71,44 +71,44 @@ class PainterItem : Item(Item.Properties().stacksTo(1).durability(MAX_DAMAGE)) {
 
     override fun useOn(context: UseOnContext): InteractionResult {
         val player = context.player ?: return InteractionResult.PASS
-        val stack = context.stack
+        val stack = context.itemInHand
         val dye = player.getItemInHand(InteractionHand.OFF_HAND).item as? DyeItem
         if (dye != null) {
-            if (setColor(stack, dye.color, player, InteractionHand.OFF_HAND)) {
-                return if (context.level().isClientSide) InteractionResult.SUCCESS else InteractionResult.CONSUME
+            if (setColor(stack, dye.dyeColor, player, InteractionHand.OFF_HAND)) {
+                return if (context.level.isClientSide) InteractionResult.SUCCESS else InteractionResult.CONSUME
             }
         }
 
         val color = getColor(stack) ?: return InteractionResult.PASS
-        val oldBlock = context.level.getBlockState(context.pos).block
+        val oldBlock = context.level.getBlockState(context.clickedPos).block
         val target = wallFor(color)
         if (target == null || oldBlock === target) return InteractionResult.PASS
         if (wallColor(oldBlock) != null) {
-            if (!context.level().isClientSide && ClaimProtection.isProtected(context.level, context.pos, player, ClaimProtection.EDIT_BLOCK)) {
+            if (!context.level.isClientSide && ClaimProtection.isProtected(context.level, context.clickedPos, player, ClaimProtection.EDIT_BLOCK)) {
                 return InteractionResult.FAIL
             }
-            context.level.setBlock(context.pos, target.defaultBlockState())
-            if (!context.level().isClientSide) damagePainter(stack, player, context.hand)
+            context.level.setBlock(context.clickedPos, target.defaultBlockState(), 3)
+            if (!context.level.isClientSide) damagePainter(stack, player, context.hand)
             return InteractionResult.CONSUME
         }
         return InteractionResult.PASS
     }
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getItemInHand(player.usedItemHand)
+        val stack = user.getItemInHand(hand)
         val dyeHand = if (hand == InteractionHand.MAIN_HAND) InteractionHand.OFF_HAND else InteractionHand.MAIN_HAND
         val dye = user.getItemInHand(dyeHand).item as? DyeItem
-        if (dye != null && setColor(stack, dye.color, user, dyeHand)) {
-            return InteractionResultHolder.success(stack, world.isClient)
+        if (dye != null && setColor(stack, dye.dyeColor, user, dyeHand)) {
+            return InteractionResultHolder.success(stack)
         }
         return InteractionResultHolder.pass(stack)
     }
 
     override fun appendHoverText(
         stack: ItemStack,
-        world: Level?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: net.minecraft.client.item.TooltipContext,
+        type: TooltipFlag
     ) {
         super.appendHoverText(stack, context, tooltip, type)
         val color = getColor(stack)
@@ -121,7 +121,7 @@ class PainterItem : Item(Item.Properties().stacksTo(1).durability(MAX_DAMAGE)) {
         tooltip.add(
             Component.translatable(
                 "tooltip.ic2_120.painter.durability",
-                (stack.maxDamage - stack.damage).coerceAtLeast(0),
+                (stack.maxDamage - stack.damageValue).coerceAtLeast(0),
                 stack.maxDamage,
             ).withStyle(ChatFormatting.GRAY)
         )
@@ -137,14 +137,14 @@ class PainterItem : Item(Item.Properties().stacksTo(1).durability(MAX_DAMAGE)) {
     }
 
     private fun damagePainter(stack: ItemStack, player: Player, hand: InteractionHand) {
-        val nextDamage = stack.damage + 1
+        val nextDamage = stack.damageValue + 1
         if (nextDamage >= stack.maxDamage) {
             // 原版 IC2 涂刷器耗尽后不会消失，而是恢复成未着色的初始刷子。
-            stack.damage = 0
+            stack.damageValue = 0
             val nbt0 = stack.orCreateNbt; nbt0.remove(COLOR_KEY); stack.orCreateNbt = nbt0
             player
         } else {
-            stack.damage = nextDamage
+            stack.damageValue = nextDamage
         }
     }
 
@@ -154,7 +154,7 @@ class PainterItem : Item(Item.Properties().stacksTo(1).durability(MAX_DAMAGE)) {
 
         fun getColor(stack: ItemStack): DyeColor? {
             val nbt = stack.orCreateNbt
-        if (nbt.allTags.isEmpty) return null
+        if (nbt.isEmpty) return null
             if (!nbt.contains(COLOR_KEY)) return null
             return DyeColor.byId(nbt.getInt(COLOR_KEY))
         }

@@ -71,7 +71,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.ListTag
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.level.ServerLevel
@@ -384,7 +383,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 
@@ -402,7 +401,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(AnimalmatronSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -425,7 +424,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(AnimalmatronSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putFloat("EnergyDebt", energyDebtF)
@@ -500,7 +499,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         val report = ScanReport()
 
         // 获取范围内的动物实体（仅包含白名单中的动物）
-        val box = AABB(pos).expand(SCAN_RADIUS.toDouble())
+        val box = AABB(pos).inflate(SCAN_RADIUS.toDouble())
         val animals = world.getEntitiesOfClass(
             AgeableMob::class.java,
             box
@@ -693,7 +692,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             val child = animal.getBreedOffspring(world, mate) ?: continue
 
             child.setBaby(true)
-            child.refreshPositionAndAngles(animal.x, animal.y, animal.z, 0f, 0f)
+            child.moveTo(animal.x, animal.y, animal.z, 0f, 0f)
             animal.spawnChildFromBreeding(world, mate)
             world.addFreshEntityWithPassengers(child)
 
@@ -793,7 +792,7 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
             }
             "minecraft:sheep" -> {
                 if (animal is Sheep && !animal.isSheared) {
-                    val colorName = animal.color.asString()
+                    val colorName = animal.color.name.lowercase()
                     val woolItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("minecraft", "${colorName}_wool"))
                     ItemStack(woolItem, 1)
                 } else null
@@ -809,12 +808,12 @@ slot == SLOT_SHEARS -> stack.item == Items.SHEARS
         val shears = getItem(SLOT_SHEARS)
         if (shears.isEmpty || shears.item != Items.SHEARS) return false
 
-        val currentDamage = shears.damage
+        val currentDamage = shears.damageValue
         if (currentDamage >= shears.maxDamage - 1) {
             // 最后一次使用，剪刀损坏
             setItem(SLOT_SHEARS, ItemStack.EMPTY)
         } else {
-            shears.damage = currentDamage + 1
+            shears.damageValue = currentDamage + 1
         }
         setChanged()
         return true

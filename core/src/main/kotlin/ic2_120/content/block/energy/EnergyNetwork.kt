@@ -535,7 +535,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             if (ENABLE_OVERVOLTAGE_LOG) {
                 log.debug("[超压检测]   → 触发爆炸！电网等级 $outputLevel > 机器耐压 $effectiveTier")
             }
-            if (be is Container) be.clear()
+            if (be is Container) be.clearContent()
             world.destroyBlock(neighborPos, false)
             val x = neighborPos.x + 0.5
             val y = neighborPos.y + 0.5
@@ -850,7 +850,7 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             val used = transferRate - remaining
             val pos = BlockPos.of(cablePosLong)
             // 只为 Jade 显示同步，绝不为它同步加载区块（曾致主线程卡 60s 被 Watchdog 砍）
-            if (!world.isChunkLoaded(pos)) continue
+            if (!world.isLoaded(pos)) continue
             val be = world.getBlockEntity(pos)
             if (be is ic2_120.content.block.cables.CableBlockEntity) {
                 be.cableLoad = used
@@ -973,8 +973,8 @@ class EnergyNetwork : SnapshotParticipant<EnergyNetwork.NetworkSnapshot>() {
             cableRates[cablePosLong] = be?.effectiveTransferRate ?: block.getTransferRate()
             val adjacent = neighbors.getOrPut(cablePosLong) { mutableListOf() }
             for (dir in Direction.values()) {
-                if (!state.get(BaseCableBlock.propertyFor(dir))) continue
-                val neighborPos = cablePos.offset(dir)
+                if (!state.getValue(BaseCableBlock.propertyFor(dir))) continue
+                val neighborPos = cablePos.relative(dir)
                 val neighborLong = neighborPos.asLong()
                 if (neighborLong in cables) {
                     adjacent.add(neighborLong)

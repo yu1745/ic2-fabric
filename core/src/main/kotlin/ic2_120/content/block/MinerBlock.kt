@@ -26,7 +26,6 @@ import net.minecraft.data.recipes.RecipeOutput
 import net.minecraft.data.recipes.ShapedRecipeBuilder
 import net.minecraft.world.item.Items
 import net.minecraft.data.recipes.RecipeCategory
-import java.util.function.Consumer
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
@@ -59,7 +58,7 @@ abstract class BaseMinerBlock : MachineBlock(defaultMachineSettings() .noOcclusi
         super.getStateForPlacement(ctx)?.setValue(ACTIVE, false)
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult, hand: InteractionHand): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
             getMenuProvider(state, world, pos)?.let { player.openMenu(it) }
         }
@@ -151,7 +150,7 @@ class MinerBlock : BaseMinerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val machine = MachineCasingBlock::class.item()
             val circuit = Circuit::class.instance()
             val miningPipe = MiningPipeBlock::class.item()
@@ -187,7 +186,7 @@ class AdvancedMinerBlock : BaseMinerBlock() {
 
     companion object {
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val alloy = Alloy::class.instance()
             val miner = MinerBlock::class.item()
             val teleporter = TeleporterBlock::class.item()

@@ -30,7 +30,6 @@ import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
 import net.minecraft.world.level.Level
-import java.util.function.Consumer
 
 /**
  * 纳米头盔 (Nano Helmet)
@@ -77,7 +76,7 @@ class NanoHelmet : NanoArmorItem(ModArmorMaterials.NANO_ARMOR, ArmorItem.Type.HE
         }
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val plate = CarbonPlate::class.instance()
             val crystal = EnergyCrystalItem::class.instance()
             val goggles = NightVisionGoggles::class.instance()

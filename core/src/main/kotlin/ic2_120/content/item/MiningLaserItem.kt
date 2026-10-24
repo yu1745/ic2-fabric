@@ -129,8 +129,8 @@ class MiningLaserItem : Item(
     /**
      * 右键点击实体时不执行实体交互，仍发射激光。
      */
-    override fun useOnEntity(stack: ItemStack, user: Player, entity: LivingEntity, hand: InteractionHand): InteractionResult {
-        return use(user.world, user, hand).result
+    override fun interactLivingEntity(stack: ItemStack, user: Player, entity: LivingEntity, hand: InteractionHand): InteractionResult {
+        return use(user.level(), user, hand).result
     }
 
     /**
@@ -141,13 +141,13 @@ class MiningLaserItem : Item(
     }
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = user.getItemInHand(player.usedItemHand)
+        val stack = user.getItemInHand(hand)
 
         // 客户端在按住模式键切模式时仍可能发来 use；与切模式包同 tick 的这一次不发射（见 [MiningLaserServerSuppress]）
         if (!world.isClient) {
             val sp = user as? ServerPlayer
             if (sp != null && MiningLaserServerSuppress.consumeSuppressNextFire(sp)) {
-                return InteractionResultHolder.success(stack, false)
+                return InteractionResultHolder.success(stack)
             }
         }
 
@@ -157,8 +157,8 @@ class MiningLaserItem : Item(
         if (getEnergy(stack) < mode.energyCost) return InteractionResultHolder.pass(stack)
 
         if (!world.isClient) {
-            val pitch = user.pitch
-            val yaw = user.yaw
+            val pitch = user.xRot
+            val yaw = user.yRot
 
             if (mode.scatterCount > 1) {
                 // 散射/3x3 模式：发射多个平行弹体，仅在起点做垂直散布
@@ -199,7 +199,7 @@ class MiningLaserItem : Item(
             setEnergy(stack, getEnergy(stack) - mode.energyCost)
 
             // 设置使用冷却：5 tick（每秒最多 4 次）
-            user.itemCooldownManager.set(this, 5)
+            user.cooldowns.addCooldown(this, 5)
         }
 
         return InteractionResultHolder.success(stack)
@@ -235,7 +235,7 @@ class MiningLaserItem : Item(
     override fun getBarWidth(stack: ItemStack) = getEnergyBarStep(stack)
     override fun getBarColor(stack: ItemStack) = getEnergyBarColor(stack)
 
-    override fun postMine(
+    override fun mineBlock(
         stack: ItemStack,
         world: Level,
         state: net.minecraft.world.level.block.state.BlockState,

@@ -4,6 +4,7 @@ import ic2_120.compat.validateTicker
 
 import net.minecraft.world.level.block.entity.BlockEntityType
 
+import net.minecraft.data.recipes.RecipeProvider.getHasName
 import net.minecraft.data.recipes.RecipeProvider.has
 
 import ic2_120.compat.isClient
@@ -56,7 +57,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                 .define('L', Items.LEAD)
                 .define('C', casing)
                 .unlockedBy(
-                    has(casing),
+                    getHasName(casing),
                     has(casing)
                 )
                 .save(exporter, LeashKineticGeneratorBlock::class.id())
@@ -98,7 +99,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                 // Unleash: detach mob, kill anchor, return lead
                 val mob = be.findLeashedMob()
                 val knot = be.findKnot()
-                mob?.detachLeash(true, true)
+                mob?.dropLeash(true, true)
                 knot?.kill()
                 knot?.remove(Entity.RemovalReason.DISCARDED)
                 be.setLeashedMob(null, "")
@@ -114,12 +115,12 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                 Mob::class.java,
                 AABB(pos).inflate(10.0)
             ) { mob ->
-                mob.isAlive && mob.holdingEntity === player
+                mob.isAlive && mob.leashHolder === player
             }
 
             val mob = nearbyMobs.firstOrNull()
             if (mob != null) {
-                mob.detachLeash(true, false)
+                mob.dropLeash(true, false)
                 val serverWorld = world as? ServerLevel
                 if (serverWorld != null) {
                     val anchor = EntityType.ARMOR_STAND.create(serverWorld)
@@ -130,7 +131,7 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                         anchor.isInvisible = true
                         anchor.setNoGravity(true)
                         serverWorld.addFreshEntity(anchor)
-                        mob.attachLeash(anchor, true)
+                        mob.setLeashedTo(anchor, true)
                         be.setLeashedMob(mob.uuid, mob.name.string, anchor.uuid)
                     }
                 }
@@ -148,13 +149,13 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
         return InteractionResult.SUCCESS
     }
 
-    override fun playerWillDestroy(world: Level, pos: BlockPos, state: BlockState, player: Player) {
+    override fun playerWillDestroy(world: Level, pos: BlockPos, state: BlockState, player: Player): BlockState {
         if (!world.isClient) {
             val be = world.getBlockEntity(pos) as? LeashKineticGeneratorBlockEntity
             be?.let {
                 val mob = it.findLeashedMob()
                 if (mob != null && mob.isAlive) {
-                    mob.detachLeash(true, true)
+                    mob.dropLeash(true, true)
                 }
                 val knot = it.findKnot()
                 if (knot != null && knot.isAlive) {
@@ -163,6 +164,6 @@ class LeashKineticGeneratorBlock : DirectionalMachineBlock() {
                 }
             }
         }
-        super.playerWillDestroy(world, pos, state, player)
+        return super.playerWillDestroy(world, pos, state, player)
     }
 }

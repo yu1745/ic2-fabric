@@ -77,9 +77,9 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
 
     override fun appendHoverText(
         stack: ItemStack,
-        world: Level?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipFlag
     ) {
         super.appendHoverText(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
@@ -118,7 +118,7 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
                 }
                 override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
                     val buf = FriendlyByteBuf(Unpooled.buffer())
-                        val s = serverPlayer.getItemInHand(player.usedItemHand)
+                        val s = serverPlayer.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND)
                         val t = getScannerType(s)
                         buf.writeInt(IElectricTool.getEnergy(s).toInt().coerceAtMost(Int.MAX_VALUE))
                         buf.writeInt(t.energyCapacity.toInt().coerceAtMost(Int.MAX_VALUE))
@@ -154,7 +154,7 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
         }
 
         fun getUsesRemaining(stack: ItemStack): Int {
-            return stack.orCreateNbt = stack.orCreateNbt.apply { getInt(NBT_USES) }.takeIf { it > 0 }
+            return stack.orCreateNbt.getInt(NBT_USES).takeIf { it > 0 }
                 ?: getScannerType(stack).maxUses
         }
 
@@ -188,8 +188,8 @@ class OdScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
                 .define('b', battery)
                 .define('c', insulatedCopper)
                 .unlockedBy(
-                    net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.has(battery),
-                    net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.has(battery)
+                    getHasName(battery),
+                    has(battery)
                 )
                 .save(exporter, OdScannerItem::class.id())
         }
@@ -211,9 +211,9 @@ class AdvancedScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
 
     override fun appendHoverText(
         stack: ItemStack,
-        world: Level?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipFlag
     ) {
         super.appendHoverText(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
@@ -264,8 +264,8 @@ class AdvancedScannerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
                 .define('i', insulatedGold)
                 .define('I', odScanner)
                 .unlockedBy(
-                    net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.has(odScanner),
-                    net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider.has(odScanner)
+                    getHasName(odScanner),
+                    has(odScanner)
                 )
                 .save(exporter, AdvancedScannerItem::class.id())
         }

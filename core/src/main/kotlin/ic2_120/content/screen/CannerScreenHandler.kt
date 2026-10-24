@@ -60,10 +60,10 @@ class CannerScreenHandler(
         // 中列材料输入 (80,43) — 根据模式锁定
         val materialSpec = itemStorage?.deriveSlotSpec(CannerBlockEntity.SLOT_MATERIAL) ?: SlotSpec()
         addTrackedSlot(object : PredicateSlot(blockInventory, CannerBlockEntity.SLOT_MATERIAL, 80, 43, materialSpec) {
-            override fun canInsert(stack: ItemStack): Boolean {
+            override fun mayPlace(stack: ItemStack): Boolean {
                 val mode = sync.getMode()
                 if (mode == CannerSync.Mode.EMPTY_LIQUID) return false
-                return super.canInsert(stack)
+                return super.mayPlace(stack)
             }
         }, CannerBlockEntity.SLOT_MATERIAL)
 

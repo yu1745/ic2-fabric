@@ -33,7 +33,7 @@ class ModItemTagProvider(
 
     private val compatPathsBuilt = mutableSetOf<String>()
 
-    override fun configure(registries: HolderLookup.Provider) {
+    override fun addTags(registries: HolderLookup.Provider) {
         for ((clazz, paths) in MaterialTagRegistry.itemEntries) {
             @Suppress("UNCHECKED_CAST")
             val item = (clazz as KClass<out Item>).instance()

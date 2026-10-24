@@ -50,7 +50,7 @@ object PipeNetworkManager {
                 visited.add(nextLong)
                 val nextState = world.getBlockState(next)
                 val nextBlock = nextState.block
-                if (nextBlock is BasePipeBlock && nextState.get(BasePipeBlock.propertyFor(dir.opposite))) {
+                if (nextBlock is BasePipeBlock && nextState.getValue(BasePipeBlock.propertyFor(dir.opposite))) {
                     queue.add(next)
                 }
             }

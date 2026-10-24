@@ -144,6 +144,9 @@ class CokeKilnGrateBlock : net.minecraft.world.level.block.BaseEntityBlock(Block
         if (!world.isClient && !state.`is`(newState.block)) CokeKilnBlockEntity.markKilnsDirtyAround(world, pos)
     }
 
+    override fun codec(): com.mojang.serialization.MapCodec<out net.minecraft.world.level.block.entity.BaseEntityBlock> =
+        BlockBehaviour.simpleCodec { CokeKilnGrateBlock() }
+
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
         CokeKilnGrateBlockEntity(pos, state)
 
@@ -160,7 +163,7 @@ class CokeKilnGrateBlock : net.minecraft.world.level.block.BaseEntityBlock(Block
     override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (world.isClient) return InteractionResult.SUCCESS
         val storage = FluidStorage.SIDED.find(world, pos, hit.direction) ?: FluidStorage.SIDED.find(world, pos, null)
-        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, hand)) {
+        if (storage != null && FluidStorageUtil.interactWithFluidStorage(storage, player, player.usedItemHand)) {
             return InteractionResult.SUCCESS
         }
         return InteractionResult.PASS
@@ -184,7 +187,7 @@ class CokeKilnGrateBlock : net.minecraft.world.level.block.BaseEntityBlock(Block
     }
 
     init {
-        registerDefaultState(stateDefinition.any()().setValue(FACING, Direction.DOWN))
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.DOWN))
     }
 }
 
@@ -194,7 +197,7 @@ class CokeKilnHatchBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BRI
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState = defaultBlockState().setValue(FACING, Direction.UP)
 
     init {
-        registerDefaultState(stateDefinition.any()().setValue(FACING, Direction.UP))
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.UP))
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
@@ -250,7 +253,7 @@ class CokeKilnHatchBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BRI
             for (dy in 0 downTo -2) {
                 for (dx in -1..1) {
                     for (dz in -1..1) {
-                        val p = hatchPos.add(dx, dy, dz)
+                        val p = BlockPos(hatchPos.x + dx, hatchPos.y + dy, hatchPos.z + dz)
                         val offset = BlockPos(dx, dy, dz)
 
                         // 顶层中心必须是窑口
@@ -269,7 +272,7 @@ class CokeKilnHatchBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BRI
                         if (dy == -2 && dx == 0 && dz == 0) {
                             val state = world.getBlockState(p)
                             if (!state.`is`(CokeKilnGrateBlock::class.instance())) return false
-                            if (state.getOptional(CokeKilnGrateBlock.FACING).orElse(Direction.DOWN) != Direction.DOWN) return false
+                            if (state.getOptionalValue(CokeKilnGrateBlock.FACING).orElse(Direction.DOWN) != Direction.DOWN) return false
                             continue
                         }
 
@@ -289,10 +292,10 @@ class CokeKilnHatchBlock : Block(BlockBehaviour.Properties.ofFullCopy(Blocks.BRI
             // 中层四边中心必须且仅有 1 个主体块
             var kilnCount = 0
             val sideCenters = listOf(
-                hatchPos.add(1, -1, 0),
-                hatchPos.add(-1, -1, 0),
-                hatchPos.add(0, -1, 1),
-                hatchPos.add(0, -1, -1)
+                BlockPos(hatchPos.x + 1, hatchPos.y - 1, hatchPos.z),
+                BlockPos(hatchPos.x - 1, hatchPos.y - 1, hatchPos.z),
+                BlockPos(hatchPos.x, hatchPos.y - 1, hatchPos.z + 1),
+                BlockPos(hatchPos.x, hatchPos.y - 1, hatchPos.z - 1)
             )
             for (p in sideCenters) {
                 if (world.getBlockState(p).`is`(CokeKilnBlock::class.instance())) kilnCount++

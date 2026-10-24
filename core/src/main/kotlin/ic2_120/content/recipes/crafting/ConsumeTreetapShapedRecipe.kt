@@ -1,7 +1,5 @@
 package ic2_120.content.recipes.crafting
 
-import net.minecraft.core.registries.BuiltInRegistries
-
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.serialization.MapCodec
@@ -14,7 +12,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.resources.ResourceLocation
-import net.minecraft.world.inventory.CraftingBookCategory
+import net.minecraft.world.item.crafting.CraftingBookCategory
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.CraftingInput
@@ -27,15 +25,15 @@ import net.minecraft.world.item.crafting.ShapedRecipePattern
  * 工作台有序配方：消耗参与合成的扳手/电动工具，完全不返回余物，并继承电量累加功能。
  */
 class ConsumeTreetapShapedRecipe(
-    private val patternRows: List<String>,
-    private val patternKeys: Map<Char, Ingredient>,
+    internal val patternRows: List<String>,
+    internal val patternKeys: Map<Char, Ingredient>,
     result: ItemStack,
     group: String = "",
 ) : ShapedRecipe(group, CraftingBookCategory.MISC, ShapedRecipePattern.of(patternKeys, patternRows), result, true) {
     override fun getRemainingItems(input: CraftingInput): NonNullList<ItemStack> {
         // 消耗参与合成的木龙头，其余材料按原版余物规则返回
-        val remainder = NonNullList.withSize(input.getContainerSize(), ItemStack.EMPTY)
-        for (slot in 0 until input.getContainerSize()) {
+        val remainder = NonNullList.withSize(input.size, ItemStack.EMPTY)
+        for (slot in 0 until input.size) {
             val stack = input.getItem(slot)
             if (stack.isEmpty) continue
             remainder[slot] = if (stack.item is Treetap) ItemStack.EMPTY else stack.item.getRecipeRemainder(stack)
@@ -95,7 +93,7 @@ object ConsumeTreetapShapedRecipeSerializer : RecipeSerializer<ConsumeTreetapSha
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, ConsumeTreetapShapedRecipe> {
         val delegate = RecipeSerializer.SHAPED_RECIPE.streamCodec()
         return StreamCodec.ofMember(
-            { buf: RegistryFriendlyByteBuf, recipe: ConsumeTreetapShapedRecipe -> delegate.encode(buf, recipe) },
+            { recipe: ConsumeTreetapShapedRecipe, buf: RegistryFriendlyByteBuf -> delegate.encode(buf, recipe) },
             { _ ->
                 ConsumeTreetapShapedRecipe(listOf("X"), linkedMapOf('X' to Ingredient.EMPTY), ItemStack.EMPTY)
             }

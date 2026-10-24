@@ -64,7 +64,7 @@ class FluidHeatGeneratorBlock : MachineBlock(defaultMachineSettings() .noOcclusi
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? =
-        defaultBlockState
+        defaultBlockState()
             .setValue(BlockStateProperties.HORIZONTAL_FACING, ctx.horizontalDirection)
             .setValue(ACTIVE, false)
 

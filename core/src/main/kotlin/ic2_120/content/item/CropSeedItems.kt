@@ -41,6 +41,9 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.TooltipFlag
 import net.minecraft.network.chat.Component
 import net.minecraft.world.InteractionResult
 import net.minecraft.ChatFormatting
@@ -58,10 +61,10 @@ object CropSeedData {
 
     fun readType(stack: ItemStack): CropType? {
         val nbt = stack.orCreateNbt
-        if (nbt.allTags.isEmpty) return null
+        if (nbt.isEmpty) return null
         val id = if (nbt.contains(NBT_ID)) nbt.getString(NBT_ID) else ""
         if (id.isEmpty()) return null
-        return CropType.entries.firstOrNull { it.asString() == id }
+        return CropType.entries.firstOrNull { it.serializedName == id }
     }
 
     fun readStats(stack: ItemStack): CropStats {
@@ -80,23 +83,23 @@ object CropSeedData {
     fun write(stack: ItemStack, type: CropType, stats: CropStats, scanLevel: Int) {
         val nbt = stack.orCreateNbt
         nbt.putString(NBT_OWNER, "ic2_120")
-        nbt.putString(NBT_ID, type.asString())
+        nbt.putString(NBT_ID, type.serializedName)
         nbt.putInt(NBT_GROWTH, stats.growth.coerceIn(0, 31))
         nbt.putInt(NBT_GAIN, stats.gain.coerceIn(0, 31))
         nbt.putInt(NBT_RESISTANCE, stats.resistance.coerceIn(0, 31))
         nbt.putInt(NBT_SCAN_LEVEL, scanLevel.coerceIn(0, 4))
     }
 
-    fun displayName(type: CropType): Component = Component.translatable("crop.ic2_120.${type.asString()}")
+    fun displayName(type: CropType): Component = Component.translatable("crop.ic2_120.${type.serializedName}")
 }
 
 @ModItem(name = "crop_seed_bag", tab = CreativeTab.IC2_CROP_SEEDS, group = "crops")
 class CropSeedBagItem : Item(Item.Properties().stacksTo(1)) {
     override fun appendHoverText(
         stack: ItemStack,
-        world: Level?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipFlag
     ) {
         super.appendHoverText(stack, context, tooltip, type)
         val scanLevel = CropSeedData.readScanLevel(stack)
@@ -161,9 +164,9 @@ class CropnalyzerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
 
     override fun appendHoverText(
         stack: ItemStack,
-        world: Level?,
+        context: Item.TooltipContext,
         tooltip: MutableList<Component>,
-        context: net.minecraft.client.item.TooltipContext
+        type: TooltipFlag
     ) {
         super.appendHoverText(stack, context, tooltip, type)
         appendEnergyTooltip(stack, tooltip)
@@ -171,7 +174,7 @@ class CropnalyzerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
     }
 
     override fun use(world: Level, user: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val scanner = user.getItemInHand(player.usedItemHand)
+        val scanner = user.getItemInHand(hand)
         if (world.isClient) return InteractionResultHolder.success(scanner)
 
         user.openMenu(object : ExtendedScreenHandlerFactory<FriendlyByteBuf> {
@@ -191,15 +194,15 @@ class CropnalyzerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
         return InteractionResultHolder.success(scanner)
     }
 
-    override fun useOnBlock(context: net.minecraft.world.item.context.UseOnContext): InteractionResult {
+    override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.level
         if (world.isClient) return InteractionResult.SUCCESS
         val player = context.player ?: return InteractionResult.PASS
-        val stack = context.stack
-        val be = world.getBlockEntity(context.pos)
+        val stack = context.itemInHand
+        val be = world.getBlockEntity(context.clickedPos)
         val cropBe = be as? ic2_120.content.block.CropBlockEntity ?: return InteractionResult.PASS
-        val cropState = world.getBlockState(context.pos)
-        val type = cropState.getValue(c2_120.content.block.CropBlock.CROP_TYPE)
+        val cropState = world.getBlockState(context.clickedPos)
+        val type = cropState.getValue(ic2_120.content.block.CropBlock.CROP_TYPE)
 
         val energy = getEnergy(stack)
         if (energy < CROP_INSPECTION_ENERGY) {
@@ -213,7 +216,7 @@ class CropnalyzerItem : Item(Item.Properties().stacksTo(1)), IElectricTool {
             .append(
                 Component.literal(" | G:${cropBe.stats.growth} Ga:${cropBe.stats.gain} R:${cropBe.stats.resistance}")
             )
-        player.displayClientMessage(msg, false, false)
+        player.displayClientMessage(msg, false)
         return InteractionResult.SUCCESS
     }
 

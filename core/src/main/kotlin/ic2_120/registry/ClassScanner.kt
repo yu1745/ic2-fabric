@@ -49,7 +49,6 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.CreativeModeTab
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Registry
 import net.minecraft.resources.ResourceKey
 import net.minecraft.network.chat.Component
@@ -91,7 +90,6 @@ import java.lang.invoke.MethodHandles
 import java.util.function.Consumer
 import java.nio.file.Files
 import java.nio.file.Paths
-import net.minecraft.data.recipes.RecipeOutput
 
 /**
  * 基于类注解的注册扫描器。
@@ -603,7 +601,7 @@ object ClassScanner {
                 val id = ResourceLocation.fromNamespaceAndPath(modId, name)
 
                 // 创建 ResourceKey
-                val tabKey = ResourceKey.create(RRegistries.CREATIVE_MODE_TAB, id)
+                val tabKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, id)
 
                 // 获取这个物品栏对应的枚举值
                 val tabEnum = CreativeTab.values().find { it.id == name }
@@ -645,7 +643,7 @@ object ClassScanner {
                 val itemGroup = FabricItemGroup.builder()
                     .icon(iconStackSupplier)
                     .title(Component.translatable("itemGroup.$modId.$name"))
-                    .entries { _, collector ->
+                    .displayItemsGenerator { _, collector ->
                         // 实时读取 tabItems（不能捕获构建时快照）：Connector/Forge 环境下附属 main
                         // 可能先于 core 的 registerWithAddons 执行，创造栏会早于附属导线注册构建；
                         // 快照会导致后注册的导线（ic2_120:cables entrypoint 贡献）缺失。
@@ -757,7 +755,7 @@ object ClassScanner {
                             createFromBuffer(syncId, playerInventory, data)
                         },
                         StreamCodec.ofMember(
-                            { buf: RegistryFriendlyByteBuf, data: FriendlyByteBuf ->
+                            { data: FriendlyByteBuf, buf: RegistryFriendlyByteBuf ->
                                 val bytes = ByteArray(data.readableBytes())
                                 data.getBytes(data.readerIndex(), bytes)
                                 buf.writeByteArray(bytes)
@@ -1270,7 +1268,7 @@ object ClassScanner {
 
     private fun parseItemGroupKey(modId: String, tab: CreativeTab): ResourceKey<CreativeModeTab> {
         val id = ResourceLocation.parse(tab.getNamespacedId(modId))
-        return ResourceKey.create(RRegistries.CREATIVE_MODE_TAB, id)
+        return ResourceKey.create(Registries.CREATIVE_MODE_TAB, id)
     }
 
     /**
@@ -1393,26 +1391,6 @@ object ClassScanner {
         logger.info("{} 配方生成完成 - 成功: {}, 失败: {}, 总计: {}", modId, successCount, failCount, filtered.size)
     }
 
-    /** 兼容旧 Consumer<RecipeOutput> 调用点 */
-    fun generateAllRecipes(recipeExporter: Consumer<RecipeOutput>) =
-        generateAllRecipes(ForwardingRecipeOutput(recipeExporter))
-
-    /** 兼容旧 Consumer<RecipeOutput> 调用点 */
-    fun generateRecipesForMod(modId: String, recipeExporter: Consumer<RecipeOutput>) =
-        generateRecipesForMod(modId, ForwardingRecipeOutput(recipeExporter))
-
-    /** 把 mojmap RecipeOutput 的 accept 转发给真实输出（RecipeOutput → Consumer<RecipeOutput> 适配） */
-    private class ForwardingRecipeOutput(private val real: RecipeOutput) : RecipeOutput {
-        override fun accept(
-            id: net.minecraft.resources.ResourceLocation,
-            recipe: net.minecraft.world.item.crafting.Recipe<*>,
-            advancementHolder: net.minecraft.advancements.AdvancementHolder?
-        ) {
-            real.accept(id, recipe, advancementHolder)
-        }
-
-        override fun advancement() = real.advancement()
-    }
 
     /**
      * 获取 Block 实例

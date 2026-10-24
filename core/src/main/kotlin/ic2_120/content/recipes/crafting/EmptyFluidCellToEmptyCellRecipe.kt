@@ -1,7 +1,5 @@
 package ic2_120.content.recipes.crafting
 
-import net.minecraft.core.registries.BuiltInRegistries
-
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.serialization.MapCodec
@@ -14,7 +12,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.resources.ResourceLocation
-import net.minecraft.world.inventory.CraftingBookCategory
+import net.minecraft.world.item.crafting.CraftingBookCategory
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.CraftingInput
@@ -31,7 +29,7 @@ class EmptyFluidCellToEmptyCellRecipe(
     private val recipeIngredients: List<Ingredient>,
     result: ItemStack,
     group: String = "",
-) : ShapelessRecipe(group, CraftingBookCategory.MISC, NonNullList.of(Ingredient.EMPTY, *recipeIngredients.toTypedArray()), result) {
+) : ShapelessRecipe(group, CraftingBookCategory.MISC, result, NonNullList.of(Ingredient.EMPTY, *recipeIngredients.toTypedArray())) {
     private val fluidCellItem: Item? =
         recipeIngredients.firstOrNull()?.items?.firstOrNull()?.item
 
@@ -39,7 +37,7 @@ class EmptyFluidCellToEmptyCellRecipe(
         if (!super.matches(inventory, world)) return false
 
         var found = false
-        for (slot in 0 until inventory.getContainerSize()) {
+        for (slot in 0 until inventory.size) {
             val stack = inventory.getItem(slot)
             if (stack.isEmpty) continue
             if (stack.item != fluidCellItem) return false
@@ -51,7 +49,7 @@ class EmptyFluidCellToEmptyCellRecipe(
     }
 
     override fun getRemainingItems(inventory: CraftingInput): NonNullList<ItemStack> =
-        NonNullList.withSize(inventory.getContainerSize(), ItemStack.EMPTY)
+        NonNullList.withSize(inventory.size, ItemStack.EMPTY)
 
     override fun getSerializer(): RecipeSerializer<*> = EmptyFluidCellToEmptyCellRecipeSerializer
 }
@@ -95,7 +93,7 @@ object EmptyFluidCellToEmptyCellRecipeSerializer : RecipeSerializer<EmptyFluidCe
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, EmptyFluidCellToEmptyCellRecipe> {
         val delegate = RecipeSerializer.SHAPELESS_RECIPE.streamCodec()
         return StreamCodec.ofMember(
-            { buf: RegistryFriendlyByteBuf, recipe: EmptyFluidCellToEmptyCellRecipe -> delegate.encode(buf, recipe) },
+            { recipe: EmptyFluidCellToEmptyCellRecipe, buf: RegistryFriendlyByteBuf -> delegate.encode(buf, recipe) },
             { _ ->
                 EmptyFluidCellToEmptyCellRecipe(listOf(Ingredient.EMPTY), ItemStack.EMPTY)
             }

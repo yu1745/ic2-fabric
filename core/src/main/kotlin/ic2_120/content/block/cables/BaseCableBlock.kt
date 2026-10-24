@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.BaseEntityBlock
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.SimpleWaterloggedBlock
+import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.entity.BlockEntity
@@ -47,14 +48,16 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
     SimpleWaterloggedBlock {
 
     init {
-        registerDefaultState(stateDefinition.any())
-            .setValue(BlockStateProperties.WATERLOGGED, false)
-            .setValue(NORTH, false)
-            .setValue(SOUTH, false)
-            .setValue(EAST, false)
-            .setValue(WEST, false)
-            .setValue(UP, false)
-            .setValue(DOWN, false)
+        registerDefaultState(
+            stateDefinition.any()
+                .setValue(BlockStateProperties.WATERLOGGED, false)
+                .setValue(NORTH, false)
+                .setValue(SOUTH, false)
+                .setValue(EAST, false)
+                .setValue(WEST, false)
+                .setValue(UP, false)
+                .setValue(DOWN, false)
+        )
     }
 
     // ── BlockState 属性 ─────────────────────────────────────────
@@ -66,7 +69,7 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState {
         val world = ctx.level
-        val pos = ctx.pos
+        val pos = ctx.clickedPos
         val fluidState = world.getFluidState(pos)
         return defaultBlockState()
             .setValue(BlockStateProperties.WATERLOGGED, fluidState.getType() == Fluids.WATER)
@@ -89,7 +92,7 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
     ): BlockState {
         // 与原版含水方块一致：含水时调度水 tick，不在这里反推 WATERLOGGED。
         if (state.getValue(BlockStateProperties.WATERLOGGED)) {
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         val property = propertyFor(direction)
         val previousConnected = state.getValue(property)
@@ -105,28 +108,28 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
         if (state.getValue(BlockStateProperties.WATERLOGGED)) Fluids.WATER.getSource(false) else Fluids.EMPTY.defaultFluidState()
 
     // 流动水通过 LiquidBlockContainer.tryFillWithFluid 含水；需显式实现（与栅栏等原版方块一致）。
-    override fun canFillWithFluid(world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
+    override fun canPlaceLiquid(player: Player?, world: BlockGetter, pos: BlockPos, state: BlockState, fluid: Fluid): Boolean =
         !state.getValue(BlockStateProperties.WATERLOGGED) && fluid == Fluids.WATER
 
-    override fun tryFillWithFluid(
+    override fun placeLiquid(
         world: LevelAccessor,
         pos: BlockPos,
         state: BlockState,
         fluidState: FluidState
     ): Boolean {
-        if (!canFillWithFluid(world, pos, state, fluidState.getType())) return false
+        if (!canPlaceLiquid(null, world, pos, state, fluidState.getType())) return false
         if (!state.getValue(BlockStateProperties.WATERLOGGED)) {
             world.setBlock(pos, state.setValue(BlockStateProperties.WATERLOGGED, true), Block.UPDATE_ALL)
-            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world))
+            world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world))
         }
         return true
     }
 
-    override fun tryDrainFluid(world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack =
+    override fun pickupBlock(player: Player?, world: LevelAccessor, pos: BlockPos, state: BlockState): ItemStack =
         ItemStack.EMPTY
 
     protected fun canConnect(world: LevelAccessor, pos: BlockPos, direction: Direction): Boolean {
-        val neighborPos = pos.offset(direction)
+        val neighborPos = pos.relative(direction)
         val neighborBlock = world.getBlockState(neighborPos).block
         if (neighborBlock is BaseCableBlock) return true
         if (world is Level) {
@@ -200,7 +203,7 @@ abstract class BaseCableBlock(settings: BlockBehaviour.Properties = defaultSetti
         val east = Shapes.box(max, min, min, 1.0, max, max)
         val down = Shapes.box(min, 0.0, min, max, min, max)
         val up = Shapes.box(min, max, min, max, 1.0, max)
-        return stateDefinition.states.associateWith { state ->
+        return stateDefinition.possibleStates.associateWith { state ->
             var shape = center
             if (state.getValue(NORTH)) shape = Shapes.or(shape, north)
             if (state.getValue(SOUTH)) shape = Shapes.or(shape, south)

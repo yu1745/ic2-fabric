@@ -168,7 +168,7 @@ class CondenserBlockEntity(
     @RegisterEnergy
     val sync = CondenserSync(
         schema = syncedData,
-        getFacing = { cachedState.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH) },
+        getFacing = { cachedState.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH) },
         currentTickProvider = { world?.time }
     )
     private val adjacentEnergyTransfer = AdjacentEnergyTransferComponent(this, sync)
@@ -230,7 +230,7 @@ class CondenserBlockEntity(
             if (amount <= 0L || variant.isBlank) return
             for (side in Direction.entries) {
                 if (amount <= 0L) break
-                val neighborPos = pos.offset(side)
+                val neighborPos = pos.relative(side)
                 val storage = FluidStorage.SIDED.find(world, neighborPos, side.opposite) ?: continue
                 try {
                     val extracted = storage.insert(variant, amount, null)
@@ -327,7 +327,7 @@ class CondenserBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 
@@ -340,7 +340,7 @@ class CondenserBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(CondenserSync.NBT_ENERGY_STORED).coerceIn(0L, CondenserSync.ENERGY_CAPACITY)
         sync.syncCommittedAmount()
@@ -363,17 +363,17 @@ class CondenserBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(CondenserSync.NBT_ENERGY_STORED, sync.amount)
         nbt.putInt(NBT_PROGRESS, progress)
         nbt.putInt(NBT_TIER, machineTier)
         val st = CompoundTag()
-        st.put("variant", steamTank.encodeFluidVariant(variant))
+        st.put("variant", encodeFluidVariant(steamTank.variant))
         st.putLong("amount", steamTank.amount)
         nbt.put(NBT_STEAM_TANK, st)
         val wt = CompoundTag()
-        wt.put("variant", distilledWaterTank.encodeFluidVariant(variant))
+        wt.put("variant", encodeFluidVariant(distilledWaterTank.variant))
         wt.putLong("amount", distilledWaterTank.amount)
         nbt.put(NBT_WATER_TANK, wt)
     }

@@ -183,7 +183,7 @@ class EnergyOMatBlockEntity(
             override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
                 val buf = FriendlyByteBuf(Unpooled.buffer())
                     buf.writeBlockPos(pos)
-                    buf.writeVarInt(syncedData.size)
+                    buf.writeVarInt(syncedData.getContainerSize())
                     buf.writeBoolean(owner)
                 return buf
             }
@@ -203,7 +203,7 @@ class EnergyOMatBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.getContainerSize())
             buf.writeBoolean(isOwner(player))
         return buf
     }

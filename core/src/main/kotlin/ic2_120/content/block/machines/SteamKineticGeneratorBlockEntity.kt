@@ -12,6 +12,7 @@ import net.minecraft.core.HolderLookup
 import ic2_120.content.block.SteamKineticGeneratorBlock
 import ic2_120.content.block.transmission.IKineticMachinePort
 import ic2_120.content.fluid.ModFluids
+import ic2_120.content.item.encodeFluidVariant
 import ic2_120.content.item.SteamTurbine
 import ic2_120.content.screen.SteamKineticGeneratorScreenHandler
 import ic2_120.content.sync.SteamKineticGeneratorSync
@@ -240,7 +241,7 @@ class SteamKineticGeneratorBlockEntity(
             if (amount <= 0L || variant.isBlank) return
             for (side in Direction.entries) {
                 if (amount <= 0L) break
-                val neighborPos = pos.offset(side)
+                val neighborPos = pos.relative(side)
                 val storage = FluidStorage.SIDED.find(world, neighborPos, side.opposite) ?: continue
                 try {
                    val extracted = storage.insert(variant, amount, null)
@@ -355,7 +356,7 @@ class SteamKineticGeneratorBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.count)
         return buf
     }
 
@@ -375,7 +376,7 @@ class SteamKineticGeneratorBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         kuBuffer = nbt.getInt(NBT_KU_BUFFER)
         condensationProgress = nbt.getInt(NBT_CONDENSATION)
@@ -396,18 +397,18 @@ class SteamKineticGeneratorBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putInt(NBT_KU_BUFFER, kuBuffer)
         nbt.putInt(NBT_CONDENSATION, condensationProgress)
 
         val steamTankNbt = CompoundTag()
-        steamTankNbt.put("variant", steamTank.encodeFluidVariant(variant))
+        steamTankNbt.put("variant", encodeFluidVariant(steamTank.variant))
         steamTankNbt.putLong("amount", steamTank.amount)
         nbt.put(NBT_STEAM_TANK, steamTankNbt)
 
         val waterTankNbt = CompoundTag()
-        waterTankNbt.put("variant", distilledWaterTank.encodeFluidVariant(variant))
+        waterTankNbt.put("variant", encodeFluidVariant(distilledWaterTank.variant))
         waterTankNbt.putLong("amount", distilledWaterTank.amount)
         nbt.put(NBT_WATER_TANK, waterTankNbt)
     }
@@ -502,7 +503,7 @@ class SteamKineticGeneratorBlockEntity(
                 turbineTicker = 0
                 val wear = if (superheated) SteamKineticGeneratorSync.TURBINE_WEAR_SUPERHEATED
                     else SteamKineticGeneratorSync.TURBINE_WEAR_NORMAL
-                if (turbineStack.damage + wear < turbineStack.maxDamage) {
+                if (turbineStack.damageValue + wear < turbineStack.maxDamage) {
                     turbineStack.damageValue += wear
                 } else {
                     inventory[SLOT_TURBINE] = ItemStack.EMPTY
@@ -549,7 +550,7 @@ class SteamKineticGeneratorBlockEntity(
 
         for (side in Direction.entries) {
             if (remaining <= 0) break
-            val neighborStorage = FluidStorage.SIDED.find(world, pos.offset(side), side.opposite)
+            val neighborStorage = FluidStorage.SIDED.find(world, pos.relative(side), side.opposite)
             if (neighborStorage == null || !neighborStorage.supportsInsertion()) continue
 
             Transaction.openOuter().use { tx ->
@@ -586,7 +587,7 @@ class SteamKineticGeneratorBlockEntity(
 
         for (side in Direction.entries) {
             if (remaining <= 0) break
-            val neighborPos = pos.offset(side)
+            val neighborPos = pos.relative(side)
             if (world.getBlockEntity(neighborPos) !is CondenserBlockEntity) continue
             val neighborStorage = FluidStorage.SIDED.find(world, neighborPos, side.opposite)
             if (neighborStorage == null || !neighborStorage.supportsInsertion()) continue

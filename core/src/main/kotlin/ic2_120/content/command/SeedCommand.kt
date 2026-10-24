@@ -20,8 +20,8 @@ object SeedCommand {
     private val seedTypeSuggestionProvider = SuggestionProvider<CommandSourceStack> { _, builder ->
         val remaining = builder.remaining.lowercase()
         for (type in CropType.entries) {
-            if (type.asString().lowercase().startsWith(remaining)) {
-                builder.suggest(type.asString())
+            if (type.serializedName.lowercase().startsWith(remaining)) {
+                builder.suggest(type.serializedName)
             }
         }
         builder.buildFuture()
@@ -60,11 +60,11 @@ object SeedCommand {
     private fun listExecute(ctx: CommandContext<CommandSourceStack>): Int {
         val source = ctx.source
         val types = CropType.entries
-        val maxKeyWidth = types.maxOf { it.asString().length }
+        val maxKeyWidth = types.maxOf { it.serializedName.length }
         val msg = Component.literal("=== 作物种子类型 (${types.size} 种) ===\n")
         types.forEachIndexed { idx, type ->
             if (idx > 0) msg.append(Component.literal("\n"))
-            msg.append(Component.literal("  ${type.asString().padEnd(maxKeyWidth)} - "))
+            msg.append(Component.literal("  ${type.serializedName.padEnd(maxKeyWidth)} - "))
             msg.append(CropSeedData.displayName(type))
         }
         source.sendSuccess({ msg }, false)
@@ -76,7 +76,7 @@ object SeedCommand {
         val player = source.player ?: return 0
 
         val seedTypeStr = StringArgumentType.getString(ctx, "seed_type")
-        val seedType = CropType.entries.firstOrNull { it.asString().equals(seedTypeStr, ignoreCase = true) }
+        val seedType = CropType.entries.firstOrNull { it.serializedName.equals(seedTypeStr, ignoreCase = true) }
             ?: run {
                 source.sendFailure(Component.literal("未知种子类型: $seedTypeStr，可用类型见 Tab 补全"))
                 return 0

@@ -48,7 +48,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.network.chat.Component
 import net.minecraft.core.NonNullList
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -110,8 +109,8 @@ abstract class EnergyStorageBlockEntity(
         syncedData,
         {
             world?.getBlockState(pos)?.let { state ->
-                state.getOptional(BlockStateProperties.FACING)
-                    .orElse(state.getOptional(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH))
+                state.getOptionalValue(BlockStateProperties.FACING)
+                    .orElse(state.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH))
             } ?: Direction.NORTH
         },
         { world?.time },
@@ -167,7 +166,7 @@ abstract class EnergyStorageBlockEntity(
     override fun getScreenOpeningData(player: ServerPlayer): FriendlyByteBuf {
         val buf = FriendlyByteBuf(Unpooled.buffer())
             buf.writeBlockPos(pos)
-            buf.writeVarInt(syncedData.size)
+            buf.writeVarInt(syncedData.count)
             buf.writeVarInt(config.slotCount)
             buf.writeBoolean(config.useEquipmentSlots)
         return buf
@@ -178,7 +177,7 @@ abstract class EnergyStorageBlockEntity(
     abstract val containerTranslationKey: String
 
     override fun createMenu(syncId: Int, playerInventory: Inventory, player: Player?): AbstractContainerMenu {
-        val blockId = BuiltInRegistries.BLOCK.getId(world!!.getBlockState(pos).block)
+        val blockId = BuiltInRegistries.BLOCK.getKey(world!!.getBlockState(pos).block)
         val screenHandlerType = BuiltInRegistries.MENU.get(ResourceLocation.fromNamespaceAndPath(blockId.namespace, blockId.path))
             ?: error("AbstractContainerMenu type not found for $blockId")
         @Suppress("UNCHECKED_CAST")
@@ -190,7 +189,7 @@ abstract class EnergyStorageBlockEntity(
 
     override fun loadAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.loadAdditional(nbt, lookup)
-        ContainerHelper.loadAllItems(nbt, inventory)
+        ContainerHelper.loadAllItems(nbt, inventory, lookup)
         syncedData.readNbt(nbt)
         sync.amount = nbt.getLong(EnergyStorageSync.NBT_ENERGY_STORED)
         sync.syncCommittedAmount()
@@ -199,7 +198,7 @@ abstract class EnergyStorageBlockEntity(
 
     override fun saveAdditional(nbt: CompoundTag, lookup: HolderLookup.Provider) {
         super.saveAdditional(nbt, lookup)
-        ContainerHelper.saveAllItems(nbt, inventory)
+        ContainerHelper.saveAllItems(nbt, inventory, lookup)
         syncedData.writeNbt(nbt)
         nbt.putLong(EnergyStorageSync.NBT_ENERGY_STORED, sync.amount)
     }
@@ -229,7 +228,7 @@ abstract class EnergyStorageBlockEntity(
         world?.updateNeighborsAt(pos, cachedState.block)
         // 原版行为：切换时聊天栏提示当前模式名
         world?.let { w ->
-            val players = w.getNonSpectatingEntities(Player::class.java, net.minecraft.world.phys.AABB(pos).inflate(8.0))
+            val players = w.getEntitiesOfClass(Player::class.java, net.minecraft.world.phys.AABB(pos).inflate(8.0))
             for (p in players) {
                 p.displayClientMessage(Component.translatable("gui.ic2_120.eu_storage.redstone_mode$redstoneMode"), true)
             }
@@ -305,7 +304,7 @@ abstract class EnergyStorageBlockEntity(
             pos.y.toDouble() + 2.9,
             pos.z.toDouble() + 1.0
         )
-        val players = world.getNonSpectatingEntities(Player::class.java, area)
+        val players = world.getEntitiesOfClass(Player::class.java, area)
         var charged = 0L
         for (player in players) {
             charged += chargePlayerInventoryPerItemLimit(
@@ -320,7 +319,7 @@ abstract class EnergyStorageBlockEntity(
 
    private fun updateActiveState(world: Level, pos: BlockPos, active: Boolean) {
        val current = world.getBlockState(pos)
-       if (!current.contains(EnergyStorageBlock.ACTIVE)) return
+       if (!current.hasProperty(EnergyStorageBlock.ACTIVE)) return
        if (current.getValue(EnergyStorageBlock.ACTIVE) == active) return
        world.setBlock(pos, current.setValue(EnergyStorageBlock.ACTIVE, active), Block.UPDATE_CLIENTS)
    }

@@ -95,7 +95,7 @@ object UuRecipeBridge {
                     }
                 }
             } catch (e: Exception) {
-                logger.warn("跳过配方 ${recipe.id}: ${e.message}")
+                logger.warn("跳过配方 ${holder.id()}: ${e.message}")
             }
         }
 

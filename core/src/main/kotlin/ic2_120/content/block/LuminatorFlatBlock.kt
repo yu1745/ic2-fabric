@@ -77,7 +77,7 @@ class LuminatorFlatBlock : BaseEntityBlock(
         val side = ctx.clickedFace
         // 侧面：发光朝向房间内部，用 opposite；顶底：发光朝向点击面，用 side（与 blockstate 模型旋转对应）
         val facing = if (side.axis == Direction.Axis.Y) side else side.opposite
-        return defaultBlockState.setValue(BlockStateProperties.FACING, facing)
+        return defaultBlockState().setValue(BlockStateProperties.FACING, facing)
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? =

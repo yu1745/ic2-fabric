@@ -287,7 +287,7 @@ object ChestLootInjector {
     }
 
     private fun LootPool.Builder.withEmpty(weight: Int): LootPool.Builder =
-        with(EmptyLootItem.lootTableItem().setWeight(weight))
+        with(EmptyLootItem.emptyItem().setWeight(weight))
 
     private fun LootPool.Builder.withIridiumOre(
         weight: Int, min: Float? = null, max: Float? = null

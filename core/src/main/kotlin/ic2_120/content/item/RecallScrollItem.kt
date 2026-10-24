@@ -77,8 +77,8 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
 
     override fun useOn(context: UseOnContext): InteractionResult {
         val world = context.level
-        val pos = context.pos
-        val stack = context.stack
+        val pos = context.clickedPos
+        val stack = context.itemInHand
         val player = context.player
         val state = world.getBlockState(pos)
 
@@ -86,7 +86,7 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
         if (player == null) return InteractionResult.SUCCESS
 
         val nbt = stack.orCreateNbt
-        val dim = world.dimension().value.toString()
+        val dim = world.dimension().location().toString()
 
         nbt.putBoolean(NBT_HAS_BIND, true)
         nbt.putInt(NBT_BIND_X, pos.x)
@@ -102,7 +102,7 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
     // ========== 使用：传送 ==========
 
     override fun use(world: Level, player: Player, hand: InteractionHand): InteractionResultHolder<ItemStack> {
-        val stack = player.getItemInHand(player.usedItemHand)
+        val stack = player.getItemInHand(hand)
         if (world.isClient) return InteractionResultHolder.success(stack)
 
         val nbt = stack.orCreateNbt
@@ -111,7 +111,7 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
             return InteractionResultHolder.fail(stack)
         }
 
-        val dim = world.dimension().value.toString()
+        val dim = world.dimension().location().toString()
         val bindDim = nbt.getString(NBT_BIND_DIM)
         if (bindDim != dim) {
             player.displayClientMessage(Component.literal("维度不一致，无法传送。"), true)
@@ -120,13 +120,13 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
 
         val bindPos = BlockPos(nbt.getInt(NBT_BIND_X), nbt.getInt(NBT_BIND_Y), nbt.getInt(NBT_BIND_Z))
         @Suppress("DEPRECATION")
-        if (!world.isChunkLoaded(bindPos)) {
+        if (!world.isLoaded(bindPos)) {
             player.displayClientMessage(Component.literal("目标坐标区块未加载。"), true)
             return InteractionResultHolder.fail(stack)
         }
 
         // 计算距离
-        val distance = sqrt(player.pos.distanceToSqr(bindPos.x + 0.5, bindPos.y + 0.5, bindPos.z + 0.5))
+        val distance = sqrt(player.position().distanceToSqr(bindPos.x + 0.5, bindPos.y + 0.5, bindPos.z + 0.5))
             .toLong().coerceAtLeast(1L)
         val weight = computeWeight(player)
         val energyNeed = computeEnergyNeed(weight, distance)
@@ -153,11 +153,11 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
         val destY = bindPos.y + 1.02
         val destZ = bindPos.z + 0.5
         player.teleportTo(destX, destY, destZ)
-        player.velocity = Vec3.ZERO
-        player.velocityModified = true
+        player.deltaMovement = Vec3.ZERO
+        player.hasImpulse = true
 
         if (teleporterExists) {
-            player.displayClientMessage(Component.literal("传送成功！消耗 ${formatNumber(energyNeed, false)} EU"), true)
+            player.displayClientMessage(Component.literal("传送成功！消耗 ${formatNumber(energyNeed)} EU"), true)
         } else {
             // 惩罚：传送机已遗失
             applyPenalty(player)
@@ -194,7 +194,7 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
         for (stack in player.inventory.items) {
             if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
         }
-        for (stack in player.inventory.offHand) {
+        for (stack in player.inventory.offhand) {
             if (!stack.isEmpty) invWeight += stack.count * (100.0 / stack.maxStackSize.toDouble().coerceAtLeast(1.0))
         }
         weight += floor(invWeight).toInt()
@@ -331,9 +331,9 @@ class RecallScrollItem : Item(Item.Properties().stacksTo(1)) {
             if (tool != null) {
                 // 本模组电力护甲：扣光 EU
                 tool.setEnergy(stack, 0)
-            } else if (stack.isDamageable && stack.maxDamage > 0) {
+            } else if (stack.isDamageableItem && stack.maxDamage > 0) {
                 // 原版耐久护甲：消耗 1/2 剩余耐久
-                val remaining = stack.maxDamage - stack.damage
+                val remaining = stack.maxDamage - stack.damageValue
                 val consume = (remaining / 2).coerceAtLeast(1)
                 stack.damageValue += consume
             }

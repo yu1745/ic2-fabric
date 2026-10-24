@@ -15,7 +15,6 @@ import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.Container
 import net.minecraft.world.item.ItemStack
 import net.minecraft.network.FriendlyByteBuf
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.world.inventory.ContainerData
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -111,7 +110,7 @@ class ScannerScreenHandler(
 
         val results = performScan(player)
 
-        player.world.playSound(
+        player.level().playSound(
             null,
             player.blockPosition(),
             scannerUseSound,
@@ -120,26 +119,24 @@ class ScannerScreenHandler(
             1.0f
         )
 
-        val buf = FriendlyByteBuf(Unpooled.buffer())
-        ScannerResultPacket.write(
-            ScannerResultPacket(
-                energy = sync.energy,
-                energyCapacity = sync.energyCapacity,
-                usesRemaining = sync.usesRemaining,
-                maxUses = sync.maxUses,
-                results = results
-            ),
-            buf
-        )
         (player as? net.minecraft.server.level.ServerPlayer)?.let {
-            ServerPlayNetworking.send(it, ScannerResultPacket.ID, buf)
+            ServerPlayNetworking.send(
+                it,
+                ScannerResultPacket(
+                    energy = sync.energy,
+                    energyCapacity = sync.energyCapacity,
+                    usesRemaining = sync.usesRemaining,
+                    maxUses = sync.maxUses,
+                    results = results
+                )
+            )
         }
 
         return true
     }
 
     private fun performScan(player: Player): List<OreScanEntry> {
-        val world = player.world
+        val world = player.level()
         if (world.isClient) return emptyList()
 
         val center = player.blockPosition()
@@ -154,7 +151,7 @@ class ScannerScreenHandler(
         for (dx in -radius..radius) {
             for (dz in -radius..radius) {
                 for (y in minY..maxY) {
-                    val pos = center.add(dx, 0, dz).atY(y)
+                    val pos = center.offset(dx, 0, dz).atY(y)
                     val state = world.getBlockState(pos)
                     if (state.isAir) continue
                     val blockId = BuiltInRegistries.BLOCK.getKey(state.block) ?: continue

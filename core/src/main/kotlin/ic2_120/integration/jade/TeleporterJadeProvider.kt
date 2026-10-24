@@ -32,7 +32,7 @@ object TeleporterJadeProvider : IBlockComponentProvider, IServerDataProvider<Blo
             data.putString("targetDim", be.targetDimension)
         }
         data.putBoolean("hasMfe", be.hasAdjacentMfeOrMfsu(world, pos))
-        val thisDim = world.dimension().location.toString()
+        val thisDim = world.dimension().location().toString()
         data.putBoolean("sameDim", target != null && thisDim == be.targetDimension)
         @Suppress("DEPRECATION")
         data.putBoolean("chunkLoaded", target != null && world.isLoaded(target))
@@ -45,7 +45,7 @@ object TeleporterJadeProvider : IBlockComponentProvider, IServerDataProvider<Blo
         data.putBoolean("entityInRange", !world.getEntities(null, box) { it.isAlive && !it.isPassenger() && !it.isVehicle() }.isEmpty())
     }
 
-    override fun appendHoverText(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
+    override fun appendTooltip(tooltip: ITooltip, accessor: BlockAccessor, config: IPluginConfig) {
         if (!accessor.serverData.contains("mfeEnergy")) return
         val data = accessor.serverData
 

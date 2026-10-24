@@ -48,7 +48,6 @@ import net.minecraft.world.phys.shapes.VoxelShape
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
-import java.util.function.Consumer
 
 /**
  * 紫外线灯方块。扁平面板外形（与日光灯相同），支持六面朝向。
@@ -79,7 +78,7 @@ class UvLampBlock : BaseEntityBlock(
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? {
         val side = ctx.clickedFace
         val facing = if (side.axis == Direction.Axis.Y) side else side.opposite
-        return defaultBlockState.setValue(BlockStateProperties.FACING, facing)
+        return defaultBlockState().setValue(BlockStateProperties.FACING, facing)
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity =
@@ -114,7 +113,7 @@ class UvLampBlock : BaseEntityBlock(
     ): VoxelShape = lampShape(state.getValue(BlockStateProperties.FACING))
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult, hand: InteractionHand): InteractionResult {
+    override fun useWithoutItem(state: BlockState, world: Level, pos: BlockPos, player: Player, hit: BlockHitResult): InteractionResult {
         if (!world.isClient) {
             getMenuProvider(state, world, pos)?.let { player.openMenu(it) }
         }
@@ -160,7 +159,7 @@ class UvLampBlock : BaseEntityBlock(
         private val SHAPE_DOWN = Shapes.box(0.0, 1.0 - THICK, 0.0, 1.0, 1.0, 1.0)
 
         @RecipeProvider
-        fun generateRecipes(exporter: Consumer<RecipeOutput>) {
+        fun generateRecipes(exporter: RecipeOutput) {
             val luminator = LuminatorFlatBlock::class.item()
             if (luminator != Items.AIR) {
                 ShapelessRecipeBuilder.shapeless(RecipeCategory.MISC, UvLampBlock::class.item(), 1)

@@ -1,7 +1,5 @@
 package ic2_120.content.recipes.crafting
 
-import net.minecraft.core.registries.BuiltInRegistries
-
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.mojang.serialization.MapCodec
@@ -16,7 +14,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.RegistryFriendlyByteBuf
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.resources.ResourceLocation
-import net.minecraft.world.inventory.CraftingBookCategory
+import net.minecraft.world.item.crafting.CraftingBookCategory
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.crafting.CraftingInput
@@ -32,13 +30,13 @@ import net.minecraft.world.item.crafting.ShapelessRecipe
  * 而不会在原版合并修复路径触发余物返回，从而避免无限刷物品漏洞。
  */
 class DamageToolShapelessRecipe(
-    private val recipeIngredients: List<Ingredient>,
+    internal val recipeIngredients: List<Ingredient>,
     result: ItemStack,
     group: String = "",
-) : ShapelessRecipe(group, CraftingBookCategory.MISC, NonNullList.of(Ingredient.EMPTY, *recipeIngredients.toTypedArray()), result) {
+) : ShapelessRecipe(group, CraftingBookCategory.MISC, result, NonNullList.of(Ingredient.EMPTY, *recipeIngredients.toTypedArray())) {
     override fun getRemainingItems(input: CraftingInput): NonNullList<ItemStack> {
-        val remainder = NonNullList.withSize(input.getContainerSize(), ItemStack.EMPTY)
-        for (slot in 0 until input.getContainerSize()) {
+        val remainder = NonNullList.withSize(input.size, ItemStack.EMPTY)
+        for (slot in 0 until input.size) {
             val stack = input.getItem(slot)
             if (stack.isEmpty) continue
             val item = stack.item
@@ -106,7 +104,7 @@ object DamageToolShapelessRecipeSerializer : RecipeSerializer<DamageToolShapeles
     override fun streamCodec(): StreamCodec<RegistryFriendlyByteBuf, DamageToolShapelessRecipe> {
         val delegate = RecipeSerializer.SHAPELESS_RECIPE.streamCodec()
         return StreamCodec.ofMember(
-            { buf: RegistryFriendlyByteBuf, recipe: DamageToolShapelessRecipe -> delegate.encode(buf, recipe) },
+            { recipe: DamageToolShapelessRecipe, buf: RegistryFriendlyByteBuf -> delegate.encode(buf, recipe) },
             { _ ->
                 DamageToolShapelessRecipe(listOf(Ingredient.EMPTY), ItemStack.EMPTY)
             }

@@ -49,6 +49,9 @@ import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.InteractionResult
 
 // ============== Block Definitions ==============
 
@@ -195,9 +198,11 @@ class MfsuBlock : EnergyStorageBlock(EnergyStorageConfig.MFSU) {
  */
 abstract class ChargepadBlock(val config: EnergyStorageConfig) : MachineBlock(defaultMachineSettings() .noOcclusion()) { // 3D 模型：关闭相邻面剔除
     init {
-        registerDefaultState(stateDefinition.any())
-            .setValue(BlockStateProperties.HORIZONTAL_FACING, net.minecraft.core.Direction.NORTH)
-            .setValue(EnergyStorageBlock.ACTIVE, false)
+        registerDefaultState(
+            stateDefinition.any()
+                .setValue(BlockStateProperties.HORIZONTAL_FACING, net.minecraft.core.Direction.NORTH)
+                .setValue(EnergyStorageBlock.ACTIVE, false)
+        )
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {

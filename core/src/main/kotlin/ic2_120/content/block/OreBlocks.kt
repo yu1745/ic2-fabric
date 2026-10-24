@@ -49,7 +49,7 @@ class DeepslateLeadOreBlock : Block(
     BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE)
         .mapColor(MapColor.DEEPSLATE)
         .strength(4.5f, 3.0f)
-        .sounds(SoundType.DEEPSLATE)
+        .sound(SoundType.DEEPSLATE)
 )
 
 /** 深层锡矿石（照搬原版深层铁矿） */
@@ -58,7 +58,7 @@ class DeepslateTinOreBlock : Block(
     BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE)
         .mapColor(MapColor.DEEPSLATE)
         .strength(4.5f, 3.0f)
-        .sounds(SoundType.DEEPSLATE)
+        .sound(SoundType.DEEPSLATE)
 )
 
 /** 深层铀矿石（照搬原版深层钻石矿） */
@@ -67,5 +67,5 @@ class DeepslateUraniumOreBlock : Block(
     BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE)
         .mapColor(MapColor.DEEPSLATE)
         .strength(4.5f, 3.0f)
-        .sounds(SoundType.DEEPSLATE)
+        .sound(SoundType.DEEPSLATE)
 )

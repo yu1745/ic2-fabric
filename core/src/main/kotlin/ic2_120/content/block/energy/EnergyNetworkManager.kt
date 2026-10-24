@@ -43,7 +43,7 @@ object EnergyNetworkManager {
      */
     fun tickAll(world: Level) {
         pendingBuilds.remove(world.dimension())?.forEach { posLong ->
-            val pos = BlockPos.fromLong(posLong)
+            val pos = BlockPos.of(posLong)
             if (world.getBlockState(pos).block is BaseCableBlock) {
                 getOrCreateNetwork(world, pos)
             }
@@ -112,8 +112,8 @@ object EnergyNetworkManager {
             }
 
             for (dir in Direction.values()) {
-                if (!state.get(BaseCableBlock.propertyFor(dir))) continue
-                val neighbor = current.offset(dir)
+                if (!state.getValue(BaseCableBlock.propertyFor(dir))) continue
+                val neighbor = current.relative(dir)
                 val neighborLong = neighbor.asLong()
                 if (neighborLong in visited) continue
                 visited.add(neighborLong)
@@ -143,7 +143,7 @@ object EnergyNetworkManager {
         distributeEnergyToEntities(world, network)
         for (cablePosLong in network.cables) {
             posToNetwork.remove(cablePosLong)
-            val cablePos = BlockPos.fromLong(cablePosLong)
+            val cablePos = BlockPos.of(cablePosLong)
             (world.getBlockEntity(cablePos) as? CableBlockEntity)?.network = null
             if (cablePos != pos && world.getBlockState(cablePos).block is BaseCableBlock) {
                 queueNetworkBuild(world, cablePos)
@@ -160,7 +160,7 @@ object EnergyNetworkManager {
 
     private fun distributeEnergyToEntities(world: Level, network: EnergyNetwork) {
         val entities = network.cables.mapNotNull { posLong ->
-            world.getBlockEntity(BlockPos.fromLong(posLong)) as? CableBlockEntity
+            world.getBlockEntity(BlockPos.of(posLong)) as? CableBlockEntity
         }
         if (entities.isEmpty()) return
         val share = network.energy / entities.size
