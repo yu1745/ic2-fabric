@@ -1,5 +1,8 @@
 package ic2_120.client.renderers
 
+import ic2_120.compat.cachedState
+import ic2_120.compat.world
+
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import ic2_120.Ic2_120
@@ -53,8 +56,9 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
         /** 资源重载时调用（与 OBJ 模型同一次加载）。 */
         fun reload(manager: ResourceManager) {
             val res = manager.getResource(ANIMATIONS_ID).orElse(null) ?: run { animations = emptyMap(); return }
-            val root = res.reader.use { JsonParser.parseReader(it).asJsonObject }
-            animations = root.entrySet().associate { (machine, list) ->
+            val root = res.open().bufferedReader().use { com.google.gson.JsonParser.parseReader(it).asJsonObject }
+            animations = root.entrySet().associate { entry ->
+                val (machine, list) = entry.key to entry.value
                 machine to list.asJsonArray.map { parsePart(it.asJsonObject) }
             }
         }
@@ -87,12 +91,12 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
         lights.fill(light)
         for (face in FACES) {
             for (quad in model.getQuads(null, face, random)) {
-                val n = quad.face.unitVector
+                val n = quad.direction.normal
                 normal.set(n.x, n.y, n.z).mul(entry.normal())
                 val shade = normal.x * normal.x * 0.6f + normal.z * normal.z * 0.8f +
                     normal.y * normal.y * (if (normal.y > 0) 1f else 0.5f)
                 brightness.fill(shade)
-                consumer.quad(entry, quad, brightness, 1f, 1f, 1f, lights, OverlayTexture.NO_OVERLAY, true)
+                consumer.putBulkData(entry, quad, brightness, 1.0f, 1.0f, 1.0f, 1.0f, lights, OverlayTexture.NO_OVERLAY, true)
             }
         }
     }
@@ -102,17 +106,17 @@ class Machine3dBlockEntityRenderer<T : BlockEntity>(
         val state = entity.cachedState
         val machine = BuiltInRegistries.BLOCK.getId(state.block).path
         val parts = animations[machine] ?: return
-        val activeProp = state.block.stateManager.getProperty("active") as? BooleanProperty
-        val active = activeProp?.let { state.get(it) } ?: false
-        val facing = state.getOrEmpty(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
+        val activeProp = state.block.stateDefinition.getProperty("active") as? BooleanProperty
+        val active = activeProp?.let { state.getValue(it) } ?: false
+        val facing = state.getOptionalValue(BlockStateProperties.HORIZONTAL_FACING).orElse(Direction.NORTH)
         // 动画时间：运行时随世界时间推进，停机时冻结
-        val t = if (active) ((world.time % 72000L) + tickDelta).also { frozenTime[entity] = it } else frozenTime[entity] ?: 0f
+        val t = if (active) ((world.gameTime % 72000L) + tickDelta).also { frozenTime[entity] = it } else frozenTime[entity] ?: 0f
 
         val client = Minecraft.getInstance()
-        val manager = client.bakedModelManager
-        val consumer = vertexConsumers.getBuffer(RenderType.getSolid())
+        val manager = client.modelManager
+        val consumer = vertexConsumers.getBuffer(RenderType.solid())
         // 运动件从正面露出：取正前方方块的光照（机器自身格子光照会低一级）
-        val frontLight = LevelRenderer.getLightmapCoordinates(world, entity.pos.offset(facing))
+        val frontLight = LevelRenderer.getLightColor(world, entity.pos.relative(facing))
 
         matrices.pushPose()
         // 与 blockstate 的 y 旋转一致：北为 0°，顺时针

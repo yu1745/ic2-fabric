@@ -999,7 +999,7 @@ class PipeBlockEntityRenderer(
     private fun getFluidTintColor(fluid: Fluid): Int {
         val world = Minecraft.getInstance().world ?: return 0xFFFFFF
         val handler = FluidRenderHandlerRegistry.INSTANCE.get(fluid) ?: return 0xFFFFFF
-        return handler.getFluidColor(world, BlockPos.ORIGIN, fluid.defaultFluidState().createLegacyBlock())
+        return handler.getFluidColor(world, BlockPos.ZERO, fluid.defaultFluidState().createLegacyBlock())
     }
 
     override fun rendersOutsideBoundingBox(entity: PipeBlockEntity): Boolean = true

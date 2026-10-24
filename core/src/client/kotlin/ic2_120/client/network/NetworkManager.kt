@@ -1,6 +1,5 @@
 package ic2_120.client.network
 
-private val minecraft = net.minecraft.client.Minecraft.getInstance()
 
 import ic2_120.Ic2_120
 import ic2_120.content.network.ReactorHeatInfoPacket
@@ -19,6 +18,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.minecraft.client.Minecraft
 import net.minecraft.resources.ResourceLocation
+private val minecraft = net.minecraft.client.Minecraft.getInstance()
 
 object NetworkManager {
     private val REACTOR_HEAT_INFO_PACKET = ResourceLocation.fromNamespaceAndPath(Ic2_120.MOD_ID, "reactor_heat_info")

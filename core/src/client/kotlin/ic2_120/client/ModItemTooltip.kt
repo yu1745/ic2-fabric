@@ -114,7 +114,7 @@ object ModItemTooltip {
                 item is BlockItem && item.block is ITiered -> (item.block as ITiered).tier
                 item is BlockItem -> {
                     val beType = ClassScanner.getBlockEntityTypeForBlock(item.block)
-                    val be = beType?.instantiate(BlockPos.ORIGIN, item.block.defaultBlockState())
+                    val be = beType?.instantiate(BlockPos.ZERO, item.block.defaultBlockState())
                     (be as? ITieredMachine)?.tier
                 }
                 else -> null

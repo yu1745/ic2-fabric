@@ -214,7 +214,7 @@ class ChunkLoaderScreen(
      */
     private fun getMapTexture(): ResourceLocation? {
         val bePos = menu.machinePos
-        if (bePos == BlockPos.ORIGIN) return null
+        if (bePos == BlockPos.ZERO) return null
 
         mapTextureCache[bePos]?.let {
             currentTextureId = it
@@ -260,12 +260,12 @@ class ChunkLoaderScreen(
                             mapTextureCache.remove(machinePos)?.let { oldId ->
                                 mapImageCache.remove(oldId)?.close()
                                 if (oldId != textureId) {
-                                    client.textureManager.destroyTexture(oldId)
+                                    client.textureManager.release(oldId)
                                 }
                             }
                         }
                         val texture = DynamicTexture(image)
-                        client.textureManager.registerTexture(textureId, texture)
+                        client.textureManager.register(textureId, texture)
                         texture.upload()
                         mapTextureCache[machinePos] = textureId
                         mapImageCache[textureId] = image
@@ -376,7 +376,7 @@ class ChunkLoaderScreen(
         tickCount++
         if (tickCount % 100L == 0L) {
             val bePos = menu.machinePos
-            if (bePos != BlockPos.ORIGIN) {
+            if (bePos != BlockPos.ZERO) {
                 triggerAsyncSampling(bePos, force = true)
             }
         }
@@ -394,7 +394,7 @@ class ChunkLoaderScreen(
     override fun removed() {
         super.removed()
         val bePos = menu.machinePos
-        if (bePos == BlockPos.ORIGIN) return
+        if (bePos == BlockPos.ZERO) return
         val id = mapTextureCache.remove(bePos) ?: return
         mapImageCache.remove(id)?.close()
         Minecraft.getInstance().textureManager.destroyTexture(id)
